@@ -1,0 +1,127 @@
+{
+  "version": "local-2026.07-msw-v1",
+  "maturity": "experimental",
+  "effectiveSince": "2026-07-24",
+  "rules": {
+    "DOC-PRD-001": {
+      "maturity": "experimental",
+      "blocking": true,
+      "waivable": false
+    },
+    "DOC-PRD-002": {
+      "maturity": "experimental",
+      "blocking": true,
+      "waivable": false
+    },
+    "DOC-PRD-003": {
+      "maturity": "experimental",
+      "blocking": true,
+      "waivable": false
+    },
+    "DOC-PRD-004": {
+      "maturity": "experimental",
+      "blocking": true,
+      "waivable": false
+    },
+    "DOC-PRD-005": {
+      "maturity": "experimental",
+      "blocking": true,
+      "waivable": false
+    },
+    "DOC-PRD-006": {
+      "maturity": "experimental",
+      "blocking": true,
+      "waivable": false
+    },
+    "DOC-PRD-007": {
+      "maturity": "experimental",
+      "blocking": true,
+      "waivable": false
+    },
+    "DOC-PRD-008": {
+      "maturity": "experimental",
+      "blocking": true,
+      "waivable": false
+    },
+    "DOC-PRD-009": {
+      "maturity": "experimental",
+      "blocking": true,
+      "waivable": false
+    },
+    "DOC-G3-IMPL-001": {
+      "maturity": "experimental",
+      "blocking": false,
+      "waivable": true
+    },
+    "DOC-G3-IMPL-002": {
+      "maturity": "experimental",
+      "blocking": false,
+      "waivable": true
+    },
+    "DOC-G3-IMPL-003": {
+      "maturity": "experimental",
+      "blocking": false,
+      "waivable": false
+    },
+    "DOC-G3-IMPL-004": {
+      "maturity": "experimental",
+      "blocking": false,
+      "waivable": true
+    },
+    "DOC-G3-IMPL-005": {
+      "maturity": "experimental",
+      "blocking": false,
+      "waivable": true
+    },
+    "DOC-G3-IMPL-006": {
+      "maturity": "experimental",
+      "blocking": false,
+      "waivable": false
+    },
+    "VERIFY-BIOME-001": {
+      "maturity": "trial",
+      "blocking": true,
+      "waivable": true
+    },
+    "VERIFY-TYPE-001": {
+      "maturity": "trial",
+      "blocking": true,
+      "waivable": true
+    },
+    "VERIFY-TYPE-002": {
+      "maturity": "experimental",
+      "blocking": false,
+      "waivable": true
+    },
+    "VERIFY-TEST-001": {
+      "maturity": "trial",
+      "blocking": true,
+      "waivable": true
+    },
+    "VERIFY-TEST-002": {
+      "maturity": "experimental",
+      "blocking": false,
+      "waivable": true
+    },
+    "VERIFY-BUILD-001": {
+      "maturity": "trial",
+      "blocking": true,
+      "waivable": false
+    },
+    "DOC-BLOCK-001": {
+      "maturity": "trial",
+      "blocking": true,
+      "waivable": false
+    },
+    "DOC-BLOCK-002": {
+      "maturity": "trial",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-BLOCK-003": {
+      "maturity": "experimental",
+      "blocking": false,
+      "waivable": true
+    }
+  }
+}

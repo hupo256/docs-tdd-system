@@ -1,0 +1,26 @@
+{
+  "source": "http://35.240.211.100:3333/project/459/interface/api",
+  "fetchedAt": "2026-06-24",
+  "previousCount": 29,
+  "currentCount": 31,
+  "added": [
+    {
+      "id": 5233,
+      "method": "GET",
+      "path": "/polymarket/category/delete",
+      "title": "一级分类删除",
+      "category": "分类管理",
+      "status": "undone"
+    },
+    {
+      "id": 5239,
+      "method": "POST",
+      "path": "/tradeDailyIncome/export",
+      "title": "每日统计导出",
+      "category": "每日收入统计",
+      "status": "undone"
+    }
+  ],
+  "removed": [],
+  "changed": []
+}

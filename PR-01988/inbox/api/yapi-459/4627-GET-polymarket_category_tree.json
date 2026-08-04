@@ -1,0 +1,33 @@
+{
+  "query_path": {
+    "path": "/polymarket/category/tree",
+    "params": []
+  },
+  "edit_uid": 0,
+  "status": "undone",
+  "type": "static",
+  "req_body_is_json_schema": true,
+  "res_body_is_json_schema": true,
+  "api_opened": false,
+  "index": 6,
+  "tag": [],
+  "_id": 4627,
+  "method": "GET",
+  "catid": 1281,
+  "title": "全量分类树桩结构",
+  "path": "/polymarket/category/tree",
+  "project_id": 459,
+  "req_params": [],
+  "res_body_type": "raw",
+  "uid": 447,
+  "add_time": 1781867338,
+  "up_time": 1781869921,
+  "req_query": [],
+  "req_headers": [],
+  "req_body_form": [],
+  "__v": 0,
+  "desc": "",
+  "markdown": "",
+  "res_body": "{\n\t\"code\": \"0\",\n\t\"msg\": \"成功\",\n\t\"data\": [\n\t\t{\n\t\t\t\"id\": 41,\n\t\t\t\"parentId\": 0,\n\t\t\t\"pathIds\": \"41\",\n\t\t\t\"level\": 1,\n\t\t\t\"code\": \"sports\",\n\t\t\t\"name\": \"Sports\",\n\t\t\t\"nameMap\": {\n\t\t\t\t\"en-US\": \"Sports\",\n\t\t\t\t\"en-AU\": \"Sports\",\n\t\t\t\t\"zh-TW\": \"體育\",\n\t\t\t\t\"zh-CN\": \"体育\",\n\t\t\t\t\"tr-TR\": \"Spor\",\n\t\t\t\t\"vi-VN\": \"Thể thao\",\n\t\t\t\t\"es-ES\": \"Deportes\",\n\t\t\t\t\"ru-RU\": \"Спорт\",\n\t\t\t\t\"ko-KR\": \"스포츠\",\n\t\t\t\t\"pt-BR\": \"Esportes\"\n\t\t\t},\n\t\t\t\"sort\": 1,\n\t\t\t\"children\": [\n\t\t\t\t{\n\t\t\t\t\t\"id\": 42,\n\t\t\t\t\t\"parentId\": 41,\n\t\t\t\t\t\"pathIds\": \"41_42\",\n\t\t\t\t\t\"level\": 2,\n\t\t\t\t\t\"code\": \"football\",\n\t\t\t\t\t\"name\": \"Football\",\n\t\t\t\t\t\"nameMap\": {\n\t\t\t\t\t\t\"en-US\": \"Football\",\n\t\t\t\t\t\t\"en-AU\": \"Football\",\n\t\t\t\t\t\t\"zh-TW\": \"足球\",\n\t\t\t\t\t\t\"zh-CN\": \"足球\",\n\t\t\t\t\t\t\"tr-TR\": \"Futbol\",\n\t\t\t\t\t\t\"vi-VN\": \"Bóng đá\",\n\t\t\t\t\t\t\"es-ES\": \"Fútbol\",\n\t\t\t\t\t\t\"ru-RU\": \"Футбол\",\n\t\t\t\t\t\t\"ko-KR\": \"축구\",\n\t\t\t\t\t\t\"pt-BR\": \"Futebol\"\n\t\t\t\t\t},\n\t\t\t\t\t\"sort\": 1,\n\t\t\t\t\t\"children\": [\n\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\"id\": 43,\n\t\t\t\t\t\t\t\"parentId\": 42,\n\t\t\t\t\t\t\t\"pathIds\": \"41_42_43\",\n\t\t\t\t\t\t\t\"level\": 3,\n\t\t\t\t\t\t\t\"code\": \"premier_league\",\n\t\t\t\t\t\t\t\"name\": \"Premier League\",\n\t\t\t\t\t\t\t\"nameMap\": {\n\t\t\t\t\t\t\t\t\"en-US\": \"Premier League\",\n\t\t\t\t\t\t\t\t\"en-AU\": \"Premier League\",\n\t\t\t\t\t\t\t\t\"zh-TW\": \"英超\",\n\t\t\t\t\t\t\t\t\"zh-CN\": \"英超\",\n\t\t\t\t\t\t\t\t\"tr-TR\": \"Premier Lig\",\n\t\t\t\t\t\t\t\t\"vi-VN\": \"Ngoại hạng Anh\",\n\t\t\t\t\t\t\t\t\"es-ES\": \"Premier League\",\n\t\t\t\t\t\t\t\t\"ru-RU\": \"Премьер-лига\",\n\t\t\t\t\t\t\t\t\"ko-KR\": \"프리미어리그\",\n\t\t\t\t\t\t\t\t\"pt-BR\": \"Premier League\"\n\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\"sort\": 1,\n\t\t\t\t\t\t\t\"children\": []\n\t\t\t\t\t\t},\n\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\"id\": 44,\n\t\t\t\t\t\t\t\"parentId\": 42,\n\t\t\t\t\t\t\t\"pathIds\": \"41_42_44\",\n\t\t\t\t\t\t\t\"level\": 3,\n\t\t\t\t\t\t\t\"code\": \"la_liga\",\n\t\t\t\t\t\t\t\"name\": \"La Liga\",\n\t\t\t\t\t\t\t\"nameMap\": {\n\t\t\t\t\t\t\t\t\"en-US\": \"La Liga\",\n\t\t\t\t\t\t\t\t\"en-AU\": \"La Liga\",\n\t\t\t\t\t\t\t\t\"zh-TW\": \"西甲\",\n\t\t\t\t\t\t\t\t\"zh-CN\": \"西甲\",\n\t\t\t\t\t\t\t\t\"tr-TR\": \"La Liga\",\n\t\t\t\t\t\t\t\t\"vi-VN\": \"La Liga\",\n\t\t\t\t\t\t\t\t\"es-ES\": \"La Liga\",\n\t\t\t\t\t\t\t\t\"ru-RU\": \"Ла Лига\",\n\t\t\t\t\t\t\t\t\"ko-KR\": \"라리가\",\n\t\t\t\t\t\t\t\t\"pt-BR\": \"La Liga\"\n\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\"sort\": 2,\n\t\t\t\t\t\t\t\"children\": []\n\t\t\t\t\t\t}\n\t\t\t\t\t]\n\t\t\t\t},\n\t\t\t\t{\n\t\t\t\t\t\"id\": 45,\n\t\t\t\t\t\"parentId\": 41,\n\t\t\t\t\t\"pathIds\": \"41_45\",\n\t\t\t\t\t\"level\": 2,\n\t\t\t\t\t\"code\": \"basketball\",\n\t\t\t\t\t\"name\": \"Basketball\",\n\t\t\t\t\t\"nameMap\": {\n\t\t\t\t\t\t\"en-US\": \"Basketball\",\n\t\t\t\t\t\t\"en-AU\": \"Basketball\",\n\t\t\t\t\t\t\"zh-TW\": \"籃球\",\n\t\t\t\t\t\t\"zh-CN\": \"篮球\",\n\t\t\t\t\t\t\"tr-TR\": \"Basketbol\",\n\t\t\t\t\t\t\"vi-VN\": \"Bóng rổ\",\n\t\t\t\t\t\t\"es-ES\": \"Baloncesto\",\n\t\t\t\t\t\t\"ru-RU\": \"Баскетбол\",\n\t\t\t\t\t\t\"ko-KR\": \"농구\",\n\t\t\t\t\t\t\"pt-BR\": \"Basquete\"\n\t\t\t\t\t},\n\t\t\t\t\t\"sort\": 2,\n\t\t\t\t\t\"children\": [\n\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\"id\": 46,\n\t\t\t\t\t\t\t\"parentId\": 45,\n\t\t\t\t\t\t\t\"pathIds\": \"41_45_46\",\n\t\t\t\t\t\t\t\"level\": 3,\n\t\t\t\t\t\t\t\"code\": \"nba\",\n\t\t\t\t\t\t\t\"name\": \"NBA\",\n\t\t\t\t\t\t\t\"nameMap\": {\n\t\t\t\t\t\t\t\t\"en-US\": \"NBA\",\n\t\t\t\t\t\t\t\t\"en-AU\": \"NBA\",\n\t\t\t\t\t\t\t\t\"zh-TW\": \"NBA\",\n\t\t\t\t\t\t\t\t\"zh-CN\": \"NBA\",\n\t\t\t\t\t\t\t\t\"tr-TR\": \"NBA\",\n\t\t\t\t\t\t\t\t\"vi-VN\": \"NBA\",\n\t\t\t\t\t\t\t\t\"es-ES\": \"NBA\",\n\t\t\t\t\t\t\t\t\"ru-RU\": \"НБА\",\n\t\t\t\t\t\t\t\t\"ko-KR\": \"NBA\",\n\t\t\t\t\t\t\t\t\"pt-BR\": \"NBA\"\n\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t\"sort\": 1,\n\t\t\t\t\t\t\t\"children\": []\n\t\t\t\t\t\t}\n\t\t\t\t\t]\n\t\t\t\t}\n\t\t\t]\n\t\t}\n\t],\n\t\"message\": null,\n\t\"succ\": true\n}",
+  "username": "knox"
+}

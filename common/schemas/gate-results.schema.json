@@ -1,0 +1,163 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "gate-results.schema.json",
+  "title": "Project Gate Results",
+  "description": "Machine-readable output of verify-project-gate.mjs --write or run-project-gate.mjs --write",
+  "type": "object",
+  "required": ["generatedAt", "tool", "ok", "projectId", "gate", "checks", "summary"],
+  "properties": {
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "tool": {
+      "type": "string",
+      "enum": ["verify-project-gate.mjs", "run-project-gate.mjs"]
+    },
+    "ok": {
+      "type": "boolean"
+    },
+    "projectId": {
+      "type": "string"
+    },
+    "gate": {
+      "type": "string",
+      "pattern": "^G[0-8]$"
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["ruleId", "ok", "message", "file", "severity"],
+        "properties": {
+          "ruleId": { "type": "string" },
+          "ok": { "type": "boolean" },
+          "message": { "type": "string" },
+          "file": { "type": "string" },
+          "severity": {
+            "type": "string",
+            "enum": ["error", "warn", "waived"]
+          },
+          "category": {
+            "type": "string",
+            "enum": ["documentation", "implementation"]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "groups": {
+      "type": "object",
+      "properties": {
+        "documentation": {
+          "type": "object",
+          "required": ["total", "ok", "warn", "waived", "fail"],
+          "properties": {
+            "total": { "type": "integer", "minimum": 0 },
+            "ok": { "type": "integer", "minimum": 0 },
+            "warn": { "type": "integer", "minimum": 0 },
+            "waived": { "type": "integer", "minimum": 0 },
+            "fail": { "type": "integer", "minimum": 0 }
+          },
+          "additionalProperties": false
+        },
+        "implementation": {
+          "type": "object",
+          "required": ["total", "ok", "warn", "waived", "fail"],
+          "properties": {
+            "total": { "type": "integer", "minimum": 0 },
+            "ok": { "type": "integer", "minimum": 0 },
+            "warn": { "type": "integer", "minimum": 0 },
+            "waived": { "type": "integer", "minimum": 0 },
+            "fail": { "type": "integer", "minimum": 0 }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "summary": {
+      "type": "object",
+      "required": ["total", "ok", "warn", "waived", "fail"],
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "ok": { "type": "integer", "minimum": 0 },
+        "warn": { "type": "integer", "minimum": 0 },
+        "waived": { "type": "integer", "minimum": 0 },
+        "fail": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "commands": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["label", "status", "ok", "startedAt"],
+        "properties": {
+          "label": { "type": "string" },
+          "status": { "type": "integer" },
+          "ok": { "type": "boolean" },
+          "startedAt": { "type": "string", "format": "date-time" },
+          "finishedAt": { "type": "string", "format": "date-time" }
+          ,"logFile": { "type": ["string", "null"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "fingerprint": {
+      "type": "object",
+      "required": ["headSha", "baseSha", "dirtyHash", "dirtyFileCount", "rulesetVersion"],
+      "properties": {
+        "headSha": { "type": "string" },
+        "baseSha": { "type": "string" },
+        "dirtyHash": { "type": "string" },
+        "dirtyFileCount": { "type": "integer", "minimum": 0 },
+        "untrackedFileCount": { "type": "integer", "minimum": 0 },
+        "rulesetVersion": { "type": "string" },
+        "ruleReleaseFingerprint": { "type": "string" },
+        "effectiveRulesFingerprint": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "codeRules": {
+      "type": "object",
+      "required": ["required", "skipped", "reason", "ok"],
+      "properties": {
+        "required": { "type": "boolean" },
+        "skipped": { "type": "boolean" },
+        "reason": { "type": "string" },
+        "ok": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "gateCommand": { "type": "string" },
+        "parseError": {},
+        "codeRulesCommand": { "type": "string" },
+        "codeRulesParseError": {}
+      },
+      "additionalProperties": true
+    },
+    "stageSync": {
+      "type": "object",
+      "required": ["attempted", "ok"],
+      "properties": {
+        "attempted": { "type": "boolean" },
+        "ok": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "cache": {
+      "type": "object",
+      "required": ["hit", "fingerprint"],
+      "properties": {
+        "hit": { "type": "boolean" },
+        "fingerprint": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

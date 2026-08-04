@@ -1,0 +1,16 @@
+[
+  {
+    "id": "BLK-1",
+    "type": "blocker",
+    "gate": "G3",
+    "blocksGate": "G3",
+    "category": "backend",
+    "summary": "夹具用已解除阻塞：验证 resolved 不阻断任何 gate",
+    "owner": "golden-fixture",
+    "raisedAt": "2026-08-03",
+    "status": "resolved",
+    "resolution": "夹具锚点，接口已就绪",
+    "resolvedAt": "2026-08-03",
+    "evidence": []
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "projectId": "PR-02074",
+  "outputDir": "apps/web/docs_tdd/PR-02074/inbox/lark-sync",
+  "sources": [
+    {
+      "type": "wiki",
+      "operation": "read",
+      "name": "需求 PRD",
+      "url": "https://qfglxo2m3dc.sg.larksuite.com/wiki/G7DYwcDijiUnYbkMuiilT8y8gch",
+      "target": "prd-latest.md"
+    }
+  ]
+}

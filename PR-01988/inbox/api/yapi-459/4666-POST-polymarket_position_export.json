@@ -1,0 +1,44 @@
+{
+  "query_path": {
+    "path": "/polymarket/position/export",
+    "params": []
+  },
+  "edit_uid": 0,
+  "status": "done",
+  "type": "static",
+  "req_body_is_json_schema": true,
+  "res_body_is_json_schema": true,
+  "api_opened": false,
+  "index": 0,
+  "tag": [],
+  "_id": 4666,
+  "res_body_type": "json",
+  "res_body": "{\"properties\":{\"code\":{\"type\":\"string\",\"description\":\"失败时业务状态码；导出成功时直接返回 Excel 文件流，不返回 JSON\"},\"msg\":{\"type\":\"string\",\"description\":\"失败原因，例如暂无可导出数据、导出失败\"}},\"type\":\"object\"}",
+  "req_query": [],
+  "req_body_other": "{\"properties\":{\"ctimeEndNum\":{\"example\":1780333800000,\"format\":\"int64\",\"description\":\"创建时间区间结束，毫秒时间戳，左闭右开\",\"type\":\"integer\"},\"updatedEndNum\":{\"example\":1780333800000,\"format\":\"int64\",\"description\":\"最后更新时间区间结束，毫秒时间戳，左闭右开\",\"type\":\"integer\"},\"uid\":{\"description\":\"用户 UID\",\"example\":100382,\"type\":\"integer\"},\"ctimeStartNum\":{\"example\":1780247400000,\"format\":\"int64\",\"description\":\"创建时间区间开始，毫秒时间戳\",\"type\":\"integer\"},\"positionId\":{\"example\":12345,\"format\":\"int64\",\"description\":\"仓位 ID，对应 polymarket_order_position.id\",\"type\":\"integer\"},\"positionStatusType\":{\"enum\":[\"holding\",\"closed\"],\"description\":\"状态：holding 持仓中、closed 已平仓\",\"example\":\"holding\",\"type\":\"string\"},\"updatedStartNum\":{\"example\":1780247400000,\"format\":\"int64\",\"description\":\"最后更新时间区间开始，毫秒时间戳\",\"type\":\"integer\"}},\"type\":\"object\",\"required\":[]}",
+  "title": "预测市场仓位管理导出",
+  "req_headers": [
+    {
+      "required": "1",
+      "_id": "6a36729b06f2ee044b08a34a",
+      "name": "Content-Type",
+      "value": "application/json",
+      "example": "application/json",
+      "desc": "请求体格式"
+    }
+  ],
+  "method": "POST",
+  "catid": 1297,
+  "project_id": 459,
+  "path": "/polymarket/position/export",
+  "req_body_type": "json",
+  "desc": "",
+  "req_params": [],
+  "uid": 629,
+  "add_time": 1781953007,
+  "up_time": 1781953179,
+  "req_body_form": [],
+  "__v": 0,
+  "markdown": "",
+  "username": "meachel@globaldev.info"
+}

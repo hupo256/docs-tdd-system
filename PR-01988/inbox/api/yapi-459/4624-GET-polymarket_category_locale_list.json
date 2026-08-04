@@ -1,0 +1,33 @@
+{
+  "query_path": {
+    "path": "/polymarket/category/locale/list",
+    "params": []
+  },
+  "edit_uid": 0,
+  "status": "undone",
+  "type": "static",
+  "req_body_is_json_schema": true,
+  "res_body_is_json_schema": true,
+  "api_opened": false,
+  "index": 0,
+  "tag": [],
+  "_id": 4624,
+  "method": "GET",
+  "catid": 1281,
+  "title": "支持的语言列表&code",
+  "path": "/polymarket/category/locale/list",
+  "project_id": 459,
+  "req_params": [],
+  "res_body_type": "raw",
+  "uid": 447,
+  "add_time": 1781867230,
+  "up_time": 1781867241,
+  "req_query": [],
+  "req_headers": [],
+  "req_body_form": [],
+  "__v": 0,
+  "desc": "",
+  "markdown": "",
+  "res_body": "{\n\t\"code\": \"0\",\n\t\"msg\": \"成功\",\n\t\"data\": [\n\t\t{\n\t\t\t\"appLocale\": \"en-US\",\n\t\t\t\"polymarketLocale\": \"en\",\n\t\t\t\"countryName\": \"美国\",\n\t\t\t\"languageName\": \"英文\"\n\t\t},\n\t\t{\n\t\t\t\"appLocale\": \"en-AU\",\n\t\t\t\"polymarketLocale\": \"en\",\n\t\t\t\"countryName\": \"澳大利亚\",\n\t\t\t\"languageName\": \"英文\"\n\t\t},\n\t\t{\n\t\t\t\"appLocale\": \"zh-TW\",\n\t\t\t\"polymarketLocale\": \"zh-Hant\",\n\t\t\t\"countryName\": \"中国台湾\",\n\t\t\t\"languageName\": \"繁体中文\"\n\t\t},\n\t\t{\n\t\t\t\"appLocale\": \"zh-CN\",\n\t\t\t\"polymarketLocale\": \"zh\",\n\t\t\t\"countryName\": \"中国大陆\",\n\t\t\t\"languageName\": \"中文\"\n\t\t},\n\t\t{\n\t\t\t\"appLocale\": \"tr-TR\",\n\t\t\t\"polymarketLocale\": \"tr\",\n\t\t\t\"countryName\": \"土耳其\",\n\t\t\t\"languageName\": \"土耳其文\"\n\t\t},\n\t\t{\n\t\t\t\"appLocale\": \"vi-VN\",\n\t\t\t\"polymarketLocale\": \"vi\",\n\t\t\t\"countryName\": \"越南\",\n\t\t\t\"languageName\": \"越南文\"\n\t\t},\n\t\t{\n\t\t\t\"appLocale\": \"es-ES\",\n\t\t\t\"polymarketLocale\": \"es\",\n\t\t\t\"countryName\": \"西班牙\",\n\t\t\t\"languageName\": \"西班牙文\"\n\t\t},\n\t\t{\n\t\t\t\"appLocale\": \"ru-RU\",\n\t\t\t\"polymarketLocale\": \"ru\",\n\t\t\t\"countryName\": \"俄罗斯\",\n\t\t\t\"languageName\": \"俄文\"\n\t\t},\n\t\t{\n\t\t\t\"appLocale\": \"ko-KR\",\n\t\t\t\"polymarketLocale\": \"ko\",\n\t\t\t\"countryName\": \"韩国\",\n\t\t\t\"languageName\": \"韩文\"\n\t\t},\n\t\t{\n\t\t\t\"appLocale\": \"pt-BR\",\n\t\t\t\"polymarketLocale\": \"pt\",\n\t\t\t\"countryName\": \"巴西\",\n\t\t\t\"languageName\": \"葡萄牙文\"\n\t\t}\n\t],\n\t\"message\": null,\n\t\"succ\": true\n}",
+  "username": "knox"
+}

@@ -1,0 +1,13 @@
+{
+  "sourceUrl": "https://qfglxo2m3dc.sg.larksuite.com/wiki/T1eTwACdaibCB8kPG3plR08jg1d",
+  "sourceType": "sheet",
+  "syncedAt": "2026-07-13T00:00:00+08:00",
+  "command": "lark-cli docs +fetch --api-version v2 --doc <url> --detail simple 转 sheet embed；lark-cli sheets +csv-get --spreadsheet-token THMeskUxGhiCXYtpGmtlwGD0gGb --sheet-id ZhrVen --range A1:L33",
+  "status": "success",
+  "documentId": "DYTIdbazLovkGJxEDU8lPrjBgFh",
+  "spreadsheetToken": "THMeskUxGhiCXYtpGmtlwGD0gGb",
+  "sheetId": "ZhrVen",
+  "revisionId": 5,
+  "identity": "user",
+  "notes": "Wiki 文档正文实际为内嵌电子表格（sheet），非普通文档；docs +fetch 只返回 <sheet> 标签，需切换 lark-sheets 技能按 spreadsheet-token+sheet-id 读取实际数据。另有空白默认子表 Sheet1（dac8ba）未同步。表内执行结果/执行人列均为空，待自测执行时回填。"
+}

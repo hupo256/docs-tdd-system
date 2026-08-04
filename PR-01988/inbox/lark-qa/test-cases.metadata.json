@@ -1,0 +1,15 @@
+{
+  "sourceName": "PR-01988 测试用例",
+  "sourceType": "doc",
+  "sourceUrl": "https://qfglxo2m3dc.sg.larksuite.com/docx/NiHVdQGgUohh20xRJmOlmo0rgAg",
+  "syncedAt": "2026-06-25T00:00:00+04:00",
+  "readOnly": true,
+  "status": "failed",
+  "command": "npx @larksuite/cli@latest docs +fetch --api-version v2 --doc <url> --doc-format markdown",
+  "error": {
+    "type": "config",
+    "subtype": "not_configured",
+    "message": "lark-cli not configured; run lark-cli config init --new and complete browser verification"
+  },
+  "nextAction": "Provide exported Markdown/Excel/PDF of the QA cases, or complete lark-cli auth/config on this machine so the document can be fetched read-only."
+}

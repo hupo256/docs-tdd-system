@@ -1,0 +1,11 @@
+# OS / editor junk
+.DS_Store
+*.swp
+
+# transient logs & node deps (docs system is script-driven, no build output tracked)
+*.log
+node_modules/
+
+# never commit secrets if any script config lands here
+.env
+.env.*

@@ -1,0 +1,42 @@
+{
+  "query_path": {
+    "path": "/polymarket/order/stats",
+    "params": []
+  },
+  "edit_uid": 0,
+  "status": "done",
+  "type": "static",
+  "req_body_is_json_schema": true,
+  "res_body_is_json_schema": true,
+  "api_opened": false,
+  "index": 0,
+  "tag": [],
+  "_id": 4660,
+  "res_body_type": "json",
+  "res_body": "{\"properties\":{\"code\":{\"type\":\"integer\",\"description\":\"业务状态码，成功时通常为 0\"},\"data\":{\"properties\":{\"successOrderCount\":{\"example\":9980,\"format\":\"int64\",\"description\":\"历史成功订单数，order_status=3\",\"type\":\"integer\"},\"todayOrderCount\":{\"example\":128,\"format\":\"int64\",\"description\":\"今日订单数：按 Asia/Shanghai 今日自然日、订单创建时间统计新增订单数\",\"type\":\"integer\"},\"todayTradeAmount\":{\"description\":\"今日成交额：今日成功订单 amount 合计\",\"example\":123456.78,\"type\":\"number\"},\"successRatePercent\":{\"description\":\"成交成功率百分比展示值，例如 97.46 表示 97.46%\",\"example\":97.46,\"type\":\"number\"},\"processingOrderCount\":{\"example\":12,\"format\":\"int64\",\"description\":\"历史成交中订单数，order_status in (1,2)\",\"type\":\"integer\"},\"totalOrderCount\":{\"example\":10240,\"format\":\"int64\",\"description\":\"历史订单总数，用于计算成交成功率\",\"type\":\"integer\"},\"successRate\":{\"description\":\"成交成功率小数值：历史成功订单数 / 历史总订单数，保留 6 位计算精度\",\"example\":0.974609,\"type\":\"number\"}},\"description\":\"订单管理顶部统计卡片数据\",\"type\":\"object\"},\"msg\":{\"type\":\"string\",\"description\":\"响应消息\"}},\"type\":\"object\",\"required\":[\"code\",\"msg\",\"data\"]}",
+  "req_query": [],
+  "req_body_other": "{\"type\":\"object\",\"title\":\"title\",\"properties\":{}}",
+  "title": "预测市场订单管理统计数据",
+  "req_headers": [
+    {
+      "required": "1",
+      "_id": "6a365c7006f2ee615f08a345",
+      "name": "Content-Type",
+      "value": "application/json"
+    }
+  ],
+  "method": "POST",
+  "catid": 1293,
+  "project_id": 459,
+  "path": "/polymarket/order/stats",
+  "req_body_type": "json",
+  "desc": "",
+  "req_params": [],
+  "uid": 629,
+  "add_time": 1781947028,
+  "up_time": 1781947504,
+  "req_body_form": [],
+  "__v": 0,
+  "markdown": "",
+  "username": "meachel@globaldev.info"
+}

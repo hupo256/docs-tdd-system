@@ -1,0 +1,44 @@
+{
+  "query_path": {
+    "path": "/polymarket/order/pageList",
+    "params": []
+  },
+  "edit_uid": 0,
+  "status": "done",
+  "type": "static",
+  "req_body_is_json_schema": true,
+  "res_body_is_json_schema": true,
+  "api_opened": false,
+  "index": 0,
+  "tag": [],
+  "_id": 4654,
+  "res_body_type": "json",
+  "res_body": "{\"properties\":{\"code\":{\"type\":\"integer\",\"description\":\"业务状态码，成功时通常为 0\"},\"data\":{\"properties\":{\"count\":{\"type\":\"integer\",\"description\":\"总条数\"},\"list\":{\"description\":\"订单列表，仅包含页面列表展示字段\",\"items\":{\"properties\":{\"txHash\":{\"description\":\"链上成交哈希\",\"example\":\"0x0a3f...\",\"type\":\"string\"},\"orderNo\":{\"description\":\"订单 ID，本地订单号\",\"example\":\"PM2026050000\",\"type\":\"string\"},\"platformAmount\":{\"description\":\"平台收入\",\"example\":0.1,\"type\":\"number\"},\"opTradeType\":{\"description\":\"类型原始值：buy 买入、sell 卖出、settled 结算\",\"example\":\"buy\",\"type\":\"string\"},\"statusTypeDesc\":{\"description\":\"状态文案：成功、失败、成交中\",\"example\":\"成交中\",\"type\":\"string\"},\"tradeShares\":{\"description\":\"份额\",\"example\":2,\"type\":\"number\"},\"displayTime\":{\"example\":\"2026-05-30 09:10:00\",\"format\":\"date-time\",\"description\":\"创建/成交时间同一列展示：有成交时间取成交时间，否则取创建时间\",\"type\":\"string\"},\"statusType\":{\"description\":\"状态原始值：success 成功、failed 失败、processing 成交中\",\"example\":\"processing\",\"type\":\"string\"},\"displayTimeNum\":{\"example\":1780103400000,\"format\":\"int64\",\"description\":\"创建/成交时间同一列展示对应的毫秒时间戳\",\"type\":\"integer\"},\"eventDirectionDisplay\":{\"description\":\"事件 / 方向，展示为事件名 + Yes/No 方向\",\"example\":\"事件 0 No\",\"type\":\"string\"},\"uid\":{\"description\":\"用户 UID\",\"example\":100382,\"type\":\"integer\"},\"amount\":{\"description\":\"金额，买入为下单金额，卖出/结算为返还或结算金额\",\"example\":20,\"type\":\"number\"}},\"type\":\"object\"},\"type\":\"array\"}},\"description\":\"分页数据\",\"type\":\"object\",\"required\":[\"count\",\"list\"]},\"msg\":{\"type\":\"string\",\"description\":\"响应消息\"}},\"type\":\"object\",\"required\":[\"code\",\"msg\",\"data\"]}",
+  "req_query": [],
+  "req_body_other": "{\"properties\":{\"tradeTimeStartNum\":{\"example\":1780247400000,\"format\":\"int64\",\"description\":\"成交时间区间开始，毫秒时间戳\",\"type\":\"integer\"},\"txHash\":{\"description\":\"链上成交哈希，支持按哈希搜索\",\"example\":\"0x0a3f...\",\"type\":\"string\"},\"orderNo\":{\"description\":\"订单 ID，本地订单号\",\"example\":\"PM2026050000\",\"type\":\"string\"},\"opTradeType\":{\"enum\":[\"buy\",\"sell\",\"settled\"],\"description\":\"类型：buy 买入、sell 卖出、settled 结算\",\"example\":\"buy\",\"type\":\"string\"},\"uid\":{\"description\":\"用户 UID\",\"example\":100382,\"type\":\"integer\"},\"ctimeEndNum\":{\"example\":1780333800000,\"format\":\"int64\",\"description\":\"创建时间区间结束，毫秒时间戳，左闭右开\",\"type\":\"integer\"},\"pageSize\":{\"description\":\"每页条数\",\"example\":20,\"type\":\"integer\"},\"tradeTimeEndNum\":{\"example\":1780333800000,\"format\":\"int64\",\"description\":\"成交时间区间结束，毫秒时间戳，左闭右开\",\"type\":\"integer\"},\"ctimeStartNum\":{\"example\":1780247400000,\"format\":\"int64\",\"description\":\"创建时间区间开始，毫秒时间戳\",\"type\":\"integer\"},\"statusType\":{\"enum\":[\"success\",\"failed\",\"processing\"],\"description\":\"状态：success 成功、failed 失败、processing 成交中\",\"example\":\"success\",\"type\":\"string\"},\"pageNum\":{\"description\":\"当前页码，从 1 开始\",\"example\":1,\"type\":\"integer\"}},\"type\":\"object\",\"required\":[\"pageNum\",\"pageSize\"]}",
+  "title": "预测市场订单管理列表",
+  "req_headers": [
+    {
+      "required": "1",
+      "_id": "6a36499506f2eecb7d08a342",
+      "name": "Content-Type",
+      "value": "application/json",
+      "example": "application/json",
+      "desc": "请求体格式"
+    }
+  ],
+  "method": "POST",
+  "catid": 1293,
+  "project_id": 459,
+  "path": "/polymarket/order/pageList",
+  "req_body_type": "json",
+  "desc": "",
+  "req_params": [],
+  "uid": 629,
+  "add_time": 1781942609,
+  "up_time": 1781942677,
+  "req_body_form": [],
+  "__v": 0,
+  "markdown": "",
+  "username": "meachel@globaldev.info"
+}

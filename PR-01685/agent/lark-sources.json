@@ -1,0 +1,20 @@
+{
+  "projectId": "PR-01685",
+  "outputDir": "apps/web/docs_tdd/PR-01685/inbox/lark-sync",
+  "sources": [
+    {
+      "type": "wiki",
+      "operation": "read",
+      "name": "【PR-01685】【增长需求】活动落地页需求web&app",
+      "url": "https://qfglxo2m3dc.sg.larksuite.com/wiki/MeZEwUWL6iDpuVkEVxclysndgEf",
+      "target": "activity-landing-page-prd.md"
+    },
+    {
+      "type": "wiki",
+      "operation": "read",
+      "name": "【PR-01685】【增长需求】活动落地页数据统计需求",
+      "url": "https://qfglxo2m3dc.sg.larksuite.com/wiki/SXaGw5ciuiXeRFk24lTl2pLagCc",
+      "target": "activity-landing-page-qa.md"
+    }
+  ]
+}

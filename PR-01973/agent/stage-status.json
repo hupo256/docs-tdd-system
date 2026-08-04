@@ -1,0 +1,20 @@
+{
+  "projectId": "PR-01973",
+  "stages": {
+    "G5": {
+      "status": "blocked",
+      "reason": "真实环境缺少 TradFi section，真实 ticker/kline 联调及入口验收尚未完成，当前仍依赖 local/dev/test mock 兜底。",
+      "evidence": [
+        "product/03-api-contract.md",
+        "product/06-collaboration.md"
+      ],
+      "updatedAt": "2026-08-01"
+    },
+    "G7": {
+      "status": "pending",
+      "reason": "未提供 QA 用例；待 G5/G6 通过后执行 G7 gate 记录跳过。",
+      "evidence": [],
+      "updatedAt": "2026-08-01"
+    }
+  }
+}

@@ -1,0 +1,7 @@
+# PR-00000 前端任务（golden fixture）
+
+| 任务 | 功能 | 描述 | 状态 |
+|------|------|------|------|
+| T01 | F01 | 榜单列表页与空态 | 完成 |
+| T02 | F01 | 列表 mapper 与单测 | 完成 |
+| T03 | F01 | G3 API 未 ready 时补齐 MSW handler / 契约测试 / dev-only worker 注册 | 完成 |

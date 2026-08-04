@@ -1,0 +1,7 @@
+{
+  "project": "PR-01973",
+  "title": "TradFi 落地页",
+  "webhookUrl": "https://open.larksuite.com/open-apis/bot/v2/hook/YOUR_HOOK_ID",
+  "secret": "YOUR_SIGN_SECRET",
+  "autoNotify": true
+}

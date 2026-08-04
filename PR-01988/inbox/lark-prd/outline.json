@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "identity": "bot",
+  "data": {
+    "document": {
+      "content": "<fragment mode=\"outline\"><outline><h1 id=\"doxlgJCLsFX0fAalEVOHDe2IQid\">文档概述</h1><h2 id=\"doxlgvVgPotcgjL7I1jBrHOCYfg\">背景</h2><h2 id=\"doxlgWK3j8sWTILl7CTwwYKJnFc\">二期范围一览</h2><h2 id=\"doxlgCrBSCep5eqckDMuyDrocyb\">1.3 目标与不做的事</h2><h1 id=\"doxlghByo6v6OsZiox8AhuaD4Mc\">数据埋点方案</h1><h1 id=\"doxlgCrG9AGtRtXyRlTmhAUQxxc\">每日收入统计</h1><h1 id=\"XxIqdEvYno4qQgxiMwRlHM9vgve\">通用参数管理</h1><h1 id=\"B4cCd4QVYotaGSxj5eBlXTfRgld\">分类管理</h1><h1 id=\"doxlgy0Viksry4eNGaDDijlzNRf\">事件管理</h1><h1 id=\"doxlgGUkfqawkDskmCufbmt4Ygc\">订单管理</h1><h1 id=\"doxlg6LKA43TPm1jjkGmGaZ0sed\">仓位管理</h1><h1 id=\"doxlgIoSqG1hakEMib8TcvxSIVd\">手动平账</h1><h1 id=\"doxlg5EgAmwdP1upHzMRN582Qpg\">告警配置</h1><h1 id=\"doxlgqWvk9Z3ndpnmcsRD3ZqYTf\">上线验收</h1><h1 id=\"doxlg40bmnU9VioAzG80cPRZsLf\">附录</h1><h1 id=\"VGXFdwjjpo9Bzwxk0aNlpiQWgMc\">三期规划</h1></outline></fragment>",
+      "document_id": "TM4Qdj5qsozPoaxdMeSlm0Gxgve",
+      "revision_id": 1838
+    }
+  }
+}

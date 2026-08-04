@@ -1,0 +1,2865 @@
+{
+  "reportDir": "/private/tmp/pr01685-full-self-test-2026-06-19",
+  "scenarios": {
+    "active": {
+      "probe": {
+        "bodySample": "买币 行情 现货交易 合约交易 返佣 福利中心 反馈 买币 行情 现货交易 合约交易 返佣 福利中心 反馈 登录 注册 线路 活动规则 我的奖励 FameEX 三期交易挑战赛 PR-01685 完成指定任务，解锁合约体验金、手续费抵扣金与专属奖励 2026/06/18 23:00:01 - 2026/06/28 04:00:01 距离活动结束还有 8D : 04 : 59 : 59 立即参与 新手入门任务 完成基础任务，领取入门奖励 5 USDT 合约体验金 完成 KYC 实名认证 通过身份认证后即可参与更多活动任务。 立即认证 10 USDT 合约手续费抵扣金 累计合约交易量达到 1,000 USDT 完成任意 USDT 永续合约交易后计入统计。 200/1,000 USDT 立即交易 100 USDT 合约赠金 净充值达到 1,000 USDT 活动期间净充值金额满足目标即可领取奖励。 200/1,000 USDT 立即充值 进阶交易任务 逐档解锁，可叠加领取 20 USDT 50 USDT 80 USDT 完成进阶任务，逐档领取奖励 阶段 2 — 可叠加领取 合约交易量达到 2,000 USDT 400/2,000 USDT 立即交易 累计充值达到 300 USDT 300/300 USDT 立即充值 阶梯冲刺任务 达成最高档后按最高档发放 50 USDT 400 USDT 0 USDT 完成以下所有任务，即可获得对应档位奖励 合约交易量达到 5,000 USDT 2,600/5,000 USDT 立即交易 净充值达到 500 USDT 300/500 USDT 立即充值 组合任务 完成组合条件，领取额外奖励 100 USDT 合约赠金 完成以下所有任务，即可获得 100 USDT 合约赠金 净充值达到 1,000 USDT 200/1,000 USDT 立即充值 且 合约交易量达到 10,000 USDT 4,200/10,000 USDT 立即交易 排行榜任务 活动结束后按排名发放奖励 我的排名 1000+ 合约交易量 90,701.00 活动结束后按排行榜名次发放奖励。 合约交易量排行榜 排行榜数据每十分钟更新一次，最近更新：2026/06/19 22:50:01 排名 UID 合约交易量(USDT) 预估奖励(USDT) *1292 120,701,900.00 100 USDT *1293 119,769,790.00 95 USDT *1294 118,837,680.00 90 USDT 4 *1295 117,905,570.00 - 5 *1296 116,973,460.00 - 6 *1297 116,041,350.00 - 7 *1298 115,109,240.00 - 8 *1299 114,177,130.00 - 9 *1300 113,245,020.00 - 10 *1301 112,312,910.00 - 1 2 3 4 5 ... 12 跳至 页 活动规则 活动规则 活动参与规则 活动期间，用户完成对应子活动任务后，可按页面展示状态领取奖励。 任务进度以系统统计结果为准，交易量、充值额等数据可能存在短暂延迟。 奖励发放说明 待发放奖励将在活动结束后陆续发放至用户账户或卡券中心。 如用户存在违规、刷量、批量注册等异常行为，平台有权取消其参与资格。 参与任务需先报名活动，未报名不计入奖励 立即参与 Mock: active 关于我们 关于我们 服务条款 隐私声明 API 管理 公告中心 官方渠道验证 系列产品 币币交易 USDT 永续合约 合约跟单 服务支持 下载 帮助中心 新闻中心 项目中心 福利中心 代理商计划 上币申请 费率表 新手学堂 买 Bitcoin 买 Ethereum 买 Cardano 买 Polkadot 买 Litecoin 更多热门币种 社区 漏洞提交：Safe@mail.fameex.info 商务合作：Business@mail.fameex.info 服务支持：Service@mail.fameex.info 友情链接 Coinmarketcap Coingecko Bscscan Tronscan Solana Etherscan Coindesk Cointelegraph Cryptonews Coincodex Coinpaprika Blockchain Feixiaohao Copyright © 2022-2026 FAMEEX.COM All Rights Reserved 02fc9884a",
+        "buttons": [
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "买币"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "行情"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "现货交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "合约交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "返佣"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "福利中心"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "反馈"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "买币"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "行情"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "现货交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "合约交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "返佣"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "福利中心"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "反馈"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "注册"
+          },
+          {
+            "aria": "Open menu",
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": "download",
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "活动规则"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "我的奖励"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即参与"
+          },
+          {
+            "aria": "分享活动",
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即认证"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "1"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "2"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "3"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "4"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "5"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "..."
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "12"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即参与"
+          }
+        ],
+        "hasHorizontalOverflow": false,
+        "headings": [
+          "FameEX 三期交易挑战赛 PR-01685",
+          "新手入门任务",
+          "进阶交易任务",
+          "阶梯冲刺任务",
+          "组合任务",
+          "排行榜任务",
+          "活动规则",
+          "活动规则",
+          "社区",
+          "友情链接",
+          ""
+        ],
+        "modalText": [
+          "参与任务需先报名活动，未报名不计入奖励立即参与",
+          "Mock: active",
+          "02fc9884a",
+          "02fc9884a"
+        ],
+        "scrollHeight": 5480,
+        "title": "比特币BTC行情走势丨合约网格量化交易丨 FameEX 数字货币交易所",
+        "url": "http://localhost:4001/zh-CN/campaign/PR-01685?scenario=active",
+        "viewport": {
+          "h": 1000,
+          "w": 1440
+        }
+      },
+      "shot": "/private/tmp/pr01685-full-self-test-2026-06-19/desktop-active.png"
+    },
+    "not-started": {
+      "probe": {
+        "bodySample": "买币 行情 现货交易 合约交易 返佣 福利中心 反馈 买币 行情 现货交易 合约交易 返佣 福利中心 反馈 登录 注册 线路 活动规则 我的奖励 FameEX 三期交易挑战赛 PR-01685 完成指定任务，解锁合约体验金、手续费抵扣金与专属奖励 2026/06/20 23:00:04 - 2026/06/28 23:00:04 距开始 0D : 23 : 59 : 59 未开始 新手入门任务 完成基础任务，领取入门奖励 5 USDT 合约体验金 完成 KYC 实名认证 通过身份认证后即可参与更多活动任务。 立即认证 10 USDT 合约手续费抵扣金 累计合约交易量达到 1,000 USDT 完成任意 USDT 永续合约交易后计入统计。 200/1,000 USDT 立即交易 100 USDT 合约赠金 净充值达到 1,000 USDT 活动期间净充值金额满足目标即可领取奖励。 200/1,000 USDT 立即充值 进阶交易任务 逐档解锁，可叠加领取 20 USDT 50 USDT 80 USDT 完成进阶任务，逐档领取奖励 阶段 2 — 可叠加领取 合约交易量达到 2,000 USDT 400/2,000 USDT 立即交易 累计充值达到 300 USDT 300/300 USDT 立即充值 阶梯冲刺任务 达成最高档后按最高档发放 50 USDT 400 USDT 0 USDT 完成以下所有任务，即可获得对应档位奖励 合约交易量达到 5,000 USDT 2,600/5,000 USDT 立即交易 净充值达到 500 USDT 300/500 USDT 立即充值 组合任务 完成组合条件，领取额外奖励 100 USDT 合约赠金 完成以下所有任务，即可获得 100 USDT 合约赠金 净充值达到 1,000 USDT 200/1,000 USDT 立即充值 且 合约交易量达到 10,000 USDT 4,200/10,000 USDT 立即交易 排行榜任务 活动结束后按排名发放奖励 我的排名 1000+ 合约交易量 90,701.00 活动结束后按排行榜名次发放奖励。 合约交易量排行榜 排行榜数据每十分钟更新一次，最近更新：2026/06/19 22:50:04 排名 UID 合约交易量(USDT) 预估奖励(USDT) *1292 120,701,900.00 100 USDT *1293 119,769,790.00 95 USDT *1294 118,837,680.00 90 USDT 4 *1295 117,905,570.00 - 5 *1296 116,973,460.00 - 6 *1297 116,041,350.00 - 7 *1298 115,109,240.00 - 8 *1299 114,177,130.00 - 9 *1300 113,245,020.00 - 10 *1301 112,312,910.00 - 1 2 3 4 5 ... 12 跳至 页 活动规则 活动规则 活动参与规则 活动期间，用户完成对应子活动任务后，可按页面展示状态领取奖励。 任务进度以系统统计结果为准，交易量、充值额等数据可能存在短暂延迟。 奖励发放说明 待发放奖励将在活动结束后陆续发放至用户账户或卡券中心。 如用户存在违规、刷量、批量注册等异常行为，平台有权取消其参与资格。 参与任务需先报名活动，未报名不计入奖励 未开始 Mock: not-started 关于我们 关于我们 服务条款 隐私声明 API 管理 公告中心 官方渠道验证 系列产品 币币交易 USDT 永续合约 合约跟单 服务支持 下载 帮助中心 新闻中心 项目中心 福利中心 代理商计划 上币申请 费率表 新手学堂 买 Bitcoin 买 Ethereum 买 Cardano 买 Polkadot 买 Litecoin 更多热门币种 社区 漏洞提交：Safe@mail.fameex.info 商务合作：Business@mail.fameex.info 服务支持：Service@mail.fameex.info 友情链接 Coinmarketcap Coingecko Bscscan Tronscan Solana Etherscan Coindesk Cointelegraph Cryptonews Coincodex Coinpaprika Blockchain Feixiaohao Copyright © 2022-2026 FAMEEX.COM All Rights Reserved 02fc9884a",
+        "buttons": [
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "买币"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "行情"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "现货交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "合约交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "返佣"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "福利中心"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "反馈"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "买币"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "行情"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "现货交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "合约交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "返佣"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "福利中心"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "反馈"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "注册"
+          },
+          {
+            "aria": "Open menu",
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": "download",
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "活动规则"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "我的奖励"
+          },
+          {
+            "aria": null,
+            "disabled": true,
+            "text": "未开始"
+          },
+          {
+            "aria": "分享活动",
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即认证"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "1"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "2"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "3"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "4"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "5"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "..."
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "12"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": true,
+            "text": "未开始"
+          }
+        ],
+        "hasHorizontalOverflow": false,
+        "headings": [
+          "FameEX 三期交易挑战赛 PR-01685",
+          "新手入门任务",
+          "进阶交易任务",
+          "阶梯冲刺任务",
+          "组合任务",
+          "排行榜任务",
+          "活动规则",
+          "活动规则",
+          "社区",
+          "友情链接",
+          ""
+        ],
+        "modalText": [
+          "参与任务需先报名活动，未报名不计入奖励未开始",
+          "Mock: not-started",
+          "02fc9884a",
+          "02fc9884a"
+        ],
+        "scrollHeight": 5480,
+        "title": "比特币BTC行情走势丨合约网格量化交易丨 FameEX 数字货币交易所",
+        "url": "http://localhost:4001/zh-CN/campaign/PR-01685?scenario=not-started",
+        "viewport": {
+          "h": 1000,
+          "w": 1440
+        }
+      },
+      "shot": "/private/tmp/pr01685-full-self-test-2026-06-19/desktop-not-started.png"
+    },
+    "ended": {
+      "probe": {
+        "bodySample": "买币 行情 现货交易 合约交易 返佣 福利中心 反馈 买币 行情 现货交易 合约交易 返佣 福利中心 反馈 登录 注册 线路 活动规则 我的奖励 FameEX 三期交易挑战赛 PR-01685 完成指定任务，解锁合约体验金、手续费抵扣金与专属奖励 2026/06/10 23:00:07 - 2026/06/18 23:00:07 已结束 0D : 00 : 00 : 00 已结束 新手入门任务 完成基础任务，领取入门奖励 5 USDT 合约体验金 完成 KYC 实名认证 通过身份认证后即可参与更多活动任务。 立即认证 10 USDT 合约手续费抵扣金 累计合约交易量达到 1,000 USDT 完成任意 USDT 永续合约交易后计入统计。 200/1,000 USDT 立即交易 100 USDT 合约赠金 净充值达到 1,000 USDT 活动期间净充值金额满足目标即可领取奖励。 200/1,000 USDT 立即充值 进阶交易任务 逐档解锁，可叠加领取 20 USDT 50 USDT 80 USDT 完成进阶任务，逐档领取奖励 阶段 2 — 可叠加领取 合约交易量达到 2,000 USDT 400/2,000 USDT 立即交易 累计充值达到 300 USDT 300/300 USDT 立即充值 阶梯冲刺任务 达成最高档后按最高档发放 50 USDT 400 USDT 0 USDT 完成以下所有任务，即可获得对应档位奖励 合约交易量达到 5,000 USDT 2,600/5,000 USDT 立即交易 净充值达到 500 USDT 300/500 USDT 立即充值 组合任务 完成组合条件，领取额外奖励 100 USDT 合约赠金 完成以下所有任务，即可获得 100 USDT 合约赠金 净充值达到 1,000 USDT 200/1,000 USDT 立即充值 且 合约交易量达到 10,000 USDT 4,200/10,000 USDT 立即交易 排行榜任务 活动结束后按排名发放奖励 我的排名 1000+ 合约交易量 90,701.00 活动结束后按排行榜名次发放奖励。 合约交易量排行榜 排行榜数据每十分钟更新一次，最近更新：2026/06/19 22:50:07 排名 UID 合约交易量(USDT) 预估奖励(USDT) *1292 120,701,900.00 100 USDT *1293 119,769,790.00 95 USDT *1294 118,837,680.00 90 USDT 4 *1295 117,905,570.00 - 5 *1296 116,973,460.00 - 6 *1297 116,041,350.00 - 7 *1298 115,109,240.00 - 8 *1299 114,177,130.00 - 9 *1300 113,245,020.00 - 10 *1301 112,312,910.00 - 1 2 3 4 5 ... 12 跳至 页 活动规则 活动规则 活动参与规则 活动期间，用户完成对应子活动任务后，可按页面展示状态领取奖励。 任务进度以系统统计结果为准，交易量、充值额等数据可能存在短暂延迟。 奖励发放说明 待发放奖励将在活动结束后陆续发放至用户账户或卡券中心。 如用户存在违规、刷量、批量注册等异常行为，平台有权取消其参与资格。 参与任务需先报名活动，未报名不计入奖励 已结束 Mock: ended 关于我们 关于我们 服务条款 隐私声明 API 管理 公告中心 官方渠道验证 系列产品 币币交易 USDT 永续合约 合约跟单 服务支持 下载 帮助中心 新闻中心 项目中心 福利中心 代理商计划 上币申请 费率表 新手学堂 买 Bitcoin 买 Ethereum 买 Cardano 买 Polkadot 买 Litecoin 更多热门币种 社区 漏洞提交：Safe@mail.fameex.info 商务合作：Business@mail.fameex.info 服务支持：Service@mail.fameex.info 友情链接 Coinmarketcap Coingecko Bscscan Tronscan Solana Etherscan Coindesk Cointelegraph Cryptonews Coincodex Coinpaprika Blockchain Feixiaohao Copyright © 2022-2026 FAMEEX.COM All Rights Reserved 02fc9884a",
+        "buttons": [
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "买币"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "行情"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "现货交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "合约交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "返佣"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "福利中心"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "反馈"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "买币"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "行情"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "现货交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "合约交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "返佣"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "福利中心"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "反馈"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "注册"
+          },
+          {
+            "aria": "Open menu",
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": "download",
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "活动规则"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "我的奖励"
+          },
+          {
+            "aria": null,
+            "disabled": true,
+            "text": "已结束"
+          },
+          {
+            "aria": "分享活动",
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即认证"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "1"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "2"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "3"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "4"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "5"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "..."
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "12"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": true,
+            "text": "已结束"
+          }
+        ],
+        "hasHorizontalOverflow": false,
+        "headings": [
+          "FameEX 三期交易挑战赛 PR-01685",
+          "新手入门任务",
+          "进阶交易任务",
+          "阶梯冲刺任务",
+          "组合任务",
+          "排行榜任务",
+          "活动规则",
+          "活动规则",
+          "社区",
+          "友情链接",
+          ""
+        ],
+        "modalText": [
+          "参与任务需先报名活动，未报名不计入奖励已结束",
+          "Mock: ended",
+          "02fc9884a",
+          "02fc9884a"
+        ],
+        "scrollHeight": 5480,
+        "title": "比特币BTC行情走势丨合约网格量化交易丨 FameEX 数字货币交易所",
+        "url": "http://localhost:4001/zh-CN/campaign/PR-01685?scenario=ended",
+        "viewport": {
+          "h": 1000,
+          "w": 1440
+        }
+      },
+      "shot": "/private/tmp/pr01685-full-self-test-2026-06-19/desktop-ended.png"
+    },
+    "unjoined": {
+      "probe": {
+        "bodySample": "买币 行情 现货交易 合约交易 返佣 福利中心 反馈 买币 行情 现货交易 合约交易 返佣 福利中心 反馈 登录 注册 线路 活动规则 我的奖励 FameEX 三期交易挑战赛 PR-01685 完成指定任务，解锁合约体验金、手续费抵扣金与专属奖励 2026/06/18 23:00:10 - 2026/06/28 04:00:10 距离活动结束还有 8D : 04 : 59 : 59 立即参与 新手入门任务 完成基础任务，领取入门奖励 5 USDT 合约体验金 完成 KYC 实名认证 通过身份认证后即可参与更多活动任务。 立即认证 10 USDT 合约手续费抵扣金 累计合约交易量达到 1,000 USDT 完成任意 USDT 永续合约交易后计入统计。 200/1,000 USDT 立即交易 100 USDT 合约赠金 净充值达到 1,000 USDT 活动期间净充值金额满足目标即可领取奖励。 200/1,000 USDT 立即充值 进阶交易任务 逐档解锁，可叠加领取 20 USDT 50 USDT 80 USDT 完成进阶任务，逐档领取奖励 阶段 2 — 可叠加领取 合约交易量达到 2,000 USDT 400/2,000 USDT 立即交易 累计充值达到 300 USDT 300/300 USDT 立即充值 阶梯冲刺任务 达成最高档后按最高档发放 50 USDT 400 USDT 0 USDT 完成以下所有任务，即可获得对应档位奖励 合约交易量达到 5,000 USDT 2,600/5,000 USDT 立即交易 净充值达到 500 USDT 300/500 USDT 立即充值 组合任务 完成组合条件，领取额外奖励 100 USDT 合约赠金 完成以下所有任务，即可获得 100 USDT 合约赠金 净充值达到 1,000 USDT 200/1,000 USDT 立即充值 且 合约交易量达到 10,000 USDT 4,200/10,000 USDT 立即交易 排行榜任务 活动结束后按排名发放奖励 我的排名 1000+ 合约交易量 90,701.00 活动结束后按排行榜名次发放奖励。 合约交易量排行榜 排行榜数据每十分钟更新一次，最近更新：2026/06/19 22:50:10 排名 UID 合约交易量(USDT) 预估奖励(USDT) *1292 120,701,900.00 100 USDT *1293 119,769,790.00 95 USDT *1294 118,837,680.00 90 USDT 4 *1295 117,905,570.00 - 5 *1296 116,973,460.00 - 6 *1297 116,041,350.00 - 7 *1298 115,109,240.00 - 8 *1299 114,177,130.00 - 9 *1300 113,245,020.00 - 10 *1301 112,312,910.00 - 1 2 3 4 5 ... 12 跳至 页 活动规则 活动规则 活动参与规则 活动期间，用户完成对应子活动任务后，可按页面展示状态领取奖励。 任务进度以系统统计结果为准，交易量、充值额等数据可能存在短暂延迟。 奖励发放说明 待发放奖励将在活动结束后陆续发放至用户账户或卡券中心。 如用户存在违规、刷量、批量注册等异常行为，平台有权取消其参与资格。 参与任务需先报名活动，未报名不计入奖励 立即参与 Mock: unjoined 关于我们 关于我们 服务条款 隐私声明 API 管理 公告中心 官方渠道验证 系列产品 币币交易 USDT 永续合约 合约跟单 服务支持 下载 帮助中心 新闻中心 项目中心 福利中心 代理商计划 上币申请 费率表 新手学堂 买 Bitcoin 买 Ethereum 买 Cardano 买 Polkadot 买 Litecoin 更多热门币种 社区 漏洞提交：Safe@mail.fameex.info 商务合作：Business@mail.fameex.info 服务支持：Service@mail.fameex.info 友情链接 Coinmarketcap Coingecko Bscscan Tronscan Solana Etherscan Coindesk Cointelegraph Cryptonews Coincodex Coinpaprika Blockchain Feixiaohao Copyright © 2022-2026 FAMEEX.COM All Rights Reserved 02fc9884a",
+        "buttons": [
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "买币"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "行情"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "现货交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "合约交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "返佣"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "福利中心"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "反馈"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "买币"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "行情"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "现货交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "合约交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "返佣"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "福利中心"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "反馈"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "注册"
+          },
+          {
+            "aria": "Open menu",
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": "download",
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "活动规则"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "我的奖励"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即参与"
+          },
+          {
+            "aria": "分享活动",
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即认证"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "1"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "2"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "3"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "4"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "5"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "..."
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "12"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即参与"
+          }
+        ],
+        "hasHorizontalOverflow": false,
+        "headings": [
+          "FameEX 三期交易挑战赛 PR-01685",
+          "新手入门任务",
+          "进阶交易任务",
+          "阶梯冲刺任务",
+          "组合任务",
+          "排行榜任务",
+          "活动规则",
+          "活动规则",
+          "社区",
+          "友情链接",
+          ""
+        ],
+        "modalText": [
+          "参与任务需先报名活动，未报名不计入奖励立即参与",
+          "Mock: unjoined",
+          "02fc9884a",
+          "02fc9884a"
+        ],
+        "scrollHeight": 5480,
+        "title": "比特币BTC行情走势丨合约网格量化交易丨 FameEX 数字货币交易所",
+        "url": "http://localhost:4001/zh-CN/campaign/PR-01685?scenario=unjoined",
+        "viewport": {
+          "h": 1000,
+          "w": 1440
+        }
+      },
+      "shot": "/private/tmp/pr01685-full-self-test-2026-06-19/desktop-unjoined.png"
+    },
+    "claimable": {
+      "probe": {
+        "bodySample": "买币 行情 现货交易 合约交易 返佣 福利中心 反馈 买币 行情 现货交易 合约交易 返佣 福利中心 反馈 登录 注册 线路 活动规则 我的奖励 FameEX 三期交易挑战赛 PR-01685 完成指定任务，解锁合约体验金、手续费抵扣金与专属奖励 2026/06/18 23:00:13 - 2026/06/28 04:00:13 距离活动结束还有 8D : 04 : 59 : 59 立即参与 新手入门任务 完成基础任务，领取入门奖励 5 USDT 合约体验金 完成 KYC 实名认证 通过身份认证后即可参与更多活动任务。 待领取 10 USDT 合约手续费抵扣金 累计合约交易量达到 1,000 USDT 完成任意 USDT 永续合约交易后计入统计。 200/1,000 USDT 立即交易 100 USDT 合约赠金 净充值达到 1,000 USDT 活动期间净充值金额满足目标即可领取奖励。 200/1,000 USDT 立即充值 进阶交易任务 逐档解锁，可叠加领取 20 USDT 50 USDT 80 USDT 完成进阶任务，逐档领取奖励 阶段 2 — 可叠加领取 合约交易量达到 2,000 USDT 400/2,000 USDT 立即交易 累计充值达到 300 USDT 300/300 USDT 立即充值 阶梯冲刺任务 达成最高档后按最高档发放 50 USDT 400 USDT 0 USDT 完成以下所有任务，即可获得对应档位奖励 合约交易量达到 5,000 USDT 2,600/5,000 USDT 立即交易 净充值达到 500 USDT 300/500 USDT 立即充值 组合任务 完成组合条件，领取额外奖励 100 USDT 合约赠金 完成以下所有任务，即可获得 100 USDT 合约赠金 净充值达到 1,000 USDT 200/1,000 USDT 立即充值 且 合约交易量达到 10,000 USDT 4,200/10,000 USDT 立即交易 排行榜任务 活动结束后按排名发放奖励 我的排名 1000+ 合约交易量 90,701.00 活动结束后按排行榜名次发放奖励。 合约交易量排行榜 排行榜数据每十分钟更新一次，最近更新：2026/06/19 22:50:13 排名 UID 合约交易量(USDT) 预估奖励(USDT) *1292 120,701,900.00 100 USDT *1293 119,769,790.00 95 USDT *1294 118,837,680.00 90 USDT 4 *1295 117,905,570.00 - 5 *1296 116,973,460.00 - 6 *1297 116,041,350.00 - 7 *1298 115,109,240.00 - 8 *1299 114,177,130.00 - 9 *1300 113,245,020.00 - 10 *1301 112,312,910.00 - 1 2 3 4 5 ... 12 跳至 页 活动规则 活动规则 活动参与规则 活动期间，用户完成对应子活动任务后，可按页面展示状态领取奖励。 任务进度以系统统计结果为准，交易量、充值额等数据可能存在短暂延迟。 奖励发放说明 待发放奖励将在活动结束后陆续发放至用户账户或卡券中心。 如用户存在违规、刷量、批量注册等异常行为，平台有权取消其参与资格。 参与任务需先报名活动，未报名不计入奖励 立即参与 Mock: claimable 关于我们 关于我们 服务条款 隐私声明 API 管理 公告中心 官方渠道验证 系列产品 币币交易 USDT 永续合约 合约跟单 服务支持 下载 帮助中心 新闻中心 项目中心 福利中心 代理商计划 上币申请 费率表 新手学堂 买 Bitcoin 买 Ethereum 买 Cardano 买 Polkadot 买 Litecoin 更多热门币种 社区 漏洞提交：Safe@mail.fameex.info 商务合作：Business@mail.fameex.info 服务支持：Service@mail.fameex.info 友情链接 Coinmarketcap Coingecko Bscscan Tronscan Solana Etherscan Coindesk Cointelegraph Cryptonews Coincodex Coinpaprika Blockchain Feixiaohao Copyright © 2022-2026 FAMEEX.COM All Rights Reserved 02fc9884a",
+        "buttons": [
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "买币"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "行情"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "现货交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "合约交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "返佣"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "福利中心"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "反馈"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "买币"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "行情"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "现货交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "合约交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "返佣"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "福利中心"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "反馈"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "注册"
+          },
+          {
+            "aria": "Open menu",
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": "download",
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "活动规则"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "我的奖励"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即参与"
+          },
+          {
+            "aria": "分享活动",
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "待领取"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "1"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "2"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "3"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "4"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "5"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "..."
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "12"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即参与"
+          }
+        ],
+        "hasHorizontalOverflow": false,
+        "headings": [
+          "FameEX 三期交易挑战赛 PR-01685",
+          "新手入门任务",
+          "进阶交易任务",
+          "阶梯冲刺任务",
+          "组合任务",
+          "排行榜任务",
+          "活动规则",
+          "活动规则",
+          "社区",
+          "友情链接",
+          ""
+        ],
+        "modalText": [
+          "参与任务需先报名活动，未报名不计入奖励立即参与",
+          "Mock: claimable",
+          "02fc9884a",
+          "02fc9884a"
+        ],
+        "scrollHeight": 5480,
+        "title": "比特币BTC行情走势丨合约网格量化交易丨 FameEX 数字货币交易所",
+        "url": "http://localhost:4001/zh-CN/campaign/PR-01685?scenario=claimable",
+        "viewport": {
+          "h": 1000,
+          "w": 1440
+        }
+      },
+      "shot": "/private/tmp/pr01685-full-self-test-2026-06-19/desktop-claimable.png"
+    },
+    "restricted": {
+      "probe": {
+        "bodySample": "买币 行情 现货交易 合约交易 返佣 福利中心 反馈 买币 行情 现货交易 合约交易 返佣 福利中心 反馈 登录 注册 线路 活动规则 我的奖励 FameEX 三期交易挑战赛 PR-01685 完成指定任务，解锁合约体验金、手续费抵扣金与专属奖励 2026/06/18 23:00:16 - 2026/06/28 04:00:16 距离活动结束还有 8D : 04 : 59 : 59 立即参与 新手入门任务 完成基础任务，领取入门奖励 5 USDT 合约体验金 完成 KYC 实名认证 通过身份认证后即可参与更多活动任务。 立即认证 10 USDT 合约手续费抵扣金 累计合约交易量达到 1,000 USDT 完成任意 USDT 永续合约交易后计入统计。 200/1,000 USDT 立即交易 100 USDT 合约赠金 净充值达到 1,000 USDT 活动期间净充值金额满足目标即可领取奖励。 200/1,000 USDT 立即充值 进阶交易任务 逐档解锁，可叠加领取 20 USDT 50 USDT 80 USDT 完成进阶任务，逐档领取奖励 阶段 2 — 可叠加领取 合约交易量达到 2,000 USDT 400/2,000 USDT 立即交易 累计充值达到 300 USDT 300/300 USDT 立即充值 阶梯冲刺任务 达成最高档后按最高档发放 50 USDT 400 USDT 0 USDT 完成以下所有任务，即可获得对应档位奖励 合约交易量达到 5,000 USDT 2,600/5,000 USDT 立即交易 净充值达到 500 USDT 300/500 USDT 立即充值 组合任务 完成组合条件，领取额外奖励 100 USDT 合约赠金 完成以下所有任务，即可获得 100 USDT 合约赠金 净充值达到 1,000 USDT 200/1,000 USDT 立即充值 且 合约交易量达到 10,000 USDT 4,200/10,000 USDT 立即交易 排行榜任务 活动结束后按排名发放奖励 我的排名 1000+ 合约交易量 90,701.00 活动结束后按排行榜名次发放奖励。 合约交易量排行榜 排行榜数据每十分钟更新一次，最近更新：2026/06/19 22:50:16 排名 UID 合约交易量(USDT) 预估奖励(USDT) *1292 120,701,900.00 100 USDT *1293 119,769,790.00 95 USDT *1294 118,837,680.00 90 USDT 4 *1295 117,905,570.00 - 5 *1296 116,973,460.00 - 6 *1297 116,041,350.00 - 7 *1298 115,109,240.00 - 8 *1299 114,177,130.00 - 9 *1300 113,245,020.00 - 10 *1301 112,312,910.00 - 1 2 3 4 5 ... 12 跳至 页 活动规则 活动规则 活动参与规则 活动期间，用户完成对应子活动任务后，可按页面展示状态领取奖励。 任务进度以系统统计结果为准，交易量、充值额等数据可能存在短暂延迟。 奖励发放说明 待发放奖励将在活动结束后陆续发放至用户账户或卡券中心。 如用户存在违规、刷量、批量注册等异常行为，平台有权取消其参与资格。 参与任务需先报名活动，未报名不计入奖励 立即参与 Mock: restricted 关于我们 关于我们 服务条款 隐私声明 API 管理 公告中心 官方渠道验证 系列产品 币币交易 USDT 永续合约 合约跟单 服务支持 下载 帮助中心 新闻中心 项目中心 福利中心 代理商计划 上币申请 费率表 新手学堂 买 Bitcoin 买 Ethereum 买 Cardano 买 Polkadot 买 Litecoin 更多热门币种 社区 漏洞提交：Safe@mail.fameex.info 商务合作：Business@mail.fameex.info 服务支持：Service@mail.fameex.info 友情链接 Coinmarketcap Coingecko Bscscan Tronscan Solana Etherscan Coindesk Cointelegraph Cryptonews Coincodex Coinpaprika Blockchain Feixiaohao Copyright © 2022-2026 FAMEEX.COM All Rights Reserved 02fc9884a 仅限指定用户参与 当前活动仅限指定用户参与，请关注官方活动获得更多参与机会。 我知道了",
+        "buttons": [
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "买币"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "行情"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "现货交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "合约交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "返佣"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "福利中心"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "反馈"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "买币"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "行情"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "现货交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "合约交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "返佣"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "福利中心"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "反馈"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "注册"
+          },
+          {
+            "aria": "Open menu",
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": "download",
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "活动规则"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "我的奖励"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即参与"
+          },
+          {
+            "aria": "分享活动",
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即认证"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "1"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "2"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "3"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "4"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "5"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "..."
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "12"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即参与"
+          },
+          {
+            "aria": "取消",
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "我知道了"
+          },
+          {
+            "aria": "取消",
+            "disabled": false,
+            "text": ""
+          }
+        ],
+        "hasHorizontalOverflow": false,
+        "headings": [
+          "FameEX 三期交易挑战赛 PR-01685",
+          "新手入门任务",
+          "进阶交易任务",
+          "阶梯冲刺任务",
+          "组合任务",
+          "排行榜任务",
+          "活动规则",
+          "活动规则",
+          "社区",
+          "友情链接",
+          ""
+        ],
+        "modalText": [
+          "参与任务需先报名活动，未报名不计入奖励立即参与",
+          "Mock: restricted",
+          "02fc9884a",
+          "02fc9884a",
+          "仅限指定用户参与当前活动仅限指定用户参与，请关注官方活动获得更多参与机会。我知道了",
+          "仅限指定用户参与当前活动仅限指定用户参与，请关注官方活动获得更多参与机会。我知道了"
+        ],
+        "scrollHeight": 5480,
+        "title": "比特币BTC行情走势丨合约网格量化交易丨 FameEX 数字货币交易所",
+        "url": "http://localhost:4001/zh-CN/campaign/PR-01685?scenario=restricted",
+        "viewport": {
+          "h": 1000,
+          "w": 1440
+        }
+      },
+      "shot": "/private/tmp/pr01685-full-self-test-2026-06-19/desktop-restricted.png"
+    },
+    "empty-ranking": {
+      "probe": {
+        "bodySample": "买币 行情 现货交易 合约交易 返佣 福利中心 反馈 买币 行情 现货交易 合约交易 返佣 福利中心 反馈 登录 注册 线路 活动规则 我的奖励 FameEX 三期交易挑战赛 PR-01685 完成指定任务，解锁合约体验金、手续费抵扣金与专属奖励 2026/06/18 23:00:17 - 2026/06/28 04:00:17 距离活动结束还有 8D : 04 : 59 : 59 立即参与 新手入门任务 完成基础任务，领取入门奖励 5 USDT 合约体验金 完成 KYC 实名认证 通过身份认证后即可参与更多活动任务。 立即认证 10 USDT 合约手续费抵扣金 累计合约交易量达到 1,000 USDT 完成任意 USDT 永续合约交易后计入统计。 200/1,000 USDT 立即交易 100 USDT 合约赠金 净充值达到 1,000 USDT 活动期间净充值金额满足目标即可领取奖励。 200/1,000 USDT 立即充值 进阶交易任务 逐档解锁，可叠加领取 20 USDT 50 USDT 80 USDT 完成进阶任务，逐档领取奖励 阶段 2 — 可叠加领取 合约交易量达到 2,000 USDT 400/2,000 USDT 立即交易 累计充值达到 300 USDT 300/300 USDT 立即充值 阶梯冲刺任务 达成最高档后按最高档发放 50 USDT 400 USDT 0 USDT 完成以下所有任务，即可获得对应档位奖励 合约交易量达到 5,000 USDT 2,600/5,000 USDT 立即交易 净充值达到 500 USDT 300/500 USDT 立即充值 组合任务 完成组合条件，领取额外奖励 100 USDT 合约赠金 完成以下所有任务，即可获得 100 USDT 合约赠金 净充值达到 1,000 USDT 200/1,000 USDT 立即充值 且 合约交易量达到 10,000 USDT 4,200/10,000 USDT 立即交易 排行榜任务 活动结束后按排名发放奖励 我的排名 - 合约交易量 0.00 活动结束后按排行榜名次发放奖励。 合约交易量排行榜 排行榜数据每十分钟更新一次，最近更新：2026/06/19 22:50:17 排名 UID 合约交易量(USDT) 预估奖励(USDT) 暂无数据 活动规则 活动规则 活动参与规则 活动期间，用户完成对应子活动任务后，可按页面展示状态领取奖励。 任务进度以系统统计结果为准，交易量、充值额等数据可能存在短暂延迟。 奖励发放说明 待发放奖励将在活动结束后陆续发放至用户账户或卡券中心。 如用户存在违规、刷量、批量注册等异常行为，平台有权取消其参与资格。 参与任务需先报名活动，未报名不计入奖励 立即参与 Mock: empty-ranking 关于我们 关于我们 服务条款 隐私声明 API 管理 公告中心 官方渠道验证 系列产品 币币交易 USDT 永续合约 合约跟单 服务支持 下载 帮助中心 新闻中心 项目中心 福利中心 代理商计划 上币申请 费率表 新手学堂 买 Bitcoin 买 Ethereum 买 Cardano 买 Polkadot 买 Litecoin 更多热门币种 社区 漏洞提交：Safe@mail.fameex.info 商务合作：Business@mail.fameex.info 服务支持：Service@mail.fameex.info 友情链接 Coinmarketcap Coingecko Bscscan Tronscan Solana Etherscan Coindesk Cointelegraph Cryptonews Coincodex Coinpaprika Blockchain Feixiaohao Copyright © 2022-2026 FAMEEX.COM All Rights Reserved 02fc9884a",
+        "buttons": [
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "买币"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "行情"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "现货交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "合约交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "返佣"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "福利中心"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "反馈"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "买币"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "行情"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "现货交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "合约交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "返佣"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "福利中心"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "反馈"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "注册"
+          },
+          {
+            "aria": "Open menu",
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": "download",
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "活动规则"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "我的奖励"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即参与"
+          },
+          {
+            "aria": "分享活动",
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即认证"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即参与"
+          }
+        ],
+        "hasHorizontalOverflow": false,
+        "headings": [
+          "FameEX 三期交易挑战赛 PR-01685",
+          "新手入门任务",
+          "进阶交易任务",
+          "阶梯冲刺任务",
+          "组合任务",
+          "排行榜任务",
+          "活动规则",
+          "活动规则",
+          "社区",
+          "友情链接",
+          ""
+        ],
+        "modalText": [
+          "参与任务需先报名活动，未报名不计入奖励立即参与",
+          "Mock: empty-ranking",
+          "02fc9884a",
+          "02fc9884a"
+        ],
+        "scrollHeight": 4971,
+        "title": "比特币BTC行情走势丨合约网格量化交易丨 FameEX 数字货币交易所",
+        "url": "http://localhost:4001/zh-CN/campaign/PR-01685?scenario=empty-ranking",
+        "viewport": {
+          "h": 1000,
+          "w": 1440
+        }
+      },
+      "shot": "/private/tmp/pr01685-full-self-test-2026-06-19/desktop-empty-ranking.png"
+    },
+    "mobile-active": {
+      "probe": {
+        "bodySample": "买币 行情 现货交易 合约交易 返佣 福利中心 反馈 注册 活动规则 我的奖励 FameEX 三期交易挑战赛 PR-01685 完成指定任务，解锁合约体验金、手续费抵扣金与专属奖励 2026/06/18 23:03:47 - 2026/06/28 04:03:47 距离活动结束还有 8D : 04 : 59 : 59 立即参与 新手入门任务 完成基础任务，领取入门奖励 5 USDT 合约体验金 完成 KYC 实名认证 通过身份认证后即可参与更多活动任务。 立即认证 10 USDT 合约手续费抵扣金 累计合约交易量达到 1,000 USDT 完成任意 USDT 永续合约交易后计入统计。 200/1,000 USDT 立即交易 100 USDT 合约赠金 净充值达到 1,000 USDT 活动期间净充值金额满足目标即可领取奖励。 200/1,000 USDT 立即充值 进阶交易任务 逐档解锁，可叠加领取 20 USDT 50 USDT 80 USDT 完成进阶任务，逐档领取奖励 阶段 2 — 可叠加领取 合约交易量达到 2,000 USDT 400/2,000 USDT 立即交易 累计充值达到 300 USDT 300/300 USDT 立即充值 阶梯冲刺任务 达成最高档后按最高档发放 50 USDT 400 USDT 0 USDT 完成以下所有任务，即可获得对应档位奖励 合约交易量达到 5,000 USDT 2,600/5,000 USDT 立即交易 净充值达到 500 USDT 300/500 USDT 立即充值 组合任务 完成组合条件，领取额外奖励 100 USDT 合约赠金 完成以下所有任务，即可获得 100 USDT 合约赠金 净充值达到 1,000 USDT 200/1,000 USDT 立即充值 且 合约交易量达到 10,000 USDT 4,200/10,000 USDT 立即交易 排行榜任务 活动结束后按排名发放奖励 我的排名 1000+ 合约交易量 90,701.00 活动结束后按排行榜名次发放奖励。 合约交易量排行榜 排行榜数据每十分钟更新一次，最近更新：2026/06/19 22:53:47 排名 UID 合约交易量(USDT) 预估奖励(USDT) *1292 120,701,900.00 100 USDT *1293 119,769,790.00 95 USDT *1294 118,837,680.00 90 USDT 4 *1295 117,905,570.00 - 5 *1296 116,973,460.00 - 6 *1297 116,041,350.00 - 7 *1298 115,109,240.00 - 8 *1299 114,177,130.00 - 9 *1300 113,245,020.00 - 10 *1301 112,312,910.00 - 1 2 3 4 5 ... 12 跳至 页 活动规则 活动规则 活动参与规则 活动期间，用户完成对应子活动任务后，可按页面展示状态领取奖励。 任务进度以系统统计结果为准，交易量、充值额等数据可能存在短暂延迟。 奖励发放说明 待发放奖励将在活动结束后陆续发放至用户账户或卡券中心。 如用户存在违规、刷量、批量注册等异常行为，平台有权取消其参与资格。 参与任务需先报名活动，未报名不计入奖励 立即参与 Mock: active 关于我们 系列产品 服务支持 新手学堂 社区 漏洞提交：Safe@mail.fameex.info 商务合作：Business@mail.fameex.info 服务支持：Service@mail.fameex.info Copyright © 2022-2026 FAMEEX.COM All Rights Reserved FameEX 行情 交易 合约 资产 02fc9884a",
+        "buttons": [
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "买币"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "行情"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "现货交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "合约交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "返佣"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "福利中心"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "反馈"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "买币"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "行情"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "现货交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "合约交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "返佣"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "福利中心"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "反馈"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "注册"
+          },
+          {
+            "aria": "Open menu",
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": "download",
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "活动规则"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "我的奖励"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即参与"
+          },
+          {
+            "aria": "分享活动",
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即认证"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "1"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "2"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "3"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "4"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "5"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "..."
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "12"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即参与"
+          }
+        ],
+        "hasHorizontalOverflow": false,
+        "headings": [
+          "FameEX 三期交易挑战赛 PR-01685",
+          "新手入门任务",
+          "进阶交易任务",
+          "阶梯冲刺任务",
+          "组合任务",
+          "排行榜任务",
+          "活动规则",
+          "活动规则",
+          "社区",
+          "友情链接",
+          ""
+        ],
+        "modalText": [
+          "参与任务需先报名活动，未报名不计入奖励立即参与",
+          "Mock: active",
+          "FameEX行情交易合约资产",
+          "02fc9884a",
+          "02fc9884a"
+        ],
+        "scrollHeight": 6610,
+        "title": "比特币BTC行情走势丨合约网格量化交易丨 FameEX 数字货币交易所",
+        "url": "http://localhost:4001/zh-CN/campaign/PR-01685?scenario=active",
+        "viewport": {
+          "h": 844,
+          "w": 390
+        }
+      },
+      "shot": "/private/tmp/pr01685-full-self-test-2026-06-19/mobile-active.png"
+    },
+    "mobile-restricted": {
+      "probe": {
+        "bodySample": "买币 行情 现货交易 合约交易 返佣 福利中心 反馈 注册 活动规则 我的奖励 FameEX 三期交易挑战赛 PR-01685 完成指定任务，解锁合约体验金、手续费抵扣金与专属奖励 2026/06/18 23:03:50 - 2026/06/28 04:03:50 距离活动结束还有 8D : 04 : 59 : 59 立即参与 新手入门任务 完成基础任务，领取入门奖励 5 USDT 合约体验金 完成 KYC 实名认证 通过身份认证后即可参与更多活动任务。 立即认证 10 USDT 合约手续费抵扣金 累计合约交易量达到 1,000 USDT 完成任意 USDT 永续合约交易后计入统计。 200/1,000 USDT 立即交易 100 USDT 合约赠金 净充值达到 1,000 USDT 活动期间净充值金额满足目标即可领取奖励。 200/1,000 USDT 立即充值 进阶交易任务 逐档解锁，可叠加领取 20 USDT 50 USDT 80 USDT 完成进阶任务，逐档领取奖励 阶段 2 — 可叠加领取 合约交易量达到 2,000 USDT 400/2,000 USDT 立即交易 累计充值达到 300 USDT 300/300 USDT 立即充值 阶梯冲刺任务 达成最高档后按最高档发放 50 USDT 400 USDT 0 USDT 完成以下所有任务，即可获得对应档位奖励 合约交易量达到 5,000 USDT 2,600/5,000 USDT 立即交易 净充值达到 500 USDT 300/500 USDT 立即充值 组合任务 完成组合条件，领取额外奖励 100 USDT 合约赠金 完成以下所有任务，即可获得 100 USDT 合约赠金 净充值达到 1,000 USDT 200/1,000 USDT 立即充值 且 合约交易量达到 10,000 USDT 4,200/10,000 USDT 立即交易 排行榜任务 活动结束后按排名发放奖励 我的排名 1000+ 合约交易量 90,701.00 活动结束后按排行榜名次发放奖励。 合约交易量排行榜 排行榜数据每十分钟更新一次，最近更新：2026/06/19 22:53:50 排名 UID 合约交易量(USDT) 预估奖励(USDT) *1292 120,701,900.00 100 USDT *1293 119,769,790.00 95 USDT *1294 118,837,680.00 90 USDT 4 *1295 117,905,570.00 - 5 *1296 116,973,460.00 - 6 *1297 116,041,350.00 - 7 *1298 115,109,240.00 - 8 *1299 114,177,130.00 - 9 *1300 113,245,020.00 - 10 *1301 112,312,910.00 - 1 2 3 4 5 ... 12 跳至 页 活动规则 活动规则 活动参与规则 活动期间，用户完成对应子活动任务后，可按页面展示状态领取奖励。 任务进度以系统统计结果为准，交易量、充值额等数据可能存在短暂延迟。 奖励发放说明 待发放奖励将在活动结束后陆续发放至用户账户或卡券中心。 如用户存在违规、刷量、批量注册等异常行为，平台有权取消其参与资格。 参与任务需先报名活动，未报名不计入奖励 立即参与 Mock: restricted 关于我们 系列产品 服务支持 新手学堂 社区 漏洞提交：Safe@mail.fameex.info 商务合作：Business@mail.fameex.info 服务支持：Service@mail.fameex.info Copyright © 2022-2026 FAMEEX.COM All Rights Reserved FameEX 行情 交易 合约 资产 02fc9884a 仅限指定用户参与 当前活动仅限指定用户参与，请关注官方活动获得更多参与机会。 我知道了",
+        "buttons": [
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "买币"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "行情"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "现货交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "合约交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "返佣"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "福利中心"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "反馈"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "买币"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "行情"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "现货交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "合约交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "返佣"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "福利中心"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "反馈"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "注册"
+          },
+          {
+            "aria": "Open menu",
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": "download",
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "活动规则"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "我的奖励"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即参与"
+          },
+          {
+            "aria": "分享活动",
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即认证"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "1"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "2"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "3"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "4"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "5"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "..."
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "12"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即参与"
+          },
+          {
+            "aria": "取消",
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "我知道了"
+          },
+          {
+            "aria": "取消",
+            "disabled": false,
+            "text": ""
+          }
+        ],
+        "hasHorizontalOverflow": false,
+        "headings": [
+          "FameEX 三期交易挑战赛 PR-01685",
+          "新手入门任务",
+          "进阶交易任务",
+          "阶梯冲刺任务",
+          "组合任务",
+          "排行榜任务",
+          "活动规则",
+          "活动规则",
+          "社区",
+          "友情链接",
+          ""
+        ],
+        "modalText": [
+          "参与任务需先报名活动，未报名不计入奖励立即参与",
+          "Mock: restricted",
+          "FameEX行情交易合约资产",
+          "02fc9884a",
+          "02fc9884a",
+          "仅限指定用户参与当前活动仅限指定用户参与，请关注官方活动获得更多参与机会。我知道了",
+          "仅限指定用户参与当前活动仅限指定用户参与，请关注官方活动获得更多参与机会。我知道了"
+        ],
+        "scrollHeight": 6610,
+        "title": "比特币BTC行情走势丨合约网格量化交易丨 FameEX 数字货币交易所",
+        "url": "http://localhost:4001/zh-CN/campaign/PR-01685?scenario=restricted",
+        "viewport": {
+          "h": 844,
+          "w": 390
+        }
+      },
+      "shot": "/private/tmp/pr01685-full-self-test-2026-06-19/mobile-restricted.png"
+    },
+    "mobile-empty-ranking": {
+      "probe": {
+        "bodySample": "买币 行情 现货交易 合约交易 返佣 福利中心 反馈 注册 活动规则 我的奖励 FameEX 三期交易挑战赛 PR-01685 完成指定任务，解锁合约体验金、手续费抵扣金与专属奖励 2026/06/18 23:03:53 - 2026/06/28 04:03:53 距离活动结束还有 8D : 04 : 59 : 59 立即参与 新手入门任务 完成基础任务，领取入门奖励 5 USDT 合约体验金 完成 KYC 实名认证 通过身份认证后即可参与更多活动任务。 立即认证 10 USDT 合约手续费抵扣金 累计合约交易量达到 1,000 USDT 完成任意 USDT 永续合约交易后计入统计。 200/1,000 USDT 立即交易 100 USDT 合约赠金 净充值达到 1,000 USDT 活动期间净充值金额满足目标即可领取奖励。 200/1,000 USDT 立即充值 进阶交易任务 逐档解锁，可叠加领取 20 USDT 50 USDT 80 USDT 完成进阶任务，逐档领取奖励 阶段 2 — 可叠加领取 合约交易量达到 2,000 USDT 400/2,000 USDT 立即交易 累计充值达到 300 USDT 300/300 USDT 立即充值 阶梯冲刺任务 达成最高档后按最高档发放 50 USDT 400 USDT 0 USDT 完成以下所有任务，即可获得对应档位奖励 合约交易量达到 5,000 USDT 2,600/5,000 USDT 立即交易 净充值达到 500 USDT 300/500 USDT 立即充值 组合任务 完成组合条件，领取额外奖励 100 USDT 合约赠金 完成以下所有任务，即可获得 100 USDT 合约赠金 净充值达到 1,000 USDT 200/1,000 USDT 立即充值 且 合约交易量达到 10,000 USDT 4,200/10,000 USDT 立即交易 排行榜任务 活动结束后按排名发放奖励 我的排名 - 合约交易量 0.00 活动结束后按排行榜名次发放奖励。 合约交易量排行榜 排行榜数据每十分钟更新一次，最近更新：2026/06/19 22:53:53 排名 UID 合约交易量(USDT) 预估奖励(USDT) 暂无数据 活动规则 活动规则 活动参与规则 活动期间，用户完成对应子活动任务后，可按页面展示状态领取奖励。 任务进度以系统统计结果为准，交易量、充值额等数据可能存在短暂延迟。 奖励发放说明 待发放奖励将在活动结束后陆续发放至用户账户或卡券中心。 如用户存在违规、刷量、批量注册等异常行为，平台有权取消其参与资格。 参与任务需先报名活动，未报名不计入奖励 立即参与 Mock: empty-ranking 关于我们 系列产品 服务支持 新手学堂 社区 漏洞提交：Safe@mail.fameex.info 商务合作：Business@mail.fameex.info 服务支持：Service@mail.fameex.info Copyright © 2022-2026 FAMEEX.COM All Rights Reserved FameEX 行情 交易 合约 资产 02fc9884a",
+        "buttons": [
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "买币"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "行情"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "现货交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "合约交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "返佣"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "福利中心"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "反馈"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "买币"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "行情"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "现货交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "合约交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "返佣"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "福利中心"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "反馈"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "注册"
+          },
+          {
+            "aria": "Open menu",
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": "download",
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "活动规则"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "我的奖励"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即参与"
+          },
+          {
+            "aria": "分享活动",
+            "disabled": false,
+            "text": ""
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即认证"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即充值"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即交易"
+          },
+          {
+            "aria": null,
+            "disabled": false,
+            "text": "立即参与"
+          }
+        ],
+        "hasHorizontalOverflow": false,
+        "headings": [
+          "FameEX 三期交易挑战赛 PR-01685",
+          "新手入门任务",
+          "进阶交易任务",
+          "阶梯冲刺任务",
+          "组合任务",
+          "排行榜任务",
+          "活动规则",
+          "活动规则",
+          "社区",
+          "友情链接",
+          ""
+        ],
+        "modalText": [
+          "参与任务需先报名活动，未报名不计入奖励立即参与",
+          "Mock: empty-ranking",
+          "FameEX行情交易合约资产",
+          "02fc9884a",
+          "02fc9884a"
+        ],
+        "scrollHeight": 6065,
+        "title": "比特币BTC行情走势丨合约网格量化交易丨 FameEX 数字货币交易所",
+        "url": "http://localhost:4001/zh-CN/campaign/PR-01685?scenario=empty-ranking",
+        "viewport": {
+          "h": 844,
+          "w": 390
+        }
+      },
+      "shot": "/private/tmp/pr01685-full-self-test-2026-06-19/mobile-empty-ranking.png"
+    }
+  },
+  "interactions": [
+    {
+      "name": "share modal opens and copy works",
+      "ok": true,
+      "hasModal": true,
+      "copyCount": 0,
+      "clipboard": "",
+      "shot": "/private/tmp/pr01685-full-self-test-2026-06-19/interaction-share-modal.png"
+    },
+    {
+      "name": "rules anchor scrolls to rules section",
+      "ok": true,
+      "before": {
+        "y": 0
+      },
+      "after": {
+        "nearRules": false,
+        "y": 4477
+      },
+      "scrolled": true,
+      "shot": "/private/tmp/pr01685-full-self-test-2026-06-19/interaction-rules-anchor.png"
+    },
+    {
+      "name": "anonymous join redirects login with from",
+      "ok": false,
+      "error": "TypeError: button?.click is not a function\n    at __playwrightEvaluate (<anonymous>:2644:13)\n    at <anonymous>:2646:14\n    at runUserScript (<anonymous>:2647:10)\n    at <anonymous>:2651:10\n    at <anonymous>:2652:3"
+    },
+    {
+      "name": "restricted scenario shows blocking modal",
+      "ok": true,
+      "hasRestriction": true,
+      "modalText": [
+        "参与任务需先报名活动，未报名不计入奖励立即参与",
+        "Mock: restricted",
+        "02fc9884a",
+        "02fc9884a",
+        "仅限指定用户参与当前活动仅限指定用户参与，请关注官方活动获得更多参与机会。我知道了"
+      ],
+      "shot": "/private/tmp/pr01685-full-self-test-2026-06-19/interaction-restricted-modal.png"
+    },
+    {
+      "name": "anonymous join redirects login with from - locator click",
+      "ok": true,
+      "count": 2,
+      "url": "http://localhost:4001/zh-CN/campaign/PR-01685?scenario=unjoined",
+      "redirected": false,
+      "shot": "/private/tmp/pr01685-full-self-test-2026-06-19/interaction-anonymous-join-login-locator.png"
+    },
+    {
+      "name": "mobile rules anchor and no horizontal overflow",
+      "ok": true,
+      "before": {
+        "overflow": false,
+        "y": 0
+      },
+      "after": {
+        "overflow": false,
+        "y": 5570
+      },
+      "scrolled": true,
+      "shot": "/private/tmp/pr01685-full-self-test-2026-06-19/mobile-rules-anchor.png"
+    },
+    {
+      "name": "anonymous join redirects login with from - coordinate click",
+      "ok": true,
+      "url": "http://localhost:4001/zh-CN/login?from=/campaign/PR-01685",
+      "redirected": true,
+      "shot": "/private/tmp/pr01685-full-self-test-2026-06-19/interaction-anonymous-join-login-coordinate.png"
+    },
+    {
+      "name": "share modal detail inspection",
+      "ok": true,
+      "bodySlice": "买币 行情 现货交易 合约交易 返佣 福利中心 反馈 买币 行情 现货交易 合约交易 返佣 福利中心 反馈 登录 注册 线路 活动规则 我的奖励 FameEX 三期交易挑战赛 PR-01685 完成指定任务，解锁合约体验金、手续费抵扣金与专属奖励 2026/06/18 23:05:05 - 2026/06/28 04:05:05 距离活动结束还有 8D : 04 : 59 : 59 立即参与 新手入门任务 完成基础任务，领取入门奖励 5 USDT 合约体验金 完成 KYC 实名认证 通过身份认证后即可参与更多活动任务。 立即认证 10 USDT 合约手续费抵扣金 累计合约交易量达到 1,000 USDT 完成任意 USDT 永续合约交易后计入统计。 200/1,000 USDT 立即交易 100 USDT 合约赠金 净充值达到 1,000 USDT 活动期间净充值金额满足目标即可领取奖励。 200/1,000 USDT 立即充值 进阶交易任务 逐档解锁，可叠加领取 20 USDT 50 USDT 80 USDT 完成进阶任务，逐档领取奖励 阶段 2 — 可叠加领取 合约交易量达到 2,000 USDT 400/2,000 USDT 立即交易 累计充值达到 300 USDT 300/300 USDT 立即充值 阶梯冲刺任务 达成最高档后按最高档发放 50 USDT 400 USDT 0 USDT 完成以下所有任务，即可获得对应档位奖励 合约交易量达到 5,000 USDT 2,600/5,000 USDT 立即交易 净充值达到 500 USDT 300/500 USDT 立即充值 组合任务 完成组合条件，领取额外奖励 100 USDT 合约赠金 完成以下所有任务，即可获得 100 USDT 合约赠金 净充值达到 1,000 USDT 200/1,000 USDT 立即充值 且 合约交易量达到 10,000 USDT 4,200/10,000 USDT 立即交易 排行榜任务 活动结束后按排名发放奖励 我的排名 1000+ 合约交易量 90,701.00 活动结束后按排行榜名次发放奖励。 合约交易量排行榜 排行榜数据每十分钟更新一次，最近更新：2026/06/19 22:55:05 排名 UID 合约交易量(USDT) 预估奖励(USDT) *1292 120,701,900.00 100 USDT *1293 119,769,790.00 95 USDT *1294 118,837,680.00 90 USDT 4 *1295 117,905,570.00 - 5 *1296 116,973,460.00 - 6 *1297 116,041,350.00 - 7 *1298 115,109,240.00 - 8 *1299 114,177,130.00 - 9 ",
+      "buttons": [
+        {
+          "disabled": false,
+          "idx": 22,
+          "rect": {
+            "h": 48,
+            "w": 48,
+            "x": 394,
+            "y": 390.5
+          },
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "idx": 42,
+          "rect": {
+            "h": 1,
+            "w": 1,
+            "x": 519,
+            "y": 352.5
+          },
+          "text": ""
+        },
+        {
+          "disabled": false,
+          "idx": 43,
+          "rect": {
+            "h": 74,
+            "w": 48,
+            "x": 544,
+            "y": 549
+          },
+          "text": "复制"
+        },
+        {
+          "disabled": false,
+          "idx": 44,
+          "rect": {
+            "h": 74,
+            "w": 49.8125,
+            "x": 642.3359375,
+            "y": 549
+          },
+          "text": "Telegram"
+        },
+        {
+          "disabled": false,
+          "idx": 45,
+          "rect": {
+            "h": 74,
+            "w": 55.1875,
+            "x": 742.4765625,
+            "y": 549
+          },
+          "text": "WhatsApp"
+        },
+        {
+          "disabled": false,
+          "idx": 46,
+          "rect": {
+            "h": 74,
+            "w": 48,
+            "x": 848,
+            "y": 549
+          },
+          "text": "X"
+        },
+        {
+          "disabled": false,
+          "idx": 47,
+          "rect": {
+            "h": 1,
+            "w": 1,
+            "x": 519,
+            "y": 352.5
+          },
+          "text": ""
+        }
+      ],
+      "shot": "/private/tmp/pr01685-full-self-test-2026-06-19/interaction-share-modal-detail.png"
+    }
+  ],
+  "errors": [
+    {
+      "name": "anonymous join redirects login with from",
+      "error": "TypeError: button?.click is not a function\n    at __playwrightEvaluate (<anonymous>:2644:13)\n    at <anonymous>:2646:14\n    at runUserScript (<anonymous>:2647:10)\n    at <anonymous>:2651:10\n    at <anonymous>:2652:3"
+    }
+  ],
+  "browserLogs": [
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:11.169Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:11.195Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:11.195Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:40.889Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:40.890Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:40.932Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:40.933Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "error",
+      "message": "Encountered a script tag while rendering React component. Scripts inside React components are never executed when rendering on the client. Consider using template tag instead (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template).",
+      "timestamp": "2026-06-19T19:03:45.135Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "error",
+      "message": "Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\nhttps://react.dev/link/hydration-mismatch\n\n  ...\n    <ScrollAndMaybeFocusHandler cacheNode={{rsc:{...}, ...}}>\n      <InnerScrollAndFocusHandlerOld focusAndScrollRef={{scrollRef:null, ...}} cacheNode={{rsc:{...}, ...}}>\n        <ErrorBoundary errorComponent={undefined} errorStyles={undefined} errorScripts={undefined}>\n          <LoadingBoundary name=\"(with-head...\" loading={null}>\n            <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>\n              <RedirectBoundary>\n                <RedirectErrorBoundary router={{...}}>\n                  <InnerLayoutRouter url=\"/zh-CN/cam...\" tree={[...]} params={{lang:\"zh-CN\"}} ...>\n                    <SegmentViewNode type=\"layout\" pagePath=\"[lang]/(wi...\">\n                      <SegmentTrieNode>\n                      <script>\n                      <script>\n                      <Layout>\n                        <BgWrapper>\n                          <div className=\"flex min-h...\">\n                            <div>\n                            <RegisterAbFooterSlot>\n                              <Footer>\n+                               <footer\n+                                 className=\"container mb-6 mt-10 max-w-[1200px] divide-y-[0.5px] divide-divider-2 px-...\"\n+                               >\n                  ...\n        ...\n\n    at throwOnHydrationMismatch (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:3318:56)\n    at beginWork (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:6758:918)\n    at runWithFiberInDEV (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:965:74)\n    at performUnitOfWork (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:9555:97)\n    at workLoopConcurrentByScheduler (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:9551:58)\n    at renderRootConcurrent (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:9534:71)\n    at performWorkOnRoot (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:9061:150)\n    at performWorkOnRootViaSchedulerTask (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:10255:9)\n    at MessagePort.performWorkUntilDeadline (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_13n-s9l._.js:4172:64)",
+      "timestamp": "2026-06-19T19:03:45.261Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js"
+    },
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:45.401Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:45.402Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:45.445Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:45.446Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:45.556Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:45.556Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "warn",
+      "message": "[React Scan] react-grab v0.1.32 is outdated (latest: v0.1.47). Update react-scan to pick up the newer react-grab.",
+      "timestamp": "2026-06-19T19:03:45.694Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "error",
+      "message": "Encountered a script tag while rendering React component. Scripts inside React components are never executed when rendering on the client. Consider using template tag instead (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template).",
+      "timestamp": "2026-06-19T19:03:47.674Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "error",
+      "message": "Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\nhttps://react.dev/link/hydration-mismatch\n\n  ...\n    <ScrollAndMaybeFocusHandler cacheNode={{rsc:{...}, ...}}>\n      <InnerScrollAndFocusHandlerOld focusAndScrollRef={{scrollRef:null, ...}} cacheNode={{rsc:{...}, ...}}>\n        <ErrorBoundary errorComponent={undefined} errorStyles={undefined} errorScripts={undefined}>\n          <LoadingBoundary name=\"(with-head...\" loading={null}>\n            <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>\n              <RedirectBoundary>\n                <RedirectErrorBoundary router={{...}}>\n                  <InnerLayoutRouter url=\"/zh-CN/cam...\" tree={[...]} params={{lang:\"zh-CN\"}} ...>\n                    <SegmentViewNode type=\"layout\" pagePath=\"[lang]/(wi...\">\n                      <SegmentTrieNode>\n                      <script>\n                      <script>\n                      <Layout>\n                        <BgWrapper>\n                          <div className=\"flex min-h...\">\n                            <div>\n                            <RegisterAbFooterSlot>\n                              <Footer>\n+                               <footer\n+                                 className=\"container mb-6 mt-10 max-w-[1200px] divide-y-[0.5px] divide-divider-2 px-...\"\n+                               >\n                  ...\n        ...\n\n    at throwOnHydrationMismatch (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:3318:56)\n    at beginWork (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:6758:918)\n    at runWithFiberInDEV (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:965:74)\n    at performUnitOfWork (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:9555:97)\n    at workLoopConcurrentByScheduler (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:9551:58)\n    at renderRootConcurrent (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:9534:71)\n    at performWorkOnRoot (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:9061:150)\n    at performWorkOnRootViaSchedulerTask (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:10255:9)\n    at MessagePort.performWorkUntilDeadline (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_13n-s9l._.js:4172:64)",
+      "timestamp": "2026-06-19T19:03:47.774Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js"
+    },
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:48.025Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:48.025Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:48.073Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:48.073Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "warn",
+      "message": "[React Scan] react-grab v0.1.32 is outdated (latest: v0.1.47). Update react-scan to pick up the newer react-grab.",
+      "timestamp": "2026-06-19T19:03:48.210Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "error",
+      "message": "Encountered a script tag while rendering React component. Scripts inside React components are never executed when rendering on the client. Consider using template tag instead (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template).",
+      "timestamp": "2026-06-19T19:03:50.492Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "error",
+      "message": "Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\nhttps://react.dev/link/hydration-mismatch\n\n  ...\n    <ScrollAndMaybeFocusHandler cacheNode={{rsc:{...}, ...}}>\n      <InnerScrollAndFocusHandlerOld focusAndScrollRef={{scrollRef:null, ...}} cacheNode={{rsc:{...}, ...}}>\n        <ErrorBoundary errorComponent={undefined} errorStyles={undefined} errorScripts={undefined}>\n          <LoadingBoundary name=\"(with-head...\" loading={null}>\n            <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>\n              <RedirectBoundary>\n                <RedirectErrorBoundary router={{...}}>\n                  <InnerLayoutRouter url=\"/zh-CN/cam...\" tree={[...]} params={{lang:\"zh-CN\"}} ...>\n                    <SegmentViewNode type=\"layout\" pagePath=\"[lang]/(wi...\">\n                      <SegmentTrieNode>\n                      <script>\n                      <script>\n                      <Layout>\n                        <BgWrapper>\n                          <div className=\"flex min-h...\">\n                            <div>\n                            <RegisterAbFooterSlot>\n                              <Footer>\n+                               <footer\n+                                 className=\"container mb-6 mt-10 max-w-[1200px] divide-y-[0.5px] divide-divider-2 px-...\"\n+                               >\n                  ...\n        ...\n\n    at throwOnHydrationMismatch (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:3318:56)\n    at beginWork (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:6758:918)\n    at runWithFiberInDEV (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:965:74)\n    at performUnitOfWork (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:9555:97)\n    at workLoopConcurrentByScheduler (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:9551:58)\n    at renderRootConcurrent (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:9534:71)\n    at performWorkOnRoot (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:9061:150)\n    at performWorkOnRootViaSchedulerTask (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:10255:9)\n    at MessagePort.performWorkUntilDeadline (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_13n-s9l._.js:4172:64)",
+      "timestamp": "2026-06-19T19:03:50.593Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js"
+    },
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:50.753Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:50.754Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:50.807Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:50.810Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "warn",
+      "message": "[React Scan] react-grab v0.1.32 is outdated (latest: v0.1.47). Update react-scan to pick up the newer react-grab.",
+      "timestamp": "2026-06-19T19:03:51.074Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "error",
+      "message": "Encountered a script tag while rendering React component. Scripts inside React components are never executed when rendering on the client. Consider using template tag instead (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template).",
+      "timestamp": "2026-06-19T19:03:53.225Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "error",
+      "message": "Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\nhttps://react.dev/link/hydration-mismatch\n\n  ...\n    <ScrollAndMaybeFocusHandler cacheNode={{rsc:{...}, ...}}>\n      <InnerScrollAndFocusHandlerOld focusAndScrollRef={{scrollRef:null, ...}} cacheNode={{rsc:{...}, ...}}>\n        <ErrorBoundary errorComponent={undefined} errorStyles={undefined} errorScripts={undefined}>\n          <LoadingBoundary name=\"(with-head...\" loading={null}>\n            <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>\n              <RedirectBoundary>\n                <RedirectErrorBoundary router={{...}}>\n                  <InnerLayoutRouter url=\"/zh-CN/cam...\" tree={[...]} params={{lang:\"zh-CN\"}} ...>\n                    <SegmentViewNode type=\"layout\" pagePath=\"[lang]/(wi...\">\n                      <SegmentTrieNode>\n                      <script>\n                      <script>\n                      <Layout>\n                        <BgWrapper>\n                          <div className=\"flex min-h...\">\n                            <div>\n                            <RegisterAbFooterSlot>\n                              <Footer>\n+                               <footer\n+                                 className=\"container mb-6 mt-10 max-w-[1200px] divide-y-[0.5px] divide-divider-2 px-...\"\n+                               >\n                  ...\n        ...\n\n    at throwOnHydrationMismatch (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:3318:56)\n    at beginWork (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:6758:918)\n    at runWithFiberInDEV (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:965:74)\n    at performUnitOfWork (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:9555:97)\n    at workLoopConcurrentByScheduler (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:9551:58)\n    at renderRootConcurrent (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:9534:71)\n    at performWorkOnRoot (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:9061:150)\n    at performWorkOnRootViaSchedulerTask (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:10255:9)\n    at MessagePort.performWorkUntilDeadline (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_13n-s9l._.js:4172:64)",
+      "timestamp": "2026-06-19T19:03:53.354Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js"
+    },
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:53.614Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:53.615Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:53.627Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:53.627Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:53.635Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:53.637Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "warn",
+      "message": "[React Scan] react-grab v0.1.32 is outdated (latest: v0.1.47). Update react-scan to pick up the newer react-grab.",
+      "timestamp": "2026-06-19T19:03:53.735Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "error",
+      "message": "Encountered a script tag while rendering React component. Scripts inside React components are never executed when rendering on the client. Consider using template tag instead (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template).",
+      "timestamp": "2026-06-19T19:03:55.990Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "error",
+      "message": "Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\nhttps://react.dev/link/hydration-mismatch\n\n  ...\n    <ScrollAndMaybeFocusHandler cacheNode={{rsc:{...}, ...}}>\n      <InnerScrollAndFocusHandlerOld focusAndScrollRef={{scrollRef:null, ...}} cacheNode={{rsc:{...}, ...}}>\n        <ErrorBoundary errorComponent={undefined} errorStyles={undefined} errorScripts={undefined}>\n          <LoadingBoundary name=\"(with-head...\" loading={null}>\n            <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>\n              <RedirectBoundary>\n                <RedirectErrorBoundary router={{...}}>\n                  <InnerLayoutRouter url=\"/zh-CN/cam...\" tree={[...]} params={{lang:\"zh-CN\"}} ...>\n                    <SegmentViewNode type=\"layout\" pagePath=\"[lang]/(wi...\">\n                      <SegmentTrieNode>\n                      <script>\n                      <script>\n                      <Layout>\n                        <BgWrapper>\n                          <div className=\"flex min-h...\">\n                            <div>\n                            <RegisterAbFooterSlot>\n                              <Footer>\n+                               <footer\n+                                 className=\"container mb-6 mt-10 max-w-[1200px] divide-y-[0.5px] divide-divider-2 px-...\"\n+                               >\n                  ...\n        ...\n\n    at throwOnHydrationMismatch (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:3318:56)\n    at beginWork (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:6758:918)\n    at runWithFiberInDEV (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:965:74)\n    at performUnitOfWork (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:9555:97)\n    at workLoopConcurrentByScheduler (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:9551:58)\n    at renderRootConcurrent (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:9534:71)\n    at performWorkOnRoot (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:9061:150)\n    at performWorkOnRootViaSchedulerTask (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js:10255:9)\n    at MessagePort.performWorkUntilDeadline (http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_13n-s9l._.js:4172:64)",
+      "timestamp": "2026-06-19T19:03:56.138Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_compiled_react-dom_05ed2a.._.js"
+    },
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:56.307Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:56.307Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:56.351Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:56.352Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "warn",
+      "message": "[React Scan] react-grab v0.1.32 is outdated (latest: v0.1.47). Update react-scan to pick up the newer react-grab.",
+      "timestamp": "2026-06-19T19:03:56.569Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:56.717Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:56.717Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:56.997Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    },
+    {
+      "level": "warn",
+      "message": "An aria-label or aria-labelledby prop is required for accessibility.",
+      "timestamp": "2026-06-19T19:03:56.997Z",
+      "url": "http://localhost:4001/_next/static/chunks/0wwo_next_dist_0rhsd7p._.js"
+    }
+  ]
+}

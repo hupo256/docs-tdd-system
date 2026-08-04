@@ -1,0 +1,44 @@
+{
+  "query_path": {
+    "path": "/polymarket/position/pageList",
+    "params": []
+  },
+  "edit_uid": 0,
+  "status": "done",
+  "type": "static",
+  "req_body_is_json_schema": true,
+  "res_body_is_json_schema": true,
+  "api_opened": false,
+  "index": 0,
+  "tag": [],
+  "_id": 4663,
+  "res_body_type": "json",
+  "res_body": "{\"properties\":{\"code\":{\"type\":\"integer\",\"description\":\"业务状态码，成功时通常为 0\"},\"data\":{\"properties\":{\"count\":{\"type\":\"integer\",\"description\":\"总条数\"},\"list\":{\"description\":\"仓位列表，仅包含页面列表展示字段\",\"items\":{\"properties\":{\"statusType\":{\"description\":\"状态原始值：holding 持仓中、closed 已平仓\",\"example\":\"holding\",\"type\":\"string\"},\"betShares\":{\"description\":\"份额\",\"example\":2,\"type\":\"number\"},\"id\":{\"example\":12345,\"format\":\"int64\",\"description\":\"仓位 ID\",\"type\":\"integer\"},\"platformAmount\":{\"description\":\"平台收入，按 position_id 汇总订单 platform_amount\",\"example\":0.1,\"type\":\"number\"},\"statusTypeDesc\":{\"description\":\"状态文案：持仓中、已平仓\",\"example\":\"持仓中\",\"type\":\"string\"},\"betAmount\":{\"description\":\"保证金(USDT)\",\"example\":20,\"type\":\"number\"},\"createdAt\":{\"example\":\"2026-05-30 09:10:00\",\"format\":\"date-time\",\"description\":\"创建时间\",\"type\":\"string\"},\"createdTime\":{\"example\":1780103400000,\"format\":\"int64\",\"description\":\"创建时间毫秒时间戳\",\"type\":\"integer\"},\"updatedAt\":{\"example\":\"2026-05-31 09:10:00\",\"format\":\"date-time\",\"description\":\"最后更新时间\",\"type\":\"string\"},\"eventDirectionDisplay\":{\"description\":\"事件 / 方向，展示为事件名 + Yes/No 方向\",\"example\":\"事件 1 Yes\",\"type\":\"string\"},\"uid\":{\"description\":\"用户 UID\",\"example\":100382,\"type\":\"integer\"},\"updatedTime\":{\"example\":1780189800000,\"format\":\"int64\",\"description\":\"最后更新时间毫秒时间戳\",\"type\":\"integer\"}},\"type\":\"object\"},\"type\":\"array\"}},\"description\":\"分页数据\",\"type\":\"object\",\"required\":[\"count\",\"list\"]},\"msg\":{\"type\":\"string\",\"description\":\"响应消息\"}},\"type\":\"object\",\"required\":[\"code\",\"msg\",\"data\"]}",
+  "req_query": [],
+  "req_body_other": "{\"properties\":{\"positionId\":{\"example\":12345,\"format\":\"int64\",\"description\":\"仓位 ID，对应 polymarket_order_position.id\",\"type\":\"integer\"},\"uid\":{\"description\":\"用户 UID\",\"example\":100382,\"type\":\"integer\"},\"ctimeEndNum\":{\"example\":1780333800000,\"format\":\"int64\",\"description\":\"创建时间区间结束，毫秒时间戳，左闭右开\",\"type\":\"integer\"},\"pageSize\":{\"description\":\"每页条数\",\"example\":20,\"type\":\"integer\"},\"ctimeStartNum\":{\"example\":1780247400000,\"format\":\"int64\",\"description\":\"创建时间区间开始，毫秒时间戳\",\"type\":\"integer\"},\"updatedEndNum\":{\"example\":1780333800000,\"format\":\"int64\",\"description\":\"最后更新时间区间结束，毫秒时间戳，左闭右开\",\"type\":\"integer\"},\"positionStatusType\":{\"enum\":[\"holding\",\"closed\"],\"description\":\"状态：holding 持仓中、closed 已平仓\",\"example\":\"holding\",\"type\":\"string\"},\"updatedStartNum\":{\"example\":1780247400000,\"format\":\"int64\",\"description\":\"最后更新时间区间开始，毫秒时间戳\",\"type\":\"integer\"},\"pageNum\":{\"description\":\"当前页码，从 1 开始\",\"example\":1,\"type\":\"integer\"}},\"type\":\"object\",\"required\":[\"pageNum\",\"pageSize\"]}",
+  "title": "预测市场仓位管理列表",
+  "req_headers": [
+    {
+      "required": "1",
+      "_id": "6a36728706f2ee6f5308a349",
+      "name": "Content-Type",
+      "value": "application/json",
+      "example": "application/json",
+      "desc": "请求体格式"
+    }
+  ],
+  "method": "POST",
+  "catid": 1297,
+  "project_id": 459,
+  "path": "/polymarket/position/pageList",
+  "req_body_type": "json",
+  "desc": "",
+  "req_params": [],
+  "uid": 629,
+  "add_time": 1781953007,
+  "up_time": 1781953159,
+  "req_body_form": [],
+  "__v": 0,
+  "markdown": "",
+  "username": "meachel@globaldev.info"
+}

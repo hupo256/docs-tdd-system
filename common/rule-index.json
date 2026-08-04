@@ -1,0 +1,244 @@
+{
+  "version": 1,
+  "resident": "rule-router.md",
+  "policy": {
+    "readResidentFirst": true,
+    "avoidFullCommonRead": true,
+    "changedFileOnlyCodeScan": true
+  },
+  "scenarios": {
+    "new_project": [
+      "startup-prompt.md",
+      "new-project-kickoff.md",
+      "project-doc-structure.md",
+      "prd-feature-inventory.md",
+      {
+        "file": "rule-inheritance.md",
+        "sections": "0-3"
+      },
+      "development-rules.md",
+      {
+        "file": "rule-ids-and-gates.md",
+        "sections": "1-2"
+      }
+    ],
+    "g0_g2_scope": [
+      "prd-feature-inventory.md",
+      {
+        "file": "lark-doc-sync.md",
+        "sections": "8"
+      },
+      "workflow-gates.md",
+      {
+        "file": "rule-ids-and-gates.md",
+        "sections": "1-2"
+      }
+    ],
+    "prd_intake": [
+      {
+        "file": "lark-doc-sync.md",
+        "sections": "8"
+      },
+      "prd-feature-inventory.md",
+      {
+        "file": "rule-ids-and-gates.md",
+        "sections": "1-2"
+      },
+      "execution-evidence.md"
+    ],
+    "g4_coding_worktree": [
+      {
+        "file": "coding-worktree.md",
+        "sections": "1-3"
+      },
+      "git-branch-flow.md",
+      "change-scope-boundary.md",
+      "architecture-and-state.md"
+    ],
+    "write_api_or_mock": [
+      "api-and-mapper.md",
+      {
+        "file": "rule-ids-and-gates.md",
+        "sections": "3"
+      }
+    ],
+    "write_api": [
+      "api-and-mapper.md",
+      {
+        "file": "rule-ids-and-gates.md",
+        "sections": "3"
+      }
+    ],
+    "write_mapper": [
+      "api-and-mapper.md",
+      {
+        "file": "rule-ids-and-gates.md",
+        "sections": "3"
+      },
+      {
+        "file": "quality-checklist.md",
+        "sections": "1-2"
+      }
+    ],
+    "write_query_hook": [
+      "api-and-mapper.md",
+      {
+        "file": "architecture-and-state.md",
+        "sections": "1-7"
+      },
+      {
+        "file": "rule-ids-and-gates.md",
+        "sections": "3"
+      }
+    ],
+    "write_state": [
+      {
+        "file": "architecture-and-state.md",
+        "sections": "1-7"
+      },
+      "development-rules.md"
+    ],
+    "write_msw": [
+      "api-and-mapper.md",
+      {
+        "file": "architecture-and-state.md",
+        "sections": "8"
+      },
+      {
+        "file": "rule-ids-and-gates.md",
+        "sections": "2-3"
+      },
+      "execution-evidence.md"
+    ],
+    "legacy_mock": [
+      "mock-legacy-route-a.md",
+      {
+        "file": "architecture-and-state.md",
+        "sections": "8"
+      },
+      {
+        "file": "rule-ids-and-gates.md",
+        "sections": "3"
+      }
+    ],
+    "write_ui": [
+      {
+        "file": "architecture-and-state.md",
+        "sections": "1-7"
+      },
+      "api-and-mapper.md",
+      "ui-style-token-rules.md",
+      "component-reuse-and-visual-fidelity.md"
+    ],
+    "write_figma": [
+      "figma-mcp-read-workflow.md",
+      "component-reuse-and-visual-fidelity.md",
+      "ui-style-token-rules.md"
+    ],
+    "g6_code_review": [
+      {
+        "file": "quality-checklist.md",
+        "sections": "5-6"
+      },
+      "rule-execution-model.md",
+      {
+        "file": "rule-ids-and-gates.md",
+        "sections": "2-4"
+      }
+    ],
+    "g6_contract": [
+      {
+        "file": "quality-checklist.md",
+        "sections": "1-3"
+      },
+      "api-and-mapper.md",
+      "execution-evidence.md",
+      {
+        "file": "rule-ids-and-gates.md",
+        "sections": "2-3"
+      }
+    ],
+    "g6_visual": [
+      {
+        "file": "quality-checklist.md",
+        "sections": "3"
+      },
+      "verification-division-of-labor.md",
+      "browser-e2e-mcp.md",
+      "component-reuse-and-visual-fidelity.md",
+      "execution-evidence.md"
+    ],
+    "g6_delivery": [
+      {
+        "file": "quality-checklist.md",
+        "sections": "6"
+      },
+      "execution-evidence.md",
+      {
+        "file": "rule-ids-and-gates.md",
+        "sections": "2"
+      },
+      "blocking-and-change-protocol.md",
+      "hook-integration.md"
+    ],
+    "g6_verify": [
+      {
+        "scenario": "g6_code_review"
+      },
+      {
+        "scenario": "g6_contract"
+      },
+      {
+        "scenario": "g6_visual"
+      },
+      {
+        "scenario": "g6_delivery"
+      }
+    ],
+    "collaboration": [
+      "collaboration-and-notifications.md",
+      "blocking-and-change-protocol.md",
+      "lark-active-notification.md",
+      "lark-bot-gateway.md",
+      "lark-doc-sync.md"
+    ],
+    "review_docs_automation": [
+      {
+        "file": "rule-inheritance.md",
+        "sections": "0-3"
+      },
+      "CHANGELOG.md",
+      {
+        "file": "rule-ids-and-gates.md",
+        "sections": "1-2"
+      },
+      "rule-execution-model.md",
+      "hook-integration.md",
+      "execution-evidence.md"
+    ],
+    "docs_tdd_maintenance": [
+      "api-and-mapper.md",
+      "rule-inheritance.md",
+      "rule-router.md",
+      "rule-index.json",
+      "rule-ownership.json",
+      "rule-ids-and-gates.md",
+      "rule-execution-model.md",
+      "execution-evidence.md",
+      "react-component-props-types.md"
+    ]
+  },
+  "projectResumeFiles": [
+    "agent/context-summary.md",
+    "README.md",
+    "product/00-feature-inventory.md",
+    "product/06-collaboration.md",
+    "agent/gate-results.json"
+  ],
+  "gateCommands": {
+    "G2": "node apps/web/docs_tdd/common/agent-scripts/verify-project-gate.mjs <PROJECT-ID> G2",
+    "codeRules": "node apps/web/docs_tdd/common/agent-scripts/verify-code-rules.mjs --project <PROJECT-ID>",
+    "G6": "node apps/web/docs_tdd/common/agent-scripts/verify-project-gate.mjs <PROJECT-ID> G6",
+    "G8": "node apps/web/docs_tdd/common/agent-scripts/verify-project-gate.mjs <PROJECT-ID> G8"
+  }
+}

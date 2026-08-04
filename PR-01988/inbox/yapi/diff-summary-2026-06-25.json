@@ -1,0 +1,18 @@
+{
+  "source": "http://35.240.211.100:3333/project/459/interface/api",
+  "fetchedAt": "2026-06-25",
+  "previousCount": 31,
+  "currentCount": 32,
+  "added": [
+    {
+      "id": 5245,
+      "method": "GET",
+      "path": "/polymarket/category/category/list",
+      "title": "按等级查询分类列表",
+      "category": "分类管理",
+      "status": "done"
+    }
+  ],
+  "removed": [],
+  "changed": []
+}

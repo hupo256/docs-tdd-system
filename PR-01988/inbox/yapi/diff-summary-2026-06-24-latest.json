@@ -1,0 +1,32 @@
+{
+  "source": "http://35.240.211.100:3333/project/459/interface/api",
+  "fetchedAt": "2026-06-24",
+  "previousCount": 31,
+  "currentCount": 31,
+  "added": [],
+  "removed": [],
+  "changed": [
+    {
+      "id": 4681,
+      "method": "POST",
+      "path": "/polymarket/event/findAdminByPage",
+      "title": "后台分页查询Polymarket事件配置",
+      "category": "事件",
+      "oldUpTime": 1782038798,
+      "newUpTime": 1782312938,
+      "changedFields": [
+        "req_body_other",
+        "desc",
+        "markdown"
+      ],
+      "addedRequestFields": [
+        "startDateNum",
+        "endDateNum",
+        "settleStartDateNum",
+        "settleEndDateNum"
+      ],
+      "summary": "事件列表查询新增上线时间范围和结算时间范围筛选字段；字段类型为 number，示例为毫秒时间戳。"
+    }
+  ],
+  "ignoredNoise": "本次比对忽略 YApi 原始导出中空 req_body_type / req_body_other / req_body_form / req_headers 与本地精简快照的结构化差异；这些字段不改变接口业务契约。"
+}

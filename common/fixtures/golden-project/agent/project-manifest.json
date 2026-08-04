@@ -1,0 +1,9 @@
+{
+  "projectId": "PR-00000",
+  "name": "Golden fixture (gate regression only)",
+  "fixture": true,
+  "pilot": {
+    "prdIntake": false,
+    "msw": false
+  }
+}

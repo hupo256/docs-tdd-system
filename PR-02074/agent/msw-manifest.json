@@ -1,0 +1,64 @@
+{
+  "projectId": "PR-02074",
+  "route": "msw",
+  "lifecycle": "mock-active",
+  "sourceRoot": "/Users/aven/github/PR-02074",
+  "assets": {
+    "handler": "apps/web/src/mocks/handlers/prediction.ts",
+    "fixture": "apps/web/src/mocks/fixtures/prediction.ts",
+    "contractTest": "apps/web/src/mocks/prediction.contract.test.ts",
+    "registration": "apps/web/src/mocks/browser.ts",
+    "workerHook": "apps/web/src/mocks/useMockWorker.ts",
+    "provider": "apps/web/src/app/[lang]/Providers.tsx",
+    "handlerExport": "predictionHandlers"
+  },
+  "endpoints": [
+    {
+      "id": "tag-events-list",
+      "method": "POST",
+      "path": "/fe-ex-api/polymarket/getTagEventsList",
+      "apiStatus": "not-ready",
+      "scenarios": [
+        { "name": "normal", "status": "implemented", "reason": "" },
+        { "name": "empty", "status": "implemented", "reason": "Search and category fixtures cover empty lists" },
+        { "name": "business-error", "status": "implemented", "reason": "Invalid tagType returns an error envelope" },
+        { "name": "unauthorized", "status": "not-applicable", "reason": "Public market list is readable without authentication" },
+        { "name": "pagination-edge", "status": "implemented", "reason": "Fixture is sliced by pageNum and pageSize" }
+      ]
+    },
+    {
+      "id": "search-events",
+      "method": "POST",
+      "path": "/fe-ex-api/polymarket/searchEvents",
+      "apiStatus": "not-ready",
+      "scenarios": [
+        { "name": "normal", "status": "implemented", "reason": "" },
+        { "name": "empty", "status": "implemented", "reason": "Empty keyword and unmatched keyword return an empty list" }
+      ]
+    },
+    {
+      "id": "category-tree",
+      "method": "POST",
+      "path": "/fe-ex-api/polymarket/getCategoryTree",
+      "apiStatus": "not-ready",
+      "scenarios": [
+        { "name": "empty", "status": "implemented", "reason": "Static frontend categories are primary; API fallback returns an empty tree" }
+      ]
+    },
+    {
+      "id": "estimated-profit",
+      "method": "POST",
+      "path": "/fe-ex-api/polymarket/getEstimatedProfit",
+      "apiStatus": "not-ready",
+      "scenarios": [
+        { "name": "buy-success", "status": "implemented", "reason": "" },
+        { "name": "sell-success", "status": "implemented", "reason": "" },
+        { "name": "validation-error", "status": "not-applicable", "reason": "Backend validation envelope is not known yet; tracked as an assumption" }
+      ]
+    }
+  ],
+  "retirement": {
+    "retiredAt": "",
+    "reconciliationEvidence": "product/03-api-contract.md#6-字段对账"
+  }
+}

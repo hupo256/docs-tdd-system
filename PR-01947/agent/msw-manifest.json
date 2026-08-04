@@ -1,0 +1,31 @@
+{
+  "projectId": "PR-01947",
+  "route": "msw",
+  "lifecycle": "mock-retired",
+  "sourceRoot": "/Users/aven/github/PR-01947",
+  "assets": {
+    "handler": "",
+    "fixture": "",
+    "contractTest": "",
+    "registration": "apps/web/src/mocks/browser.ts",
+    "workerHook": "apps/web/src/mocks/useMockWorker.ts",
+    "provider": "apps/web/src/app/[lang]/Providers.tsx",
+    "handlerExport": "copyTradingFollowHandlers"
+  },
+  "endpoints": [
+    {
+      "id": "before-follow",
+      "method": "GET",
+      "path": "/fe-ex-api/cptrade/follow/before_follow",
+      "apiStatus": "real",
+      "scenarios": [
+        { "name": "normal", "status": "retired", "reason": "Real dev API is connected" },
+        { "name": "error", "status": "retired", "reason": "Real dev API is connected" }
+      ]
+    }
+  ],
+  "retirement": {
+    "retiredAt": "2026-07-15",
+    "reconciliationEvidence": "product/03-api-contract.md#81-真实接口到位后的字段对账"
+  }
+}

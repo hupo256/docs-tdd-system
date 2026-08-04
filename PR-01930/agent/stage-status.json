@@ -1,0 +1,20 @@
+{
+  "projectId": "PR-01930",
+  "stages": {
+    "G5": {
+      "status": "blocked",
+      "reason": "后端真实 API 尚未 ready，当前实现仍使用占位 type code 与 MSW，未完成真实字段、错误码和 mock 退役对账。",
+      "evidence": [
+        "evidence/README.md",
+        "product/03-api-contract.md"
+      ],
+      "updatedAt": "2026-08-01"
+    },
+    "G7": {
+      "status": "skipped",
+      "reason": "未提供正式 QA 用例；待 G5 与 G6 依次通过后再执行 G7 gate 记录跳过。",
+      "evidence": [],
+      "updatedAt": "2026-08-01"
+    }
+  }
+}

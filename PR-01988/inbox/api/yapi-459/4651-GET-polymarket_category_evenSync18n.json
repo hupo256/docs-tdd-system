@@ -1,0 +1,48 @@
+{
+  "query_path": {
+    "path": "/polymarket/category/evenSync18n",
+    "params": []
+  },
+  "edit_uid": 0,
+  "status": "undone",
+  "type": "static",
+  "req_body_is_json_schema": true,
+  "res_body_is_json_schema": true,
+  "api_opened": false,
+  "index": 0,
+  "tag": [],
+  "_id": 4651,
+  "method": "GET",
+  "catid": 1289,
+  "title": "同步查询事件",
+  "path": "/polymarket/category/evenSync18n",
+  "project_id": 459,
+  "req_params": [],
+  "res_body_type": "raw",
+  "uid": 447,
+  "add_time": 1781890471,
+  "up_time": 1781891917,
+  "req_query": [
+    {
+      "required": "0",
+      "_id": "6a35834d06f2ee990a08a340",
+      "name": "eventsId",
+      "example": "351744",
+      "desc": "二选一"
+    },
+    {
+      "required": "0",
+      "_id": "6a35834d06f2ee75b408a33f",
+      "name": "slug",
+      "example": "will-neymar-play-in-the-world-cup",
+      "desc": "二选一"
+    }
+  ],
+  "req_headers": [],
+  "req_body_form": [],
+  "__v": 0,
+  "desc": "",
+  "markdown": "",
+  "res_body": "{\n  \"code\": \"0\",\n  \"msg\": \"成功\",\n  \"data\": {\n    \"eventId\": \"351743\",\n    \"slug\": \"fifwc-usa-aus-2026-06-19\",\n    \"eventName\": \"United States vs. Australia\",   //事件名称 （默认英文）\n    \"eventNameI18n\": [\n      {\n        \"appLocale\": \"en-US\",           //多语言\n        \"name\": \"United States vs. Australia\"    //事件名称\n      },\n      {\n        \"appLocale\": \"en-AU\",\n        \"name\": \"\"\n      },\n      {\n        \"appLocale\": \"zh-TW\",\n        \"name\": \"\"\n      },\n      {\n        \"appLocale\": \"zh-CN\",\n        \"name\": \"\"\n      },\n      {\n        \"appLocale\": \"tr-TR\",\n        \"name\": \"\"\n      },\n      {\n        \"appLocale\": \"vi-VN\",\n        \"name\": \"\"\n      },\n      {\n        \"appLocale\": \"es-ES\",\n        \"name\": \"\"\n      },\n      {\n        \"appLocale\": \"ru-RU\",\n        \"name\": \"\"\n      },\n      {\n        \"appLocale\": \"ko-KR\",\n        \"name\": \"\"\n      },\n      {\n        \"appLocale\": \"pt-BR\",\n        \"name\": \"\"\n      }\n    ],\n    \"markets\": [\n      {\n        \"marketId\": \"1897119\",\n        \"eventId\": \"351743\",\n        \"groupItemTitle\": \"Draw (United States vs. Australia)\",\n        \"groupItemThreshold\": \"1\",\n        \"question\": \"Will United States vs. Australia end in a draw?\",    //市场标题（默认英文）\n        \"marketNameI18n\": [\n          {\n            \"appLocale\": \"en-US\",    //多语言\n            \"name\": \"Will United States vs. Australia end in a draw?\"\n          },\n          {\n            \"appLocale\": \"en-AU\",\n            \"name\": \"\"\n          },\n          {\n            \"appLocale\": \"zh-TW\",\n            \"name\": \"\"\n          },\n          {\n            \"appLocale\": \"zh-CN\",\n            \"name\": \"\"\n          },\n          {\n            \"appLocale\": \"tr-TR\",\n            \"name\": \"\"\n          },\n          {\n            \"appLocale\": \"vi-VN\",\n            \"name\": \"\"\n          },\n          {\n            \"appLocale\": \"es-ES\",\n            \"name\": \"\"\n          },\n          {\n            \"appLocale\": \"ru-RU\",\n            \"name\": \"\"\n          },\n          {\n            \"appLocale\": \"ko-KR\",\n            \"name\": \"\"\n          },\n          {\n            \"appLocale\": \"pt-BR\",\n            \"name\": \"\"\n          }\n        ]\n      },\n      {\n        \"marketId\": \"1897120\",\n        \"eventId\": \"351743\",\n        \"groupItemTitle\": \"Australia\",\n        \"groupItemThreshold\": \"2\",\n        \"question\": \"Will Australia win on 2026-06-19?\",\n        \"marketNameI18n\": [\n          {\n            \"appLocale\": \"en-US\",\n            \"name\": \"Will Australia win on 2026-06-19?\"\n          },\n          {\n            \"appLocale\": \"en-AU\",\n            \"name\": \"\"\n          },\n          {\n            \"appLocale\": \"zh-TW\",\n            \"name\": \"\"\n          },\n          {\n            \"appLocale\": \"zh-CN\",\n            \"name\": \"\"\n          },\n          {\n            \"appLocale\": \"tr-TR\",\n            \"name\": \"\"\n          },\n          {\n            \"appLocale\": \"vi-VN\",\n            \"name\": \"\"\n          },\n          {\n            \"appLocale\": \"es-ES\",\n            \"name\": \"\"\n          },\n          {\n            \"appLocale\": \"ru-RU\",\n            \"name\": \"\"\n          },\n          {\n            \"appLocale\": \"ko-KR\",\n            \"name\": \"\"\n          },\n          {\n            \"appLocale\": \"pt-BR\",\n            \"name\": \"\"\n          }\n        ]\n      },\n      {\n        \"marketId\": \"1897118\",\n        \"eventId\": \"351743\",\n        \"groupItemTitle\": \"United States\",\n        \"groupItemThreshold\": \"0\",\n        \"question\": \"Will United States win on 2026-06-19?\",\n        \"marketNameI18n\": [\n          {\n            \"appLocale\": \"en-US\",\n            \"name\": \"Will United States win on 2026-06-19?\"\n          },\n          {\n            \"appLocale\": \"en-AU\",\n            \"name\": \"\"\n          },\n          {\n            \"appLocale\": \"zh-TW\",\n            \"name\": \"\"\n          },\n          {\n            \"appLocale\": \"zh-CN\",\n            \"name\": \"\"\n          },\n          {\n            \"appLocale\": \"tr-TR\",\n            \"name\": \"\"\n          },\n          {\n            \"appLocale\": \"vi-VN\",\n            \"name\": \"\"\n          },\n          {\n            \"appLocale\": \"es-ES\",\n            \"name\": \"\"\n          },\n          {\n            \"appLocale\": \"ru-RU\",\n            \"name\": \"\"\n          },\n          {\n            \"appLocale\": \"ko-KR\",\n            \"name\": \"\"\n          },\n          {\n            \"appLocale\": \"pt-BR\",\n            \"name\": \"\"\n          }\n        ]\n      }\n    ]\n  },\n  \"message\": null,\n  \"succ\": true\n}",
+  "username": "knox"
+}

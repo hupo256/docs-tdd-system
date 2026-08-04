@@ -1,0 +1,11 @@
+{
+  "sourceUrl": "https://qfglxo2m3dc.sg.larksuite.com/docx/WQECd5jNWo3qdBxUfiqlUAnmgfg",
+  "sourceType": "doc",
+  "syncedAt": "2026-06-30T00:00:00+04:00",
+  "command": "lark-cli docs +fetch --api-version v2 --doc <url> --doc-format markdown",
+  "status": "success",
+  "documentId": "WQECd5jNWo3qdBxUfiqlUAnmgfg",
+  "revisionId": 633,
+  "identity": "bot",
+  "notes": "含图片（4张引导步骤示意图 + 2张内嵌说明图），图片以 alt 文字替代，alt 来自 Lark/OCR 自动生成，仅作辅助线索，不作权威需求来源。需与 Figma 对照确认视觉细节。"
+}

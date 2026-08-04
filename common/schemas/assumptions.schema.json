@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "assumptions.schema.json",
+  "title": "Project Assumption Ledger",
+  "type": "object",
+  "required": ["projectId", "assumptions"],
+  "properties": {
+    "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "endpoint", "field", "code", "owner", "status", "blockingWhen", "resolution"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^ASM-\\d{3,}$" },
+          "endpoint": { "type": "string", "minLength": 1 },
+          "field": { "type": "string", "minLength": 1 },
+          "code": { "type": "array", "items": { "type": "string" } },
+          "owner": { "type": "string", "minLength": 1 },
+          "status": { "type": "string", "enum": ["open", "confirmed", "rejected"] },
+          "blockingWhen": { "type": "string", "enum": ["api-ready", "reconciling", "release"] },
+          "resolution": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

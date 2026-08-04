@@ -1,0 +1,19 @@
+{
+  "projectId": "PR-02074",
+  "stages": {
+    "G5": {
+      "status": "blocked",
+      "reason": "后端接口未 ready，真实 fixture/schema 对账、ASSUMED 字段销账和 MSW handler 退役均未完成。",
+      "evidence": [
+        "product/03-api-contract.md"
+      ],
+      "updatedAt": "2026-08-01"
+    },
+    "G7": {
+      "status": "pending",
+      "reason": "待 G5/G6 通过后执行 QA 用例，或明确记录未提供 QA 用例而跳过。",
+      "evidence": [],
+      "updatedAt": "2026-08-01"
+    }
+  }
+}

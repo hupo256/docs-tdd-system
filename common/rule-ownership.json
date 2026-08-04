@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "policy": {
+    "sourceDefines": "trigger-action-evidence-failure",
+    "consumerDefines": "trigger-and-source-reference-only"
+  },
+  "topics": {
+    "workflow-gates": { "source": "workflow-gates.md" },
+    "project-structure": { "source": "project-doc-structure.md" },
+    "prd-rich-media-read": { "source": "lark-doc-sync.md", "sections": "8" },
+    "prd-feature-task-trace": { "source": "prd-feature-inventory.md", "sections": "3" },
+    "api-schema-mapper": { "source": "api-and-mapper.md" },
+    "state-and-msw": { "source": "architecture-and-state.md", "sections": "4-8" },
+    "legacy-mock-route-a": { "source": "mock-legacy-route-a.md" },
+    "ui-token-theme": { "source": "ui-style-token-rules.md" },
+    "component-reuse-visual-acceptance": { "source": "component-reuse-and-visual-fidelity.md", "sections": "2-3" },
+    "verification-division": { "source": "verification-division-of-labor.md" },
+    "browser-operation": { "source": "browser-e2e-mcp.md" },
+    "quality-review": { "source": "quality-checklist.md" },
+    "change-scope": { "source": "change-scope-boundary.md" },
+    "execution-evidence": { "source": "execution-evidence.md" },
+    "collaboration": { "source": "collaboration-and-notifications.md" },
+    "rule-placement": { "source": "rule-inheritance.md" },
+    "effective-rule-governance": { "source": "rule-execution-model.md", "sections": "5" }
+  }
+}

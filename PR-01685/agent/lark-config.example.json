@@ -1,0 +1,9 @@
+{
+  "project": "PR-01685",
+  "title": "Campaign 活动落地页",
+  "appId": "cli_xxx 可选；事件 header 有 app_id 时可不填",
+  "appSecret": "YOUR_LARK_APP_SECRET",
+  "webhookUrl": "https://open.larksuite.com/open-apis/bot/v2/hook/YOUR_HOOK_ID",
+  "secret": "YOUR_SIGN_SECRET",
+  "autoNotify": true
+}

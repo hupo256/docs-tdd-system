@@ -1,0 +1,450 @@
+#!/usr/bin/env node
+
+import { createHash } from 'node:crypto'
+import assert from 'node:assert/strict'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { spawnSync } from 'node:child_process'
+import { tmpdir } from 'node:os'
+import { dirname, join, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { codeFingerprint, matchesGateFingerprint } from './lib/fingerprint.mjs'
+
+const scriptDir = dirname(fileURLToPath(import.meta.url))
+const repoRoot = resolve(scriptDir, '../../../../..')
+const docsRoot = join(repoRoot, 'apps/web/docs_tdd')
+const releaseScript = join(scriptDir, 'rule-release.mjs')
+const effectiveRulesScript = join(scriptDir, 'effective-rules.mjs')
+const cliArgs = process.argv.slice(2)
+const [command, projectId] = cliArgs
+const positional = cliArgs.slice(2).filter((arg) => !arg.startsWith('--'))
+const detail = positional[0]
+const fullContext = cliArgs.includes('--full')
+const noCache = cliArgs.includes('--no-cache')
+
+function run(args, cwd = repoRoot) {
+  const result = spawnSync(process.execPath, args, { cwd, stdio: 'inherit' })
+  return result.status ?? 1
+}
+
+function runCaptured(args, cwd = repoRoot) {
+  const started = Date.now()
+  const result = spawnSync(process.execPath, args, { cwd, encoding: 'utf8', stdio: 'pipe' })
+  return {
+    status: result.status ?? 1,
+    stdout: result.stdout || '',
+    stderr: result.stderr || '',
+    durationMs: Date.now() - started,
+  }
+}
+
+function safeLogLabel(value) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 64) || 'check'
+}
+
+function persistCapturedLog(id, label, result) {
+  const logDir = join(tmpdir(), 'docs-tdd-logs', id)
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-')
+  const logFile = join(logDir, `${stamp}-${safeLogLabel(label)}.log`)
+  mkdirSync(logDir, { recursive: true })
+  writeFileSync(logFile, [
+    `status: ${result.status}`,
+    `durationMs: ${result.durationMs}`,
+    '',
+    '--- stdout ---',
+    result.stdout.trim(),
+    '',
+    '--- stderr ---',
+    result.stderr.trim(),
+    '',
+  ].join('\n'))
+  return logFile
+}
+
+function conciseFailure(result, limit = 12) {
+  const lines = `${result.stderr}\n${result.stdout}`.split('\n').map((line) => line.trim()).filter(Boolean)
+  const actionable = lines.filter((line) => /\b(?:fail|block|error|warn|action|required|missing|invalid)\b/i.test(line))
+  return (actionable.length ? actionable : lines).slice(0, limit)
+}
+
+function readJson(file) {
+  return JSON.parse(readFileSync(file, 'utf8'))
+}
+
+function readOptionalJson(file) {
+  return existsSync(file) ? readJson(file) : null
+}
+
+function inspectRuleRelease() {
+  const result = spawnSync(process.execPath, [releaseScript, '--check', '--json'], { cwd: repoRoot, encoding: 'utf8' })
+  try {
+    return { ...JSON.parse(result.stdout), exitCode: result.status ?? 1 }
+  } catch (error) {
+    return { fresh: false, status: 'invalid', parseError: error.message, exitCode: result.status ?? 1 }
+  }
+}
+
+function inspectEffectiveRules() {
+  const result = spawnSync(process.execPath, [effectiveRulesScript, '--check', '--json'], { cwd: repoRoot, encoding: 'utf8' })
+  try {
+    return { ...JSON.parse(result.stdout), exitCode: result.status ?? 1 }
+  } catch (error) {
+    return { fresh: false, status: 'invalid', parseError: error.message, exitCode: result.status ?? 1 }
+  }
+}
+
+function requireFreshRuleRelease() {
+  const release = inspectRuleRelease()
+  if (release.fresh) return release
+  console.error(`rule release is ${release.status || 'invalid'}; current=${release.currentFingerprint || 'unknown'} published=${release.publishedFingerprint || 'none'}`)
+  for (const key of ['added', 'changed', 'removed']) {
+    if (release.diff?.[key]?.length) console.error(`${key}: ${release.diff[key].join(', ')}`)
+  }
+  console.error('run docs-tdd check <PROJECT-ID>, then rule-release.mjs --write before context/changed/gate')
+  return null
+}
+
+function requireFreshEffectiveRules() {
+  const release = inspectEffectiveRules()
+  if (release.fresh) return release
+  console.error(`effective rules release is ${release.status || 'invalid'}; current=${release.currentFingerprint || 'unknown'} published=${release.publishedFingerprint || 'none'}`)
+  if (release.missing?.length) console.error(`missing: ${release.missing.join(', ')}`)
+  console.error('run effective-rules.mjs --doctor, fix errors, then effective-rules.mjs --write')
+  return null
+}
+
+function normalizeRuleRef(ref) {
+  if (typeof ref === 'string') return { file: ref, sections: '' }
+  if (ref && typeof ref.file === 'string') return { file: ref.file, sections: ref.sections || '' }
+  throw new Error(`invalid rule reference: ${JSON.stringify(ref)}`)
+}
+
+function expandScenarioRefs(index, scenario, stack = []) {
+  if (stack.includes(scenario)) throw new Error(`scenario cycle: ${[...stack, scenario].join(' -> ')}`)
+  const refs = index.scenarios?.[scenario]
+  if (!Array.isArray(refs) || refs.length === 0) {
+    const available = Object.keys(index.scenarios || {}).sort().join(', ')
+    throw new Error(`unknown scenario: ${scenario}; available: ${available}`)
+  }
+  const expanded = refs.flatMap((ref) => {
+    if (ref && typeof ref.scenario === 'string') return expandScenarioRefs(index, ref.scenario, [...stack, scenario])
+    return [normalizeRuleRef(ref)]
+  })
+  const seen = new Set()
+  return expanded.filter((ref) => {
+    const key = `${ref.file}#${ref.sections}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
+function selectMarkdownSections(text, selector) {
+  if (!selector) return text
+  const match = /^(\d+)(?:-(\d+))?$/.exec(selector)
+  if (!match) throw new Error(`invalid section selector: ${selector}`)
+  const min = Number(match[1])
+  const max = Number(match[2] || match[1])
+  if (max < min) throw new Error(`invalid section selector: ${selector}`)
+  const headings = [...text.matchAll(/^##\s+(\d+)(?:\.|\s)/gm)]
+  const start = headings.find((heading) => Number(heading[1]) === min)?.index
+  const end = headings.find((heading) => Number(heading[1]) > max)?.index
+  if (start === undefined) throw new Error(`section selector ${selector} did not match any heading`)
+  return text.slice(start, end ?? text.length)
+}
+
+function createContextPack(id, scenario, release, effectiveRules, mode = 'compact') {
+  const started = Date.now()
+  const index = readJson(join(docsRoot, 'common/rule-index.json'))
+  const refs = expandScenarioRefs(index, scenario)
+
+  const summaryRef = { file: `${id}/agent/context-summary.md`, sections: '' }
+  const sources = [
+    summaryRef,
+    ...refs.map((normalized) => {
+      return { file: `common/${normalized.file}`, sections: mode === 'full' ? '' : normalized.sections }
+    }),
+  ]
+  const sections = sources.map((source) => {
+    const file = join(docsRoot, source.file)
+    if (!existsSync(file)) throw new Error(`context source does not exist: ${source.file}`)
+    const raw = readFileSync(file, 'utf8')
+    return {
+      label: `${source.file}${source.sections ? `#§${source.sections}` : ''}`,
+      text: selectMarkdownSections(raw, source.sections),
+    }
+  })
+  const ruleset = readJson(join(docsRoot, 'common/ruleset.json'))
+  const payload = sections.map(({ label, text }) => `${label}\n${text}`).join('\n')
+  const fingerprint = createHash('sha256').update(`${effectiveRules.currentFingerprint}\n${scenario}\n${mode}\n${payload}`).digest('hex').slice(0, 12)
+  const cacheDir = join(tmpdir(), 'docs-tdd-context')
+  const output = join(cacheDir, `${id}-${scenario}-${mode}-${fingerprint}.md`)
+  const body = [
+    '<!-- GENERATED CONTEXT PACK: disposable cache; source of truth remains docs_tdd -->',
+    `# ${id} / ${scenario}`,
+    '',
+    `- ruleset: \`${ruleset.version}\``,
+    `- rule release: \`${release.currentFingerprint}\``,
+    `- effective rules: \`${effectiveRules.currentFingerprint}\``,
+    `- mode: \`${mode}\``,
+    `- fingerprint: \`${fingerprint}\``,
+    `- sources: ${sections.map(({ label }) => `\`${label}\``).join(', ')}`,
+    '',
+    ...sections.flatMap(({ label, text }) => [`## Source: ${label}`, '', text.trim(), '']),
+  ].join('\n')
+
+  mkdirSync(cacheDir, { recursive: true })
+  const cacheHit = existsSync(output)
+  if (!cacheHit) writeFileSync(output, `${body}\n`)
+  return {
+    fingerprint,
+    output,
+    refs: sections.map(({ label }) => label),
+    sources,
+    mode,
+    cacheHit,
+    sourceChars: sections.reduce((total, item) => total + Array.from(item.text).length, 0),
+    packChars: Array.from(body).length + 1,
+    durationMs: Date.now() - started,
+  }
+}
+
+function gitOutput(args, cwd) {
+  const result = spawnSync('git', args, { cwd, encoding: 'utf8', stdio: 'pipe' })
+  return result.status === 0 ? result.stdout : ''
+}
+
+function changedFingerprint(id, worktree, effectiveFingerprint) {
+  const trackedDiff = gitOutput(['diff', '--binary', 'origin/online'], worktree)
+  const untracked = gitOutput(['ls-files', '--others', '--exclude-standard'], worktree).trim().split('\n').filter(Boolean)
+  const untrackedPayload = untracked.map((file) => {
+    const absolute = join(worktree, file)
+    return existsSync(absolute) ? `${file}\n${readFileSync(absolute)}` : file
+  }).join('\n')
+  const prdFile = join(docsRoot, id, 'agent/prd-source-manifest.json')
+  const prdHash = existsSync(prdFile) ? createHash('sha256').update(readFileSync(prdFile)).digest('hex') : 'none'
+  const projectDir = join(docsRoot, id)
+  const projectDocs = ['product/00-feature-inventory.md', 'product/03-api-contract.md', 'product/04-frontend-tasks.md', 'product/06-collaboration.md', 'agent/project-manifest.json', 'agent/msw-manifest.json', 'agent/assumptions.json']
+    .map((file) => {
+      const absolute = join(projectDir, file)
+      return existsSync(absolute) ? `${file}\n${readFileSync(absolute)}` : `${file}\nmissing`
+    })
+    .join('\n')
+  return createHash('sha256')
+    .update(`changed-v2\n${id}\n${effectiveFingerprint}\n${prdHash}\n${projectDocs}\n${trackedDiff}\n${untrackedPayload}`)
+    .digest('hex')
+    .slice(0, 16)
+}
+
+function runChanged(id, worktree, effectiveFingerprint) {
+  const started = Date.now()
+  const fingerprint = changedFingerprint(id, worktree, effectiveFingerprint)
+  const cacheDir = join(tmpdir(), 'docs-tdd-check-cache')
+  const cacheFile = join(cacheDir, `${id}-changed-${fingerprint}.json`)
+  if (!noCache && existsSync(cacheFile)) {
+    const cached = readJson(cacheFile)
+    console.log(`changed: ${id} — PASS (cache=hit, checks=${cached.checks}, duration=${Date.now() - started}ms, fingerprint=${fingerprint})`)
+    return 0
+  }
+
+  const projectManifest = readOptionalJson(join(docsRoot, id, 'agent/project-manifest.json'))
+  const checks = [
+    { label: 'code-rules', args: [join(scriptDir, 'verify-code-rules.mjs'), '--project', id] },
+  ]
+  if (projectManifest?.pilot?.msw) checks.push({ label: 'msw-manifest', args: [join(scriptDir, 'verify-msw-manifest.mjs'), id] })
+  if (projectManifest?.pilot?.prdIntake) checks.push({ label: 'prd-intake', args: [join(scriptDir, 'prd-intake.mjs'), id, '--stage', 'G2'] })
+
+  let status = 0
+  for (const check of checks) {
+    const result = runCaptured(check.args, worktree)
+    const logFile = persistCapturedLog(id, check.label, result)
+    if (result.status === 0) console.log(`PASS ${check.label} (${result.durationMs}ms)`)
+    else {
+      status ||= result.status
+      console.error(`FAIL ${check.label} (${result.durationMs}ms)`)
+      for (const line of conciseFailure(result)) console.error(`  ${line}`)
+      console.error(`  full log: ${logFile}`)
+    }
+  }
+  const durationMs = Date.now() - started
+  console.log(`changed: ${id} — ${status === 0 ? 'PASS' : 'BLOCK'} (cache=miss, checks=${checks.length}, duration=${durationMs}ms, fingerprint=${fingerprint})`)
+  if (status === 0 && !noCache) {
+    mkdirSync(cacheDir, { recursive: true })
+    writeFileSync(cacheFile, `${JSON.stringify({ id, fingerprint, checks: checks.length, durationMs })}\n`)
+  }
+  return status
+}
+
+function recommendScenarios(worktree) {
+  const files = new Set([
+    ...gitOutput(['diff', '--name-only', 'origin/online'], worktree).trim().split('\n'),
+    ...gitOutput(['ls-files', '--others', '--exclude-standard'], worktree).trim().split('\n'),
+  ].filter(Boolean))
+  const recommendations = []
+  const add = (scenario, reason) => {
+    if (!recommendations.some((item) => item.scenario === scenario)) recommendations.push({ scenario, reason })
+  }
+  for (const file of files) {
+    if (/(?:map[A-Z][^/]*|mapper)\.(?:ts|tsx)$/i.test(file)) add('write_mapper', file)
+    if (/(?:mocks?\/handlers|fixtures?|msw)/i.test(file)) add('write_msw', file)
+    if (/(?:use[A-Z][^/]*Query|query)\.(?:ts|tsx)$/i.test(file)) add('write_query_hook', file)
+    if (/\.(?:tsx|css|scss|less)$/.test(file)) add('write_ui', file)
+    if (/figma|07-figma-spec/i.test(file)) add('write_figma', file)
+  }
+  console.log(recommendations.length ? recommendations.map((item) => `${item.scenario}: ${item.reason}`).join('\n') : 'no scenario recommendation; choose explicitly')
+}
+
+function resolveProjectWorktree(id) {
+  const projectDir = id ? join(docsRoot, id) : ''
+  const readmeFile = projectDir ? join(projectDir, 'README.md') : ''
+  const readme = readmeFile && existsSync(readmeFile) ? readFileSync(readmeFile, 'utf8') : ''
+  const configured = readme.match(/^worktree:\s*(.*)$/m)?.[1]?.replace(/^['"]|['"]$/g, '').trim()
+  const worktree = configured ? resolve(projectDir, configured) : repoRoot
+  return {
+    configured: Boolean(configured),
+    exists: existsSync(worktree),
+    worktree: existsSync(worktree) ? worktree : repoRoot,
+    requestedWorktree: worktree,
+  }
+}
+
+// Gate heartbeat: warn when the worktree code drifted from the last PASS, so the
+// agent doesn't trust a stale green. Diagnostic-only; never blocks. Worktree-level,
+// so any dirty change in the feature worktree flips it (feature worktrees are 1-per-PR).
+// Gate 心跳判定（纯函数，便于 self-test）：located/isGitRepo 缺失即跳过；无 gate 结果时，
+// 若 worktree 与 base 零差异（还没代码可 gate）也跳过，避免对 pre-coding 项目催跑 gate。
+function heartbeatDecision({ located, isGitRepo, noDivergence, gate, matches }) {
+  if (!located || !isGitRepo) return { level: 'skip' }
+  if (!gate) return noDivergence ? { level: 'skip' } : { level: 'warn', message: '尚无 gate-results.json（从未跑过 gate）；交付前先跑 docs-tdd gate' }
+  if (gate.ok !== true) return { level: 'warn', message: `上次 ${gate.gate} 未通过（ok=false）；修复后重跑 docs-tdd gate ${gate.gate}` }
+  if (matches) return { level: 'ok', message: `${gate.gate} PASS 与当前代码一致` }
+  return { level: 'warn', message: `距上次 ${gate.gate} PASS 后 worktree 代码已变更（worktree 级，非文件级）；交付前先跑 docs-tdd changed/gate` }
+}
+
+function gateHeartbeat(id, resolvedWorktree) {
+  const located = resolvedWorktree.configured && resolvedWorktree.exists
+  if (!located) return { level: 'skip' } // pre-G4 / 未配置 worktree
+  const current = codeFingerprint(resolvedWorktree.worktree)
+  const noDivergence = current.headSha === current.baseSha && current.dirtyFileCount === 0 && current.untrackedFileCount === 0
+  const gate = readOptionalJson(join(docsRoot, id, 'agent/gate-results.json'))
+  return heartbeatDecision({
+    located,
+    isGitRepo: current.isGitRepo,
+    noDivergence,
+    gate,
+    matches: matchesGateFingerprint(current, gate?.fingerprint),
+  })
+}
+
+function printGateHeartbeat(id, resolvedWorktree) {
+  const beat = gateHeartbeat(id, resolvedWorktree)
+  if (beat.level === 'warn') console.warn(`⚠ gate 心跳：${beat.message}`)
+  else if (beat.level === 'ok') console.log(`✓ gate 心跳：${beat.message}`)
+}
+
+function capability(id) {
+  const projectDir = id ? join(docsRoot, id) : ''
+  const manifestFile = projectDir ? join(projectDir, 'agent/project-manifest.json') : ''
+  const manifest = manifestFile && existsSync(manifestFile) ? readJson(manifestFile) : null
+  const resolvedWorktree = resolveProjectWorktree(id)
+  const ruleset = readJson(join(docsRoot, 'common/ruleset.json'))
+  const release = inspectRuleRelease()
+  const effectiveRules = inspectEffectiveRules()
+  const hook = process.env.CLAUDE_PROJECT_DIR ? 'claude-posttooluse' : 'manual-agent-adapter'
+  console.log(`docs_tdd root: ${docsRoot}`)
+  console.log(`agent adapter: ${hook}`)
+  console.log(`automatic post-edit hook: ${hook === 'claude-posttooluse' ? 'available' : 'unavailable'}`)
+  console.log(`fallback: run docs-tdd changed ${id || '<PROJECT-ID>'} before completion`)
+  console.log(`ruleset: ${manifest?.rulesetVersion || ruleset.version} (${ruleset.maturity})`)
+  console.log(`rule release: ${release.status || 'invalid'} (${(release.currentFingerprint || 'unknown').slice(0, 12)})`)
+  console.log(`effective rules: ${effectiveRules.status || 'invalid'} (${(effectiveRules.currentFingerprint || 'unknown').slice(0, 12)})`)
+  console.log(`project worktree: ${resolvedWorktree.worktree}`)
+  if (!resolvedWorktree.exists) console.warn(`warning: configured worktree does not exist: ${resolvedWorktree.requestedWorktree}; falling back to ${repoRoot}`)
+  else if (!resolvedWorktree.configured && id) console.warn(`warning: project worktree is not configured; falling back to ${repoRoot}`)
+  if (!release.fresh) console.warn('warning: context/changed/gate are blocked until the current rules are published')
+  if (!effectiveRules.fresh) console.warn('warning: context/changed/gate are blocked until effective rules are published')
+}
+
+if (process.argv.includes('--self-test')) {
+  const ruleset = readJson(join(docsRoot, 'common/ruleset.json'))
+  if (!ruleset.version || !ruleset.maturity) process.exit(1)
+  const index = readJson(join(docsRoot, 'common/rule-index.json'))
+  if (!Array.isArray(index.scenarios?.write_mapper) || index.scenarios.write_mapper.length === 0) process.exit(1)
+  const markdown = ['# Test', '', '## 1. One', 'one', '', '## 2 Two', 'two', '', '## 3. Three', 'three'].join('\n')
+  assert.equal(selectMarkdownSections(markdown, '2'), ['## 2 Two', 'two', '', ''].join('\n'))
+  assert.equal(selectMarkdownSections(markdown, '1-2'), ['## 1. One', 'one', '', '## 2 Two', 'two', '', ''].join('\n'))
+  assert.throws(() => selectMarkdownSections(markdown, '2-1'), /invalid section selector/)
+  assert.throws(() => selectMarkdownSections(markdown, 'x'), /invalid section selector/)
+  assert.throws(() => selectMarkdownSections(markdown, '4'), /did not match any heading/)
+  assert(expandScenarioRefs(index, 'g6_verify').some((ref) => ref.file === 'quality-checklist.md'))
+  const release = inspectRuleRelease()
+  assert.equal(typeof release.currentFingerprint, 'string')
+  const effectiveRules = inspectEffectiveRules()
+  assert.equal(typeof effectiveRules.currentFingerprint, 'string')
+  // gate 心跳判定
+  assert.equal(heartbeatDecision({ located: false }).level, 'skip')
+  assert.equal(heartbeatDecision({ located: true, isGitRepo: false }).level, 'skip')
+  assert.equal(heartbeatDecision({ located: true, isGitRepo: true, noDivergence: true, gate: null }).level, 'skip') // 无代码可 gate → 不催
+  assert.equal(heartbeatDecision({ located: true, isGitRepo: true, noDivergence: false, gate: null }).level, 'warn') // 有改动却从未跑 → 催
+  assert.equal(heartbeatDecision({ located: true, isGitRepo: true, noDivergence: false, gate: { ok: false, gate: 'G5' } }).level, 'warn')
+  assert.equal(heartbeatDecision({ located: true, isGitRepo: true, noDivergence: false, gate: { ok: true, gate: 'G5' }, matches: true }).level, 'ok')
+  assert.equal(heartbeatDecision({ located: true, isGitRepo: true, noDivergence: false, gate: { ok: true, gate: 'G5' }, matches: false }).level, 'warn')
+  console.log('docs-tdd self-test passed.')
+  process.exit(0)
+}
+
+if (command === 'capability') {
+  capability(projectId)
+  process.exit(0)
+}
+
+if (command === 'doctor') {
+  process.exit(run([effectiveRulesScript, '--doctor']))
+}
+
+// golden 不针对具体项目：它用保留夹具 PR-00000 回归 gate 机器自己，所以必须在项目 ID 校验之前分流。
+if (command === 'golden') {
+  process.exit(run([join(scriptDir, 'golden-run.mjs'), ...cliArgs.slice(1)]))
+}
+
+if (!/^PR-\d{5}$/.test(projectId || '')) {
+  console.error('usage: docs-tdd.mjs <capability|doctor|golden|check|gate|context|changed|recommend> PR-01234 [G0-G8|scenario] [--compact|--full|--no-cache]')
+  process.exit(1)
+}
+
+capability(projectId)
+const resolvedWorktree = resolveProjectWorktree(projectId)
+const { worktree } = resolvedWorktree
+let status = 0
+if (command === 'check') status = run([join(scriptDir, 'check-doc-budget.mjs')])
+else {
+  const release = requireFreshRuleRelease()
+  if (!release) process.exit(1)
+  const effectiveRules = requireFreshEffectiveRules()
+  if (!effectiveRules) process.exit(1)
+  if (command === 'gate') {
+    status = run([join(scriptDir, 'run-project-gate.mjs'), projectId, detail || 'G3', '--write', ...(noCache ? ['--no-cache'] : [])], worktree)
+  } else if (command === 'changed') {
+    status = runChanged(projectId, worktree, effectiveRules.currentFingerprint)
+  } else if (command === 'context') {
+    try {
+      const scenario = detail || 'g0_g2_scope'
+      const pack = createContextPack(projectId, scenario, release, effectiveRules, fullContext ? 'full' : 'compact')
+      console.log(`scenario: ${scenario}`)
+      console.log(`context mode: ${pack.mode}`)
+      console.log(`context fingerprint: ${pack.fingerprint}`)
+      console.log(`context pack: ${pack.output}`)
+      console.log(`context metrics: sources=${pack.refs.length}, sourceChars=${pack.sourceChars}, packChars=${pack.packChars}, cache=${pack.cacheHit ? 'hit' : 'miss'}, duration=${pack.durationMs}ms`)
+      console.log(`routed rules: ${pack.refs.join(', ')}`)
+      printGateHeartbeat(projectId, resolvedWorktree)
+    } catch (error) {
+      console.error(error.message)
+      status = 1
+    }
+  } else if (command === 'recommend') {
+    recommendScenarios(worktree)
+  } else {
+    console.error(`unknown command: ${command}`)
+    status = 1
+  }
+}
+process.exit(status)

@@ -1,0 +1,67 @@
+{
+  "date": "2026-06-26",
+  "mcp": "Playwright MCP (user-Playwright, --extension)",
+  "service": "http://localhost:4000",
+  "mock": true,
+  "activityId": "PR-01685",
+  "viewports": ["1440x1200", "390x844"],
+  "theme": "light only (dark toggle not exercised)",
+  "summary": {
+    "passed": 18,
+    "failed": 0,
+    "partial": 3,
+    "blocked": 1,
+    "verdict": "pass_with_notes"
+  },
+  "scenarios": {
+    "active": { "desktop": { "overflow": false, "hero": true, "ranking": true }, "mobile": { "overflow": false } },
+    "not-started": { "desktop": { "overflow": false, "notStarted": true }, "mobile": { "overflow": false } },
+    "ended": { "desktop": { "overflow": false, "ended": true }, "mobile": { "overflow": false } },
+    "unjoined": { "desktop": { "overflow": false, "joinCta": true }, "mobile": { "overflow": false } },
+    "claimable": { "desktop": { "overflow": false, "claimable": true }, "mobile": { "overflow": false } },
+    "restricted": { "desktop": { "overflow": false, "restricted": true, "knowBtn": true }, "mobile": { "overflow": false } },
+    "empty-ranking": { "desktop": { "overflow": false, "empty": true }, "mobile": { "overflow": false } }
+  },
+  "interactions": {
+    "K4_bottomCta": { "status": "pass", "fixedCtaOnScroll": true },
+    "K5_1_joinLogin": { "status": "pass", "url": "http://localhost:4000/zh-CN/login?from=/campaign/PR-01685" },
+    "K5_2_restricted": { "status": "pass", "texts": ["仅限指定用户参与", "我知道了"] },
+    "K6_1_claim": { "status": "partial", "note": "未登录点击待领取跳转登录页，toast 需登录后验证" },
+    "K6_2_goComplete": { "status": "partial", "note": "unjoined mock 任务按钮为立即认证/立即交易，无去完成；请先报名 toast 需已登录未报名态" },
+    "K6_3_share": { "status": "pass", "channels": ["复制", "Telegram", "WhatsApp", "X"] },
+    "K6_4_rulesAnchor": { "status": "pass", "inViewport": true },
+    "K7_1_rankingPage2": { "status": "pass" },
+    "K7_2_emptyRanking": { "status": "pass", "emptyText": "暂无数据" }
+  },
+  "console": {
+    "level": "warning",
+    "notable": [
+      "Hydration mismatch (Footer)",
+      "Image missing alt",
+      "aria-label required (multiple)",
+      "webapi.localhost SSL / webapi.xfojw.com unreachable (env)",
+      "GSI/Google login origin 403 (localhost)",
+      "geetest 502 (env)"
+    ]
+  },
+  "screenshots": [
+    "desktop-active.png",
+    "desktop-not-started.png",
+    "desktop-ended.png",
+    "desktop-unjoined.png",
+    "desktop-claimable.png",
+    "desktop-restricted.png",
+    "desktop-empty-ranking.png",
+    "mobile-active.png",
+    "mobile-not-started.png",
+    "mobile-ended.png",
+    "mobile-unjoined.png",
+    "mobile-claimable.png",
+    "mobile-restricted.png",
+    "mobile-empty-ranking.png"
+  ],
+  "figma": {
+    "status": "not_run",
+    "note": "JF 95% 像素对照待截图人工并排或 Figma MCP"
+  }
+}

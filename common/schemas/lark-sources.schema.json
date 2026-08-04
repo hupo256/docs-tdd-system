@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "lark-sources.schema.json",
+  "title": "Lark Document Sync Sources",
+  "description": "Sources for sync-lark-docs.mjs to pull PRD/QA/wiki into the project inbox",
+  "type": "object",
+  "required": ["projectId", "outputDir", "sources"],
+  "properties": {
+    "projectId": { "type": "string" },
+    "outputDir": { "type": "string" },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "operation", "name", "url", "target"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["wiki", "doc", "docx", "markdown", "sheet"]
+          },
+          "operation": {
+            "type": "string",
+            "enum": ["read", "export"]
+          },
+          "name": { "type": "string" },
+          "url": { "type": "string" },
+          "target": { "type": "string" },
+          "syncedAt": { "type": "string", "format": "date-time" },
+          "revision": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

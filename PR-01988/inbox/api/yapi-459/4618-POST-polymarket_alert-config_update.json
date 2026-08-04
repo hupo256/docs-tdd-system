@@ -1,0 +1,44 @@
+{
+  "query_path": {
+    "path": "/polymarket/alert-config/update",
+    "params": []
+  },
+  "edit_uid": 0,
+  "status": "done",
+  "type": "static",
+  "req_body_is_json_schema": true,
+  "res_body_is_json_schema": true,
+  "api_opened": false,
+  "index": 0,
+  "tag": [],
+  "_id": 4618,
+  "res_body_type": "json",
+  "res_body": "{\"properties\":{\"code\":{\"type\":\"integer\",\"description\":\"业务状态码，成功时通常为 0\"},\"data\":{\"type\":\"object\",\"description\":\"成功时可能为空\",\"properties\":{}},\"msg\":{\"type\":\"string\",\"description\":\"响应消息\"}},\"type\":\"object\"}",
+  "req_query": [],
+  "req_body_other": "{\"properties\":{\"orderErrorThreshold\":{\"description\":\"下单连续失败次数阈值。统计窗口内连续失败次数达到该值时触发紧急告警，默认 3\",\"example\":3,\"type\":\"integer\"},\"larkWebhookUrl\":{\"description\":\"Lark 群机器人 Webhook 地址，用于发送钱包余额、下单失败和持仓差异告警\",\"example\":\"https://open.larksuite.com/open-apis/bot/v2/hook/xxxx\",\"type\":\"string\"},\"orderErrorWindowMinutes\":{\"description\":\"下单失败统计窗口，单位分钟。默认 5 分钟\",\"example\":5,\"type\":\"integer\"},\"positionDiffRate\":{\"description\":\"持仓差异率告警阈值，单位为百分比数值。差异率超过该值时触发 Lark 告警，默认 0.1\",\"example\":\"0.1\",\"type\":\"string\"},\"walletWarningBalance\":{\"description\":\"钱包余额警告阈值。USDC 余额低于该值时触发警告告警，默认 50000\",\"example\":\"50000\",\"type\":\"string\"},\"walletCriticalBalance\":{\"description\":\"钱包余额紧急阈值。USDC 余额低于该值时触发紧急补资告警，默认 10000\",\"example\":\"10000\",\"type\":\"string\"}},\"type\":\"object\",\"required\":[\"larkWebhookUrl\",\"walletWarningBalance\",\"walletCriticalBalance\",\"positionDiffRate\",\"orderErrorThreshold\",\"orderErrorWindowMinutes\"]}",
+  "title": "更新 Polymarket 预警配置",
+  "req_headers": [
+    {
+      "required": "1",
+      "_id": "6a3519ee06f2eea68908a32b",
+      "name": "Content-Type",
+      "value": "application/json",
+      "example": "application/json",
+      "desc": "请求体格式，POST 接口必填"
+    }
+  ],
+  "method": "POST",
+  "catid": 1277,
+  "project_id": 459,
+  "path": "/polymarket/alert-config/update",
+  "req_body_type": "json",
+  "desc": "",
+  "req_params": [],
+  "uid": 629,
+  "add_time": 1781864508,
+  "up_time": 1781864942,
+  "req_body_form": [],
+  "__v": 0,
+  "markdown": "",
+  "username": "meachel@globaldev.info"
+}

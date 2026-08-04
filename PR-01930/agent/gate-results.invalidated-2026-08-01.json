@@ -1,0 +1,408 @@
+{
+  "generatedAt": "2026-07-27T17:27:33.926Z",
+  "tool": "verify-project-gate.mjs",
+  "ok": true,
+  "projectId": "PR-01930",
+  "gate": "G8",
+  "checks": [
+    {
+      "ruleId": "DOC-STRUCT-001",
+      "ok": true,
+      "message": "project directory exists: apps/web/docs_tdd/PR-01930",
+      "file": "apps/web/docs_tdd/PR-01930",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-STRUCT-002",
+      "ok": true,
+      "message": "required file exists: README.md",
+      "file": "apps/web/docs_tdd/PR-01930/README.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-STRUCT-003",
+      "ok": true,
+      "message": "required file exists: product/00-feature-inventory.md",
+      "file": "apps/web/docs_tdd/PR-01930/product/00-feature-inventory.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-STRUCT-004",
+      "ok": true,
+      "message": "required file exists: product/01-scope-and-phases.md",
+      "file": "apps/web/docs_tdd/PR-01930/product/01-scope-and-phases.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-STRUCT-005",
+      "ok": true,
+      "message": "required file exists: product/02-technical-design.md",
+      "file": "apps/web/docs_tdd/PR-01930/product/02-technical-design.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-STRUCT-006",
+      "ok": true,
+      "message": "required file exists: product/03-api-contract.md",
+      "file": "apps/web/docs_tdd/PR-01930/product/03-api-contract.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-STRUCT-007",
+      "ok": true,
+      "message": "required file exists: product/04-frontend-tasks.md",
+      "file": "apps/web/docs_tdd/PR-01930/product/04-frontend-tasks.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-STRUCT-008",
+      "ok": true,
+      "message": "required file exists: product/05-ui-and-interaction.md",
+      "file": "apps/web/docs_tdd/PR-01930/product/05-ui-and-interaction.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-STRUCT-009",
+      "ok": true,
+      "message": "required file exists: product/06-collaboration.md",
+      "file": "apps/web/docs_tdd/PR-01930/product/06-collaboration.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-STRUCT-010",
+      "ok": true,
+      "message": "required file exists: product/07-figma-spec.md",
+      "file": "apps/web/docs_tdd/PR-01930/product/07-figma-spec.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-STRUCT-011",
+      "ok": true,
+      "message": "required file exists: engineering/development-rules.md",
+      "file": "apps/web/docs_tdd/PR-01930/engineering/development-rules.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-STRUCT-012",
+      "ok": true,
+      "message": "required file exists: agent/README.md",
+      "file": "apps/web/docs_tdd/PR-01930/agent/README.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G0-001",
+      "ok": true,
+      "message": "feature inventory records PRD source",
+      "file": "apps/web/docs_tdd/PR-01930/product/00-feature-inventory.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G0-002",
+      "ok": true,
+      "message": "feature inventory has feature list section",
+      "file": "apps/web/docs_tdd/PR-01930/product/00-feature-inventory.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G0-003",
+      "ok": true,
+      "message": "feature inventory has acceptance mapping section",
+      "file": "apps/web/docs_tdd/PR-01930/product/00-feature-inventory.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G0-004",
+      "ok": true,
+      "message": "feature inventory has unreadable PRD content section",
+      "file": "apps/web/docs_tdd/PR-01930/product/00-feature-inventory.md",
+      "severity": "warn",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G2-001",
+      "ok": true,
+      "message": "feature inventory has no blocking placeholders",
+      "file": "apps/web/docs_tdd/PR-01930/product/00-feature-inventory.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G2-002",
+      "ok": true,
+      "message": "G2 confirmer and date are filled",
+      "file": "apps/web/docs_tdd/PR-01930/product/00-feature-inventory.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G2-003",
+      "ok": true,
+      "message": "feature list has at least one feature row",
+      "file": "apps/web/docs_tdd/PR-01930/product/00-feature-inventory.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G2-004",
+      "ok": true,
+      "message": "each feature row has 本期=做/不做/延期",
+      "file": "apps/web/docs_tdd/PR-01930/product/00-feature-inventory.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G2-005",
+      "ok": true,
+      "message": "all 本期=做 feature IDs appear in frontend tasks",
+      "file": "apps/web/docs_tdd/PR-01930/product/04-frontend-tasks.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G3-001",
+      "ok": true,
+      "message": "G3 API contract locks mock route to MSW route B",
+      "file": "apps/web/docs_tdd/PR-01930/product/03-api-contract.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G3-002",
+      "ok": true,
+      "message": "G3 API contract contains MSW checklist / landing preconditions",
+      "file": "apps/web/docs_tdd/PR-01930/product/03-api-contract.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G3-003",
+      "ok": true,
+      "message": "G3 MSW checklist covers normal/empty/error/unauthorized/edge scenarios",
+      "file": "apps/web/docs_tdd/PR-01930/product/03-api-contract.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G3-004",
+      "ok": true,
+      "message": "G3 MSW route records schema contract test requirement",
+      "file": "apps/web/docs_tdd/PR-01930/product/03-api-contract.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G3-005",
+      "ok": true,
+      "message": "G3 MSW route records dev-only worker registration",
+      "file": "apps/web/docs_tdd/PR-01930/product/03-api-contract.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G3-006",
+      "ok": true,
+      "message": "G3 frontend tasks include the MSW fallback task",
+      "file": "apps/web/docs_tdd/PR-01930/product/04-frontend-tasks.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G3-007",
+      "ok": true,
+      "message": "G3 collaboration records the MSW fallback decision / checklist",
+      "file": "apps/web/docs_tdd/PR-01930/product/06-collaboration.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G4-001",
+      "ok": true,
+      "message": "technical design reuse inventory has no blocking placeholders",
+      "file": "apps/web/docs_tdd/PR-01930/product/02-technical-design.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G4-002",
+      "ok": true,
+      "message": "technical design contains reuse inventory",
+      "file": "apps/web/docs_tdd/PR-01930/product/02-technical-design.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G4-003",
+      "ok": true,
+      "message": "technical design does not contain skipped-reuse wording",
+      "file": "apps/web/docs_tdd/PR-01930/product/02-technical-design.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G5-001",
+      "ok": true,
+      "message": "API contract records field reconciliation",
+      "file": "apps/web/docs_tdd/PR-01930/product/03-api-contract.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G5-002",
+      "ok": true,
+      "message": "API contract records mock status/removal result",
+      "file": "apps/web/docs_tdd/PR-01930/product/03-api-contract.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G5-003",
+      "ok": true,
+      "message": "API contract records copy contract table",
+      "file": "apps/web/docs_tdd/PR-01930/product/03-api-contract.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "CODE-MSW-004",
+      "ok": true,
+      "message": "new feature mock route is MSW route B or explicitly documented",
+      "file": "apps/web/docs_tdd/PR-01930/product/03-api-contract.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "CODE-MSW-001",
+      "ok": true,
+      "message": "MSW route B records contract/schema verification",
+      "file": "apps/web/docs_tdd/PR-01930/product/03-api-contract.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "CODE-MSW-003",
+      "ok": true,
+      "message": "MSW route B records handler removal/disable or test-only disposition before G6 handoff",
+      "file": "apps/web/docs_tdd/PR-01930/product/03-api-contract.md",
+      "severity": "warn",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "CODE-MOCK-002",
+      "ok": false,
+      "message": "cannot scan mock residue (rg unavailable: status 2)",
+      "file": "apps/web/docs_tdd/PR-01930",
+      "severity": "warn",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "CODE-SCOPE-001",
+      "ok": false,
+      "message": "changed files outside 责任模块目录 (confirm not out-of-scope, §1.1):\napps/web/src/apps/CashFlow/futures/FuturesCashFlow.tsx\napps/web/src/apps/CashFlow/futures/futuresCashFlowEnum.contract.test.ts\napps/web/src/apps/Futures/components/FuturesOrders/FundsFlow/components/TransactionFilter.tsx\napps/web/src/apps/Orders/CouponRecord/couponRecordEnum.contract.test.ts",
+      "file": "apps/web/docs_tdd/PR-01930",
+      "severity": "warn",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "VERIFY-G6-001",
+      "ok": true,
+      "message": "at least one evidence README exists under project evidence/",
+      "file": "apps/web/docs_tdd/PR-01930/evidence",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "VERIFY-G6-002",
+      "ok": true,
+      "message": "code-review findings recorded with disposition and no unresolved items (fix on the spot or waive)",
+      "file": "apps/web/docs_tdd/PR-01930/product/06-collaboration.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "VERIFY-G6-003",
+      "ok": true,
+      "message": "verification evidence records command target/result, including Biome or documented fallback",
+      "file": "apps/web/docs_tdd/PR-01930/evidence",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "VERIFY-G6-004",
+      "ok": true,
+      "message": "evidence directory contains no binary/temporary files (only text reports)",
+      "file": "apps/web/docs_tdd/PR-01930/evidence",
+      "severity": "warn",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "VERIFY-G8-001",
+      "ok": true,
+      "message": "gate-results.json is valid JSON produced by verify-project-gate.mjs --write or run-project-gate.mjs (has generatedAt + tool)",
+      "file": "apps/web/docs_tdd/PR-01930/agent/gate-results.json",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "VERIFY-G8-002",
+      "ok": true,
+      "message": "gate-results.json projectId matches PR-01930 (got PR-01930)",
+      "file": "apps/web/docs_tdd/PR-01930/agent/gate-results.json",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "VERIFY-G8-003",
+      "ok": true,
+      "message": "gate-results.json was generated for G8 (got G8)",
+      "file": "apps/web/docs_tdd/PR-01930/agent/gate-results.json",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "VERIFY-G8-004",
+      "ok": true,
+      "message": "gate-results.json has no blocking failures (fail=0, ok=true)",
+      "file": "apps/web/docs_tdd/PR-01930/agent/gate-results.json",
+      "severity": "error",
+      "category": "documentation"
+    }
+  ],
+  "groups": {
+    "documentation": {
+      "total": 47,
+      "ok": 45,
+      "warn": 2,
+      "waived": 0,
+      "fail": 0
+    },
+    "implementation": {
+      "total": 0,
+      "ok": 0,
+      "warn": 0,
+      "waived": 0,
+      "fail": 0
+    }
+  },
+  "summary": {
+    "total": 47,
+    "ok": 45,
+    "warn": 2,
+    "waived": 0,
+    "fail": 0
+  }
+}

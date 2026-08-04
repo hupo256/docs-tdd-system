@@ -1,0 +1,13 @@
+{
+  "projectId": "PR-01947",
+  "outputDir": "apps/web/docs_tdd/PR-01947/inbox/lark-sync",
+  "sources": [
+    {
+      "type": "doc",
+      "operation": "read",
+      "name": "需求 PRD",
+      "url": "https://qfglxo2m3dc.sg.larksuite.com/docx/Qj5OdXCCroWHopxcfcmlGklMgff",
+      "target": "prd-latest.md"
+    }
+  ]
+}

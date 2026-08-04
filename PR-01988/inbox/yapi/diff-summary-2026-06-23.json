@@ -1,0 +1,36 @@
+{
+  "oldCount": 26,
+  "newCount": 29,
+  "added": [
+    {
+      "id": 5215,
+      "method": "POST",
+      "path": "/polymarket/alert-config/update_1782211023564",
+      "title": "更新 Polymarket 预警配置",
+      "category": "Polymarket 预警配置"
+    },
+    {
+      "id": 5218,
+      "method": "GET",
+      "path": "/positionDiff/statistics",
+      "title": "持仓差异统计",
+      "category": "手动平账"
+    },
+    {
+      "id": 5212,
+      "method": "GET",
+      "path": "/polymarket/alert-config/get_1782211018309",
+      "title": "查询通用参数配置",
+      "category": "通用参数管理"
+    }
+  ],
+  "changed": [
+    {
+      "id": 4618,
+      "method": "POST",
+      "path": "/polymarket/alert-config/fee/update",
+      "title": "更新通用参数配置",
+      "category": "通用参数管理"
+    }
+  ]
+}

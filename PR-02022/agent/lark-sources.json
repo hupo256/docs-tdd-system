@@ -1,0 +1,20 @@
+{
+  "projectId": "PR-02022",
+  "outputDir": "apps/web/docs_tdd/PR-02022/inbox/lark-sync",
+  "sources": [
+    {
+      "type": "doc",
+      "operation": "read",
+      "name": "需求 PRD",
+      "url": "https://qfglxo2m3dc.sg.larksuite.com/docx/WQECd5jNWo3qdBxUfiqlUAnmgfg",
+      "target": "prd-latest.md"
+    },
+    {
+      "type": "sheet",
+      "operation": "read",
+      "name": "提测演示用例",
+      "url": "https://qfglxo2m3dc.sg.larksuite.com/wiki/T1eTwACdaibCB8kPG3plR08jg1d",
+      "target": "test-cases-latest.md"
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "title": "FameEX TradFi | USDT 永续合约交易",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "hasNoNextErrorText": true,
+  "labels": {
+    "hasHero": false,
+    "hasTabs": true,
+    "hasMobileSort": true,
+    "hasTradeLinks": false
+  },
+  "clicks": {
+    "clickedPrice": true,
+    "clickedTurnover": true,
+    "clickedStock": true
+  },
+  "counts": {
+    "before": 0,
+    "afterPrice": 0,
+    "afterTurnover": 0,
+    "afterStock": 0
+  },
+  "allLinks": {
+    "before": [
+      {
+        "text": "合约交易",
+        "href": "/zh-CN/swap/E-BTC-USDT",
+        "rect": {
+          "top": 0,
+          "width": 0,
+          "height": 0
+        }
+      },
+      {
+        "text": "合约交易",
+        "href": "/zh-CN/swap/E-BTC-USDT",
+        "rect": {
+          "top": 0,
+          "width": 0,
+          "height": 0
+        }
+      }
+    ],
+    "afterStock": [
+      {
+        "text": "合约交易",
+        "href": "/zh-CN/swap/E-BTC-USDT",
+        "rect": {
+          "top": 0,
+          "width": 0,
+          "height": 0
+        }
+      },
+      {
+        "text": "合约交易",
+        "href": "/zh-CN/swap/E-BTC-USDT",
+        "rect": {
+          "top": 0,
+          "width": 0,
+          "height": 0
+        }
+      }
+    ]
+  },
+  "firstRows": {
+    "before": [],
+    "afterPrice": [],
+    "afterTurnover": [],
+    "afterStock": []
+  }
+}

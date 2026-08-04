@@ -1,0 +1,31 @@
+{
+  "projectId": "PR-02074",
+  "assumptions": [
+    {
+      "id": "ASM-001",
+      "endpoint": "tag-events-list",
+      "field": "categoryLabel",
+      "code": [
+        "apps/web/src/services/api/prediction/schemas.ts",
+        "apps/web/src/mocks/fixtures/prediction.ts"
+      ],
+      "owner": "backend",
+      "status": "open",
+      "blockingWhen": "api-ready",
+      "resolution": "Confirm the field name or replace it with a frontend tag mapping"
+    },
+    {
+      "id": "ASM-002",
+      "endpoint": "estimated-profit",
+      "field": "orderAmount/feeAmount/receiveAmount",
+      "code": [
+        "apps/web/src/services/api/prediction/schemas.ts",
+        "apps/web/src/mocks/fixtures/prediction.ts"
+      ],
+      "owner": "backend",
+      "status": "open",
+      "blockingWhen": "api-ready",
+      "resolution": "Confirm real response fields and buy/sell amount semantics"
+    }
+  ]
+}

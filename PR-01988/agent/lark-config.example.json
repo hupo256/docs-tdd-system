@@ -1,0 +1,7 @@
+{
+  "project": "PR-01988",
+  "title": "预测市场二期",
+  "webhookUrl": "https://open.larksuite.com/open-apis/bot/v2/hook/YOUR_HOOK_ID",
+  "secret": "YOUR_LARK_BOT_SECRET",
+  "autoNotify": true
+}

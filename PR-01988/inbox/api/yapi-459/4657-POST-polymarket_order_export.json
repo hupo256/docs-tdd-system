@@ -1,0 +1,44 @@
+{
+  "query_path": {
+    "path": "/polymarket/order/export",
+    "params": []
+  },
+  "edit_uid": 0,
+  "status": "done",
+  "type": "static",
+  "req_body_is_json_schema": true,
+  "res_body_is_json_schema": true,
+  "api_opened": false,
+  "index": 0,
+  "tag": [],
+  "_id": 4657,
+  "res_body_type": "json",
+  "res_body": "{\"properties\":{\"code\":{\"type\":\"string\",\"description\":\"失败时业务状态码；导出成功时直接返回 Excel 文件流，不返回 JSON\"},\"msg\":{\"type\":\"string\",\"description\":\"失败原因，例如暂无可导出数据、导出失败\"}},\"type\":\"object\"}",
+  "req_query": [],
+  "req_body_other": "{\"properties\":{\"tradeTimeStartNum\":{\"example\":1780247400000,\"format\":\"int64\",\"description\":\"成交时间区间开始，毫秒时间戳\",\"type\":\"integer\"},\"txHash\":{\"description\":\"链上成交哈希，支持按哈希搜索\",\"example\":\"0x0a3f...\",\"type\":\"string\"},\"orderNo\":{\"description\":\"订单 ID，本地订单号\",\"example\":\"PM2026050000\",\"type\":\"string\"},\"opTradeType\":{\"enum\":[\"buy\",\"sell\",\"settled\"],\"description\":\"类型：buy 买入、sell 卖出、settled 结算\",\"example\":\"buy\",\"type\":\"string\"},\"ctimeEndNum\":{\"example\":1780333800000,\"format\":\"int64\",\"description\":\"创建时间区间结束，毫秒时间戳，左闭右开\",\"type\":\"integer\"},\"tradeTimeEndNum\":{\"example\":1780333800000,\"format\":\"int64\",\"description\":\"成交时间区间结束，毫秒时间戳，左闭右开\",\"type\":\"integer\"},\"ctimeStartNum\":{\"example\":1780247400000,\"format\":\"int64\",\"description\":\"创建时间区间开始，毫秒时间戳\",\"type\":\"integer\"},\"statusType\":{\"enum\":[\"success\",\"failed\",\"processing\"],\"description\":\"状态：success 成功、failed 失败、processing 成交中\",\"example\":\"success\",\"type\":\"string\"},\"uid\":{\"description\":\"用户 UID\",\"example\":100382,\"type\":\"integer\"}},\"type\":\"object\",\"required\":[]}",
+  "title": "预测市场订单管理导出",
+  "req_headers": [
+    {
+      "required": "1",
+      "_id": "6a364a1806f2ee483208a344",
+      "name": "Content-Type",
+      "value": "application/json",
+      "example": "application/json",
+      "desc": "请求体格式"
+    }
+  ],
+  "method": "POST",
+  "catid": 1293,
+  "project_id": 459,
+  "path": "/polymarket/order/export",
+  "req_body_type": "json",
+  "desc": "",
+  "req_params": [],
+  "uid": 629,
+  "add_time": 1781942742,
+  "up_time": 1781942808,
+  "req_body_form": [],
+  "__v": 0,
+  "markdown": "",
+  "username": "meachel@globaldev.info"
+}

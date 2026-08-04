@@ -1,0 +1,13 @@
+{
+  "projectId": "PR-02006",
+  "outputDir": "apps/web/docs_tdd/PR-02006/inbox/lark-sync",
+  "sources": [
+    {
+      "type": "doc",
+      "operation": "read",
+      "name": "PR-02006 PRD",
+      "url": "https://qfglxo2m3dc.sg.larksuite.com/docx/NiHVdQGgUohh20xRJmOlmo0rgAg",
+      "target": "prd-latest.md"
+    }
+  ]
+}

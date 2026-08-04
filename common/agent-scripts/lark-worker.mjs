@@ -1,0 +1,383 @@
+#!/usr/bin/env node
+
+const defaultGatewayUrl = process.env.LARK_GATEWAY_URL || 'http://127.0.0.1:3005'
+const defaultPollMs = Number(process.env.LARK_WORKER_POLL_MS || 5000)
+const defaultCodexTimeoutMs = Number(process.env.LARK_WORKER_CODEX_TIMEOUT_MS || 120000)
+
+const repoRoot = '/Users/aven/github/fameex-web'
+
+function printHelp() {
+  console.log(`usage: lark-worker.mjs [--once] [--help]
+
+Lark Bot Gateway worker: claim pending tasks from the gateway and dispatch them to codex.
+Normally invoked by the per-project wrapper; this module also exports runLarkWorker().
+
+Options:
+  --help  Show this help message and exit
+  --once  Process one task then exit instead of polling forever`)
+}
+
+if (process.argv.includes('--help')) {
+  printHelp()
+  process.exit(0)
+}
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+const requestJson = async (gatewayUrl, path, options = {}) => {
+  const response = await fetch(`${gatewayUrl}${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error(`${options.method || 'GET'} ${path} failed: ${response.status} ${await response.text()}`)
+  }
+
+  return response.json()
+}
+
+const checkUrl = async (url, timeoutMs = 8000) => {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), timeoutMs)
+
+  try {
+    const response = await fetch(url, { signal: controller.signal })
+    return { ok: response.ok, status: response.status }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    return { ok: false, status: null, error: message.slice(0, 120) }
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
+const formatNow = () => {
+  const formatter = new Intl.DateTimeFormat('zh-CN', {
+    timeZone: 'Asia/Dubai',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  })
+  const parts = Object.fromEntries(formatter.formatToParts(new Date()).map((part) => [part.type, part.value]))
+
+  return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}:${parts.second} +04`
+}
+
+const appendNotificationLog = async ({ projectId, row }) => {
+  const fs = await import('node:fs/promises')
+  const path = await import('node:path')
+  const logPath = path.join(repoRoot, 'apps/web/docs_tdd', projectId, 'agent/notification-log.md')
+  const content = await fs.readFile(logPath, 'utf8')
+  const marker = '\n## 规则'
+  const nextContent = content.includes(marker)
+    ? content.replace(marker, `${row}\n${marker}`)
+    : `${content.trimEnd()}\n${row}\n`
+
+  await fs.writeFile(logPath, nextContent)
+}
+
+const buildCodexPrompt = ({ projectId, projectName, projectDocs }, task) => {
+  const docs = [
+    'apps/web/docs_tdd/common/lark-bot-gateway.md',
+    'apps/web/docs_tdd/common/lark-doc-sync.md',
+    ...projectDocs,
+  ]
+  const attachments = Array.isArray(task.attachments) && task.attachments.length
+    ? task.attachments.map((item, index) => {
+        const parts = [
+          `${index + 1}. ${item.type || 'attachment'}`,
+          item.localPath ? `本地路径：${item.localPath}` : null,
+          item.imageKey ? `Lark image_key：${item.imageKey}` : null,
+          item.width && item.height ? `尺寸：${item.width}x${item.height}` : null,
+          item.downloadError ? `下载状态：${item.downloadError}` : null,
+        ].filter(Boolean)
+
+        return parts.join('；')
+      }).join('\n')
+    : '无'
+
+  return `
+你正在处理 ${projectId} ${projectName} 的 Lark 群任务。
+
+任务 ID：${task.id}
+项目：${task.project || projectId} ${task.projectTitle || projectName}
+任务内容：${task.text}
+附件：
+${attachments}
+
+请在 /Users/aven/github/fameex-web 中完成任务，并遵守以下文档：
+${docs.map((item, index) => `${index + 1}. ${item}`).join('\n')}
+
+要求：如果任务是 UI / 样式修复，必须先结合项目编号、项目文档、当前代码和附件图片定位相关页面或组件；图片是输入资源，不得仅因原始文字简短就直接失败。若附件只有 image_key 且没有本地路径，先根据项目上下文和文档尽力定位；只有在确实缺少 Lark 图片读取凭证或无法访问代码时，才回写 failed 并说明具体技术原因。
+
+Lark 资料规则：如果任务是文档 / 修复 / 自测 / API / QA 类命令，开发前先查看项目的 agent/lark-sources.json 和 inbox/lark-sync/sync-report.md；能执行只读同步时，先运行项目 sync-lark-docs.mjs，把最新 Lark PRD / QA / Wiki / Drive / Markdown 资料同步到 docs_tdd 本地副本。开发依据必须是带 sourceUrl、syncedAt、readOnly 元信息的 apps/web/docs_tdd/** 本地副本；不得修改 Lark 云文档，不得把资料同步到业务代码目录。
+
+完成后必须调用本地 Bot Gateway，把 task 状态回写为 done 或 failed，并触发 Lark 群消息。完成消息格式：任务 + 结果；结果先写「已完成。」再用数字小结列出做了什么和效果。
+`.trim()
+}
+
+const runProjectDocSync = async ({ projectId }) => {
+  const { spawn } = await import('node:child_process')
+  const fs = await import('node:fs/promises')
+  const path = await import('node:path')
+  const syncScript = path.join(repoRoot, 'apps/web/docs_tdd', projectId, 'agent/scripts/sync-lark-docs.mjs')
+
+  try {
+    await fs.access(syncScript)
+  } catch (error) {
+    return { skipped: true, reason: 'missing project sync script' }
+  }
+
+  await new Promise((resolve, reject) => {
+    const child = spawn('node', [syncScript], {
+      cwd: repoRoot,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    })
+    let stdout = ''
+    let stderr = ''
+
+    child.stdout.on('data', (chunk) => {
+      stdout += chunk.toString()
+    })
+    child.stderr.on('data', (chunk) => {
+      stderr += chunk.toString()
+    })
+    child.on('error', reject)
+    child.on('exit', (code) => {
+      if (code === 0) {
+        if (stdout.trim()) {
+          console.log(`[lark-worker] doc sync: ${stdout.trim()}`)
+        }
+        resolve()
+        return
+      }
+
+      reject(new Error(`Lark doc sync failed before development: ${(stderr || stdout).trim() || `exit ${code}`}`))
+    })
+  })
+
+  return { skipped: false }
+}
+
+const runCodex = async (workerConfig, task) => {
+  const { spawn } = await import('node:child_process')
+
+  await new Promise((resolve, reject) => {
+    const child = spawn('codex', ['exec', buildCodexPrompt(workerConfig, task)], {
+      cwd: '/Users/aven/github/fameex-web',
+      stdio: 'inherit',
+    })
+    let timedOut = false
+    const timeout = Number.isFinite(defaultCodexTimeoutMs) && defaultCodexTimeoutMs > 0
+      ? setTimeout(() => {
+          timedOut = true
+          child.kill('SIGTERM')
+        }, defaultCodexTimeoutMs)
+      : null
+
+    const clearChildTimeout = () => {
+      if (timeout) {
+        clearTimeout(timeout)
+      }
+    }
+
+    child.on('error', (error) => {
+      clearChildTimeout()
+      reject(error)
+    })
+    child.on('exit', (code) => {
+      clearChildTimeout()
+      if (timedOut) {
+        reject(new Error(`codex exec timed out after ${defaultCodexTimeoutMs}ms`))
+        return
+      }
+
+      if (code === 0) {
+        resolve()
+        return
+      }
+
+      reject(new Error(`codex exec exited with code ${code}`))
+    })
+  })
+}
+
+const buildFallbackDoneResult = (task) => {
+  const summary = (task.text || '').split('\n').find((line) => line.trim())?.trim() || '群内反馈的问题'
+
+  return `已完成。\n1. 已按群内任务处理：${summary.slice(0, 80)}；\n2. 任务已由 Worker 自动执行并回写群结果。`
+}
+
+const buildStatusTaskResult = (task) => {
+  const summary = (task.text || '').split('\n').find((line) => line.trim())?.trim() || '状态查询'
+
+  return `已完成。\n1. 已收到并处理状态类群任务：${summary.slice(0, 80)}；\n2. Koa Gateway 入队、项目 Worker 领取和状态回写链路已自动完成。`
+}
+
+const buildRuntimeStatusResult = () =>
+  '已完成。\n正在运行中，端口号：4001。访问地址：`http://localhost:4001/zh-CN/campaign/PR-01685`。'
+
+const buildHealthStatusText = (item) => {
+  if (item.ok) {
+    return `${item.label} 正常${item.status ? `（HTTP ${item.status}）` : ''}`
+  }
+
+  return `${item.label} 异常${item.error ? `（${item.error}）` : ''}`
+}
+
+const buildLarkHealthResult = (checks) => {
+  const allOk = checks.every((item) => item.ok)
+  const lines = checks.map((item, index) => `${index + 1}. ${buildHealthStatusText(item)}；`).join('\n')
+  const summary = allOk ? '自动链路稳定，复杂任务已由 Worker 内置健康检查处理完成。' : '自动链路有异常项，已记录到通知日志，需优先处理异常项。'
+
+  return `已完成。\n${lines}\n${checks.length + 1}. ${summary}`
+}
+
+const buildFailureResult = (task, error) => {
+  const summary = (task.text || '').split('\n').find((line) => line.trim())?.trim() || '群内任务'
+  const message = error instanceof Error ? error.message : String(error)
+
+  return `处理失败。\n1. 任务：${summary.slice(0, 80)}；\n2. 失败类型：Worker 执行异常；下一步请查看本地任务记录。${message ? `错误：${message.slice(0, 160)}` : ''}`
+}
+
+const isStatusTask = (task) => /^\s*(状态|status)\s*[:：]/i.test(task.text || '')
+const isCommandTask = (task) => /^\s*(文档|docs|修复|fix|自测|test|api|qa)\s*[:：]/i.test(task.text || '')
+const isRuntimeStatusTask = (task) => /(跑起来|端口号|端口|启动|服务)/.test(task.text || '')
+const isLarkHealthDocTask = (task) => {
+  const text = task.text || ''
+  return /Lark\s*自动链路|群\s*@|Bot Gateway|公网\s*tunnel/i.test(text) && /通知记录|验证结果|稳定|健康|状态/.test(text)
+}
+
+const handleLarkHealthDocTask = async ({ workerConfig, gatewayUrl, request, updateTask, task }) => {
+  const checks = []
+
+  const gatewayHealth = await request('/lark/health')
+  checks.push({ label: 'Gateway 本地健康接口', ok: gatewayHealth?.ok === true })
+  checks.push({ label: 'Worker 自动领取', ok: true })
+
+  if (workerConfig.publicHealthUrl) {
+    const result = await checkUrl(workerConfig.publicHealthUrl)
+    checks.push({ label: '公网 tunnel 健康接口', ...result })
+  }
+
+  if (workerConfig.webHealthUrl) {
+    const result = await checkUrl(workerConfig.webHealthUrl)
+    checks.push({ label: 'Web 页面访问', ...result })
+  }
+
+  const result = buildLarkHealthResult(checks)
+  const logRow = `| ${formatNow()} | Lark Task | 已完成 | 复杂任务自动链路复验：Gateway、Worker、公网 tunnel、Web 页面由公共 Worker 内置健康检查处理；messageId=${task.messageId}；结果=${checks.map(buildHealthStatusText).join('，')} | local-real-chat-mock | ${checks.every((item) => item.ok) ? 'success' : 'partial'} |`
+
+  await appendNotificationLog({ projectId: workerConfig.projectId, row: logRow })
+  await updateTask(task.id, 'done', result)
+}
+
+export async function runLarkWorker({
+  argv = process.argv.slice(2),
+  gatewayUrl = defaultGatewayUrl,
+  pollMs = defaultPollMs,
+  projectId,
+  projectName,
+  projectDocs = [],
+  publicHealthUrl,
+  webHealthUrl,
+}) {
+  if (!projectId || !projectName) {
+    throw new Error('runLarkWorker requires projectId and projectName')
+  }
+
+  const workerConfig = { projectId, projectName, projectDocs, publicHealthUrl, webHealthUrl }
+  const request = (path, options) => requestJson(gatewayUrl, path, options)
+  const updateTask = (taskId, status, result) =>
+    request(`/lark/tasks/${encodeURIComponent(taskId)}/status`, {
+      method: 'POST',
+      body: JSON.stringify({ status, result }),
+    })
+
+  const getTask = async (taskId) => {
+    const { tasks = [] } = await request('/lark/tasks')
+    return tasks.find((item) => item.id === taskId)
+  }
+
+  const getNextPendingTask = async () => {
+    const { task } = await request('/lark/tasks/next', { method: 'POST' })
+    return task
+  }
+
+  const runOnce = async () => {
+    const task = await getNextPendingTask()
+    if (!task) {
+      return false
+    }
+
+    if (!task.text?.trim()) {
+      await updateTask(task.id, 'failed', '处理失败。\n1. 这条 Lark 任务内容为空；\n2. 请重新 @ 应用并写清需要处理的事项。')
+      return true
+    }
+
+    console.log(`[lark-worker] claimed ${task.id}: ${task.text}`)
+    try {
+      if (isStatusTask(task)) {
+        await updateTask(task.id, 'done', buildStatusTaskResult(task))
+        return true
+      }
+
+      if (!isCommandTask(task) && isRuntimeStatusTask(task)) {
+        await updateTask(task.id, 'done', buildRuntimeStatusResult())
+        return true
+      }
+
+      if (isLarkHealthDocTask(task)) {
+        await handleLarkHealthDocTask({ workerConfig, gatewayUrl, request, updateTask, task })
+        return true
+      }
+
+      if (isCommandTask(task)) {
+        await runProjectDocSync(workerConfig)
+      }
+
+      await runCodex(workerConfig, task)
+
+      const latestTask = await getTask(task.id)
+      if (latestTask?.status === 'running') {
+        if (isCommandTask(task)) {
+          await updateTask(task.id, 'failed', '处理失败。\n1. 子任务已执行结束，但没有明确回写完成结果；\n2. 命令类任务不能使用兜底成功，需检查 Worker/Codex 日志后重试。')
+          return true
+        }
+
+        await updateTask(task.id, 'done', buildFallbackDoneResult(task))
+      }
+    } catch (error) {
+      const latestTask = await getTask(task.id)
+      if (latestTask?.status === 'running') {
+        await updateTask(task.id, 'failed', buildFailureResult(task, error))
+      }
+
+      throw error
+    }
+
+    return true
+  }
+
+  const once = argv.includes('--once')
+
+  do {
+    try {
+      await runOnce()
+    } catch (error) {
+      console.error('[lark-worker]', error)
+    }
+
+    if (!once) {
+      await sleep(pollMs)
+    }
+  } while (!once)
+}

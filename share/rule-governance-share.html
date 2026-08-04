@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>docs_tdd 规则治理三合一 · 会议分享</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg2: #161b22;
+    --card: #1c2330;
+    --ink: #e6edf3;
+    --muted: #9aa7b4;
+    --line: #2b3440;
+    --accent: #4c8dff;
+    --accent2: #38d39f;
+    --warn: #f0a848;
+    --bad: #f2708a;
+    --chip: #223049;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Segoe UI", Roboto, sans-serif;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  .deck { position: relative; width: 100vw; height: 100vh; }
+  .slide {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    padding: 6vh 8vw 8vh;
+    animation: fade .4s ease;
+  }
+  .slide.active { display: flex; }
+  @keyframes fade { from { opacity: 0; transform: translateY(14px);} to {opacity:1; transform:none;} }
+
+  .kicker { color: var(--accent); font-size: 15px; letter-spacing: .18em; text-transform: uppercase; font-weight: 700; margin-bottom: 14px; }
+  h1 { font-size: 52px; line-height: 1.15; font-weight: 800; letter-spacing: -.01em; }
+  h2 { font-size: 34px; line-height: 1.2; font-weight: 800; margin-bottom: 4px; }
+  h3 { font-size: 19px; font-weight: 700; color: var(--ink); margin-bottom: 10px; }
+  .sub { color: var(--muted); font-size: 20px; margin-top: 18px; line-height: 1.5; max-width: 62ch; }
+  .lead { font-size: 22px; color: var(--ink); margin: 8px 0 26px; line-height: 1.5; max-width: 72ch; }
+  .lead b { color: var(--accent2); }
+
+  ul { list-style: none; display: flex; flex-direction: column; gap: 13px; }
+  li { position: relative; padding-left: 26px; font-size: 19px; line-height: 1.5; color: var(--ink); }
+  li::before { content: ""; position: absolute; left: 4px; top: 11px; width: 8px; height: 8px; border-radius: 2px; background: var(--accent); }
+  li b { color: #fff; }
+  li .n { color: var(--muted); }
+
+  .cols { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 10px; flex: 1; }
+  .cols.two { grid-template-columns: 1fr 1fr; }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 24px 22px; display: flex; flex-direction: column;
+  }
+  .card .tag { font-size: 13px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 12px; }
+  .tag.p { color: var(--bad); }
+  .tag.s { color: var(--accent); }
+  .tag.g { color: var(--accent2); }
+  .card ul { gap: 10px; }
+  .card li { font-size: 16.5px; padding-left: 22px; }
+  .card li::before { width: 6px; height: 6px; top: 9px; }
+  .tag.p ~ ul li::before { background: var(--bad); }
+  .tag.g ~ ul li::before { background: var(--accent2); }
+
+  .pillars { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 22px; margin-top: 26px; flex: 1; }
+  .pillar { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 28px 26px; display: flex; flex-direction: column; }
+  .pillar .idx { font-size: 40px; font-weight: 800; color: var(--accent); opacity: .35; }
+  .pillar h3 { font-size: 22px; margin: 6px 0 12px; }
+  .pillar p { color: var(--muted); font-size: 16px; line-height: 1.55; }
+
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 28px; }
+  .metric { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 22px; }
+  .metric .big { font-size: 34px; font-weight: 800; color: var(--accent2); letter-spacing: -.02em; }
+  .metric .lbl { color: var(--muted); font-size: 15px; margin-top: 8px; line-height: 1.4; }
+  .metric .arrow { color: var(--muted); font-weight: 400; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+  .chip { background: var(--chip); color: #cfe0ff; border: 1px solid #2f4368; border-radius: 999px; padding: 8px 15px; font-size: 15px; }
+
+  code, .mono { font-family: "SF Mono", "JetBrains Mono", Menlo, monospace; font-size: .88em; color: #ffd9a8; background: #241c11; padding: 1px 6px; border-radius: 5px; }
+
+  .footer { position: absolute; left: 8vw; right: 8vw; bottom: 3vh; display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 14px; border-top: 1px solid var(--line); padding-top: 14px; }
+  .dots { display: flex; gap: 7px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line); cursor: pointer; transition: .2s; }
+  .dot.on { background: var(--accent); transform: scale(1.25); }
+  .progress { position: absolute; top: 0; left: 0; height: 3px; background: linear-gradient(90deg,var(--accent),var(--accent2)); transition: width .3s; z-index: 10; }
+  .hint { position: absolute; right: 8vw; top: 4vh; color: var(--muted); font-size: 13px; opacity: .6; }
+
+  .divider-num { font-size: 20px; color: var(--accent); font-weight: 700; }
+  .two-line { display:flex; gap:40px; margin-top: 8px; }
+  .note { color: var(--warn); font-size: 15px; margin-top: 16px; }
+  .badge { display:inline-block; background:#12261d; color:var(--accent2); border:1px solid #1f4a38; border-radius:6px; padding:2px 9px; font-size:13px; font-weight:700; margin-left:8px; }
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+  <div class="progress" id="progress"></div>
+
+  <!-- 1 封面 -->
+  <section class="slide active">
+    <div class="kicker">apps/web/docs_tdd · 规则治理</div>
+    <h1>AI 编码规则治理三合一<br/>让规则可继承、可加载、可执行</h1>
+    <p class="sub">三条并行工作，同一个底座——把散落在 Codex / Claude / Cursor 与全局/仓库/项目三处的编码规则，
+      收敛成一套「分层单一事实源 + 确定性按需加载 + 机器门禁 + 指纹证据」的体系。全程 local-only，团队零影响。</p>
+    <div class="chips">
+      <span class="chip">① 组件到 API 架构规则</span>
+      <span class="chip">② 统一管理 coding 规则</span>
+      <span class="chip">③ AI 内存与 Token 规划</span>
+    </div>
+  </section>
+
+  <!-- 2 全景 -->
+  <section class="slide">
+    <div class="kicker">全景 · Overview</div>
+    <h2>一个工作，三个抓手</h2>
+    <p class="lead">三项优化都指向同一个问题：<b>规则多、放得乱、加载贵、执行靠自觉</b>。分别从「架构表达」「分层归属」「加载成本」三个切面根治。</p>
+    <div class="pillars">
+      <div class="pillar">
+        <div class="idx">01</div>
+        <h3>组件到 API 架构规则</h3>
+        <p>把含混的单链重构为「调用链 + 数据链」双向表达，配五层契约表、设计前置模板与机器兜底扫描——架构从口号变门禁。</p>
+      </div>
+      <div class="pillar">
+        <div class="idx">02</div>
+        <h3>统一管理 coding 规则</h3>
+        <p>共享内核 + 三个薄适配器 + 一个执行器 + 一份指纹证据，让 Codex / Claude / Cursor 吃同一份规则，唯一判据定落层。</p>
+      </div>
+      <div class="pillar">
+        <div class="idx">03</div>
+        <h3>AI 内存与 Token 规划</h3>
+        <p>三级按需加载 + 确定性缓存 + 持久记忆，让每次读取只服务当前决策——省 Token 不降质量。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 主题一 问题 -->
+  <section class="slide">
+    <div class="kicker">① 组件到 API 架构规则 · 问题</div>
+    <h2>架构是「文档口号」，落不成约束</h2>
+    <ul style="margin-top:20px">
+      <li><b>表述含混：</b><code>Page → hook → schema/mapper → API</code> 把「调用方向」和「数据返回方向」混为一谈，最误导的是让人以为 Mapper 会去调 API。</li>
+      <li><b>缺层间契约：</b>没有一张规定每层「输入/输出/允许依赖/禁止依赖」的表，组件直连 DTO、Service 反向依赖 UI 等违例无据可依。</li>
+      <li><b>规则加载不确定：</b>写数据请求 UI 或 Query Hook 时，该读的分层规则不会被自动路由到。</li>
+      <li><b>设计阶段无前置：</b>技术方案不要求编码前登记完整数据链，问题拖到写码甚至 review 才暴露。</li>
+      <li><b>静态检查太弱：</b>旧 <code>CODE-ARCH-001</code> 只能抓 <code>.tsx</code> 里的 <code>fetch()</code>，抓不到 Hook 直连请求、组件 import DTO、Mapper 反向依赖等结构性问题。</li>
+    </ul>
+  </section>
+
+  <!-- 4 主题一 方案 -->
+  <section class="slide">
+    <div class="kicker">① 组件到 API 架构规则 · 方案</div>
+    <h2>双向链路 + 五层契约 + 三道关卡</h2>
+    <div class="cols">
+      <div class="card">
+        <div class="tag s">重构表达</div>
+        <ul>
+          <li>单链拆为<b>调用链</b>与<b>数据链</b>两条（<code>api-and-mapper.md §1</code>）</li>
+          <li>五层契约表：Component / Query Hook / API Service / Schema / Mapper 各自输入·输出·允许/禁止依赖</li>
+          <li>明确 Mapper 为无网络、无状态、无 UI 依赖的纯转换层</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="tag s">左移到设计</div>
+        <ul>
+          <li>技术方案模板升级 <b>v3</b>：请求型功能 G4 前必须登记完整数据链表</li>
+          <li>新增门禁 <code>DOC-G4-006/007</code>，仅约束 v3、不回溯阻断存量</li>
+          <li>纯 UI 可写带来源说明的 <code>N/A</code></li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="tag s">机器兜底</div>
+        <ul>
+          <li>新增 <code>CODE-ARCH-003</code>（warn-first）：changed-file import 扫描</li>
+          <li>提示 Mapper 反依赖、组件穿透 Hook、Service 依赖 UI、生产链引入 fixture</li>
+          <li>路由新增 <code>write_query_hook</code>，写数据 UI/Hook 自动加载分层规则</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 主题一 收益 -->
+  <section class="slide">
+    <div class="kicker">① 组件到 API 架构规则 · 收益</div>
+    <h2>规则集全绿，已在真实改动中抓到违例</h2>
+    <div class="metrics">
+      <div class="metric"><div class="big">17 / 29</div><div class="lbl">场景 / 专题，<code>docs-tdd check</code> 通过（92 Rule ID）</div></div>
+      <div class="metric"><div class="big">42 + 20</div><div class="lbl">规则用例 + 谓词用例，<code>verify-code-rules --self-test</code> 绿</div></div>
+      <div class="metric"><div class="big">24</div><div class="lbl">门禁用例，<code>verify-project-gate --self-test</code> 绿</div></div>
+      <div class="metric"><div class="big">已命中</div><div class="lbl">真实改动扫出「组件直连 service」「Service 反依赖 Feature」等违例</div></div>
+    </div>
+    <ul style="margin-top:26px">
+      <li>五层契约表已落地 <code>api-and-mapper.md §1</code>；规则已发布，指纹 <code>ac151721fade</code>，状态 <code>fresh</code>。</li>
+      <li><b>就地升级不新建文档</b>：在既有权威源升级，避免多一份重复专题挤进路由表。</li>
+    </ul>
+    <p class="note">遗留：<code>CODE-ARCH-003</code> 仍 warn-first，需真实 PR 误报数据支撑才晋升硬阻断；静态扫描是正则候选、非完整依赖图。</p>
+  </section>
+
+  <!-- 6 主题二 问题 -->
+  <section class="slide">
+    <div class="kicker">② 统一管理 coding 规则 · 问题</div>
+    <h2>三个工具、三处地方，规则各说各话</h2>
+    <ul style="margin-top:20px">
+      <li><b>多处重复维护：</b>同一规则在多个文件重复，改一份、其余漂移。</li>
+      <li><b>该放哪一层无唯一判据：</b>纯手艺、FameEX 锚点、流程门禁混在一起，「错层」等同漏继承。</li>
+      <li><b>三个 Agent 吃的规则不一致：</b>Codex 集成最好；Claude 只模糊提一句 <code>docs_tdd</code>、无 gate；Cursor 的 <code>~/.cursor/rules</code> 是空的。</li>
+      <li><b>副本已实际漂移：</b>Codex 与 Claude 的 <code>coding-quality</code>、<code>figma-read</code> skill SHA-256 已不一致。</li>
+      <li><b>「被执行」无法证明：</b>旧指纹只覆盖 L3，证明不了实际消费了哪个版本的 L1/L2/适配器。</li>
+      <li><b>个人规则易污染团队：</b>试验规则一旦写进 tracked 文件就影响同事。</li>
+    </ul>
+  </section>
+
+  <!-- 7 主题二 方案 -->
+  <section class="slide">
+    <div class="kicker">② 统一管理 coding 规则 · 方案</div>
+    <h2>共享内核 + 薄适配器 + 执行器 + 指纹证据</h2>
+    <p class="lead">分层判据唯一真值源 = <code>rule-inheritance.md §0</code>：<b>纯手艺→L1，带 FameEX 锚点→L2，流程门禁→L3</b>；一条规则只落一层，其余层只放指针。</p>
+    <div class="cols">
+      <div class="card">
+        <div class="tag s">L1 纯手艺</div>
+        <ul>
+          <li>唯一源 <code>~/.ai-rules/AGENT.md</code> + skills</li>
+          <li>Codex / Claude 经 <b>symlink</b> 消费同一份，副本漂移归零</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="tag s">L2 仓库锚点</div>
+        <ul>
+          <li><code>.cursor/rules/*.mdc</code>（~80 个，glob 触发）</li>
+          <li>团队影响面，本轮<b>只诊断不改</b>，冲突仅 WARN</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="tag s">L3 流程门禁</div>
+        <ul>
+          <li><code>docs_tdd/</code> 被 <code>.git/info/exclude</code> 本地排除</li>
+          <li>router / inheritance / execution-model + Cursor 用户级适配器</li>
+        </ul>
+      </div>
+    </div>
+    <p class="note">执行器：<code>docs-tdd.mjs</code>（新增 <code>doctor</code>）+ <code>effective-rules.mjs</code>（L1+适配器+L2+L3 一起打「effective 指纹」）+ 幂等安装脚本 + Claude PostToolUse hook。</p>
+  </section>
+
+  <!-- 8 主题二 收益 -->
+  <section class="slide">
+    <div class="kicker">② 统一管理 coding 规则 · 收益</div>
+    <h2>三端统一，闭环全绿，团队零影响</h2>
+    <div class="metrics">
+      <div class="metric"><div class="big">3 端统一</div><div class="lbl">Codex/Claude symlink 同一份 L1；Cursor 有用户级适配器</div></div>
+      <div class="metric"><div class="big">49 / 0</div><div class="lbl">G6 聚合 gate：49 checks、0 error、2 warning</div></div>
+      <div class="metric"><div class="big">81 → 86</div><div class="lbl">release 覆盖：L3 81 文件 <span class="arrow">→</span> effective 86 文件</div></div>
+      <div class="metric"><div class="big">0 改动</div><div class="lbl">对团队仓库 <code>git status</code> 为空，tracked 规则未动</div></div>
+    </div>
+    <ul style="margin-top:26px">
+      <li><b>effective 指纹</b>让「规则被执行」变成可核验证据——「已读/已注意」不算数。</li>
+      <li><b>个人规则本地优先</b>：未经评审的规则先在本地 L1/L3 试运行，改载体前先 <code>git check-ignore</code> 核验，不用 <code>skip-worktree</code> 偷改。</li>
+    </ul>
+    <p class="note">遗留：3 条 tracked L2 告警（引用失效路径、React Query vs SWR 冲突）本地无权改，留待团队评审；Codex/Cursor 无自动 hook，靠 <code>docs-tdd changed</code> 兜底。</p>
+  </section>
+
+  <!-- 9 主题三 问题 -->
+  <section class="slide">
+    <div class="kicker">③ AI 内存与 Token 规划 · 问题</div>
+    <h2>上下文越滚越重，命中即全量加载</h2>
+    <ul style="margin-top:20px">
+      <li><b>常驻规则挤占预算：</b><code>rule-router.md</code> 曾达 4855 / 8000 字符，占去大半常驻窗口。</li>
+      <li><b>命中即全量：</b>一个场景命中就要读整篇专题（<code>architecture-and-state.md</code> 24.8K、<code>rule-ids-and-gates.md</code> 23.2K），大量正文与当前任务无关。</li>
+      <li><b>重复执行：</b><code>changed</code>/<code>gate</code> 每次全量重跑；只有文件缓存，模型每轮仍要重新消费全文。</li>
+      <li><b>跨会话记忆丢失：</b>AI 无持久记忆，反复解释同一背景、踩同一坑（意译文案、gate 假阳性）。</li>
+      <li><b>会话内存高：</b>长对话 + 图片 + 工具输出持续累积（Codex 桌面进程可达 ~1.11 GB），单压 Markdown 解决不了。</li>
+    </ul>
+  </section>
+
+  <!-- 10 主题三 方案 -->
+  <section class="slide">
+    <div class="kicker">③ AI 内存与 Token 规划 · 方案</div>
+    <h2>三级按需加载 + 确定性缓存 + 持久记忆</h2>
+    <div class="cols">
+      <div class="card">
+        <div class="tag s">三级加载</div>
+        <ul>
+          <li><b>L0 常驻：</b><code>rule-router.md</code>，命中才读正文</li>
+          <li><b>L1 场景包：</b><code>context</code> 默认 <code>--compact</code>，只摘录指定章节</li>
+          <li><b>L2 全文：</b>仅歧义或 gate 失败时 <code>--full</code></li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="tag s">确定性缓存</div>
+        <ul>
+          <li>章节级路由：大文档按 <code>"sections":"1-3"</code> 加载</li>
+          <li>增量缓存 <b>PASS-only</b>：key 含 release + diff + 文件 hash</li>
+          <li>规则一变即失效；<code>--write</code>/失败永远真跑</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="tag s">持久记忆</div>
+        <ul>
+          <li><code>MEMORY.md</code> 索引 + ~28 条主题记忆</li>
+          <li>事实/决定/踩坑沉淀，跨会话不再重述</li>
+          <li>摘要收敛：项目 summary 目标 1800 / 硬限 2200</li>
+        </ul>
+      </div>
+    </div>
+    <p class="note">红线：不为省 Token 跳过 PRD 图片/表格/schema/视觉验收；compact 严格按 <code>rule-index.json</code> 章节生成、带 source hash，拒绝有损的 AI 临时总结——Markdown 仍是唯一真值。</p>
+  </section>
+
+  <!-- 11 主题三 收益 -->
+  <section class="slide">
+    <div class="kicker">③ AI 内存与 Token 规划 · 收益</div>
+    <h2>省 ~1/3 上下文，质量红线一个不少</h2>
+    <div class="metrics">
+      <div class="metric"><div class="big">4855→2651</div><div class="lbl">常驻 Router 字符；预算 8000 <span class="arrow">→</span> 5000</div></div>
+      <div class="metric"><div class="big">39K→26K</div><div class="lbl">场景包字符（<code>write_msw</code>），压缩约 1/3</div></div>
+      <div class="metric"><div class="big">~1K</div><div class="lbl">项目摘要实测（目标 1800 / 硬限 2200）</div></div>
+      <div class="metric"><div class="big">~28 条</div><div class="lbl">持久记忆 + 1 索引，跨会话复用背景与踩坑</div></div>
+    </div>
+    <ul style="margin-top:26px">
+      <li>G6 细分为 4 个子场景，按验证类型只加载对应章节；可追溯发布指纹 L3 <code>c8298756d2b5</code> / effective <code>ac9c9ffebd59</code>。</li>
+      <li><b>不再继续压 Router</b>：成本大头是命中后全量加载与长会话累积，不是单篇文件。</li>
+    </ul>
+    <p class="note">遗留：state/MSW 待续拆专题；PRD 富媒体 manifest 未开 pilot；会话 checkpoint（一阶段一短会话）是降真实内存最有效手段，属流程约束、靠人执行。</p>
+  </section>
+
+  <!-- 12 整体收益 -->
+  <section class="slide">
+    <div class="kicker">整体收益 · Outcome</div>
+    <h2>从「靠自觉」到「可继承、可加载、可执行、可证明」</h2>
+    <div class="cols">
+      <div class="card">
+        <div class="tag g">可继承 / 可执行</div>
+        <ul>
+          <li>三端吃同一份 L1，副本漂移归零</li>
+          <li>唯一判据定落层，一条规则只落一层</li>
+          <li>架构违例有机器兜底扫描（warn-first）</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="tag g">更省 / 更快</div>
+        <ul>
+          <li>常驻预算降 37.5%（8000→5000）</li>
+          <li>场景包省 ~1/3，PASS-only 缓存免重复</li>
+          <li>持久记忆免背景重述、免重踩坑</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="tag g">可证明 / 零风险</div>
+        <ul>
+          <li>effective 指纹证明实际消费的规则版本</li>
+          <li>doctor / G6 gate 全绿，证据双指纹</li>
+          <li>全程 local-only，团队仓库零改动</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 13 边界与下一步 -->
+  <section class="slide">
+    <div class="kicker">治理边界 · 下一步</div>
+    <h2>已守住的边界 & 待推进的项</h2>
+    <div class="cols two">
+      <div class="card">
+        <div class="tag s">已守住的边界</div>
+        <ul>
+          <li>全部产物限定在 git-excluded 的 <code>docs_tdd/**</code> 与 <code>/tmp</code>，不碰业务代码/根配置/CI</li>
+          <li>tracked L2 冲突只报 WARN、不自动改，改动需明确批准</li>
+          <li>前向生效：新门禁不回溯阻断 v1/v2 存量项目</li>
+          <li>缓存不掩盖失败，Markdown 是唯一真值源</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="tag p">待推进 / 遗留</div>
+        <ul>
+          <li>3 条 tracked L2 告警待团队评审（失效引用、RQ vs SWR 冲突）</li>
+          <li><code>CODE-ARCH-003</code> 攒真实 PR 数据后由 warn 晋 error</li>
+          <li>state / MSW 续拆独立专题；PRD 富媒体 manifest 开 pilot</li>
+          <li>Codex/Cursor 补可信自动 hook；本地治理推广为全员默认</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 14 收尾 -->
+  <section class="slide">
+    <div class="kicker">Thank you</div>
+    <h1>规则不该靠记忆和自觉<br/>而该被继承、被加载、被证明</h1>
+    <p class="sub">一个共享内核，三个抓手：架构表达讲清、分层归属定死、加载成本压低。<br/>
+      下一步——把本地治理沉淀为团队默认，把 warn-first 规则用真实证据推向硬门禁。</p>
+    <div class="chips">
+      <span class="chip">doctor / G6 gate 全绿</span>
+      <span class="chip">effective 指纹可证明</span>
+      <span class="chip">local-only · 团队零影响</span>
+    </div>
+  </section>
+
+  <div class="hint">← → 翻页 · F 全屏</div>
+  <div class="footer">
+    <div>docs_tdd 规则治理三合一 · 会议分享</div>
+    <div class="dots" id="dots"></div>
+    <div><span id="cur">1</span> / <span id="total">14</span></div>
+  </div>
+</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const dotsWrap = document.getElementById('dots');
+  const progress = document.getElementById('progress');
+  const curEl = document.getElementById('cur');
+  document.getElementById('total').textContent = slides.length;
+  let i = 0;
+
+  slides.forEach((_, idx) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (idx === 0 ? ' on' : '');
+    d.onclick = () => go(idx);
+    dotsWrap.appendChild(d);
+  });
+  const dots = Array.from(dotsWrap.children);
+
+  function go(n) {
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach((s, idx) => s.classList.toggle('active', idx === i));
+    dots.forEach((d, idx) => d.classList.toggle('on', idx === i));
+    progress.style.width = ((i + 1) / slides.length * 100) + '%';
+    curEl.textContent = i + 1;
+  }
+  function next() { go(i + 1); }
+  function prev() { go(i - 1); }
+
+  document.addEventListener('keydown', (e) => {
+    if (['ArrowRight', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); next(); }
+    else if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); prev(); }
+    else if (e.key === 'Home') go(0);
+    else if (e.key === 'End') go(slides.length - 1);
+    else if (e.key.toLowerCase() === 'f') {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    }
+  });
+  document.getElementById('deck').addEventListener('click', (e) => {
+    if (e.target.closest('.dot') || e.target.closest('.footer')) return;
+    if (e.clientX > window.innerWidth * 0.5) next(); else prev();
+  });
+  progress.style.width = (1 / slides.length * 100) + '%';
+</script>
+</body>
+</html>

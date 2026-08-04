@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "prd-source-manifest.schema.json",
+  "title": "docs_tdd PRD Source Manifest",
+  "type": "object",
+  "required": ["version", "projectId", "generatedAt", "approvedFingerprint", "sources", "items"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },
+    "generatedAt": { "type": "string", "minLength": 1 },
+    "approvedFingerprint": { "type": "string" },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["path", "contentHash"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "contentHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["sourceId", "type", "sourcePath", "line", "locator", "contentHash", "assetPath", "assetHash", "assetStatus", "status", "classification", "readMethod", "summary", "featureIds", "disposition", "evidence"],
+        "properties": {
+          "sourceId": { "type": "string", "pattern": "^PRD-(IMG|TABLE|EMBED)-\\d{3}$" },
+          "type": { "type": "string", "enum": ["image", "table", "embed"] },
+          "sourcePath": { "type": "string", "minLength": 1 },
+          "line": { "type": "integer", "minimum": 1 },
+          "locator": { "type": "string", "minLength": 1 },
+          "contentHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "assetPath": { "type": "string" },
+          "assetHash": { "type": "string", "pattern": "^$|^[a-f0-9]{64}$" },
+          "assetStatus": { "type": "string", "enum": ["local", "remote", "missing", "embedded", "not-applicable"] },
+          "status": { "type": "string", "enum": ["unresolved", "read"] },
+          "classification": { "type": "string", "enum": ["unresolved", "requirement", "decorative"] },
+          "readMethod": { "type": "string" },
+          "summary": { "type": "string" },
+          "featureIds": { "type": "array", "items": { "type": "string", "pattern": "^F[0-9A-Za-z_-]+$" } },
+          "disposition": { "type": "string" },
+          "evidence": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "msw-manifest.schema.json",
+  "title": "MSW Pilot Manifest",
+  "type": "object",
+  "required": ["projectId", "route", "lifecycle", "sourceRoot", "assets", "endpoints", "retirement"],
+  "properties": {
+    "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },
+    "route": { "type": "string", "enum": ["msw"] },
+    "lifecycle": { "type": "string", "enum": ["planned", "mock-active", "api-ready", "reconciling", "mock-retired"] },
+    "sourceRoot": { "type": "string", "description": "worktree root for resolving asset paths; may be empty for planned lifecycle (assets not built yet). Active-lifecycle asset existence is enforced separately by DOC-G3-IMPL-002." },
+    "assets": {
+      "type": "object",
+      "required": ["handler", "fixture", "contractTest", "registration", "workerHook", "provider", "handlerExport"],
+      "properties": {
+        "handler": { "type": "string" },
+        "fixture": { "type": "string" },
+        "contractTest": { "type": "string" },
+        "registration": { "type": "string" },
+        "workerHook": { "type": "string" },
+        "provider": { "type": "string" },
+        "handlerExport": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "endpoints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "method", "path", "apiStatus", "scenarios"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "method": { "type": "string", "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"] },
+          "path": { "type": "string", "minLength": 1 },
+          "apiStatus": { "type": "string", "enum": ["not-ready", "partial", "dev-ready", "real"] },
+          "scenarios": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["name", "status", "reason"],
+              "properties": {
+                "name": { "type": "string", "minLength": 1 },
+                "status": { "type": "string", "enum": ["implemented", "not-applicable", "retired"] },
+                "reason": { "type": "string" }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "retirement": {
+      "type": "object",
+      "required": ["retiredAt", "reconciliationEvidence"],
+      "properties": {
+        "retiredAt": { "type": "string" },
+        "reconciliationEvidence": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

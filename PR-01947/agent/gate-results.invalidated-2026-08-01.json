@@ -1,0 +1,226 @@
+{
+  "generatedAt": "2026-07-09T07:52:51.338Z",
+  "tool": "verify-project-gate.mjs",
+  "ok": true,
+  "projectId": "PR-01947",
+  "gate": "G6",
+  "checks": [
+    {
+      "ruleId": "DOC-STRUCT-001",
+      "ok": true,
+      "message": "project directory exists: apps/web/docs_tdd/PR-01947",
+      "file": "apps/web/docs_tdd/PR-01947",
+      "severity": "error"
+    },
+    {
+      "ruleId": "DOC-STRUCT-002",
+      "ok": true,
+      "message": "required file exists: README.md",
+      "file": "apps/web/docs_tdd/PR-01947/README.md",
+      "severity": "error"
+    },
+    {
+      "ruleId": "DOC-STRUCT-003",
+      "ok": true,
+      "message": "required file exists: product/00-feature-inventory.md",
+      "file": "apps/web/docs_tdd/PR-01947/product/00-feature-inventory.md",
+      "severity": "error"
+    },
+    {
+      "ruleId": "DOC-STRUCT-004",
+      "ok": true,
+      "message": "required file exists: product/01-scope-and-phases.md",
+      "file": "apps/web/docs_tdd/PR-01947/product/01-scope-and-phases.md",
+      "severity": "error"
+    },
+    {
+      "ruleId": "DOC-STRUCT-005",
+      "ok": true,
+      "message": "required file exists: product/02-technical-design.md",
+      "file": "apps/web/docs_tdd/PR-01947/product/02-technical-design.md",
+      "severity": "error"
+    },
+    {
+      "ruleId": "DOC-STRUCT-006",
+      "ok": true,
+      "message": "required file exists: product/03-api-contract.md",
+      "file": "apps/web/docs_tdd/PR-01947/product/03-api-contract.md",
+      "severity": "error"
+    },
+    {
+      "ruleId": "DOC-STRUCT-007",
+      "ok": true,
+      "message": "required file exists: product/04-frontend-tasks.md",
+      "file": "apps/web/docs_tdd/PR-01947/product/04-frontend-tasks.md",
+      "severity": "error"
+    },
+    {
+      "ruleId": "DOC-STRUCT-008",
+      "ok": true,
+      "message": "required file exists: product/05-ui-and-interaction.md",
+      "file": "apps/web/docs_tdd/PR-01947/product/05-ui-and-interaction.md",
+      "severity": "error"
+    },
+    {
+      "ruleId": "DOC-STRUCT-009",
+      "ok": true,
+      "message": "required file exists: product/06-collaboration.md",
+      "file": "apps/web/docs_tdd/PR-01947/product/06-collaboration.md",
+      "severity": "error"
+    },
+    {
+      "ruleId": "DOC-STRUCT-010",
+      "ok": true,
+      "message": "required file exists: product/07-figma-spec.md",
+      "file": "apps/web/docs_tdd/PR-01947/product/07-figma-spec.md",
+      "severity": "error"
+    },
+    {
+      "ruleId": "DOC-STRUCT-011",
+      "ok": true,
+      "message": "required file exists: engineering/development-rules.md",
+      "file": "apps/web/docs_tdd/PR-01947/engineering/development-rules.md",
+      "severity": "error"
+    },
+    {
+      "ruleId": "DOC-STRUCT-012",
+      "ok": true,
+      "message": "required file exists: agent/README.md",
+      "file": "apps/web/docs_tdd/PR-01947/agent/README.md",
+      "severity": "error"
+    },
+    {
+      "ruleId": "DOC-G0-001",
+      "ok": true,
+      "message": "feature inventory records PRD source",
+      "file": "apps/web/docs_tdd/PR-01947/product/00-feature-inventory.md",
+      "severity": "error"
+    },
+    {
+      "ruleId": "DOC-G0-002",
+      "ok": true,
+      "message": "feature inventory has feature list section",
+      "file": "apps/web/docs_tdd/PR-01947/product/00-feature-inventory.md",
+      "severity": "error"
+    },
+    {
+      "ruleId": "DOC-G0-003",
+      "ok": true,
+      "message": "feature inventory has acceptance mapping section",
+      "file": "apps/web/docs_tdd/PR-01947/product/00-feature-inventory.md",
+      "severity": "error"
+    },
+    {
+      "ruleId": "DOC-G0-004",
+      "ok": true,
+      "message": "feature inventory has unreadable PRD content section",
+      "file": "apps/web/docs_tdd/PR-01947/product/00-feature-inventory.md",
+      "severity": "warn"
+    },
+    {
+      "ruleId": "DOC-G2-001",
+      "ok": true,
+      "message": "feature inventory has no blocking placeholders",
+      "file": "apps/web/docs_tdd/PR-01947/product/00-feature-inventory.md",
+      "severity": "error"
+    },
+    {
+      "ruleId": "DOC-G2-002",
+      "ok": true,
+      "message": "G2 confirmer and date are filled",
+      "file": "apps/web/docs_tdd/PR-01947/product/00-feature-inventory.md",
+      "severity": "error"
+    },
+    {
+      "ruleId": "DOC-G2-003",
+      "ok": true,
+      "message": "feature list has at least one feature row",
+      "file": "apps/web/docs_tdd/PR-01947/product/00-feature-inventory.md",
+      "severity": "error"
+    },
+    {
+      "ruleId": "DOC-G2-004",
+      "ok": true,
+      "message": "each feature row has 本期=做/不做/延期",
+      "file": "apps/web/docs_tdd/PR-01947/product/00-feature-inventory.md",
+      "severity": "error"
+    },
+    {
+      "ruleId": "DOC-G2-005",
+      "ok": true,
+      "message": "all 本期=做 feature IDs appear in frontend tasks",
+      "file": "apps/web/docs_tdd/PR-01947/product/04-frontend-tasks.md",
+      "severity": "error"
+    },
+    {
+      "ruleId": "DOC-G4-001",
+      "ok": true,
+      "message": "technical design reuse inventory has no blocking placeholders",
+      "file": "apps/web/docs_tdd/PR-01947/product/02-technical-design.md",
+      "severity": "error"
+    },
+    {
+      "ruleId": "DOC-G4-002",
+      "ok": true,
+      "message": "technical design contains reuse inventory",
+      "file": "apps/web/docs_tdd/PR-01947/product/02-technical-design.md",
+      "severity": "error"
+    },
+    {
+      "ruleId": "DOC-G4-003",
+      "ok": true,
+      "message": "technical design does not contain skipped-reuse wording",
+      "file": "apps/web/docs_tdd/PR-01947/product/02-technical-design.md",
+      "severity": "error"
+    },
+    {
+      "ruleId": "DOC-G5-001",
+      "ok": true,
+      "message": "API contract records field reconciliation",
+      "file": "apps/web/docs_tdd/PR-01947/product/03-api-contract.md",
+      "severity": "error"
+    },
+    {
+      "ruleId": "DOC-G5-002",
+      "ok": true,
+      "message": "API contract records mock status/removal result",
+      "file": "apps/web/docs_tdd/PR-01947/product/03-api-contract.md",
+      "severity": "error"
+    },
+    {
+      "ruleId": "CODE-MOCK-002",
+      "ok": false,
+      "message": "cannot scan mock residue (rg unavailable: ENOENT)",
+      "file": "apps/web/docs_tdd/PR-01947",
+      "severity": "warn"
+    },
+    {
+      "ruleId": "CODE-SCOPE-001",
+      "ok": false,
+      "message": "changed files outside 责任模块目录 (confirm not out-of-scope, §1.1):\napps/web/src/app/[lang]/Providers.tsx\napps/web/src/components/modals/OpenContractModal/OpenContractModal.tsx\napps/web/src/types/copyTrading.ts\napps/web/src/utils/hooks/useServiceWorkerRegistration.ts",
+      "file": "apps/web/docs_tdd/PR-01947",
+      "severity": "warn"
+    },
+    {
+      "ruleId": "VERIFY-G6-001",
+      "ok": true,
+      "message": "at least one evidence README exists under project evidence/",
+      "file": "apps/web/docs_tdd/PR-01947/evidence",
+      "severity": "error"
+    },
+    {
+      "ruleId": "VERIFY-G6-002",
+      "ok": true,
+      "message": "code-review result or finding disposition is recorded",
+      "file": "apps/web/docs_tdd/PR-01947/product/06-collaboration.md",
+      "severity": "error"
+    }
+  ],
+  "summary": {
+    "total": 30,
+    "ok": 28,
+    "warn": 2,
+    "waived": 0,
+    "fail": 0
+  }
+}

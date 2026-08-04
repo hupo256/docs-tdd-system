@@ -1,0 +1,52 @@
+[
+  {
+    "name": "desktop-1440",
+    "width": 1440,
+    "height": 1000,
+    "mobile": false,
+    "before": {
+      "title": "",
+      "hasAssetTitle": false,
+      "buttons": [],
+      "links": [],
+      "linkCount": 0,
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "overflow": false
+    },
+    "tabClicked": false,
+    "afterTab": [],
+    "sort": {
+      "found": false,
+      "label": "",
+      "before": [],
+      "once": [],
+      "twice": []
+    }
+  },
+  {
+    "name": "mobile-390",
+    "width": 390,
+    "height": 844,
+    "mobile": true,
+    "before": {
+      "title": "",
+      "hasAssetTitle": false,
+      "buttons": [],
+      "links": [],
+      "linkCount": 0,
+      "scrollWidth": 980,
+      "clientWidth": 980,
+      "overflow": false
+    },
+    "tabClicked": false,
+    "afterTab": [],
+    "sort": {
+      "found": false,
+      "label": "",
+      "before": [],
+      "once": [],
+      "twice": []
+    }
+  }
+]

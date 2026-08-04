@@ -1,0 +1,20 @@
+{
+  "projectId": "PR-01947",
+  "stages": {
+    "G5": {
+      "status": "blocked",
+      "reason": "Web 前台真实 API 已对账；后台 F19 导出未验收，F20/F21 缺 follower/page 与 follower/export 真实契约/响应，marginMode、leverage、copyPositionMode 未完成对账，ST-040～042 均待执行。",
+      "evidence": [
+        "product/03-api-contract.md",
+        "evidence/README.md"
+      ],
+      "updatedAt": "2026-08-01"
+    },
+    "G7": {
+      "status": "pending",
+      "reason": "待整体 G5 与 G6 依次通过后执行 QA 用例，或记录未提供 QA 用例而跳过。",
+      "evidence": [],
+      "updatedAt": "2026-08-01"
+    }
+  }
+}

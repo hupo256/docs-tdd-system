@@ -1,0 +1,41 @@
+{
+  "query_path": {
+    "path": "/polymarket/category/treeByLevelOneId",
+    "params": []
+  },
+  "edit_uid": 0,
+  "status": "undone",
+  "type": "static",
+  "req_body_is_json_schema": true,
+  "res_body_is_json_schema": true,
+  "api_opened": false,
+  "index": 5,
+  "tag": [],
+  "_id": 4642,
+  "method": "GET",
+  "catid": 1281,
+  "title": "某一级分类树桩结构",
+  "path": "/polymarket/category/treeByLevelOneId",
+  "project_id": 459,
+  "req_params": [],
+  "res_body_type": "raw",
+  "req_query": [
+    {
+      "required": "1",
+      "_id": "6a352ddb06f2ee817708a32d",
+      "name": "id",
+      "example": "41",
+      "desc": ""
+    }
+  ],
+  "req_headers": [],
+  "req_body_form": [],
+  "desc": "",
+  "markdown": "",
+  "res_body": "{\"code\":\"0\",\"msg\":\"成功\",\"data\":[{\"id\":41,\"parentId\":0,\"pathIds\":\"41\",\"level\":1,\"code\":\"sports\",\"name\":\"Sports\",\"nameMap\":{\"en-US\":\"Sports\",\"en-AU\":\"Sports\",\"zh-TW\":\"體育\",\"zh-CN\":\"体育\",\"tr-TR\":\"Spor\",\"vi-VN\":\"Thể thao\",\"es-ES\":\"Deportes\",\"ru-RU\":\"Спорт\",\"ko-KR\":\"스포츠\",\"pt-BR\":\"Esportes\"},\"sort\":1,\"children\":[{\"id\":42,\"parentId\":41,\"pathIds\":\"41_42\",\"level\":2,\"code\":\"football\",\"name\":\"Football\",\"nameMap\":{\"en-US\":\"Football\",\"en-AU\":\"Football\",\"zh-TW\":\"足球\",\"zh-CN\":\"足球\",\"tr-TR\":\"Futbol\",\"vi-VN\":\"Bóng đá\",\"es-ES\":\"Fútbol\",\"ru-RU\":\"Футбол\",\"ko-KR\":\"축구\",\"pt-BR\":\"Futebol\"},\"sort\":1,\"children\":[{\"id\":43,\"parentId\":42,\"pathIds\":\"41_42_43\",\"level\":3,\"code\":\"premier_league\",\"name\":\"Premier League\",\"nameMap\":{\"en-US\":\"Premier League\",\"en-AU\":\"Premier League\",\"zh-TW\":\"英超\",\"zh-CN\":\"英超\",\"tr-TR\":\"Premier Lig\",\"vi-VN\":\"Ngoại hạng Anh\",\"es-ES\":\"Premier League\",\"ru-RU\":\"Премьер-лига\",\"ko-KR\":\"프리미어리그\",\"pt-BR\":\"Premier League\"},\"sort\":1,\"children\":[]},{\"id\":44,\"parentId\":42,\"pathIds\":\"41_42_44\",\"level\":3,\"code\":\"la_liga\",\"name\":\"La Liga\",\"nameMap\":{\"en-US\":\"La Liga\",\"en-AU\":\"La Liga\",\"zh-TW\":\"西甲\",\"zh-CN\":\"西甲\",\"tr-TR\":\"La Liga\",\"vi-VN\":\"La Liga\",\"es-ES\":\"La Liga\",\"ru-RU\":\"Ла Лига\",\"ko-KR\":\"라리가\",\"pt-BR\":\"La Liga\"},\"sort\":2,\"children\":[]}]},{\"id\":45,\"parentId\":41,\"pathIds\":\"41_45\",\"level\":2,\"code\":\"basketball\",\"name\":\"Basketball\",\"nameMap\":{\"en-US\":\"Basketball\",\"en-AU\":\"Basketball\",\"zh-TW\":\"籃球\",\"zh-CN\":\"篮球\",\"tr-TR\":\"Basketbol\",\"vi-VN\":\"Bóng rổ\",\"es-ES\":\"Baloncesto\",\"ru-RU\":\"Баскетбол\",\"ko-KR\":\"농구\",\"pt-BR\":\"Basquete\"},\"sort\":2,\"children\":[{\"id\":46,\"parentId\":45,\"pathIds\":\"41_45_46\",\"level\":3,\"code\":\"nba\",\"name\":\"NBA\",\"nameMap\":{\"en-US\":\"NBA\",\"en-AU\":\"NBA\",\"zh-TW\":\"NBA\",\"zh-CN\":\"NBA\",\"tr-TR\":\"NBA\",\"vi-VN\":\"NBA\",\"es-ES\":\"NBA\",\"ru-RU\":\"НБА\",\"ko-KR\":\"NBA\",\"pt-BR\":\"NBA\"},\"sort\":1,\"children\":[]}]}]}],\"message\":null,\"succ\":true}",
+  "uid": 447,
+  "add_time": 1781869999,
+  "up_time": 1781870043,
+  "__v": 0,
+  "username": "knox"
+}
