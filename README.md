@@ -43,6 +43,55 @@ docs-tdd golden                            # 让门禁机器自己被回归测�
 
 换一个项目/公司复用，只需重复 1+2，不动任何脚本或规则正文。
 
+## 如何使用（Step by Step）
+
+以「用本系统跑一个新需求」为例的日常流程（首次接入新仓库见上一节「挂载」）。命令统一走 `common/agent-scripts/docs-tdd.mjs`（下文简写 `docs-tdd`）。
+
+**0. 前置**：系统已挂载到消费仓库（软链 + `docs-tdd.config.json`），`docs-tdd doctor <任意ID>` 适配项全 PASS。
+
+**1. 启动新需求** — 对 AI 说启动口令：
+```text
+根据 docs_tdd 下的文档，开始新的需求 PR-01234，PRD 文档是：<PRD 链接或本地路径>。
+```
+AI 会先读 `common/rule-router.md`，在 `PR-01234/` 下建项目目录，按 `common/project-doc-structure.md` 放置 `inbox/ product/ engineering/ agent/`。
+
+**2. G0 资料接收**：把 PRD / Figma / API 资料放进 `PR-01234/inbox/`。含图片、表格、嵌入对象时先完成 `prd_intake`（`docs-tdd context PR-01234 prd_intake`），逐项读取分类，读不了即阻断，不猜。
+
+**3. G1 文档生成**：AI 复制 `templates/feature-inventory-template.md` → `product/00-feature-inventory.md`，产出 PRD 全量功能清单初稿（防 scope 误裁）。
+
+**4. 按场景加载规则**：`docs-tdd context PR-01234 <SCENARIO>` 生成 compact 规则包，只读命中场景的专题，不全读 `common/`。常用场景：`g0_g2_scope` `write_api` `write_mapper` `write_query_hook` `write_ui` `write_figma` `write_msw` `g6_verify`（全表见 `rule-router.md §3`）。
+
+**5. G2 方案定稿**：对功能清单逐条确认「做 / 不做 / 延期」，写完 `product/02-technical-design.md`（含复用盘点、PRD 路径核验）后**才允许写业务代码**。
+
+**6. G4 建编码 worktree**：
+```bash
+node <mount>/common/agent-scripts/prepare-coding-worktree.mjs PR-01234 --dry-run   # 先看
+node <mount>/common/agent-scripts/prepare-coding-worktree.mjs PR-01234             # 建分支+软链+装依赖+起 dev
+```
+从最新 `origin/online` 切 `feature/PR-01234`，基线校验通过才算 ready。
+
+**7. 编码 + 增量校验**：每次改完代码跑
+```bash
+docs-tdd changed PR-01234      # 实跑 code-rules / mock-manifest 校验改动文件
+```
+
+**8. 阶段门禁**：每过一关跑对应 gate，全绿才进下一阶段：
+```bash
+docs-tdd gate PR-01234 G5      # 接口联调（字段对账、删 mock 臆造字段）
+docs-tdd gate PR-01234 G6      # 自测验收（实跑 biome/tsc/vitest + code review findings 清零）
+docs-tdd gate PR-01234 G7      # QA 用例回归
+docs-tdd gate PR-01234 G8      # 交付摘要 + 残留风险/阻塞（blockers.json）
+```
+`docs-tdd doctor PR-01234` 随时自检适配/冲突/发布状态；缓存仅复用同输入 PASS，强制实跑加 `--no-cache`。
+
+**9. 上线后回收**：需求合入 `origin/online` 并验证后，回收一次性 worktree（保留 `PR-01234/` 文档）：
+```bash
+node <mount>/common/agent-scripts/decommission-worktree.mjs PR-01234 --dry-run
+node <mount>/common/agent-scripts/decommission-worktree.mjs PR-01234
+```
+
+> 维护系统本身（改规则/加专题/发指纹）用场景 `docs_tdd_maintenance`；改完依次 `docs-tdd check`、`rule-release.mjs --write`、`effective-rules.mjs --write`，否则发布漂移会阻断 context/changed/gate。
+
 ## 目录
 
 | 路径 | 用途 |
