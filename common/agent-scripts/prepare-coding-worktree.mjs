@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { existsSync, lstatSync, mkdirSync, readlinkSync, rmSync } from 'node:fs';
+import { existsSync, lstatSync, mkdirSync, readFileSync, readlinkSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn, spawnSync } from 'node:child_process';
@@ -19,25 +19,45 @@ function readOption(name, fallback) {
   return process.argv[index + 1] ?? fallback;
 }
 
-const port = readOption('--port', '4001');
-const verifyPath = readOption('--verify-path', '/zh-CN');
+function frontmatterValue(file, key) {
+  if (!existsSync(file)) return '';
+  return readFileSync(file, 'utf8').match(new RegExp(`^${key}:\\s*(.*)$`, 'm'))?.[1]?.replace(/^['"]|['"]$/g, '').trim() || '';
+}
+
+function allocatePort() {
+  const projectReadme = join(docsSystemRoot, projectId || '', 'README.md');
+  const existing = frontmatterValue(projectReadme, 'port');
+  if (/^\d+$/.test(existing)) return existing;
+  const used = new Set();
+  for (const entry of readdirSync(docsSystemRoot, { withFileTypes: true })) {
+    if (!entry.isDirectory() || !/^PR-/.test(entry.name)) continue;
+    const value = frontmatterValue(join(docsSystemRoot, entry.name, 'README.md'), 'port');
+    if (/^\d+$/.test(value)) used.add(Number(value));
+  }
+  let candidate = Number(config.portRangeStart || config.defaultPort || 4101);
+  while (used.has(candidate)) candidate += 1;
+  return String(candidate);
+}
+
+const port = readOption('--port', '') || allocatePort();
+const verifyPath = readOption('--verify-path', config.verifyPath || '/zh-CN');
 // 强制规则：所有功能分支一律从最新 origin/online 切（见 common/git-branch-flow.md §1）。
 // 仅在极少数确需其他基线时用 --base-ref 显式覆盖，并自负其责。
-const baseRef = readOption('--base-ref', 'origin/online');
+const baseRef = readOption('--base-ref', config.baseRef || 'origin/online');
 
 function printHelp() {
   console.log(`usage: prepare-coding-worktree.mjs <PR-01234> [--dry-run] [--skip-install] [--skip-verify] [--port <port>] [--verify-path <path>] [--base-ref <ref>] [--help]
 
-Create feature/<PR-ID> worktree from the base ref, symlink docs_tdd, install deps, and verify dev server.
+Create ${config.branchPrefix || 'feature/'}<PR-ID> worktree from the configured base ref, symlink docs_tdd, install deps, and verify dev server.
 
 Options:
   --help          Show this help message and exit
   --dry-run       Print planned commands without running them
   --skip-install  Skip pnpm install
   --skip-verify   Skip dev server health check
-  --port          Dev server port (default: 4001)
-  --verify-path   Health-check URL path (default: /zh-CN)
-  --base-ref      Base ref to branch from (default: origin/online)`)
+  --port          Dev server port (auto-allocated from ${config.portRangeStart || config.defaultPort || 4101})
+  --verify-path   Health-check URL path (default: ${config.verifyPath || '/zh-CN'})
+  --base-ref      Base ref to branch from (default: ${config.baseRef || 'origin/online'})`)
 }
 
 if (process.argv.includes('--help')) {
@@ -81,7 +101,8 @@ function tryOutput(command, args, cwd = repoRoot) {
   return result.stdout.trim();
 }
 
-if (!projectId || !/^PR-\d{5}$/.test(projectId)) {
+const projectIdPattern = new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`);
+if (!projectId || !projectIdPattern.test(projectId)) {
   fail('usage: prepare-coding-worktree.mjs PR-01234 [--dry-run] [--skip-install] [--skip-verify] [--port 4001] [--verify-path /zh-CN] [--base-ref origin/online]');
 }
 
@@ -92,10 +113,10 @@ if (resolve(gitRoot) !== repoRoot) {
 
 const parentDir = dirname(repoRoot);
 const worktreeDir = join(parentDir, projectId);
-const branchName = `feature/${projectId}`;
+const branchName = `${config.branchPrefix || 'feature/'}${projectId}`;
 const mainDocsTdd = docsSystemRoot;
 const linkedDocsTdd = join(worktreeDir, config.docsMountPath);
-const webDir = join(worktreeDir, 'apps/web');
+const webDir = join(worktreeDir, config.appSubpath || 'apps/web');
 
 console.log(`projectId: ${projectId}`);
 console.log(`branch: ${branchName}`);
@@ -254,5 +275,28 @@ async function verifyDevServer() {
 }
 
 await verifyDevServer();
+
+function updateProjectMetadata() {
+  const readme = join(docsSystemRoot, projectId, 'README.md');
+  if (!existsSync(readme)) fail(`project README missing: ${readme}`);
+  if (dryRun) {
+    console.log(`[dry-run] update README frontmatter worktree=${worktreeDir} port=${port} branch=${branchName}`);
+    return;
+  }
+  let text = readFileSync(readme, 'utf8');
+  const update = (key, value) => {
+    const line = `${key}: ${JSON.stringify(String(value))}`;
+    const pattern = new RegExp(`^${key}:.*$`, 'm');
+    if (!pattern.test(text)) fail(`README frontmatter missing ${key}: ${readme}`);
+    text = text.replace(pattern, line);
+  };
+  update('worktree', worktreeDir);
+  update('port', port);
+  update('branch', branchName);
+  writeFileSync(readme, text);
+  console.log(`project metadata updated: ${readme}`);
+}
+
+updateProjectMetadata();
 
 console.log('coding worktree is ready');

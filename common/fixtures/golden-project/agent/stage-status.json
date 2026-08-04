@@ -1,0 +1,17 @@
+{
+  "projectId": "PR-00000",
+  "stages": {
+    "G5": {
+      "status": "not-applicable",
+      "reason": "Golden fixture has no real backend integration.",
+      "evidence": [],
+      "updatedAt": "2026-08-03"
+    },
+    "G7": {
+      "status": "pending",
+      "reason": "Golden fixture stops at G6.",
+      "evidence": [],
+      "updatedAt": "2026-08-03"
+    }
+  }
+}

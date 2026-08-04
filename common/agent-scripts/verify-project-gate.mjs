@@ -6,10 +6,11 @@ import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
 import { blockerChecks } from './lib/blockers.mjs'
 import { codeReviewChecks } from './lib/code-review.mjs'
+import { acceptanceChecks } from './lib/acceptance-results.mjs'
 import { resolveRoots } from './lib/roots.mjs'
 
 const scriptPath = fileURLToPath(import.meta.url)
-const { docsSystemRoot: docsRoot, consumerRoot: repoRoot } = resolveRoots()
+const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, config } = resolveRoots()
 
 // GIT-G4 checks the branch/HEAD of the worktree the agent is CODING in. That is process.cwd(),
 // NOT repoRoot: in a feature worktree, docs_tdd is a symlink, so the script path resolves back to
@@ -296,7 +297,8 @@ function recordsPrdSource(text) {
   return /\| PRD 来源 \|\s*(?!\s*\|)/.test(text)
 }
 function recordsG2Confirmer(text) {
-  return /\| G2 确认人 & 日期 \|\s*(?!\s*(待确认)?\s*\|)/.test(text)
+  const value = text.match(/\| G2 确认人 & 日期 \|\s*([^|]+)\|/)?.[1]?.trim() || ''
+  return Boolean(value && !/待确认|待填写/.test(value) && /\d{4}-\d{2}-\d{2}/.test(value) && /[^\d\s/（()·-]/.test(value))
 }
 function featureRowsMissingStatus(rows) {
   return rows.filter((row) => row[0] && !row.some((cell) => ['做', '不做', '延期'].includes(cell)))
@@ -476,7 +478,7 @@ function validatePrdIntake(stage) {
 }
 
 function validateG2() {
-  validateG0()
+  validateG1()
   const inventory = join(projectDir, 'product/00-feature-inventory.md')
   const tasks = join(projectDir, 'product/04-frontend-tasks.md')
   const text = read(inventory)
@@ -492,6 +494,18 @@ function validateG2() {
   const taskText = read(tasks)
   const missingTaskIds = doingIds.filter((id) => !taskText.includes(id))
   add('DOC-G2-005', missingTaskIds.length === 0, `all 本期=做 feature IDs appear in frontend tasks${missingTaskIds.length ? `: ${missingTaskIds.join(', ')}` : ''}`, tasks)
+}
+
+function validateG1() {
+  validateG0()
+  const scope = join(projectDir, 'product/01-scope-and-phases.md')
+  const design = join(projectDir, 'product/02-technical-design.md')
+  const tasks = join(projectDir, 'product/04-frontend-tasks.md')
+  const collaboration = join(projectDir, 'product/06-collaboration.md')
+  add('DOC-G1-001', /本期范围|范围/.test(read(scope)), 'G1 scope document records the current scope', scope)
+  add('DOC-G1-002', /复用盘点/.test(read(design)), 'G1 technical design contains reuse inventory scaffold', design)
+  add('DOC-G1-003', /任务清单|\|\s*ID\s*\|/.test(read(tasks)), 'G1 frontend tasks contain a task inventory', tasks)
+  add('DOC-G1-004', /待确认|差异|协作/.test(read(collaboration)), 'G1 collaboration document records decisions or pending items', collaboration)
 }
 
 function validateG3() {
@@ -570,8 +584,9 @@ function validateG4() {
     const onFeature = branch.stdout.startsWith('feature/')
     add('GIT-G4-001', onExact, `current branch is feature/${projectId} (feature/* tolerated); got ${branch.stdout || 'unknown'}`, projectDir, onFeature ? 'warn' : 'error')
     // 基线判定见 classifyBaseline：区分「良性前进(warn)」与「从非 online 切(error)」，不再把主线前进误判为 FAIL。
-    const hasCommonBase = runGit(['merge-base', 'origin/online', 'HEAD'], gitCwd).ok
-    const onlineIsAncestor = runGit(['merge-base', '--is-ancestor', 'origin/online', 'HEAD'], gitCwd).ok
+    const baseRef = config.baseRef || 'origin/online'
+    const hasCommonBase = runGit(['merge-base', baseRef, 'HEAD'], gitCwd).ok
+    const onlineIsAncestor = runGit(['merge-base', '--is-ancestor', baseRef, 'HEAD'], gitCwd).ok
     const baseline = classifyBaseline(hasCommonBase, onlineIsAncestor)
     add('GIT-G4-002', baseline.ok, baseline.note, projectDir, baseline.severity)
   }
@@ -681,7 +696,40 @@ function validateG6() {
   const evidenceText = readEvidenceText(evidenceDir)
   const collaboration = join(projectDir, 'product/06-collaboration.md')
   const collabText = read(collaboration)
-  add('VERIFY-G6-002', codeReviewFindingsResolved(collabText), 'code-review findings recorded with disposition and no unresolved items (fix on the spot or waive)', collaboration)
+  const projectManifest = readJson(join(projectDir, 'agent/project-manifest.json'))
+  const codeReviewFile = join(projectDir, 'agent/code-review.json')
+  if (existsSync(codeReviewFile)) {
+    const report = readJson(codeReviewFile)
+    if (report === null) add('DOC-CR-001', false, 'code-review.json 不是合法 JSON', codeReviewFile)
+    else {
+      const currentSha = runGit(['rev-parse', 'HEAD'], gitCwd).stdout
+      for (const check of codeReviewChecks({ report, currentSha, expectedProjectId: projectId, file: rel(codeReviewFile) })) {
+        add(check.ruleId, check.ok, check.message, codeReviewFile, check.severity, check.category)
+      }
+    }
+  } else if ((projectManifest?.templateVersion || 0) >= 2) {
+    add('DOC-CR-001', false, 'template v2+ 必须存在 agent/code-review.json', codeReviewFile)
+  } else {
+    add('VERIFY-G6-002', codeReviewFindingsResolved(collabText), 'legacy project: code-review findings recorded with disposition and no unresolved items', collaboration)
+  }
+
+  const inventoryText = read(join(projectDir, 'product/00-feature-inventory.md'))
+  const doingFeatureIds = parseMarkdownTableRows(inventoryText, '## 功能清单')
+    .filter((row) => featureRowStatus(row) === '做')
+    .map((row) => row[0])
+    .filter(Boolean)
+  const acceptanceFile = join(projectDir, 'agent/acceptance-results.json')
+  if (existsSync(acceptanceFile)) {
+    const report = readJson(acceptanceFile)
+    if (report === null) add('DOC-AC-001', false, 'acceptance-results.json 不是合法 JSON', acceptanceFile)
+    else {
+      for (const check of acceptanceChecks({ report, doingFeatureIds, expectedProjectId: projectId, file: rel(acceptanceFile) })) {
+        add(check.ruleId, check.ok, check.message, acceptanceFile, check.severity, check.category)
+      }
+    }
+  } else if ((projectManifest?.templateVersion || 0) >= 2) {
+    add('DOC-AC-001', false, 'template v2+ 必须存在 agent/acceptance-results.json', acceptanceFile)
+  }
   add('VERIFY-G6-003', /\|\s*命令\s*\|\s*目标文件|Command\s*\|\s*Target|Biome|biome|node --check|verify-code-rules|check-doc-budget/.test(`${evidenceText}\n${collabText}`), 'verification evidence records command target/result, including Biome or documented fallback', evidenceDir)
   const binaryFiles = findBinaryEvidenceFiles(evidenceDir)
   add('VERIFY-G6-004', binaryFiles.length === 0, binaryFiles.length === 0 ? 'evidence directory contains no binary/temporary files (only text reports)' : `evidence directory contains binary/temporary files that should be moved to /tmp/ or a .gitignore path: ${binaryFiles.join(', ')}`, evidenceDir, 'warn')
@@ -702,9 +750,51 @@ function validateG7() {
 function validateG8() {
   validateG7()
   add('VERIFY-STAGE-003', hasPassedGate('G7'), 'G8 requires a persisted successful G7 run in agent/gate-history.json', join(projectDir, 'agent/gate-history.json'))
+  const projectManifest = readJson(join(projectDir, 'agent/project-manifest.json'))
+  const deliveryFile = join(projectDir, 'agent/delivery-status.json')
+  const delivery = readJson(deliveryFile)
+  if ((projectManifest?.templateVersion || 0) >= 2 || existsSync(deliveryFile)) {
+    const structureOk = Boolean(
+      delivery
+      && delivery.projectId === projectId
+      && ['local', 'pushed', 'merged', 'released'].includes(delivery.mode)
+      && typeof delivery.branch === 'string'
+      && typeof delivery.headSha === 'string'
+      && Array.isArray(delivery.evidence),
+    )
+    add('VERIFY-G8-001', structureOk, 'delivery-status.json has valid projectId/mode/branch/headSha/evidence', deliveryFile)
+    if (structureOk) {
+      add('VERIFY-G8-002', delivery.mode !== 'local', `G8 delivery mode must be pushed/merged/released (got ${delivery.mode})`, deliveryFile)
+      const dirty = runGit(['status', '--porcelain'], gitCwd).stdout
+      add('VERIFY-G8-003', dirty.length === 0, dirty.length ? `G8 worktree is not clean:\n${dirty}` : 'G8 worktree is clean', gitCwd)
+      const branch = delivery.branch.trim()
+      const deliveredHead = delivery.headSha.trim()
+      const resolvedDeliveredHead = /^[0-9a-f]{7,40}$/.test(deliveredHead)
+        ? runGit(['rev-parse', `${deliveredHead}^{commit}`], gitCwd)
+        : { ok: false, stdout: '' }
+      const hasDeliveryEvidence = delivery.evidence.length > 0
+      let remoteOk = false
+      let remoteMessage = ''
+      if (!branch || !resolvedDeliveredHead.ok || !hasDeliveryEvidence) {
+        remoteMessage = '非 local 交付必须记录 branch、7-40 位 headSha 和至少一条 evidence'
+      } else if (delivery.mode === 'pushed') {
+        const remoteHead = runGit(['rev-parse', `origin/${branch}`], gitCwd)
+        const currentHead = runGit(['rev-parse', 'HEAD'], gitCwd)
+        remoteOk = remoteHead.ok && currentHead.ok && remoteHead.stdout === resolvedDeliveredHead.stdout && currentHead.stdout === resolvedDeliveredHead.stdout
+        remoteMessage = remoteOk
+          ? `origin/${branch}、当前 HEAD 与 delivery-status.headSha 一致`
+          : `origin/${branch}、当前 HEAD 与 delivery-status.headSha 不一致或不存在`
+      } else {
+        const baseRef = config.baseRef || 'origin/online'
+        remoteOk = runGit(['merge-base', '--is-ancestor', resolvedDeliveredHead.stdout, baseRef], gitCwd).ok
+        remoteMessage = remoteOk ? `交付提交 ${resolvedDeliveredHead.stdout.slice(0, 12)} 已进入 ${baseRef}` : `交付提交 ${resolvedDeliveredHead.stdout.slice(0, 12)} 尚未进入 ${baseRef}`
+      }
+      add('VERIFY-G8-004', remoteOk, remoteMessage, deliveryFile)
+    }
+  }
 }
 
-const validators = { G0: validateG0, G1: validateG0, G2: validateG2, G3: validateG3, G4: validateG4, G5: validateG5, G6: validateG6, G7: validateG7, G8: validateG8 }
+const validators = { G0: validateG0, G1: validateG1, G2: validateG2, G3: validateG3, G4: validateG4, G5: validateG5, G6: validateG6, G7: validateG7, G8: validateG8 }
 validators[gate]()
 
 // 阻塞与变更登记跨所有阶段生效：读 agent/blockers.json，把 DOC-BLOCK-* 结论并入 checks。

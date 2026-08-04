@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "run-state.schema.json",
+  "title": "docs_tdd Orchestrator Run State",
+  "type": "object",
+  "required": ["version", "projectId", "status", "currentStage", "nextAction", "updatedAt", "attempts"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },
+    "status": { "type": "string", "enum": ["ready", "active", "waiting_approval", "blocked", "complete"] },
+    "currentStage": { "type": "string", "pattern": "^G[0-8]$" },
+    "lastAction": { "type": "string" },
+    "nextAction": { "type": "string", "minLength": 1 },
+    "source": { "type": "string" },
+    "syncedSource": { "type": "string" },
+    "blocker": { "type": "string" },
+    "updatedAt": { "type": "string", "minLength": 1 },
+    "attempts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["at", "action", "ok"],
+        "properties": {
+          "at": { "type": "string", "minLength": 1 },
+          "action": { "type": "string", "minLength": 1 },
+          "ok": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

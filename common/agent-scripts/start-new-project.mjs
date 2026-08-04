@@ -4,10 +4,10 @@ import { existsSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { resolveRoots } from './lib/roots.mjs';
+import { resolveDocsPath, resolveRoots } from './lib/roots.mjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
-const { docsSystemRoot: docsRoot, consumerRoot: repoRoot } = resolveRoots();
+const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, config } = resolveRoots();
 
 const args = process.argv.slice(2);
 const projectId = args[0];
@@ -42,7 +42,7 @@ function fail(message) {
 }
 
 function assertProjectId(value) {
-  if (!/^PR-\d{5}$/.test(value || '')) {
+  if (!new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(value || '')) {
     fail('usage: start-new-project.mjs PR-01234 --prd <Lark URL or local md path> [--title <name>] [--dry-run]');
   }
 }
@@ -108,10 +108,10 @@ function sourceTypeFromPrd(prd) {
 
 function validatePrdSource(prd) {
   if (/^https?:\/\//i.test(prd)) return;
-  const sourcePath = path.resolve(repoRoot, prd);
-  assertInside(docsRoot, sourcePath, 'local PRD');
-  if (!existsSync(sourcePath)) {
-    fail(`local PRD does not exist: ${path.relative(repoRoot, sourcePath)}`);
+  try {
+    resolveDocsPath(prd, { consumerRoot: repoRoot, docsMountPath: config.docsMountPath, mustExist: true });
+  } catch (error) {
+    fail(`invalid local PRD: ${error.message}`);
   }
 }
 
@@ -127,6 +127,10 @@ const sourceType = sourceTypeFromPrd(prd);
 const lowerProjectId = projectId.toLowerCase();
 const today = new Date().toISOString().slice(0, 10);
 const ruleset = JSON.parse(await fs.readFile(path.join(docsRoot, 'common/ruleset.json'), 'utf8'));
+const branchName = `${config.branchPrefix || 'feature/'}${projectId}`;
+const docsMountPath = config.docsMountPath || 'apps/web/docs_tdd';
+const larkOutputDir = String(config.larkOutputDir || `${docsMountPath}/\${projectId}/inbox/lark-sync`)
+  .replaceAll('${projectId}', projectId);
 const templateReplacements = {
   '<PROJECT-ID>': projectId,
   '<TICKET-ID>': projectId,
@@ -149,7 +153,7 @@ for (const dir of dirs) {
   await ensureDir(dir);
 }
 
-await writeFileIfMissing(path.join(projectDir, 'README.md'), `---\nprojectId: ${projectId}\nstatus: active\nstage: G0\nbranch: feature/${projectId}\nworktree: ""\nport: ""\nvisualFidelity: standard\nprdSource: ${prd}\nfigmaNode: ""\nlarkEnabled: false\n---\n\n# ${projectId} ${title}\n\n> 本文件顶部 YAML frontmatter 是机器可读的元数据真值源，修改后请运行 \`node apps/web/docs_tdd/common/agent-scripts/update-project-index.mjs --write\` 刷新 PROJECTS.md。\n\n## 状态\n\n| 字段 | 值 |\n|------|-----|\n| 当前阶段 | G0 资料接收 |\n| 最新通过门禁 | |\n| 公共规则 | 继承 ../common/README.md |\n| PRD 来源 | ${prd} |\n| visualFidelity | standard |\n\n## 文档地图\n\n- product/00-feature-inventory.md\n- product/01-scope-and-phases.md\n- product/02-technical-design.md\n- product/03-api-contract.md\n- product/04-frontend-tasks.md\n- product/05-ui-and-interaction.md\n- product/06-collaboration.md\n- product/07-figma-spec.md\n- engineering/development-rules.md\n- agent/README.md\n\n## 待确认\n\n- [ ] G2 scope 确认人和日期\n- [ ] Figma / API / QA 资料是否补充\n- [ ] API 未 ready 时是否按 MSW 路线 B 落地 handler / 契约测试 / dev-only worker\n- [ ] Lark 主动通知是否启用\n- [ ] 群内 @ 应用转 task 是否启用\n`);
+await writeFileIfMissing(path.join(projectDir, 'README.md'), `---\nprojectId: ${projectId}\nstatus: active\nstage: G0\nbranch: ${branchName}\nworktree: ""\nport: ""\nvisualFidelity: standard\nprdSource: ${prd}\nfigmaNode: ""\nlarkEnabled: false\n---\n\n# ${projectId} ${title}\n\n> 本文件顶部 YAML frontmatter 是机器可读的元数据真值源，修改后请运行 \`node ${docsMountPath}/common/agent-scripts/update-project-index.mjs --write\` 刷新 PROJECTS.md。\n\n## 状态\n\n| 字段 | 值 |\n|------|-----|\n| 当前阶段 | G0 资料接收 |\n| 最新通过门禁 | |\n| 公共规则 | 继承 ../common/README.md |\n| PRD 来源 | ${prd} |\n| visualFidelity | standard |\n\n## 文档地图\n\n- product/00-feature-inventory.md\n- product/01-scope-and-phases.md\n- product/02-technical-design.md\n- product/03-api-contract.md\n- product/04-frontend-tasks.md\n- product/05-ui-and-interaction.md\n- product/06-collaboration.md\n- product/07-figma-spec.md\n- engineering/development-rules.md\n- agent/README.md\n\n## 待确认\n\n- [ ] G2 scope 确认人和日期\n- [ ] Figma / API / QA 资料是否补充\n- [ ] API 未 ready 时是否按 MSW 路线 B 落地 handler / 契约测试 / dev-only worker\n- [ ] Lark 主动通知是否启用\n- [ ] 群内 @ 应用转 task 是否启用\n`);
 
 const featureInventoryTemplate = await readTemplate(
   'feature-inventory-template.md',
@@ -217,10 +221,10 @@ await writeFileIfMissing(path.join(projectDir, 'agent/project-manifest.json'), j
   projectId,
   createdAt: today,
   rulesetVersion: ruleset.version,
-  templateVersion: 1,
+  templateVersion: 2,
   pilot: { msw: true, prdIntake: true },
   gatePolicy: {
-    legacyRules: 'report-only',
+    legacyRules: 'blocking',
     currentTouchedRules: 'blocking',
   },
 }));
@@ -263,6 +267,32 @@ await writeFileIfMissing(path.join(projectDir, 'agent/msw-manifest.json'), json(
   retirement: { retiredAt: '', reconciliationEvidence: '' },
 }));
 await writeFileIfMissing(path.join(projectDir, 'agent/assumptions.json'), json({ projectId, assumptions: [] }));
+await writeFileIfMissing(path.join(projectDir, 'agent/blockers.json'), json([]));
+await writeFileIfMissing(path.join(projectDir, 'agent/code-review.json'), json({
+  projectId,
+  reviewedAt: today,
+  reviewer: 'pending',
+  findings: [
+    {
+      id: 'CR-1',
+      category: 'other',
+      severity: 'high',
+      summary: 'G6 code review 尚未执行',
+      disposition: 'open',
+      evidence: [],
+    },
+  ],
+}));
+await writeFileIfMissing(path.join(projectDir, 'agent/acceptance-results.json'), json({ projectId, items: [] }));
+await writeFileIfMissing(path.join(projectDir, 'agent/delivery-status.json'), json({
+  projectId,
+  mode: 'local',
+  branch: branchName,
+  headSha: '',
+  pullRequestUrl: '',
+  evidence: [],
+  note: 'G8 前更新为 pushed / merged / released；gate 会用 Git 实际状态复核。',
+}));
 
 await writeFileIfMissing(path.join(projectDir, 'agent/lark-integration.md'), `# ${projectId} Lark 集成\n\n继承 ../../common/collaboration-and-notifications.md。\n\n## 启用状态\n\n- 主动发群消息：待确认\n- 群内 @ 应用转 task：待确认\n\n## 配置路径\n\n- 自定义机器人配置：agent/scripts/${lowerProjectId}.json（本机 ignored，禁止提交密钥）\n- 通知记录：agent/notification-log.md\n`);
 
@@ -270,7 +300,7 @@ await writeFileIfMissing(path.join(projectDir, 'agent/notification-log.md'), `# 
 
 await writeFileIfMissing(path.join(projectDir, 'agent/lark-sources.json'), json({
   projectId,
-  outputDir: `apps/web/docs_tdd/${projectId}/inbox/lark-sync`,
+  outputDir: larkOutputDir,
   sources: [
     {
       type: sourceType,
@@ -282,9 +312,9 @@ await writeFileIfMissing(path.join(projectDir, 'agent/lark-sources.json'), json(
   ],
 }));
 
-await writeFileIfMissing(path.join(projectDir, 'agent/scripts/sync-lark-docs.mjs'), `#!/usr/bin/env node\n\nimport { runSyncLarkDocs } from '../../../common/agent-scripts/sync-lark-docs.mjs'\n\nrunSyncLarkDocs({\n  defaultConfigPath: 'apps/web/docs_tdd/${projectId}/agent/lark-sources.json',\n}).catch((error) => {\n  console.error(error.message)\n  process.exit(1)\n})\n`);
+await writeFileIfMissing(path.join(projectDir, 'agent/scripts/sync-lark-docs.mjs'), `#!/usr/bin/env node\n\nimport { runSyncLarkDocs } from '../../../common/agent-scripts/sync-lark-docs.mjs'\n\nrunSyncLarkDocs({\n  defaultConfigPath: '${docsMountPath}/${projectId}/agent/lark-sources.json',\n}).catch((error) => {\n  console.error(error.message)\n  process.exit(1)\n})\n`);
 
-await writeFileIfMissing(path.join(projectDir, 'agent/scripts/notify-lark.mjs'), `#!/usr/bin/env node\n\nimport { runNotifyLark } from '../../../common/agent-scripts/notify-lark.mjs'\n\nrunNotifyLark({\n  defaultConfigPath: 'apps/web/docs_tdd/${projectId}/agent/scripts/${lowerProjectId}.json',\n}).catch((error) => {\n  console.error(error.message)\n  process.exit(1)\n})\n`);
+await writeFileIfMissing(path.join(projectDir, 'agent/scripts/notify-lark.mjs'), `#!/usr/bin/env node\n\nimport { runNotifyLark } from '../../../common/agent-scripts/notify-lark.mjs'\n\nrunNotifyLark({\n  defaultConfigPath: '${docsMountPath}/${projectId}/agent/scripts/${lowerProjectId}.json',\n}).catch((error) => {\n  console.error(error.message)\n  process.exit(1)\n})\n`);
 
 if (!dryRun) {
   await fs.chmod(path.join(projectDir, 'agent/scripts/sync-lark-docs.mjs'), 0o755);
@@ -297,5 +327,5 @@ console.log(JSON.stringify({
   projectId,
   projectDir: path.relative(repoRoot, projectDir),
   prd,
-  next: `node apps/web/docs_tdd/common/agent-scripts/update-project-index.mjs --write`,
+  next: `node ${docsMountPath}/common/agent-scripts/update-project-index.mjs --write`,
 }, null, 2));

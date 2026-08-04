@@ -4,6 +4,10 @@
   "docsMountPath": "apps/web/docs_tdd",
   "baseRef": "origin/online",
   "projectIdPattern": "PR-\\d{5}",
+  "branchPrefix": "feature/",
+  "defaultPort": 4101,
+  "portRangeStart": 4101,
+  "verifyPath": "/zh-CN",
   "ruleSurfaces": {
     "agents": ["AGENTS.md"],
     "claude": ["CLAUDE.md"],
@@ -17,6 +21,7 @@
     "cursorLocalGovernance": "~/.cursor/rules/fameex-local-governance.mdc"
   },
   "typecheckRoots": ["apps/web", "apps/admin"],
+  "productionBuild": ["pnpm", "--filter", "@fameex/web", "build"],
   "moduleImportAliases": ["@fameex/ui"],
   "larkOutputDir": "apps/web/docs_tdd/${projectId}/inbox/lark-sync"
 }

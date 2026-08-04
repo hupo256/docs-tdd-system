@@ -22,3 +22,11 @@ schema / mapper / 契约测试保留。
 契约测试用真实 schema：`schema.parse(fixture)` 必须通过，字段缺失即失败。
 
 worker 注册仅 dev 环境：`browser.ts` 只在 dev-only 分支启动，生产构建不注册。
+
+## 7. 字段对账与文案契约
+
+字段来源已按真实 API 契约核对；本夹具没有未决字段。
+
+| 文案 ID | zh-CN key | 动态变量 |
+|---------|-----------|----------|
+| 榜单标题 | `golden:board.title` | 无 |

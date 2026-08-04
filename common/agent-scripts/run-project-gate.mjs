@@ -13,7 +13,7 @@ import { resolveRoots } from './lib/roots.mjs'
 
 const scriptPath = fileURLToPath(import.meta.url)
 const scriptDir = dirname(scriptPath)
-const { docsSystemRoot: docsRoot, consumerRoot: repoRoot } = resolveRoots()
+const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, config } = resolveRoots()
 // 子 gate 的 GIT-G4 检查要认「agent 正在编码的 worktree 分支」，靠 verify-project-gate 内部的 process.cwd()。
 // 但本聚合器经 symlink 解析出的 repoRoot 恒指向主仓（常停在 dev），若用它当子进程 cwd，会把子脚本
 // 的 worktree 定位拽回主仓、误判 GIT-G4-001。所以 spawn 子 gate 时传调用者
@@ -191,7 +191,7 @@ function summarizeCommand(item) {
 }
 
 function createFingerprint() {
-  const code = codeFingerprint(callerCwd)
+  const code = codeFingerprint(callerCwd, config.baseRef || 'origin/online')
   const rulesetFile = join(docsRoot, 'common/ruleset.json')
   const ruleset = existsSync(rulesetFile) ? JSON.parse(readFileSync(rulesetFile, 'utf8')) : { version: 'unknown' }
   const releaseFile = join(docsRoot, 'common/rule-release.json')
@@ -216,7 +216,7 @@ function shouldUseGateCache({ isWrite, isNoCache, cacheExists, cachedOk }) {
 
 function gateCacheFingerprint(projectDir) {
   const fingerprint = createFingerprint()
-  const projectFiles = ['product/00-feature-inventory.md', 'product/02-technical-design.md', 'product/03-api-contract.md', 'product/04-frontend-tasks.md', 'product/06-collaboration.md', 'agent/project-manifest.json', 'agent/prd-source-manifest.json', 'agent/msw-manifest.json', 'agent/assumptions.json', 'agent/rule-waivers.json', 'agent/stage-status.json', 'agent/gate-history.json']
+  const projectFiles = ['product/00-feature-inventory.md', 'product/02-technical-design.md', 'product/03-api-contract.md', 'product/04-frontend-tasks.md', 'product/06-collaboration.md', 'agent/project-manifest.json', 'agent/prd-source-manifest.json', 'agent/msw-manifest.json', 'agent/assumptions.json', 'agent/rule-waivers.json', 'agent/stage-status.json', 'agent/gate-history.json', 'agent/blockers.json', 'agent/code-review.json', 'agent/acceptance-results.json', 'agent/delivery-status.json']
     .map((file) => {
       const absolute = join(projectDir, file)
       return existsSync(absolute) ? `${file}\n${readFileSync(absolute)}` : `${file}\nmissing`
@@ -415,7 +415,7 @@ if (args.includes('--self-test')) {
   process.exit(0)
 }
 
-if (!/^PR-\d{5}$/.test(projectId || '') || !/^G[0-8]$/.test(gate)) usage()
+if (!new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(projectId || '') || !/^G[0-8]$/.test(gate)) usage()
 if (skipCodeRules && strictCodeRuleGates.includes(gate) && !skipCodeRulesReason) {
   fail('--skip-code-rules-reason is required when using --skip-code-rules for G6/G7/G8')
 }
@@ -474,7 +474,7 @@ if (!skipCodeRules && codeRuleGates.includes(gate)) {
 let buildQualityRun = null
 let buildQualityResult = null
 if (!skipBuildQuality && buildQualityGates.includes(gate)) {
-  buildQualityRun = run([join(scriptDir, 'verify-build-quality.mjs'), '--project', projectId, '--json'])
+  buildQualityRun = run([join(scriptDir, 'verify-build-quality.mjs'), '--project', projectId, '--json', ...(gate === 'G8' ? ['--production-build'] : [])])
   persistRunLog('verify-build-quality', buildQualityRun)
   buildQualityResult = parseJsonOutput(buildQualityRun)
   commands.push({ label: `verify-build-quality --project ${projectId}`, target: 'biome / tsc / vitest 实跑', result: buildQualityRun })

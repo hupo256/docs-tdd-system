@@ -1,0 +1,9 @@
+{
+  "projectId": "PR-00000",
+  "mode": "local",
+  "branch": "feature/PR-00000",
+  "headSha": "",
+  "pullRequestUrl": "",
+  "evidence": [],
+  "note": "Golden fixture stops at G6; G8 delivery is not exercised here."
+}

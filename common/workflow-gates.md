@@ -10,9 +10,9 @@
 | G3 | API/Mock 准备 | 明确接口/schema/mapper/Mock 场景；新功能默认 MSW handler + 契约测试；API 未 ready 时必须补 `03-api-contract.md` 的 MSW 清单 / worker / 切真实前置 | 提供 API 或确认复用旧接口 | 完成 / 阻塞 |
 | G4 | 开发实现 | 先确认 `02-technical-design.md` 复用盘点及单一事实源所有权表完成（见 [architecture-and-state.md](./architecture-and-state.md) §4.0），按 [coding-worktree.md](./coding-worktree.md) 备 worktree，再按文档实现 | 确认可进入编码 | 开始 / 完成 |
 | G5 | API 联调 | 接真实接口、处理异常、更新文档；**逐页字段对账**（见 [architecture-and-state.md](./architecture-and-state.md) §8.1）：删 mock 臆造、契约无来源字段 | 提供环境 / 测试数据 | 进行中 / 阻塞 |
-| G6 | 自动验收 | **实跑 biome/tsc/vitest**（[rule-ids-and-gates.md §3.5](./rule-ids-and-gates.md) 机器事实层）+ Browser/Playwright；**跑 `/code-review` skill 审本次 diff**（复用/简化/正确性），findings 清零或登记；重要 UI（Hero/卡片/弹窗/浮层）Figma 并排 L2 走查清单全 pass | 评审自测证据 | 完成 / 阻塞 |
+| G6 | 自动验收 | **实跑 biome/tsc/vitest**；`acceptance-results.json` 覆盖每个本期 Feature；`code-review.json` findings 清零；需要浏览器才能证明的交互真实执行，纯视觉/手感按人工清单 | 评审自测证据 | 完成 / 阻塞 |
 | G7 | 用例回归 | 有 QA 用例则先比对 QA↔PRD 差异再跑并修；未提供则记跳过，不阻塞 | 确认差异处理 | 跳过 / 待确认 / 完成 |
-| G8 | 交付 | 汇总文件/命令/风险/残留项；第 1/2/3 段由 `render-delivery-summary.mjs` 从证据自动生成（见 [quality-checklist.md §6](./quality-checklist.md)） | 接受或返工 | 交付摘要 |
+| G8 | 交付 | 实跑 production build；工作树干净；`delivery-status.json` 记录 mode/branch/headSha/evidence，pushed 或 merged/released 状态由 Git 复核；生成机器交付摘要 | 接受或返工 | 交付摘要 |
 
 ## 执行规则
 
@@ -28,7 +28,7 @@
 - 新需求启动时 Agent **自动** `feature-inventory-template.md` → `product/00-feature-inventory.md`，无需手动复制。
 - 遇 PRD/Figma/API/QA 冲突不越门禁，先写 `product/06-collaboration.md`。
 - G5 出口含字段对账：每个列表/表单/详情页的 type/column/搜索项字段在契约里有唯一来源，mock 臆造字段已删/合并；结果写 `03-api-contract.md` 或 `12-*-api-integration.md`。未对账不得进 G6。**MSW 路线 B：删/停 handler 即切真实接口，保留 schema/mapper/契约测试；遗留路线 A 才同步按 [mock-legacy-route-a.md](./mock-legacy-route-a.md) §8.0.3 零残留拆 mock：`grep @mock-only` 归零、`USE_MOCK` 已删。删业务代码时顺带 grep 同名 `describe`/import 清孤儿测试；fixture 对账测试若接口已变，更新 fixture 不删测试（生命周期见 [verification-division-of-labor.md](./verification-division-of-labor.md) §6）。**
-- **G6 必须跑 `/code-review` skill 审本次 diff**（correctness + reuse/simplification/efficiency）。Review 同时按所有权表检查重复事实源、派生状态双写和无同步契约的副本；findings 当场修或在 `06-collaboration.md` 登记。未跑或有未处理 findings 不得进 G8。judgment 级质量（复用/命名/过度抽象/mapper 臆造字段）靠它兜底，机械项由 Biome/typecheck 负责。
+- **G6 必须跑 `/code-review` skill 审本次 diff**（correctness + reuse/simplification/efficiency），结果写 `agent/code-review.json`；每个本期 Feature 的验收场景写 `agent/acceptance-results.json`。findings 或验收阻塞不得进入 G8；`06-collaboration.md` 只保留讨论背景，不再承担机器真值。
 - G6 静态规则跑 `verify-code-rules.mjs --project <PROJECT-ID>`，只 review 新增/已改文件；不用全仓历史阻断本次，也不跳过本次 diff 新增问题。
 - **G6/G7/G8 由 `docs-tdd gate` 自动调用 `verify-build-quality.mjs` 实跑 biome/tsc/vitest**（契约见 [rule-ids-and-gates.md §3.5](./rule-ids-and-gates.md)）：结论来自真实退出码，不接受「证据文档写了 Biome」这类自述；归因只看本次改动文件，存量债不阻断。跳过必须 `--skip-build-quality-reason`，无理由跳过由 `VERIFY-BUILD-001` 判 error。G5 及之前不强制，避免联调期天天红。
 - 阶段通知只发结论摘要，不发长日志/密钥/账号/Cookie/内网 URL。

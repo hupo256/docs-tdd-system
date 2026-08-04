@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "delivery-status.schema.json",
+  "title": "docs_tdd G8 Delivery Status",
+  "type": "object",
+  "required": ["projectId", "mode", "branch", "headSha", "evidence"],
+  "properties": {
+    "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },
+    "mode": { "type": "string", "enum": ["local", "pushed", "merged", "released"] },
+    "branch": { "type": "string" },
+    "headSha": { "type": "string", "pattern": "^$|^[0-9a-f]{7,40}$" },
+    "pullRequestUrl": { "type": "string" },
+    "evidence": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "note": { "type": "string" }
+  },
+  "additionalProperties": false
+}

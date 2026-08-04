@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "fingerprint": "dea90b6261efe2df8d2016ac1222c593180039e1a0384098dba9c1a23f492727",
-  "publishedAt": "2026-08-04T09:34:00.008Z",
-  "l3RuleReleaseFingerprint": "47bb375d8930a5fcae4e4d3706311455413fd303c1b11372ac276a2ed2cc45b0",
+  "fingerprint": "196221cdac8d8d87247a8fbaddeeb27f07f649cf61778b1306f305cc3e4c3c20",
+  "publishedAt": "2026-08-04T14:43:06.196Z",
+  "l3RuleReleaseFingerprint": "bef7a5256921f179e810b579bca587db1cc9c52a2af237613992c5899ccf14f0",
   "fileCount": 86,
   "skillTargets": {
     "~/.codex/skills/coding-quality": "~/.ai-rules/skills/coding-quality",
@@ -95,7 +95,7 @@
     "~/.claude/settings.json": "2b3d1590a41974466e7a1485b403f13b03d869cb4afffdb9beab2fde4007efa6",
     "~/.codex/AGENTS.md": "23db3e8c71da36b6b9a3dd7cf8c63d7b3b694c6af95bee8a92bef400bdedea00",
     "~/.cursor/rules/fameex-local-governance.mdc": "a710f99a18162d5326a70d4ae6d99e47a6dff4720153574d8b1c3eb8c3157696",
-    "AGENTS.md": "4c9dcd945204eba2f4f1d45b96cd699a6c0d53b93a942495543dcff65e5f94a1",
+    "AGENTS.md": "392064b3caa6942371cdf5380c7c8b6e368e6ba36d5cae03753afc5d6001c480",
     "CLAUDE.md": "aca4da706ab009ec2792fae2a5c1d011f816da2899972eb4fddec37570a79365"
   }
 }

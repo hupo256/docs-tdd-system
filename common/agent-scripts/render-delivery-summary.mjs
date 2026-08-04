@@ -18,7 +18,7 @@ import { resolveRoots } from './lib/roots.mjs'
 
 const scriptPath = fileURLToPath(import.meta.url)
 const scriptDir = dirname(scriptPath)
-const { docsSystemRoot: docsRoot, consumerRoot: repoRoot } = resolveRoots()
+const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, config } = resolveRoots()
 const worktreeRoot = (() => {
   const result = spawnSync('git', ['rev-parse', '--show-toplevel'], { cwd: process.cwd(), stdio: 'pipe', encoding: 'utf8' })
   return result.status === 0 ? result.stdout.trim() : repoRoot
@@ -380,7 +380,7 @@ if (hasFlag('--self-test')) {
 const projectId = readOption('--project')
 if (!projectId) fail('missing --project <PR-ID>（或用 --self-test / --help）')
 
-const baseRef = readOption('--base', 'origin/online')
+const baseRef = readOption('--base', config.baseRef || 'origin/online')
 const projectDir = join(docsRoot, projectId)
 if (!existsSync(projectDir)) fail(`project not found: ${relative(repoRoot, projectDir)}`)
 
@@ -399,7 +399,7 @@ const changedFiles = (() => {
   for (const file of splitLines(runGit(['diff', '--name-only', '--diff-filter=ACMR', '--cached']))) files.add(toPosix(file))
   for (const file of splitLines(runGit(['ls-files', '--others', '--exclude-standard']))) files.add(toPosix(file))
   // docs_tdd 本身不进业务交付摘要（本地忽略目录）。
-  return [...files].filter((file) => file && !file.startsWith('apps/web/docs_tdd/'))
+  return [...files].filter((file) => file && !file.startsWith(`${config.docsMountPath}/`))
 })()
 
 const gateResults = readJson(join(projectDir, 'agent/gate-results.json'))

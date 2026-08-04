@@ -36,13 +36,13 @@ node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs gate PR-01234 G8
 
 | Gate | 机器检查重点 | 说明 |
 |------|--------------|------|
-| G0/G1 | 项目目录、`product/00-07`、`engineering`、`agent` 基础文件;PRD 来源、功能清单、验收映射章节 | 验证文档骨架和 G0 输入是否存在 |
+| G0/G1 | G0 验项目骨架、PRD 来源、功能清单与验收映射；G1 另验 scope、复用盘点、任务清单和协作记录已形成可评审初稿 | 区分资料接收与文档生成出口 |
 | G2/G3 | `00-feature-inventory.md` 无阻断占位;每条功能 `本期=做/不做/延期`;G2 确认人和日期;本期做的功能 ID 进入 `04-frontend-tasks.md` | 阻止 scope 未定稿就写代码 |
 | G4 | 技术方案复用盘点无占位；模板 v2 的单一事实源所有权表存在且无占位；不出现 `跳过复用`；当前分支是 `feature/<PROJECT-ID>` 且基于 `origin/online` | 阻止未完成复用/所有权盘点或在错误分支编码 |
 | G5 | `stage-status.json` 的 G5 为 `completed`/`not-applicable`；真实联调有证据，或 N/A 有具体原因；API 契约、字段对账、Mock/ASSUMED 状态一致 | 阻止关键词占位冒充真实联调完成 |
-| G6 | 已有 G5 PASS 历史；项目有自测报告和 `/code-review` 处理结论，验证证据含命令、目标、结果；**并实跑 biome/tsc/vitest（§3.5 机器事实层）** | 阻止跳过联调或无证据自测 |
+| G6 | 已有 G5 PASS 历史；结构化验收结果覆盖每个本期功能，`code-review.json` findings 清零；**并实跑 biome/tsc/vitest（§3.5 机器事实层）** | 阻止跳过联调、验收或靠散文冒充 review |
 | G7 | 已有 G6 PASS 历史；G7 为 `completed`/`skipped`，完成项有 QA 证据，跳过项有具体原因；机器事实层同 G6 | 阻止复用 G6 校验冒充 QA 完成 |
-| G8 | 已有 G7 PASS 历史；重新执行 G7/G8 累积检查并产出当前结果；机器事实层同 G6，交付摘要里的 PASS 必须来自真实退出码 | 阻止旧 `gate-results.json` 循环自证或越级交付 |
+| G8 | 已有 G7 PASS 历史；实跑 production build；交付模式为 pushed/merged/released；工作树干净且 Git 远端状态可验证 | G8 仍是唯一终点，同时证明代码真正可交付 |
 
 这些检查只覆盖机器可判定部分;PRD 语义、视觉手感、复杂复用判断仍需人工或 `/code-review` 兜底,但必须留证据。
 
@@ -134,8 +134,9 @@ node apps/web/docs_tdd/common/agent-scripts/verify-build-quality.mjs --project P
 | `VERIFY-TYPE-001` | 实跑 `tsc --noEmit`,把报错路径换算成 worktree 相对路径后**只归因本次改动文件**;存量债不阻断,也无法通过删基线洗白（报错归属来自 git,不来自基线文件） | changed 文件,真实子进程 |
 | `VERIFY-TYPE-002`（warn） | 存量涟漪:改动之外的 tsc 报错总数不得超过 `agent/tsc-baseline.json`;抓「改共享类型把没碰过的文件搞挂」。只做 warn,故基线被篡改的收益上限是「少一个 warn」 | 全量 tsc 计数 vs 项目基线 |
 | `VERIFY-TEST-001` | 实跑 `vitest run` 于相关测试文件（changed 测试文件 ∪ changed 源文件的同名/同目录 `__tests__` 测试）;有选中文件却 `No test files found` 或退出码非 0 即 fail | changed 文件推导出的测试集 |
-| `VERIFY-TEST-002`（warn） | 改动的 `.ts` 逻辑文件（`utils/helpers/mappers/lib`、`mapXxx.ts`、`use*Store.ts`、`format/calc/schema/selector`）导出了函数但无对应单测。`.tsx` 不在范围内（视觉走人工,见 [verification-division-of-labor.md](./verification-division-of-labor.md) §1） | changed `.ts` 逻辑文件 |
+| `VERIFY-TEST-002`（新模板 error；旧项目 warn） | 改动的 `.ts` 逻辑文件（`utils/helpers/mappers/lib`、`mapXxx.ts`、`use*Store.ts`、`format/calc/schema/selector`）导出了函数但无对应单测。`.tsx` 不在范围内（交互/视觉由结构化验收承接） | changed `.ts` 逻辑文件 |
 | `VERIFY-BUILD-001` | 缺席守卫:G6+ 要求本层但被跳过 / 未执行 / 输出无法解析时补一条显式失败,不允许静默当成「本阶段没有这一层」。有理由跳过 = warn,无理由 = error | gate 编排层 |
+| `VERIFY-PROD-BUILD-001` | G8 使用 `docs-tdd.config.json.productionBuild` 实跑生产构建，缺配置或退出码非 0 均阻断 | G8 真实子进程 |
 
 ### 3.5.1 执行契约
 
@@ -145,7 +146,7 @@ node apps/web/docs_tdd/common/agent-scripts/verify-build-quality.mjs --project P
 - **Evidence**：命令、退出码、日志路径写入 `evidence/gate/**/README.md` 的 Command Evidence 与 Summary「机器事实层」行;完整输出落 `/tmp/docs-tdd-logs/<PROJECT-ID>/`。
 - **Failure**：`VERIFY-BIOME-001`/`VERIFY-TYPE-001`/`VERIFY-TEST-001`/`VERIFY-BUILD-001`（无理由跳过）阻断 gate,当场修或按 §4 登记有期限豁免;两条 warn 进 warn 台账。
 
-## 3.7 阻塞与变更登记（`agent/blockers.json`）
+## 3.6 阻塞与变更登记（`agent/blockers.json`）
 
 阻塞和需求变更此前只存在于 `06-collaboration.md §7` 的散文表格里——交付摘要靠 grep「待修复/未处理」字样（改口径就漏），gate 也拦不住「待后端销账」这类项飘到 G8。改为机器可读单一源 `agent/blockers.json`，语义与协议见 [blocking-and-change-protocol.md](./blocking-and-change-protocol.md)。判定纯函数集中在 `agent-scripts/lib/blockers.mjs`，`verify-project-gate.mjs`（每个 gate）与 `render-delivery-summary.mjs`（G8 第 4/5 段）共用，不各写一份。
 
@@ -154,10 +155,16 @@ node apps/web/docs_tdd/common/agent-scripts/verify-build-quality.mjs --project P
 - **与 `stage-status.blocked` 分工**：`stage-status` 是 G5/G7 的阶段处置结论；`blockers.json` 是跨阶段的结构化登记（谁、何时、卡在哪、什么能解）。两者不重复。
 - **生命周期**：`open → resolved` 必须带非空 `resolution` + `resolvedAt`，禁止静默清零；`open` 的 `blocker` 必须填 `blocksGate`（否则 gate 无从拦截）。
 
+## 3.7 结构化 Review 与验收结果
 
-## 3.6 Golden run（回归 gate 机器自己）
+- `agent/code-review.json` 是 G6 review 真值源；模板 v2 起缺文件即阻断，旧项目才允许回退 `06-collaboration.md` 散文判定。`DOC-CR-001/002/003` 分别验证结构、未处理 finding、HEAD 新鲜度。
+- `agent/acceptance-results.json` 把本期 Feature 映射到具体场景、验证方式、结果和 evidence。`DOC-AC-001/002/003/004` 分别验证结构、Feature 覆盖、无 failed/blocked、PASS 有证据。
+- 两者都由 `verify-project-gate.mjs` 直接消费；不能只在 evidence README 写“已 review/已自测”。
 
-各脚本的 `--self-test` 只覆盖导出的纯谓词，覆盖不到「规则 ID 有没有真的连到判定、聚合器还能不能跑起来、规则改宽后有没有误伤旁边的项」。`golden-run.mjs` 填这一层：把 `common/fixtures/golden-project` 物化成保留 ID 项目 `PR-00000`（基线刚好通过 G0/G2/G3），再逐个变异用例只破坏一处，断言预期规则 ID 正好命中且不牵连基线之外的 error 规则。
+
+## 3.8 Golden run（回归 gate 机器自己）
+
+各脚本的 `--self-test` 只覆盖导出的纯谓词，覆盖不到「规则 ID 有没有真的连到判定、聚合器还能不能跑起来、规则改宽后有没有误伤旁边的项」。`golden-run.mjs` 填这一层：把 `common/fixtures/golden-project` 物化成保留 ID 项目 `PR-00000`（模板 v2 基线刚好通过 G0/G1/G2/G3/G6），再逐个变异用例只破坏一处，断言预期规则 ID 正好命中且不牵连基线之外的 error 规则。
 
 ```bash
 docs-tdd golden                 # 完整跑（含聚合器烟测，需指纹链已发布）
@@ -165,10 +172,10 @@ docs-tdd golden --verbose       # 逐条打印用例结论
 docs-tdd golden --keep          # 保留 PR-00000 供手工排查
 ```
 
-- **变异用例（14 条）**：`DOC-STRUCT-006/012`、`DOC-G0-001/002/003`、`DOC-G2-001/002/004/005`、`DOC-G3-001/005/006`，外加豁免机制两条（未过期豁免须把 error 降 waived；过期豁免须以 `DOC-WAIVER-003` 暴露且规则仍然阻断）。
+- **变异用例（21 条）**：覆盖结构、G0/G1/G2/G3、阻塞/豁免，以及 G6 的 `DOC-CR-002`、`DOC-AC-002/004` 接线；每条只破坏一处。
 - **双向断言**：规则失效（该红不红）与规则变宽（连带误伤）都会 fail。故障注入实测：把 `DOC-G3-005` 改成恒真、把 `DOC-G0-003` 改宽，两类都被抓出。
 - **发布即强制**：`rule-release.mjs --write` 在 `check-doc-budget` 之后跑 `golden-run --skip-aggregator`，不通过就拒绝发布。聚合器烟测（`run-project-gate PR-00000 G2`）需要**已发布**的新指纹，发布前跑不了，所以那一条留给发布后的 `docs-tdd golden`。
-- **边界（不遮掩）**：只覆盖文档类 gate。G4+ 依赖真实分支 / 改动文件 / 工具链，夹具造不出可信输入，那一层由 §3.5 的真实执行负责；`prd-intake` 与 MSW 子链路在夹具里显式关闭（`project-manifest.pilot` 全 false），各自有 fixtures 与自测。
+- **边界（不遮掩）**：G6 只覆盖结构化 Review/验收接线；G4+ 的真实分支 / 改动文件 / 工具链由 §3.5 的真实执行负责。`prd-intake` 与 MSW 子链路在夹具里显式关闭，各自有 fixtures 与自测。
 - **副作用**：不传 `--write`，不写 `gate-results.json` / `evidence/**` / `PROJECTS.md` / warn 台账；`PR-00000` 在 `finally` 里删除，且被 `check-doc-budget` 与 `update-project-index.mjs` 的项目扫描显式排除。
 
 ## 4. 豁免原则
@@ -226,6 +233,10 @@ docs-tdd golden --keep          # 保留 PR-00000 供手工排查
 | `DOC-G0-002` | G0+ | 有 `## 功能清单` 章节 | error |
 | `DOC-G0-003` | G0+ | 有 `## 验收标准对照` 章节 | error |
 | `DOC-G0-004` | G0+ | 有 `## PRD 未完全可读内容` 章节 | warn |
+| `DOC-G1-001` | G1+ | scope 文档记录本期范围 | error |
+| `DOC-G1-002` | G1+ | 技术方案包含复用盘点初稿 | error |
+| `DOC-G1-003` | G1+ | 前端任务文档包含任务清单 | error |
+| `DOC-G1-004` | G1+ | 协作文档记录决策、差异或待确认项 | error |
 | `DOC-G2-001` | G2+ | 功能清单无阻断占位 | error |
 | `DOC-G2-002` | G2+ | G2 确认人和日期已填 | error |
 | `DOC-G2-003` | G2+ | 功能清单至少一行 | error |
@@ -274,6 +285,10 @@ docs-tdd golden --keep          # 保留 PR-00000 供手工排查
 | `VERIFY-G6-002` | G6+ | `06-collaboration.md` 记录 code-review findings + 处理结论，且无未处理悬空项（`待修复/未处理` 即 fail，须当场修或进 `rule-waivers.json`） | error |
 | `VERIFY-G6-003` | G6+ | 自测证据记录命令、目标文件/场景、结果，含 Biome 或 fallback | error |
 | `VERIFY-G6-004` | G6+ | `evidence/` 下不出现 `.png/.jpg/.html` 等二进制/临时文件（应放 `/tmp/` 或 `.gitignore` 目录） | warn |
+| `DOC-AC-001` | G6+ | `agent/acceptance-results.json` 结构合法；模板 v2 起必须存在 | error |
+| `DOC-AC-002` | G6+ | 每个本期做 Feature 至少有一条 passed 验收结果 | error |
+| `DOC-AC-003` | G6+ | 验收结果无 failed/blocked | error |
+| `DOC-AC-004` | G6+ | 每条 passed 验收都有 evidence | error |
 | `VERIFY-STAGE-001` | G6+ | `agent/gate-history.json` 存在此前真实写入的 G5 PASS | error |
 | `VERIFY-STAGE-002` | G7+ | `agent/gate-history.json` 存在此前真实写入的 G6 PASS | error |
 | `VERIFY-G7-001` | G7+ | `agent/stage-status.json` 存在 G7 结构化结论 | error |
@@ -286,6 +301,7 @@ docs-tdd golden --keep          # 保留 PR-00000 供手工排查
 | `VERIFY-TEST-001` | G6+（`verify-build-quality.mjs`） | 实跑 `vitest run` 于相关测试文件全绿 | error |
 | `VERIFY-TEST-002` | G6+（`verify-build-quality.mjs`） | 改动的 `.ts` 逻辑文件导出函数须有对应单测 | warn |
 | `VERIFY-BUILD-001` | G6+（`run-project-gate.mjs`） | 机器事实层缺席守卫：未执行/输出不可解析/无理由跳过即 fail，有理由跳过降 warn | error/warn |
+| `VERIFY-PROD-BUILD-001` | G8（`verify-build-quality.mjs`） | 按配置实跑 production build | error |
 | `DOC-BLOCK-001` | G0+（`lib/blockers.mjs`） | `agent/blockers.json` 结构合法：字段合规、id 唯一、resolved 带 resolution+resolvedAt；缺文件不发 check | error（不可豁免） |
 | `DOC-BLOCK-002` | G0+（`lib/blockers.mjs`） | 无 `open` 且 `blocksGate ≤ 当前 gate` 的阻塞/变更未解除 | error（可豁免） |
 | `DOC-BLOCK-003` | G0+（`lib/blockers.mjs`） | 其余 `open` 登记（尚不卡当前 gate）可见性提示 | warn |
@@ -296,5 +312,9 @@ docs-tdd golden --keep          # 保留 PR-00000 供手工排查
 | `DOC-CR-001` | G6+（`lib/code-review.mjs`） | `agent/code-review.json` 结构合法：字段合规、finding id 唯一、fixed 带 resolution；缺文件不发 check | error |
 | `DOC-CR-002` | G6+（`lib/code-review.mjs`） | code-review 无未处理 finding（open 项须当场修或 waive/标 N/A） | error |
 | `DOC-CR-003` | G6+（`lib/code-review.mjs`） | `code-review.json.head` 覆盖当前 HEAD（未记 head 不判定），防 review 过时 | warn |
+| `VERIFY-G8-001` | G8 | `agent/delivery-status.json` 的 project/mode/branch/headSha/evidence 结构合法；模板 v2 起必须存在 | error |
+| `VERIFY-G8-002` | G8 | 交付模式不是 local，而是 pushed/merged/released | error |
+| `VERIFY-G8-003` | G8 | 实际 Git 工作树干净 | error |
+| `VERIFY-G8-004` | G8 | 非 local 交付具备证据；pushed 模式远端分支、当前 HEAD 与记录 SHA 一致；merged/released 模式记录 SHA 已进入基线分支 | error |
 
 > `GIT-G4-*` 定位说明见 §2.1(时点检查、worktree cwd 求值);责任模块目录字段可填在 `00-feature-inventory.md` 或 `agent/context-summary.md`。

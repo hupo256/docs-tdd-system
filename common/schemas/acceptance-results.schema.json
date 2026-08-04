@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "acceptance-results.schema.json",
+  "title": "docs_tdd Acceptance Results",
+  "type": "object",
+  "required": ["projectId", "items"],
+  "properties": {
+    "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "featureId", "scenario", "method", "status", "evidence"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^AC-\\d+$" },
+          "featureId": { "type": "string", "pattern": "^F\\d+$" },
+          "scenario": { "type": "string", "minLength": 1 },
+          "method": { "type": "string", "enum": ["vitest", "browser", "contract", "manual-visual", "manual", "not-applicable"] },
+          "status": { "type": "string", "enum": ["passed", "failed", "blocked", "not-applicable"] },
+          "evidence": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "reason": { "type": "string" },
+          "owner": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

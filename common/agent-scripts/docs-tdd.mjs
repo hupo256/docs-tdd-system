@@ -11,7 +11,7 @@ import { codeFingerprint, matchesGateFingerprint } from './lib/fingerprint.mjs'
 import { resolveRoots } from './lib/roots.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
-const { docsSystemRoot: docsRoot, consumerRoot: repoRoot } = resolveRoots()
+const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, consumerWorktree, config } = resolveRoots()
 const releaseScript = join(scriptDir, 'rule-release.mjs')
 const effectiveRulesScript = join(scriptDir, 'effective-rules.mjs')
 const cliArgs = process.argv.slice(2)
@@ -214,7 +214,7 @@ function gitOutput(args, cwd) {
 }
 
 function changedFingerprint(id, worktree, effectiveFingerprint) {
-  const trackedDiff = gitOutput(['diff', '--binary', 'origin/online'], worktree)
+  const trackedDiff = gitOutput(['diff', '--binary', config.baseRef || 'origin/online'], worktree)
   const untracked = gitOutput(['ls-files', '--others', '--exclude-standard'], worktree).trim().split('\n').filter(Boolean)
   const untrackedPayload = untracked.map((file) => {
     const absolute = join(worktree, file)
@@ -276,7 +276,7 @@ function runChanged(id, worktree, effectiveFingerprint) {
 
 function recommendScenarios(worktree) {
   const files = new Set([
-    ...gitOutput(['diff', '--name-only', 'origin/online'], worktree).trim().split('\n'),
+    ...gitOutput(['diff', '--name-only', config.baseRef || 'origin/online'], worktree).trim().split('\n'),
     ...gitOutput(['ls-files', '--others', '--exclude-standard'], worktree).trim().split('\n'),
   ].filter(Boolean))
   const recommendations = []
@@ -298,7 +298,8 @@ function resolveProjectWorktree(id) {
   const readmeFile = projectDir ? join(projectDir, 'README.md') : ''
   const readme = readmeFile && existsSync(readmeFile) ? readFileSync(readmeFile, 'utf8') : ''
   const configured = readme.match(/^worktree:\s*(.*)$/m)?.[1]?.replace(/^['"]|['"]$/g, '').trim()
-  const worktree = configured ? resolve(projectDir, configured) : repoRoot
+  const cwdWorktree = consumerWorktree && consumerWorktree !== docsRoot ? consumerWorktree : ''
+  const worktree = configured ? resolve(projectDir, configured) : (cwdWorktree || repoRoot)
   return {
     configured: Boolean(configured),
     exists: existsSync(worktree),
@@ -323,7 +324,7 @@ function heartbeatDecision({ located, isGitRepo, noDivergence, gate, matches }) 
 function gateHeartbeat(id, resolvedWorktree) {
   const located = resolvedWorktree.configured && resolvedWorktree.exists
   if (!located) return { level: 'skip' } // pre-G4 / 未配置 worktree
-  const current = codeFingerprint(resolvedWorktree.worktree)
+  const current = codeFingerprint(resolvedWorktree.worktree, config.baseRef || 'origin/online')
   const noDivergence = current.headSha === current.baseSha && current.dirtyFileCount === 0 && current.untrackedFileCount === 0
   const gate = readOptionalJson(join(docsRoot, id, 'agent/gate-results.json'))
   return heartbeatDecision({
@@ -406,9 +407,13 @@ if (command === 'golden') {
   process.exit(run([join(scriptDir, 'golden-run.mjs'), ...cliArgs.slice(1)]))
 }
 
-if (!/^PR-\d{5}$/.test(projectId || '')) {
-  console.error('usage: docs-tdd.mjs <capability|doctor|golden|check|gate|context|changed|recommend> PR-01234 [G0-G8|scenario] [--compact|--full|--no-cache]')
+if (!new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(projectId || '')) {
+  console.error('usage: docs-tdd.mjs <kickoff|status|resume|next|capability|doctor|golden|check|gate|context|changed|recommend> PR-01234 [G0-G8|scenario] [--compact|--full|--no-cache]')
   process.exit(1)
+}
+
+if (['kickoff', 'status', 'resume', 'next'].includes(command)) {
+  process.exit(run([join(scriptDir, 'project-orchestrator.mjs'), command, projectId, ...cliArgs.slice(2)]))
 }
 
 capability(projectId)

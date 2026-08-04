@@ -25,6 +25,7 @@ const REQUIRED_SCRIPTS = [
   'golden-run.mjs',
   'install-local-agent-rules.mjs',
   'prd-intake.mjs',
+  'project-orchestrator.mjs',
   'rule-release.mjs',
   'render-delivery-summary.mjs',
   'run-project-gate.mjs',
@@ -39,9 +40,12 @@ const SELF_TEST_SCRIPTS = [
   ['docs-tdd.mjs', '--self-test'],
   ['effective-rules.mjs', '--self-test'],
   ['golden-run.mjs', '--self-test'],
+  ['lib/acceptance-results.mjs', '--self-test'],
   ['lib/blockers.mjs', '--self-test'],
+  ['lib/code-review.mjs', '--self-test'],
   ['install-local-agent-rules.mjs', '--self-test'],
   ['prd-intake.mjs', '--self-test'],
+  ['project-orchestrator.mjs', '--self-test'],
   ['rule-release.mjs', '--self-test'],
   ['render-delivery-summary.mjs', '--self-test'],
   ['run-project-gate.mjs', '--self-test'],
@@ -76,6 +80,7 @@ const ROUTER_FILE = 'rule-router.md'
 const README_FILE = 'README.md'
 const RULE_INDEX_FILE = 'rule-index.json'
 const RULE_OWNERSHIP_FILE = 'rule-ownership.json'
+const DEFAULT_CONFIG_FILE = join(DOCS_TDD_DIR, 'docs-tdd.config.default.json')
 const LEDGER_FILE = 'rule-ids-and-gates.md' // rule ID 台账（脚本里的 ID 必须登记于此）
 const REQUIRED_TEMPLATES = [
   '01-scope-and-phases-template.md',
@@ -298,6 +303,7 @@ if (readmeMissing.length) {
 // 校验 4：机器可读路由索引必须可解析，且引用的 common 文档真实存在。
 const ruleIndexPath = join(COMMON_DIR, RULE_INDEX_FILE)
 const indexedRuleRefs = new Set()
+const knownScenarioNames = new Set()
 if (!existsSync(ruleIndexPath)) {
   errors.push(`❌ 缺少 ${RULE_INDEX_FILE}（机器可读场景路由索引）。`)
 } else if (!routerText.includes(RULE_INDEX_FILE)) {
@@ -310,6 +316,7 @@ if (!existsSync(ruleIndexPath)) {
     }
     const scenarios = ruleIndex.scenarios || {}
     const scenarioNames = Object.keys(scenarios)
+    scenarioNames.forEach((name) => knownScenarioNames.add(name))
     if (!scenarioNames.length) {
       errors.push(`❌ ${RULE_INDEX_FILE}.scenarios 不能为空。`)
     }
@@ -514,6 +521,58 @@ const docFilesForScriptRefs = [
   join(COMMON_DIR, RULE_INDEX_FILE),
   ...readdirSync(TEMPLATES_DIR).filter((name) => ['.md', '.ts'].some((ext) => name.endsWith(ext))).map((name) => join(TEMPLATES_DIR, name)),
 ]
+
+// 文档里的字面量场景名必须真实存在于 rule-index。占位符 <SCENARIO> 不检查；
+// 这里专门拦 `docs-tdd.mjs context PR-01234 typo_scenario` 这类能复制、但运行必失败的漂移。
+{
+  const invalidScenarioRefs = []
+  const literalScenarioRe = /docs-tdd\.mjs\s+context\s+(?:PR-\d{5}|<PROJECT-ID>)\s+([a-z][a-z0-9_]*)/g
+  for (const file of docFilesForScriptRefs) {
+    const text = readFileSync(file, 'utf8')
+    for (const match of text.matchAll(literalScenarioRe)) {
+      if (!knownScenarioNames.has(match[1])) {
+        const line = text.slice(0, match.index).split('\n').length
+        invalidScenarioRefs.push(`${file}:${line}: ${match[1]}`)
+      }
+    }
+  }
+  if (invalidScenarioRefs.length) {
+    errors.push(`❌ 文档引用了 rule-index.json 中不存在的 context 场景：\n   ${invalidScenarioRefs.join('\n   ')}`)
+  } else {
+    console.log('✅ context 场景引用：文档中的字面量场景均存在于 rule-index.json。')
+  }
+}
+
+// 默认绑定配置的核心键必须至少有一个运行时消费者，防止“配置看似可移植，脚本仍硬编码”。
+{
+  const coreConfigKeys = [
+    'appSubpath',
+    'docsMountPath',
+    'baseRef',
+    'projectIdPattern',
+    'branchPrefix',
+    'defaultPort',
+    'portRangeStart',
+    'verifyPath',
+    'typecheckRoots',
+    'productionBuild',
+    'moduleImportAliases',
+    'larkOutputDir',
+  ]
+  if (!existsSync(DEFAULT_CONFIG_FILE)) {
+    errors.push('❌ 缺少 docs-tdd.config.default.json。')
+  } else {
+    const scriptFiles = [
+      ...readdirSync(SCRIPTS_DIR).filter((name) => name.endsWith('.mjs')).map((name) => join(SCRIPTS_DIR, name)),
+      ...readdirSync(join(SCRIPTS_DIR, 'lib')).filter((name) => name.endsWith('.mjs')).map((name) => join(SCRIPTS_DIR, 'lib', name)),
+    ]
+    const sources = scriptFiles.map((file) => readFileSync(file, 'utf8')).join('\n')
+    const unused = coreConfigKeys.filter((key) => !sources.includes(`config.${key}`))
+    if (unused.length) errors.push(`❌ 默认配置键无人消费（疑似伪配置）：${unused.join(', ')}`)
+    else console.log(`✅ 配置消费：${coreConfigKeys.length} 个核心配置键均有运行时消费者。`)
+  }
+}
+
 const missingScriptRefs = []
 for (const file of docFilesForScriptRefs) {
   const text = readFileSync(file, 'utf8')
@@ -803,6 +862,10 @@ if (missingTemplateRefs.length) {
     stageStatus: { file: 'stage-status.schema.json', data: null },
     gateHistory: { file: 'gate-history.schema.json', data: null },
     blockers: { file: 'blockers.schema.json', data: null },
+    codeReview: { file: 'code-review.schema.json', data: null },
+    acceptanceResults: { file: 'acceptance-results.schema.json', data: null },
+    deliveryStatus: { file: 'delivery-status.schema.json', data: null },
+    runState: { file: 'run-state.schema.json', data: null },
   }
   let schemaLoadErrors = []
   for (const [key, { file }] of Object.entries(schemas)) {
@@ -870,6 +933,10 @@ if (missingTemplateRefs.length) {
         ['stage-status.json', 'stageStatus'],
         ['gate-history.json', 'gateHistory'],
         ['blockers.json', 'blockers'],
+        ['code-review.json', 'codeReview'],
+        ['acceptance-results.json', 'acceptanceResults'],
+        ['delivery-status.json', 'deliveryStatus'],
+        ['run-state.json', 'runState'],
       ]) {
         const file = join(projectDir, 'agent', fileName)
         if (!existsSync(file)) continue

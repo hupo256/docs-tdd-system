@@ -24,6 +24,8 @@ AI 编码的两个顽疾：**跳过需求确认直接写码**、**规则散落�
 
 ```bash
 docs-tdd context <PROJECT-ID> <SCENARIO>   # 按场景生成 compact 规则包
+docs-tdd kickoff <PROJECT-ID> --prd <src>  # 一句话幂等启动：骨架+同步+intake+run-state
+docs-tdd status|next|resume <PROJECT-ID>   # 状态、唯一下一步、断点恢复
 docs-tdd changed <PROJECT-ID>              # 编辑后跑 code-rules / mock 校验
 docs-tdd gate    <PROJECT-ID> <Gx>         # 阶段交付门禁
 docs-tdd doctor  <PROJECT-ID>              # 适配/冲突/发布状态自检
@@ -32,7 +34,7 @@ docs-tdd golden                            # 让门禁机器自己被回归测�
 
 ## 与业务解耦：如何挂载到一个项目
 
-系统真身可放任意位置（如 `~/github/docs_tdd`），通过**软链 + 一份绑定配置**接入消费项目，脚本零改动：
+系统真身可放任意位置（如 `~/github/docs_tdd`），通过**软链 + 一份绑定配置**接入消费项目。流程引擎读取 `appSubpath/docsMountPath/baseRef/projectIdPattern/branchPrefix/typecheckRoots/productionBuild`；FameEX 专属代码扫描仍属于默认 profile，迁移到结构不同的仓库时应替换该 profile，而不是宣称零配置通用：
 
 1. **挂载**：在消费仓库里把 `<app>/docs_tdd` 软链到本仓库真身（各 worktree 同样直指真身）。
 2. **绑定**：在消费仓库根放一份 `docs-tdd.config.json`（gitignored，各安装/各公司自带），声明 `consumerRoot` 等；可复用默认值在已提交的 [docs-tdd.config.default.json](./docs-tdd.config.default.json)。
@@ -41,7 +43,7 @@ docs-tdd golden                            # 让门禁机器自己被回归测�
    - `consumerRoot`：被指导项目主仓（由 config 绑定确定）
    - `consumerWorktree`：当前编码 worktree（cwd 的 git 根）
 
-换一个项目/公司复用，只需重复 1+2，不动任何脚本或规则正文。
+同结构项目只需重复 1+2；不同结构项目需提供自己的 profile/config，但不改流程状态机和 gate 语义。
 
 ## 如何使用（Step by Step）
 
@@ -53,11 +55,11 @@ docs-tdd golden                            # 让门禁机器自己被回归测�
 ```text
 根据 docs_tdd 下的文档，开始新的需求 PR-01234，PRD 文档是：<PRD 链接或本地路径>。
 ```
-AI 会先读 `common/rule-router.md`，在 `PR-01234/` 下建项目目录，按 `common/project-doc-structure.md` 放置 `inbox/ product/ engineering/ agent/`。
+AI 会先读 `common/rule-router.md`，再执行 `docs-tdd kickoff PR-01234 --prd <source>`。命令幂等创建项目、同步 PRD、初始化 intake 并写 `agent/run-state.json`；中断后用 `status/next/resume` 恢复。
 
 **2. G0 资料接收**：把 PRD / Figma / API 资料放进 `PR-01234/inbox/`。含图片、表格、嵌入对象时先完成 `prd_intake`（`docs-tdd context PR-01234 prd_intake`），逐项读取分类，读不了即阻断，不猜。
 
-**3. G1 文档生成**：AI 复制 `templates/feature-inventory-template.md` → `product/00-feature-inventory.md`，产出 PRD 全量功能清单初稿（防 scope 误裁）。
+**3. G1 文档生成**：AI 基于启动器生成的模板填写 PRD 全量功能清单、scope、技术方案初稿、任务与协作记录；G1 有独立机器出口，不与 G0 共用空骨架判定。
 
 **4. 按场景加载规则**：`docs-tdd context PR-01234 <SCENARIO>` 生成 compact 规则包，只读命中场景的专题，不全读 `common/`。常用场景：`g0_g2_scope` `write_api` `write_mapper` `write_query_hook` `write_ui` `write_figma` `write_msw` `g6_verify`（全表见 `rule-router.md §3`）。
 
@@ -80,7 +82,7 @@ docs-tdd changed PR-01234      # 实跑 code-rules / mock-manifest 校验改动�
 docs-tdd gate PR-01234 G5      # 接口联调（字段对账、删 mock 臆造字段）
 docs-tdd gate PR-01234 G6      # 自测验收（实跑 biome/tsc/vitest + code review findings 清零）
 docs-tdd gate PR-01234 G7      # QA 用例回归
-docs-tdd gate PR-01234 G8      # 交付摘要 + 残留风险/阻塞（blockers.json）
+docs-tdd gate PR-01234 G8      # production build + Git 可交付状态 + 交付摘要
 ```
 `docs-tdd doctor PR-01234` 随时自检适配/冲突/发布状态；缓存仅复用同输入 PASS，强制实跑加 `--no-cache`。
 

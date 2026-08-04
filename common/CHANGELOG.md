@@ -7,6 +7,15 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-08-04（G8 内收口：一句话编排、结构化验收与可复核交付）
+
+- **边界**：保持 G0-G8，不新增 G9/G10；增强落在既有 G1、G6、G8。
+- **编排**：新增 `kickoff/status/next/resume` 与 `run-state.json`，支持幂等启动和断点恢复；需求未澄清时不猜业务结论。
+- **G6**：模板 v2 强制结构化 code review 与 Feature 验收；Golden 覆盖 G0/G1/G2/G3/G6 及相应变异。
+- **G8**：`delivery-status.json` 记录 mode/branch/headSha/evidence；Git 复核 push/merge 状态，工作树须干净，并实跑 production build。
+- **可移植性**：核心路径、分支、端口、构建和 Lark 配置均有运行时消费者；worktree 验证后回写 README 元数据。
+- **防漂移**：校验 context 场景与配置消费；G5+ 缺机器历史或证据在 `PROJECTS.md` 显示 `legacy-unverified`。
+
 ## 2026-08-03（阻塞与变更协议：`agent/blockers.json` 机器可读单一源）
 
 - **补的是哪一层**：阻塞和需求变更此前只存在于 `06-collaboration.md §7` 的散文表格里——交付摘要靠正则 grep「待修复/未处理/待确认」字样（改口径就漏），gate 也拦不住「错误码待后端销账」这类项一路飘到 G8。改为机器可读单一源 `agent/blockers.json`，散文层退化为叙述补充而非真值源。
@@ -109,4 +118,3 @@
 - **Mapper 命名收紧**：单一来源字段即使类型/格式变化或需要来源消歧也保持 API 名；改名只接受跨来源统一和多字段语义派生，并用 `API-RENAME: cross-source` / `API-DERIVED: sources=` 留可审计理由。`CODE-NAMING-001` 普通 `// API:` 不再豁免，新增 4 条回归自测；新项目 API 契约模板改用四种“映射类型”。
 - **二级规则路由**：`rule-router.md` 从 4855 压到约 1.9k 字符，预算收紧为 5000；专题覆盖唯一机器真值迁到 `rule-index.json`，README 继续做人读全索引。新增 `write_api` / `write_mapper` / `write_state` / `write_msw` / `legacy_mock` 场景，遗留路线 A 不再被新功能无条件加载。
 - **Context Pack 缓存**：`docs-tdd context` 按项目摘要 + 场景专题 + ruleset 生成带内容 fingerprint 的 `/tmp/docs-tdd-context/*.md`；规则或摘要变化即换 fingerprint，不把缓存当真值源。API/mapper 另拆 `api-and-mapper.md`，使 mapper 场景不再加载 31KB 聚合规则。
-

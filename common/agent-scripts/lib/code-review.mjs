@@ -40,10 +40,12 @@ export function validateFinding(finding, index) {
 }
 
 // 整份报告的结构校验（顶层字段 + findings 各条 + id 唯一）。返回错误串数组。
-export function validateCodeReview(report) {
+export function validateCodeReview(report, expectedProjectId = '') {
   if (!report || typeof report !== 'object' || Array.isArray(report)) return ['code-review.json 必须是对象']
   const errors = []
   if (!isNonEmptyString(report.projectId)) errors.push('缺 projectId')
+  else if (!/^PR-\d{5}$/.test(report.projectId)) errors.push('projectId 须形如 PR-01234')
+  else if (expectedProjectId && report.projectId !== expectedProjectId) errors.push(`projectId=${report.projectId} 与当前项目 ${expectedProjectId} 不一致`)
   if (!DATE_RE.test(report.reviewedAt ?? '')) errors.push('reviewedAt 须是 YYYY-MM-DD')
   if (!isNonEmptyString(report.reviewer)) errors.push('缺 reviewer')
   if (!Array.isArray(report.findings)) return [...errors, 'findings 须是数组']
@@ -74,11 +76,11 @@ export function reviewCoversHead(report, currentSha) {
 }
 
 // gate 消费：标准 check 形状（聚合式）。report===null（文件缺失）→ 不发 check，散文回退由调用方处理。
-export function codeReviewChecks({ report, currentSha, file = 'agent/code-review.json' }) {
+export function codeReviewChecks({ report, currentSha, expectedProjectId = '', file = 'agent/code-review.json' }) {
   const base = { file, category: 'documentation' }
   if (report === null || report === undefined) return []
 
-  const structural = validateCodeReview(report)
+  const structural = validateCodeReview(report, expectedProjectId)
   if (structural.length) {
     return [{ ...base, ruleId: 'DOC-CR-001', ok: false, severity: 'error', message: `code-review.json 结构非法：${structural.slice(0, 6).join('；')}${structural.length > 6 ? ` …(+${structural.length - 6})` : ''}` }]
   }
@@ -131,6 +133,7 @@ function selfTest() {
   assert('bad disposition', validateFinding({ ...okReport.findings[0], disposition: 'done' }, 0).some((e) => e.includes('disposition')))
   assert('missing reviewer', validateCodeReview({ ...okReport, reviewer: '' }).some((e) => e.includes('reviewer')))
   assert('duplicate id', validateCodeReview({ ...okReport, findings: [okReport.findings[0], { ...okReport.findings[0] }] }).some((e) => e.includes('重复')))
+  assert('wrong project', validateCodeReview(okReport, 'PR-00002').some((e) => e.includes('不一致')))
 
   assert('absent → 空', codeReviewChecks({ report: null }).length === 0)
   const structuralBad = codeReviewChecks({ report: { ...okReport, reviewer: '' } })
@@ -143,7 +146,7 @@ function selfTest() {
   assert('no head → 003 pass', codeReviewChecks({ report: { ...okReport, head: undefined }, currentSha: 'def456' }).find((c) => c.ruleId === 'DOC-CR-003')?.ok === true)
   assert('openFindings 只收 open', openFindings({ findings: [okReport.findings[0], openReport.findings[0]] }).length === 1)
 
-  if (!process.exitCode) console.log('code-review lib self-test passed (16 cases)')
+  if (!process.exitCode) console.log('code-review lib self-test passed (17 cases)')
 }
 
 if (process.argv[1] && process.argv[1].endsWith('code-review.mjs') && process.argv.includes('--self-test')) {

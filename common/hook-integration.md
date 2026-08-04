@@ -7,7 +7,7 @@
 ```bash
 node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs capability PR-01234
 node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs doctor PR-01234
-node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs context PR-01234 api_mock
+node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs context PR-01234 write_api_or_mock
 node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs changed PR-01234
 node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs gate PR-01234 G3
 ```

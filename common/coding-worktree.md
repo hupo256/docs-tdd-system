@@ -21,7 +21,11 @@
 | 文档来源 | 主仓 `apps/web/docs_tdd` | `/Users/aven/github/fameex-web/apps/web/docs_tdd` |
 | worktree 文档入口 | **必须**软链到主仓 `docs_tdd`（§6） | `/Users/aven/github/PR-01234/apps/web/docs_tdd` |
 
-### 端口注册表
+### 端口分配
+
+`prepare-coding-worktree.mjs` 默认从 `docs-tdd.config.json.portRangeStart` 起扫描项目 README 已占用端口，选择首个空闲值，并在 worktree 验证成功后原子回写项目 README 的 `worktree`、`branch`、`port`。并行启动仍由实际端口占用检查兜底；无需人工先改注册表。
+
+以下表仅保留历史实例，不再作为分配真值：
 
 每个 worktree 占一个固定端口，新建前核对取下一个空闲端口。
 
@@ -107,6 +111,7 @@ node apps/web/docs_tdd/common/agent-scripts/prepare-coding-worktree.mjs PR-01234
 7. 具备 `node`/`pnpm`/`git`。
 8. `apps/web` 能启 dev server，访问指定页得 2xx HTML。
 9. 页面非 404、非空 HTML、非白屏；需登录/特殊路由时至少先验 `/zh-CN` 基础页，再补目标路由。
+10. 成功后自动回写项目 README frontmatter；`docs-tdd changed/gate` 必须解析到该 worktree，不能回退到主仓误扫。
 
 脚本因网络/权限/依赖/端口/启动/404/白屏不能完成时，把原因写入 `product/06-collaboration.md`；启用 Lark 则同步发群说明阻塞。
 

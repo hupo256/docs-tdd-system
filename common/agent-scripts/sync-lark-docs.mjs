@@ -1,14 +1,13 @@
 #!/usr/bin/env node
 
 import { spawn } from 'node:child_process'
-import { existsSync } from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { resolveRoots } from './lib/roots.mjs'
+import { resolveDocsPath, resolveRoots } from './lib/roots.mjs'
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url))
-const { docsSystemRoot: docsRoot, consumerRoot: repoRoot } = resolveRoots()
+const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, config: bindingConfig } = resolveRoots()
 const larkCliBin = process.env.LARK_CLI_BIN || 'lark-cli'
 const allowedServices = new Set(['doc', 'docs', 'wiki', 'drive', 'markdown'])
 const allowedOperations = new Set(['read', 'search'])
@@ -68,12 +67,11 @@ const isLocalMarkdownSource = (source) => {
 }
 
 const resolveLocalMarkdownSource = (source) => {
-  const sourcePath = path.resolve(repoRoot, source.path || source.url)
-  assertInside(docsRoot, sourcePath, 'local markdown source')
-  if (!existsSync(sourcePath)) {
-    throw new Error(`local markdown source does not exist: ${path.relative(repoRoot, sourcePath)}`)
-  }
-  return sourcePath
+  return resolveDocsPath(source.path || source.url, {
+    consumerRoot: repoRoot,
+    docsMountPath: bindingConfig.docsMountPath,
+    mustExist: true,
+  })
 }
 
 const assertInside = (parent, child, label) => {
@@ -89,8 +87,10 @@ const normalizeTargetPath = ({ outputDir, target }) => {
     throw new Error(`source target must be a safe relative path: ${target || '<empty>'}`)
   }
 
-  const resolvedOutputDir = path.resolve(repoRoot, outputDir)
-  assertInside(docsRoot, resolvedOutputDir, 'outputDir')
+  const resolvedOutputDir = resolveDocsPath(outputDir, {
+    consumerRoot: repoRoot,
+    docsMountPath: bindingConfig.docsMountPath,
+  })
 
   const targetPath = path.resolve(resolvedOutputDir, target)
   assertInside(resolvedOutputDir, targetPath, 'target')
@@ -241,7 +241,10 @@ const readLocalMarkdown = async (source) => {
 }
 
 const writeReport = async ({ outputDir, rows }) => {
-  const reportPath = path.resolve(repoRoot, outputDir, 'sync-report.md')
+  const reportPath = path.join(resolveDocsPath(outputDir, {
+    consumerRoot: repoRoot,
+    docsMountPath: bindingConfig.docsMountPath,
+  }), 'sync-report.md')
   assertInside(docsRoot, reportPath, 'sync-report')
   await fs.mkdir(path.dirname(reportPath), { recursive: true })
 
@@ -265,8 +268,11 @@ export async function runSyncLarkDocs({ argv = process.argv.slice(2), defaultCon
     throw new Error('sync-lark-docs requires --config <path>')
   }
 
-  const configPath = path.resolve(repoRoot, options.configPath)
-  assertInside(docsRoot, configPath, 'config')
+  const configPath = resolveDocsPath(options.configPath, {
+    consumerRoot: repoRoot,
+    docsMountPath: bindingConfig.docsMountPath,
+    mustExist: true,
+  })
 
   const config = await readJson(configPath)
   const outputDir = config.outputDir || `apps/web/docs_tdd/${config.projectId}/inbox/lark-sync`

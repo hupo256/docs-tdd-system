@@ -18,7 +18,7 @@ import { resolveRoots } from './lib/roots.mjs'
 
 const scriptPath = fileURLToPath(import.meta.url)
 const scriptDir = dirname(scriptPath)
-const { docsSystemRoot: docsRoot, consumerRoot: repoRoot } = resolveRoots()
+const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, config } = resolveRoots()
 const worktreeRoot = (() => {
   const result = spawnSync('git', ['rev-parse', '--show-toplevel'], { cwd: process.cwd(), stdio: 'pipe', encoding: 'utf8' })
   return result.status === 0 ? result.stdout.trim() : repoRoot
@@ -36,7 +36,7 @@ function hasFlag(name) {
 }
 
 const projectId = readOption('--project')
-const baseRef = readOption('--base', 'origin/online')
+const baseRef = readOption('--base', config.baseRef || 'origin/online')
 const explicitFiles = readOption('--files')
 const json = hasFlag('--json')
 const skipList = readOption('--skip')
@@ -44,7 +44,12 @@ const skipList = readOption('--skip')
   .map((item) => item.trim().toUpperCase())
   .filter(Boolean)
 const writeBaseline = hasFlag('--write-baseline')
+const productionBuild = hasFlag('--production-build')
 const packageManager = readOption('--pm', 'pnpm')
+const projectManifest = projectId ? (() => {
+  try { return JSON.parse(readFileSync(join(docsRoot, projectId, 'agent/project-manifest.json'), 'utf8')) } catch { return null }
+})() : null
+const strictTestEvidence = (projectManifest?.templateVersion || 0) >= 2
 
 function printHelp() {
   console.log(`usage: verify-build-quality.mjs [--project <PR-ID>] [--base <ref>] [--files <comma-list>]
@@ -60,6 +65,7 @@ Rules implemented:
   VERIFY-TYPE-002   repo-wide tsc error total vs recorded baseline, ripple detection (warn)
   VERIFY-TEST-001   vitest run on test files related to changed files (error)
   VERIFY-TEST-002   changed logic files (utils/helpers/mapper/store) have a related test (warn)
+  VERIFY-PROD-BUILD-001 production build at G8 (error)
 
 Options:
   --help            Show this help message and exit
@@ -68,6 +74,7 @@ Options:
   --files           Comma-separated file list, skips git diff (for targeted runs)
   --skip            Skip check families; each skip is reported as a non-passing check
   --write-baseline  Re-record the tsc baseline totals for this project
+  --production-build Run the configured production build (used by G8)
   --pm              Package manager used to exec tools (default: pnpm)
   --json            Output JSON result to stdout
   --self-test       Run inline self-test`)
@@ -210,12 +217,14 @@ function resolveWithin(appRoot, rawFile) {
 
 // 从改动文件推导需要 typecheck 的 app 根目录。packages/** 改动统一挂到 apps/web，
 // 因为 web 的 tsconfig 会把 packages 源码纳入编译（xSign.ts 等已在报错清单里可证）。
-export function deriveTypecheckRoots(changedFiles, hasTsconfig) {
+export function deriveTypecheckRoots(changedFiles, hasTsconfig, configuredRoots = ['apps/web', 'apps/admin']) {
   const roots = new Set()
   for (const file of changedFiles) {
-    const match = /^apps\/([^/]+)\//.exec(file)
-    if (match && hasTsconfig(`apps/${match[1]}`)) roots.add(`apps/${match[1]}`)
-    if (file.startsWith('packages/') && hasTsconfig('apps/web')) roots.add('apps/web')
+    for (const root of configuredRoots) {
+      if ((file === root || file.startsWith(`${root}/`)) && hasTsconfig(root)) roots.add(root)
+    }
+    const primaryRoot = configuredRoots[0]
+    if (file.startsWith('packages/') && primaryRoot && hasTsconfig(primaryRoot)) roots.add(primaryRoot)
   }
   return [...roots].sort()
 }
@@ -374,12 +383,14 @@ function selfTest() {
   expect('ripple ok when equal', rippleVerdict({ total: 193, inChanged: 0, baselineTotal: 193 }).ok === true)
   expect('ripple ignores own new errors', rippleVerdict({ total: 200, inChanged: 7, baselineTotal: 193 }).ok === true)
   expect('ripple ok without baseline', rippleVerdict({ total: 999, inChanged: 0, baselineTotal: null }).ok === true)
+  expect('production build exit 0 passes', productionBuildVerdict({ status: 0, spawnError: null }).ok === true)
+  expect('production build spawn/exit failure blocks', productionBuildVerdict({ status: 1, spawnError: 'ENOENT' }).ok === false)
 
   if (failures.length) {
     console.error(`verify-build-quality self-test FAILED:\n  ${failures.join('\n  ')}`)
     process.exit(1)
   }
-  console.log('verify-build-quality self-test passed (32 predicate cases).')
+  console.log('verify-build-quality self-test passed (34 predicate cases).')
   process.exit(0)
 }
 
@@ -429,6 +440,10 @@ export function rippleVerdict({ total, inChanged, baselineTotal }) {
   return { ok: true, outside, reason: '' }
 }
 
+export function productionBuildVerdict(run) {
+  return { ok: run?.status === 0 && !run?.spawnError }
+}
+
 if (hasFlag('--self-test')) selfTest()
 
 /* ------------------------------------------------------------------- main */
@@ -474,7 +489,7 @@ let baselineDirty = false
 
 // ---- VERIFY-TYPE-001 / VERIFY-TYPE-002 --------------------------------------
 {
-  const roots = deriveTypecheckRoots(changedFiles, (root) => existsSync(join(worktreeRoot, root, 'tsconfig.json')))
+  const roots = deriveTypecheckRoots(changedFiles, (root) => existsSync(join(worktreeRoot, root, 'tsconfig.json')), config.typecheckRoots || ['apps/web', 'apps/admin'])
   if (skipped('TYPE')) {
     addCheck({ ruleId: 'VERIFY-TYPE-001', ok: false, severity: 'warn', message: '--skip TYPE：类型检查被跳过，不构成通过证据' })
   } else if (!roots.length) {
@@ -580,13 +595,33 @@ let baselineDirty = false
   addCheck({
     ruleId: 'VERIFY-TEST-002',
     ok: missing.length === 0,
-    severity: 'warn',
+    severity: strictTestEvidence ? 'error' : 'warn',
     message: missing.length
       ? `以下逻辑文件导出了函数但无同名/同目录 __tests__ 单测：${missing.slice(0, 8).join(', ')}${missing.length > 8 ? ` 等 ${missing.length} 个` : ''}`
       : '改动的逻辑文件均有相关单测',
     file: missing[0] || '',
     counts: { missing: missing.length },
   })
+}
+
+// ---- VERIFY-PROD-BUILD-001 -------------------------------------------------
+if (productionBuild) {
+  const buildCommand = Array.isArray(config.productionBuild) ? config.productionBuild.filter(Boolean) : []
+  if (!buildCommand.length) {
+    addCheck({ ruleId: 'VERIFY-PROD-BUILD-001', ok: false, message: 'G8 要求 production build，但 docs-tdd.config.json 未配置 productionBuild' })
+  } else {
+    const [command, ...commandArgs] = buildCommand
+    const run = execTool('production-build', command, commandArgs, worktreeRoot)
+    const verdict = productionBuildVerdict(run)
+    addCheck({
+      ruleId: 'VERIFY-PROD-BUILD-001',
+      ok: verdict.ok,
+      message: verdict.ok
+        ? `production build 通过：${buildCommand.join(' ')}`
+        : `production build 失败：${buildCommand.join(' ')}；详见 ${run.logFile}`,
+      run,
+    })
+  }
 }
 
 /* ------------------------------------------------------------- waivers/out */

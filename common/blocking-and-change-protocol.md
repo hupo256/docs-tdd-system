@@ -3,7 +3,7 @@
 
 # 阻塞与变更协议
 
-> AI 主用。给「阻塞」和「需求变更」一个机器可读单一源 `agent/blockers.json`，让 gate 能拦、交付摘要能派生、生命周期可追踪。规则 ID 与判定细节见 [rule-ids-and-gates.md §3.7](./rule-ids-and-gates.md)，语义纯函数在 `agent-scripts/lib/blockers.mjs`。
+> AI 主用。给「阻塞」和「需求变更」一个机器可读单一源 `agent/blockers.json`，让 gate 能拦、交付摘要能派生、生命周期可追踪。规则 ID 与判定细节见 [rule-ids-and-gates.md §3.6](./rule-ids-and-gates.md)，语义纯函数在 `agent-scripts/lib/blockers.mjs`。
 
 ## 1. 为什么要有它
 

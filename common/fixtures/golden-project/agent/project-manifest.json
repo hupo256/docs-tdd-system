@@ -1,9 +1,14 @@
 {
   "projectId": "PR-00000",
-  "name": "Golden fixture (gate regression only)",
-  "fixture": true,
+  "createdAt": "2026-08-03",
+  "rulesetVersion": "local-2026.07-msw-v1",
+  "templateVersion": 2,
   "pilot": {
-    "prdIntake": false,
-    "msw": false
+    "msw": false,
+    "prdIntake": false
+  },
+  "gatePolicy": {
+    "legacyRules": "blocking",
+    "currentTouchedRules": "blocking"
   }
 }

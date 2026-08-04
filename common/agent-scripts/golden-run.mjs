@@ -6,8 +6,8 @@
 // - 怎么测：把 `common/fixtures/golden-project` 物化成临时项目 PR-00000（基线刚好全绿），
 //   然后每个变异用例只破坏一处，断言「预期规则 ID 正好命中」且「没有其他 error 级规则被牵连」。
 //   后者是防误报的那一半——规则变宽会让基线之外的项一起红，这里会直接失败。
-// - 边界：只覆盖文档类 gate（G0/G2/G3）。G4+ 依赖真实分支/改动文件/工具链，
-//   夹具造不出可信输入；那一层由 verify-build-quality 的真实执行负责。
+// - 边界：覆盖文档类 gate（G0/G1/G2/G3/G6）。G6 只验证结构化 Review/验收接线，
+//   G4+ 的真实分支、改动文件和工具链仍由 verify-build-quality 的真实执行负责。
 //   prd-intake / MSW 子链路在夹具里显式关闭（project-manifest.pilot 全 false），
 //   它们各自有 fixtures 与自测。
 // - 副作用：临时项目目录在 finally 里删除；不传 `--write`，所以不写 gate-results /
@@ -120,7 +120,7 @@ function runAggregator(gate) {
   }
 }
 
-const baselineGates = ['G0', 'G2', 'G3']
+const baselineGates = ['G0', 'G1', 'G2', 'G3', 'G6']
 
 // 每个用例只破坏一处。expectRuleId 是「必须命中」的那条；任何额外 error 命中都算规则变宽。
 const mutationCases = [
@@ -154,6 +154,12 @@ const mutationCases = [
     gate: 'G0',
     expectRuleId: 'DOC-G0-003',
     apply: () => editFixtureFile('product/00-feature-inventory.md', (text) => text.replace('## 验收标准对照', '## 验收想法')),
+  },
+  {
+    id: 'g1-scope-missing',
+    gate: 'G1',
+    expectRuleId: 'DOC-G1-001',
+    apply: () => editFixtureFile('product/01-scope-and-phases.md', (text) => text.replaceAll('范围', '阶段')),
   },
   {
     id: 'blocking-placeholder-left-in-inventory',
@@ -269,6 +275,29 @@ const mutationCases = [
       assert.equal(waived.severity, 'waived', `未过期豁免应把 DOC-BLOCK-002 降为 waived，实际 ${waived.severity}`)
       assert.equal(errorFailures(result.checks).length, 0, `豁免后不应剩余 error：${errorFailures(result.checks).join(', ')}`)
     },
+  },
+  {
+    id: 'open-code-review-finding',
+    gate: 'G6',
+    expectRuleId: 'DOC-CR-002',
+    apply: () => writeFixtureFile('agent/code-review.json', `${JSON.stringify({
+      projectId: GOLDEN_PROJECT_ID,
+      reviewedAt: '2026-08-03',
+      reviewer: 'golden-fixture',
+      findings: [{ id: 'CR-1', category: 'correctness', severity: 'high', summary: '未处理问题', disposition: 'open', evidence: [] }],
+    }, null, 2)}\n`),
+  },
+  {
+    id: 'doing-feature-missing-acceptance',
+    gate: 'G6',
+    expectRuleId: 'DOC-AC-002',
+    apply: () => writeFixtureFile('agent/acceptance-results.json', `${JSON.stringify({ projectId: GOLDEN_PROJECT_ID, items: [] }, null, 2)}\n`),
+  },
+  {
+    id: 'passed-acceptance-missing-evidence',
+    gate: 'G6',
+    expectRuleId: 'DOC-AC-004',
+    apply: () => editFixtureFile('agent/acceptance-results.json', (text) => text.replace('"evidence": ["evidence/gate/g6/README.md"]', '"evidence": []')),
   },
 ]
 

@@ -26,11 +26,11 @@ QA：<链接>
 
 1. 读取 `common/rule-router.md`。
 2. 如需机器路由，读取 `common/rule-index.json` 中的 `new_project` 场景。
-3. 执行：
+3. 执行统一编排入口：
 
 ```bash
-node apps/web/docs_tdd/common/agent-scripts/start-new-project.mjs <PROJECT-ID> --prd <PRD> --title <项目短名>
+node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs kickoff <PROJECT-ID> --prd <PRD> --title <项目短名>
 ```
 
-4. 优先读取项目 `agent/context-summary.md`；没有则读取项目 README、`product/00-feature-inventory.md`、`product/06-collaboration.md`。
+4. 中断或换会话先运行 `docs-tdd status <PROJECT-ID>` 与 `docs-tdd next <PROJECT-ID>`；可安全重试的同步/intake 用 `docs-tdd resume <PROJECT-ID>`。
 5. G2 / G5 / G6 / G7 / G8 前运行 `docs-tdd.mjs gate <PROJECT-ID> <GATE>`；代码变更后运行 `verify-code-rules.mjs --project <PROJECT-ID>`。只读 verifier 用于排障，不能代替正式 gate 写成功历史和推进阶段。

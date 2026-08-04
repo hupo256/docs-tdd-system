@@ -1,0 +1,20 @@
+{
+  "projectId": "PR-00000",
+  "runs": [
+    {
+      "gate": "G5",
+      "ok": true,
+      "generatedAt": "2026-08-03T00:00:00.000Z",
+      "tool": "run-project-gate.mjs",
+      "summary": {
+        "total": 1,
+        "ok": 1,
+        "warn": 0,
+        "waived": 0,
+        "fail": 0
+      },
+      "fingerprint": {},
+      "evidence": "evidence/gate/g5/README.md"
+    }
+  ]
+}

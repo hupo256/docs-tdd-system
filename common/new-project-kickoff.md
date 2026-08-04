@@ -13,9 +13,9 @@
 ## 2. Agent 自动执行链路
 
 1. 读 [rule-router.md](./rule-router.md)，通过 `docs-tdd.mjs context <PROJECT-ID> new_project` 加载场景包；禁止全读 `common/`。
-2. 运行 `start-new-project.mjs <PROJECT-ID> --prd <source> --title <title>` 补齐骨架；目录和文件职责以 [project-doc-structure.md](./project-doc-structure.md) 为准，脚本实际产物以启动器为准。
-3. 在 `agent/lark-sources.json` 登记来源并执行项目同步脚本。同步和 PRD 富媒体读取完整执行 [lark-doc-sync.md §8](./lark-doc-sync.md)，失败不得用旧副本冒充最新。
-4. 执行 `prd-intake.mjs <PROJECT-ID> --init --source <source>`，再按 [prd-feature-inventory.md §3](./prd-feature-inventory.md) 建 sourceId → Feature → Task 映射并完成 G2 批准。
+2. 运行 `docs-tdd kickoff <PROJECT-ID> --prd <source> --title <title>`；它幂等创建骨架、登记来源、尝试只读同步与 PRD intake，并写 `agent/run-state.json`。
+3. 同步/intake 失败时用 `docs-tdd status/next/resume` 诊断和安全重试；不得用旧副本冒充最新。
+4. 按 [prd-feature-inventory.md §3](./prd-feature-inventory.md) 建 sourceId → Feature → Task 映射并完成 G2 批准；语义文档仍由 Agent 读取真实 PRD 后填写，编排器不猜需求。
 5. 运行 `update-project-index.mjs --write`；差异、缺料、假设和负责人确认写入 `product/06-collaboration.md`。
 6. G2 前不写业务代码；G2 通过后按 [coding-worktree.md](./coding-worktree.md) 准备项目 worktree。
 7. 后续只按 [workflow-gates.md](./workflow-gates.md) 推进 G3-G8。API 未 ready 消费 [architecture-and-state.md §8.4.1](./architecture-and-state.md)，验证消费 [quality-checklist.md](./quality-checklist.md) 与 [execution-evidence.md](./execution-evidence.md)。

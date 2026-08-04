@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process'
 import { resolveRoots } from './lib/roots.mjs'
 
 const scriptPath = fileURLToPath(import.meta.url)
-const { docsSystemRoot: docsRoot, consumerRoot: repoRoot } = resolveRoots()
+const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, config } = resolveRoots()
 const worktreeRoot = (() => {
   const result = spawnSync('git', ['rev-parse', '--show-toplevel'], { cwd: process.cwd(), stdio: 'pipe', encoding: 'utf8' })
   return result.status === 0 ? result.stdout.trim() : repoRoot
@@ -23,14 +23,14 @@ function hasFlag(name) {
   return args.includes(name)
 }
 
-const baseRef = readOption('--base', 'origin/online')
+const baseRef = readOption('--base', config.baseRef || 'origin/online')
 // base ref 可解析性：origin/online 未 fetch 时 base…HEAD diff 静默为空，且无法证明某文件是「本次新建」。
 // 用于 CODE-FILE-001：base 不可解析时不把存量超限 .tsx 误判成新引入 error（见 classifyFileSize 调用点）。
 const baseResolvable = spawnSync('git', ['rev-parse', '--verify', '--quiet', `${baseRef}^{commit}`], { cwd: worktreeRoot, stdio: 'pipe', encoding: 'utf8' }).status === 0
 const json = hasFlag('--json')
 const explicitFiles = readOption('--files')
 const projectId = readOption('--project')
-const waiversPath = readOption('--waivers', projectId ? `apps/web/docs_tdd/${projectId}/agent/rule-waivers.json` : '')
+const waiversPath = readOption('--waivers', projectId ? `${config.docsMountPath}/${projectId}/agent/rule-waivers.json` : '')
 const globalScan = hasFlag('--global-scan') || (!hasFlag('--no-global-scan') && !explicitFiles)
 
 function printHelp() {
@@ -65,6 +65,7 @@ const projectVisualFidelityHigh = /\|\s*visualFidelity\s*\|\s*`?high`?\s*\||visu
   readProjectText('README.md'),
   readProjectText('product/00-feature-inventory.md'),
 ].join('\n'))
+const moduleImportAliases = Array.isArray(config.moduleImportAliases) ? config.moduleImportAliases.filter(Boolean) : ['@fameex/ui']
 
 function runGit(gitArgs, { allowFailure = true } = {}) {
   const result = spawnSync('git', gitArgs, {
@@ -162,7 +163,8 @@ function isSchemaOrDtoImport(source) {
 }
 
 function isUiImport(source) {
-  return /(?:^|\/)components?(?:$|\/)|^@fameex\/ui(?:$|\/)|^@\/apps\//i.test(source)
+  return /(?:^|\/)components?(?:$|\/)|^@\/apps\//i.test(source)
+    || moduleImportAliases.some((alias) => source === alias || source.startsWith(`${alias}/`))
 }
 
 function isMswFixtureImport(source) {

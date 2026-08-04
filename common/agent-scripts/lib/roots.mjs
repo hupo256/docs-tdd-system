@@ -10,15 +10,55 @@
 //   - consumerWorktree: the worktree the agent is actually coding in (git toplevel of cwd).
 //   - config         : consumer binding (docs-tdd.config.json), merged over bundled defaults.
 
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, realpathSync } from 'node:fs'
 import { homedir } from 'node:os'
-import { basename, dirname, isAbsolute, join, resolve } from 'node:path'
+import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
 
 const here = dirname(fileURLToPath(import.meta.url)) // <docs>/common/agent-scripts/lib
 export const docsSystemRoot = resolve(here, '../../..') // -> <docs> root, host-independent
 const defaultConfigFile = join(docsSystemRoot, 'docs-tdd.config.default.json')
+
+function isInside(parent, child) {
+  const rel = relative(parent, child)
+  return rel === '' || (!rel.startsWith('..') && !isAbsolute(rel))
+}
+
+// Resolve a path that belongs to docs_tdd whether callers provide:
+// - the physical standalone docs path,
+// - a consumer-repo mount path such as apps/web/docs_tdd/PR-xxxxx/..., or
+// - a docs-root-relative path such as PR-xxxxx/inbox/prd.md.
+// Existing inputs are realpath-resolved so a legitimate symlink mount is accepted without
+// weakening the boundary check; output paths are mapped to the physical docs root first.
+export function resolveDocsPath(value, { consumerRoot, docsMountPath = 'apps/web/docs_tdd', mustExist = false } = {}) {
+  if (typeof value !== 'string' || !value.trim()) throw new Error('docs path is empty')
+  const input = value.trim()
+  const mountPrefix = `${docsMountPath.replace(/\/$/, '')}/`
+  const absoluteMount = consumerRoot ? resolve(consumerRoot, docsMountPath) : ''
+  let candidate
+  if (isAbsolute(input)) {
+    candidate = absoluteMount && isInside(absoluteMount, input)
+      ? join(docsSystemRoot, relative(absoluteMount, input))
+      : input
+  } else if (input === docsMountPath || input.startsWith(mountPrefix)) {
+    candidate = join(docsSystemRoot, input === docsMountPath ? '' : input.slice(mountPrefix.length))
+  } else if (/^(?:PR-[^/]+|common|templates)(?:\/|$)/.test(input)) {
+    candidate = join(docsSystemRoot, input)
+  } else {
+    candidate = resolve(consumerRoot || docsSystemRoot, input)
+  }
+
+  if (mustExist) {
+    if (!existsSync(candidate)) throw new Error(`docs path does not exist: ${candidate}`)
+    candidate = realpathSync(candidate)
+  } else {
+    candidate = resolve(candidate)
+  }
+  const realDocsRoot = realpathSync(docsSystemRoot)
+  if (!isInside(realDocsRoot, candidate)) throw new Error(`docs path must stay inside ${realDocsRoot}: ${candidate}`)
+  return candidate
+}
 
 function git(args, cwd) {
   const r = spawnSync('git', args, { cwd, encoding: 'utf8', stdio: 'pipe' })

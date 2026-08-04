@@ -1,0 +1,13 @@
+{
+  "projectId": "PR-00000",
+  "items": [
+    {
+      "id": "AC-1",
+      "featureId": "F01",
+      "scenario": "榜单列表展示与空态",
+      "method": "browser",
+      "status": "passed",
+      "evidence": ["evidence/gate/g6/README.md"]
+    }
+  ]
+}

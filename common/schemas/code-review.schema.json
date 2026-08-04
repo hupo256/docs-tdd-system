@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "code-review.schema.json",
   "title": "docs_tdd G6 Code Review Report",
-  "description": "G6 /code-review findings 的机器可读单一源。缺失文件时 G6 回退散文校验（VERIFY-G6-002）。语义见 rule-ids-and-gates.md §3.8。",
+  "description": "G6 /code-review findings 的机器可读单一源。缺失文件时 G6 回退散文校验（VERIFY-G6-002）。语义见 rule-ids-and-gates.md §3.7。",
   "type": "object",
   "required": ["projectId", "reviewedAt", "reviewer", "findings"],
   "properties": {
