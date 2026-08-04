@@ -130,12 +130,25 @@
       },
       "additionalProperties": false
     },
+    "buildQuality": {
+      "type": "object",
+      "required": ["required", "skipped", "reason", "ok"],
+      "properties": {
+        "required": { "type": "boolean" },
+        "skipped": { "type": "boolean" },
+        "reason": { "type": "string" },
+        "ok": { "type": "boolean" },
+        "checkCount": { "type": "integer", "minimum": 0 },
+        "baselineFile": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
     "source": {
       "type": "object",
       "properties": {
         "gateCommand": { "type": "string" },
         "parseError": {},
-        "codeRulesCommand": { "type": "string" },
+        "codeRulesCommand": { "type": ["string", "null"] },
         "codeRulesParseError": {}
       },
       "additionalProperties": true

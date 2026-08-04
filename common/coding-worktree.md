@@ -100,7 +100,7 @@ node apps/web/docs_tdd/common/agent-scripts/prepare-coding-worktree.mjs PR-01234
 
 1. 编号格式 `PR-xxxxx`。
 2. 新分支 `feature/PR-xxxxx`，**从最新 `origin/online` 切出**（默认 `--base-ref origin/online`，切前先 `git fetch origin online`）。
-3. **基线校验**：`git merge-base --is-ancestor origin/online HEAD` 通过（即 `origin/online` 是 HEAD 的祖先 = HEAD 基于最新 online）；不通过即切错基线，脚本立即失败。
+3. **基线校验**：`git merge-base --is-ancestor origin/online HEAD` 通过（基线方向语义见 [git-branch-flow.md](./git-branch-flow.md) §1）；不通过即切错基线，脚本立即失败。
 4. worktree 与主仓同级，目录名 `PR-xxxxx`。
 5. worktree 内 `apps/web/docs_tdd` 是指向主仓的软链。
 6. 依赖就绪，优先 `pnpm install --frozen-lockfile`。
@@ -140,7 +140,7 @@ curl -i http://localhost:4001/zh-CN
 
 ## 5. Agent 执行约束
 
-- **基线校验是 worktree ready 前置硬条件**：进编码前确认当前分支基于最新 `origin/online`。基线不对一律不算 ready。
+- **基线校验是 worktree ready 前置硬条件**：进编码前确认当前分支基于最新 `origin/online`（`git merge-base --is-ancestor origin/online HEAD`，基线方向语义见 [git-branch-flow.md](./git-branch-flow.md) §1）。基线不对一律不算 ready。
 - G4-G8 的业务代码修改、Biome、typecheck、test、dev server、Playwright 自测都在项目 worktree 执行。
 - worktree ready = 基线校验通过 + 依赖装完 + dev server 可启 + 基础页非 404/空白；只建目录分支不算 ready。
 - `docs_tdd` 以主仓为准，worktree 只软链读取，不复制新副本。
@@ -173,7 +173,7 @@ for item in "$src"/*; do
 done
 ```
 
-Agent 检查点：① `git merge-base --is-ancestor origin/online HEAD` 退出码 0（`origin/online` 是 HEAD 祖先 = 基线通过），不过即切错基线不得编码；② `apps/web/docs_tdd/common/coding-worktree.md` 可读，否则视为未就绪。
+Agent 检查点：① 基线校验通过（见 §5，方向语义见 [git-branch-flow.md](./git-branch-flow.md) §1），不过即切错基线不得编码；② `apps/web/docs_tdd/common/coding-worktree.md` 可读，否则视为未就绪。
 
 ## 7. 退役 / 回收（上线后）
 

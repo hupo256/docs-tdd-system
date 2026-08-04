@@ -62,16 +62,11 @@ Lark 主动发群 + 群内 @ 应用自动建 task 都是协作增强,非需求�
 
 ### 3.3 去重与记录
 
-- 同一门禁同一状态只发一次;内容有实质变化才补发。
-- dry-run 只用于调试,不算通知成功。
-- 每次 real 发送后必须记录到 `<PROJECT-ID>/agent/notification-log.md` 或 `agent/lark-integration.md` 的通知记录。
-- 发送失败记 failed 和原因,不能在项目文档标「已通知」。
+去重规则、通知记录字段表与失败处理见 [lark-active-notification.md](./lark-active-notification.md) §9。
 
 ### 3.4 安全边界
 
-- webhook URL、Secret、App Secret、OAuth token 只放本机配置,如 `.lark-fe-task/<PROJECT-ID>.json`。
-- 群消息只贴本地文档相对路径、公开链接或脱敏摘要。
-- 涉账号/Cookie/完整响应/内网地址/敏感截图时,只写「已记录在本地文档/待负责人查看」。
+「禁止同步」硬清单见本文档 §2;配置文件脱敏与 dry-run 细则见 [lark-active-notification.md](./lark-active-notification.md) §3。
 
 ## 4. 待确认 / 补信息通知策略
 
@@ -133,49 +128,17 @@ Agent/Worker 在任意阶段遇需人工确认、需补资料、缺登录账号/
 
 ## 7. 已发送通知记录
 
-每次实际发群后必须在项目文档留轻量记录,避免重复或漏发。推荐记到 `<PROJECT-ID>/agent/lark-integration.md` 的「通知记录」小节,或独立 `agent/notification-log.md`。
-
-| 字段 | 说明 |
-| ---- | ---- |
-| 时间 | 本地时间即可 |
-| 门禁 | G0-G8 |
-| 状态 | 进行中/完成/阻塞/待确认/补信息 |
-| 摘要 | 群消息的简短说明 |
-| 方式 | real/dry-run |
-| 结果 | success/failed/skipped |
-
-规则:
-- 同一门禁同一状态不重复发,除非内容有实质变化。
-- dry-run 不等于已通知,不能记为 real success。
-- 发送失败记 failed 和原因,不假装已通知。
-- 群消息只放摘要,详细差异仍写项目文档。
+通知记录字段表(时间/门禁/状态/摘要/方式/结果)、去重与失败处理规则见 [lark-active-notification.md](./lark-active-notification.md) §9。记录写到 `<PROJECT-ID>/agent/notification-log.md` 或 `agent/lark-integration.md` 的「通知记录」小节;群消息只放摘要,详细差异仍写项目文档。
 
 ## 8. 消息格式
 
-主动通知卡片完整格式见 [lark-active-notification.md](./lark-active-notification.md) §7-§8;群内 @ 应用任务完成格式见 [lark-bot-gateway.md](./lark-bot-gateway.md) §6.4。
+主动通知卡片字段、字段顺序(`当前阶段`→`下一阶段`→`说明`→`note 时间`)与时间行格式见 [lark-active-notification.md](./lark-active-notification.md) §5、§7;群内 @ 应用任务完成格式见 [lark-bot-gateway.md](./lark-bot-gateway.md) §6.4。
 
-同一条消息只放结论摘要:节点、状态、说明、时间（用 Lark `note` 元素显示纯时间值,不写 `时间：` 标签）、必要时附本地文档路径。
-
-格式规则:
-- 单项字段可写一行,如 `说明：阶段状态已更新`。
-- 同一字段含多项说明/多个结论/多个待办时,必须换行并用数字编号,如 `说明：\n1. 格式校验已完成；\n2. 请确认 API 字段。`
-- 主动通知字段顺序固定 `当前阶段` → `下一阶段` → `说明` → `note 时间`,时间格式 `YYYY/M/D HH:mm:ss`,作为 Lark `note` 元素单独展示。
-- 面向全员的结果消息先写完成状态,再用数字小结列做了哪些、现在什么效果。如:`结果：已完成。\n1. TradFi 落地页跑马灯速度已从 40 调整为 80；\n2. 播放速度提升为原来的 2 倍。`
-- 验证命令、任务 ID、diff 摘要、内部状态写入项目文档或任务记录,不放普通完成消息。
-
-不发长日志;细节写入 `docs_tdd/<PROJECT-ID>/`。
+原则:同一条消息只放结论摘要,不发长日志;验证命令、任务 ID、diff 摘要、内部状态写入项目文档或任务记录,不放普通完成消息。
 
 ### 8.1 多项内容必须编号
 
-同一字段含多项说明/多个结论/多个待办时必须拆数字编号,不挤同一行。适用字段包括但不限于:说明、结果、待办、待确认、风险。
-
-```text
-说明：
-1. 格式校验：当前阶段与下一阶段字段已更新；
-2. 请确认 C 端展示范围、Admin 是否同做、API 字段与 AB 分组来源。
-```
-
-项目级 Lark 脚本应支持用中/英文分号（`；`/`;`）拆分多项说明并自动生成编号列表。主动通知脚本细则见 [lark-active-notification.md](./lark-active-notification.md) §8。待确认/补信息消息用独立 UI 格式,后续在本文件补充;格式定稿前至少按 §4 内容边界发纯摘要。
+同一字段含多项说明/多个结论/多个待办时必须拆数字编号(适用字段:说明、结果、待办、待确认、风险)。完整规则、示例与脚本分号(`；`/`;`)拆分口径见 [lark-active-notification.md](./lark-active-notification.md) §8。待确认/补信息消息格式定稿前,按 §4 内容边界发纯摘要。
 
 ## 9. Webhook 使用边界
 

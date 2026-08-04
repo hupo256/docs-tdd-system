@@ -64,15 +64,7 @@ G0–G1 对每个模块:
 
 ### 3.1 cornerRadius → preset 映射规则
 
-**先读几何,再查 preset**（`packages/config/tailwind-preset.js`）。**禁止为单页改 preset。**
-
-```
-若 cornerRadius >= min(width, height) / 2  →  rounded-full（圆形）
-若 cornerRadius === 16                      →  rounded-lg（平替 Figma rounded-4）
-若 cornerRadius === 8                       →  rounded-m
-若 cornerRadius === 12                      →  相近：rounded-m（8px）或 rounded-lg（16px）取更近
-若 cornerRadius === 4                       →  rounded（DEFAULT）
-```
+**先读原子节点几何,再查 preset**（`packages/config/tailwind-preset.js`）。**禁止为单页改 preset。** 完整 `rounded-*` 像素映射表与圆形判定（`cornerRadius ≥ min(w,h)/2`）见 [ui-style-token-rules.md](./ui-style-token-rules.md) §1.2;arbitrary 硬编码值（`w-[700px]`/`rounded-[16px]`,非高保真项目禁用）见 [ui-style-token-rules.md](./ui-style-token-rules.md) §4。
 
 无精确键时:
 - **默认项目**:用**最相近** preset,映射写入 `07-figma-spec` §4。

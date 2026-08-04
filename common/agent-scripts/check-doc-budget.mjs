@@ -62,6 +62,16 @@ const isRealProjectDir = (entry, pattern) => entry.isDirectory() && pattern.test
 
 const RESIDENT_MARKER = '<!-- RESIDENT-DOC'
 const RESIDENT_BUDGET = 5000 // 码点；改此值须同步 rule-router.md §4 的预算声明
+// per-file on-demand 预算（码点）：常驻恒定小之外，按需专题也要有天花板，防单文件无限膨胀挤爆 context pack。
+// warn = 超过即告警（不阻断，提示该拆分/归档）；fail = 硬上限（阻断，必须瘦身）。
+// 少数「引用型大文件」（rule ID 台账、架构专题、变更日志）grandfather 一个带余量的上限：允许随规则自然增长，但仍有界。
+const DOC_BUDGET_DEFAULT = { warn: 9000, fail: 13000 }
+const DOC_BUDGET_OVERRIDES = {
+  'rule-ids-and-gates.md': { warn: 25000, fail: 29000 }, // rule ID 台账，随规则条目增长
+  'architecture-and-state.md': { warn: 15000, fail: 17000 },
+  'CHANGELOG.md': { warn: 15000, fail: 18000 }, // 轮转后保留近期条目；历史在 CHANGELOG-archive.md
+}
+const BUDGET_EXEMPT = new Set(['CHANGELOG-archive.md']) // 纯历史归档，不进 context、不参与覆盖/预算
 const ROUTER_FILE = 'rule-router.md'
 const README_FILE = 'README.md'
 const RULE_INDEX_FILE = 'rule-index.json'
@@ -83,7 +93,7 @@ const REQUIRED_TEMPLATES = [
   'project-readme-frontmatter-template.md',
   'real-fixture-reconcile-test-template.ts',
 ]
-const COVERAGE_EXEMPT = new Set([README_FILE, ROUTER_FILE]) // 索引/常驻本身不需被自己收录
+const COVERAGE_EXEMPT = new Set([README_FILE, ROUTER_FILE, 'CHANGELOG-archive.md']) // 索引/常驻本身不需被自己收录；归档纯历史不进索引
 const SCRIPT_REF_RE = /(?:common\/agent-scripts\/|agent-scripts\/)([A-Za-z0-9_.-]+\.mjs)/g
 const TEMPLATE_REF_RE = /(?:templates\/|\.\.\/templates\/)([A-Za-z0-9_.-]+\.(?:md|ts))/g
 const FORBIDDEN_DUPLICATE_BLOCKS = {
@@ -96,6 +106,10 @@ const FORBIDDEN_DUPLICATE_BLOCKS = {
   ],
   'architecture-and-state.md': ['为何不现在全量引入', '下一个需要 mock 的新功能', '试点结论：MSW 升为新功能强制路线'],
   'new-project-kickoff.md': ['## 5. 默认产物清单', '## 6. 默认成功标准', 'apps/web/docs_tdd/<PROJECT-ID>/\n  README.md'],
+  // 去重后锁位：以下签名内容各有唯一权威源，次要文件不得再复述（回潮即打回）。
+  // A1/A4 通知规则源在 lark-active-notification.md §8/§9；A9 圆角映射源在 ui-style-token-rules.md §1.2。
+  'collaboration-and-notifications.md': ['格式校验：当前阶段与下一阶段字段', 'dry-run 不等于已通知', 'real/dry-run'],
+  'figma-mcp-read-workflow.md': ['若 cornerRadius === 16', 'rounded-lg（平替 Figma rounded-4）'],
 }
 
 function printHelp() {
@@ -242,6 +256,26 @@ for (const r of residents) {
   } else {
     console.log(`✅ ${r.name} = ${r.size} / ${RESIDENT_BUDGET} 字符（余 ${RESIDENT_BUDGET - r.size}）`)
   }
+}
+
+// 校验 2.5：per-file on-demand 预算。常驻文件已由校验 2 管；其余专题文档各有天花板，防无限膨胀。
+{
+  const overCap = []
+  for (const name of mdFiles) {
+    if (BUDGET_EXEMPT.has(name) || residents.some((r) => r.name === name)) continue
+    const size = charCount(readFileSync(join(COMMON_DIR, name), 'utf8'))
+    const budget = DOC_BUDGET_OVERRIDES[name] || DOC_BUDGET_DEFAULT
+    if (size > budget.fail) {
+      overCap.push(
+        `❌ ${name} = ${size} 字符，超硬上限 ${budget.fail}（超 ${size - budget.fail}）。` +
+          `\n   拆分为更小专题、把历史移出、或改指针；引用型大文件可在 check-doc-budget.mjs 的 DOC_BUDGET_OVERRIDES 调整并说明理由。`,
+      )
+    } else if (size > budget.warn) {
+      console.warn(`⚠ ${name} = ${size} 字符，超告警线 ${budget.warn}（硬上限 ${budget.fail}）：考虑瘦身/归档/拆指针。`)
+    }
+  }
+  if (overCap.length) errors.push(...overCap)
+  else console.log(`✅ on-demand 预算：${mdFiles.length - residents.length} 个专题文档均在硬上限内。`)
 }
 
 // Router 只保留启动协议；专题覆盖由机器索引承担，避免常驻文件手抄全量文件名。

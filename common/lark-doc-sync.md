@@ -11,7 +11,7 @@
 - 只允许读取：`doc`、`wiki`、`drive`、`markdown` 的 `read/search` 类命令。
 - 不允许创建、更新、patch、删除 Lark 云文档，除非负责人后续单独确认写权限边界。
 - 不同步到业务代码目录；所有输出只能落到 `apps/web/docs_tdd/<PROJECT-ID>/inbox/lark-sync/` 或项目指定的 `docs_tdd` 子目录。
-- OAuth token、App Secret、Webhook、Cookie、账号密码不写入仓库、不写入 `docs_tdd` 正文、不发群。
+- 敏感项(OAuth token、App Secret、Webhook、Cookie、账号密码)不写仓库、不写 `docs_tdd` 正文、不发群——「禁止同步」硬清单见 [collaboration-and-notifications.md](./collaboration-and-notifications.md) §2。
 - 同步失败不能静默使用旧资料；开发报告必须标明失败来源和下一步需要谁补权限或链接。
 
 ## 3. 本地副本要求

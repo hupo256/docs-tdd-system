@@ -1,84 +1,72 @@
-# apps/web 本地 TDD 开发文档
+# docs_tdd — 可移植的 AI 前端开发规则与门禁系统
 
-> 本目录只在本机使用：`apps/web/docs_tdd/` 已通过 `.git/info/exclude` 忽略，不跟踪、不 push。它是 Web 功能开发期间给 Codex / Cursor / 负责人共同使用的本地知识库。
+一套**独立、可复用**的 AI 前端开发操作系统：用「先文档后代码 + G0-G8 门禁 + 机器可验证证据」约束 AI（Codex / Claude / Cursor）与人协作完成前端功能开发。与具体业务仓库解耦，可挂载到任意前端项目复用。
 
-## 目录职责
+> 本仓库是从某前端工程中沉淀、抽离出的独立系统，经多轮真实项目迭代。作为个人知识库独立版本管理，不含任何业务机密以外的通用方法论。
 
-| 路径                                               | 用途                                             |
-| -------------------------------------------------- | ------------------------------------------------ |
-| [AGENTS.md](./AGENTS.md)                           | 给 AI Agent 的行为规则、必读顺序、新需求接入流程 |
-| [CONTEXT.md](./CONTEXT.md)                         | 当前本地运行状态、恢复提示（项目清单见 PROJECTS.md） |
-| [PROJECTS.md](./PROJECTS.md)                       | 项目清单/状态/worktree 唯一真值源（自动生成，勿手抄） |
-| [common/](./common/)                               | 跨项目复用的项目流程、门禁、自测、边界和证据规则 |
-| [templates/](./templates/)                         | 后续新需求复制使用的文档模板                     |
-| `PR-xxxxx/`                                         | 各需求项目文档目录；完整清单与状态见 PROJECTS.md |
+## 它解决什么
 
-## 文档演进来源
+AI 编码的两个顽疾：**跳过需求确认直接写码**、**规则散落导致每次重新解释**。docs_tdd 把开发拆成 G0-G8 阶段门禁，每阶段有机器可读的证据要求（gate 脚本实跑 biome/tsc/vitest、校验字段对账、阻塞登记、通知记录），AI「已读/已注意」不算数，只认执行契约产出的证据。
 
-当前规则来自多轮真实项目沉淀：
+规则本身遵循「**规则可变多，常驻恒定小**」：AI 开工只常驻读一个路由文件（`common/rule-router.md`，≤5000 字符机器守），其余按场景加载，避免上下文膨胀。
 
-1. `apps/web/docs_tdd/PR-01685/`：Campaign 活动落地页，沉淀了先文档后代码、G0-G8 门禁、Browser / Playwright 自测、主题与 H5 规则。
-2. `apps/web/docs_tdd/PR-01973/`：TradFi 落地页，沉淀了老接口复用、Figma / PRD 冲突处理、Lark webhook 阶段通知。
-3. `apps/web/docs_tdd/PR-01988/`：预测市场二期，沉淀了 Admin mock-first、验收矩阵和高风险操作安全闸口。
-4. `apps/web/docs_tdd/PR-02006/`：TradFi 板块币种体验优化，沉淀了新需求 Lark PRD 同步和 G0/G1 启动链路。
+## 架构
 
-## 新项目默认流程
+| 层 | 内容 | 位置 |
+| --- | --- | --- |
+| **常驻路由** | 开工唯一入口：启动协议 + 硬规则 + 场景表 | [common/rule-router.md](./common/rule-router.md) |
+| **按需专题** | 架构/状态/API/Mock/UI/Figma/协作/门禁等规则，命中场景才加载 | `common/*.md`（人工索引见 [common/README.md](./common/README.md)，机器路由见 `common/rule-index.json`） |
+| **门禁脚本** | 阶段验证、机器事实层、发布指纹、golden 自回归 | `common/agent-scripts/*.mjs` |
+| **模板** | 新需求复制使用的文档骨架 | `templates/` |
+| **项目实例** | 各需求的文档/证据（清单见自动生成的 [PROJECTS.md](./PROJECTS.md)） | `PR-xxxxx/` |
 
-### 新需求启动口令
+核心命令（统一入口 `common/agent-scripts/docs-tdd.mjs`）：
 
-后续新 chat 建议直接使用：
-
-```text
-根据 apps/web/docs_tdd 下的文档，开始新的需求 PR-01234，PRD 文档是：<PRD 链接或本地路径>。
+```bash
+docs-tdd context <PROJECT-ID> <SCENARIO>   # 按场景生成 compact 规则包
+docs-tdd changed <PROJECT-ID>              # 编辑后跑 code-rules / mock 校验
+docs-tdd gate    <PROJECT-ID> <Gx>         # 阶段交付门禁
+docs-tdd doctor  <PROJECT-ID>              # 适配/冲突/发布状态自检
+docs-tdd golden                            # 让门禁机器自己被回归测试
 ```
 
-Agent 必须先读 [common/rule-router.md](./common/rule-router.md)，按场景命中专题；如需机器路由，读取 [common/rule-index.json](./common/rule-index.json)。不要一次性读取整个 `common/`。通用代码质量不从 `docs_tdd` 展开：Codex 读 `~/.codex/AGENTS.md` 和按需 skill，Claude 读 `~/.claude/CLAUDE.md` 和按需 skill，FameEX 锚点按主题读 `.cursor/rules/*.mdc`。
+## 与业务解耦：如何挂载到一个项目
 
-1. 在 `apps/web/docs_tdd/<PROJECT-ID>/` 下建项目目录，目录名必须是大写项目编号，例如 `PR-01234`。
-2. **Agent 自动**：复制 [templates/feature-inventory-template.md](./templates/feature-inventory-template.md) → `product/00-feature-inventory.md`（见 [common/prd-feature-inventory.md](./common/prd-feature-inventory.md) §3）。
-3. **G0**：Agent 读 `inbox/` PRD（含验收标准）填清单初稿。
-4. **G2**：定稿每条「做 / 不做 / 延期」后再写业务代码。
-5. 按 [common/project-doc-structure.md](./common/project-doc-structure.md) 放置 `inbox/`、`product/`、`engineering/`、`agent/`。
-6. 先读 [common/rule-router.md](./common/rule-router.md)；只读取当前场景命中的公共规则专题。
-7. 做规则继承检查：对照最近一个成熟项目的 `engineering/development-rules.md`，确认通用规则已进入 `common/`。
-8. 如果旧项目有通用规则只沉在项目目录里，先提炼到 `common/`，再继续当前项目。
-9. 先写 / 更新文档，确认后再写业务代码。
-10. 实现中发现 PRD、Figma、API、QA 或代码现状冲突，先回写项目文档，再继续开发。
-11. 执行薄包装检查：项目文档只写项目差异；公共规则、脚本、模板、清单和流程只保留在 `common/` 或 `templates/`。
+系统真身可放任意位置（如 `~/github/docs_tdd`），通过**软链 + 一份绑定配置**接入消费项目，脚本零改动：
+
+1. **挂载**：在消费仓库里把 `<app>/docs_tdd` 软链到本仓库真身（各 worktree 同样直指真身）。
+2. **绑定**：在消费仓库根放一份 `docs-tdd.config.json`（gitignored，各安装/各公司自带），声明 `consumerRoot` 等；可复用默认值在已提交的 [docs-tdd.config.default.json](./docs-tdd.config.default.json)。
+3. **根解析**：[common/agent-scripts/lib/roots.mjs](./common/agent-scripts/lib/roots.mjs) 的 `resolveRoots()` 把三个根解耦——
+   - `docsSystemRoot`：本系统自身（从脚本位置推，与物理位置无关）
+   - `consumerRoot`：被指导项目主仓（由 config 绑定确定）
+   - `consumerWorktree`：当前编码 worktree（cwd 的 git 根）
+
+换一个项目/公司复用，只需重复 1+2，不动任何脚本或规则正文。
+
+## 目录
+
+| 路径 | 用途 |
+| --- | --- |
+| [common/](./common/) | 跨项目复用的规则、门禁脚本、schema、模板索引 |
+| [common/rule-router.md](./common/rule-router.md) | **开工常驻入口**（渐进披露路由） |
+| [common/README.md](./common/README.md) | 公共规则专题的人工全索引 |
+| [templates/](./templates/) | 新需求文档模板 |
+| [AGENTS.md](./AGENTS.md) | 给 AI Agent 的行为规则与接入流程 |
+| [CONTEXT.md](./CONTEXT.md) | 本机运行状态与恢复提示 |
+| [PROJECTS.md](./PROJECTS.md) | 项目清单/状态/worktree（自动生成，勿手抄） |
+| [common/CHANGELOG.md](./common/CHANGELOG.md) | 框架变更日志（近期条目；历史见 CHANGELOG-archive.md） |
+
+## 体量治理：重要文件不无限膨胀
+
+「常驻恒定小」由机器强制，不靠自觉：
+
+- **常驻限额**：唯一常驻文件 `rule-router.md` ≤5000 字符，`check-doc-budget.mjs` 校验。
+- **按需文件预算**：每个 `common/*.md` 有告警线/硬上限（默认 9000 / 13000 字符，少数引用型大文件设有界的 grandfather 上限），超限即打回，逼迫拆分/归档/改指针。
+- **日志轮转**：`CHANGELOG.md` 只保留近期条目，旧条目轮转进 `CHANGELOG-archive.md`（不进 context、不参与预算）。
+- **防重复守护**：`FORBIDDEN_DUPLICATE_BLOCKS` 登记已收敛的唯一正文源签名，防规则正文在多处回潮重复。
 
 ## 规则继承原则
 
-- `common/` 是新项目继承规则的唯一公共入口。详见 [common/rule-inheritance.md](./common/rule-inheritance.md)。
-- 项目目录只沉淀当前需求的特殊规则；一旦规则可跨项目复用，必须回写到 `common/`。
-- 跨项目脚本必须有公共实现，项目脚本只做薄包装；已启用 Lark 通知的项目统一调用 `common/agent-scripts/notify-lark.mjs`。
-- 出现“以前定过但新项目没继承”的情况，视为文档流程缺陷，先修公共文档再继续实现。
-- `docs_tdd` 只沉淀项目流程、边界、自测和证据；纯 React/TypeScript 代码规范归全局 AGENTS/skill，FameEX 代码锚点归 `.cursor/rules`，这里只保留触发入口和验证证据。
-
-## 公共规则专题
-
-| 文档                                                                                     | 主题                              |
-| ---------------------------------------------------------------------------------------- | --------------------------------- |
-| [common/rule-router.md](./common/rule-router.md)                                         | **渐进披露路由表（开工常驻入口）** |
-| [common/rule-inheritance.md](./common/rule-inheritance.md)                               | 规则继承与沉淀机制                |
-| [common/prd-feature-inventory.md](./common/prd-feature-inventory.md)                     | PRD 全量功能清单（防 scope 误裁） |
-| [common/development-rules.md](./common/development-rules.md)                             | 项目开发流程总览与专题入口        |
-| [common/change-scope-boundary.md](./common/change-scope-boundary.md)                     | 改动边界与影响半径（越界先警告+重点 check） |
-| [common/architecture-and-state.md](./common/architecture-and-state.md)                   | API / mapper / state / Mock 的项目门禁与证据 |
-| [common/mock-legacy-route-a.md](./common/mock-legacy-route-a.md)                         | Mock 路线 A（`if(USE_MOCK)`）拆除税，仅遗留功能适用 |
-| [common/ui-style-token-rules.md](./common/ui-style-token-rules.md)                       | Figma、Tailwind token、主题、H5 的项目验收流程 |
-| [common/react-component-props-types.md](./common/react-component-props-types.md)         | Props/Params 已上移 L1 的本地指针 |
-| [common/quality-checklist.md](./common/quality-checklist.md)                             | 测试、自测、Review、交付摘要      |
-| [common/collaboration-and-notifications.md](./common/collaboration-and-notifications.md) | G0-G8 协作通知和安全边界          |
-| [common/lark-active-notification.md](./common/lark-active-notification.md)               | Lark 自定义机器人主动通知规则      |
-| [common/lark-bot-gateway.md](./common/lark-bot-gateway.md)                               | 群内 @ 应用转任务和 Worker 链路    |
-
-## 模板
-
-| 文档                                                                                 | 用途                              |
-| ------------------------------------------------------------------------------------ | --------------------------------- |
-| [templates/feature-doc-checklist.md](./templates/feature-doc-checklist.md)           | 新需求 G0-G8 文档和验收清单       |
-| [templates/feature-inventory-template.md](./templates/feature-inventory-template.md) | PRD 功能清单模板（G0-G2 必填）    |
-| [templates/context-summary-template.md](./templates/context-summary-template.md)     | 项目恢复短摘要模板，减少每次上下文读取 |
-| [templates/03-api-contract-template.md](./templates/03-api-contract-template.md)     | API 契约 + 字段对账表模板（Mock 阶段起建） |
-| [templates/07-figma-spec-template.md](./templates/07-figma-spec-template.md)         | Figma 规格 + 几何表 + preset 映射模板 |
-| [templates/notification-log-template.md](./templates/notification-log-template.md)   | Lark / webhook 已发送通知记录模板 |
+- `common/` 是新项目继承规则的唯一公共入口；项目目录只沉淀当前需求的差异，一旦可跨项目复用必须回写 `common/`。
+- 跨项目脚本有公共实现，项目脚本只做薄包装。
+- 通用 React/TypeScript 手艺归全局 AI 规则与 skill，框架代码锚点归各仓库 `.cursor/rules`；`docs_tdd` 只承载项目流程、门禁、Mock 策略、证据与豁免。详见 [common/rule-inheritance.md](./common/rule-inheritance.md)。
