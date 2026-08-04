@@ -55,6 +55,42 @@
 2. 各环境 **Telegram Client ID / Meta App ID + App Secret** 由谁提供、何时能给？（前端 `thirdConfig` 现为空占位 `TODO(B5/C08)`，等此值填入）
 3. state/nonce 的签发/校验接口路由与出入参？id_token/token 过期时的**错误码**与「重新授权」提示文案？（关联 Q53）
 
+## 2026-08-04 落地进展（Client ID 到位 + 密钥口径更正 + 本地开发结论）
+
+> D1/D2 已实锤：@BotFather → Bot Settings → **Login Widget → Switch to OpenID Connect Login**（弹窗警告 permanently disables legacy，**不可逆、每 bot 一次性**）。TG 确为标准 OIDC，与老版 `{id,hash}`+bot_token HMAC 二选一，老版切换后永久关闭。
+
+**Client ID / App ID 已填入 `thirdConfig.ts`（均为公开值，可进代码）：**
+
+| 环境组 | Telegram Client ID | Facebook App ID |
+|--------|--------------------|-----------------|
+| isTest（dev/pre/test 共用测试 bot/app） | `8904904266`（@fameex_login_test_bot） | `2802166923501452` |
+| prod（独立生产 bot/app） | `8841057249`（@fameex_login_prod_bot） | `1592698835583337`（Fameex_login_prod） |
+
+- 惯例同 Google/Apple：`isTest ? testId : prodId`。测试/生产 bot·app 均已建齐并填入 `thirdConfig.ts`。
+- 控制台白名单分家：测试 bot/app 只放 dev/pre/test 三 origin（`dvmkgi.vip` / `azmgb.com` / `pfyys.com`）；生产 bot/app 只放生产/预备域名（`fameex.com` / `fameexbtc.com:17801` / `vsgpk.com` / `fameex.asia` / `canary.fameex.com`）。两边都**不放 localhost**（本地走桩）。
+- **TG 生产 bot 提醒**：OIDC 走的是 **Trusted Origins**（跨域取 token），不是 Redirect URIs——生产 bot 的 Trusted Origins 须把上述生产 origin 补齐，否则 popup 被拒。
+- FB 生产 app 尚「未发布」且缺应用图标/隐私政策/数据删除/类别等提交项；`public_profile`/`email` 走标准登录无需 App Review，但**上线前需把 app 切到 Live 并补齐基础资料**。
+
+**给后端的密钥更正——TG 分两条路，取决于后端选哪条（2026-08-04 curl 官方文档核实）：**
+
+官方 `core.telegram.org/bots/telegram-login` 明确 Web 有两条落地路径：
+
+| 路 | 前端 | 后端验签需要 |
+|----|------|--------------|
+| **(A) JS 库 popup（前端现状）** | `Telegram.Login.auth()` 直接回 `id_token` | **仅公开 JWKS**（`oauth.telegram.org/.well-known/jwks.json`）验签 + 校 `iss=https://oauth.telegram.org`、`aud=<bot Client ID>`、`exp`、`nonce`。**无需 Client Secret、无需 bot token** |
+| (B) 标准 Code+PKCE redirect | redirect `/auth?response_type=code` | 需 **Client Secret**（`/token` 端点 `Basic base64(client_id:client_secret)`）+ PKCE(S256) |
+
+- 前端已实现 A 路（[providerAdapters.ts](../../../src/components/ThirdPartyLogin/common/providerAdapters.ts) `authorizeTelegram`，已带 `nonce`）。**走 A 后端零私钥**；仅当后端改走 B 才需 TG Client Secret。
+- **FB App Secret 仍为必须**（code 换 token）。~~TG bot token~~ 两条路都不需要（只服务 Bot API / 已永久关闭的老版 HMAC）。
+- 所有私钥只私发、勿进代码/群/git。Client ID / App ID 为公开值，已进代码。
+- OIDC 发现文档：`https://oauth.telegram.org/.well-known/openid-configuration`；scope 中 `openid` 必带，`profile` 取 name/username/picture。
+
+**COOP 实测非必需（撤销强制项）：** 主文档（dvmkgi.vip）响应头未设 COOP = 默认 `unsafe-none`，popup 回调即通。只需运维**别下发 `COOP: same-origin`**；若因其他安全需求要设，用 `same-origin-allow-popups`。
+
+**本地开发结论（方案 A）：** localhost 无法进 TG/FB 白名单（强制 HTTPS + origin 含端口精确匹配），本地继续走 `DevThirdLoginDemo` 桩跑三态逻辑；真实 TG/FB 授权在已部署 dev 环境 `https://www.pfyys.com` 验证。（若需本机断真流程，可 hosts 劫持 + mkcert + 443 反代伪装成白名单 dev 域名，非常规不默认做。）
+
+**验收：** code-rules + msw-manifest PASS、改动文件 tsc 0；prd-intake FAIL 为 G2 PRD 原文未归档的既存 blocker，非本次改动回退。
+
 ## 已确认技术决策（当前负责人 / 2026-08-03）
 
 | 项 | 结论 |
@@ -250,3 +286,49 @@
 | 本地下载 + `file` | 40 张 PRD 图片 | PASS | 全部为有效 PNG，共约 11.2 MB |
 | `lark-cli whiteboard +query` | `PRD-EMBED-005` | BLOCK | 缺 `board:whiteboard:node:read` |
 | `lark-cli docs +fetch` | PR-01268 现货后台章节 | PASS | 已读取脱敏场景参考 |
+
+## 可转发交接清单（后端/运维，2026-08-04 官方文档核实版）
+
+> 下面整段可直接转发。已按 `core.telegram.org/bots/telegram-login`（curl 直取核实）与 FB v26.0 文档校对。
+
+### 一、Telegram（先定走哪条路，二选一）
+
+前端已实现「A 路」。
+
+- **A 路（推荐，与前端一致）**：前端用官方 JS 库 popup `Telegram.Login.auth()` 直接拿 `id_token`(OIDC JWT) 传后端。后端只需**公开 JWKS 验签，无需任何私钥**：
+  - JWKS `https://oauth.telegram.org/.well-known/jwks.json`；discovery `https://oauth.telegram.org/.well-known/openid-configuration`
+  - 校验 `iss=https://oauth.telegram.org`、`aud=<bot Client ID>`、`exp`、`nonce`（前端已带，见 providerAdapters `authorizeTelegram`）
+- **B 路（后端若坚持服务端换 token）**：标准 Authorization Code + PKCE，redirect `/auth?response_type=code` → 后端 `/token` 换 token。**此路才需 TG Client Secret**（`Basic base64(client_id:client_secret)`）。走 B 请告知，前端改 redirect 发起。
+
+> ⚠️ bot 的 HTTP API token 两条路都不需要（Bot API / 已永久关闭的老版 HMAC 用）。
+
+### 二、Facebook（固定一条路）
+
+- 前端 popup `/v26.0/dialog/oauth?response_type=code` 拿 **authorization code** 传后端。
+- 后端用 **App Secret** 向 `graph.facebook.com/v26.0/oauth/access_token` 换 token，再 `/me?fields=id,name,email`。
+- 校 `state`、`redirect_uri` 与前端**逐字一致**：`https://<域名>/oauth/facebook/callback`。
+- `public_profile`/`email` 无需 App Review；生产 app 现「未发布」，上线前切 Live 并补图标/隐私政策/数据删除/类别。
+
+### 三、公开值（已在前端代码，无需给）
+
+| | 测试（dev/pre/test 共用） | 生产 |
+|---|---|---|
+| TG Client ID | `8904904266` | `8841057249` |
+| FB App ID | `2802166923501452` | `1592698835583337` |
+
+### 四、私钥（只私发，勿进代码/群/git）
+
+- TG Client Secret —— **仅 B 路需要**（走 A 可不发）
+- FB App Secret —— **必须**
+
+### 五、运维
+
+- **别给本站域名下发 `Cross-Origin-Opener-Policy: same-origin`**（会掐断 TG/FB popup 致登录静默失效）；要设改用 `same-origin-allow-popups`。当前各环境主文档未设 COOP，保持即可。
+- **白名单分家**：测试 bot/app 放 `dvmkgi.vip / azmgb.com / pfyys.com`；生产放 `fameex.com / fameexbtc.com:17801 / vsgpk.com / fameex.asia / canary.fameex.com`；均不放 localhost。
+- **TG 生产 bot 配 Trusted Origins**（A 路校验 origin，非 Redirect URIs）。
+
+### 六、待后端回
+
+1. TG 走 A 还是 B？
+2. 复用 `authLogin` 按 `source` 分支还是新 endpoint？字段沿用 `{source, idToken}`（FB code 塞 idToken）还是给 FB 单列 `code`？
+3. `state`/`nonce` 签发/校验接口路由与出入参？id_token/token 过期错误码 + 「重新授权」文案？
