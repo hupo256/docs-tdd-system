@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 
+import { resolveRoots } from './lib/roots.mjs'
+
 const defaultGatewayUrl = process.env.LARK_GATEWAY_URL || 'http://127.0.0.1:3005'
 const defaultPollMs = Number(process.env.LARK_WORKER_POLL_MS || 5000)
 const defaultCodexTimeoutMs = Number(process.env.LARK_WORKER_CODEX_TIMEOUT_MS || 120000)
 
-const repoRoot = '/Users/aven/github/fameex-web'
+const { consumerRoot: repoRoot } = resolveRoots()
 
 function printHelp() {
   console.log(`usage: lark-worker.mjs [--once] [--help]

@@ -9,3 +9,7 @@ node_modules/
 # never commit secrets if any script config lands here
 .env
 .env.*
+
+# installation-specific consumer binding (each checkout/company sets its own;
+# the committed docs-tdd.config.default.json holds the reusable defaults)
+docs-tdd.config.json

@@ -4,9 +4,10 @@ import { existsSync, lstatSync, mkdirSync, readlinkSync, rmSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn, spawnSync } from 'node:child_process';
+import { resolveRoots } from './lib/roots.mjs';
 
 const scriptPath = fileURLToPath(import.meta.url);
-const repoRoot = resolve(dirname(scriptPath), '../../../../..');
+const { docsSystemRoot, consumerRoot: repoRoot, config } = resolveRoots();
 const projectId = process.argv[2];
 const dryRun = process.argv.includes('--dry-run');
 const skipInstall = process.argv.includes('--skip-install');
@@ -92,8 +93,8 @@ if (resolve(gitRoot) !== repoRoot) {
 const parentDir = dirname(repoRoot);
 const worktreeDir = join(parentDir, projectId);
 const branchName = `feature/${projectId}`;
-const mainDocsTdd = join(repoRoot, 'apps/web/docs_tdd');
-const linkedDocsTdd = join(worktreeDir, 'apps/web/docs_tdd');
+const mainDocsTdd = docsSystemRoot;
+const linkedDocsTdd = join(worktreeDir, config.docsMountPath);
 const webDir = join(worktreeDir, 'apps/web');
 
 console.log(`projectId: ${projectId}`);

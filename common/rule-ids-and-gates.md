@@ -293,5 +293,8 @@ docs-tdd golden --keep          # 保留 PR-00000 供手工排查
 | `DOC-SYNC-002` | —（`check-doc-budget.mjs`） | 机器版 `context-summary.md` 的当前阶段与 `gate-results.json.gate` 一致 | error |
 | `DOC-SYNC-003` | —（`check-doc-budget.mjs`） | `PROJECTS.md` 与即时重生成结果一致 | error |
 | `DOC-SYNC-004` | —（`check-doc-budget.mjs`） | active 项目 stage=G5+ 时存在 G5→当前阶段连续 PASS 历史，且历史证据文件真实存在 | error |
+| `DOC-CR-001` | G6+（`lib/code-review.mjs`） | `agent/code-review.json` 结构合法：字段合规、finding id 唯一、fixed 带 resolution；缺文件不发 check | error |
+| `DOC-CR-002` | G6+（`lib/code-review.mjs`） | code-review 无未处理 finding（open 项须当场修或 waive/标 N/A） | error |
+| `DOC-CR-003` | G6+（`lib/code-review.mjs`） | `code-review.json.head` 覆盖当前 HEAD（未记 head 不判定），防 review 过时 | warn |
 
 > `GIT-G4-*` 定位说明见 §2.1(时点检查、worktree cwd 求值);责任模块目录字段可填在 `00-feature-inventory.md` 或 `agent/context-summary.md`。

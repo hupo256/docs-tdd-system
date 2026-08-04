@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-08-01T09:18:33.803Z",
+  "generatedAt": "2026-08-04T07:28:47.090Z",
   "tool": "run-project-gate.mjs",
   "projectId": "PR-02074",
-  "gate": "G5",
-  "ok": false,
+  "gate": "G3",
+  "ok": true,
   "summary": {
-    "total": 50,
-    "ok": 47,
-    "warn": 1,
+    "total": 34,
+    "ok": 34,
+    "warn": 0,
     "waived": 0,
-    "fail": 2
+    "fail": 0
   },
   "groups": {
     "documentation": {
-      "total": 44,
-      "ok": 41,
-      "warn": 1,
+      "total": 28,
+      "ok": 28,
+      "warn": 0,
       "waived": 0,
-      "fail": 2
+      "fail": 0
     },
     "implementation": {
       "total": 6,
@@ -299,190 +299,64 @@
       "file": "apps/web/docs_tdd/PR-02074/agent/assumptions.json",
       "severity": "error",
       "category": "implementation"
-    },
-    {
-      "ruleId": "DOC-G4-001",
-      "ok": true,
-      "message": "technical design reuse inventory has no blocking placeholders",
-      "file": "apps/web/docs_tdd/PR-02074/product/02-technical-design.md",
-      "severity": "error",
-      "category": "documentation"
-    },
-    {
-      "ruleId": "DOC-G4-002",
-      "ok": true,
-      "message": "technical design contains reuse inventory",
-      "file": "apps/web/docs_tdd/PR-02074/product/02-technical-design.md",
-      "severity": "error",
-      "category": "documentation"
-    },
-    {
-      "ruleId": "DOC-G4-003",
-      "ok": true,
-      "message": "technical design does not contain skipped-reuse wording",
-      "file": "apps/web/docs_tdd/PR-02074/product/02-technical-design.md",
-      "severity": "error",
-      "category": "documentation"
-    },
-    {
-      "ruleId": "DOC-G5-001",
-      "ok": true,
-      "message": "API contract records field reconciliation",
-      "file": "apps/web/docs_tdd/PR-02074/product/03-api-contract.md",
-      "severity": "error",
-      "category": "documentation"
-    },
-    {
-      "ruleId": "DOC-G5-002",
-      "ok": true,
-      "message": "API contract records mock status/removal result",
-      "file": "apps/web/docs_tdd/PR-02074/product/03-api-contract.md",
-      "severity": "error",
-      "category": "documentation"
-    },
-    {
-      "ruleId": "DOC-G5-003",
-      "ok": true,
-      "message": "API contract records copy contract table",
-      "file": "apps/web/docs_tdd/PR-02074/product/03-api-contract.md",
-      "severity": "error",
-      "category": "documentation"
-    },
-    {
-      "ruleId": "CODE-MSW-004",
-      "ok": true,
-      "message": "new feature mock route is MSW route B or explicitly documented",
-      "file": "apps/web/docs_tdd/PR-02074/product/03-api-contract.md",
-      "severity": "error",
-      "category": "documentation"
-    },
-    {
-      "ruleId": "CODE-MSW-001",
-      "ok": true,
-      "message": "MSW route B records contract/schema verification",
-      "file": "apps/web/docs_tdd/PR-02074/product/03-api-contract.md",
-      "severity": "error",
-      "category": "documentation"
-    },
-    {
-      "ruleId": "CODE-MSW-003",
-      "ok": true,
-      "message": "MSW route B records handler removal/disable or test-only disposition before G6 handoff",
-      "file": "apps/web/docs_tdd/PR-02074/product/03-api-contract.md",
-      "severity": "warn",
-      "category": "documentation"
-    },
-    {
-      "ruleId": "VERIFY-G5-001",
-      "ok": true,
-      "message": "agent/stage-status.json records the G5 integration disposition",
-      "file": "apps/web/docs_tdd/PR-02074/agent/stage-status.json",
-      "severity": "error",
-      "category": "documentation"
-    },
-    {
-      "ruleId": "VERIFY-G5-002",
-      "ok": false,
-      "message": "G5 status is completed or not-applicable (got blocked)",
-      "file": "apps/web/docs_tdd/PR-02074/agent/stage-status.json",
-      "severity": "error",
-      "category": "documentation"
-    },
-    {
-      "ruleId": "VERIFY-G5-003",
-      "ok": false,
-      "message": "G5 completion has existing evidence paths, or not-applicable has a concrete reason",
-      "file": "apps/web/docs_tdd/PR-02074/agent/stage-status.json",
-      "severity": "error",
-      "category": "documentation"
-    },
-    {
-      "ruleId": "CODE-MOCK-002",
-      "ok": true,
-      "message": "mock residue grep is empty in responsibility modules",
-      "file": "apps/web/docs_tdd/PR-02074",
-      "severity": "error",
-      "category": "documentation"
-    },
-    {
-      "ruleId": "CODE-MSW-002",
-      "ok": true,
-      "message": "MSW route B leaves no business mock switch residue in responsibility modules",
-      "file": "apps/web/docs_tdd/PR-02074",
-      "severity": "error",
-      "category": "documentation"
-    },
-    {
-      "ruleId": "CODE-ASSUMED-001",
-      "ok": true,
-      "message": "no `// ASSUMED:` residue in responsibility modules",
-      "file": "apps/web/docs_tdd/PR-02074",
-      "severity": "warn",
-      "category": "documentation"
-    },
-    {
-      "ruleId": "CODE-SCOPE-001",
-      "ok": false,
-      "message": "changed files outside 责任模块目录 (confirm not out-of-scope, §1.1):\napps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/crypto/page.tsx\napps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/finance/page.tsx\napps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/page.tsx\napps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/politics/page.tsx\napps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/search/page.tsx\napps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/sports/page.tsx\napps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/world-cup/page.tsx\napps/web/src/app/[lang]/Providers.tsx\napps/web/src/apps/Assets/PredictAccount.tsx\napps/web/src/apps/Assets/PredictSellFeeRows.tsx\napps/web/src/constants/pathnames.ts\napps/web/src/proxy.ts",
-      "file": "apps/web/docs_tdd/PR-02074",
-      "severity": "warn",
-      "category": "documentation"
     }
   ],
   "commands": [
     {
-      "label": "verify-project-gate PR-02074 G5",
-      "status": 1,
-      "ok": false,
-      "startedAt": "2026-08-01T09:18:29.121Z",
-      "finishedAt": "2026-08-01T09:18:29.349Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-08-01T09-18-29-121Z-verify-project-gate-g5.log"
-    },
-    {
-      "label": "verify-code-rules --project PR-02074",
+      "label": "verify-project-gate PR-02074 G3",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-08-01T09:18:29.350Z",
-      "finishedAt": "2026-08-01T09:18:33.803Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-08-01T09-18-29-350Z-verify-code-rules.log"
+      "startedAt": "2026-08-04T07:28:47.016Z",
+      "finishedAt": "2026-08-04T07:28:47.090Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-08-04T07-28-47-016Z-verify-project-gate-g3.log"
     },
     {
-      "label": "update-project-index --write",
+      "label": "set-project-stage PR-02074 G3",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-08-01T09:18:34.117Z",
-      "finishedAt": "2026-08-01T09:18:34.170Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-08-01T09-18-34-117Z-update-project-index.log"
+      "startedAt": "2026-08-04T07:28:47.350Z",
+      "finishedAt": "2026-08-04T07:28:47.474Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-08-04T07-28-47-350Z-set-project-stage.log"
     }
   ],
   "codeRules": {
-    "required": true,
+    "required": false,
     "skipped": false,
     "reason": "",
     "ok": true
   },
+  "buildQuality": {
+    "required": false,
+    "skipped": false,
+    "reason": "",
+    "ok": true,
+    "checkCount": 0,
+    "baselineFile": null
+  },
   "source": {
-    "gateCommand": "/Users/aven/.nvm/versions/node/v24.7.0/bin/node /Users/aven/github/fameex-web/apps/web/docs_tdd/common/agent-scripts/verify-project-gate.mjs PR-02074 G5 --json",
+    "gateCommand": "/Users/aven/.nvm/versions/node/v24.7.0/bin/node /Users/aven/github/fameex-web/apps/web/docs_tdd/common/agent-scripts/verify-project-gate.mjs PR-02074 G3 --json",
     "parseError": null,
-    "codeRulesCommand": "/Users/aven/.nvm/versions/node/v24.7.0/bin/node /Users/aven/github/fameex-web/apps/web/docs_tdd/common/agent-scripts/verify-code-rules.mjs --project PR-02074 --json",
-    "codeRulesParseError": null
+    "codeRulesCommand": null,
+    "codeRulesParseError": null,
+    "buildQualityCommand": null,
+    "buildQualityParseError": null
   },
   "fingerprint": {
-    "headSha": "6b088004b59bc03cb890db9c2d978cadac393bf1",
-    "baseSha": "c5d5ef2dbcfbcd0f71069f670e8adc7de7f1b416",
+    "headSha": "b8794616798d9c54b2baeb15fb33e13d3472d081",
+    "baseSha": "19ed5a6a1c15df797801332f1f6ba19032cb28a0",
     "dirtyHash": "ee91fec5beef70258d3f4e44aecf6ef1a5b8611e240a82b4d77c17fe7172f806",
     "dirtyFileCount": 0,
     "untrackedFileCount": 0,
     "rulesetVersion": "local-2026.07-msw-v1",
-    "ruleReleaseFingerprint": "5ab2f74245f862725fff0d49388e93647ab9990a4c7856ee1ba360e4706b4efe",
-    "effectiveRulesFingerprint": "4ebca4f034e59e69b207df691fa19d8bf46eabdc7848861a9fd6d59f554b4cf4"
+    "ruleReleaseFingerprint": "9a4c5f543446c2b3aa914fbb70656732b2bf919714c3c5de603c85192d0e5523",
+    "effectiveRulesFingerprint": "f9f0ba129dd190021d612d01d1f3031964fddeffc4001968d0d3a87787ccc1e4"
   },
   "cache": {
     "hit": false,
-    "fingerprint": "d1e95f03c34867d9"
+    "fingerprint": "5af965634bce88b7"
   },
   "stageSync": {
-    "attempted": false,
-    "ok": false
+    "attempted": true,
+    "ok": true
   }
 }

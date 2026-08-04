@@ -5,9 +5,10 @@ import { existsSync, lstatSync, mkdirSync, readFileSync, readlinkSync, renameSyn
 import { homedir } from 'node:os'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { resolveRoots } from './lib/roots.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
-const repoRoot = resolve(scriptDir, '../../../../..')
+const { consumerRoot: repoRoot } = resolveRoots()
 const home = homedir()
 const sharedRoot = join(home, '.ai-rules')
 const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
@@ -125,7 +126,7 @@ function selfTest() {
   assert.equal(protocol.includes('docs-tdd.mjs context'), true)
   assert.equal(protocol.includes('docs-tdd.mjs changed'), true)
   assert.equal(protocol.includes('docs-tdd.mjs gate'), true)
-  assert.equal(resolve(scriptDir, '../../../../..'), repoRoot)
+  assert.equal(typeof repoRoot === 'string' && repoRoot.length > 0, true)
   console.log('install-local-agent-rules self-test passed.')
 }
 

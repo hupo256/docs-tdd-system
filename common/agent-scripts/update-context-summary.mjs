@@ -4,10 +4,10 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { resolveRoots } from './lib/roots.mjs'
 
 const scriptPath = fileURLToPath(import.meta.url)
-const repoRoot = resolve(dirname(scriptPath), '../../../../..')
-const docsRoot = join(repoRoot, 'apps/web/docs_tdd')
+const { docsSystemRoot: docsRoot, consumerRoot: repoRoot } = resolveRoots()
 const args = process.argv.slice(2)
 const projectId = args[0]
 const write = args.includes('--write')

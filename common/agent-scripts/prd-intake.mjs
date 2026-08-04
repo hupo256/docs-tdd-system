@@ -5,10 +5,10 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import assert from 'node:assert/strict'
+import { resolveRoots } from './lib/roots.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
-const repoRoot = resolve(scriptDir, '../../../../..')
-const docsRoot = join(repoRoot, 'apps/web/docs_tdd')
+const { docsSystemRoot: docsRoot, consumerRoot: repoRoot } = resolveRoots()
 const args = process.argv.slice(2)
 
 function hash(text) {

@@ -22,9 +22,10 @@ import { existsSync, lstatSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
+import { resolveRoots } from './lib/roots.mjs'
 
 const scriptPath = fileURLToPath(import.meta.url)
-const repoRoot = resolve(dirname(scriptPath), '../../../../..')
+const { consumerRoot: repoRoot } = resolveRoots()
 const parentDir = resolve(repoRoot, '..')
 const projectId = process.argv[2]
 const dryRun = process.argv.includes('--dry-run')

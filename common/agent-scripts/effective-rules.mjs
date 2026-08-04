@@ -7,32 +7,33 @@ import { homedir } from 'node:os'
 import { dirname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
+import { resolveRoots } from './lib/roots.mjs'
 
-const scriptDir = dirname(fileURLToPath(import.meta.url))
-const repoRoot = resolve(scriptDir, '../../../../..')
-const commonDir = resolve(scriptDir, '..')
+const { docsSystemRoot, consumerRoot: repoRoot, config } = resolveRoots()
+const commonDir = join(docsSystemRoot, 'common')
 const manifestFile = join(commonDir, 'effective-rules.json')
 const home = homedir()
 const args = process.argv.slice(2)
 const json = args.includes('--json')
 
+const g = config.globalAdapters
 const sources = {
   l1: [
-    join(home, '.ai-rules/AGENT.md'),
-    join(home, '.ai-rules/skills/coding-quality/SKILL.md'),
-    join(home, '.ai-rules/skills/figma-read/SKILL.md'),
+    join(g.aiRules, 'AGENT.md'),
+    join(g.aiRules, 'skills/coding-quality/SKILL.md'),
+    join(g.aiRules, 'skills/figma-read/SKILL.md'),
   ],
   adapters: [
-    join(home, '.codex/AGENTS.md'),
-    join(home, '.claude/CLAUDE.md'),
-    join(home, '.cursor/rules/fameex-local-governance.mdc'),
-    join(home, '.claude/settings.json'),
+    join(g.codex, 'AGENTS.md'),
+    join(g.claude, 'CLAUDE.md'),
+    g.cursorLocalGovernance,
+    join(g.claude, 'settings.json'),
   ],
   skillEntries: [
-    join(home, '.codex/skills/coding-quality'),
-    join(home, '.claude/skills/coding-quality'),
-    join(home, '.codex/skills/figma-read'),
-    join(home, '.claude/skills/figma-read'),
+    join(g.codex, 'skills/coding-quality'),
+    join(g.claude, 'skills/coding-quality'),
+    join(g.codex, 'skills/figma-read'),
+    join(g.claude, 'skills/figma-read'),
   ],
 }
 
@@ -60,7 +61,8 @@ function label(file) {
 }
 
 function collectL2Files() {
-  return [join(repoRoot, 'AGENTS.md'), join(repoRoot, 'CLAUDE.md'), ...walkFiles(join(repoRoot, '.cursor/rules'))]
+  const s = config.ruleSurfaces
+  return [...s.agents.map((f) => join(repoRoot, f)), ...s.claude.map((f) => join(repoRoot, f)), ...walkFiles(join(repoRoot, s.cursorRulesDir))]
     .filter((file) => existsSync(file) && (file.endsWith('.md') || file.endsWith('.mdc')))
     .sort((a, b) => label(a).localeCompare(label(b)))
 }
@@ -189,9 +191,9 @@ function doctor() {
 
   const release = checkRelease()
   add('EFFECTIVE-RELEASE', release.fresh, 'error', `effective rules release is ${release.status}`, label(manifestFile))
-  const ignored = spawnSync('git', ['check-ignore', '-q', 'apps/web/docs_tdd'], { cwd: repoRoot })
-  add('LOCAL-ISOLATION', ignored.status === 0, 'error', `docs_tdd ${ignored.status === 0 ? 'is locally ignored' : 'is not ignored'}`, 'apps/web/docs_tdd')
-  const protectedPaths = ['AGENTS.md', 'CLAUDE.md', '.cursor', '.claude', '.husky', 'package.json']
+  const ignored = spawnSync('git', ['check-ignore', '-q', config.docsMountPath], { cwd: repoRoot })
+  add('LOCAL-ISOLATION', ignored.status === 0, 'error', `docs_tdd ${ignored.status === 0 ? 'is locally ignored' : 'is not ignored'}`, config.docsMountPath)
+  const protectedPaths = config.protectedRuleSurfaces
   const trackedChanges = spawnSync('git', ['status', '--short', '--', ...protectedPaths], { cwd: repoRoot, encoding: 'utf8' }).stdout.trim()
   add('TRACKED-RULE-ISOLATION', !trackedChanges, 'error', trackedChanges ? `tracked rule surfaces have local changes: ${trackedChanges.replace(/\n/g, '; ')}` : 'tracked rule surfaces are unchanged', repoRoot)
 

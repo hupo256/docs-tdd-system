@@ -3,10 +3,10 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, isAbsolute, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { resolveRoots } from './lib/roots.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
-const repoRoot = resolve(scriptDir, '../../../../..')
-const docsRoot = join(repoRoot, 'apps/web/docs_tdd')
+const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, consumerWorktree } = resolveRoots()
 const projectId = process.argv[2]
 const json = process.argv.includes('--json')
 
@@ -28,7 +28,7 @@ function read(file) {
 }
 
 function resolveSourceRoot(projectDir, sourceRoot) {
-  if (!sourceRoot) return repoRoot
+  if (!sourceRoot) return consumerWorktree || repoRoot
   if (isAbsolute(sourceRoot)) return sourceRoot
   return resolve(projectDir, sourceRoot)
 }

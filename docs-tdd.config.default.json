@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "appSubpath": "apps/web",
+  "docsMountPath": "apps/web/docs_tdd",
+  "baseRef": "origin/online",
+  "projectIdPattern": "PR-\\d{5}",
+  "ruleSurfaces": {
+    "agents": ["AGENTS.md"],
+    "claude": ["CLAUDE.md"],
+    "cursorRulesDir": ".cursor/rules"
+  },
+  "protectedRuleSurfaces": ["AGENTS.md", "CLAUDE.md", ".cursor", ".claude", ".husky", "package.json"],
+  "globalAdapters": {
+    "aiRules": "~/.ai-rules",
+    "codex": "~/.codex",
+    "claude": "~/.claude",
+    "cursorLocalGovernance": "~/.cursor/rules/fameex-local-governance.mdc"
+  },
+  "typecheckRoots": ["apps/web", "apps/admin"],
+  "moduleImportAliases": ["@fameex/ui"],
+  "larkOutputDir": "apps/web/docs_tdd/${projectId}/inbox/lark-sync"
+}

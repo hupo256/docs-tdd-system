@@ -4,10 +4,10 @@ import { existsSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { resolveRoots } from './lib/roots.mjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
-const repoRoot = path.resolve(scriptDir, '../../../../..');
-const docsRoot = path.join(repoRoot, 'apps/web/docs_tdd');
+const { docsSystemRoot: docsRoot, consumerRoot: repoRoot } = resolveRoots();
 
 const args = process.argv.slice(2);
 const projectId = args[0];

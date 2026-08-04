@@ -10,10 +10,10 @@ import { spawnSync } from 'node:child_process'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { codeFingerprint } from './lib/fingerprint.mjs'
+import { resolveRoots } from './lib/roots.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
-const repoRoot = resolve(scriptDir, '../../../../..')
-const docsRoot = join(repoRoot, 'apps/web/docs_tdd')
+const { docsSystemRoot: docsRoot, consumerRoot: repoRoot } = resolveRoots()
 const ledgerFile = join(docsRoot, 'common/warn-ledger.json')
 
 // 计划晋级的 warn-first 规则（与 rule-ids-and-gates.md §2.1 台账一致）。

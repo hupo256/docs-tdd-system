@@ -12,11 +12,11 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { resolveRoots } from './lib/roots.mjs'
 
 const scriptPath = fileURLToPath(import.meta.url)
 const scriptDir = dirname(scriptPath)
-const repoRoot = resolve(scriptDir, '../../../../..')
-const docsRoot = join(repoRoot, 'apps/web/docs_tdd')
+const { docsSystemRoot: docsRoot, consumerRoot: repoRoot } = resolveRoots()
 const callerCwd = process.cwd()
 const args = process.argv.slice(2)
 const projectId = args[0]

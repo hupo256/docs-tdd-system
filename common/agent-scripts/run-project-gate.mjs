@@ -9,11 +9,11 @@ import { fileURLToPath } from 'node:url'
 import { tmpdir } from 'node:os'
 import { codeFingerprint } from './lib/fingerprint.mjs'
 import { recordFindings, loadLedger, saveLedger } from './warn-ledger.mjs'
+import { resolveRoots } from './lib/roots.mjs'
 
 const scriptPath = fileURLToPath(import.meta.url)
 const scriptDir = dirname(scriptPath)
-const repoRoot = resolve(scriptDir, '../../../../..')
-const docsRoot = join(repoRoot, 'apps/web/docs_tdd')
+const { docsSystemRoot: docsRoot, consumerRoot: repoRoot } = resolveRoots()
 // 子 gate 的 GIT-G4 检查要认「agent 正在编码的 worktree 分支」，靠 verify-project-gate 内部的 process.cwd()。
 // 但本聚合器经 symlink 解析出的 repoRoot 恒指向主仓（常停在 dev），若用它当子进程 cwd，会把子脚本
 // 的 worktree 定位拽回主仓、误判 GIT-G4-001。所以 spawn 子 gate 时传调用者

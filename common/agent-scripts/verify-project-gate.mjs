@@ -6,10 +6,10 @@ import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
 import { blockerChecks } from './lib/blockers.mjs'
 import { codeReviewChecks } from './lib/code-review.mjs'
+import { resolveRoots } from './lib/roots.mjs'
 
 const scriptPath = fileURLToPath(import.meta.url)
-const repoRoot = resolve(dirname(scriptPath), '../../../../..')
-const docsRoot = join(repoRoot, 'apps/web/docs_tdd')
+const { docsSystemRoot: docsRoot, consumerRoot: repoRoot } = resolveRoots()
 
 // GIT-G4 checks the branch/HEAD of the worktree the agent is CODING in. That is process.cwd(),
 // NOT repoRoot: in a feature worktree, docs_tdd is a symlink, so the script path resolves back to
