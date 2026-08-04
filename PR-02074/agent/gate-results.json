@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-04T07:28:47.090Z",
+  "generatedAt": "2026-08-04T07:35:48.173Z",
   "tool": "run-project-gate.mjs",
   "projectId": "PR-02074",
   "gate": "G3",
@@ -32,7 +32,7 @@
       "ruleId": "DOC-STRUCT-001",
       "ok": true,
       "message": "project directory exists: apps/web/docs_tdd/PR-02074",
-      "file": "apps/web/docs_tdd/PR-02074",
+      "file": "../docs_tdd/PR-02074",
       "severity": "error",
       "category": "documentation"
     },
@@ -40,7 +40,7 @@
       "ruleId": "DOC-STRUCT-002",
       "ok": true,
       "message": "required file exists: README.md",
-      "file": "apps/web/docs_tdd/PR-02074/README.md",
+      "file": "../docs_tdd/PR-02074/README.md",
       "severity": "error",
       "category": "documentation"
     },
@@ -48,7 +48,7 @@
       "ruleId": "DOC-STRUCT-003",
       "ok": true,
       "message": "required file exists: product/00-feature-inventory.md",
-      "file": "apps/web/docs_tdd/PR-02074/product/00-feature-inventory.md",
+      "file": "../docs_tdd/PR-02074/product/00-feature-inventory.md",
       "severity": "error",
       "category": "documentation"
     },
@@ -56,7 +56,7 @@
       "ruleId": "DOC-STRUCT-004",
       "ok": true,
       "message": "required file exists: product/01-scope-and-phases.md",
-      "file": "apps/web/docs_tdd/PR-02074/product/01-scope-and-phases.md",
+      "file": "../docs_tdd/PR-02074/product/01-scope-and-phases.md",
       "severity": "error",
       "category": "documentation"
     },
@@ -64,7 +64,7 @@
       "ruleId": "DOC-STRUCT-005",
       "ok": true,
       "message": "required file exists: product/02-technical-design.md",
-      "file": "apps/web/docs_tdd/PR-02074/product/02-technical-design.md",
+      "file": "../docs_tdd/PR-02074/product/02-technical-design.md",
       "severity": "error",
       "category": "documentation"
     },
@@ -72,7 +72,7 @@
       "ruleId": "DOC-STRUCT-006",
       "ok": true,
       "message": "required file exists: product/03-api-contract.md",
-      "file": "apps/web/docs_tdd/PR-02074/product/03-api-contract.md",
+      "file": "../docs_tdd/PR-02074/product/03-api-contract.md",
       "severity": "error",
       "category": "documentation"
     },
@@ -80,7 +80,7 @@
       "ruleId": "DOC-STRUCT-007",
       "ok": true,
       "message": "required file exists: product/04-frontend-tasks.md",
-      "file": "apps/web/docs_tdd/PR-02074/product/04-frontend-tasks.md",
+      "file": "../docs_tdd/PR-02074/product/04-frontend-tasks.md",
       "severity": "error",
       "category": "documentation"
     },
@@ -88,7 +88,7 @@
       "ruleId": "DOC-STRUCT-008",
       "ok": true,
       "message": "required file exists: product/05-ui-and-interaction.md",
-      "file": "apps/web/docs_tdd/PR-02074/product/05-ui-and-interaction.md",
+      "file": "../docs_tdd/PR-02074/product/05-ui-and-interaction.md",
       "severity": "error",
       "category": "documentation"
     },
@@ -96,7 +96,7 @@
       "ruleId": "DOC-STRUCT-009",
       "ok": true,
       "message": "required file exists: product/06-collaboration.md",
-      "file": "apps/web/docs_tdd/PR-02074/product/06-collaboration.md",
+      "file": "../docs_tdd/PR-02074/product/06-collaboration.md",
       "severity": "error",
       "category": "documentation"
     },
@@ -104,7 +104,7 @@
       "ruleId": "DOC-STRUCT-010",
       "ok": true,
       "message": "required file exists: product/07-figma-spec.md",
-      "file": "apps/web/docs_tdd/PR-02074/product/07-figma-spec.md",
+      "file": "../docs_tdd/PR-02074/product/07-figma-spec.md",
       "severity": "error",
       "category": "documentation"
     },
@@ -112,7 +112,7 @@
       "ruleId": "DOC-STRUCT-011",
       "ok": true,
       "message": "required file exists: engineering/development-rules.md",
-      "file": "apps/web/docs_tdd/PR-02074/engineering/development-rules.md",
+      "file": "../docs_tdd/PR-02074/engineering/development-rules.md",
       "severity": "error",
       "category": "documentation"
     },
@@ -120,7 +120,7 @@
       "ruleId": "DOC-STRUCT-012",
       "ok": true,
       "message": "required file exists: agent/README.md",
-      "file": "apps/web/docs_tdd/PR-02074/agent/README.md",
+      "file": "../docs_tdd/PR-02074/agent/README.md",
       "severity": "error",
       "category": "documentation"
     },
@@ -128,7 +128,7 @@
       "ruleId": "DOC-G0-001",
       "ok": true,
       "message": "feature inventory records PRD source",
-      "file": "apps/web/docs_tdd/PR-02074/product/00-feature-inventory.md",
+      "file": "../docs_tdd/PR-02074/product/00-feature-inventory.md",
       "severity": "error",
       "category": "documentation"
     },
@@ -136,7 +136,7 @@
       "ruleId": "DOC-G0-002",
       "ok": true,
       "message": "feature inventory has feature list section",
-      "file": "apps/web/docs_tdd/PR-02074/product/00-feature-inventory.md",
+      "file": "../docs_tdd/PR-02074/product/00-feature-inventory.md",
       "severity": "error",
       "category": "documentation"
     },
@@ -144,7 +144,7 @@
       "ruleId": "DOC-G0-003",
       "ok": true,
       "message": "feature inventory has acceptance mapping section",
-      "file": "apps/web/docs_tdd/PR-02074/product/00-feature-inventory.md",
+      "file": "../docs_tdd/PR-02074/product/00-feature-inventory.md",
       "severity": "error",
       "category": "documentation"
     },
@@ -152,7 +152,7 @@
       "ruleId": "DOC-G0-004",
       "ok": true,
       "message": "feature inventory has unreadable PRD content section",
-      "file": "apps/web/docs_tdd/PR-02074/product/00-feature-inventory.md",
+      "file": "../docs_tdd/PR-02074/product/00-feature-inventory.md",
       "severity": "warn",
       "category": "documentation"
     },
@@ -160,7 +160,7 @@
       "ruleId": "DOC-G2-001",
       "ok": true,
       "message": "feature inventory has no blocking placeholders",
-      "file": "apps/web/docs_tdd/PR-02074/product/00-feature-inventory.md",
+      "file": "../docs_tdd/PR-02074/product/00-feature-inventory.md",
       "severity": "error",
       "category": "documentation"
     },
@@ -168,7 +168,7 @@
       "ruleId": "DOC-G2-002",
       "ok": true,
       "message": "G2 confirmer and date are filled",
-      "file": "apps/web/docs_tdd/PR-02074/product/00-feature-inventory.md",
+      "file": "../docs_tdd/PR-02074/product/00-feature-inventory.md",
       "severity": "error",
       "category": "documentation"
     },
@@ -176,7 +176,7 @@
       "ruleId": "DOC-G2-003",
       "ok": true,
       "message": "feature list has at least one feature row",
-      "file": "apps/web/docs_tdd/PR-02074/product/00-feature-inventory.md",
+      "file": "../docs_tdd/PR-02074/product/00-feature-inventory.md",
       "severity": "error",
       "category": "documentation"
     },
@@ -184,7 +184,7 @@
       "ruleId": "DOC-G2-004",
       "ok": true,
       "message": "each feature row has 本期=做/不做/延期",
-      "file": "apps/web/docs_tdd/PR-02074/product/00-feature-inventory.md",
+      "file": "../docs_tdd/PR-02074/product/00-feature-inventory.md",
       "severity": "error",
       "category": "documentation"
     },
@@ -192,7 +192,7 @@
       "ruleId": "DOC-G2-005",
       "ok": true,
       "message": "all 本期=做 feature IDs appear in frontend tasks",
-      "file": "apps/web/docs_tdd/PR-02074/product/04-frontend-tasks.md",
+      "file": "../docs_tdd/PR-02074/product/04-frontend-tasks.md",
       "severity": "error",
       "category": "documentation"
     },
@@ -200,7 +200,7 @@
       "ruleId": "DOC-G3-001",
       "ok": true,
       "message": "G3 API contract locks mock route to MSW route B",
-      "file": "apps/web/docs_tdd/PR-02074/product/03-api-contract.md",
+      "file": "../docs_tdd/PR-02074/product/03-api-contract.md",
       "severity": "error",
       "category": "documentation"
     },
@@ -208,7 +208,7 @@
       "ruleId": "DOC-G3-002",
       "ok": true,
       "message": "G3 API contract contains MSW checklist / landing preconditions",
-      "file": "apps/web/docs_tdd/PR-02074/product/03-api-contract.md",
+      "file": "../docs_tdd/PR-02074/product/03-api-contract.md",
       "severity": "error",
       "category": "documentation"
     },
@@ -216,7 +216,7 @@
       "ruleId": "DOC-G3-003",
       "ok": true,
       "message": "G3 MSW checklist covers normal/empty/error/unauthorized/edge scenarios",
-      "file": "apps/web/docs_tdd/PR-02074/product/03-api-contract.md",
+      "file": "../docs_tdd/PR-02074/product/03-api-contract.md",
       "severity": "error",
       "category": "documentation"
     },
@@ -224,7 +224,7 @@
       "ruleId": "DOC-G3-004",
       "ok": true,
       "message": "G3 MSW route records schema contract test requirement",
-      "file": "apps/web/docs_tdd/PR-02074/product/03-api-contract.md",
+      "file": "../docs_tdd/PR-02074/product/03-api-contract.md",
       "severity": "error",
       "category": "documentation"
     },
@@ -232,7 +232,7 @@
       "ruleId": "DOC-G3-005",
       "ok": true,
       "message": "G3 MSW route records dev-only worker registration",
-      "file": "apps/web/docs_tdd/PR-02074/product/03-api-contract.md",
+      "file": "../docs_tdd/PR-02074/product/03-api-contract.md",
       "severity": "error",
       "category": "documentation"
     },
@@ -240,7 +240,7 @@
       "ruleId": "DOC-G3-006",
       "ok": true,
       "message": "G3 frontend tasks include the MSW fallback task",
-      "file": "apps/web/docs_tdd/PR-02074/product/04-frontend-tasks.md",
+      "file": "../docs_tdd/PR-02074/product/04-frontend-tasks.md",
       "severity": "error",
       "category": "documentation"
     },
@@ -248,7 +248,7 @@
       "ruleId": "DOC-G3-007",
       "ok": true,
       "message": "G3 collaboration records the MSW fallback decision / checklist",
-      "file": "apps/web/docs_tdd/PR-02074/product/06-collaboration.md",
+      "file": "../docs_tdd/PR-02074/product/06-collaboration.md",
       "severity": "error",
       "category": "documentation"
     },
@@ -256,7 +256,7 @@
       "ruleId": "DOC-G3-IMPL-001",
       "ok": true,
       "message": "MSW manifest is valid JSON",
-      "file": "apps/web/docs_tdd/PR-02074/agent/msw-manifest.json",
+      "file": "../docs_tdd/PR-02074/agent/msw-manifest.json",
       "severity": "error",
       "category": "implementation"
     },
@@ -264,7 +264,7 @@
       "ruleId": "DOC-G3-IMPL-002",
       "ok": true,
       "message": "active MSW assets exist",
-      "file": "apps/web/docs_tdd/PR-02074/agent/msw-manifest.json",
+      "file": "../docs_tdd/PR-02074/agent/msw-manifest.json",
       "severity": "error",
       "category": "implementation"
     },
@@ -272,7 +272,7 @@
       "ruleId": "DOC-G3-IMPL-003",
       "ok": true,
       "message": "handler export is registered and provider mounts useMockWorker",
-      "file": "apps/web/docs_tdd/PR-02074/agent/msw-manifest.json",
+      "file": "../docs_tdd/PR-02074/agent/msw-manifest.json",
       "severity": "error",
       "category": "implementation"
     },
@@ -280,7 +280,7 @@
       "ruleId": "DOC-G3-IMPL-004",
       "ok": true,
       "message": "endpoint scenarios are structured and lifecycle-complete",
-      "file": "apps/web/docs_tdd/PR-02074/agent/msw-manifest.json",
+      "file": "../docs_tdd/PR-02074/agent/msw-manifest.json",
       "severity": "error",
       "category": "implementation"
     },
@@ -288,7 +288,7 @@
       "ruleId": "DOC-G3-IMPL-005",
       "ok": true,
       "message": "assumption ledger is readable",
-      "file": "apps/web/docs_tdd/PR-02074/agent/assumptions.json",
+      "file": "../docs_tdd/PR-02074/agent/assumptions.json",
       "severity": "error",
       "category": "implementation"
     },
@@ -296,7 +296,7 @@
       "ruleId": "DOC-G3-IMPL-006",
       "ok": true,
       "message": "no blocking assumptions remain for lifecycle=mock-active",
-      "file": "apps/web/docs_tdd/PR-02074/agent/assumptions.json",
+      "file": "../docs_tdd/PR-02074/agent/assumptions.json",
       "severity": "error",
       "category": "implementation"
     }
@@ -306,17 +306,17 @@
       "label": "verify-project-gate PR-02074 G3",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-08-04T07:28:47.016Z",
-      "finishedAt": "2026-08-04T07:28:47.090Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-08-04T07-28-47-016Z-verify-project-gate-g3.log"
+      "startedAt": "2026-08-04T07:35:48.089Z",
+      "finishedAt": "2026-08-04T07:35:48.172Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-08-04T07-35-48-089Z-verify-project-gate-g3.log"
     },
     {
       "label": "set-project-stage PR-02074 G3",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-08-04T07:28:47.350Z",
-      "finishedAt": "2026-08-04T07:28:47.474Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-08-04T07-28-47-350Z-set-project-stage.log"
+      "startedAt": "2026-08-04T07:35:48.435Z",
+      "finishedAt": "2026-08-04T07:35:48.565Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-08-04T07-35-48-435Z-set-project-stage.log"
     }
   ],
   "codeRules": {
@@ -334,7 +334,7 @@
     "baselineFile": null
   },
   "source": {
-    "gateCommand": "/Users/aven/.nvm/versions/node/v24.7.0/bin/node /Users/aven/github/fameex-web/apps/web/docs_tdd/common/agent-scripts/verify-project-gate.mjs PR-02074 G3 --json",
+    "gateCommand": "/Users/aven/.nvm/versions/node/v24.7.0/bin/node /Users/aven/github/docs_tdd/common/agent-scripts/verify-project-gate.mjs PR-02074 G3 --json",
     "parseError": null,
     "codeRulesCommand": null,
     "codeRulesParseError": null,
@@ -353,7 +353,7 @@
   },
   "cache": {
     "hit": false,
-    "fingerprint": "5af965634bce88b7"
+    "fingerprint": "12fa8d69a309863c"
   },
   "stageSync": {
     "attempted": true,
