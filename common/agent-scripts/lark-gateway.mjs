@@ -104,27 +104,35 @@ const createTaskStore = ({ tasksDir }) => {
 // 发群消息（走 lark-cli im，bot 身份；无需 webhook secret）
 // ---------------------------------------------------------------------------
 
-const sendChatMessage = async ({ chatId, text, logPrefix }) => {
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+// 发群消息，带重试（网络/DNS 抖动时不丢消息）。idempotencyKey 让重试不会重复发（Lark 侧去重）。
+const sendChatMessage = async ({ chatId, text, logPrefix, idempotencyKey, retries = 3 }) => {
   if (!chatId) {
     console.warn(`[lark-gateway] ${logPrefix}: skipped, missing chatId`)
     return { ok: false, reason: 'missing chatId' }
   }
-  const result = await runLarkCli([
-    'im',
-    '+messages-send',
-    '--chat-id',
-    chatId,
-    '--msg-type',
-    'text',
-    '--text',
-    text,
-  ])
-  if (result.code !== 0) {
-    console.error(`[lark-gateway] ${logPrefix} send failed: ${(result.stderr || result.stdout).slice(0, 200)}`)
-    return { ok: false, reason: result.stderr || result.stdout }
+  const args = ['im', '+messages-send', '--chat-id', chatId, '--msg-type', 'text', '--text', text]
+  if (idempotencyKey) {
+    args.push('--idempotency-key', String(idempotencyKey).slice(0, 50))
   }
-  console.log(`[lark-gateway] ${logPrefix} sent to ${chatId}`)
-  return { ok: true }
+
+  let reason = ''
+  for (let attempt = 1; attempt <= retries; attempt += 1) {
+    const result = await runLarkCli(args)
+    const failed = result.code !== 0 || /"ok"\s*:\s*false/.test(result.stdout)
+    if (!failed) {
+      console.log(`[lark-gateway] ${logPrefix} sent to ${chatId}${attempt > 1 ? ` (attempt ${attempt})` : ''}`)
+      return { ok: true }
+    }
+    reason = (result.stderr || result.stdout || '').slice(0, 200)
+    console.error(`[lark-gateway] ${logPrefix} send attempt ${attempt}/${retries} failed: ${reason}`)
+    if (attempt < retries) {
+      await sleep(attempt * 1500)
+    }
+  }
+  console.error(`[lark-gateway] ${logPrefix} send gave up after ${retries} attempts`)
+  return { ok: false, reason }
 }
 
 const buildQueuedMessage = ({ config, task }) =>
@@ -332,7 +340,7 @@ const ingestLarkEvent = async ({ raw, config, store }) => {
   store.upsert(task)
   console.log(`[lark-gateway] queued task ${task.id}: ${task.summary}`)
 
-  await sendChatMessage({ chatId: task.chatId, text: buildQueuedMessage({ config, task }), logPrefix: 'queued receipt' })
+  await sendChatMessage({ chatId: task.chatId, text: buildQueuedMessage({ config, task }), logPrefix: 'queued receipt', idempotencyKey: `${task.id}-queued` })
   appendNotificationLog({
     config,
     row: `| ${formatDisplayTime()} | Lark Job | 进行中 | 收到群任务：${task.summary} | real | success |`,
@@ -343,29 +351,86 @@ const ingestLarkEvent = async ({ raw, config, store }) => {
 // 启动 lark-cli 长连接消费事件（保持 stdin 打开常驻）
 // ---------------------------------------------------------------------------
 
+// 长连接自愈：lark-cli 事件消费子进程掉线（WS 抖动/服务端踢连接/进程崩溃）后，
+// 若不重连就静默收不到 @。这里用退避重连 + 稳定运行后重置退避 + 连续失败发群告警。
+const RECONNECT_BACKOFFS_MS = [1000, 2000, 5000, 10000, 30000, 60000]
+const STABLE_UPTIME_MS = 60000 // 连接存活超过此时长视为已稳定，下次掉线从最小退避重来
+const ALERT_AFTER_RESTARTS = 3 // 连续重连达到此次数仍未稳定 -> 发一次群告警
+
 const startEventConsumer = ({ config, store }) => {
-  const child = spawn(larkCliBin, ['event', 'consume', 'im.message.receive_v1'], {
-    stdio: ['pipe', 'pipe', 'pipe'],
-  })
-  let buffer = ''
-  child.stdout.on('data', (chunk) => {
-    buffer += chunk.toString()
-    let index
-    while ((index = buffer.indexOf('\n')) >= 0) {
-      const line = buffer.slice(0, index).trim()
-      buffer = buffer.slice(index + 1)
-      if (!line) continue
-      const raw = parseLine(line)
-      if (raw) {
-        ingestLarkEvent({ raw, config, store }).catch((error) =>
-          console.error('[lark-gateway] ingest error:', error.message),
+  const state = { child: null, stopped: false, restarts: 0, alerted: false }
+
+  const alertConsumerDown = async (attempt) => {
+    const chatId = config.bugTable?.chatId || config.allowedChatIds?.[0]
+    await sendChatMessage({
+      chatId,
+      text: `[${config.title || config.project}] ⚠️ Lark 长连接已连续 ${attempt} 次重连仍未恢复，可能暂时收不到群内 @；请检查网络或 lark-cli 登录态。\n${formatDisplayTime()}`,
+      logPrefix: 'consumer-down alert',
+      idempotencyKey: `consumer-down-${attempt}`,
+    })
+  }
+
+  const spawnOnce = () => {
+    const child = spawn(larkCliBin, ['event', 'consume', 'im.message.receive_v1'], {
+      stdio: ['pipe', 'pipe', 'pipe'],
+    })
+    state.child = child
+    const spawnedAt = Date.now()
+    let buffer = ''
+
+    child.stdout.on('data', (chunk) => {
+      buffer += chunk.toString()
+      let index
+      while ((index = buffer.indexOf('\n')) >= 0) {
+        const line = buffer.slice(0, index).trim()
+        buffer = buffer.slice(index + 1)
+        if (!line) continue
+        const raw = parseLine(line)
+        if (raw) {
+          ingestLarkEvent({ raw, config, store }).catch((error) =>
+            console.error('[lark-gateway] ingest error:', error.message),
+          )
+        }
+      }
+    })
+    child.stderr.on('data', (chunk) => process.stderr.write(`[lark-cli consume] ${chunk}`))
+    child.on('error', (error) => console.error('[lark-gateway] event consumer spawn error:', error.message))
+    child.on('exit', (code) => {
+      state.child = null
+      if (state.stopped) return
+
+      // 连接曾稳定存活足够久 -> 视为一次独立掉线，重置退避与告警
+      if (Date.now() - spawnedAt >= STABLE_UPTIME_MS) {
+        state.restarts = 0
+        state.alerted = false
+      }
+
+      const delay = RECONNECT_BACKOFFS_MS[Math.min(state.restarts, RECONNECT_BACKOFFS_MS.length - 1)]
+      state.restarts += 1
+      console.error(
+        `[lark-gateway] event consumer exited (code ${code}); reconnecting in ${delay}ms (attempt ${state.restarts})`,
+      )
+      if (state.restarts >= ALERT_AFTER_RESTARTS && !state.alerted) {
+        state.alerted = true
+        alertConsumerDown(state.restarts).catch((error) =>
+          console.error('[lark-gateway] consumer-down alert failed:', error.message),
         )
       }
-    }
-  })
-  child.stderr.on('data', (chunk) => process.stderr.write(`[lark-cli consume] ${chunk}`))
-  child.on('exit', (code) => console.error(`[lark-gateway] event consumer exited (code ${code}); restart gateway to resume`))
-  return child
+      setTimeout(() => {
+        if (!state.stopped) spawnOnce()
+      }, delay)
+    })
+  }
+
+  spawnOnce()
+
+  return {
+    isAlive: () => state.child != null && state.child.exitCode === null,
+    stop: () => {
+      state.stopped = true
+      state.child?.kill('SIGTERM')
+    },
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -407,6 +472,7 @@ const handleStatusUpdate = async ({ config, store, id, status, result }) => {
       chatId: task.chatId,
       text: buildResultMessage({ config, task, status, result }),
       logPrefix: 'result receipt',
+      idempotencyKey: `${task.id}-${status}`,
     })
     appendNotificationLog({
       config,
@@ -429,7 +495,7 @@ export async function runLarkGateway({ configPath, port = defaultPort }) {
 
     try {
       if (req.method === 'GET' && pathname === '/lark/health') {
-        return sendJson(res, 200, { ok: true, consumer: consumer.exitCode === null })
+        return sendJson(res, 200, { ok: true, consumer: consumer.isAlive() })
       }
       if (req.method === 'GET' && pathname === '/lark/tasks') {
         return sendJson(res, 200, { tasks: store.list() })
@@ -455,7 +521,7 @@ export async function runLarkGateway({ configPath, port = defaultPort }) {
           status: 'queued',
           createdAt: new Date().toISOString(),
         })
-        await sendChatMessage({ chatId: task.chatId, text: buildQueuedMessage({ config, task }), logPrefix: 'queued receipt' })
+        await sendChatMessage({ chatId: task.chatId, text: buildQueuedMessage({ config, task }), logPrefix: 'queued receipt', idempotencyKey: `${task.id}-queued` })
         return sendJson(res, 200, { task })
       }
       const statusMatch = pathname.match(/^\/lark\/tasks\/([^/]+)\/status$/)
@@ -482,7 +548,7 @@ export async function runLarkGateway({ configPath, port = defaultPort }) {
   })
 
   const shutdown = () => {
-    consumer.kill('SIGTERM')
+    consumer.stop()
     server.close()
     process.exit(0)
   }
