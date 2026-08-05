@@ -10,6 +10,14 @@ node_modules/
 .env
 .env.*
 
+# Lark bot per-project local secret configs (webhookUrl/secret/appToken/chat_id) — machine-local only
+**/agent/scripts/*.json
+
+# Lark bot runtime state — queued group tasks & downloaded group attachments may hold group content
+**/agent/lark-tasks/
+**/agent/lark-attachments/
+**/agent/lark-bugtable-state.json
+
 # installation-specific consumer binding (each checkout/company sets its own;
 # the committed docs-tdd.config.default.json holds the reusable defaults)
 docs-tdd.config.json
