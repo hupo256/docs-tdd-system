@@ -241,3 +241,13 @@ Worker 完成后必须回群，并写入项目通知记录。回群内容固定�
 - 通知记录位置（`agent/notification-log.md`）。
 
 项目级 `agent/scripts/lark-worker.mjs` 必须是薄包装，只调用 `common/agent-scripts/lark-worker.mjs` 并传入项目编号、项目名称和需要读取的项目文档。Gateway 轮询、任务领取、Codex prompt、状态回写、空任务失败处理和兜底完成消息都由公共 Worker 维护；不得在项目目录复制完整 Worker 实现。
+
+## 12. 当前实现：lark-cli 长连接（替代公网 tunnel）
+
+历史上 Gateway 是独立 Koa 服务，靠公网 cloudflared tunnel 收 Lark 事件回调并做 challenge / 验签。当前推荐实现改为 **lark-cli 官方长连接**，`common/agent-scripts/lark-gateway.mjs` 是本地专用 Gateway：
+
+- 事件源：子进程 `lark-cli event consume im.message.receive_v1`（长连接），不再需要公网 tunnel、challenge 端点、手写签名校验。event bus 守护进程实测约 35MB。
+- 对外仍暴露 §5 Worker 依赖的本地 HTTP 契约：`GET /lark/health`、`GET /lark/tasks`、`POST /lark/tasks`（外部投递，如 bug 表轮询器）、`POST /lark/tasks/next`（领取，pending→running）、`POST /lark/tasks/:id/status`（回写 done/failed，触发回群 + bug 表回写）。
+- 发消息、下载图片、读写多维表格统一走 lark-cli 已登录的 bot 身份（keychain）；配置文件里不放 app 级 `appSecret`。图片经 `lark-cli im +messages-resources-download` 落到 `<PROJECT>/agent/lark-attachments/<messageId>/`。
+- 上线前置：Lark 后台开启事件订阅 `im.message.receive_v1` 并授 `im:message.p2p_msg:readonly` + 群消息收发 / `im:resource` / bitable 相关 scope；白名单 `allowedChatIds` / `allowedOpenIds` 与 `botOpenId` 写入项目配置。
+- 相关脚本：接收链路 `common/agent-scripts/lark-gateway.mjs`；bug 多维表格链路 `common/agent-scripts/lark-bugtable-poller.mjs`（`base +record-list` 拉「负责人=我 且 状态=待处理」→ 投递 Gateway 队列 → done 后 `base +record-batch-update` 回写状态）。

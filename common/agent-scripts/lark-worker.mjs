@@ -5,8 +5,21 @@ import { resolveRoots } from './lib/roots.mjs'
 const defaultGatewayUrl = process.env.LARK_GATEWAY_URL || 'http://127.0.0.1:3005'
 const defaultPollMs = Number(process.env.LARK_WORKER_POLL_MS || 5000)
 const defaultCodexTimeoutMs = Number(process.env.LARK_WORKER_CODEX_TIMEOUT_MS || 120000)
+const defaultAiExecutor = process.env.LARK_AI_EXECUTOR || 'codex'
 
 const { consumerRoot: repoRoot } = resolveRoots()
+
+// AI executor 抽象：把 task prompt 交给 claude 或 codex 的 headless 命令。
+// 无人值守场景下 claude 需 --dangerously-skip-permissions，否则只能"描述"、无法真正
+// 改文件/执行 git；代价是 worker 会在 repoCwd 里自主写操作，务必只绑受控 worktree + 白名单群。
+// codex 若启用需自行补其 bypass flag（本机未安装 codex，未验证故不预置）。
+const aiExecutorCommands = {
+  codex: (prompt) => ({ cmd: 'codex', args: ['exec', prompt] }),
+  claude: (prompt) => ({ cmd: 'claude', args: ['-p', '--dangerously-skip-permissions', prompt] }),
+}
+
+const resolveAiExecutor = (workerConfig, task) =>
+  task.aiExecutor || workerConfig.aiExecutor || defaultAiExecutor
 
 function printHelp() {
   console.log(`usage: lark-worker.mjs [--once] [--help]
@@ -169,12 +182,21 @@ const runProjectDocSync = async ({ projectId }) => {
   return { skipped: false }
 }
 
-const runCodex = async (workerConfig, task) => {
+const runAI = async (workerConfig, task) => {
   const { spawn } = await import('node:child_process')
+  const executor = resolveAiExecutor(workerConfig, task)
+  const buildCommand = aiExecutorCommands[executor]
+
+  if (!buildCommand) {
+    throw new Error(`unknown AI executor: ${executor} (expected claude or codex)`)
+  }
+
+  const { cmd, args } = buildCommand(buildCodexPrompt(workerConfig, task))
+  const cwd = workerConfig.repoCwd || repoRoot
 
   await new Promise((resolve, reject) => {
-    const child = spawn('codex', ['exec', buildCodexPrompt(workerConfig, task)], {
-      cwd: '/Users/aven/github/fameex-web',
+    const child = spawn(cmd, args, {
+      cwd,
       stdio: 'inherit',
     })
     let timedOut = false
@@ -198,7 +220,7 @@ const runCodex = async (workerConfig, task) => {
     child.on('exit', (code) => {
       clearChildTimeout()
       if (timedOut) {
-        reject(new Error(`codex exec timed out after ${defaultCodexTimeoutMs}ms`))
+        reject(new Error(`${executor} exec timed out after ${defaultCodexTimeoutMs}ms`))
         return
       }
 
@@ -207,7 +229,7 @@ const runCodex = async (workerConfig, task) => {
         return
       }
 
-      reject(new Error(`codex exec exited with code ${code}`))
+      reject(new Error(`${executor} exec exited with code ${code}`))
     })
   })
 }
@@ -289,6 +311,8 @@ export async function runLarkWorker({
   projectId,
   projectName,
   projectDocs = [],
+  aiExecutor = defaultAiExecutor,
+  repoCwd,
   publicHealthUrl,
   webHealthUrl,
 }) {
@@ -296,7 +320,7 @@ export async function runLarkWorker({
     throw new Error('runLarkWorker requires projectId and projectName')
   }
 
-  const workerConfig = { projectId, projectName, projectDocs, publicHealthUrl, webHealthUrl }
+  const workerConfig = { projectId, projectName, projectDocs, aiExecutor, repoCwd, publicHealthUrl, webHealthUrl }
   const request = (path, options) => requestJson(gatewayUrl, path, options)
   const updateTask = (taskId, status, result) =>
     request(`/lark/tasks/${encodeURIComponent(taskId)}/status`, {
@@ -346,7 +370,7 @@ export async function runLarkWorker({
         await runProjectDocSync(workerConfig)
       }
 
-      await runCodex(workerConfig, task)
+      await runAI(workerConfig, task)
 
       const latestTask = await getTask(task.id)
       if (latestTask?.status === 'running') {
