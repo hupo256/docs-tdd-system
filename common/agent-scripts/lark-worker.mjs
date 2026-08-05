@@ -4,7 +4,7 @@ import { resolveRoots } from './lib/roots.mjs'
 
 const defaultGatewayUrl = process.env.LARK_GATEWAY_URL || 'http://127.0.0.1:3005'
 const defaultPollMs = Number(process.env.LARK_WORKER_POLL_MS || 5000)
-const defaultCodexTimeoutMs = Number(process.env.LARK_WORKER_CODEX_TIMEOUT_MS || 120000)
+const defaultCodexTimeoutMs = Number(process.env.LARK_WORKER_CODEX_TIMEOUT_MS || 1800000)
 const defaultAiExecutor = process.env.LARK_AI_EXECUTOR || 'codex'
 
 const { consumerRoot: repoRoot } = resolveRoots()
@@ -55,51 +55,8 @@ const requestJson = async (gatewayUrl, path, options = {}) => {
   return response.json()
 }
 
-const checkUrl = async (url, timeoutMs = 8000) => {
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), timeoutMs)
-
-  try {
-    const response = await fetch(url, { signal: controller.signal })
-    return { ok: response.ok, status: response.status }
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
-    return { ok: false, status: null, error: message.slice(0, 120) }
-  } finally {
-    clearTimeout(timeout)
-  }
-}
-
-const formatNow = () => {
-  const formatter = new Intl.DateTimeFormat('zh-CN', {
-    timeZone: 'Asia/Dubai',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  })
-  const parts = Object.fromEntries(formatter.formatToParts(new Date()).map((part) => [part.type, part.value]))
-
-  return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}:${parts.second} +04`
-}
-
-const appendNotificationLog = async ({ projectId, row }) => {
-  const fs = await import('node:fs/promises')
-  const path = await import('node:path')
-  const logPath = path.join(repoRoot, 'apps/web/docs_tdd', projectId, 'agent/notification-log.md')
-  const content = await fs.readFile(logPath, 'utf8')
-  const marker = '\n## 规则'
-  const nextContent = content.includes(marker)
-    ? content.replace(marker, `${row}\n${marker}`)
-    : `${content.trimEnd()}\n${row}\n`
-
-  await fs.writeFile(logPath, nextContent)
-}
-
-const buildCodexPrompt = ({ projectId, projectName, projectDocs }, task) => {
+const buildCodexPrompt = ({ projectId, projectName, projectDocs, repoCwd }, task) => {
+  const workCwd = repoCwd || '/Users/aven/github/fameex-web'
   const docs = [
     'apps/web/docs_tdd/common/lark-bot-gateway.md',
     'apps/web/docs_tdd/common/lark-doc-sync.md',
@@ -128,7 +85,7 @@ const buildCodexPrompt = ({ projectId, projectName, projectDocs }, task) => {
 附件：
 ${attachments}
 
-请在 /Users/aven/github/fameex-web 中完成任务，并遵守以下文档：
+请在 ${workCwd} 中完成任务，并遵守以下文档：
 ${docs.map((item, index) => `${index + 1}. ${item}`).join('\n')}
 
 要求：如果任务是 UI / 样式修复，必须先结合项目编号、项目文档、当前代码和附件图片定位相关页面或组件；图片是输入资源，不得仅因原始文字简短就直接失败。若附件只有 image_key 且没有本地路径，先根据项目上下文和文档尽力定位；只有在确实缺少 Lark 图片读取凭证或无法访问代码时，才回写 failed 并说明具体技术原因。
@@ -240,31 +197,6 @@ const buildFallbackDoneResult = (task) => {
   return `已完成。\n1. 已按群内任务处理：${summary.slice(0, 80)}；\n2. 任务已由 Worker 自动执行并回写群结果。`
 }
 
-const buildStatusTaskResult = (task) => {
-  const summary = (task.text || '').split('\n').find((line) => line.trim())?.trim() || '状态查询'
-
-  return `已完成。\n1. 已收到并处理状态类群任务：${summary.slice(0, 80)}；\n2. Koa Gateway 入队、项目 Worker 领取和状态回写链路已自动完成。`
-}
-
-const buildRuntimeStatusResult = () =>
-  '已完成。\n正在运行中，端口号：4001。访问地址：`http://localhost:4001/zh-CN/campaign/PR-01685`。'
-
-const buildHealthStatusText = (item) => {
-  if (item.ok) {
-    return `${item.label} 正常${item.status ? `（HTTP ${item.status}）` : ''}`
-  }
-
-  return `${item.label} 异常${item.error ? `（${item.error}）` : ''}`
-}
-
-const buildLarkHealthResult = (checks) => {
-  const allOk = checks.every((item) => item.ok)
-  const lines = checks.map((item, index) => `${index + 1}. ${buildHealthStatusText(item)}；`).join('\n')
-  const summary = allOk ? '自动链路稳定，复杂任务已由 Worker 内置健康检查处理完成。' : '自动链路有异常项，已记录到通知日志，需优先处理异常项。'
-
-  return `已完成。\n${lines}\n${checks.length + 1}. ${summary}`
-}
-
 const buildFailureResult = (task, error) => {
   const summary = (task.text || '').split('\n').find((line) => line.trim())?.trim() || '群内任务'
   const message = error instanceof Error ? error.message : String(error)
@@ -272,37 +204,7 @@ const buildFailureResult = (task, error) => {
   return `处理失败。\n1. 任务：${summary.slice(0, 80)}；\n2. 失败类型：Worker 执行异常；下一步请查看本地任务记录。${message ? `错误：${message.slice(0, 160)}` : ''}`
 }
 
-const isStatusTask = (task) => /^\s*(状态|status)\s*[:：]/i.test(task.text || '')
 const isCommandTask = (task) => /^\s*(文档|docs|修复|fix|自测|test|api|qa)\s*[:：]/i.test(task.text || '')
-const isRuntimeStatusTask = (task) => /(跑起来|端口号|端口|启动|服务)/.test(task.text || '')
-const isLarkHealthDocTask = (task) => {
-  const text = task.text || ''
-  return /Lark\s*自动链路|群\s*@|Bot Gateway|公网\s*tunnel/i.test(text) && /通知记录|验证结果|稳定|健康|状态/.test(text)
-}
-
-const handleLarkHealthDocTask = async ({ workerConfig, gatewayUrl, request, updateTask, task }) => {
-  const checks = []
-
-  const gatewayHealth = await request('/lark/health')
-  checks.push({ label: 'Gateway 本地健康接口', ok: gatewayHealth?.ok === true })
-  checks.push({ label: 'Worker 自动领取', ok: true })
-
-  if (workerConfig.publicHealthUrl) {
-    const result = await checkUrl(workerConfig.publicHealthUrl)
-    checks.push({ label: '公网 tunnel 健康接口', ...result })
-  }
-
-  if (workerConfig.webHealthUrl) {
-    const result = await checkUrl(workerConfig.webHealthUrl)
-    checks.push({ label: 'Web 页面访问', ...result })
-  }
-
-  const result = buildLarkHealthResult(checks)
-  const logRow = `| ${formatNow()} | Lark Task | 已完成 | 复杂任务自动链路复验：Gateway、Worker、公网 tunnel、Web 页面由公共 Worker 内置健康检查处理；messageId=${task.messageId}；结果=${checks.map(buildHealthStatusText).join('，')} | local-real-chat-mock | ${checks.every((item) => item.ok) ? 'success' : 'partial'} |`
-
-  await appendNotificationLog({ projectId: workerConfig.projectId, row: logRow })
-  await updateTask(task.id, 'done', result)
-}
 
 export async function runLarkWorker({
   argv = process.argv.slice(2),
@@ -313,14 +215,12 @@ export async function runLarkWorker({
   projectDocs = [],
   aiExecutor = defaultAiExecutor,
   repoCwd,
-  publicHealthUrl,
-  webHealthUrl,
 }) {
   if (!projectId || !projectName) {
     throw new Error('runLarkWorker requires projectId and projectName')
   }
 
-  const workerConfig = { projectId, projectName, projectDocs, aiExecutor, repoCwd, publicHealthUrl, webHealthUrl }
+  const workerConfig = { projectId, projectName, projectDocs, aiExecutor, repoCwd }
   const request = (path, options) => requestJson(gatewayUrl, path, options)
   const updateTask = (taskId, status, result) =>
     request(`/lark/tasks/${encodeURIComponent(taskId)}/status`, {
@@ -351,21 +251,6 @@ export async function runLarkWorker({
 
     console.log(`[lark-worker] claimed ${task.id}: ${task.text}`)
     try {
-      if (isStatusTask(task)) {
-        await updateTask(task.id, 'done', buildStatusTaskResult(task))
-        return true
-      }
-
-      if (!isCommandTask(task) && isRuntimeStatusTask(task)) {
-        await updateTask(task.id, 'done', buildRuntimeStatusResult())
-        return true
-      }
-
-      if (isLarkHealthDocTask(task)) {
-        await handleLarkHealthDocTask({ workerConfig, gatewayUrl, request, updateTask, task })
-        return true
-      }
-
       if (isCommandTask(task)) {
         await runProjectDocSync(workerConfig)
       }
