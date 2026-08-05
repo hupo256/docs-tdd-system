@@ -185,6 +185,14 @@ function doctor() {
     const same = existsSync(codex) && existsSync(claude) && existsSync(canonical) && realpathSync(codex) === realpathSync(canonical) && realpathSync(claude) === realpathSync(canonical)
     add('L1-SINGLE-SOURCE', same, 'error', `${skill} ${same ? 'resolves to one shared source' : 'does not resolve to the shared source'}`, label(canonical))
   }
+  // 顶层 L1 入口也必须同源：codex/claude 的规则入口须 realpath 到 canonical AGENT.md。
+  // 只校验 skill 不够——若有人把 ~/.codex/AGENTS.md 或 ~/.claude/CLAUDE.md 从软链换成分叉的真实文件，
+  // ADAPTER-PROTOCOL 的子串匹配仍可能通过，而三端从此读到不同的 L1 craft。这条把「读同一套」焊死到字节级。
+  const canonicalL1 = sources.l1[0]
+  for (const adapter of [sources.adapters[0], sources.adapters[1]]) {
+    const same = existsSync(adapter) && existsSync(canonicalL1) && realpathSync(adapter) === realpathSync(canonicalL1)
+    add('L1-TOPLEVEL-SINGLE-SOURCE', same, 'error', `${label(adapter)} ${same ? 'resolves to the shared L1 source' : `does not resolve to shared L1 (${label(canonicalL1)}); replace with symlink via install-local-agent-rules.mjs`}`, label(adapter))
+  }
   const settingsText = existsSync(sources.adapters[3]) ? readFileSync(sources.adapters[3], 'utf8') : ''
   const claudeHook = settingsText.includes('PostToolUse') && settingsText.includes('claude-posttooluse-gate.mjs')
   add('CLAUDE-HOOK', claudeHook, 'error', `Claude PostToolUse dispatcher ${claudeHook ? 'is configured' : 'is missing'}`, label(sources.adapters[3]))
@@ -197,14 +205,10 @@ function doctor() {
   const trackedChanges = spawnSync('git', ['status', '--short', '--', ...protectedPaths], { cwd: repoRoot, encoding: 'utf8' }).stdout.trim()
   add('TRACKED-RULE-ISOLATION', !trackedChanges, 'error', trackedChanges ? `tracked rule surfaces have local changes: ${trackedChanges.replace(/\n/g, '; ')}` : 'tracked rule surfaces are unchanged', repoRoot)
 
-  const trackedRefs = [
-    ['CLAUDE.md', '.cursor/rules/react-component-comments.mdc'],
-    ['.cursor/rules/frontend-harness.mdc', '.ai-harness'],
-  ]
-  for (const [owner, target] of trackedRefs) {
-    const exists = existsSync(join(repoRoot, target))
-    add('L2-STALE-REFERENCE', exists, 'warn', `${owner} references ${target}, which ${exists ? 'exists' : 'is missing'}`, owner)
-  }
+  // 曾有两条硬编码 L2-STALE-REFERENCE guard（react-component-comments.mdc、.ai-harness）——对应引用已在源头清除
+  // （component-comments 上移 L1；.ai-harness 工作流下线，frontend-harness.mdc 已精简）。保留会对「按设计已删除」
+  // 的文件永久误报、侵蚀信号，故移除。未来若需通用防悬空引用，应做「扫描规则文件里的 .mdc 交叉引用并校验存在」的
+  // 通用检查，而非再堆硬编码对。
   const swrRule = join(repoRoot, '.cursor/rules/client-swr-dedup.mdc')
   const reactQueryRule = join(repoRoot, 'AGENTS.md')
   const conflict = existsSync(swrRule) && readFileSync(swrRule, 'utf8').includes('SWR') && readFileSync(reactQueryRule, 'utf8').includes('React Query')

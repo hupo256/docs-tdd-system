@@ -3,9 +3,10 @@
   "$id": "acceptance-results.schema.json",
   "title": "docs_tdd Acceptance Results",
   "type": "object",
-  "required": ["projectId", "items"],
+  "required": ["projectId", "head", "items"],
   "properties": {
     "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },
+    "head": { "type": "string", "minLength": 1 },
     "items": {
       "type": "array",
       "items": {

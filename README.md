@@ -30,6 +30,7 @@ docs-tdd changed <PROJECT-ID>              # 编辑后跑 code-rules / mock 校�
 docs-tdd gate    <PROJECT-ID> <Gx>         # 阶段交付门禁
 docs-tdd doctor  <PROJECT-ID>              # 适配/冲突/发布状态自检
 docs-tdd golden                            # 让门禁机器自己被回归测试
+docs-tdd guard                             # 机器层兜底：一条命令跑 golden + 发布 fresh 检查 + doctor
 ```
 
 ## 与业务解耦：如何挂载到一个项目
@@ -85,6 +86,8 @@ docs-tdd gate PR-01234 G7      # QA 用例回归
 docs-tdd gate PR-01234 G8      # production build + Git 可交付状态 + 交付摘要
 ```
 `docs-tdd doctor PR-01234` 随时自检适配/冲突/发布状态；缓存仅复用同输入 PASS，强制实跑加 `--no-cache`。
+
+> **人机分界（自动化边界要如实）**：G0–G4（需求→文档→方案→MSW 编码）高度自动；G5–G8 是**人机协同**——gate 机器实跑 biome/tsc/vitest/build 与结构化验收/字段对账，但**真实接口联调、视觉还原（Figma 并排 ≥95%）、交互手感、响应式、QA 用例执行以人工确认为锚点**（分工见 [common/verification-division-of-labor.md](./common/verification-division-of-labor.md)：Agent 固化能回归的逻辑/边界/数据/DOM 契约，人工过一眼能判的像素/手感/响应式）。判断层的 `acceptance-results.json`/`code-review.json` 由 Agent 产出、gate 校验其结构与证据锚点真实性，但语义正确性仍需人工/Review 兜底（执行强度分级见 [common/rule-execution-model.md §3](./common/rule-execution-model.md)）。
 
 **9. 上线后回收**：需求合入 `origin/online` 并验证后，回收一次性 worktree（保留 `PR-01234/` 文档）：
 ```bash

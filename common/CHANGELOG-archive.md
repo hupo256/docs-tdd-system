@@ -2,6 +2,59 @@
 
 > 从 [CHANGELOG.md](./CHANGELOG.md) 轮转出的较早条目（保持倒序）。此文件不进 context pack、不参与覆盖/预算校验，仅供追溯。
 
+## 2026-07-25（上下文与增量执行减负）
+
+- **按章节加载**：`rule-index.json` 支持章节路由和 G6 子场景，`context` 默认生成确定性 compact pack，保留 `--full` 调查模式；规则 Markdown 仍是唯一真值源。
+- **安全增量缓存**：`changed` 和非写入 gate 仅复用同规则、项目文档、Git diff、未跟踪文件内容及 PRD manifest 指纹下的 PASS；失败、`--write`、`--no-cache` 不复用，避免以提速换验证强度。
+- **输出与恢复收敛**：项目摘要收紧为阶段、指纹、阻塞和下一步，完整子检查日志移至 `/tmp/docs-tdd-logs/`；Router 增加场景推荐和 checkpoint 触发指针，长规则、日志和图片不常驻主上下文。
+- **生效边界**：全部产物和改动保持在 local-only `docs_tdd` 或 `/tmp`，不改 tracked 配置、业务代码和既有项目 pilot；PRD 图片、表格、嵌入对象覆盖及 Gate 数量不减少。
+
+## 2026-07-25（调用链、数据链与分层落地）
+
+- **三端规则统一消费**：新增 `~/.ai-rules` 单一 L1 真值源与本地 installer，Codex/Claude 通过 symlink 消费同一短规则和 skills，Cursor 使用用户级薄 adapter；旧文件先备份，tracked 仓库规则不修改。
+- **有效规则组合发布**：新增 `effective-rules.mjs` / `effective-rules.json`，组合 L1、三端 adapter、tracked L2 与 L3 release；context、changed、gate 现在同时要求 L3/effective fresh，并把组合指纹写入 context pack 和 gate evidence。
+- **可操作诊断**：新增 `docs-tdd doctor`，阻断 adapter/共享 skill/hook/隔离/release 漂移，并把仓库现有 SWR vs React Query、缺失 `.ai-harness`、失效 component-comments 引用作为 tracked L2 warning 报告，不越权修复。
+
+- **架构语义拆分**：将含混的 `Page → hook → schema/mapper → API` 拆为调用链和响应数据链，`api-and-mapper.md §1` 增加 Component、Query Hook、API Service、Schema、Mapper 的输入/输出/允许依赖/禁止依赖固定契约；Mapper 明确为无网络、状态和 UI 依赖的纯转换层。
+- **确定性加载与设计前置**：新增 `write_query_hook`，并让 `write_ui`/`write_state` 加载分层入口；技术方案模板升 v3，新增请求链必填表。`DOC-G4-006/007` 仅约束 v3，新旧模板不回溯，纯 UI 可用有来源说明的 `N/A`。
+- **结构候选机器兜底**：新增 `CODE-ARCH-003` changed-file import 扫描和正反 self-test，提示 Mapper 反向依赖、Service 依赖 UI、Component 穿透 Hook、生产链引 fixture。正则不宣称替代依赖图，当前 warn-first，由 G6 Review 裁决并进入晋级台账。
+
+## 2026-07-24（规则内容发布指纹）
+
+- 新增 `rule-release.mjs` 与 `rule-release.json`，对 `common/`、`templates/` 的实际内容和文件列表计算确定性 SHA-256；人工 `ruleset.version` 继续表示兼容标签，不再冒充实际规则内容证明。
+- 规则维护采用“编辑 → `check-doc-budget` → publish → consume”：`context/changed/gate` 和 gate 直达入口只消费 fresh release，规则半成品、遗漏发布或发布后漂移均退出 1；`check/capability` 保持可用于修复和诊断。
+- context pack 和新 gate evidence 绑定同一规则发布指纹，可准确追溯当次 AI 加载、扫描和门禁使用的规则内容；全部机制保持在 ignored local-only `docs_tdd`，不修改团队 tracked 配置。
+
+## 2026-07-24（专题唯一正文源收敛）
+
+- 新增 `rule-ownership.json`，登记流程、PRD intake、API/mapper、状态/MSW、视觉、验证和证据等主题的唯一正文源；Router、Gate、模板和项目文档只保留触发与消费指针。
+- `development-rules.md` 降级为纯导航，`new-project-kickoff.md` 只保留启动编排；移除目录树、成功标准、质量清单等副本。
+- `architecture-and-state.md §8.4.1` 成为当前 MSW 执行契约；删除“尚待试点”与“已强制”并存的过期时态，历史结论移入本日志。
+- `check-doc-budget.mjs` 增加专题所有权有效性与已知重复块防回归检查；本次规则只影响 `common/` 维护方式，不要求历史项目回填。
+
+## 2026-07-24（PRD 富媒体 intake 门禁）
+
+- **从声明“读过”改为可追踪输入链**：新增 `prd-source-manifest.json` 与 `prd-intake.mjs`，逐项登记图片、表格和嵌入对象，要求 `sourceId → Feature → Task → evidence` 可追溯；G0 可保留 unresolved，G2 前必须归零并批准 fingerprint。
+- **视觉输入与漂移阻断**：图片必须视觉读取，OCR/alt 仅辅助；本地图片二进制参与 hash，链接不变但素材被替换也会阻断。只有远程 URL 或附件缺失时不得批准，需先同步为 `docs_tdd` 本地附件。
+- **前向生效边界**：新项目默认 `pilot.prdIntake=true` 并阻断，历史项目未显式 opt-in 时保持原行为；规则、脚本和证据均留在 ignored local-only `docs_tdd`，不改项目根配置和业务 worktree。
+
+## 2026-07-24（单一事实源所有权）
+
+- **问题收敛**：针对共享数据、状态、业务规则、配置和项目结论在多处重复维护、更新不一致的问题，`architecture-and-state.md §4.0` 新增项目所有权门禁；编码细则仍由 L1/L2 承担，L3 只记录阶段、证据与例外。
+- **前向模板与 gate**：`02-technical-design-template.md` 升级 v2，新增权威来源/唯一写入口/消费者/副本契约表；`DOC-G4-004/005` 仅对 v2 技术方案检查章节与占位，不回溯阻断未触及相关模块的旧项目。
+- **例外口径**：缓存、持久化镜像、读模型和迁移兼容值不被一刀切禁止，但必须登记同步或失效机制、陈旧窗口、owner、恢复方式与验证证据；无此契约即按第二真值源处理。
+
+## 2026-07-24（规则执行保障模型）
+
+- **从“规则存在”改为“执行契约完整”**：新增 `rule-execution-model.md`，要求规则明确 Trigger、唯一 Source、Loader、Executor、Evidence 和 Failure；缺执行器或证据的规则只能算建议，不能声称已落实。
+- **真实保障边界**：明确 PostToolUse 只提供快速反馈，无 hook 的 Agent 必须跑 `docs-tdd changed`；无论是否有 hook，阶段出口都以带工作树/ruleset fingerprint 的 gate 证据为准。`docs_tdd` local-only 时不宣称 Husky/CI 已兜底。
+- **规则治理闭环**：建立 Mechanical/Structural/Judgment 三级执行方式、新规则准入流程、规则即测试、证据新鲜度、限时豁免和定期健康指标；专题接入 G6、文档自动化 Review 与维护场景，常驻路由只保留判断指针。
+- **个人规则本地优先**：规则载体新增 `personal-local` / `team-tracked` 边界；个人 AI 规则只写用户目录或 `.git/info/exclude` 排除的 `docs_tdd`。仓库根 `AGENTS.md`、`.cursor/rules`、hooks、package/CI 默认只读，只有用户明确批准为团队规范后才允许提升，避免影响其他同事。
+
+- **Mapper 命名收紧**：单一来源字段即使类型/格式变化或需要来源消歧也保持 API 名；改名只接受跨来源统一和多字段语义派生，并用 `API-RENAME: cross-source` / `API-DERIVED: sources=` 留可审计理由。`CODE-NAMING-001` 普通 `// API:` 不再豁免，新增 4 条回归自测；新项目 API 契约模板改用四种“映射类型”。
+- **二级规则路由**：`rule-router.md` 从 4855 压到约 1.9k 字符，预算收紧为 5000；专题覆盖唯一机器真值迁到 `rule-index.json`，README 继续做人读全索引。新增 `write_api` / `write_mapper` / `write_state` / `write_msw` / `legacy_mock` 场景，遗留路线 A 不再被新功能无条件加载。
+- **Context Pack 缓存**：`docs-tdd context` 按项目摘要 + 场景专题 + ruleset 生成带内容 fingerprint 的 `/tmp/docs-tdd-context/*.md`；规则或摘要变化即换 fingerprint，不把缓存当真值源。API/mapper 另拆 `api-and-mapper.md`，使 mapper 场景不再加载 31KB 聚合规则。
+
 ## 2026-07-24
 
 本地规则试点升级（保持 `docs_tdd` local-only，不改项目根配置、不进入团队版本管理）：

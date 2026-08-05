@@ -6,10 +6,11 @@
 // - 怎么测：把 `common/fixtures/golden-project` 物化成临时项目 PR-00000（基线刚好全绿），
 //   然后每个变异用例只破坏一处，断言「预期规则 ID 正好命中」且「没有其他 error 级规则被牵连」。
 //   后者是防误报的那一半——规则变宽会让基线之外的项一起红，这里会直接失败。
-// - 边界：覆盖文档类 gate（G0/G1/G2/G3/G6）。G6 只验证结构化 Review/验收接线，
-//   G4+ 的真实分支、改动文件和工具链仍由 verify-build-quality 的真实执行负责。
-//   prd-intake / MSW 子链路在夹具里显式关闭（project-manifest.pilot 全 false），
-//   它们各自有 fixtures 与自测。
+// - 边界：端到端覆盖文档类 gate G0-G7（G4 的 GIT-G4 point-in-time 检查依赖真实 feature 分支，故 baseline 走 G5
+//   累积覆盖 G4 的 DOC 检查、不直接跑 G4）。G8 做结构 dry-check：合成 fixture 无真实 git 推送，G8 必然因
+//   交付/git 终点规则失败，只断言 G0-G7 文档链在 G8 校验下无回归。G4+ 的真实分支、改动文件和工具链
+//   仍由 verify-build-quality 的真实执行负责。
+//   prd-intake / MSW 子链路在夹具里显式关闭（project-manifest.pilot 全 false），它们各自有 fixtures 与自测。
 // - 副作用：临时项目目录在 finally 里删除；不传 `--write`，所以不写 gate-results /
 //   evidence / PROJECTS.md / warn 台账。PR-00000 是保留 ID，索引与预算检查都排除它。
 
@@ -120,7 +121,7 @@ function runAggregator(gate) {
   }
 }
 
-const baselineGates = ['G0', 'G1', 'G2', 'G3', 'G6']
+const baselineGates = ['G0', 'G1', 'G2', 'G3', 'G5', 'G6', 'G7']
 
 // 每个用例只破坏一处。expectRuleId 是「必须命中」的那条；任何额外 error 命中都算规则变宽。
 const mutationCases = [
@@ -284,6 +285,7 @@ const mutationCases = [
       projectId: GOLDEN_PROJECT_ID,
       reviewedAt: '2026-08-03',
       reviewer: 'golden-fixture',
+      head: '0000000000000000000000000000000000000000',
       findings: [{ id: 'CR-1', category: 'correctness', severity: 'high', summary: '未处理问题', disposition: 'open', evidence: [] }],
     }, null, 2)}\n`),
   },
@@ -291,13 +293,22 @@ const mutationCases = [
     id: 'doing-feature-missing-acceptance',
     gate: 'G6',
     expectRuleId: 'DOC-AC-002',
-    apply: () => writeFixtureFile('agent/acceptance-results.json', `${JSON.stringify({ projectId: GOLDEN_PROJECT_ID, items: [] }, null, 2)}\n`),
+    apply: () => writeFixtureFile('agent/acceptance-results.json', `${JSON.stringify({ projectId: GOLDEN_PROJECT_ID, head: '0000000000000000000000000000000000000000', items: [] }, null, 2)}\n`),
   },
   {
     id: 'passed-acceptance-missing-evidence',
     gate: 'G6',
     expectRuleId: 'DOC-AC-004',
+    // 空 evidence 同时触发 DOC-AC-005（无真实文件锚点）——这是正确连带，显式容忍。
+    tolerate: ['DOC-AC-005'],
     apply: () => editFixtureFile('agent/acceptance-results.json', (text) => text.replace('"evidence": ["evidence/gate/g6/README.md"]', '"evidence": []')),
+  },
+  {
+    id: 'acceptance-evidence-broken-anchor',
+    gate: 'G6',
+    expectRuleId: 'DOC-AC-005',
+    // evidence 非空但指向不存在的文件：只触发 DOC-AC-005（锚点不存在），不触发 DOC-AC-004（非空）。
+    apply: () => editFixtureFile('agent/acceptance-results.json', (text) => text.replace('evidence/gate/g6/README.md', 'evidence/gate/g6/nonexistent.png')),
   },
 ]
 
@@ -358,6 +369,23 @@ try {
       !result.parseError && result.ok === true && failed.length === 0,
       `baseline ${gate}`,
       result.parseError ? `gate 输出无法解析：${result.parseError}\n${result.stderr || ''}` : `期望全绿，实际 error 命中：${failed.join(', ') || '(无但 ok!==true)'}`,
+    )
+  }
+
+  // 1.5 G8 结构 dry-check：合成 fixture 无真实 git 推送，G8 必然因交付/git 规则失败（这是诚实终点，
+  //     真实交付依赖推送 origin，无法在无后端夹具里伪造）。这里只断言 G0-G7 文档链在 G8 校验下无回归——
+  //     即除交付/git 终点规则外，不得有任何额外 error。它把"端到端到 G7 机器全绿 + G8 结构完好"一次固化。
+  {
+    materialize()
+    const g8 = runProjectGate('G8')
+    const G8_DELIVERY_RULES = new Set(['VERIFY-STAGE-003', 'VERIFY-G8-002', 'VERIFY-G8-003', 'VERIFY-G8-004'])
+    const structuralErrors = g8.parseError ? ['(parse error)'] : errorFailures(g8.checks).filter((id) => !G8_DELIVERY_RULES.has(id))
+    record(
+      !g8.parseError && structuralErrors.length === 0,
+      'G8 structural dry-check',
+      g8.parseError
+        ? `gate 输出无法解析：${g8.parseError}`
+        : `G0-G7 文档链在 G8 校验下应无回归（仅允许交付/git 终点规则 ${[...G8_DELIVERY_RULES].join('/')} 失败），实际额外 error：${structuralErrors.join(', ')}`,
     )
   }
 

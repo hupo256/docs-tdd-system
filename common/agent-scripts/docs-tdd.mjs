@@ -407,8 +407,27 @@ if (command === 'golden') {
   process.exit(run([join(scriptDir, 'golden-run.mjs'), ...cliArgs.slice(1)]))
 }
 
+// guard：机器层兜底守护，一条命令串跑三检——发布是否 fresh、gate 机器自身能否回归、三端规则加载/冲突。
+// project-agnostic，手动/按需运行（不装 launchd/cron；个人本地，机器层正确性不再只靠"每次记得跑"）。
+if (command === 'guard') {
+  let worst = 0
+  const step = (label, args) => {
+    console.log(`\n=== docs-tdd guard: ${label} ===`)
+    const code = run(args)
+    if (code !== 0) worst = code
+    return code
+  }
+  // 先查发布 fresh：stale 时 golden 的聚合器烟测跑不了（run-project-gate 拒 stale 指纹链），
+  // 据此决定是否给 golden 传 --skip-aggregator，而不是伪装通过。stale 本身即 worst≠0，guard 会判 BLOCK。
+  const releaseFresh = step('rule-release --check', [releaseScript, '--check']) === 0
+  step('golden-run', [join(scriptDir, 'golden-run.mjs'), ...(releaseFresh ? [] : ['--skip-aggregator'])])
+  step('doctor (effective-rules)', [effectiveRulesScript, '--doctor'])
+  console.log(`\ndocs-tdd guard: ${worst === 0 ? 'PASS — 机器层回归/发布/加载三检通过' : 'BLOCK — 见上方失败项'}`)
+  process.exit(worst)
+}
+
 if (!new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(projectId || '')) {
-  console.error('usage: docs-tdd.mjs <kickoff|status|resume|next|capability|doctor|golden|check|gate|context|changed|recommend> PR-01234 [G0-G8|scenario] [--compact|--full|--no-cache]')
+  console.error('usage: docs-tdd.mjs <kickoff|status|resume|next|capability|doctor|golden|guard|check|gate|context|changed|recommend> PR-01234 [G0-G8|scenario] [--compact|--full|--no-cache]')
   process.exit(1)
 }
 

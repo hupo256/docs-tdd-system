@@ -106,6 +106,16 @@ function selfTest() {
     console.error('[update-project-index] self-test failed: verified G8 should not carry legacy marker')
     process.exit(1)
   }
+  const reconcile = frontendReconcileNote('G4', { stages: { G5: { status: 'frontend-complete-pending-reconcile' } } })
+  if (reconcile !== 'G4 · 前端完成待对账') {
+    console.error('[update-project-index] self-test failed: frontend-complete-pending-reconcile G5 should annotate status')
+    process.exit(1)
+  }
+  const noReconcile = frontendReconcileNote('G4', { stages: { G5: { status: 'blocked' } } })
+  if (noReconcile !== 'G4') {
+    console.error('[update-project-index] self-test failed: non-reconcile G5 status must not annotate')
+    process.exit(1)
+  }
   console.log('PASS project index renderer')
 }
 
@@ -218,6 +228,14 @@ function legacyAwareStatus(status, history, evidenceExists) {
   return verified ? status : `${status} (legacy-unverified)`
 }
 
+// 若 G5 记为报告态 frontend-complete-pending-reconcile（前端完成、仅待真实字段对账），
+// 在索引状态上追加可读标记——让"前端已交付、后端字段待对账"的项目不再笼统显示为阻塞/停在 G4。
+function frontendReconcileNote(status, stageStatusJson) {
+  const g5 = stageStatusJson?.stages?.G5?.status
+  if (g5 !== 'frontend-complete-pending-reconcile') return status
+  return String(status).includes('前端完成待对账') ? status : `${status} · 前端完成待对账`
+}
+
 function listProjectDirs() {
   return readdirSync(docsRoot, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
@@ -266,6 +284,13 @@ function projectInfo(name, byBranch) {
     history = null
   }
   const status = legacyAwareStatus(rawStatus, history, (evidence) => existsSync(join(dir, evidence)))
+  let stageStatusJson = null
+  try {
+    stageStatusJson = JSON.parse(read(join(dir, 'agent/stage-status.json')) || 'null')
+  } catch {
+    stageStatusJson = null
+  }
+  const displayStatus = frontendReconcileNote(status, stageStatusJson)
   const prd = stripMd(firstMatch(`${readme}\n${inventory}`, [
     /^>\s*\*\*PRD\*\*[:：]\s*(.+)$/m,
     /\|\s*PRD 来源\s*\|\s*([^|]+)\|/,
@@ -276,7 +301,7 @@ function projectInfo(name, byBranch) {
   return {
     id: name,
     title,
-    status,
+    status: displayStatus,
     prd,
     g2,
     modulePath,
@@ -314,6 +339,8 @@ ${rows.join('\n')}
 
 - This index is a generated navigation view; its underlying facts remain in each project README / agent state and Git.
 - Project status uses the machine row \`| 最新通过门禁 | GX |\` first, then README frontmatter \`stage\`, then narrative rows. G5+ without matching successful gate history and existing evidence is labeled \`legacy-unverified\`.
+- \`legacy-unverified\` = 机制上线（gate-history 机器背书）之前的自声明 G8/G5+，非机器背书。这些旧项目 worktree 多已回收、无真实 gate 运行；**不 backfill 伪造 PASS 历史**（违反"不伪造证据"原则）。要转为机器背书须有真实结构的 \`agent/gate-history.json\` 且其 evidence 路径真实存在。
+- \`· 前端完成待对账\` = G5 记为报告态 \`frontend-complete-pending-reconcile\`：前端已交付、仅待后端真实字段对账；此态不放行 G6（见 \`workflow-gates.md\`）。
 - G2/module data comes from \`product/00-feature-inventory.md\`; final gate data comes from \`agent/gate-results.json\` when present.
 - Worktree column is derived live from \`git worktree list\` (configured branch prefix or \`fix/<ID>\`); a project with no active worktree shows \`—\`.
 - Regenerate after creating or materially updating a project: \`node apps/web/docs_tdd/common/agent-scripts/update-project-index.mjs --write\`.

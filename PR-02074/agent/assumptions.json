@@ -26,6 +26,69 @@
       "status": "open",
       "blockingWhen": "api-ready",
       "resolution": "Confirm real response fields and buy/sell amount semantics"
+    },
+    {
+      "id": "ASM-003",
+      "endpoint": "tag-events-list / search-events",
+      "field": "fixture-key-casing",
+      "code": [
+        "apps/web/src/mocks/fixtures/prediction.ts",
+        "apps/web/src/mocks/handlers/prediction.ts"
+      ],
+      "owner": "backend",
+      "status": "open",
+      "blockingWhen": "api-ready",
+      "resolution": "Fixture 头注释声称 snake_case 但实际字段为 camelCase，toCamel 对多数字段为 no-op，契约测试未真正验证键名转换。确认后端真实键名格式：若 camelCase 则修正注释；若 snake_case 则 fixture 改真实 snake_case 键。"
+    },
+    {
+      "id": "ASM-004",
+      "endpoint": "tag-events-list",
+      "field": "teams[].id",
+      "code": [
+        "apps/web/src/services/api/prediction/schemas.ts"
+      ],
+      "owner": "backend",
+      "status": "open",
+      "blockingWhen": "api-ready",
+      "resolution": "team id 暂按 z.number()。若后端下发 string 需放宽为 z.union([string,number]).transform(String)（会连带调整 mapTagEventsToWorldCup.test.ts / eventCardType.test.ts 的 team fixture 为 string id）。"
+    },
+    {
+      "id": "ASM-005",
+      "endpoint": "tag-events-list",
+      "field": "volume / volumeClob / market.name 缺失兜底",
+      "code": [
+        "apps/web/src/services/api/prediction/schemas.ts",
+        "apps/web/src/services/api/prediction/mapTagEventsToWorldCup.ts"
+      ],
+      "owner": "product-backend",
+      "status": "open",
+      "blockingWhen": "api-ready",
+      "resolution": "volume null→'0'、volumeClob 缺失→'0'、name 回落 enum key/m.id 属假默认（[[feedback_no_fallback_masks_missing_data]]）。确认 volume/name 是否恒有值；若可缺失应改显式空标记 '--'。"
+    },
+    {
+      "id": "ASM-006",
+      "endpoint": "search-events",
+      "field": "searchSort.matchCount 语义",
+      "code": [
+        "apps/web/src/apps/Prediction/common/searchSort.ts"
+      ],
+      "owner": "product",
+      "status": "open",
+      "blockingWhen": "prd-clarify",
+      "resolution": "F03 排序：matchCount 含重复计数且大小写/locale 敏感（该函数为后端兜底、默认不启用）。确认 PRD 是否指「命中的不同字符数」及英文标题是否需 casefold。"
+    },
+    {
+      "id": "ASM-007",
+      "endpoint": "tag-events-list (match)",
+      "field": "markets 数量 / MatchCard 段数",
+      "code": [
+        "apps/web/src/services/api/prediction/mapTagEventsToWorldCup.ts",
+        "apps/web/src/apps/Prediction/WorldCup/common/MatchCard.tsx"
+      ],
+      "owner": "backend",
+      "status": "open",
+      "blockingWhen": "api-ready",
+      "resolution": "markets>3 时 OUTCOME_KEYS 坍缩为 home、MatchCard 写死 3 段斜切在 outcomes≠3 时破损。确认真实比赛恒为 3 markets；否则按 length 派生首/中/末角色。"
     }
   ]
 }

@@ -19,7 +19,7 @@
 - G2 功能清单未定稿前不写业务代码（自动流程见 [prd-feature-inventory.md](./prd-feature-inventory.md) §3）。
 - 新项目 G2 必须通过 PRD intake：读取判定消费 [lark-doc-sync.md §8](./lark-doc-sync.md)，Feature/Task 追踪消费 [prd-feature-inventory.md §3](./prd-feature-inventory.md)；gate 未过即阻断。
 - G2/G5/G6/G7/G8 进下一阶段前必须依次跑 [rule-ids-and-gates.md](./rule-ids-and-gates.md) 项目 gate；机器可判定项未过不得用口头代替。`docs-tdd gate` 默认持久化 `agent/gate-results.json`、`agent/gate-history.json` 与 `evidence/gate/**`；G6 必须存在 G5 PASS 历史，G7 必须存在 G6 PASS 历史，G8 必须存在 G7 PASS 历史，禁止跳级或用当前 G8 结果自证 G8。
-- G5 与 G7 的业务结论写入 `agent/stage-status.json`：G5 仅允许 `completed` / `not-applicable` 通过，`blocked` 不得进入 G6；G7 仅允许 `completed` / `skipped` 通过，跳过必须明确记录“未提供 QA 用例”等具体原因。
+- G5 与 G7 的业务结论写入 `agent/stage-status.json`：G5 仅允许 `completed` / `not-applicable` 通过，`blocked` 不得进入 G6；G7 仅允许 `completed` / `skipped` 通过，跳过必须明确记录“未提供 QA 用例”等具体原因。前端已完成、仅待后端真实字段对账时，可记 `frontend-complete-pending-reconcile`（报告态：须有前端 evidence 与待对账原因，由 `VERIFY-G5-004` 校验）——它比 `blocked` 更准确地表达“前端已交付”，会在 PROJECTS.md / 交付摘要显示为“前端完成待对账”，但**同样不放行 G6**（字段对账完成后改回 `completed` 才进 G6）。
 - gate 通过后先追加不可覆盖的成功历史，再由 `set-project-stage.mjs` 校验该历史并同步阶段真值四面：README 状态表机器行「最新通过门禁」、README frontmatter `stage`、机器版 `agent/context-summary.md`、`PROJECTS.md`。机器行只由脚本写入，人工叙述写「当前阶段」行；禁止绕过 gate 手工推进，`set-project-stage.mjs --force` 只允许回退。单面漂移由 DOC-SYNC-001/002/003 拦截，active 项目阶段链缺失或证据丢失由 DOC-SYNC-004 拦截。
 - G4 前 `02-technical-design.md` 必须有复用盘点结论：已检查的现有组件/hooks/services/stores/utils、**跨业务 `apps/**` 的 Modal/分享/渠道 UI**；每个新增能力标「直接复用/轻量封装/抽公共能力/新建」，新建须写原因。**项目文档不得出现「跳过复用」等与 `common/` 冲突表述。**
 - G4 前按 [architecture-and-state.md](./architecture-and-state.md) §4.0 完成单一事实源所有权表：每项共享事实明确权威来源、唯一写入口和消费者；存在缓存/镜像/读模型等副本时写明同步或失效机制、陈旧窗口、owner、恢复方式和验证证据。模板 v2 起由 `DOC-G4-004/005` 检查；旧项目未触及相关模块不回填。

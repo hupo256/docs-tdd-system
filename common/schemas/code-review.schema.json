@@ -4,7 +4,7 @@
   "title": "docs_tdd G6 Code Review Report",
   "description": "G6 /code-review findings 的机器可读单一源。缺失文件时 G6 回退散文校验（VERIFY-G6-002）。语义见 rule-ids-and-gates.md §3.7。",
   "type": "object",
-  "required": ["projectId", "reviewedAt", "reviewer", "findings"],
+  "required": ["projectId", "reviewedAt", "reviewer", "head", "findings"],
   "properties": {
     "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },
     "reviewedAt": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },

@@ -625,6 +625,12 @@ function validateG5() {
     ? Boolean(status?.reason)
     : status?.status === 'completed' && evidencePathsExist(status?.evidence)
   add('VERIFY-G5-003', g5EvidenceOk, 'G5 completion has existing evidence paths, or not-applicable has a concrete reason', join(projectDir, 'agent/stage-status.json'))
+  // VERIFY-G5-004（报告态）：G5 记为 frontend-complete-pending-reconcile = 前端已完成、仅待真实字段对账。
+  // 该态不放行 G6（VERIFY-G5-002 仍只认 completed/not-applicable），但要求前端 evidence 与待对账原因存在，
+  // 使"前端完成待对账"成为有证据的可交付中间态，而非笼统 blocked（观感上不再显示全线阻塞）。
+  if (status?.status === 'frontend-complete-pending-reconcile') {
+    add('VERIFY-G5-004', evidencePathsExist(status?.evidence) && Boolean(status?.reason), '前端完成待对账：须有前端 evidence 路径与待对账原因；此态为报告态，不放行 G6', join(projectDir, 'agent/stage-status.json'), 'warn')
+  }
 
   // 责任模块目录可填在 00-feature-inventory.md（scope 事实）或 agent/context-summary.md（恢复上下文），
   // 两处任一命中即可，避免脚手架把字段放在 context-summary 而 gate 只读 inventory 导致恒空。
@@ -723,7 +729,8 @@ function validateG6() {
     const report = readJson(acceptanceFile)
     if (report === null) add('DOC-AC-001', false, 'acceptance-results.json 不是合法 JSON', acceptanceFile)
     else {
-      for (const check of acceptanceChecks({ report, doingFeatureIds, expectedProjectId: projectId, file: rel(acceptanceFile) })) {
+      const currentSha = runGit(['rev-parse', 'HEAD'], gitCwd).stdout
+      for (const check of acceptanceChecks({ report, doingFeatureIds, expectedProjectId: projectId, currentSha, evidenceExists: (p) => existsSync(join(projectDir, p)), file: rel(acceptanceFile) })) {
         add(check.ruleId, check.ok, check.message, acceptanceFile, check.severity, check.category)
       }
     }

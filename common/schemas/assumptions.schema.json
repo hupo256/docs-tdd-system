@@ -18,7 +18,7 @@
           "code": { "type": "array", "items": { "type": "string" } },
           "owner": { "type": "string", "minLength": 1 },
           "status": { "type": "string", "enum": ["open", "confirmed", "rejected"] },
-          "blockingWhen": { "type": "string", "enum": ["api-ready", "reconciling", "release"] },
+          "blockingWhen": { "type": "string", "enum": ["api-ready", "reconciling", "release", "prd-clarify"] },
           "resolution": { "type": "string" }
         },
         "additionalProperties": false

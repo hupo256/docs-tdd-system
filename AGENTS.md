@@ -39,9 +39,9 @@ Codex 侧编码规则入口不放在 `docs_tdd`：短硬规则常驻 `~/.codex/A
 
 ## 5. 新需求接入
 
-新需求进入时，**由 Agent 自动执行**（不要求负责人手动复制模板）。完整流程见 [common/prd-feature-inventory.md](./common/prd-feature-inventory.md) §3。
+新需求进入时，**G0–G2 文档骨架由 Agent 自动执行**（不要求负责人手动复制模板）。完整流程见 [common/prd-feature-inventory.md](./common/prd-feature-inventory.md) §3。（此处"自动"限于 G0–G2 文档脚手架；G5–G8 联调/验收/QA 为人机协同，见 [README.md](./README.md) 步骤 8 的人机分界。）
 
-### 5.1 Agent 自动三步（强制）
+### 5.1 Agent 自动三步（G0–G2 文档骨架，强制）
 
 | 步骤 | 门禁 | Agent 动作 | 完成标准 |
 |------|------|-----------|---------|

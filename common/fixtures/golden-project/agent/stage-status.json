@@ -8,8 +8,8 @@
       "updatedAt": "2026-08-03"
     },
     "G7": {
-      "status": "pending",
-      "reason": "Golden fixture stops at G6.",
+      "status": "skipped",
+      "reason": "Golden fixture has no QA cases; G7 is recorded as skipped for the end-to-end baseline.",
       "evidence": [],
       "updatedAt": "2026-08-03"
     }

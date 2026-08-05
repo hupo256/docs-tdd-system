@@ -29,7 +29,7 @@
     "g5Status": {
       "allOf": [
         { "$ref": "#/definitions/baseStatus" },
-        { "properties": { "status": { "type": "string", "enum": ["pending", "blocked", "completed", "not-applicable"] } }, "required": ["status"] }
+        { "properties": { "status": { "type": "string", "enum": ["pending", "blocked", "frontend-complete-pending-reconcile", "completed", "not-applicable"] } }, "required": ["status"] }
       ]
     },
     "g7Status": {

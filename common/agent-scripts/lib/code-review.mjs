@@ -48,6 +48,8 @@ export function validateCodeReview(report, expectedProjectId = '') {
   else if (expectedProjectId && report.projectId !== expectedProjectId) errors.push(`projectId=${report.projectId} 与当前项目 ${expectedProjectId} 不一致`)
   if (!DATE_RE.test(report.reviewedAt ?? '')) errors.push('reviewedAt 须是 YYYY-MM-DD')
   if (!isNonEmptyString(report.reviewer)) errors.push('缺 reviewer')
+  // head 强制记录 review 覆盖的 commit sha：代码再改即由 DOC-CR-003 判定过时（原为可选，现提为必填）。
+  if (!isNonEmptyString(report.head)) errors.push('缺 head（须记录 review 覆盖的 commit sha）')
   if (!Array.isArray(report.findings)) return [...errors, 'findings 须是数组']
 
   const seen = new Map()
@@ -143,7 +145,7 @@ function selfTest() {
   assert('clean → 002 pass', codeReviewChecks({ report: okReport }).find((c) => c.ruleId === 'DOC-CR-002')?.ok === true)
   assert('stale head → 003 warn fail', codeReviewChecks({ report: okReport, currentSha: 'def456' }).find((c) => c.ruleId === 'DOC-CR-003')?.ok === false)
   assert('matching head → 003 pass', codeReviewChecks({ report: okReport, currentSha: 'abc123456' }).find((c) => c.ruleId === 'DOC-CR-003')?.ok === true)
-  assert('no head → 003 pass', codeReviewChecks({ report: { ...okReport, head: undefined }, currentSha: 'def456' }).find((c) => c.ruleId === 'DOC-CR-003')?.ok === true)
+  assert('missing head → structural fail', (() => { const r = codeReviewChecks({ report: { ...okReport, head: undefined }, currentSha: 'def456' }); return r.length === 1 && r[0].ruleId === 'DOC-CR-001' && !r[0].ok })())
   assert('openFindings 只收 open', openFindings({ findings: [okReport.findings[0], openReport.findings[0]] }).length === 1)
 
   if (!process.exitCode) console.log('code-review lib self-test passed (17 cases)')

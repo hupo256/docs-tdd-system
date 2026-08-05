@@ -13,3 +13,6 @@ node_modules/
 # installation-specific consumer binding (each checkout/company sets its own;
 # the committed docs-tdd.config.default.json holds the reusable defaults)
 docs-tdd.config.json
+
+# Local per-machine agent settings (personal permission allowlist, absolute paths)
+.claude/

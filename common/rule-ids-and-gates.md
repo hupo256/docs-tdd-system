@@ -157,8 +157,8 @@ node apps/web/docs_tdd/common/agent-scripts/verify-build-quality.mjs --project P
 
 ## 3.7 结构化 Review 与验收结果
 
-- `agent/code-review.json` 是 G6 review 真值源；模板 v2 起缺文件即阻断，旧项目才允许回退 `06-collaboration.md` 散文判定。`DOC-CR-001/002/003` 分别验证结构、未处理 finding、HEAD 新鲜度。
-- `agent/acceptance-results.json` 把本期 Feature 映射到具体场景、验证方式、结果和 evidence。`DOC-AC-001/002/003/004` 分别验证结构、Feature 覆盖、无 failed/blocked、PASS 有证据。
+- `agent/code-review.json` 是 G6 review 真值源；模板 v2 起缺文件即阻断，旧项目才允许回退 `06-collaboration.md` 散文判定。`DOC-CR-001/002/003` 分别验证结构（含必填 `head`）、未处理 finding、HEAD 新鲜度。
+- `agent/acceptance-results.json` 把本期 Feature 映射到具体场景、验证方式、结果和 evidence。`DOC-AC-001/002/003/004/005/006` 分别验证结构（含必填 `head`）、Feature 覆盖、无 failed/blocked、PASS 有 evidence、PASS 的 evidence 有真实存在的文件锚点、验收覆盖当前 HEAD。
 - 两者都由 `verify-project-gate.mjs` 直接消费；不能只在 evidence README 写“已 review/已自测”。
 
 
@@ -172,7 +172,7 @@ docs-tdd golden --verbose       # 逐条打印用例结论
 docs-tdd golden --keep          # 保留 PR-00000 供手工排查
 ```
 
-- **变异用例（21 条）**：覆盖结构、G0/G1/G2/G3、阻塞/豁免，以及 G6 的 `DOC-CR-002`、`DOC-AC-002/004` 接线；每条只破坏一处。
+- **变异用例（22 条）**：覆盖结构、G0/G1/G2/G3、阻塞/豁免，以及 G6 的 `DOC-CR-002`、`DOC-AC-002/004/005` 接线；每条只破坏一处。
 - **双向断言**：规则失效（该红不红）与规则变宽（连带误伤）都会 fail。故障注入实测：把 `DOC-G3-005` 改成恒真、把 `DOC-G0-003` 改宽，两类都被抓出。
 - **发布即强制**：`rule-release.mjs --write` 在 `check-doc-budget` 之后跑 `golden-run --skip-aggregator`，不通过就拒绝发布。聚合器烟测（`run-project-gate PR-00000 G2`）需要**已发布**的新指纹，发布前跑不了，所以那一条留给发布后的 `docs-tdd golden`。
 - **边界（不遮掩）**：G6 只覆盖结构化 Review/验收接线；G4+ 的真实分支 / 改动文件 / 工具链由 §3.5 的真实执行负责。`prd-intake` 与 MSW 子链路在夹具里显式关闭，各自有 fixtures 与自测。
@@ -281,6 +281,7 @@ docs-tdd golden --keep          # 保留 PR-00000 供手工排查
 | `VERIFY-G5-001` | G5+ | `agent/stage-status.json` 存在 G5 结构化结论 | error |
 | `VERIFY-G5-002` | G5+ | G5 状态为 `completed` 或 `not-applicable`，`blocked` 不得进入 G6 | error |
 | `VERIFY-G5-003` | G5+ | G5 完成项存在证据路径；不适用项存在具体原因 | error |
+| `VERIFY-G5-004` | G5+ | 报告态 `frontend-complete-pending-reconcile`（前端完成、仅待真实字段对账）须有前端 evidence 路径与待对账原因；此态不放行 G6，仅供索引/交付摘要正向显示 | warn |
 | `VERIFY-G6-001` | G6+ | `evidence/` 下有自测 README | error |
 | `VERIFY-G6-002` | G6+ | `06-collaboration.md` 记录 code-review findings + 处理结论，且无未处理悬空项（`待修复/未处理` 即 fail，须当场修或进 `rule-waivers.json`） | error |
 | `VERIFY-G6-003` | G6+ | 自测证据记录命令、目标文件/场景、结果，含 Biome 或 fallback | error |
@@ -289,6 +290,8 @@ docs-tdd golden --keep          # 保留 PR-00000 供手工排查
 | `DOC-AC-002` | G6+ | 每个本期做 Feature 至少有一条 passed 验收结果 | error |
 | `DOC-AC-003` | G6+ | 验收结果无 failed/blocked | error |
 | `DOC-AC-004` | G6+ | 每条 passed 验收都有 evidence | error |
+| `DOC-AC-005` | G6+（`lib/acceptance-results.mjs`） | 每条 passed 验收的 evidence 至少有一个真实存在的文件锚点（截图/报告/DOM 比对），且不含指向不存在文件的路径 | error |
+| `DOC-AC-006` | G6+（`lib/acceptance-results.mjs`） | `acceptance-results.json.head` 覆盖当前 HEAD（缺 currentSha 不判定），防验收过时 | warn |
 | `VERIFY-STAGE-001` | G6+ | `agent/gate-history.json` 存在此前真实写入的 G5 PASS | error |
 | `VERIFY-STAGE-002` | G7+ | `agent/gate-history.json` 存在此前真实写入的 G6 PASS | error |
 | `VERIFY-G7-001` | G7+ | `agent/stage-status.json` 存在 G7 结构化结论 | error |
@@ -309,9 +312,9 @@ docs-tdd golden --keep          # 保留 PR-00000 供手工排查
 | `DOC-SYNC-002` | —（`check-doc-budget.mjs`） | 机器版 `context-summary.md` 的当前阶段与 `gate-results.json.gate` 一致 | error |
 | `DOC-SYNC-003` | —（`check-doc-budget.mjs`） | `PROJECTS.md` 与即时重生成结果一致 | error |
 | `DOC-SYNC-004` | —（`check-doc-budget.mjs`） | active 项目 stage=G5+ 时存在 G5→当前阶段连续 PASS 历史，且历史证据文件真实存在 | error |
-| `DOC-CR-001` | G6+（`lib/code-review.mjs`） | `agent/code-review.json` 结构合法：字段合规、finding id 唯一、fixed 带 resolution；缺文件不发 check | error |
+| `DOC-CR-001` | G6+（`lib/code-review.mjs`） | `agent/code-review.json` 结构合法：字段合规（含必填 `head`）、finding id 唯一、fixed 带 resolution；缺文件不发 check | error |
 | `DOC-CR-002` | G6+（`lib/code-review.mjs`） | code-review 无未处理 finding（open 项须当场修或 waive/标 N/A） | error |
-| `DOC-CR-003` | G6+（`lib/code-review.mjs`） | `code-review.json.head` 覆盖当前 HEAD（未记 head 不判定），防 review 过时 | warn |
+| `DOC-CR-003` | G6+（`lib/code-review.mjs`） | `code-review.json.head` 覆盖当前 HEAD（head 现为必填，缺 currentSha 不判定），防 review 过时 | warn |
 | `VERIFY-G8-001` | G8 | `agent/delivery-status.json` 的 project/mode/branch/headSha/evidence 结构合法；模板 v2 起必须存在 | error |
 | `VERIFY-G8-002` | G8 | 交付模式不是 local，而是 pushed/merged/released | error |
 | `VERIFY-G8-003` | G8 | 实际 Git 工作树干净 | error |

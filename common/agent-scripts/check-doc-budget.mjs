@@ -76,6 +76,31 @@ const DOC_BUDGET_OVERRIDES = {
   'CHANGELOG.md': { warn: 15000, fail: 18000 }, // 轮转后保留近期条目；历史在 CHANGELOG-archive.md
 }
 const BUDGET_EXEMPT = new Set(['CHANGELOG-archive.md']) // 纯历史归档，不进 context、不参与覆盖/预算
+// 门禁脚本体量预算（码点）：脚本天然比文档大，但仍需天花板，防单个 gate 脚本无限膨胀——它们恰是 AI 最难 review、
+// 出错影响最大的部分。warn = 告警（提示拆分/抽 lib），fail = 硬上限（阻断）。大执行器 grandfather 一个带余量的上限。
+const SCRIPT_BUDGET_DEFAULT = { warn: 24000, fail: 30000 }
+const SCRIPT_BUDGET_OVERRIDES = {
+  'verify-project-gate.mjs': { warn: 52000, fail: 58000 }, // 全 gate 判定聚合入口
+  'verify-code-rules.mjs': { warn: 44000, fail: 50000 }, // 静态代码规则扫描
+  'check-doc-budget.mjs': { warn: 44000, fail: 48000 }, // 本文件：文档/脚本预算 + 覆盖 + 台账自检
+  'run-project-gate.mjs': { warn: 32000, fail: 36000 }, // 正式 gate runner（持久化/证据/阶段同步）
+  'verify-build-quality.mjs': { warn: 32000, fail: 36000 }, // 实跑 biome/tsc/vitest 机器事实层
+}
+// 无 self-test 但可接受的脚本：纯 CLI/IO 包装或副作用型入口（逻辑靠 golden/集成实测覆盖）。
+// 新增脚本若含可测纯逻辑，必须加 --self-test 并登记 SELF_TEST_SCRIPTS；否则显式加入本豁免集（一次有意识决定）。
+const SELF_TEST_EXEMPT = new Set([
+  'check-doc-budget.mjs', // 顶层校验入口本身：无导出纯函数，逻辑每次实跑即自检，并被 golden 间接覆盖
+  'claude-posttooluse-gate.mjs', // hook 分发薄包装
+  'decommission-worktree.mjs', // worktree 回收 IO
+  'lark-worker.mjs', // Lark 任务 worker（外部依赖）
+  'log-exec.mjs', // 执行日志 IO
+  'notify-lark.mjs', // Lark 发送薄包装
+  'prepare-coding-worktree.mjs', // worktree 准备 IO
+  'start-new-project.mjs', // 项目骨架 IO
+  'sync-lark-docs.mjs', // Lark 只读同步 IO
+  'lib/fingerprint.mjs', // 指纹小工具（被 rule-release/effective-rules self-test 间接覆盖）
+  'lib/roots.mjs', // 根解析（被多脚本 self-test 间接覆盖）
+])
 const ROUTER_FILE = 'rule-router.md'
 const README_FILE = 'README.md'
 const RULE_INDEX_FILE = 'rule-index.json'
@@ -281,6 +306,43 @@ for (const r of residents) {
   }
   if (overCap.length) errors.push(...overCap)
   else console.log(`✅ on-demand 预算：${mdFiles.length - residents.length} 个专题文档均在硬上限内。`)
+}
+
+// 校验 2.6：门禁脚本体量预算 + self-test 覆盖门。脚本是机器强制层的实体，同样不能无限膨胀，
+// 且每个含可测逻辑的脚本都应有 self-test（"规则即测试"）；无 self-test 的须显式登记豁免。
+{
+  const scriptFiles = [
+    ...readdirSync(SCRIPTS_DIR).filter((n) => n.endsWith('.mjs')).map((n) => n),
+    ...(existsSync(join(SCRIPTS_DIR, 'lib'))
+      ? readdirSync(join(SCRIPTS_DIR, 'lib')).filter((n) => n.endsWith('.mjs')).map((n) => `lib/${n}`)
+      : []),
+  ]
+  const selfTested = new Set(SELF_TEST_SCRIPTS.map((entry) => entry[0]))
+  const overCap = []
+  const missingSelfTest = []
+  for (const rel of scriptFiles) {
+    const size = charCount(readFileSync(join(SCRIPTS_DIR, rel), 'utf8'))
+    const budget = SCRIPT_BUDGET_OVERRIDES[rel] || SCRIPT_BUDGET_DEFAULT
+    if (size > budget.fail) {
+      overCap.push(
+        `❌ agent-scripts/${rel} = ${size} 字符，超硬上限 ${budget.fail}（超 ${size - budget.fail}）。` +
+          `\n   抽公共 lib、拆子命令、或把纯逻辑移进可测 lib；确属大执行器可在 SCRIPT_BUDGET_OVERRIDES 调整并说明理由。`,
+      )
+    } else if (size > budget.warn) {
+      console.warn(`⚠ agent-scripts/${rel} = ${size} 字符，超告警线 ${budget.warn}（硬上限 ${budget.fail}）：考虑抽 lib/拆子命令。`)
+    }
+    if (!selfTested.has(rel) && !SELF_TEST_EXEMPT.has(rel)) missingSelfTest.push(rel)
+  }
+  if (overCap.length) errors.push(...overCap)
+  if (missingSelfTest.length) {
+    errors.push(
+      `❌ 以下脚本既无 --self-test 也未登记豁免：${missingSelfTest.join(', ')}。` +
+        `\n   含可测逻辑的加 --self-test 并登记 SELF_TEST_SCRIPTS；纯 CLI/IO 包装加入 SELF_TEST_EXEMPT（一次有意识决定）。`,
+    )
+  }
+  if (!overCap.length && !missingSelfTest.length) {
+    console.log(`✅ 脚本预算与 self-test 覆盖：${scriptFiles.length} 个 .mjs 均在硬上限内且已 self-test 或登记豁免。`)
+  }
 }
 
 // Router 只保留启动协议；专题覆盖由机器索引承担，避免常驻文件手抄全量文件名。
