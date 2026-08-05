@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { spawnSync } from 'node:child_process'
 import { createHmac } from 'node:crypto'
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
@@ -41,9 +42,10 @@ Send a Lark interactive card notification for a project gate/status update.
 Normally invoked via the per-project wrapper at <PROJECT-ID>/agent/scripts/notify-lark.mjs.
 
 Options:
-  --help     Show this help message and exit
-  --dry-run  Print the payload instead of sending
-  --config   Path to the project webhook config JSON`)
+  --help             Show this help message and exit
+  --dry-run          Print the payload instead of sending
+  --config           Path to the project webhook config JSON
+  --idempotency-key  Dedup key for bot transport (config.notifyTransport==='bot')`)
 }
 
 if (process.argv.includes('--help')) {
@@ -69,6 +71,7 @@ function parseArgs(argv, defaultConfigPath) {
   const args = [...argv]
   let dryRun = false
   let configPath = defaultConfigPath
+  let idempotencyKey
 
   for (let index = 0; index < args.length; index += 1) {
     if (args[index] === '--dry-run') {
@@ -80,6 +83,13 @@ function parseArgs(argv, defaultConfigPath) {
 
     if (args[index] === '--config') {
       configPath = args[index + 1]
+      args.splice(index, 2)
+      index -= 1
+      continue
+    }
+
+    if (args[index] === '--idempotency-key') {
+      idempotencyKey = args[index + 1]
       args.splice(index, 2)
       index -= 1
     }
@@ -96,6 +106,7 @@ function parseArgs(argv, defaultConfigPath) {
     status,
     summary,
     dryRun,
+    idempotencyKey,
     configPath: resolve(configPath),
   }
 }
@@ -195,6 +206,33 @@ export function createPayload({ config, gate, status, summary }) {
   return payload
 }
 
+// 通道解析：config.notifyTransport==='bot' → 走 lark-cli bot 身份发卡片（无需 webhook secret）；
+// 否则沿用自定义机器人 webhook（默认，保持既有项目行为不变）。
+function resolveTransport(config) {
+  return config.notifyTransport === 'bot' ? 'bot' : 'webhook'
+}
+
+// 走已登录 bot 身份用 lark-cli 直发 interactive 卡片；card 为 createPayload().card（直接作为 --content）。
+function deliverViaBot({ config, card, idempotencyKey }) {
+  const chatId = config.notifyChatId || config.allowedChatIds?.[0]
+  if (!chatId) {
+    throw new Error('bot transport requires notifyChatId or allowedChatIds[0] in config')
+  }
+
+  const args = ['im', '+messages-send', '--chat-id', chatId, '--msg-type', 'interactive', '--content', JSON.stringify(card)]
+  if (idempotencyKey) {
+    args.push('--idempotency-key', String(idempotencyKey).slice(0, 50))
+  }
+
+  const result = spawnSync('lark-cli', args, { encoding: 'utf8' })
+  if (result.error) {
+    throw new Error(`lark-cli spawn failed: ${result.error.message}`)
+  }
+  if (result.status !== 0 || /"ok"\s*:\s*false/.test(result.stdout || '')) {
+    throw new Error(`lark-cli send failed: ${(result.stderr || result.stdout || '').trim().slice(0, 200)}`)
+  }
+}
+
 export async function runNotifyLark({ argv = process.argv.slice(2), defaultConfigPath }) {
   const options = parseArgs(argv, defaultConfigPath)
 
@@ -205,10 +243,7 @@ export async function runNotifyLark({ argv = process.argv.slice(2), defaultConfi
 
   const status = options.status || gateMeta[options.gate].defaultStatus
   const config = loadConfig(options.configPath)
-
-  if (!options.dryRun && isPlaceholder(config.webhookUrl)) {
-    throw new Error('webhookUrl is empty or still a placeholder')
-  }
+  const transport = resolveTransport(config)
 
   const payload = createPayload({
     config,
@@ -222,8 +257,19 @@ export async function runNotifyLark({ argv = process.argv.slice(2), defaultConfi
     if (dryRunPayload.sign) {
       dryRunPayload.sign = '[redacted]'
     }
+    console.log(`transport: ${transport}`)
     console.log(JSON.stringify(dryRunPayload, null, 2))
     return
+  }
+
+  if (transport === 'bot') {
+    deliverViaBot({ config, card: payload.card, idempotencyKey: options.idempotencyKey })
+    console.log(`Lark notification sent (bot): ${options.gate} ${status}`)
+    return
+  }
+
+  if (isPlaceholder(config.webhookUrl)) {
+    throw new Error('webhookUrl is empty or still a placeholder')
   }
 
   const response = await fetch(config.webhookUrl, {

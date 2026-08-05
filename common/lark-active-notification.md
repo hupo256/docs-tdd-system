@@ -9,10 +9,11 @@
 
 | 能力 | 用途 | 是否依赖本文 |
 |------|------|--------------|
-| 自定义机器人 webhook | 主动发送 G0-G8 阶段进度、阻塞、补信息、交付摘要 | 是 |
+| 自定义机器人 webhook | 主动发送 G0-G8 阶段进度、阻塞、补信息、交付摘要（默认通道） | 是 |
+| bot `im +messages-send` | 同上，改用已登录 bot 身份直发卡片（`notifyTransport:'bot'`，无需 webhook secret；见 §11） | 是 |
 | Lark 应用事件订阅 | 群内 @ 应用后生成 task，进入 Bot Gateway / Worker | 否，见 `lark-bot-gateway.md` |
 
-Webhook 只能发消息；不能用 webhook 冒充群内 @ 应用接收链路。
+Webhook / bot 通道只能发消息；不能冒充群内 @ 应用接收链路。
 
 ## 2. 项目级配置放置
 
@@ -50,9 +51,18 @@ Webhook 只能发消息；不能用 webhook 冒充群内 @ 应用接收链路。
   "title": "<项目短名>",
   "webhookUrl": "https://open.larksuite.com/...",
   "secret": "...",
-  "autoNotify": true
+  "autoNotify": true,
+  "notifyTransport": "webhook",
+  "notifyChatId": "oc_...",
+  "notifyOnGate": false
 }
 ```
+
+通道字段（见 §11）：
+
+- `notifyTransport`：`'webhook'`（默认）或 `'bot'`。为 `'bot'` 时走 lark-cli 已登录 bot 身份直发，无需 `webhookUrl`/`secret`。
+- `notifyChatId`：bot 通道目标群；缺省回落 `allowedChatIds[0]`。
+- `notifyOnGate`：是否在 `docs-tdd gate` 通过后自动播报「Gx 已完成」。默认关，逐项目 opt-in。
 
 安全规则：
 
@@ -205,3 +215,27 @@ runNotifyLark({
 - 已完成什么。
 - 需要谁确认或补什么。
 - 下一步等待什么。
+
+## 11. bot 通道与阶段推进自动播报
+
+### 11.1 bot 通道（`notifyTransport:'bot'`）
+
+除自定义机器人 webhook 外，`notify-lark.mjs` 支持用 lark-cli 已登录的 bot 身份直发同款 interactive 卡片：
+
+- 触发：config `notifyTransport === 'bot'`（缺省 / 其它值 = webhook，既有项目行为不变）。
+- 目标群：`notifyChatId`，缺省回落 `allowedChatIds[0]`；二者皆缺则报错。
+- 底层：`lark-cli im +messages-send --msg-type interactive --content <card>`；卡片体与 webhook 完全一致（`createPayload().card`），签名字段不参与。
+- 优点：不需 webhook secret；缺点：依赖本机 lark-cli 已登录 + bot 在群内。
+
+### 11.2 gate 通过自动播报（`notifyOnGate:true`）
+
+`docs-tdd.mjs gate <PID> <Gx>` **机器校验通过（exit 0）** 时，自动发一张「Gx 已完成」卡片，无需手动 `notify-lark`。
+
+- **opt-in**：仅当项目 config `notifyOnGate === true` 才发；默认关，其它项目不受影响。
+- **仅通过时发**：gate 失败 / `changed` / `context` 等命令都不发。
+- **非阻塞**：播报失败只 warn，绝不改 gate 退出码。
+- **幂等防刷群**：幂等键 = `<PID>-<Gx>-<sha1(gate 指纹)[:12]>`，走 `--idempotency-key` 服务端去重；同代码状态重复跑同一 gate 不重复发。
+- **通道**：复用 §11.1 的 `notifyTransport`。
+- **实现坑**：`docs-tdd.mjs` 里 spawn 的是**项目薄包装** `notify-lark.mjs`，不能直调 common 脚本（软链主守卫恒 false，见 `lark-bot-gateway.md`）。
+
+命令行入口（bot 通道加了）：`--idempotency-key <key>`（仅 `notifyTransport:'bot'` 生效）。`docs-tdd.mjs`/`notify-lark.mjs` 是按需 CLI，改完即生效，无需重启常驻。

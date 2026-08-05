@@ -92,7 +92,9 @@ ${docs.map((item, index) => `${index + 1}. ${item}`).join('\n')}
 
 Lark 资料规则：如果任务是文档 / 修复 / 自测 / API / QA 类命令，开发前先查看项目的 agent/lark-sources.json 和 inbox/lark-sync/sync-report.md；能执行只读同步时，先运行项目 sync-lark-docs.mjs，把最新 Lark PRD / QA / Wiki / Drive / Markdown 资料同步到 docs_tdd 本地副本。开发依据必须是带 sourceUrl、syncedAt、readOnly 元信息的 apps/web/docs_tdd/** 本地副本；不得修改 Lark 云文档，不得把资料同步到业务代码目录。
 
-完成后必须调用本地 Bot Gateway，把 task 状态回写为 done 或 failed，并触发 Lark 群消息。完成消息格式：任务 + 结果；结果先写「已完成。」再用数字小结列出做了什么和效果。
+验证要求（代码类修复必做）：改动完成后，必须在 ${workCwd} 内验证本次改动——至少运行 \`pnpm type-check\`，并运行与改动相关的测试（\`pnpm test\` 或对应包/文件的最小测试范围），对触达文件运行 \`pnpm lint\`。只有验证通过才回写 done；若测试 / 类型检查 / lint 未通过，或环境无法运行验证，必须回写 failed 并写清未通过项或阻塞原因，禁止在未验证的情况下报成功。
+
+完成后必须调用本地 Bot Gateway，把 task 状态回写为 done 或 failed，并触发 Lark 群消息。完成消息格式：任务 + 结果；结果先写「已完成。」再用数字小结列出做了什么和效果（含验证结论：跑了哪些检查、是否通过）。
 `.trim()
 }
 

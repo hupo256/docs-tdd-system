@@ -23,3 +23,9 @@
 | 2026/8/5 17:13:26 | Lark Job | 进行中 | 收到群任务：/login 页都崩掉了，你要修复这个 | real | success |
 | 2026/8/5 17:16:20 | Lark Job | 已完成 | /login 页都崩掉了，你要修复这个：已完成。
 1. 定位到 /login 崩溃根因：useRedirectIfLogin 把 router.replace  | real | success |
+| 2026/8/5 19:29:19 | Lark Job | 阻塞中 | 修复：Lark bug 表待处理项 [跟单设置，要加第四个 tab ,  叫   迅速设置。UI/UX跟倍率一样]：处理失败。
+1. 任务：修复：Lark bug 表待处理项 [跟单设置，要加第四个 tab ,  叫   迅速设置。UI | real | failed |
+| 2026/8/5 19:55:02 | Lark Job | 已完成 | 修复：Lark bug 表待处理项 [跟单设置，每个 tab 在 hover 时要显示 tips ]：已完成。
+1) 定位组件：apps/web/src/apps/CopyTrading/components/CopySe | real | success |
+| 2026/8/5 21:16:19 | Lark Job | 已完成 | 修复：Lark bug 表待处理项 [跟单设置，每个 tab 在 hover 时要显示 tips ]：已完成。
+1) 定位组件：apps/web/src/apps/CopyTrading/components/CopySe | real | success |

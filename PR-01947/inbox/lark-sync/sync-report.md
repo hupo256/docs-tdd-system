@@ -2,4 +2,4 @@
 
 | 时间 | 资料 | 类型 | 结果 | 输出 |
 |------|------|------|------|------|
-| 2026-07-24T12:20:10.026Z | 需求 PRD | doc | synced | apps/web/docs_tdd/PR-01947/inbox/lark-sync/prd-latest.md |
+| 2026-08-05T17:07:02.990Z | 需求 PRD | doc | synced | ../docs_tdd/PR-01947/inbox/lark-sync/prd-latest.md |

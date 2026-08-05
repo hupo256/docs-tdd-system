@@ -342,6 +342,38 @@ function printGateHeartbeat(id, resolvedWorktree) {
   else if (beat.level === 'ok') console.log(`✓ gate 心跳：${beat.message}`)
 }
 
+// 阶段推进自动播报：gate 通过（exit 0）后，仅当项目 notify 配置 notifyOnGate===true 才发「Gx 已完成」卡片。
+// 非阻塞——发送失败只 warn，绝不改 gate 退出码；指纹入幂等键，同代码状态重复跑 gate 不重复刷群。
+function maybeBroadcastGate(id, gate) {
+  const configPath = join(docsRoot, id, 'agent/scripts', `${id.toLowerCase()}.json`)
+  const notifyConfig = readOptionalJson(configPath)
+  if (!notifyConfig?.notifyOnGate) return
+
+  const wrapper = join(docsRoot, id, 'agent/scripts/notify-lark.mjs')
+  if (!existsSync(wrapper)) {
+    console.warn(`⚠ notifyOnGate 开启但缺 notify-lark 薄包装：${wrapper}`)
+    return
+  }
+
+  const gateResult = readOptionalJson(join(docsRoot, id, 'agent/gate-results.json'))
+  const summary = typeof gateResult?.summary === 'string' && gateResult.summary.trim()
+    ? gateResult.summary.trim()
+    : `${gate} 机器校验通过`
+  const fpKey = createHash('sha1').update(JSON.stringify(gateResult?.fingerprint ?? gate)).digest('hex').slice(0, 12)
+  const idempotencyKey = `${id}-${gate}-${fpKey}`
+
+  const result = spawnSync(
+    process.execPath,
+    [wrapper, gate, '已完成', summary, '--config', configPath, '--idempotency-key', idempotencyKey],
+    { cwd: repoRoot, encoding: 'utf8' },
+  )
+  if (result.status === 0) {
+    console.log(`✓ 阶段播报已发：${id} ${gate} 已完成`)
+  } else {
+    console.warn(`⚠ 阶段播报失败（不影响 gate）：${(result.stderr || result.stdout || '').trim().slice(0, 200)}`)
+  }
+}
+
 function capability(id) {
   const projectDir = id ? join(docsRoot, id) : ''
   const manifestFile = projectDir ? join(projectDir, 'agent/project-manifest.json') : ''
@@ -447,6 +479,7 @@ else {
   if (!effectiveRules) process.exit(1)
   if (command === 'gate') {
     status = run([join(scriptDir, 'run-project-gate.mjs'), projectId, detail || 'G3', '--write', ...(noCache ? ['--no-cache'] : [])], worktree)
+    if (status === 0) maybeBroadcastGate(projectId, (detail || 'G3').toUpperCase())
   } else if (command === 'changed') {
     status = runChanged(projectId, worktree, effectiveRules.currentFingerprint)
   } else if (command === 'context') {

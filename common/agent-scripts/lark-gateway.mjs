@@ -107,12 +107,15 @@ const createTaskStore = ({ tasksDir }) => {
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 // 发群消息，带重试（网络/DNS 抖动时不丢消息）。idempotencyKey 让重试不会重复发（Lark 侧去重）。
-const sendChatMessage = async ({ chatId, text, logPrefix, idempotencyKey, retries = 3 }) => {
+// 传 card（interactive 卡片 content JSON）优先走卡片；否则回退纯文本 text。
+const sendChatMessage = async ({ chatId, text, card, logPrefix, idempotencyKey, retries = 3 }) => {
   if (!chatId) {
     console.warn(`[lark-gateway] ${logPrefix}: skipped, missing chatId`)
     return { ok: false, reason: 'missing chatId' }
   }
-  const args = ['im', '+messages-send', '--chat-id', chatId, '--msg-type', 'text', '--text', text]
+  const args = card
+    ? ['im', '+messages-send', '--chat-id', chatId, '--msg-type', 'interactive', '--content', card]
+    : ['im', '+messages-send', '--chat-id', chatId, '--msg-type', 'text', '--text', text]
   if (idempotencyKey) {
     args.push('--idempotency-key', String(idempotencyKey).slice(0, 50))
   }
@@ -135,12 +138,44 @@ const sendChatMessage = async ({ chatId, text, logPrefix, idempotencyKey, retrie
   return { ok: false, reason }
 }
 
-const buildQueuedMessage = ({ config, task }) =>
-  `[${config.title || config.project}] 已收到 Lark 任务\n任务：${(task.summary || task.text || '').slice(0, 120)}\n状态：已收到，正在排队处理\n${formatDisplayTime()}`
+// 回执卡片样式：与 notify-lark.mjs 的 G0-G8 卡片同一套规则（header 彩色模板 + 图标 + note 时间行），
+// 让 bot 主动发的「已收到/完成/失败/告警」与项目进度卡片视觉统一。
+const RECEIPT_STYLES = {
+  queued: { template: 'blue', icon: '🔄', statusText: '已收到，正在排队处理' },
+  done: { template: 'green', icon: '✅', statusText: '已完成' },
+  failed: { template: 'red', icon: '⛔', statusText: '处理失败' },
+  alert: { template: 'red', icon: '⚠️', statusText: 'Lark 长连接异常' },
+}
 
-const buildResultMessage = ({ config, task, status, result }) => {
-  const head = status === 'done' ? 'Lark 任务完成' : 'Lark 任务失败'
-  return `[${config.title || config.project}] ${head}\n任务：${(task.summary || task.text || '').slice(0, 120)}\n结果：${result || (status === 'done' ? '已完成。' : '处理失败。')}\n${formatDisplayTime()}`
+// 构建 interactive 卡片 content（供 sendChatMessage 的 --content 使用）。lines 为「**标签**：值」正文行。
+const buildCardContent = ({ config, kind, lines }) => {
+  const style = RECEIPT_STYLES[kind]
+  const content = [`**状态**：${style.statusText} ${style.icon}`, ...lines].join('\n')
+  return JSON.stringify({
+    config: { wide_screen_mode: true },
+    header: {
+      template: style.template,
+      title: { tag: 'plain_text', content: `[${config.project}] ${config.title || config.project}` },
+    },
+    elements: [
+      { tag: 'div', text: { tag: 'lark_md', content } },
+      { tag: 'note', elements: [{ tag: 'plain_text', content: formatDisplayTime() }] },
+    ],
+  })
+}
+
+const taskLine = (task) => `**任务**：${(task.summary || task.text || '').slice(0, 200)}`
+
+const buildQueuedCard = ({ config, task }) =>
+  buildCardContent({ config, kind: 'queued', lines: [taskLine(task)] })
+
+const buildResultCard = ({ config, task, status, result }) => {
+  const resultText = (result || (status === 'done' ? '已完成。' : '处理失败。')).trim()
+  return buildCardContent({
+    config,
+    kind: status === 'done' ? 'done' : 'failed',
+    lines: [taskLine(task), `**结果**：\n${resultText}`],
+  })
 }
 
 // ---------------------------------------------------------------------------
@@ -340,7 +375,7 @@ const ingestLarkEvent = async ({ raw, config, store }) => {
   store.upsert(task)
   console.log(`[lark-gateway] queued task ${task.id}: ${task.summary}`)
 
-  await sendChatMessage({ chatId: task.chatId, text: buildQueuedMessage({ config, task }), logPrefix: 'queued receipt', idempotencyKey: `${task.id}-queued` })
+  await sendChatMessage({ chatId: task.chatId, card: buildQueuedCard({ config, task }), logPrefix: 'queued receipt', idempotencyKey: `${task.id}-queued` })
   appendNotificationLog({
     config,
     row: `| ${formatDisplayTime()} | Lark Job | 进行中 | 收到群任务：${task.summary} | real | success |`,
@@ -364,7 +399,11 @@ const startEventConsumer = ({ config, store }) => {
     const chatId = config.bugTable?.chatId || config.allowedChatIds?.[0]
     await sendChatMessage({
       chatId,
-      text: `[${config.title || config.project}] ⚠️ Lark 长连接已连续 ${attempt} 次重连仍未恢复，可能暂时收不到群内 @；请检查网络或 lark-cli 登录态。\n${formatDisplayTime()}`,
+      card: buildCardContent({
+        config,
+        kind: 'alert',
+        lines: [`**详情**：已连续 ${attempt} 次重连仍未恢复，可能暂时收不到群内 @；请检查网络或 lark-cli 登录态。`],
+      }),
       logPrefix: 'consumer-down alert',
       idempotencyKey: `consumer-down-${attempt}`,
     })
@@ -470,7 +509,7 @@ const handleStatusUpdate = async ({ config, store, id, status, result }) => {
   if (status === 'done' || status === 'failed') {
     await sendChatMessage({
       chatId: task.chatId,
-      text: buildResultMessage({ config, task, status, result }),
+      card: buildResultCard({ config, task, status, result }),
       logPrefix: 'result receipt',
       idempotencyKey: `${task.id}-${status}`,
     })
@@ -521,7 +560,7 @@ export async function runLarkGateway({ configPath, port = defaultPort }) {
           status: 'queued',
           createdAt: new Date().toISOString(),
         })
-        await sendChatMessage({ chatId: task.chatId, text: buildQueuedMessage({ config, task }), logPrefix: 'queued receipt', idempotencyKey: `${task.id}-queued` })
+        await sendChatMessage({ chatId: task.chatId, card: buildQueuedCard({ config, task }), logPrefix: 'queued receipt', idempotencyKey: `${task.id}-queued` })
         return sendJson(res, 200, { task })
       }
       const statusMatch = pathname.match(/^\/lark\/tasks\/([^/]+)\/status$/)
