@@ -92,12 +92,20 @@ const SELF_TEST_EXEMPT = new Set([
   'check-doc-budget.mjs', // 顶层校验入口本身：无导出纯函数，逻辑每次实跑即自检，并被 golden 间接覆盖
   'claude-posttooluse-gate.mjs', // hook 分发薄包装
   'decommission-worktree.mjs', // worktree 回收 IO
+  'lark-bugtable-poller.mjs', // Lark Base 轮询 IO；解析/安全边界由 __tests__/lark-pure.test.mjs 覆盖
+  'lark-gateway.mjs', // HTTP/长连接编排；纯逻辑由 __tests__/lark-pure.test.mjs 与 lark-ai-executor.test.mjs 覆盖
   'lark-worker.mjs', // Lark 任务 worker（外部依赖）
   'log-exec.mjs', // 执行日志 IO
   'notify-lark.mjs', // Lark 发送薄包装
   'prepare-coding-worktree.mjs', // worktree 准备 IO
   'start-new-project.mjs', // 项目骨架 IO
   'sync-lark-docs.mjs', // Lark 只读同步 IO
+  'lib/lark-ai-executor.mjs', // AI 子进程 IO；命令/选择/输出由 __tests__/lark-ai-executor.test.mjs 覆盖
+  'lib/lark-cards.mjs', // 纯卡片构建，由 __tests__/lark-ai-executor.test.mjs 覆盖
+  'lib/lark-cli.mjs', // lark-cli 子进程 IO
+  'lib/lark-lint-diff.mjs', // diff 扫描纯逻辑，由 __tests__/lark-ai-executor.test.mjs 覆盖
+  'lib/lark-message.mjs', // 消息归一/白名单纯逻辑，由 __tests__/lark-pure.test.mjs 覆盖
+  'lib/lark-task-store.mjs', // 文件队列，由 __tests__/lark-task-store.test.mjs 覆盖
   'lib/fingerprint.mjs', // 指纹小工具（被 rule-release/effective-rules self-test 间接覆盖）
   'lib/roots.mjs', // 根解析（被多脚本 self-test 间接覆盖）
 ])

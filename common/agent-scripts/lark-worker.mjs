@@ -1,18 +1,23 @@
 #!/usr/bin/env node
 
 import { spawnSync } from 'node:child_process'
-import { existsSync, mkdirSync, readdirSync, symlinkSync } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { existsSync, mkdirSync, readFileSync, readdirSync, symlinkSync } from 'node:fs'
+import { dirname, isAbsolute, join } from 'node:path'
 import { resolveRoots } from './lib/roots.mjs'
 import { scanDiffForViolations, formatViolations } from './lib/lark-lint-diff.mjs'
+import {
+  execAiExecutor,
+  formatStructuredAiResult,
+  preflightAiExecutor,
+  resolveAiExecutor,
+} from './lib/lark-ai-executor.mjs'
 
 const defaultGatewayUrl = process.env.LARK_GATEWAY_URL || 'http://127.0.0.1:3005'
 const defaultPollMs = Number(process.env.LARK_WORKER_POLL_MS || 5000)
 // 并行执行上限：不同 worktree 的任务可同时跑，同一 worktree（cwd 相同）仍串行。
 // 每个并发任务都会起一个 claude + 全套验证，很吃 CPU/内存，默认 3 是吞吐与机器负载的平衡点。
 const defaultConcurrency = Math.max(1, Number(process.env.LARK_WORKER_CONCURRENCY || 3))
-const defaultCodexTimeoutMs = Number(process.env.LARK_WORKER_CODEX_TIMEOUT_MS || 1800000)
-const defaultAiExecutor = process.env.LARK_AI_EXECUTOR || 'codex'
+const defaultAiExecutor = 'claude'
 
 const { consumerRoot: repoRoot } = resolveRoots()
 // worktree 约定：/Users/aven/github/<项目ID>；无 worktree 的任务用临时 worktree（见 prepareTempWorktree）
@@ -35,17 +40,15 @@ const syncSleep = (ms) => {
   Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms)
 }
 
-// AI executor 抽象：把 task prompt 交给 claude 或 codex 的 headless 命令。
-// 无人值守场景下 claude 需 --dangerously-skip-permissions，否则只能"描述"、无法真正
-// 改文件/执行 git；代价是 worker 会在 repoCwd 里自主写操作，务必只绑受控 worktree + 白名单群。
-// codex 若启用需自行补其 bypass flag（本机未安装 codex，未验证故不预置）。
-const aiExecutorCommands = {
-  codex: (prompt) => ({ cmd: 'codex', args: ['exec', prompt] }),
-  claude: (prompt) => ({ cmd: 'claude', args: ['-p', '--dangerously-skip-permissions', prompt] }),
+const loadWorkerLocalConfig = (configPath) => {
+  if (!configPath) return {}
+  const absolutePath = isAbsolute(configPath) ? configPath : join(repoRoot, configPath)
+  try {
+    return JSON.parse(readFileSync(absolutePath, 'utf8'))
+  } catch (error) {
+    throw new Error(`worker config 读取失败（${absolutePath}）：${error.message}`)
+  }
 }
-
-const resolveAiExecutor = (workerConfig, task) =>
-  task.aiExecutor || workerConfig.aiExecutor || defaultAiExecutor
 
 // 项目文档：docs_tdd 在主仓下（软链到 ~/github/docs_tdd），按项目号取存在的文档
 const projectDocsFor = (projectId) =>
@@ -262,7 +265,7 @@ const requestJson = async (gatewayUrl, path, options = {}) => {
   return response.json()
 }
 
-const buildCodexPrompt = ({ projectId, projectName, projectDocs, cwd, hotfixBranch }, task) => {
+const buildTaskPrompt = ({ projectId, projectName, projectDocs, cwd, hotfixBranch }, task, executor) => {
   const workCwd = cwd || repoRoot
   const docs = [
     'apps/web/docs_tdd/common/lark-bot-gateway.md',
@@ -282,6 +285,10 @@ const buildCodexPrompt = ({ projectId, projectName, projectDocs, cwd, hotfixBran
         return parts.join('；')
       }).join('\n')
     : '无'
+
+  const completionInstruction = executor === 'codex'
+    ? `完成后不要访问或调用本地 Bot Gateway。最终答复必须严格按 CLI 提供的 JSON Schema 返回：\n- status：验证通过才是 done，否则 failed；\n- summary：先写结论，再概括改动和效果；\n- checks：实际运行过的检查及结果，未运行不得编造；\n- changedFiles：本次实际触达的相对路径。`
+    : `完成后必须调用本地 Bot Gateway，把 task 状态回写为 done 或 failed，并触发 Lark 群消息。完成消息格式：任务 + 结果；结果先写「已完成。」再用数字小结列出做了什么和效果（含验证结论：跑了哪些检查、是否通过）。`
 
   return `
 你正在处理 ${projectId} ${projectName} 的 Lark 群任务。
@@ -317,7 +324,7 @@ Lark 资料规则：如果任务是文档 / 修复 / 自测 / API / QA 类命令
 
 验证要求（代码类修复必做，**只验证本次触达的包/文件**，不跑全仓）：改动完成后必须在 ${workCwd} 内验证——对触达文件所在包运行 type-check（如触达 apps/web 则 \`cd apps/web && pnpm exec tsc --noEmit\`），运行与改动相关的最小范围测试（对应包/文件，不跑全仓 \`pnpm test\`），对触达文件运行 \`pnpm lint\` / biome。本仓库存在既有基线类型报错，**只需确认你触达的文件没有新增类型 / lint 错误**即可，不必要求全仓 tsc 干净。只有触达文件验证通过才回写 done；若触达文件有新增错误、相关测试未过，或环境无法运行验证，必须回写 failed 并写清未通过项或阻塞原因，禁止在未验证的情况下报成功。
 
-完成后必须调用本地 Bot Gateway，把 task 状态回写为 done 或 failed，并触发 Lark 群消息。完成消息格式：任务 + 结果；结果先写「已完成。」再用数字小结列出做了什么和效果（含验证结论：跑了哪些检查、是否通过）。
+${completionInstruction}
 `.trim()
 }
 
@@ -364,56 +371,14 @@ const runProjectDocSync = async ({ projectId }) => {
   return { skipped: false }
 }
 
-// 起一个 AI executor 子进程跑给定 prompt（带超时 + SIGTERM→SIGKILL 升级）。
-// 供正常任务与「规范纠正 pass」复用。
-const execAI = async ({ executor, promptText, cwd }) => {
-  const { spawn } = await import('node:child_process')
-  const buildCommand = aiExecutorCommands[executor]
-  if (!buildCommand) {
-    throw new Error(`unknown AI executor: ${executor} (expected claude or codex)`)
-  }
-  const { cmd, args } = buildCommand(promptText)
-
-  await new Promise((resolve, reject) => {
-    const child = spawn(cmd, args, { cwd: cwd || repoRoot, stdio: 'inherit' })
-    let timedOut = false
-    let killTimer = null
-    const timeout = Number.isFinite(defaultCodexTimeoutMs) && defaultCodexTimeoutMs > 0
-      ? setTimeout(() => {
-          timedOut = true
-          child.kill('SIGTERM')
-          // 宽限 10s 仍未退出 → SIGKILL，避免 AI 忽略 SIGTERM 导致 worker 循环永久卡死。
-          killTimer = setTimeout(() => {
-            try {
-              child.kill('SIGKILL')
-            } catch {
-              // 进程可能已退出
-            }
-          }, 10000)
-        }, defaultCodexTimeoutMs)
-      : null
-
-    const clearChildTimeout = () => {
-      if (timeout) clearTimeout(timeout)
-      if (killTimer) clearTimeout(killTimer)
-    }
-
-    child.on('error', (error) => {
-      clearChildTimeout()
-      reject(error)
-    })
-    child.on('exit', (code) => {
-      clearChildTimeout()
-      if (timedOut) return reject(new Error(`${executor} exec timed out after ${defaultCodexTimeoutMs}ms`))
-      if (code === 0) return resolve()
-      reject(new Error(`${executor} exec exited with code ${code}`))
-    })
-  })
-}
-
 const runAI = async (workerConfig, task, workContext) => {
   const executor = resolveAiExecutor(workerConfig, task)
-  await execAI({ executor, promptText: buildCodexPrompt(workContext, task), cwd: workContext.cwd || repoRoot })
+  return execAiExecutor({
+    executor,
+    promptText: buildTaskPrompt(workContext, task, executor),
+    cwd: workContext.cwd || repoRoot,
+    attachments: task.attachments || [],
+  })
 }
 
 // 无人值守规范闸：扫本次 diff 新增行的 arbitrary value / 失效裸色类；有违规先让 AI 定向纠正一次，
@@ -430,7 +395,7 @@ const enforceCodeQuality = async (workerConfig, task, workContext) => {
   console.warn(`[lark-worker] 规范闸命中 ${violations.length} 处违规，触发定向纠正 pass（${task.id}）`)
   try {
     const executor = resolveAiExecutor(workerConfig, task)
-    await execAI({ executor, promptText: buildLintFixPrompt(cwd, violations), cwd })
+    await execAiExecutor({ executor, promptText: buildLintFixPrompt(cwd, violations), cwd })
   } catch (error) {
     console.warn(`[lark-worker] 规范纠正 pass 执行异常（保留原改动）：${error.message}`)
   }
@@ -473,18 +438,22 @@ export async function runLarkWorker({
   projectName,
   projectDocs = [],
   aiExecutor = defaultAiExecutor,
+  configPath,
   repoCwd,
 }) {
   if (!projectId || !projectName) {
     throw new Error('runLarkWorker requires projectId and projectName')
   }
 
-  const workerConfig = { projectId, projectName, projectDocs, aiExecutor, repoCwd }
+  const localConfig = loadWorkerLocalConfig(configPath)
+  const workerConfig = { projectId, projectName, projectDocs, aiExecutor, localConfig, repoCwd }
+  const startupExecutor = resolveAiExecutor(workerConfig, {})
+  console.log(`[lark-worker] AI executor=${startupExecutor}（task > env > config > wrapper）`)
   const request = (path, options) => requestJson(gatewayUrl, path, options)
-  const updateTask = (taskId, status, result) =>
+  const updateTask = (taskId, status, result, executor) =>
     request(`/lark/tasks/${encodeURIComponent(taskId)}/status`, {
       method: 'POST',
-      body: JSON.stringify({ status, result }),
+      body: JSON.stringify({ status, result, aiExecutor: executor }),
     })
 
   const getTask = async (taskId) => {
@@ -506,7 +475,16 @@ export async function runLarkWorker({
       return
     }
 
-    console.log(`[lark-worker] claimed ${task.id}: ${task.text}`)
+    let selectedExecutor
+    try {
+      selectedExecutor = resolveAiExecutor(workerConfig, task)
+      preflightAiExecutor(selectedExecutor)
+    } catch (error) {
+      await updateTask(task.id, 'failed', buildFailureResult(task, error))
+      return
+    }
+
+    console.log(`[lark-worker] claimed ${task.id} via ${selectedExecutor}: ${task.text}`)
     console.log(`[lark-worker] routing ${task.id} → ${workContext.cwd}${workContext.hotfixBranch ? ` (临时 worktree ${workContext.hotfixBranch})` : ''}`)
     // 命中已有 worktree 且进来时已有未提交 WIP → 先把 WIP 单独提交一笔隔离，
     // 与随后本任务的改动分成两个 commit，避免你的 WIP 和 bot 改动混作一团。
@@ -525,9 +503,27 @@ export async function runLarkWorker({
         await runProjectDocSync({ projectId: workContext.projectId })
       }
 
-      await runAI(workerConfig, task, workContext)
+      task.aiExecutor = selectedExecutor
+      // 先持久化实际执行器，排障与最终卡片都不依赖 AI 自报。
+      await updateTask(task.id, 'running', undefined, selectedExecutor)
+      const aiRun = await runAI(workerConfig, task, workContext)
 
-      const latestTask = await getTask(task.id)
+      let latestTask = await getTask(task.id)
+      let qualityGate = null
+      // Codex 不开放工具网络，无法也不应自行请求 Gateway；结构化结果由 Worker 统一回写。
+      if (aiRun.result && latestTask?.status === 'running') {
+        if (aiRun.result.status === 'done') {
+          qualityGate = await enforceCodeQuality(workerConfig, task, workContext)
+        }
+        let resultText = formatStructuredAiResult(aiRun.result, aiRun.executor)
+        if (qualityGate && !qualityGate.ok) {
+          task.qualityNote = `含 ${qualityGate.remaining.length} 处未修正规范问题（arbitrary value / 失效色类），需人工处理`
+          resultText += `\n5. ⚠ ${task.qualityNote}`
+        }
+        await updateTask(task.id, aiRun.result.status, resultText, aiRun.executor)
+        latestTask = await getTask(task.id)
+      }
+
       if (latestTask?.status === 'running') {
         // AI 退出但没显式回写 done/failed → 一律判失败待人工复核（不分任务类型，绝不兜底成功）
         await updateTask(task.id, 'failed', buildNeedsReviewResult(task))
@@ -536,7 +532,7 @@ export async function runLarkWorker({
 
       // 规范闸（仅任务成功后、提交前）：扫本次 diff 违规 → AI 定向纠正一次 → 残留记入 commit message
       // 供人工 review 时看见。claude 已自报 done、完成卡已发，故此处不重发卡片，只保证「进分支的代码」变干净。
-      if (latestTask?.status === 'done') {
+      if (latestTask?.status === 'done' && !qualityGate) {
         const gate = await enforceCodeQuality(workerConfig, task, workContext)
         if (!gate.ok) {
           task.qualityNote = `含 ${gate.remaining.length} 处未修正规范问题（arbitrary value / 失效色类），需人工处理`

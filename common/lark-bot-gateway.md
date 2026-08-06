@@ -243,6 +243,10 @@ Worker 完成后必须回群，并写入项目通知记录。回群内容固定�
 
 项目级 `agent/scripts/lark-worker.mjs` 必须是薄包装，只调用 `common/agent-scripts/lark-worker.mjs` 并传入项目编号、项目名称和需要读取的项目文档。Gateway 轮询、任务领取、Codex prompt、状态回写、空任务失败处理和兜底完成消息都由公共 Worker 维护；不得在项目目录复制完整 Worker 实现。
 
+AI 执行器只允许 `claude` / `codex`，优先级为：task > `LARK_AI_EXECUTOR` > `lark-bot.local.json.aiExecutor` > wrapper > `claude`。群消息开头 `[codex]` / `[claude]` 可单次覆盖，外部投递可传 `aiExecutor`；未知值拒绝，结果卡显示实际执行器。
+
+Codex 使用 `codex exec`：`ephemeral + workspace-write + approval never + 工具网络关闭`。Prompt 走 stdin，图片走 `--image`；最终结果按 `common/schemas/lark-ai-result.schema.json` 输出，由 Worker 回写 Gateway，不使用全放权参数。Claude 保持既有 callback。
+
 ## 12. 当前实现：lark-cli 长连接（替代公网 tunnel）
 
 历史上 Gateway 是独立 Koa 服务，靠公网 cloudflared tunnel 收 Lark 事件回调并做 challenge / 验签。当前推荐实现改为 **lark-cli 官方长连接**，`common/agent-scripts/lark-gateway.mjs` 是本地专用 Gateway：
@@ -255,6 +259,7 @@ Worker 完成后必须回群，并写入项目通知记录。回群内容固定�
 - **健壮性兜底**（无人值守必需）：
   - **领取租约**：`claimNext` 领走任务时盖 `claimedAt`，超过 `LARK_TASK_LEASE_MS`（默认 40min，须 > worker AI 超时 30min）仍 `running` 视为孤儿（worker 崩了），下次领取时自动重入队；`GET /lark/health` 暴露各状态计数与卡住任务 id。
   - **子进程超时**：所有 `lark-cli` 调用带 `LARK_CLI_TIMEOUT_MS`（默认 60s）超时，到点 SIGTERM→3s 后 SIGKILL，避免卡网/卡登录永久挂起。worker 的 AI 进程超时同样升级到 SIGKILL。
+  - **AI 启动预检**：每种 executor 首次执行前先检查 CLI；Codex 额外检查 `codex login status`，缺二进制/登录态直接回写 failed，不等跑到半途。AI 超时用 `LARK_WORKER_AI_TIMEOUT_MS`（默认 30min；兼容旧 `LARK_WORKER_CODEX_TIMEOUT_MS`）。
   - **本地 API 鉴权（可选）**：配置 `LARK_GATEWAY_SECRET` 后，所有写操作 POST 必须带 `x-lark-gateway-secret`（worker/poller 从同名环境变量读取）；`readBody` 有 1MB 上限。未配置则仅靠 127.0.0.1 绑定兜底。
   - **附件文件名 sanitize、状态白名单校验**：`imageKey` 拼本地路径前清路径分隔符；`/status` 只接受合法生命周期状态。
 
@@ -278,12 +283,12 @@ bug 多维表格通常是**全公司共享表**，同一负责人的 bug 横跨�
 
 worker 不再是单串行循环，而是**按目标 worktree 并行**的调度器：
 
-- **调度键 = `resolveWorkContext(task).cwd`**。同一 worktree（同项目、或同 adhoc 分支）的任务**串行**（并发 claude 在同目录改文件会打架）；不同 worktree 的任务**并行**。
+- **调度键 = `resolveWorkContext(task).cwd`**。同一 worktree（同项目、或同 adhoc 分支）的任务**串行**（并发 AI 在同目录改文件会打架）；不同 worktree 的任务**并行**。
 - **并发上限** `LARK_WORKER_CONCURRENCY`（默认 3）。调度循环：`inFlight`（Map，key=cwd）未满时，`GET /lark/tasks` 列出 queued/received 按 createdAt 升序，挑第一个「cwd 未在飞」的任务，`POST /lark/tasks/:id/claim` 原子领取（返回 null 表示被并发领走/状态已变，下一轮重来），启动 `runTask` 并在 `finally` 里 `inFlight.delete(cwd)`。
 - **`--once`** 保持旧单次语义（领一个最老 pending 跑完退出）。
 - **临时 worktree 提速**：`prepareTempWorktree` 建好后 `linkNodeModules` 把主仓的 node_modules（根 + `apps/*` + `packages/*`，pnpm monorepo 每包各一份）**软链**进临时目录，免 `pnpm install`（重建整棵符号链接树很慢）。临时 worktree 基于 `origin/online`、依赖集与主仓一致，Node 经目录软链 realpath 解析进主仓 store。软链失败只 warn（claude 可自行装依赖兜底）。
 - **验证收窄**：hotfix/群 @ 任务的 AI prompt 只要求验证**触达的包/文件**（如 `cd apps/web && pnpm exec tsc --noEmit` + 触达文件 lint + 相关最小测试），本仓有基线类型报错，只需确认触达文件无新增错误，不跑全仓。
 - **编码规范双保险**：① prompt 里让 claude 先读 `~/.ai-rules/skills/coding-quality/SKILL.md` + 按 `rule-router.md` 加载 L3，并内联最易踩红线（禁 arbitrary value、颜色必须用真实 preset token）；② **无人值守规范闸**（`lib/lark-lint-diff.mjs` + worker `enforceCodeQuality`）：任务成功、提交前扫本次 **diff 新增行**的 arbitrary value（`rounded-[8px]`…）与失效裸色类（`text-green` 等 Tailwind 静默丢弃的未知类），命中先让 AI **定向纠正一次**，仍残留则写进 commit message（`⚠ N 处未修正规范问题`）供人工 review。只扫 `+` 行、不碰存量债，只对代码文件生效。
 
-> git `worktree add/remove` 走 spawnSync 同步执行、本就互不交错，无需额外锁；并行的是各任务的 claude 运行。
+> git `worktree add/remove` 走 spawnSync 同步执行、本就互不交错，无需额外锁；并行的是各任务的 AI executor 运行。
 > 规范闸是**代码级兜底**（不依赖哪个 AI 写的），补 prompt 自律之不足；团队级全局 lint 仍按项目节奏另议。

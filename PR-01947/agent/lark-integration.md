@@ -37,7 +37,7 @@ Lark 群 @机器人 ─┐                         Lark bug 多维表格 ─┐
 | 项目 / 标题 | PR-01947 / CopyTrading 跟单设置 |
 | 机器人 app | `cli_aabf9468b1789ed4`（Aven.tong 的 bot，已在试点群） |
 | 配置文件 | `scripts/lark-bot.local.json`（**本机 gitignored 的单一 bot 配置**，含 botOpenId/allowedChatIds/myOpenId/bugTable.appToken 等标识，禁提交）。**这是单一跨项目 bot 服务配置**，非 PR-01947 专属；`project`/`title` 仅作附件/任务落盘目录与 adhoc 兜底品牌 |
-| AI 执行器 | `aiExecutor`：默认 `claude`（worker wrapper 设定），可被 task / `LARK_AI_EXECUTOR` 覆盖；worker 在 `/Users/aven/github/PR-01947` worktree 内执行；claude 已带 `--dangerously-skip-permissions`（无人值守可真改代码，故务必只绑受控 worktree + 白名单群） |
+| AI 执行器 | 仅允许 `claude` / `codex`；优先级 task（群消息开头 `[codex]`/`[claude]`）> `LARK_AI_EXECUTOR` > `lark-bot.local.json.aiExecutor` > 默认 `claude`。Codex 用 workspace-write、never、工具网络关闭及结构化结果，由 Worker 回写 Gateway；Claude 保持现有无人值守 callback。 |
 | 任务队列 | `agent/lark-tasks/*.json`（文件队列，gitignored） |
 | bug 去重状态 | `agent/lark-bugtable-state.json`（gitignored） |
 | 图片附件 | `agent/lark-attachments/<messageId>/`（gitignored） |
@@ -84,12 +84,12 @@ node /Users/aven/github/docs_tdd/PR-01947/agent/scripts/lark-bugtable-poller.mjs
 
 | 项 | 状态 |
 |----|------|
-| 公共脚本 | ✅ `lark-gateway.mjs`（含拍平事件归一化器）、`lark-worker.mjs`（executor 抽象 + claude 放权）、`lark-bugtable-poller.mjs`（列式解析 + 分页） |
+| 公共脚本 | ✅ `lark-gateway.mjs`（含拍平事件归一化器）、`lark-worker.mjs`（Claude/Codex executor 抽象 + 安全参数）、`lark-bugtable-poller.mjs`（列式解析 + 分页） |
 | 本地 HTTP 队列契约 | ✅ health / ingest / claim / status / 去重 / 落盘 / 两条独立回群消息 全通过 |
 | lark-cli 长连接 | ✅ `feishu-websocket: connected`，真 @ 事件已摄取解析 |
 | 能力2 全链路 | ✅ claude 真执行验证通过 |
 | 能力3 | ✅ 读取/分页/过滤/回写 shape 已验；当前 aven 名下无待处理 bug，缺真实数据端到端 |
-| codex 执行器 | ⏸ 本机 `codex` CLI 不在 PATH（装的是 ChatGPT App），未预置其 bypass flag；默认 claude 已工作 |
+| codex 执行器 | ✅ 本机 ChatGPT App 内置 Codex CLI 可用；已接 `codex exec` 非交互模式、结构化结果与 Worker 回写；默认仍为 Claude，改本机 `aiExecutor` 或消息加 `[codex]` 灰度启用 |
 
 ### 关键实现坑（避免重踩）
 - **软链主守卫**：见 §4，只走薄包装入口。
@@ -97,6 +97,7 @@ node /Users/aven/github/docs_tdd/PR-01947/agent/scripts/lark-bugtable-poller.mjs
 - **lark-cli 事件是拍平顶层结构**（非官方嵌套 webhook schema）：`message_id/chat_id/sender_id` 在顶层、`content` 是已内联 mention 名的纯文本、`mentions[].id` 是字符串。gateway 已加归一化器（双 schema 容错 + 去 mention）。@bot 判定 = `mentions.some(m=>m.id===botOpenId)`。
 - **`base +record-list` 返回列式结构**（`data.fields`=列名字符串数组 / `data.data`=行 / `data.record_id_list`），非 `data.items[].fields`；poller 已按列式解析并翻页。`+record-search` 强制要 `--keyword`，不适合列全部。
 - **worker `claude -p` 默认权限无法无人值守写文件/git**，已加 `--dangerously-skip-permissions`。
+- **Codex 不照搬 Claude 的全放权**：使用 `workspace-write + approval never + network=false + ephemeral`；AI 最终 JSON 由 Worker 回写本地 Gateway，避免为 callback 打开工具网络。
 
 ### 本轮健壮性加固（2026-08-06，review 后落码）
 

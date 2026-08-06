@@ -71,6 +71,12 @@ const loadConfig = (configPath) => {
 
 const docsDir = (project) => join(repoRoot, 'apps/web/docs_tdd', project)
 
+// 群消息可用 `[codex]` / `[claude]` 临时覆盖本机默认；只返回固定枚举，不接受命令参数。
+export const parseAiExecutorDirective = (text) => {
+  const match = String(text || '').match(/^\s*\[(codex|claude)\](?:\s+|$)/i)
+  return match ? match[1].toLowerCase() : undefined
+}
+
 // ---------------------------------------------------------------------------
 // bug 表回写：done 后把记录状态从「待处理」改为约定完成值
 // ---------------------------------------------------------------------------
@@ -160,6 +166,7 @@ const ingestLarkEvent = async ({ raw, config, store }) => {
 
   const project = await resolveProject({ chatId: msg.chatId, text: mergedText })
   const worktreeExists = project ? existsSync(join(worktreesDir, project)) : false
+  const requestedExecutor = parseAiExecutorDirective(msg.text)
 
   const task = store.upsert({
     id: msg.messageId,
@@ -173,6 +180,7 @@ const ingestLarkEvent = async ({ raw, config, store }) => {
     // 卡片「任务」摘要优先展示用户本条附言，其次被引用消息首行
     summary: summarize(msg.text?.trim() ? msg.text : refCtx?.text || ''),
     attachments,
+    aiExecutor: requestedExecutor,
     status: 'queued',
     createdAt: new Date().toISOString(),
   })
@@ -311,13 +319,22 @@ const sendJson = (res, status, body) => {
 }
 
 const VALID_STATUSES = new Set(['queued', 'running', 'verifying', 'done', 'failed', 'blocked', 'waiting_confirmation'])
+const VALID_AI_EXECUTORS = new Set(['claude', 'codex'])
 
-const handleStatusUpdate = async ({ config, store, id, status, result }) => {
+const normalizeAiExecutor = (value) => {
+  if (value == null || value === '') return undefined
+  const normalized = String(value).trim().toLowerCase()
+  if (!VALID_AI_EXECUTORS.has(normalized)) throw new Error(`invalid aiExecutor: ${value}`)
+  return normalized
+}
+
+const handleStatusUpdate = async ({ config, store, id, status, result, aiExecutor }) => {
   if (!VALID_STATUSES.has(status)) return { ok: false, error: `invalid status: ${status}` }
   const task = store.get(id)
   if (!task) return { ok: false, error: 'task not found' }
   task.status = status
   task.result = result
+  task.aiExecutor = normalizeAiExecutor(aiExecutor) || task.aiExecutor
   store.upsert(task)
 
   if (status === 'done' && task.source === 'lark-bugtable') {
@@ -340,6 +357,7 @@ const handleStatusUpdate = async ({ config, store, id, status, result }) => {
 
 export async function runLarkGateway({ configPath, port = defaultPort }) {
   const config = loadConfig(configPath)
+  config.aiExecutor = normalizeAiExecutor(config.aiExecutor)
   const membershipMode = config.allowedChatIds === 'auto'
   if (!membershipMode && !config.allowedChatIds?.length && !config.allowedOpenIds?.length) {
     console.warn('[lark-gateway] ⚠ 未配置任何白名单（allowedChatIds/allowedOpenIds），将拒绝所有事件（fail-closed）。请填 allowedChatIds:"auto"（bot 所在群）或显式群 id。')
@@ -402,6 +420,7 @@ export async function runLarkGateway({ configPath, port = defaultPort }) {
           text: body.text || '',
           summary: summarize(body.text),
           attachments: body.attachments || [],
+          aiExecutor: normalizeAiExecutor(body.aiExecutor),
           status: 'queued',
           createdAt: new Date().toISOString(),
         })
@@ -417,6 +436,7 @@ export async function runLarkGateway({ configPath, port = defaultPort }) {
           id: decodeURIComponent(statusMatch[1]),
           status: body.status,
           result: body.result,
+          aiExecutor: body.aiExecutor,
         })
         return sendJson(res, outcome.ok ? 200 : 404, outcome)
       }

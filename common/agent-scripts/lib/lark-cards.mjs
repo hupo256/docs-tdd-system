@@ -40,6 +40,7 @@ export const buildCardContent = ({ config, kind, lines, project, projectTitle })
 }
 
 const taskLine = (task) => `**任务**：${(task.summary || task.text || '').slice(0, 200)}`
+const executorLine = (task) => task.aiExecutor ? `**执行器**：${task.aiExecutor === 'codex' ? 'Codex' : 'Claude'}` : null
 
 // 卡片标题用的项目段：有项目号用它（仅当 == config.project 才带 config.title 后缀），
 // 无项目号（adhoc 主仓 hotfix）显示「主仓 hotfix」。
@@ -49,14 +50,19 @@ const cardProjectOf = (task, config) => ({
 })
 
 export const buildQueuedCard = ({ config, task, note }) =>
-  buildCardContent({ config, kind: 'queued', lines: note ? [taskLine(task), note] : [taskLine(task)], ...cardProjectOf(task, config) })
+  buildCardContent({
+    config,
+    kind: 'queued',
+    lines: [taskLine(task), executorLine(task), note].filter(Boolean),
+    ...cardProjectOf(task, config),
+  })
 
 export const buildResultCard = ({ config, task, status, result }) => {
   const resultText = (result || (status === 'done' ? '已完成。' : '处理失败。')).trim()
   return buildCardContent({
     config,
     kind: status === 'done' ? 'done' : 'failed',
-    lines: [taskLine(task), `**结果**：\n${resultText}`],
+    lines: [taskLine(task), executorLine(task), `**结果**：\n${resultText}`].filter(Boolean),
     ...cardProjectOf(task, config),
   })
 }

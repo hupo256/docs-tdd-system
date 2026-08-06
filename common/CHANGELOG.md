@@ -7,6 +7,12 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-08-06（Lark 自动修复增加 Codex executor）
+
+- Lark Worker 的 AI 执行器收敛为 `claude|codex` 固定枚举，接通 task / 环境变量 / 本机配置三级选择，并支持群消息 `[codex]` / `[claude]` 单次覆盖；卡片记录实际执行器。
+- Codex 走非交互 workspace-write、无审批、工具网络关闭与 ephemeral 会话，图片直接附加；最终结果按 schema 输出后由 Worker 回写 Gateway，不给 AI callback 开网络，也不使用全放权参数。
+- executor 适配抽入 `lib/lark-ai-executor.mjs`，新增选择、命令权限、结构化回执与卡片测试；真实 `/tmp` 隔离 smoke 已验证 Codex CLI 登录、参数和零业务文件改动。
+
 ## 2026-08-04（判断层门禁锚定可核验证据 + 收敛自动化边界）
 
 - **补的是哪一层**：评审发现机器强制层"硬层真硬（biome/tsc/vitest/build 实跑退出码），软层必然软"——判断层的 `acceptance-results.json` 只校验 evidence 数组非空、不验证产物真实存在；SHA 绑定可选（head 缺省即跳过 staleness）。本次把承重的判断层门禁锚定到外部可核验产物，并把叙事与真实能力对齐。
