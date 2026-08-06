@@ -265,7 +265,19 @@ const requestJson = async (gatewayUrl, path, options = {}) => {
   return response.json()
 }
 
-const buildTaskPrompt = ({ projectId, projectName, projectDocs, cwd, hotfixBranch }, task, executor) => {
+export const buildValidationRequirements = () => `验证策略（代码类修复必做，按最终 diff 风险分级，禁止机械跑全量检查）：
+1. 先看最终 \`git diff --name-only\` / \`git diff\`，只选一个等级：
+   - **L1 样式 / 静态文案 / 纯标记**：仅改 className、CSS token、静态文案或不改变 props / 类型 / 控制流的 JSX。必须跑 \`git diff --check\`、触达文件 Biome；有直接相关测试才跑最小测试。**无需 type-check**，checks 中注明“L1，按策略跳过 type-check”。
+   - **L2 局部逻辑 / 类型**：改组件逻辑、hook、纯函数、props 或局部类型。跑 L1 检查 + 直接相关最小测试 + 触达包 type-check 一次。
+   - **L3 契约 / 共享高风险**：改 API、schema、mapper、共享状态、权限、路由或跨包契约。跑触达文件 Biome + 相关契约/单测 + 所有触达包 type-check；仍不跑全仓 build/test。
+2. 临时 worktree 已软链依赖，**不要运行 pnpm install，也不要用会触发 Corepack/registry 的 \`pnpm exec\`**。优先调用仓库现有本地二进制，例如：
+   - \`./node_modules/.bin/biome check --no-errors-on-unmatched <触达文件>\`
+   - \`./node_modules/.bin/vitest run --no-cache <直接相关测试>\`
+   - L2/L3 才用对应包的 \`node_modules/.bin/tsc --project <tsconfig> --noEmit --pretty false\`
+3. 收敛规则：同一检查最多执行一次；只有明确的环境/缓存故障可用一个已知兜底重试一次（例如首次误用了缓存，改 \`--no-cache\`）。preset/token 存在性用 \`rg\` / 读源文件确认，不要 import 整个构建配置。命中仓库既有 type-check 基线错误时，只确认输出不含触达文件，不继续追查无关错误。
+4. 必需检查完成后立即结束，不追加“顺手”扫描、全量测试、全仓 type-check 或 build。实际检查失败且无法用上述一次兜底排除环境问题时返回 failed；未运行的检查不得编造。`
+
+export const buildTaskPrompt = ({ projectId, projectName, projectDocs, cwd, hotfixBranch }, task, executor) => {
   const workCwd = cwd || repoRoot
   const docs = [
     'apps/web/docs_tdd/common/lark-bot-gateway.md',
@@ -322,7 +334,7 @@ Lark 资料规则：如果任务是文档 / 修复 / 自测 / API / QA 类命令
    - 命名入参类型（2+ 入参含回调定义 \`XxxProps\`）、i18n key 用字面量 \`t('ns:literal.key')\`、缺失数据显式 \`--\` 不造假默认、server state 归 React Query。
 3. 改完自审自己的 diff：\`cd ${workCwd} && git diff\`，逐行检查有没有新增的 \`[..px]\` / \`[..%]\` 等 arbitrary value，或不在 preset 里的 class（尤其颜色）；发现就地换成 token 后再回写 done。
 
-验证要求（代码类修复必做，**只验证本次触达的包/文件**，不跑全仓）：改动完成后必须在 ${workCwd} 内验证——对触达文件所在包运行 type-check（如触达 apps/web 则 \`cd apps/web && pnpm exec tsc --noEmit\`），运行与改动相关的最小范围测试（对应包/文件，不跑全仓 \`pnpm test\`），对触达文件运行 \`pnpm lint\` / biome。本仓库存在既有基线类型报错，**只需确认你触达的文件没有新增类型 / lint 错误**即可，不必要求全仓 tsc 干净。只有触达文件验证通过才回写 done；若触达文件有新增错误、相关测试未过，或环境无法运行验证，必须回写 failed 并写清未通过项或阻塞原因，禁止在未验证的情况下报成功。
+${buildValidationRequirements()}
 
 ${completionInstruction}
 `.trim()

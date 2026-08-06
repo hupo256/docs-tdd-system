@@ -12,6 +12,7 @@ import {
 } from '../lib/lark-ai-executor.mjs'
 import { buildQueuedCard, buildResultCard } from '../lib/lark-cards.mjs'
 import { scanDiffForViolations } from '../lib/lark-lint-diff.mjs'
+import { buildTaskPrompt, buildValidationRequirements } from '../lark-worker.mjs'
 
 describe('AI executor selection', () => {
   it('只接受 claude/codex 固定枚举', () => {
@@ -63,6 +64,28 @@ describe('Codex non-interactive command', () => {
     const command = buildAiExecutorCommand({ executor: 'claude', promptText: 'fix it', cwd: '/tmp/repo' })
     assert.deepEqual(command.args, ['-p', '--dangerously-skip-permissions', 'fix it'])
     assert.equal(command.resultMode, 'gateway-callback')
+  })
+})
+
+describe('risk-based validation policy', () => {
+  it('L1 样式改动跳过 type-check，验证使用本地二进制并预防缓存/网络问题', () => {
+    const policy = buildValidationRequirements()
+    assert.match(policy, /L1 样式/)
+    assert.match(policy, /无需 type-check/)
+    assert.match(policy, /node_modules\/\.bin\/vitest run --no-cache/)
+    assert.match(policy, /不要用会触发 Corepack\/registry 的 `pnpm exec`/)
+    assert.match(policy, /同一检查最多执行一次/)
+  })
+
+  it('任务 Prompt 只保留风险分级策略，不再强制每个 apps\/web 改动跑 tsc', () => {
+    const prompt = buildTaskPrompt(
+      { projectId: 'PR-00001', projectName: 'test', projectDocs: [], cwd: '/tmp/repo', hotfixBranch: 'hotfix/test' },
+      { id: 'task-1', text: '调整圆角', attachments: [] },
+      'codex',
+    )
+    assert.match(prompt, /按最终 diff 风险分级/)
+    assert.doesNotMatch(prompt, /cd apps\/web && pnpm exec tsc --noEmit/)
+    assert.match(prompt, /必需检查完成后立即结束/)
   })
 })
 

@@ -287,7 +287,7 @@ worker 不再是单串行循环，而是**按目标 worktree 并行**的调度�
 - **并发上限** `LARK_WORKER_CONCURRENCY`（默认 3）。调度循环：`inFlight`（Map，key=cwd）未满时，`GET /lark/tasks` 列出 queued/received 按 createdAt 升序，挑第一个「cwd 未在飞」的任务，`POST /lark/tasks/:id/claim` 原子领取（返回 null 表示被并发领走/状态已变，下一轮重来），启动 `runTask` 并在 `finally` 里 `inFlight.delete(cwd)`。
 - **`--once`** 保持旧单次语义（领一个最老 pending 跑完退出）。
 - **临时 worktree 提速**：`prepareTempWorktree` 建好后 `linkNodeModules` 把主仓的 node_modules（根 + `apps/*` + `packages/*`，pnpm monorepo 每包各一份）**软链**进临时目录，免 `pnpm install`（重建整棵符号链接树很慢）。临时 worktree 基于 `origin/online`、依赖集与主仓一致，Node 经目录软链 realpath 解析进主仓 store。软链失败只 warn（claude 可自行装依赖兜底）。
-- **验证收窄**：hotfix/群 @ 任务的 AI prompt 只要求验证**触达的包/文件**（如 `cd apps/web && pnpm exec tsc --noEmit` + 触达文件 lint + 相关最小测试），本仓有基线类型报错，只需确认触达文件无新增错误，不跑全仓。
+- **验证分级**：L1 样式/文案只跑 diff-check、触达文件 Biome 和已有直接测试，不跑 type-check；L2 逻辑/类型、L3 契约/共享改动才跑触达包 type-check。临时 worktree 用已软链的 `.bin`，Vitest 加 `--no-cache`；同一检查最多一次，必需项完成即收尾。
 - **编码规范双保险**：① prompt 里让 claude 先读 `~/.ai-rules/skills/coding-quality/SKILL.md` + 按 `rule-router.md` 加载 L3，并内联最易踩红线（禁 arbitrary value、颜色必须用真实 preset token）；② **无人值守规范闸**（`lib/lark-lint-diff.mjs` + worker `enforceCodeQuality`）：任务成功、提交前扫本次 **diff 新增行**的 arbitrary value（`rounded-[8px]`…）与失效裸色类（`text-green` 等 Tailwind 静默丢弃的未知类），命中先让 AI **定向纠正一次**，仍残留则写进 commit message（`⚠ N 处未修正规范问题`）供人工 review。只扫 `+` 行、不碰存量债，只对代码文件生效。
 
 > git `worktree add/remove` 走 spawnSync 同步执行、本就互不交错，无需额外锁；并行的是各任务的 AI executor 运行。
