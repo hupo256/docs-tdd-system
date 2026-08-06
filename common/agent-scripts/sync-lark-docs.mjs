@@ -9,6 +9,8 @@ import { resolveDocsPath, resolveRoots } from './lib/roots.mjs'
 const scriptDir = path.dirname(fileURLToPath(import.meta.url))
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, config: bindingConfig } = resolveRoots()
 const larkCliBin = process.env.LARK_CLI_BIN || 'lark-cli'
+// lark-cli 子进程超时兜底（默认 120s；文档同步可能较慢，给宽一点）
+const larkCliTimeoutMs = Number(process.env.LARK_CLI_TIMEOUT_MS || 120000)
 const allowedServices = new Set(['doc', 'docs', 'wiki', 'drive', 'markdown'])
 const allowedOperations = new Set(['read', 'search'])
 const forbiddenTokenPattern = /(create|update|patch|delete|remove|write|append|upload|send|reply|complete|move|copy|share|permission)/i
@@ -127,7 +129,7 @@ const getCommand = (source) => {
   return buildDefaultCommand(source)
 }
 
-const validateSource = (source) => {
+export const validateSource = (source) => {
   const type = String(source.type || '')
   const operation = String(source.operation || 'read')
 
@@ -169,8 +171,11 @@ const validateSource = (source) => {
     throw new Error(`+fetch is only allowed for docs read sync: ${commandText}`)
   }
 
-  if (shortcut && forbiddenTokenPattern.test(shortcut)) {
-    throw new Error(`lark-cli command contains a forbidden write-like token: ${commandText}`)
+  // 禁写校验扫描整条命令的每个 token（不止 shortcut），防止 source.command 里夹带 --op=update /
+  // +batch-delete 之类的写命令；排除 source.url 本身以免 URL 路径里的普通词误触发。
+  const forbiddenHit = command.filter((token) => token !== source.url).find((token) => forbiddenTokenPattern.test(token))
+  if (forbiddenHit) {
+    throw new Error(`lark-cli command contains a forbidden write-like token (${forbiddenHit}): ${commandText}`)
   }
 
   return command
@@ -183,6 +188,25 @@ const runCommand = async (command) => {
     const child = spawn(binary, args, { cwd: repoRoot, stdio: ['ignore', 'pipe', 'pipe'] })
     let stdout = ''
     let stderr = ''
+    let settled = false
+    const finish = (fn, value) => {
+      if (settled) return
+      settled = true
+      clearTimeout(timer)
+      fn(value)
+    }
+    // 超时兜底：卡网/卡登录时先 SIGTERM，宽限 3s 再 SIGKILL，并 reject，避免同步永久挂起
+    const timer = setTimeout(() => {
+      child.kill('SIGTERM')
+      setTimeout(() => {
+        try {
+          child.kill('SIGKILL')
+        } catch {
+          // 进程可能已退出
+        }
+      }, 3000)
+      finish(reject, new Error(`${command.map(shellQuote).join(' ')} timed out after ${larkCliTimeoutMs}ms`))
+    }, larkCliTimeoutMs)
 
     child.stdout.on('data', (chunk) => {
       stdout += chunk.toString()
@@ -190,14 +214,14 @@ const runCommand = async (command) => {
     child.stderr.on('data', (chunk) => {
       stderr += chunk.toString()
     })
-    child.on('error', reject)
+    child.on('error', (error) => finish(reject, error))
     child.on('exit', (code) => {
       if (code === 0) {
-        resolve({ stdout, stderr })
+        finish(resolve, { stdout, stderr })
         return
       }
 
-      reject(new Error(`${command.map(shellQuote).join(' ')} failed with code ${code}: ${stderr || stdout}`))
+      finish(reject, new Error(`${command.map(shellQuote).join(' ')} failed with code ${code}: ${stderr || stdout}`))
     })
   })
 }

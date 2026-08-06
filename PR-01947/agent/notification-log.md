@@ -29,3 +29,16 @@
 1) 定位组件：apps/web/src/apps/CopyTrading/components/CopySe | real | success |
 | 2026/8/5 21:16:19 | Lark Job | 已完成 | 修复：Lark bug 表待处理项 [跟单设置，每个 tab 在 hover 时要显示 tips ]：已完成。
 1) 定位组件：apps/web/src/apps/CopyTrading/components/CopySe | real | success |
+| 2026/8/6 12:07:15 | Lark Job | 已完成 | 看看不是不这个 ![Image](img_v3_0214a_9d378872-c8a7-4f1d-853a-c2212feb87hu)：已完成图片识别与代码核对。
+1. 图片识别：这是 Meta（Facebook）商务管理后台「设置 → 安全中心」页面（业 | real | success |
+| 2026/8/6 12:58:29 | Lark Job | 阻塞中 | 看这里： | real | failed |
+| 2026/8/6 13:17:40 | Lark Job | 已完成 | 麻烦解决一下：已完成。
+1. 定位到根因：从嗨聊跳转充值页会用 URL 上的一次性授权码（channel_token）去换登录态，但该 | real | success |
+| 2026/8/6 14:10:40 | Lark Job | 阻塞中 | ![Image](img_v3_0214a_3ba1627b-1110-4705-b06d-13644077e7hu) 交易胜率 数据要加粗标绿，背景色块的圆角：处理失败。
+1. 项目 PR-02031 本地无 worktree，需临时 worktree；
+2. git workt | real | failed |
+| 2026/8/6 14:44:39 | Lark Job | 进行中 | 收到群任务(PR-02032)：交易胜率 数据要加粗标绿，背景色块的圆角改为 8px | real | success |
+| 2026/8/6 14:50:07 | Lark Job | 已完成 | 交易胜率 数据要加粗标绿，背景色块的圆角改为 8px：已完成。
+1. 跟单设置页交易员卡片里「交易胜率」的百分比数值已加粗并改成绿色，与「利润分成」「跟单用户」区分开、更醒目 | real | success |
+| 2026/8/6 15:10:10 | Lark Job | 进行中 | 收到群任务(PR-02032)：![Image](img_v3_0214a_147a9121-1aa0-44b4-be58-218dddd144hu) Tab hover 时要显示 tips  | real | success |
+| 2026/8/6 15:15:25 | Lark Job | 已完成 | ![Image](img_v3_0214a_147a9121-1aa0-44b4-be58-218dddd144hu) Tab hover 时要显示 tips ： | real | success |

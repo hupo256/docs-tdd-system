@@ -27,7 +27,7 @@ Bot Gateway 是独立服务，不放进 `apps/web` 运行时。它负责：
 
 - 处理 Lark challenge。
 - 校验签名、encrypt key、verification token。
-- 只接受白名单群和白名单用户。
+- 只接受白名单群和白名单用户。信任边界是**白名单群**：群内 QA / PM / 后台 @ 都能触发，群消息只按群放行、不按发送人过滤；p2p 直发才按白名单用户放行。**fail-closed 硬规则**：完全没配任何白名单（群 + 用户皆空）时拒绝所有事件，绝不因配置漏填而放行所有人。
 - 只处理群内 @ 应用消息，普通群聊默认忽略。
 - 使用 `message_id` 做幂等，避免重复执行。
 - 将消息解析为 Job，写入任务队列。
@@ -165,6 +165,7 @@ Worker 完成后必须回群，并写入项目通知记录。回群内容固定�
 - 任务 ID、触达文件、验证命令、失败命令输出写入项目文档或任务记录，不放进普通完成消息。
 - 如果失败，群消息只说明失败类型和下一步；详细错误写入任务记录。
 - 如果失败，必须说明是工具失败、环境失败、权限失败还是需求不清。
+- **AI 退出但未显式回写 done/failed 时，一律判 `failed`（待人工复核），不分任务类型都不得兜底谎报「已完成」**——无回写 = 无验证 = 不可信（AI 可能中途放弃/崩溃/未按要求回调 Gateway）。
 - 图片 / 视觉任务不能因为文字简短就快速失败；项目配置已经提供项目编号和标题，Worker 必须结合当前项目文档、代码、PRD / Figma 资料和图片附件自动定位。只有 Lark 图片下载凭证缺失、图片下载失败、代码不可访问等技术原因，才能回写 failed，并明确说明具体技术卡点。
 
 ## 7. 必须等待确认
@@ -251,3 +252,26 @@ Worker 完成后必须回群，并写入项目通知记录。回群内容固定�
 - 发消息、下载图片、读写多维表格统一走 lark-cli 已登录的 bot 身份（keychain）；配置文件里不放 app 级 `appSecret`。图片经 `lark-cli im +messages-resources-download` 落到 `<PROJECT>/agent/lark-attachments/<messageId>/`。
 - 上线前置：Lark 后台开启事件订阅 `im.message.receive_v1` 并授 `im:message.p2p_msg:readonly` + 群消息收发 / `im:resource` / bitable 相关 scope；白名单 `allowedChatIds` / `allowedOpenIds` 与 `botOpenId` 写入项目配置。
 - 相关脚本：接收链路 `common/agent-scripts/lark-gateway.mjs`；bug 多维表格链路 `common/agent-scripts/lark-bugtable-poller.mjs`（`base +record-list` 拉「负责人=我 且 状态=待处理」→ 投递 Gateway 队列 → done 后 `base +record-batch-update` 回写状态）。
+- **健壮性兜底**（无人值守必需）：
+  - **领取租约**：`claimNext` 领走任务时盖 `claimedAt`，超过 `LARK_TASK_LEASE_MS`（默认 40min，须 > worker AI 超时 30min）仍 `running` 视为孤儿（worker 崩了），下次领取时自动重入队；`GET /lark/health` 暴露各状态计数与卡住任务 id。
+  - **子进程超时**：所有 `lark-cli` 调用带 `LARK_CLI_TIMEOUT_MS`（默认 60s）超时，到点 SIGTERM→3s 后 SIGKILL，避免卡网/卡登录永久挂起。worker 的 AI 进程超时同样升级到 SIGKILL。
+  - **本地 API 鉴权（可选）**：配置 `LARK_GATEWAY_SECRET` 后，所有写操作 POST 必须带 `x-lark-gateway-secret`（worker/poller 从同名环境变量读取）；`readBody` 有 1MB 上限。未配置则仅靠 127.0.0.1 绑定兜底。
+  - **附件文件名 sanitize、状态白名单校验**：`imageKey` 拼本地路径前清路径分隔符；`/status` 只接受合法生命周期状态。
+
+## 13. bug 表链路：跨项目路由 + 按需轮询
+
+bug 多维表格通常是**全公司共享表**，同一负责人的 bug 横跨多个项目。故 bug 链路按 **`项目ID` 列**路由，不绑单一项目：
+
+- **poller** 读配置 `bugTable.projectField`（默认 `项目ID`）→ `POST /lark/tasks` 带 `project`。Gateway 入队时 `project: body.project || config.project`（不再硬编码覆盖）。**`项目ID` 单元格必须先过 `(PR|PM)-\d{3,}` 校验**才作为 `project`；异常值（如 `../../x`）不传，交由 worker 走 adhoc 临时 worktree。worker 的 `resolveWorkContext` 也会用 `safeProject` 二次校验（project 会拼进 worktree 路径与分支名，防越目录）。
+- **worker** `resolveWorkContext(workerConfig, task)` 按 `task.project` 决定 cwd：
+  - `/Users/aven/github/<项目ID>` 有 worktree → 在该 worktree 改；**进来时若已有未提交 WIP 先 `commitPreexistingWip` 单独提交一笔隔离**（标明"非本任务产生"），再跑 AI；任务**真 done** 后 `finalizeExistingWorktree` 把本任务改动 `git add -A && commit --no-verify` 到**当前分支**（每任务一个独立 commit；失败/阻塞不提交、无改动不提交、commit 失败保留改动在工作区）。→ 你的 WIP 与 bot 改动分成两个 commit，不混。
+  - 无 worktree → **一次性临时 worktree**（`git worktree add` 到 `~/github/.lark-hotfix/<slug>`，基于 `origin/online` 建 `hotfix/<项目ID>-<id>` 分支；`prepareTempWorktree` 建、`finalizeTempWorktree` 收尾：有改动本地提交到分支+删目录，无改动连空分支删）。**不碰主仓**，天然无并发/顺序碰撞，无常驻 worktree 蔓延；
+  - 无 `project` → 同样临时 worktree，分支 `hotfix/adhoc-<id>`。
+- **群 @ 任务同源路由**：能力2 与能力3 共用 `resolveWorkContext`。项目号解析优先级 `resolveProject` = **群名 `[PR-xxxxx]`（权威）> 正文 `PR-####` > 都无则 null**（不再套 config.project）。群名优先是因为每个项目建一个群、群名带编号，而正文常引用别的工单号（只读正文会路由错项目）；`resolveChatName` 调 `lark-cli im +chat-list`（`data.chats[].name`）建缓存。差别仅：只有 `source:'lark-bugtable'` 的 task done 后回写表格。
+- **无 worktree / 无项目号的处理**：@ 任务解析到项目号但本地无 worktree（或压根没项目号）→ **直接建一次性临时 worktree** 修（不再发「请选择处理方式」按钮卡片；分支 `hotfix/<项目ID|adhoc>-<msgId尾8位>`，尾部取值避免同群 messageId 共享前缀导致分支撞车）。「已收到」卡片带说明。poller 任务同理直接临时 worktree。（早前的 `card.action.trigger` 按钮澄清流程已移除。）
+- **引用/回复消息合并**：@ 时若在别人的消息下回复（`reply_to`/`root_id`），真正内容多在父消息里。gateway `fetchReferencedContext` 用 `lark-cli im +messages-mget` 拉父消息，文本（含 `merge_forward` 合并转发的可读 content）+ 图片 image_key 合并进 task，再交给 worker。否则「看这里」类回复式 @ 会因无落点 failed。
+- **回写健壮**：`writeBackBugRecord` 带重试；`doneValue` 缺失跳过不写（不写非法枚举）；重试仍失败发群告警，避免「已报完成 + 已 seen 不再捞 + 表格永卡待处理」静默不一致。
+- **去重按 gateway 任务状态、非「入队即永久 seen」**：poller 每轮读 `GET /lark/tasks` 拿到 `record_id → status`，`done` 才落地本地 `seen`（跨重启防重入队）；`queued/running` 视为在处理中跳过；**`failed` 的记录不永久 seen**——群里已收到失败卡片、表格保持「待处理」待人工介入，poller 仅计数暴露（`stuck-failed=N`），不自动重跑（避免对修不动的 bug 无限重试 AI、刷群烧钱），人工可在群里重触发。这修掉了旧实现「failed 既留在表里又被本地 seen 挡住而静默消失」。
+- **触发（手动轮询窗口）**：poller 不常驻，QA 密集期手动 `lark-bot poll-on` 开、`poll-off` 关；空闲 `LARK_BUGTABLE_IDLE_OFF_MS`（默认 4h）无新 bug 自动收工。进 G6/G7 的 gate 播报提醒开轮询、G8 提醒收工。
+
+> 主仓切分支是侵入式操作（改动主仓当前 checkout 分支），靠 clean 守卫兜底；worker 串行执行，天然不并发切分支。
