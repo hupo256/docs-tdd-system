@@ -12,7 +12,7 @@ import {
 } from '../lib/lark-ai-executor.mjs'
 import { buildQueuedCard, buildResultCard } from '../lib/lark-cards.mjs'
 import { scanDiffForViolations } from '../lib/lark-lint-diff.mjs'
-import { buildTaskPrompt, buildValidationRequirements } from '../lark-worker.mjs'
+import { buildTaskPrompt, buildValidationRequirements, requestJson } from '../lark-worker.mjs'
 
 describe('AI executor selection', () => {
   it('只接受 claude/codex 固定枚举', () => {
@@ -93,6 +93,30 @@ describe('risk-based validation policy', () => {
     assert.match(prompt, /按最终 diff 风险分级/)
     assert.doesNotMatch(prompt, /cd apps\/web && pnpm exec tsc --noEmit/)
     assert.match(prompt, /必需检查完成后立即结束/)
+  })
+})
+
+describe('Gateway transient retry', () => {
+  it('幂等请求遇到 ECONNRESET 会重试并成功', async () => {
+    let calls = 0
+    const fetchImpl = async () => {
+      calls += 1
+      if (calls < 3) throw new TypeError('fetch failed', { cause: { code: 'ECONNRESET' } })
+      return { ok: true, json: async () => ({ ok: true }) }
+    }
+    const result = await requestJson('http://127.0.0.1:3005', '/status', { retryTransient: true }, { fetchImpl, sleepImpl: async () => {} })
+    assert.deepEqual(result, { ok: true })
+    assert.equal(calls, 3)
+  })
+
+  it('claim 类调用默认不重试，避免重复领取', async () => {
+    let calls = 0
+    const fetchImpl = async () => {
+      calls += 1
+      throw new TypeError('fetch failed', { cause: { code: 'ECONNRESET' } })
+    }
+    await assert.rejects(() => requestJson('http://127.0.0.1:3005', '/claim', { method: 'POST' }, { fetchImpl, sleepImpl: async () => {} }), /fetch failed/)
+    assert.equal(calls, 1)
   })
 })
 

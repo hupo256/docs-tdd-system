@@ -248,21 +248,43 @@ if (process.argv.includes('--help')) {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
-const requestJson = async (gatewayUrl, path, options = {}) => {
-  const response = await fetch(`${gatewayUrl}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(gatewaySecret ? { 'x-lark-gateway-secret': gatewaySecret } : {}),
-      ...(options.headers || {}),
-    },
-  })
+const TRANSIENT_GATEWAY_CODES = new Set(['ECONNRESET', 'ECONNREFUSED', 'EPIPE', 'ETIMEDOUT', 'UND_ERR_SOCKET'])
 
-  if (!response.ok) {
-    throw new Error(`${options.method || 'GET'} ${path} failed: ${response.status} ${await response.text()}`)
+const isTransientGatewayError = (error) =>
+  TRANSIENT_GATEWAY_CODES.has(error?.code) ||
+  TRANSIENT_GATEWAY_CODES.has(error?.cause?.code) ||
+  (error instanceof TypeError && /fetch failed/i.test(error.message))
+
+// 本地 Gateway 偶发 ECONNRESET 时，仅幂等请求可自动重试；claim/next 绝不重试，避免响应丢失后重复领取。
+export const requestJson = async (
+  gatewayUrl,
+  path,
+  options = {},
+  { fetchImpl = fetch, sleepImpl = sleep } = {},
+) => {
+  const { retryTransient = false, ...fetchOptions } = options
+  const attempts = retryTransient ? 3 : 1
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      const response = await fetchImpl(`${gatewayUrl}${path}`, {
+        ...fetchOptions,
+        headers: {
+          'Content-Type': 'application/json',
+          ...(gatewaySecret ? { 'x-lark-gateway-secret': gatewaySecret } : {}),
+          ...(fetchOptions.headers || {}),
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error(`${fetchOptions.method || 'GET'} ${path} failed: ${response.status} ${await response.text()}`)
+      }
+      return response.json()
+    } catch (error) {
+      if (attempt === attempts || !isTransientGatewayError(error)) throw error
+      console.warn(`[lark-worker] Gateway 瞬时连接失败，重试 ${attempt}/${attempts - 1}：${path} (${error.cause?.code || error.code || error.message})`)
+      await sleepImpl(attempt * 150)
+    }
   }
-
-  return response.json()
 }
 
 export const buildValidationRequirements = () => `验证策略（代码类修复必做，按最终 diff 风险分级，禁止机械跑全量检查）：
@@ -473,14 +495,15 @@ export async function runLarkWorker({
     : ''
   console.log(`[lark-worker] AI executor=${startupExecutor}${codexProfile}（task > env > config > wrapper）`)
   const request = (path, options) => requestJson(gatewayUrl, path, options)
+  const reliableRequest = (path, options = {}) => requestJson(gatewayUrl, path, { ...options, retryTransient: true })
   const updateTask = (taskId, status, result, executor) =>
-    request(`/lark/tasks/${encodeURIComponent(taskId)}/status`, {
+    reliableRequest(`/lark/tasks/${encodeURIComponent(taskId)}/status`, {
       method: 'POST',
       body: JSON.stringify({ status, result, aiExecutor: executor }),
     })
 
   const getTask = async (taskId) => {
-    const { tasks = [] } = await request('/lark/tasks')
+    const { tasks = [] } = await reliableRequest('/lark/tasks')
     return tasks.find((item) => item.id === taskId)
   }
 
@@ -585,7 +608,7 @@ export async function runLarkWorker({
 
   // 可领取任务（queued/received）按创建时间升序，供调度器挑选
   const listClaimable = async () => {
-    const { tasks = [] } = await request('/lark/tasks')
+    const { tasks = [] } = await reliableRequest('/lark/tasks')
     return tasks
       .filter((item) => item.status === 'queued' || item.status === 'received')
       .sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1))

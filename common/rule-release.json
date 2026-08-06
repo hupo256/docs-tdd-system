@@ -1,11 +1,11 @@
 {
   "version": 1,
   "rulesetVersion": "local-2026.07-msw-v1",
-  "fingerprint": "2afb335cffaf7c0919498615db657117c0766e407a693a67390f670f295a2df8",
-  "publishedAt": "2026-08-06T17:00:04.396Z",
+  "fingerprint": "4ec49470682f1043ae85790aa16baa0d5e88a06a147c2de9f22c10fe073a6adc",
+  "publishedAt": "2026-08-06T17:11:28.262Z",
   "fileCount": 132,
   "files": {
-    "common/agent-scripts/__tests__/lark-ai-executor.test.mjs": "c9b89a1877deb958974df18a3e87c341399e4096a127390f88164e790a66d564",
+    "common/agent-scripts/__tests__/lark-ai-executor.test.mjs": "c48ace0d1ccdae9a34b742ece022a0172289affdf88667972d78e958179ed8b1",
     "common/agent-scripts/__tests__/lark-pure.test.mjs": "0140dda14650f1e4aec14cc32a1b69be88ee87d80fcdf60f5095bb72601b1ede",
     "common/agent-scripts/__tests__/lark-task-store.test.mjs": "aa3a757557665bf56f0ecbd3a15d4e7ecc2e5ed452b4aca4c249088b6eb6f142",
     "common/agent-scripts/check-doc-budget.mjs": "102e2cbb4dacdc4393243370c502c36171804d0bab0d758b47aea357438eaebc",
@@ -18,7 +18,7 @@
     "common/agent-scripts/install-local-agent-rules.mjs": "1da6bad3c4ecfb973af380c9a2252148d8e903c77e4d2bdab34172dab7aa3451",
     "common/agent-scripts/lark-bugtable-poller.mjs": "3aa1c2f7aed9df4eff5edc54fd90d01a75e3a25e7f97312f9064d194035ce7d2",
     "common/agent-scripts/lark-gateway.mjs": "da79122250cd01236da1701dc6f9adb0af26327913fd8f0e1f2f65fa00cfc242",
-    "common/agent-scripts/lark-worker.mjs": "cc6a975d70c9a327f6cfddf724a3ff41c95383fc1177bb75aefa483c7acd4968",
+    "common/agent-scripts/lark-worker.mjs": "1480f2b236da9dd0e6989a1e2686789de13e153400ae31719d5164be3363b58e",
     "common/agent-scripts/lib/acceptance-results.mjs": "8c2729d17c5ff651199e6a227abc8f2eaa7a50c46c1a54ba6a81d371b4b7ac14",
     "common/agent-scripts/lib/blockers.mjs": "3c55feaf004469a9470980803b5c33e84d2516944207cf40eb391a5ead0fd2b3",
     "common/agent-scripts/lib/code-review.mjs": "7d00cd9ae93a2981b0ff0866a45b5be4e45fe8c3a60cb65f3bea4761763e0330",
