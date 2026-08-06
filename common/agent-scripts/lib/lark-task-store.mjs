@@ -28,6 +28,20 @@ export const createTaskStore = ({ tasksDir, leaseMs }) => {
   const isOrphan = (task, now) =>
     task.status === 'running' && task.claimedAt && now - new Date(task.claimedAt).getTime() > leaseMs
 
+  // 回收租约过期的孤儿 running 任务（worker 崩溃/被杀后任务不会永卡 running），重新入队待领取。
+  const reclaimOrphans = () => {
+    const now = Date.now()
+    for (const task of tasks.values()) {
+      if (!isOrphan(task, now)) continue
+      task.status = 'queued'
+      task.claimedAt = null
+      task.requeuedAt = new Date(now).toISOString()
+      task.requeueCount = (task.requeueCount || 0) + 1
+      persist(task)
+      console.warn(`[lark-gateway] 租约过期，重新入队孤儿任务 ${task.id}（第 ${task.requeueCount} 次）`)
+    }
+  }
+
   return {
     has: (id) => tasks.has(id),
     get: (id) => tasks.get(id),
@@ -40,25 +54,26 @@ export const createTaskStore = ({ tasksDir, leaseMs }) => {
     // 领取一个 pending 任务并置为 running（盖 claimedAt 作租约）。
     // 领取前先回收租约过期的孤儿 running 任务（worker 崩溃/被杀后任务不会永卡 running）。
     claimNext() {
-      const now = Date.now()
-      for (const task of tasks.values()) {
-        if (isOrphan(task, now)) {
-          task.status = 'queued'
-          task.claimedAt = null
-          task.requeuedAt = new Date(now).toISOString()
-          task.requeueCount = (task.requeueCount || 0) + 1
-          persist(task)
-          console.warn(`[lark-gateway] 租约过期，重新入队孤儿任务 ${task.id}（第 ${task.requeueCount} 次）`)
-        }
-      }
+      reclaimOrphans()
       const pending = [...tasks.values()]
         .filter((task) => task.status === 'queued' || task.status === 'received')
         .sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1))[0]
       if (!pending) return null
       pending.status = 'running'
-      pending.claimedAt = new Date(now).toISOString()
+      pending.claimedAt = new Date(Date.now()).toISOString()
       persist(pending)
       return pending
+    },
+    // 按 id 原子领取（并行调度器用）：先回收孤儿，再仅当该任务处于可领取态时置 running。
+    // 已被并发领走 / 状态已变 → 返回 null，调用方跳过。
+    claimById(id) {
+      reclaimOrphans()
+      const task = tasks.get(id)
+      if (!task || (task.status !== 'queued' && task.status !== 'received')) return null
+      task.status = 'running'
+      task.claimedAt = new Date(Date.now()).toISOString()
+      persist(task)
+      return task
     },
     // 健康检查用：各状态计数 + 租约已过期仍 running 的卡住任务 id
     stats() {

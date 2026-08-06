@@ -1,12 +1,16 @@
 #!/usr/bin/env node
 
 import { spawnSync } from 'node:child_process'
-import { existsSync, mkdirSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, symlinkSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { resolveRoots } from './lib/roots.mjs'
+import { scanDiffForViolations, formatViolations } from './lib/lark-lint-diff.mjs'
 
 const defaultGatewayUrl = process.env.LARK_GATEWAY_URL || 'http://127.0.0.1:3005'
 const defaultPollMs = Number(process.env.LARK_WORKER_POLL_MS || 5000)
+// 并行执行上限：不同 worktree 的任务可同时跑，同一 worktree（cwd 相同）仍串行。
+// 每个并发任务都会起一个 claude + 全套验证，很吃 CPU/内存，默认 3 是吞吐与机器负载的平衡点。
+const defaultConcurrency = Math.max(1, Number(process.env.LARK_WORKER_CONCURRENCY || 3))
 const defaultCodexTimeoutMs = Number(process.env.LARK_WORKER_CODEX_TIMEOUT_MS || 1800000)
 const defaultAiExecutor = process.env.LARK_AI_EXECUTOR || 'codex'
 
@@ -96,6 +100,43 @@ const prepareTempWorktree = ({ path, branch }) => {
   if (add.status !== 0) {
     throw new Error(`git worktree add 失败：${(add.stderr || add.stdout || '').trim().slice(0, 160)}`)
   }
+  linkNodeModules(path)
+}
+
+// 主仓下所有存在 node_modules 的目录（相对路径）：根 + 每个 workspace 包（apps/*、packages/*）。
+// pnpm monorepo 每个包各有真实 node_modules（共享根 .pnpm store），逐个软链才能让子包依赖解析到位。
+const nodeModulesDirsRel = () => {
+  const rels = existsSync(join(repoRoot, 'node_modules')) ? [''] : []
+  for (const group of ['apps', 'packages']) {
+    const groupAbs = join(repoRoot, group)
+    if (!existsSync(groupAbs)) continue
+    for (const entry of readdirSync(groupAbs, { withFileTypes: true })) {
+      if (entry.isDirectory() && existsSync(join(groupAbs, entry.name, 'node_modules'))) {
+        rels.push(join(group, entry.name))
+      }
+    }
+  }
+  return rels
+}
+
+// 临时 worktree 基于同一 commit（origin/online），依赖集与主仓一致 → 直接软链主仓 node_modules，
+// 免去 pnpm install（monorepo 重建整棵符号链接树很慢）。Node 经目录软链 realpath 解析进主仓 store，正确。
+// 失败只 warn 不阻塞：claude 仍可自行 pnpm install 兜底。
+const linkNodeModules = (worktreePath) => {
+  let linked = 0
+  for (const rel of nodeModulesDirsRel()) {
+    const target = join(repoRoot, rel, 'node_modules')
+    const linkPath = join(worktreePath, rel, 'node_modules')
+    try {
+      if (existsSync(linkPath)) continue
+      mkdirSync(dirname(linkPath), { recursive: true })
+      symlinkSync(target, linkPath, 'dir')
+      linked += 1
+    } catch (error) {
+      console.warn(`[lark-worker] ⚠ 软链 node_modules 失败（${rel || '根'}），claude 需自行装依赖：${error.message}`)
+    }
+  }
+  if (linked) console.log(`[lark-worker] 已软链主仓 node_modules ×${linked} 到临时 worktree（跳过 pnpm install）`)
 }
 
 // git fetch origin online 带退避重试；网络抖动是常见 SPOF。若重试仍失败但本地已有
@@ -127,7 +168,7 @@ const finalizeTempWorktree = ({ path, branch, task }) => {
     gitAt(path, ['add', '-A'])
     // --no-verify：临时 worktree 无 node_modules，husky pre-commit(pnpm lint-staged) 必失败；
     // 这些是留待人工 review 的 hotfix 提交，不需要跑钩子。
-    const committed = gitAt(path, ['commit', '--no-verify', '-m', `lark hotfix: ${(task.summary || 'fix').slice(0, 60)} [${task.id}]`])
+    const committed = gitAt(path, ['commit', '--no-verify', '-m', `lark hotfix: ${(task.summary || 'fix').slice(0, 60)} [${task.id}]${task.qualityNote ? `\n\n⚠ ${task.qualityNote}` : ''}`])
     if (committed.status !== 0) {
       // 提交失败：绝不 --force 删除（会连未提交改动一起灭失）。保留 worktree 待人工处理。
       console.error(`[lark-worker] ⚠ 提交到 ${branch} 失败，保留临时 worktree ${path} 以免丢改动：${(committed.stderr || committed.stdout || '').trim().slice(0, 200)}`)
@@ -177,7 +218,7 @@ const finalizeExistingWorktree = ({ cwd, task }) => {
     return
   }
   gitAt(cwd, ['add', '-A'])
-  const committed = gitAt(cwd, ['commit', '--no-verify', '-m', `lark task: ${(task.summary || task.text || 'fix').slice(0, 60)} [${task.id}]`])
+  const committed = gitAt(cwd, ['commit', '--no-verify', '-m', `lark task: ${(task.summary || task.text || 'fix').slice(0, 60)} [${task.id}]${task.qualityNote ? `\n\n⚠ ${task.qualityNote}` : ''}`])
   if (committed.status !== 0) {
     console.error(`[lark-worker] ⚠ 提交到 ${cwd} 当前分支失败（改动仍留工作区）：${(committed.stderr || committed.stdout || '').trim().slice(0, 200)}`)
     return
@@ -260,13 +301,21 @@ UNTRUSTED_TASK_INPUT
 
 请在 ${workCwd} 中完成任务，并遵守以下文档：
 ${docs.map((item, index) => `${index + 1}. ${item}`).join('\n')}
-${hotfixBranch ? `\n注意：该项目本地无独立 worktree，你正在一个**临时 worktree**（基于 origin/online 的分支 \`${hotfixBranch}\`）里工作，改动只影响此临时目录、不碰主仓。完成后你的改动会被自动提交到本地分支 \`${hotfixBranch}\`（不 push、不合并），留待人工 review；你无需自己 commit/push，请在完成消息里注明分支名 \`${hotfixBranch}\`。\n` : ''}
+${hotfixBranch ? `\n注意：该项目本地无独立 worktree，你正在一个**临时 worktree**（基于 origin/online 的分支 \`${hotfixBranch}\`）里工作，改动只影响此临时目录、不碰主仓。node_modules 已从主仓软链就位，**不要跑 \`pnpm install\`**（依赖已可用）。完成后你的改动会被自动提交到本地分支 \`${hotfixBranch}\`（不 push、不合并），留待人工 review；你无需自己 commit/push，请在完成消息里注明分支名 \`${hotfixBranch}\`。\n` : ''}
 
 要求：如果任务是 UI / 样式修复，必须先结合项目编号、项目文档、当前代码和附件图片定位相关页面或组件；图片是输入资源，不得仅因原始文字简短就直接失败。若附件只有 image_key 且没有本地路径，先根据项目上下文和文档尽力定位；只有在确实缺少 Lark 图片读取凭证或无法访问代码时，才回写 failed 并说明具体技术原因。
 
 Lark 资料规则：如果任务是文档 / 修复 / 自测 / API / QA 类命令，开发前先查看项目的 agent/lark-sources.json 和 inbox/lark-sync/sync-report.md；能执行只读同步时，先运行项目 sync-lark-docs.mjs，把最新 Lark PRD / QA / Wiki / Drive / Markdown 资料同步到 docs_tdd 本地副本。开发依据必须是带 sourceUrl、syncedAt、readOnly 元信息的 apps/web/docs_tdd/** 本地副本；不得修改 Lark 云文档，不得把资料同步到业务代码目录。
 
-验证要求（代码类修复必做）：改动完成后，必须在 ${workCwd} 内验证本次改动——至少运行 \`pnpm type-check\`，并运行与改动相关的测试（\`pnpm test\` 或对应包/文件的最小测试范围），对触达文件运行 \`pnpm lint\`。只有验证通过才回写 done；若测试 / 类型检查 / lint 未通过，或环境无法运行验证，必须回写 failed 并写清未通过项或阻塞原因，禁止在未验证的情况下报成功。
+编码规范（改任何代码前必做，违规会被人工 review 打回）：
+1. 先加载规范再动手——读 \`~/.ai-rules/skills/coding-quality/SKILL.md\`（样式 / token / i18n / 状态派生 / 复用细则）；在 ${workCwd} 下读 \`apps/web/docs_tdd/common/rule-router.md\` 并按其路由加载命中的 L3 规则（也可 \`node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs context ${projectId} <scenario>\`）。注意 \`.cursor/rules/*.mdc\` 里也有仓库级细则，需要时主动读。
+2. 最常踩的红线（务必遵守）：
+   - **禁 arbitrary value**：\`rounded-[8px]\`→\`rounded-m\`、间距 / 圆角 / 颜色一律用 preset（\`packages/config/tailwind-preset.js\`）里的 token；即使同一行原有代码就是 \`[..px]\` 硬编码，也不许照抄，要换成 token。
+   - **颜色必须是真实存在的 token**：Tailwind 会静默丢弃未知类（如 \`text-green\` 根本不存在→文字不会变色也不报错）。语义绿用 \`text-sem-g\`、语义红 \`text-sem-r\`、正文色 \`text-1/2/3\`。写任何 class 前先确认它在 preset 里有定义。
+   - 命名入参类型（2+ 入参含回调定义 \`XxxProps\`）、i18n key 用字面量 \`t('ns:literal.key')\`、缺失数据显式 \`--\` 不造假默认、server state 归 React Query。
+3. 改完自审自己的 diff：\`cd ${workCwd} && git diff\`，逐行检查有没有新增的 \`[..px]\` / \`[..%]\` 等 arbitrary value，或不在 preset 里的 class（尤其颜色）；发现就地换成 token 后再回写 done。
+
+验证要求（代码类修复必做，**只验证本次触达的包/文件**，不跑全仓）：改动完成后必须在 ${workCwd} 内验证——对触达文件所在包运行 type-check（如触达 apps/web 则 \`cd apps/web && pnpm exec tsc --noEmit\`），运行与改动相关的最小范围测试（对应包/文件，不跑全仓 \`pnpm test\`），对触达文件运行 \`pnpm lint\` / biome。本仓库存在既有基线类型报错，**只需确认你触达的文件没有新增类型 / lint 错误**即可，不必要求全仓 tsc 干净。只有触达文件验证通过才回写 done；若触达文件有新增错误、相关测试未过，或环境无法运行验证，必须回写 failed 并写清未通过项或阻塞原因，禁止在未验证的情况下报成功。
 
 完成后必须调用本地 Bot Gateway，把 task 状态回写为 done 或 failed，并触发 Lark 群消息。完成消息格式：任务 + 结果；结果先写「已完成。」再用数字小结列出做了什么和效果（含验证结论：跑了哪些检查、是否通过）。
 `.trim()
@@ -315,23 +364,18 @@ const runProjectDocSync = async ({ projectId }) => {
   return { skipped: false }
 }
 
-const runAI = async (workerConfig, task, workContext) => {
+// 起一个 AI executor 子进程跑给定 prompt（带超时 + SIGTERM→SIGKILL 升级）。
+// 供正常任务与「规范纠正 pass」复用。
+const execAI = async ({ executor, promptText, cwd }) => {
   const { spawn } = await import('node:child_process')
-  const executor = resolveAiExecutor(workerConfig, task)
   const buildCommand = aiExecutorCommands[executor]
-
   if (!buildCommand) {
     throw new Error(`unknown AI executor: ${executor} (expected claude or codex)`)
   }
-
-  const { cmd, args } = buildCommand(buildCodexPrompt(workContext, task))
-  const cwd = workContext.cwd || repoRoot
+  const { cmd, args } = buildCommand(promptText)
 
   await new Promise((resolve, reject) => {
-    const child = spawn(cmd, args, {
-      cwd,
-      stdio: 'inherit',
-    })
+    const child = spawn(cmd, args, { cwd: cwd || repoRoot, stdio: 'inherit' })
     let timedOut = false
     let killTimer = null
     const timeout = Number.isFinite(defaultCodexTimeoutMs) && defaultCodexTimeoutMs > 0
@@ -339,7 +383,6 @@ const runAI = async (workerConfig, task, workContext) => {
           timedOut = true
           child.kill('SIGTERM')
           // 宽限 10s 仍未退出 → SIGKILL，避免 AI 忽略 SIGTERM 导致 worker 循环永久卡死。
-          // SIGKILL 由 OS 保证终止 → 'exit' 必触发 → promise 一定结算。
           killTimer = setTimeout(() => {
             try {
               child.kill('SIGKILL')
@@ -351,12 +394,8 @@ const runAI = async (workerConfig, task, workContext) => {
       : null
 
     const clearChildTimeout = () => {
-      if (timeout) {
-        clearTimeout(timeout)
-      }
-      if (killTimer) {
-        clearTimeout(killTimer)
-      }
+      if (timeout) clearTimeout(timeout)
+      if (killTimer) clearTimeout(killTimer)
     }
 
     child.on('error', (error) => {
@@ -365,20 +404,49 @@ const runAI = async (workerConfig, task, workContext) => {
     })
     child.on('exit', (code) => {
       clearChildTimeout()
-      if (timedOut) {
-        reject(new Error(`${executor} exec timed out after ${defaultCodexTimeoutMs}ms`))
-        return
-      }
-
-      if (code === 0) {
-        resolve()
-        return
-      }
-
+      if (timedOut) return reject(new Error(`${executor} exec timed out after ${defaultCodexTimeoutMs}ms`))
+      if (code === 0) return resolve()
       reject(new Error(`${executor} exec exited with code ${code}`))
     })
   })
 }
+
+const runAI = async (workerConfig, task, workContext) => {
+  const executor = resolveAiExecutor(workerConfig, task)
+  await execAI({ executor, promptText: buildCodexPrompt(workContext, task), cwd: workContext.cwd || repoRoot })
+}
+
+// 无人值守规范闸：扫本次 diff 新增行的 arbitrary value / 失效裸色类；有违规先让 AI 定向纠正一次，
+// 仍残留则把清单附到完成消息里（醒目、供人工 review），不静默放过。只对代码类改动生效。
+const enforceCodeQuality = async (workerConfig, task, workContext) => {
+  const cwd = workContext.cwd || repoRoot
+  const diffOf = () => {
+    gitAt(cwd, ['add', '-A', '-N']) // 让新增文件也进 diff（intent-to-add，非破坏性）
+    return gitAt(cwd, ['diff']).stdout || ''
+  }
+  let violations = scanDiffForViolations(diffOf())
+  if (!violations.length) return { ok: true, remaining: [] }
+
+  console.warn(`[lark-worker] 规范闸命中 ${violations.length} 处违规，触发定向纠正 pass（${task.id}）`)
+  try {
+    const executor = resolveAiExecutor(workerConfig, task)
+    await execAI({ executor, promptText: buildLintFixPrompt(cwd, violations), cwd })
+  } catch (error) {
+    console.warn(`[lark-worker] 规范纠正 pass 执行异常（保留原改动）：${error.message}`)
+  }
+
+  violations = scanDiffForViolations(diffOf())
+  return { ok: violations.length === 0, remaining: violations }
+}
+
+const buildLintFixPrompt = (cwd, violations) =>
+  `你刚在 ${cwd} 完成一处修复，但触碰了编码规范红线，请**只修正下列 class**（不要改动其它逻辑/文案/结构，改完不必回写 Gateway）：
+
+${formatViolations(violations)}
+
+规则：Tailwind 一律用 packages/config/tailwind-preset.js 里定义的 token，不用 arbitrary value \`[..]\`；颜色必须是 preset 里真实存在的类（未知类如 text-green 会被 Tailwind 静默丢弃、根本不生效）。改完用 \`git diff\` 自查这些点已全部换成 token。`
+
+
 
 // AI 进程退出但没有显式回写 done/failed 时的结果文案：一律判失败待人工复核。
 // 不分任务类型都不能兜底谎报「已完成」——无回写 = 无验证 = 不可信（AI 可能中途放弃/崩溃/未按要求回调）。
@@ -429,19 +497,16 @@ export async function runLarkWorker({
     return task
   }
 
-  const runOnce = async () => {
-    const task = await getNextPendingTask()
-    if (!task) {
-      return false
-    }
-
+  // 执行一个**已领取**的任务（领取由调度器/--once 完成）。workContext 由调用方算好传入，
+  // 与调度器挑选时用的 cwd 一致（同一 worktree 串行的判定依据）。异常在内部吞掉并回写 failed，
+  // 不向外抛（调度器里各任务并行 detached，抛出会变未捕获 rejection）。
+  const runTask = async (task, workContext) => {
     if (!task.text?.trim()) {
       await updateTask(task.id, 'failed', '处理失败。\n1. 这条 Lark 任务内容为空；\n2. 请重新 @ 应用并写清需要处理的事项。')
-      return true
+      return
     }
 
     console.log(`[lark-worker] claimed ${task.id}: ${task.text}`)
-    const workContext = resolveWorkContext(workerConfig, task)
     console.log(`[lark-worker] routing ${task.id} → ${workContext.cwd}${workContext.hotfixBranch ? ` (临时 worktree ${workContext.hotfixBranch})` : ''}`)
     // 命中已有 worktree 且进来时已有未提交 WIP → 先把 WIP 单独提交一笔隔离，
     // 与随后本任务的改动分成两个 commit，避免你的 WIP 和 bot 改动混作一团。
@@ -452,7 +517,7 @@ export async function runLarkWorker({
           prepareTempWorktree({ path: workContext.cwd, branch: workContext.hotfixBranch })
         } catch (prepError) {
           await updateTask(task.id, 'failed', `处理失败。\n1. 项目 ${workContext.projectId} 本地无 worktree，需临时 worktree；\n2. ${prepError.message}`)
-          return true
+          return
         }
       }
 
@@ -466,7 +531,17 @@ export async function runLarkWorker({
       if (latestTask?.status === 'running') {
         // AI 退出但没显式回写 done/failed → 一律判失败待人工复核（不分任务类型，绝不兜底成功）
         await updateTask(task.id, 'failed', buildNeedsReviewResult(task))
-        return true
+        return
+      }
+
+      // 规范闸（仅任务成功后、提交前）：扫本次 diff 违规 → AI 定向纠正一次 → 残留记入 commit message
+      // 供人工 review 时看见。claude 已自报 done、完成卡已发，故此处不重发卡片，只保证「进分支的代码」变干净。
+      if (latestTask?.status === 'done') {
+        const gate = await enforceCodeQuality(workerConfig, task, workContext)
+        if (!gate.ok) {
+          task.qualityNote = `含 ${gate.remaining.length} 处未修正规范问题（arbitrary value / 失效色类），需人工处理`
+          console.error(`[lark-worker] ⚠ ${task.id} 规范闸残留：\n${formatViolations(gate.remaining)}`)
+        }
       }
 
       // 命中已有 worktree（非临时）且任务成功 → 提交到该 worktree 当前分支。
@@ -480,29 +555,64 @@ export async function runLarkWorker({
       if (latestTask?.status === 'running') {
         await updateTask(task.id, 'failed', buildFailureResult(task, error))
       }
-
-      throw error
+      console.error(`[lark-worker] task ${task.id} 执行异常：`, error)
     } finally {
       // 临时 worktree 收尾：有改动提交到本地分支后删目录，无改动连空分支一起删（成功/失败都执行）
       if (workContext.hotfixBranch) {
         finalizeTempWorktree({ path: workContext.cwd, branch: workContext.hotfixBranch, task })
       }
     }
+  }
 
-    return true
+  // 可领取任务（queued/received）按创建时间升序，供调度器挑选
+  const listClaimable = async () => {
+    const { tasks = [] } = await request('/lark/tasks')
+    return tasks
+      .filter((item) => item.status === 'queued' || item.status === 'received')
+      .sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1))
   }
 
   const once = argv.includes('--once')
 
-  do {
-    try {
-      await runOnce()
-    } catch (error) {
-      console.error('[lark-worker]', error)
+  if (once) {
+    const task = await getNextPendingTask()
+    if (task) await runTask(task, resolveWorkContext(workerConfig, task))
+    return
+  }
+
+  // 并行调度器：inFlight 以 workContext.cwd 为 key（同一 worktree 只允许一个在飞、天然串行；
+  // 不同 worktree 并行）。git worktree add/remove 等走 spawnSync 同步执行，本就互不交错，无需额外锁。
+  const inFlight = new Map()
+  for (;;) {
+    while (inFlight.size < defaultConcurrency) {
+      const candidates = await listClaimable()
+      // 挑第一个「目标 cwd 未在飞」的任务；其余留到下一轮（保证同 worktree 串行）
+      let picked = null
+      let pickedCtx = null
+      for (const candidate of candidates) {
+        const ctx = resolveWorkContext(workerConfig, candidate)
+        if (inFlight.has(ctx.cwd)) continue
+        picked = candidate
+        pickedCtx = ctx
+        break
+      }
+      if (!picked) break
+
+      let claimed = null
+      try {
+        const res = await request(`/lark/tasks/${encodeURIComponent(picked.id)}/claim`, { method: 'POST' })
+        claimed = res.task
+      } catch (error) {
+        console.error('[lark-worker] claim 失败：', error)
+        break
+      }
+      if (!claimed) continue // 被并发领走 / 状态已变，下一轮重新 list
+
+      const key = pickedCtx.cwd
+      const running = runTask(claimed, pickedCtx).finally(() => inFlight.delete(key))
+      inFlight.set(key, running)
     }
 
-    if (!once) {
-      await sleep(pollMs)
-    }
-  } while (!once)
+    await sleep(pollMs)
+  }
 }

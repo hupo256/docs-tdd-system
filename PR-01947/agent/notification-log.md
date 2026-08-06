@@ -42,3 +42,18 @@
 1. 跟单设置页交易员卡片里「交易胜率」的百分比数值已加粗并改成绿色，与「利润分成」「跟单用户」区分开、更醒目 | real | success |
 | 2026/8/6 15:10:10 | Lark Job | 进行中 | 收到群任务(PR-02032)：![Image](img_v3_0214a_147a9121-1aa0-44b4-be58-218dddd144hu) Tab hover 时要显示 tips  | real | success |
 | 2026/8/6 15:15:25 | Lark Job | 已完成 | ![Image](img_v3_0214a_147a9121-1aa0-44b4-be58-218dddd144hu) Tab hover 时要显示 tips ： | real | success |
+| 2026/8/6 16:12:36 | Lark Job | 进行中 | 收到群任务(PR-02032)：再看看这个，修一下 | real | success |
+| 2026/8/6 16:19:19 | Lark Job | 已完成 | 再看看这个，修一下：任务：PR-02032 CopyTrading 跟单设置 — 修复 copy-trading 页 Banner 的 Hy | real | success |
+| 2026/8/6 16:30:56 | Lark Job | 进行中 | 收到群任务(PR-02032)：![Image](img_v3_0214a_ce09a551-54d5-45ad-84ef-ff7d8109c2hu) 交易胜率 数据要加粗标绿，背景色块的圆角 | real | success |
+| 2026/8/6 16:32:04 | Lark Job | 进行中 | 收到群任务(PR-02032)：![Image](img_v3_0214a_6b6e0d79-d737-4ddc-82dd-6a32280c2bhu) Tab hove 时加上 tips | real | success |
+| 2026/8/6 16:35:42 | Lark Job | 已完成 | ![Image](img_v3_0214a_ce09a551-54d5-45ad-84ef-ff7d8109c2hu) 交易胜率 数据要加粗标绿，背景色块的圆角：已完成。
+1. 定位到跟单设置页带单员资料卡组件 KolProfile.tsx，把「交易胜率」数值改为加粗并标绿（fon | real | success |
+| 2026/8/6 16:38:18 | Lark Job | 进行中 | 收到群任务(PR-01947)：修一下这个 | real | success |
+| 2026/8/6 16:38:34 | Lark Job | 进行中 | 收到群任务(PR-01947)：修下这个 | real | success |
+| 2026/8/6 16:46:32 | Lark Job | 已完成 | ![Image](img_v3_0214a_6b6e0d79-d737-4ddc-82dd-6a32280c2bhu) Tab hove 时加上 tips：已完成。
+1. 给跟单设置三个 Tab（智能跟单/固定金额/倍数）的标题各加了 hover Tooltip 提示，鼠标悬 | real | success |
+| 2026/8/6 16:51:37 | Lark Job | 已完成 | 修一下这个：已完成。
+1. 跟单设置页带单员卡片的「交易胜率」数值已加粗并标绿（text-green + font-bold）；
+2 | real | success |
+| 2026/8/6 17:02:29 | Lark Job | 已完成 | 修下这个：已完成。
+1. 三个跟单方式 Tab（智能比例 / 固定额度 / 倍率）hover 时浮出该模式说明气泡，智能比例、固定 | real | success |

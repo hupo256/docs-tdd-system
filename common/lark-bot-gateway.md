@@ -27,7 +27,7 @@ Bot Gateway 是独立服务，不放进 `apps/web` 运行时。它负责：
 
 - 处理 Lark challenge。
 - 校验签名、encrypt key、verification token。
-- 只接受白名单群和白名单用户。信任边界是**白名单群**：群内 QA / PM / 后台 @ 都能触发，群消息只按群放行、不按发送人过滤；p2p 直发才按白名单用户放行。**fail-closed 硬规则**：完全没配任何白名单（群 + 用户皆空）时拒绝所有事件，绝不因配置漏填而放行所有人。
+- 只接受白名单群和白名单用户。信任边界是**白名单群**：群内 QA / PM / 后台 @ 都能触发，群消息只按群放行、不按发送人过滤；p2p 直发才按白名单用户放行。**推荐动态成员制 `allowedChatIds:"auto"`**：白名单 = bot 当前所在的群（`im +chat-list`），新群拉进去即时响应、无需改配置或重启（未知 chat 首次 @ 自动刷新再判）。**fail-closed 硬规则**：完全没配任何白名单（`allowedChatIds` 非 `"auto"` 且群 + 用户皆空）时拒绝所有事件，绝不因配置漏填而放行所有人。
 - 只处理群内 @ 应用消息，普通群聊默认忽略。
 - 使用 `message_id` 做幂等，避免重复执行。
 - 将消息解析为 Job，写入任务队列。
@@ -248,7 +248,7 @@ Worker 完成后必须回群，并写入项目通知记录。回群内容固定�
 历史上 Gateway 是独立 Koa 服务，靠公网 cloudflared tunnel 收 Lark 事件回调并做 challenge / 验签。当前推荐实现改为 **lark-cli 官方长连接**，`common/agent-scripts/lark-gateway.mjs` 是本地专用 Gateway：
 
 - 事件源：子进程 `lark-cli event consume im.message.receive_v1`（长连接），不再需要公网 tunnel、challenge 端点、手写签名校验。event bus 守护进程实测约 35MB。
-- 对外仍暴露 §5 Worker 依赖的本地 HTTP 契约：`GET /lark/health`、`GET /lark/tasks`、`POST /lark/tasks`（外部投递，如 bug 表轮询器）、`POST /lark/tasks/next`（领取，pending→running）、`POST /lark/tasks/:id/status`（回写 done/failed，触发回群 + bug 表回写）。
+- 对外仍暴露 §5 Worker 依赖的本地 HTTP 契约：`GET /lark/health`、`GET /lark/tasks`、`POST /lark/tasks`（外部投递，如 bug 表轮询器）、`POST /lark/tasks/next`（领取最老 queued，pending→running）、`POST /lark/tasks/:id/claim`（**按 id 原子领取**，供并行调度器挑选空闲 worktree 的任务）、`POST /lark/tasks/:id/status`（回写 done/failed，触发回群 + bug 表回写）。
 - 发消息、下载图片、读写多维表格统一走 lark-cli 已登录的 bot 身份（keychain）；配置文件里不放 app 级 `appSecret`。图片经 `lark-cli im +messages-resources-download` 落到 `<PROJECT>/agent/lark-attachments/<messageId>/`。
 - 上线前置：Lark 后台开启事件订阅 `im.message.receive_v1` 并授 `im:message.p2p_msg:readonly` + 群消息收发 / `im:resource` / bitable 相关 scope；白名单 `allowedChatIds` / `allowedOpenIds` 与 `botOpenId` 写入项目配置。
 - 相关脚本：接收链路 `common/agent-scripts/lark-gateway.mjs`；bug 多维表格链路 `common/agent-scripts/lark-bugtable-poller.mjs`（`base +record-list` 拉「负责人=我 且 状态=待处理」→ 投递 Gateway 队列 → done 后 `base +record-batch-update` 回写状态）。
@@ -274,4 +274,16 @@ bug 多维表格通常是**全公司共享表**，同一负责人的 bug 横跨�
 - **去重按 gateway 任务状态、非「入队即永久 seen」**：poller 每轮读 `GET /lark/tasks` 拿到 `record_id → status`，`done` 才落地本地 `seen`（跨重启防重入队）；`queued/running` 视为在处理中跳过；**`failed` 的记录不永久 seen**——群里已收到失败卡片、表格保持「待处理」待人工介入，poller 仅计数暴露（`stuck-failed=N`），不自动重跑（避免对修不动的 bug 无限重试 AI、刷群烧钱），人工可在群里重触发。这修掉了旧实现「failed 既留在表里又被本地 seen 挡住而静默消失」。
 - **触发（手动轮询窗口）**：poller 不常驻，QA 密集期手动 `lark-bot poll-on` 开、`poll-off` 关；空闲 `LARK_BUGTABLE_IDLE_OFF_MS`（默认 4h）无新 bug 自动收工。进 G6/G7 的 gate 播报提醒开轮询、G8 提醒收工。
 
-> 主仓切分支是侵入式操作（改动主仓当前 checkout 分支），靠 clean 守卫兜底；worker 串行执行，天然不并发切分支。
+## 14. Worker 并行调度（按 worktree）
+
+worker 不再是单串行循环，而是**按目标 worktree 并行**的调度器：
+
+- **调度键 = `resolveWorkContext(task).cwd`**。同一 worktree（同项目、或同 adhoc 分支）的任务**串行**（并发 claude 在同目录改文件会打架）；不同 worktree 的任务**并行**。
+- **并发上限** `LARK_WORKER_CONCURRENCY`（默认 3）。调度循环：`inFlight`（Map，key=cwd）未满时，`GET /lark/tasks` 列出 queued/received 按 createdAt 升序，挑第一个「cwd 未在飞」的任务，`POST /lark/tasks/:id/claim` 原子领取（返回 null 表示被并发领走/状态已变，下一轮重来），启动 `runTask` 并在 `finally` 里 `inFlight.delete(cwd)`。
+- **`--once`** 保持旧单次语义（领一个最老 pending 跑完退出）。
+- **临时 worktree 提速**：`prepareTempWorktree` 建好后 `linkNodeModules` 把主仓的 node_modules（根 + `apps/*` + `packages/*`，pnpm monorepo 每包各一份）**软链**进临时目录，免 `pnpm install`（重建整棵符号链接树很慢）。临时 worktree 基于 `origin/online`、依赖集与主仓一致，Node 经目录软链 realpath 解析进主仓 store。软链失败只 warn（claude 可自行装依赖兜底）。
+- **验证收窄**：hotfix/群 @ 任务的 AI prompt 只要求验证**触达的包/文件**（如 `cd apps/web && pnpm exec tsc --noEmit` + 触达文件 lint + 相关最小测试），本仓有基线类型报错，只需确认触达文件无新增错误，不跑全仓。
+- **编码规范双保险**：① prompt 里让 claude 先读 `~/.ai-rules/skills/coding-quality/SKILL.md` + 按 `rule-router.md` 加载 L3，并内联最易踩红线（禁 arbitrary value、颜色必须用真实 preset token）；② **无人值守规范闸**（`lib/lark-lint-diff.mjs` + worker `enforceCodeQuality`）：任务成功、提交前扫本次 **diff 新增行**的 arbitrary value（`rounded-[8px]`…）与失效裸色类（`text-green` 等 Tailwind 静默丢弃的未知类），命中先让 AI **定向纠正一次**，仍残留则写进 commit message（`⚠ N 处未修正规范问题`）供人工 review。只扫 `+` 行、不碰存量债，只对代码文件生效。
+
+> git `worktree add/remove` 走 spawnSync 同步执行、本就互不交错，无需额外锁；并行的是各任务的 claude 运行。
+> 规范闸是**代码级兜底**（不依赖哪个 AI 写的），补 prompt 自律之不足；团队级全局 lint 仍按项目节奏另议。

@@ -382,6 +382,11 @@ export async function runLarkGateway({ configPath, port = defaultPort }) {
       if (req.method === 'POST' && pathname === '/lark/tasks/next') {
         return sendJson(res, 200, { task: store.claimNext() })
       }
+      // 并行调度器按 id 原子领取：cwd 相同的任务串行、不同 worktree 并行，worker 侧决策哪个可领
+      const claimMatch = pathname.match(/^\/lark\/tasks\/([^/]+)\/claim$/)
+      if (req.method === 'POST' && claimMatch) {
+        return sendJson(res, 200, { task: store.claimById(decodeURIComponent(claimMatch[1])) })
+      }
       if (req.method === 'POST' && pathname === '/lark/tasks') {
         const body = await readBody(req)
         const id = body.id || body.recordId || body.messageId

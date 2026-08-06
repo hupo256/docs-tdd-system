@@ -36,7 +36,7 @@ Lark 群 @机器人 ─┐                         Lark bug 多维表格 ─┐
 |----|----|
 | 项目 / 标题 | PR-01947 / CopyTrading 跟单设置 |
 | 机器人 app | `cli_aabf9468b1789ed4`（Aven.tong 的 bot，已在试点群） |
-| 配置文件 | `scripts/pr-01947.json`（**本机 gitignored**，含 botOpenId/allowedChatIds/myOpenId/bugTable.appToken 等标识，禁提交） |
+| 配置文件 | `scripts/lark-bot.local.json`（**本机 gitignored 的单一 bot 配置**，含 botOpenId/allowedChatIds/myOpenId/bugTable.appToken 等标识，禁提交）。**这是单一跨项目 bot 服务配置**，非 PR-01947 专属；`project`/`title` 仅作附件/任务落盘目录与 adhoc 兜底品牌 |
 | AI 执行器 | `aiExecutor`：默认 `claude`（worker wrapper 设定），可被 task / `LARK_AI_EXECUTOR` 覆盖；worker 在 `/Users/aven/github/PR-01947` worktree 内执行；claude 已带 `--dangerously-skip-permissions`（无人值守可真改代码，故务必只绑受控 worktree + 白名单群） |
 | 任务队列 | `agent/lark-tasks/*.json`（文件队列，gitignored） |
 | bug 去重状态 | `agent/lark-bugtable-state.json`（gitignored） |
@@ -72,7 +72,7 @@ node /Users/aven/github/docs_tdd/PR-01947/agent/scripts/lark-bugtable-poller.mjs
 
 ## 5. 上线前置（均已完成）
 
-1. ✅ bot 已在试点群；`allowedChatIds` / `botOpenId` / `myOpenId` 已填入本机配置。
+1. ✅ bot 已在试点群；`botOpenId` / `myOpenId` 已填入本机配置。**白名单用动态成员制 `allowedChatIds:"auto"`**：白名单 = bot 当前所在的群（Lark 只投递 bot 所在群的消息，群成员资格即信任边界）。新项目群把 bot 拉进去即时响应 @、无需改配置或重启（未知 chat 首次 @ 自动刷新 `im +chat-list` 再判）；仍 fail-closed（bot 不在该群则拒）。p2p 直发无群锚点，仍只放行 `allowedOpenIds` 显式用户。
 2. ✅ Lark 后台事件订阅 `im.message.receive_v1` 已开、应用已发布；bitable 读写 scope（`base:field:read` / `base:record:read` / `base:record:update`）已审批。
 3. ✅ bug 表字段已确认（表名「EX项目bug统计表」）：
    - `assigneeField` = **负责RD**（表内**无**「负责人」字段，人员类字段为 解决人员/负责RD/测试人员）
@@ -113,7 +113,7 @@ node /Users/aven/github/docs_tdd/PR-01947/agent/scripts/lark-bugtable-poller.mjs
 
 `docs-tdd.mjs gate <PID> <Gx>` **机器校验通过（exit 0）** 时，自动发一张「Gx 已完成」绿卡到群，无需手动 `notify-lark`。
 
-**开关（opt-in，逐项目）**：仅当项目配置 `scripts/pr-01947.json` 里 `notifyOnGate:true` 才播报；其它项目默认不受影响。本项目已开启。
+**开关（opt-in，逐项目）**：仅当项目配置 `scripts/lark-bot.local.json` 里 `notifyOnGate:true` 才播报；其它项目默认不受影响。本项目已开启。
 
 **通道**：复用 §5 的 `notifyTransport`。本项目 `'bot'`，走 bot `im +messages-send` 发卡片（无需 webhook secret）。
 
@@ -126,7 +126,7 @@ node /Users/aven/github/docs_tdd/PR-01947/agent/scripts/lark-bugtable-poller.mjs
 - `common/agent-scripts/docs-tdd.mjs` → `maybeBroadcastGate(id, gate)`，在 gate 分支 exit 0 后调用；spawn **项目薄包装** `notify-lark.mjs`（不能直调 common，见 §4 软链主守卫坑）。
 - `common/agent-scripts/notify-lark.mjs` → `resolveTransport` / `deliverViaBot` + `--idempotency-key`；`createPayload` 卡片结构与 G0-G8 手动播报完全一致（图1 样式）。
 
-**配置字段（pr-01947.json，gitignored）**：`notifyTransport:'bot'`、`notifyOnGate:true`、`notifyChatId`（缺省回落 `allowedChatIds[0]`）。
+**配置字段（lark-bot.local.json，gitignored）**：`notifyTransport:'bot'`、`notifyOnGate:true`、`notifyChatId`（缺省回落 `allowedChatIds[0]`）。
 
 > 说明：`docs-tdd.mjs` / `notify-lark.mjs` 是按需 CLI，改完即生效，无需 `lark-bot restart`（那是给常驻的 gateway/worker 用的）。
 
@@ -143,6 +143,8 @@ bug 多维表格是**全公司共享表**，Aven.tong 名下的 bug 横跨多个
 - 干完回写表格状态 `待处理 → 待推版`（`doneValue`）。
 
 **路由实现**：`common/agent-scripts/lark-worker.mjs` → `resolveWorkContext(workerConfig, task)`（已导出，可只读单测）+ `prepareTempWorktree` / `finalizeTempWorktree`。
+
+**并行调度（2026-08-06 加）**：worker 从单串行改成**按 worktree 并行**——调度键 = `resolveWorkContext(task).cwd`，同一 worktree 串行、不同 worktree 并行，并发上限 `LARK_WORKER_CONCURRENCY`（默认 3）。靠 store `claimById` + gateway `POST /lark/tasks/:id/claim` 原子按 id 领取。临时 worktree 建好后 `linkNodeModules` 软链主仓 node_modules（根+apps/*+packages/*）免 `pnpm install`；hotfix 任务 prompt 验证收窄到触达包/文件（不跑全仓 tsc）。详见 `common/lark-bot-gateway.md` §14。
 
 ### 8.1 群 @ 任务也共用同一套跨项目路由
 
