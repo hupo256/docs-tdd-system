@@ -26,6 +26,7 @@ import { createServer } from 'node:http'
 import { resolve, join, dirname } from 'node:path'
 
 import { resolveRoots } from './lib/roots.mjs'
+import { resolveAiExecutor } from './lib/lark-ai-executor.mjs'
 import {
   isForBot,
   isWhitelisted,
@@ -76,6 +77,10 @@ export const parseAiExecutorDirective = (text) => {
   const match = String(text || '').match(/^\s*\[(codex|claude)\](?:\s+|$)/i)
   return match ? match[1].toLowerCase() : undefined
 }
+
+// 排队卡必须展示任务最终会用的执行器，不能等 Worker 领取后才补写。
+export const resolveGatewayAiExecutor = ({ requestedExecutor, config, env = process.env }) =>
+  resolveAiExecutor({ localConfig: config }, { aiExecutor: requestedExecutor }, env)
 
 // ---------------------------------------------------------------------------
 // bug 表回写：done 后把记录状态从「待处理」改为约定完成值
@@ -167,6 +172,7 @@ const ingestLarkEvent = async ({ raw, config, store }) => {
   const project = await resolveProject({ chatId: msg.chatId, text: mergedText })
   const worktreeExists = project ? existsSync(join(worktreesDir, project)) : false
   const requestedExecutor = parseAiExecutorDirective(msg.text)
+  const aiExecutor = resolveGatewayAiExecutor({ requestedExecutor, config })
 
   const task = store.upsert({
     id: msg.messageId,
@@ -180,7 +186,7 @@ const ingestLarkEvent = async ({ raw, config, store }) => {
     // 卡片「任务」摘要优先展示用户本条附言，其次被引用消息首行
     summary: summarize(msg.text?.trim() ? msg.text : refCtx?.text || ''),
     attachments,
-    aiExecutor: requestedExecutor,
+    aiExecutor,
     status: 'queued',
     createdAt: new Date().toISOString(),
   })
@@ -420,7 +426,7 @@ export async function runLarkGateway({ configPath, port = defaultPort }) {
           text: body.text || '',
           summary: summarize(body.text),
           attachments: body.attachments || [],
-          aiExecutor: normalizeAiExecutor(body.aiExecutor),
+          aiExecutor: resolveGatewayAiExecutor({ requestedExecutor: normalizeAiExecutor(body.aiExecutor), config }),
           status: 'queued',
           createdAt: new Date().toISOString(),
         })

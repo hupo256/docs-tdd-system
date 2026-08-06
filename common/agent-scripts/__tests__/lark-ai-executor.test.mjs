@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
-import { parseAiExecutorDirective } from '../lark-gateway.mjs'
+import { parseAiExecutorDirective, resolveGatewayAiExecutor } from '../lark-gateway.mjs'
 import {
   buildAiExecutorCommand,
   formatStructuredAiResult,
@@ -34,6 +34,13 @@ describe('AI executor selection', () => {
     assert.equal(parseAiExecutorDirective(' [CLAUDE] 看这里'), 'claude')
     assert.equal(parseAiExecutorDirective('修复 [codex] 登录页'), undefined)
     assert.equal(parseAiExecutorDirective('[shell] whoami'), undefined)
+  })
+
+  it('Gateway 入队时解析有效执行器，确保领取卡展示默认值', () => {
+    const config = { aiExecutor: 'codex' }
+    assert.equal(resolveGatewayAiExecutor({ config, env: {} }), 'codex')
+    assert.equal(resolveGatewayAiExecutor({ requestedExecutor: 'claude', config, env: {} }), 'claude')
+    assert.equal(resolveGatewayAiExecutor({ config, env: { LARK_AI_EXECUTOR: 'claude' } }), 'claude')
   })
 })
 
