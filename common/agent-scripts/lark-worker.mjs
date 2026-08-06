@@ -378,6 +378,8 @@ const runAI = async (workerConfig, task, workContext) => {
     promptText: buildTaskPrompt(workContext, task, executor),
     cwd: workContext.cwd || repoRoot,
     attachments: task.attachments || [],
+    codexModel: workerConfig.localConfig?.codexModel,
+    codexReasoningEffort: workerConfig.localConfig?.codexReasoningEffort,
   })
 }
 
@@ -395,7 +397,13 @@ const enforceCodeQuality = async (workerConfig, task, workContext) => {
   console.warn(`[lark-worker] 规范闸命中 ${violations.length} 处违规，触发定向纠正 pass（${task.id}）`)
   try {
     const executor = resolveAiExecutor(workerConfig, task)
-    await execAiExecutor({ executor, promptText: buildLintFixPrompt(cwd, violations), cwd })
+    await execAiExecutor({
+      executor,
+      promptText: buildLintFixPrompt(cwd, violations),
+      cwd,
+      codexModel: workerConfig.localConfig?.codexModel,
+      codexReasoningEffort: workerConfig.localConfig?.codexReasoningEffort,
+    })
   } catch (error) {
     console.warn(`[lark-worker] 规范纠正 pass 执行异常（保留原改动）：${error.message}`)
   }
@@ -448,7 +456,10 @@ export async function runLarkWorker({
   const localConfig = loadWorkerLocalConfig(configPath)
   const workerConfig = { projectId, projectName, projectDocs, aiExecutor, localConfig, repoCwd }
   const startupExecutor = resolveAiExecutor(workerConfig, {})
-  console.log(`[lark-worker] AI executor=${startupExecutor}（task > env > config > wrapper）`)
+  const codexProfile = startupExecutor === 'codex'
+    ? ` model=${localConfig.codexModel || '(Codex default)'} reasoning=${localConfig.codexReasoningEffort || '(Codex default)'}`
+    : ''
+  console.log(`[lark-worker] AI executor=${startupExecutor}${codexProfile}（task > env > config > wrapper）`)
   const request = (path, options) => requestJson(gatewayUrl, path, options)
   const updateTask = (taskId, status, result, executor) =>
     request(`/lark/tasks/${encodeURIComponent(taskId)}/status`, {

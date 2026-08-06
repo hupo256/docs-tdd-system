@@ -37,12 +37,14 @@ describe('AI executor selection', () => {
 })
 
 describe('Codex non-interactive command', () => {
-  it('使用 workspace-write、never、关闭工具网络，并从 stdin 读 prompt', () => {
+  it('使用指定模型与推理强度，并保持 workspace-write、never、关闭工具网络', () => {
     const command = buildAiExecutorCommand({
       executor: 'codex',
       promptText: 'fix it',
       cwd: '/tmp/repo',
       resultPath: '/tmp/result.json',
+      codexModel: 'gpt-5.6-sol',
+      codexReasoningEffort: 'high',
     })
     assert.equal(command.cmd, 'codex')
     assert.equal(command.stdin, 'fix it')
@@ -50,6 +52,8 @@ describe('Codex non-interactive command', () => {
     assert.ok(command.args.includes('--ephemeral'))
     assert.deepEqual(command.args.slice(command.args.indexOf('--sandbox'), command.args.indexOf('--sandbox') + 2), ['--sandbox', 'workspace-write'])
     assert.deepEqual(command.args.slice(0, 3), ['--ask-for-approval', 'never', 'exec'])
+    assert.deepEqual(command.args.slice(command.args.indexOf('--model'), command.args.indexOf('--model') + 2), ['--model', 'gpt-5.6-sol'])
+    assert.ok(command.args.includes('model_reasoning_effort="high"'))
     assert.ok(command.args.includes('sandbox_workspace_write.network_access=false'))
     assert.equal(command.args.at(-1), '-')
     assert.equal(command.args.includes('--dangerously-bypass-approvals-and-sandbox'), false)

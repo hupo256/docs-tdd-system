@@ -243,7 +243,7 @@ Worker 完成后必须回群，并写入项目通知记录。回群内容固定�
 
 项目级 `agent/scripts/lark-worker.mjs` 必须是薄包装，只调用 `common/agent-scripts/lark-worker.mjs` 并传入项目编号、项目名称和需要读取的项目文档。Gateway 轮询、任务领取、Codex prompt、状态回写、空任务失败处理和兜底完成消息都由公共 Worker 维护；不得在项目目录复制完整 Worker 实现。
 
-AI 执行器只允许 `claude` / `codex`，优先级为：task > `LARK_AI_EXECUTOR` > `lark-bot.local.json.aiExecutor` > wrapper > `claude`。群消息开头 `[codex]` / `[claude]` 可单次覆盖，外部投递可传 `aiExecutor`；未知值拒绝，结果卡显示实际执行器。
+AI 执行器只允许 `claude` / `codex`，优先级为：task > `LARK_AI_EXECUTOR` > `lark-bot.local.json.aiExecutor` > wrapper > `claude`。群消息开头 `[codex]` / `[claude]` 可单次覆盖，外部投递可传 `aiExecutor`；未知值拒绝，结果卡显示实际执行器。本机可用 `codexModel` / `codexReasoningEffort` 固定 Lark Worker 的 Codex 模型与推理强度，不影响其它 Codex 会话。
 
 Codex 使用 `codex exec`：`ephemeral + workspace-write + approval never + 工具网络关闭`。Prompt 走 stdin，图片走 `--image`；最终结果按 `common/schemas/lark-ai-result.schema.json` 输出，由 Worker 回写 Gateway，不使用全放权参数。Claude 保持既有 callback。
 

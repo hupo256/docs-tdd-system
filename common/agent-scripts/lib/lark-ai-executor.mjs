@@ -34,7 +34,15 @@ export const resolveAiExecutor = (workerConfig, task, env = process.env) => {
   return validateAiExecutor(value, source)
 }
 
-export const buildAiExecutorCommand = ({ executor, promptText, cwd, resultPath, attachments = [] }) => {
+export const buildAiExecutorCommand = ({
+  executor,
+  promptText,
+  cwd,
+  resultPath,
+  attachments = [],
+  codexModel,
+  codexReasoningEffort,
+}) => {
   if (executor === 'codex') {
     const imageArgs = attachments
       .filter((item) => item.type === 'image' && item.localPath && existsSync(item.localPath))
@@ -44,6 +52,8 @@ export const buildAiExecutorCommand = ({ executor, promptText, cwd, resultPath, 
       args: [
         '--ask-for-approval', 'never',
         'exec', '--ephemeral',
+        ...(codexModel ? ['--model', codexModel] : []),
+        ...(codexReasoningEffort ? ['--config', `model_reasoning_effort=${JSON.stringify(codexReasoningEffort)}`] : []),
         '--sandbox', 'workspace-write',
         '-c', 'sandbox_workspace_write.network_access=false',
         '--cd', cwd,
@@ -113,10 +123,25 @@ export const formatStructuredAiResult = (result, executor = 'codex') => {
   return lines.join('\n')
 }
 
-export const execAiExecutor = async ({ executor, promptText, cwd, attachments = [] }) => {
+export const execAiExecutor = async ({
+  executor,
+  promptText,
+  cwd,
+  attachments = [],
+  codexModel,
+  codexReasoningEffort,
+}) => {
   const resultDir = executor === 'codex' ? mkdtempSync(join(tmpdir(), 'lark-codex-result-')) : null
   const resultPath = resultDir ? join(resultDir, 'result.json') : null
-  const { cmd, args, stdin, resultMode } = buildAiExecutorCommand({ executor, promptText, cwd, resultPath, attachments })
+  const { cmd, args, stdin, resultMode } = buildAiExecutorCommand({
+    executor,
+    promptText,
+    cwd,
+    resultPath,
+    attachments,
+    codexModel,
+    codexReasoningEffort,
+  })
 
   try {
     await new Promise((resolve, reject) => {
