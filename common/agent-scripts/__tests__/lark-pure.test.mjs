@@ -145,6 +145,16 @@ describe('isWhitelisted (fail-closed, 群级信任)', () => {
     const config = { allowedChatIds: ['oc_ok'] }
     assert.equal(isWhitelisted({ msg: { chatType: 'p2p', senderOpenId: ME }, config }), false)
   })
+
+  it('动态成员制（auto）：群消息按注入的 isMember 放行/拒绝', () => {
+    const config = { allowedChatIds: 'auto' }
+    assert.equal(isWhitelisted({ msg: { chatType: 'group', chatId: 'oc_x' }, config, isMember: true }), true)
+    assert.equal(isWhitelisted({ msg: { chatType: 'group', chatId: 'oc_x' }, config, isMember: false }), false)
+    // auto 下 p2p 仍只放行白名单用户，与 isMember 无关
+    const withUser = { allowedChatIds: 'auto', allowedOpenIds: [ME] }
+    assert.equal(isWhitelisted({ msg: { chatType: 'p2p', senderOpenId: ME }, config: withUser, isMember: true }), true)
+    assert.equal(isWhitelisted({ msg: { chatType: 'p2p', senderOpenId: 'ou_x' }, config: withUser, isMember: true }), false)
+  })
 })
 
 // ---------------------------------------------------------------------------
