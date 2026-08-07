@@ -93,3 +93,7 @@
 | 2026/8/6 22:26:37 | Lark Job | 已完成 | ![Image](img_v3_0214b_c62238fb-5713-4f36-8f71-933244e4d4hu) tips 还要统一加上指向的小三角：已完成。
 1. 已完成：跟单设置页所有 Tooltip 统一增加指向小三角，并移除固定额度/倍率间的箭头差异配置。
 2. | real | success |
+| 2026/8/7 14:47:04 | Lark Job | 阻塞中 | 修复：Lark bug 表待处理项 [[lark-bot e2e] README 顶部补一行说明注释]：处理失败。
+1. 任务：修复：Lark bug 表待处理项 [[lark-bot e2e] README 顶部补一行说明 | real | failed |
+| 2026/8/7 14:55:33 | Lark Job | 已完成 | 修复：Lark bug 表待处理项 [[lark-bot e2e] README 顶部补一行说明注释]：已完成。
+1. 已完成：在 apps/web/README.md 顶部添加指定注释，未改动其他内容。改动位于分支 hot | real | success |
