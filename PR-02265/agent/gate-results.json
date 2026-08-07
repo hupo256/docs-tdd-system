@@ -1,27 +1,27 @@
 {
-  "generatedAt": "2026-08-07T11:40:57.280Z",
+  "generatedAt": "2026-08-07T12:14:11.631Z",
   "tool": "run-project-gate.mjs",
   "projectId": "PR-02265",
-  "gate": "G3",
+  "gate": "G4",
   "ok": true,
   "summary": {
-    "total": 51,
-    "ok": 51,
+    "total": 54,
+    "ok": 48,
     "warn": 0,
-    "waived": 0,
+    "waived": 6,
     "fail": 0
   },
   "groups": {
     "documentation": {
-      "total": 45,
-      "ok": 45,
+      "total": 54,
+      "ok": 48,
       "warn": 0,
-      "waived": 0,
+      "waived": 6,
       "fail": 0
     },
     "implementation": {
-      "total": 6,
-      "ok": 6,
+      "total": 0,
+      "ok": 0,
       "warn": 0,
       "waived": 0,
       "fail": 0
@@ -318,99 +318,123 @@
     },
     {
       "ruleId": "DOC-G3-002",
-      "ok": true,
-      "message": "G3 API contract contains MSW checklist / landing preconditions",
+      "ok": false,
+      "message": "G3 API contract contains MSW checklist / landing preconditions [waived: 同 DOC-G3-001：不采用 MSW，无落地前置清单 · owner=项目负责人 · until 2026-12-31]",
       "file": "../docs_tdd/PR-02265/product/03-api-contract.md",
-      "severity": "error",
+      "severity": "waived",
       "category": "documentation"
     },
     {
       "ruleId": "DOC-G3-003",
-      "ok": true,
-      "message": "G3 MSW checklist covers normal/empty/error/unauthorized/edge scenarios",
+      "ok": false,
+      "message": "G3 MSW checklist covers normal/empty/error/unauthorized/edge scenarios [waived: 同 DOC-G3-001：无 MSW handler 场景矩阵 · owner=项目负责人 · until 2026-12-31]",
       "file": "../docs_tdd/PR-02265/product/03-api-contract.md",
-      "severity": "error",
+      "severity": "waived",
       "category": "documentation"
     },
     {
       "ruleId": "DOC-G3-004",
-      "ok": true,
-      "message": "G3 MSW route records schema contract test requirement",
+      "ok": false,
+      "message": "G3 MSW route records schema contract test requirement [waived: 同 DOC-G3-001：无 MSW 契约测试（Vue admin 非 zod 体系；React 侧接口已存在） · owner=项目负责人 · until 2026-12-31]",
       "file": "../docs_tdd/PR-02265/product/03-api-contract.md",
-      "severity": "error",
+      "severity": "waived",
       "category": "documentation"
     },
     {
       "ruleId": "DOC-G3-005",
-      "ok": true,
-      "message": "G3 MSW route records dev-only worker registration",
+      "ok": false,
+      "message": "G3 MSW route records dev-only worker registration [waived: 同 DOC-G3-001：无 MSW dev-only worker · owner=项目负责人 · until 2026-12-31]",
       "file": "../docs_tdd/PR-02265/product/03-api-contract.md",
-      "severity": "error",
+      "severity": "waived",
       "category": "documentation"
     },
     {
       "ruleId": "DOC-G3-006",
-      "ok": true,
-      "message": "G3 frontend tasks include the MSW fallback task",
+      "ok": false,
+      "message": "G3 frontend tasks include the MSW fallback task [waived: 同 DOC-G3-001：无 MSW fallback 任务 · owner=项目负责人 · until 2026-12-31]",
       "file": "../docs_tdd/PR-02265/product/04-frontend-tasks.md",
-      "severity": "error",
+      "severity": "waived",
       "category": "documentation"
     },
     {
       "ruleId": "DOC-G3-007",
-      "ok": true,
-      "message": "G3 collaboration records the MSW fallback decision / checklist",
+      "ok": false,
+      "message": "G3 collaboration records the MSW fallback decision / checklist [waived: 同 DOC-G3-001：协作记录改为记 MSW 豁免决策而非落地清单 · owner=项目负责人 · until 2026-12-31]",
       "file": "../docs_tdd/PR-02265/product/06-collaboration.md",
+      "severity": "waived",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G4-001",
+      "ok": true,
+      "message": "technical design reuse inventory has no blocking placeholders",
+      "file": "../docs_tdd/PR-02265/product/02-technical-design.md",
       "severity": "error",
       "category": "documentation"
     },
     {
-      "ruleId": "DOC-G3-IMPL-001",
+      "ruleId": "DOC-G4-002",
       "ok": true,
-      "message": "MSW manifest is valid JSON",
-      "file": "../docs_tdd/PR-02265/agent/msw-manifest.json",
+      "message": "technical design contains reuse inventory",
+      "file": "../docs_tdd/PR-02265/product/02-technical-design.md",
       "severity": "error",
-      "category": "implementation"
+      "category": "documentation"
     },
     {
-      "ruleId": "DOC-G3-IMPL-002",
+      "ruleId": "DOC-G4-003",
       "ok": true,
-      "message": "asset existence is not required in lifecycle=planned",
-      "file": "../docs_tdd/PR-02265/agent/msw-manifest.json",
+      "message": "technical design does not contain skipped-reuse wording",
+      "file": "../docs_tdd/PR-02265/product/02-technical-design.md",
       "severity": "error",
-      "category": "implementation"
+      "category": "documentation"
     },
     {
-      "ruleId": "DOC-G3-IMPL-003",
+      "ruleId": "DOC-G4-004",
       "ok": true,
-      "message": "registration is retired in lifecycle=planned",
-      "file": "../docs_tdd/PR-02265/agent/msw-manifest.json",
+      "message": "technical design template v2 contains single-source ownership inventory",
+      "file": "../docs_tdd/PR-02265/product/02-technical-design.md",
       "severity": "error",
-      "category": "implementation"
+      "category": "documentation"
     },
     {
-      "ruleId": "DOC-G3-IMPL-004",
+      "ruleId": "DOC-G4-005",
       "ok": true,
-      "message": "endpoint inventory may remain empty before G3",
-      "file": "../docs_tdd/PR-02265/agent/msw-manifest.json",
+      "message": "single-source ownership inventory has no unresolved placeholders",
+      "file": "../docs_tdd/PR-02265/product/02-technical-design.md",
       "severity": "error",
-      "category": "implementation"
+      "category": "documentation"
     },
     {
-      "ruleId": "DOC-G3-IMPL-005",
+      "ruleId": "DOC-G4-006",
       "ok": true,
-      "message": "assumption ledger is readable",
-      "file": "../docs_tdd/PR-02265/agent/assumptions.json",
+      "message": "technical design template v3 contains data-flow and layer contract inventory",
+      "file": "../docs_tdd/PR-02265/product/02-technical-design.md",
       "severity": "error",
-      "category": "implementation"
+      "category": "documentation"
     },
     {
-      "ruleId": "DOC-G3-IMPL-006",
+      "ruleId": "DOC-G4-007",
       "ok": true,
-      "message": "no blocking assumptions remain for lifecycle=planned",
-      "file": "../docs_tdd/PR-02265/agent/assumptions.json",
+      "message": "data-flow and layer contract inventory has no unresolved placeholders",
+      "file": "../docs_tdd/PR-02265/product/02-technical-design.md",
       "severity": "error",
-      "category": "implementation"
+      "category": "documentation"
+    },
+    {
+      "ruleId": "GIT-G4-001",
+      "ok": true,
+      "message": "current branch is feature/PR-02265 (feature/* tolerated); got feature/PR-02265",
+      "file": "../docs_tdd/PR-02265",
+      "severity": "warn",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "GIT-G4-002",
+      "ok": true,
+      "message": "HEAD descends from current origin/online",
+      "file": "../docs_tdd/PR-02265",
+      "severity": "error",
+      "category": "documentation"
     },
     {
       "ruleId": "DOC-BLOCK-001",
@@ -423,7 +447,7 @@
     {
       "ruleId": "DOC-BLOCK-002",
       "ok": true,
-      "message": "无到达当前阶段(G3)仍未解除的阻塞",
+      "message": "无到达当前阶段(G4)仍未解除的阻塞",
       "file": "../docs_tdd/PR-02265/agent/blockers.json",
       "severity": "error",
       "category": "documentation"
@@ -439,20 +463,20 @@
   ],
   "commands": [
     {
-      "label": "verify-project-gate PR-02265 G3",
+      "label": "verify-project-gate PR-02265 G4",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-08-07T11:40:57.131Z",
-      "finishedAt": "2026-08-07T11:40:57.279Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02265/2026-08-07T11-40-57-131Z-verify-project-gate-g3.log"
+      "startedAt": "2026-08-07T12:14:11.499Z",
+      "finishedAt": "2026-08-07T12:14:11.631Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02265/2026-08-07T12-14-11-499Z-verify-project-gate-g4.log"
     },
     {
-      "label": "set-project-stage PR-02265 G3",
+      "label": "set-project-stage PR-02265 G4",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-08-07T11:40:57.531Z",
-      "finishedAt": "2026-08-07T11:40:57.683Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02265/2026-08-07T11-40-57-531Z-set-project-stage.log"
+      "startedAt": "2026-08-07T12:14:11.863Z",
+      "finishedAt": "2026-08-07T12:14:11.998Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02265/2026-08-07T12-14-11-863Z-set-project-stage.log"
     }
   ],
   "codeRules": {
@@ -470,7 +494,7 @@
     "baselineFile": null
   },
   "source": {
-    "gateCommand": "/Users/aven/.nvm/versions/node/v24.7.0/bin/node /Users/aven/github/docs_tdd/common/agent-scripts/verify-project-gate.mjs PR-02265 G3 --json",
+    "gateCommand": "/Users/aven/.nvm/versions/node/v24.7.0/bin/node /Users/aven/github/docs_tdd/common/agent-scripts/verify-project-gate.mjs PR-02265 G4 --json",
     "parseError": null,
     "codeRulesCommand": null,
     "codeRulesParseError": null,
@@ -478,10 +502,10 @@
     "buildQualityParseError": null
   },
   "fingerprint": {
-    "headSha": "0406e2a1d661ce1a83f28b968ac1c8b3c0b97a05",
+    "headSha": "445876e97f3d118dec3d594d3582538d2f30b52f",
     "baseSha": "445876e97f3d118dec3d594d3582538d2f30b52f",
-    "dirtyHash": "e75e04bc510f338019ce514cb5ff906a196552c34a928f53ecc0bd2a563138d2",
-    "dirtyFileCount": 0,
+    "dirtyHash": "9b252769af98149549a5db3746be497ab537d4570e851c2e5507b2b1dd5e35ee",
+    "dirtyFileCount": 1,
     "untrackedFileCount": 0,
     "rulesetVersion": "local-2026.07-msw-v1",
     "ruleReleaseFingerprint": "a82db7bf74c321fbe4b33d06aab8d32806ea0bc96be371c31f2634830d52a12c",
@@ -489,7 +513,7 @@
   },
   "cache": {
     "hit": false,
-    "fingerprint": "74299b317694358b"
+    "fingerprint": "aee31af50b6ec348"
   },
   "stageSync": {
     "attempted": true,

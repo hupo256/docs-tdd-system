@@ -1,1 +1,9 @@
-[]
+[
+  { "ruleId": "DOC-G3-001", "reason": "接口全部已存在复用、仅放开负值；F01~F04/F06 主体为 Vue2 legacy-admin（apps/admin、apps/futures-admin），非 apps/web React/MSW 体系；F05 前台亦为已存在接口的纯展示改动。MSW 路线 B 不适用，开发直接连 test 后端用真实负费率数据验证（项目负责人 2026-08-07 确认）", "owner": "项目负责人", "expiresAt": "2026-12-31" },
+  { "ruleId": "DOC-G3-002", "reason": "同 DOC-G3-001：不采用 MSW，无落地前置清单", "owner": "项目负责人", "expiresAt": "2026-12-31" },
+  { "ruleId": "DOC-G3-003", "reason": "同 DOC-G3-001：无 MSW handler 场景矩阵", "owner": "项目负责人", "expiresAt": "2026-12-31" },
+  { "ruleId": "DOC-G3-004", "reason": "同 DOC-G3-001：无 MSW 契约测试（Vue admin 非 zod 体系；React 侧接口已存在）", "owner": "项目负责人", "expiresAt": "2026-12-31" },
+  { "ruleId": "DOC-G3-005", "reason": "同 DOC-G3-001：无 MSW dev-only worker", "owner": "项目负责人", "expiresAt": "2026-12-31" },
+  { "ruleId": "DOC-G3-006", "reason": "同 DOC-G3-001：无 MSW fallback 任务", "owner": "项目负责人", "expiresAt": "2026-12-31" },
+  { "ruleId": "DOC-G3-007", "reason": "同 DOC-G3-001：协作记录改为记 MSW 豁免决策而非落地清单", "owner": "项目负责人", "expiresAt": "2026-12-31" }
+]

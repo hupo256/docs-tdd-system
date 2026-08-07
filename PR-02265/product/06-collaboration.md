@@ -19,12 +19,11 @@
 
 ## Mock 策略（G3 决策）
 
-**采用 MSW 路线 B**。接口复用现状、仅放开负值，但后端「放开负值」可能未与前端同步部署，故用 MSW 负值 fixture 让前端先自测负值配置/查询/展示（正数化）：
+**不采用 MSW，已登记豁免**（`agent/rule-waivers.json` DOC-G3-001~007，项目负责人 2026-08-07）。理由：
 
-- API 未 ready 时的 MSW 路线 B 落地清单见 [03-api-contract.md](./03-api-contract.md) §6.1；handler `src/mocks/handlers/mm-fee.ts`，edge 场景含负费率 -0.000001 / 边界 ±100 / 6 位精度。
-- schema 去 `min(0)` 放开负值后，handler response 过真实 schema 契约测试；`useMockWorker()` 仅 dev。
-- 后端放开负值 ready 后按 handler 粒度删除切真实，业务代码 0 改动。
-- 无豁免（未走遗留路线 A）。
+- 接口全部**已存在复用**、仅放开负值；F01~F04/F06 主体是 **Vue2 legacy-admin**（`apps/admin`、`apps/futures-admin`），非 apps/web React/MSW/zod 体系；F05 前台也只是已存在接口的展示层改动。
+- 开发**直接连 test 后端**，用真实负费率账户数据验证配置/查询/展示全链路；负值/边界由前端**纯函数单测**覆盖。
+- 风险：后端「放开负值」若未同步部署，前端配负值会被后端拒——G5 联调前需后端确认（见 03-api-contract §8 #1）。
 
 ## Code Review
 

@@ -1,7 +1,7 @@
 ---
 projectId: PR-02265
 status: active
-stage: G3
+stage: G4
 branch: "feature/PR-02265"
 worktree: "/Users/aven/github/PR-02265"
 port: "4101"
@@ -20,7 +20,7 @@ larkEnabled: false
 | 字段 | 值 |
 |------|-----|
 | 当前阶段 | G0 资料接收 |
-| 最新通过门禁 | G3 |
+| 最新通过门禁 | G4 |
 | 公共规则 | 继承 ../common/README.md |
 | PRD 来源 | https://qfglxo2m3dc.sg.larksuite.com/docx/P2xud4WYyoapp6xfjskl7UI3gKc |
 | visualFidelity | standard |
