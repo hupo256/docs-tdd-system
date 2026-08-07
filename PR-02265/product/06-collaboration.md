@@ -17,6 +17,15 @@
 
 暂无。
 
+## Mock 策略（G3 决策）
+
+**采用 MSW 路线 B**。接口复用现状、仅放开负值，但后端「放开负值」可能未与前端同步部署，故用 MSW 负值 fixture 让前端先自测负值配置/查询/展示（正数化）：
+
+- API 未 ready 时的 MSW 路线 B 落地清单见 [03-api-contract.md](./03-api-contract.md) §6.1；handler `src/mocks/handlers/mm-fee.ts`，edge 场景含负费率 -0.000001 / 边界 ±100 / 6 位精度。
+- schema 去 `min(0)` 放开负值后，handler response 过真实 schema 契约测试；`useMockWorker()` 仅 dev。
+- 后端放开负值 ready 后按 handler 粒度删除切真实，业务代码 0 改动。
+- 无豁免（未走遗留路线 A）。
+
 ## Code Review
 
 | 时间 | 命令 | findings | 处理结论 | 证据 |
