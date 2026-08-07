@@ -47,11 +47,21 @@ function toDocsRelative(file) {
   return relative(docsRoot, file).split(sep).join('/')
 }
 
+// Lark 集成层（机器人/消息卡片/任务存储/长连接网关及其 __tests__）属于「把规则搬进 Lark 展示/协作」的外围插件，
+// 不定义规则或门禁语义。整棵 common/ 参与指纹会让这些纯基建改动把规则发布拖成假性 stale，
+// 从而阻塞所有 consumer（Codex/Claude/Cursor）的 changed/gate。故按 basename `lark-*` 从规则指纹中排除
+// （含 agent-scripts/、agent-scripts/lib/、agent-scripts/__tests__/ 下的 lark 插件与其测试）；
+// 规则引擎本体（code-review/gate runner/effective-rules 等）仍参与指纹，保证真规则/门禁变更强制重发布 + golden-run。
+function isLarkPlumbing(rel) {
+  return /(?:^|\/)agent-scripts\/(?:[^/]+\/)?lark-[^/]*\.mjs$/.test(rel)
+}
+
 function collectRuleFiles() {
   return [...walkFiles(commonDir), ...walkFiles(templatesDir)]
     .filter((file) => ![manifestRelativePath, effectiveManifestRelativePath, warnLedgerRelativePath].includes(toDocsRelative(file)))
     .filter((file) => {
       const rel = toDocsRelative(file)
+      if (isLarkPlumbing(rel)) return false
       return rel.startsWith('templates/') || /\.(?:md|json|mjs)$/.test(rel)
     })
     .sort((a, b) => toDocsRelative(a).localeCompare(toDocsRelative(b)))
