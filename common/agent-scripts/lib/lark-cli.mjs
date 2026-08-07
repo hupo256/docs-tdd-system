@@ -169,7 +169,8 @@ export const fetchReferencedContext = async (messageId) => {
 
   const content = msg.content
   if (typeof content === 'string' && !content.trim().startsWith('{')) {
-    return { text: content.trim(), attachments: [] } // text / merge_forward
+    const parsed = parseTextAndAttachments({ messageType: msg.msg_type, rawContent: content, mentions: [] })
+    return { text: parsed.text, attachments: parsed.attachments } // text / merge_forward（含图片占位恢复）
   }
   if (msg.msg_type === 'image') {
     try {

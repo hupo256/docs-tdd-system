@@ -78,3 +78,18 @@
 1. 任务：[claude] 数字加粗，标绿。背景圆角改为 8px. ![Image](img_v3_021 | real | failed |
 | 2026/8/6 21:09:53 | Lark Job | 已完成 | ![Image](img_v3_0214b_06fa5e7b-8372-4843-8bae-631ec36192hu) 三个 Tab hover 时要全部展示 ：已完成。
 1. 已完成：智能比例、固定额度、倍率三个 Tab 统一增加 hover Tooltip，提示内容为对应 Ta | real | success |
+| 2026/8/6 21:17:10 | Lark Job | 已完成 | [claude] 数字加粗，标绿。背景圆角改为 8px. ![Image](img_v3_0214b_11bfd1b7-e2c7-44e3-af50-4857e：已完成。
+1. 定位到跟单设置页交易员信息卡（交易员胜率 / 利润分成 / 跟单用户 那一栏），把其中三个数字改成加粗并 | real | success |
+| 2026/8/6 21:21:18 | Lark Job | 进行中 | 收到群任务(PR-01947)：[claude] 这些标题在 hover 时要加上 tips ![Image](img_v3_0214b_b9ed5fa5-1d9a-45f5-8e8c-d6b | real | success |
+| 2026/8/6 21:24:21 | Lark Job | 进行中 | 收到群任务(PR-02135)：[codex] 冒烟测试：在仓库根目录创建 .lark-codex-smoke.md，写入“Lark Codex smoke test passed”，不要修改 | real | success |
+| 2026/8/6 21:25:08 | Lark Job | 已完成 | [codex] 冒烟测试：在仓库根目录创建 .lark-codex-smoke.md，写入“Lark Codex smoke test passed”，不要修改：已完成。
+1. 已完成冒烟测试：在仓库根目录创建指定文件且未修改其他文件。分支：hotfix/PR-02135-96a3 | real | success |
+| 2026/8/6 21:29:53 | Lark Job | 阻塞中 | [claude] 这些标题在 hover 时要加上 tips ![Image](img_v3_0214b_b9ed5fa5-1d9a-45f5-8e8c-d6b：未完成（需求/文案缺口，非工具/环境/权限故障）。
+1. 已读取附件截图并定位到「合约跟单设置·智能比例」表单的三个标题 | real | failed |
+| 2026/8/6 22:20:05 | Lark Job | 进行中 | 收到群任务(PR-01947)：这些标题 hover 加上 tips | real | success |
+| 2026/8/6 22:22:33 | Lark Job | 已完成 | 这些标题 hover 加上 tips：已完成。
+1. 已完成：跟单金额、现有持仓复制模式和高级设置标题悬停时会显示同名 Tooltip，原有说明提示保持不变。 | real | success |
+| 2026/8/6 22:24:23 | Lark Job | 进行中 | 收到群任务(PR-01947)：![Image](img_v3_0214b_c62238fb-5713-4f36-8f71-933244e4d4hu) tips 还要统一加上指向的小三角 | real | success |
+| 2026/8/6 22:26:37 | Lark Job | 已完成 | ![Image](img_v3_0214b_c62238fb-5713-4f36-8f71-933244e4d4hu) tips 还要统一加上指向的小三角：已完成。
+1. 已完成：跟单设置页所有 Tooltip 统一增加指向小三角，并移除固定额度/倍率间的箭头差异配置。
+2. | real | success |

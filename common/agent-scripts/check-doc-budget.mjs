@@ -105,7 +105,9 @@ const SELF_TEST_EXEMPT = new Set([
   'lib/lark-cli.mjs', // lark-cli 子进程 IO
   'lib/lark-lint-diff.mjs', // diff 扫描纯逻辑，由 __tests__/lark-ai-executor.test.mjs 覆盖
   'lib/lark-message.mjs', // 消息归一/白名单纯逻辑，由 __tests__/lark-pure.test.mjs 覆盖
+  'lib/lark-rule-context.mjs', // 精准规则抽取纯逻辑，由 __tests__/lark-ai-executor.test.mjs 覆盖
   'lib/lark-task-store.mjs', // 文件队列，由 __tests__/lark-task-store.test.mjs 覆盖
+  'lib/lark-worker-prompts.mjs', // 两阶段 Prompt 纯构建逻辑，由 __tests__/lark-ai-executor.test.mjs 覆盖
   'lib/fingerprint.mjs', // 指纹小工具（被 rule-release/effective-rules self-test 间接覆盖）
   'lib/roots.mjs', // 根解析（被多脚本 self-test 间接覆盖）
 ])

@@ -9,7 +9,7 @@
  *   GET  /lark/tasks
  *   POST /lark/tasks          （外部投递，如 bug 表轮询器）
  *   POST /lark/tasks/next     （worker 领取，pending -> running）
- *   POST /lark/tasks/:id/status（worker 回写 done/failed，触发回群 + bug 表回写）
+ *   POST /lark/tasks/:id/status（worker 回写终态，触发对应回群卡；仅 done 回写 bug 表）
  *
  * 本文件只做编排 + HTTP 接线；纯函数/IO 拆到 lib/lark-*.mjs：
  *   · lib/lark-message.mjs  信封归一 + 白名单/@bot 判定（纯，可单测）
@@ -34,7 +34,7 @@ import {
   parseProjectFromText,
   summarize,
 } from './lib/lark-message.mjs'
-import { buildCardContent, buildQueuedCard, buildResultCard, formatDisplayTime } from './lib/lark-cards.mjs'
+import { buildCardContent, buildQueuedCard, buildResultCard, buildWaitingCard, formatDisplayTime } from './lib/lark-cards.mjs'
 import {
   downloadAttachments,
   fetchReferencedContext,
@@ -152,24 +152,25 @@ const ingestLarkEvent = async ({ raw, config, store }) => {
   if (!isWhitelisted({ msg, config, isMember }) || !isForBot({ msg, config })) return
   if (!msg.text && !msg.attachments.length && !msg.replyTo) return
 
-  const resolvedAttachments = await downloadAttachments({
-    repoRoot,
-    project: config.project,
-    messageId: msg.messageId,
-    attachments: msg.attachments,
-  })
-
   // 合并被引用/被回复消息（真正的 bug 正文与截图多在父消息里）
   const refCtx = msg.replyTo ? await fetchReferencedContext(msg.replyTo) : null
-  const refAttachments = refCtx?.attachments?.length
-    ? await downloadAttachments({ repoRoot, project: config.project, messageId: msg.replyTo, attachments: refCtx.attachments })
-    : []
   const mergedText = refCtx?.text
     ? `【被引用消息】\n${refCtx.text}\n\n【本条 @】${msg.text || '（无附言）'}`.trim()
     : msg.text
+  const project = await resolveProject({ chatId: msg.chatId, text: mergedText })
+  // 附件跟任务实际项目落盘；跨项目群任务不再错误写进 gateway 默认项目目录。
+  const attachmentProject = project || config.project
+  const resolvedAttachments = await downloadAttachments({
+    repoRoot,
+    project: attachmentProject,
+    messageId: msg.messageId,
+    attachments: msg.attachments,
+  })
+  const refAttachments = refCtx?.attachments?.length
+    ? await downloadAttachments({ repoRoot, project: attachmentProject, messageId: msg.replyTo, attachments: refCtx.attachments })
+    : []
   const attachments = [...resolvedAttachments, ...refAttachments]
 
-  const project = await resolveProject({ chatId: msg.chatId, text: mergedText })
   const worktreeExists = project ? existsSync(join(worktreesDir, project)) : false
   const requestedExecutor = parseAiExecutorDirective(msg.text)
   const aiExecutor = resolveGatewayAiExecutor({ requestedExecutor, config })
@@ -358,6 +359,20 @@ const handleStatusUpdate = async ({ config, store, id, status, result, aiExecuto
       row: `| ${formatDisplayTime()} | Lark Job | ${status === 'done' ? '已完成' : '阻塞中'} | ${task.summary}：${(result || '').slice(0, 60)} | real | ${status === 'done' ? 'success' : 'failed'} |`,
     })
   }
+  // 待确认 / 阻塞：单独一条橙色回执（区别于完成/失败），能识别触发人时 @ 其补料。
+  // task.operator = 群 @ 的发送人 open_id（bug 表任务通常没有，则不 @、仅发群）。
+  if (status === 'waiting_confirmation' || status === 'blocked') {
+    await sendChatMessage({
+      chatId: task.chatId,
+      card: buildWaitingCard({ config, task, status, result, mentionOpenId: task.operator }),
+      logPrefix: `${status} receipt`,
+      idempotencyKey: `${task.id}-${status}`,
+    })
+    appendNotificationLog({
+      config,
+      row: `| ${formatDisplayTime()} | Lark Job | 待确认 | ${task.summary}：${(result || '').slice(0, 60)} | real | waiting |`,
+    })
+  }
   return { ok: true }
 }
 
@@ -405,6 +420,28 @@ export async function runLarkGateway({ configPath, port = defaultPort }) {
       }
       if (req.method === 'POST' && pathname === '/lark/tasks/next') {
         return sendJson(res, 200, { task: store.claimNext() })
+      }
+      // 人工重触发：把 failed/blocked 任务重置为 queued，worker 下一轮重跑，并补发「已重新入队」卡片。
+      // bug 表任务只能走这里重跑（POST 幂等命中旧 failed）；群 @ 任务也可直接重新 @。
+      const retryMatch = pathname.match(/^\/lark\/tasks\/([^/]+)\/retry$/)
+      if (req.method === 'POST' && retryMatch) {
+        const task = store.retry(decodeURIComponent(retryMatch[1]))
+        if (!task) return sendJson(res, 404, { ok: false, error: 'task not found or not retryable (must be failed/blocked)' })
+        await sendChatMessage({
+          chatId: task.chatId,
+          card: buildQueuedCard({ config, task }),
+          logPrefix: 'retry receipt',
+          idempotencyKey: `${task.id}-retry-${task.retryCount}`,
+        })
+        return sendJson(res, 200, { task })
+      }
+      // 陈旧终态清理：默认清 done（failed 需显式传 statuses，见 store 注释里的自动重投风险）。
+      if (req.method === 'POST' && pathname === '/lark/tasks/prune') {
+        const body = await readBody(req)
+        const olderThanMs = Math.max(0, Number(body.olderThanHours ?? 0)) * 3600000
+        const statuses = Array.isArray(body.statuses) && body.statuses.length ? body.statuses : ['done']
+        const removed = store.pruneTerminal({ olderThanMs, statuses })
+        return sendJson(res, 200, { ok: true, removed })
       }
       // 并行调度器按 id 原子领取：cwd 相同的任务串行、不同 worktree 并行，worker 侧决策哪个可领
       const claimMatch = pathname.match(/^\/lark\/tasks\/([^/]+)\/claim$/)
@@ -457,7 +494,16 @@ export async function runLarkGateway({ configPath, port = defaultPort }) {
     console.log(`[lark-gateway] whitelist chats=${config.allowedChatIds === 'auto' ? 'auto(bot 所在群)' : ((config.allowedChatIds || []).join(',') || '(none)')} consume=im.message.receive_v1`)
   })
 
+  // 定期清理陈旧 done 任务，防止 /lark/health 计数单调增长（failed 保留待人工 retry/clear）。
+  const pruneDoneAfterMs = Number(config.pruneDoneAfterHours ?? 24) * 3600000
+  const pruneTimer = setInterval(() => {
+    const removed = store.pruneTerminal({ olderThanMs: pruneDoneAfterMs, statuses: ['done'] })
+    if (removed.length) console.log(`[lark-gateway] 清理陈旧 done 任务 ${removed.length} 条`)
+  }, 60 * 60 * 1000)
+  pruneTimer.unref?.()
+
   const shutdown = () => {
+    clearInterval(pruneTimer)
     consumer.stop()
     server.close()
     process.exit(0)

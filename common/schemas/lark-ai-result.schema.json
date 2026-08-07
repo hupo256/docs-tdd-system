@@ -7,7 +7,7 @@
   "properties": {
     "status": {
       "type": "string",
-      "enum": ["done", "failed"]
+      "enum": ["done", "blocked", "failed", "waiting_confirmation"]
     },
     "summary": {
       "type": "string",
@@ -20,6 +20,15 @@
     "changedFiles": {
       "type": "array",
       "items": { "type": "string", "minLength": 1 }
+    },
+    "blockers": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "description": "status=blocked/waiting_confirmation 时逐条列出缺什么 / 卡在哪个环节 / 需要谁补"
+    },
+    "owner": {
+      "type": "string",
+      "description": "可推断到的责任人或角色（如 产品 / QA / 设计），用于回群 @ 提示"
     }
   }
 }

@@ -16,6 +16,16 @@ import { resolve, join, dirname } from 'node:path'
 
 const larkCliBin = process.env.LARK_CLI_BIN || 'lark-cli'
 const defaultGatewayUrl = process.env.LARK_GATEWAY_URL || 'http://127.0.0.1:3005'
+const ACTIVE_TASK_STATUSES = new Set(['received', 'queued', 'running', 'verifying'])
+const WAITING_TASK_STATUSES = new Set(['blocked', 'waiting_confirmation'])
+
+export const classifyBugTaskStatus = (status) => {
+  if (status === 'done') return 'done'
+  if (ACTIVE_TASK_STATUSES.has(status)) return 'in-flight'
+  if (WAITING_TASK_STATUSES.has(status)) return 'waiting'
+  if (status === 'failed') return 'failed'
+  return 'new'
+}
 const defaultPollMs = Number(process.env.LARK_BUGTABLE_POLL_MS || 90000)
 // 空闲自动收工：连续这么久没有新 bug 就自动退出，忘了 poll-off 也无害（默认 4h）
 const defaultIdleOffMs = Number(process.env.LARK_BUGTABLE_IDLE_OFF_MS || 4 * 60 * 60 * 1000)
@@ -222,20 +232,25 @@ const runOnce = async ({ config, seen, gatewayUrl }) => {
   const statusById = await fetchGatewayTaskStatuses(gatewayUrl)
   let enqueued = 0
   let inFlight = 0
+  let waiting = 0
   let stuck = 0
   for (const record of mine) {
     const id = record.record_id
     if (seen.has(id)) continue // 已知终态成功
-    const status = statusById.get(id)
-    if (status === 'done') {
+    const disposition = classifyBugTaskStatus(statusById.get(id))
+    if (disposition === 'done') {
       seen.add(id) // 落地终态成功，之后不再处理（表格状态也应已回写为 doneValue）
       continue
     }
-    if (status === 'queued' || status === 'running') {
+    if (disposition === 'in-flight') {
       inFlight += 1 // 正在处理中，不重复入队
       continue
     }
-    if (status === 'failed') {
+    if (disposition === 'waiting') {
+      waiting += 1 // 阻塞/待确认必须等人工补料，禁止 poller 自动重跑覆盖状态
+      continue
+    }
+    if (disposition === 'failed') {
       // 上次失败：群里已收到失败卡片，表格保持待处理待人工介入。此处不自动重跑（避免对
       // 真正修不动的 bug 无限重试 AI、刷群烧钱）；仅计数暴露，需人工在群里重触发或手动处理。
       stuck += 1
@@ -246,7 +261,7 @@ const runOnce = async ({ config, seen, gatewayUrl }) => {
     enqueued += 1
     console.log(`[bugtable-poller] enqueued ${id}`)
   }
-  console.log(`[bugtable-poller] pending=${records.length} mine=${mine.length} new=${enqueued} in-flight=${inFlight} stuck-failed=${stuck}`)
+  console.log(`[bugtable-poller] pending=${records.length} mine=${mine.length} new=${enqueued} in-flight=${inFlight} waiting=${waiting} stuck-failed=${stuck}`)
   return enqueued
 }
 

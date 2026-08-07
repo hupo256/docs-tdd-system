@@ -10,9 +10,10 @@ import {
   resolveAiExecutor,
   validateAiExecutor,
 } from '../lib/lark-ai-executor.mjs'
-import { buildQueuedCard, buildResultCard } from '../lib/lark-cards.mjs'
+import { buildQueuedCard, buildResultCard, buildWaitingCard } from '../lib/lark-cards.mjs'
 import { scanDiffForViolations } from '../lib/lark-lint-diff.mjs'
-import { buildTaskPrompt, buildValidationRequirements, requestJson } from '../lark-worker.mjs'
+import { buildFocusedRuleContext } from '../lib/lark-rule-context.mjs'
+import { buildAnalysisPrompt, buildTaskPrompt, buildValidationRequirements, requestJson } from '../lark-worker.mjs'
 
 describe('AI executor selection', () => {
   it('只接受 claude/codex 固定枚举', () => {
@@ -71,6 +72,56 @@ describe('Codex non-interactive command', () => {
     const command = buildAiExecutorCommand({ executor: 'claude', promptText: 'fix it', cwd: '/tmp/repo' })
     assert.deepEqual(command.args, ['-p', '--dangerously-skip-permissions', 'fix it'])
     assert.equal(command.resultMode, 'gateway-callback')
+  })
+
+  it('Codex 分析阶段使用只读沙箱和独立分析 Schema', () => {
+    const command = buildAiExecutorCommand({
+      executor: 'codex',
+      promptText: 'analyze it',
+      cwd: '/tmp/repo',
+      resultPath: '/tmp/analysis.json',
+      resultKind: 'analysis',
+    })
+    assert.deepEqual(command.args.slice(command.args.indexOf('--sandbox'), command.args.indexOf('--sandbox') + 2), ['--sandbox', 'read-only'])
+    const schemaPath = command.args[command.args.indexOf('--output-schema') + 1]
+    assert.match(schemaPath, /lark-ai-analysis\.schema\.json$/)
+  })
+})
+
+describe('focused rule loading and two-phase prompts', () => {
+  it('tips/Tooltip 任务精准命中文案契约，并保留来源与指纹', () => {
+    const context = buildFocusedRuleContext({ taskText: '这些标题 hover 时加上 tips' })
+    assert.equal(context.scenario, 'write_ui')
+    assert.ok(context.sources.some((item) => item.section.includes('文案契约')))
+    assert.match(context.text, /文案契约/)
+    assert.match(context.fingerprint, /^[a-f0-9]{16}$/)
+  })
+
+  it('分析 Prompt 注入规则原文；实现 Prompt 注入 ready 结论', () => {
+    const workContext = { projectId: 'PR-00001', projectName: 'test', projectDocs: [], cwd: '/tmp/repo' }
+    const task = { id: 'task-1', text: '标题加 tips', attachments: [] }
+    const ruleContext = {
+      scenario: 'write_ui',
+      fingerprint: 'abc123',
+      sources: [{ path: 'common/rule.md', section: '## Copy', sha256: 'deadbeef' }],
+      text: '权威规则：文案必须来自 PRD。',
+    }
+    const analysis = {
+      status: 'ready',
+      summary: '文案已存在',
+      applicableRules: [{ source: 'common/rule.md', application: '复用 PRD 文案' }],
+      requirements: ['不得自造文案'],
+      blockers: [],
+    }
+    const analysisPrompt = buildAnalysisPrompt(workContext, task, ruleContext)
+    assert.match(analysisPrompt, /第一阶段只读分析/)
+    assert.match(analysisPrompt, /权威规则：文案必须来自 PRD/)
+    assert.match(analysisPrompt, /规则指纹：abc123/)
+
+    const implementationPrompt = buildTaskPrompt(workContext, task, 'codex', { ruleContext, analysis })
+    assert.match(implementationPrompt, /第一阶段只读分析已判定 ready/)
+    assert.match(implementationPrompt, /不得自造文案/)
+    assert.match(implementationPrompt, /权威规则：文案必须来自 PRD/)
   })
 })
 
@@ -140,6 +191,45 @@ describe('structured result and cards', () => {
     const task = { project: 'PR-01947', summary: 'fix', aiExecutor: 'codex' }
     assert.match(JSON.parse(buildQueuedCard({ config, task })).elements[0].text.content, /执行器.*Codex/)
     assert.match(JSON.parse(buildResultCard({ config, task, status: 'done', result: 'ok' })).elements[0].text.content, /执行器.*Codex/)
+  })
+
+  it('waiting_confirmation 结果转成「待确认」回执并列出 blockers/owner', () => {
+    const text = formatStructuredAiResult(
+      { status: 'waiting_confirmation', summary: '需要 hover tips 文案', checks: [], changedFiles: [], blockers: ['缺 tips 文案原文'], owner: '产品' },
+      'codex',
+    )
+    assert.match(text, /^需人工确认/)
+    assert.match(text, /待补充：缺 tips 文案原文/)
+    assert.match(text, /建议责任人：产品/)
+  })
+
+  it('待确认卡为橙色、能识别触发人时 @ 其补料', () => {
+    const config = { project: 'PR-01947', title: 'Test' }
+    const task = { project: 'PR-01947', summary: 'tips', aiExecutor: 'codex' }
+    const card = JSON.parse(buildWaitingCard({ config, task, status: 'waiting_confirmation', result: '缺文案', mentionOpenId: 'ou_pm' }))
+    assert.equal(card.header.template, 'orange')
+    assert.match(card.elements[0].text.content, /待确认，需补充材料/)
+    assert.match(card.elements[0].text.content, /<at id=ou_pm><\/at>/)
+    // 无触发人（bug 表任务）→ 不带 @
+    const noMention = JSON.parse(buildWaitingCard({ config, task, status: 'waiting_confirmation', result: '缺文案' }))
+    assert.doesNotMatch(noMention.elements[0].text.content, /<at id=/)
+  })
+
+  it('blocked 结果和卡片使用阻塞语义', () => {
+    const text = formatStructuredAiResult(
+      { status: 'blocked', summary: '缺少权威文案', checks: ['只读分析通过'], changedFiles: [], blockers: ['PM 未提供 tips 文案'] },
+      'codex',
+    )
+    assert.match(text, /^已阻塞/)
+    assert.match(text, /待补充：PM 未提供 tips 文案/)
+    const card = JSON.parse(buildWaitingCard({
+      config: { project: 'PR-01947', title: 'Test' },
+      task: { project: 'PR-01947', summary: 'tips', aiExecutor: 'codex' },
+      status: 'blocked',
+      result: text,
+    }))
+    assert.equal(card.header.template, 'orange')
+    assert.match(card.elements[0].text.content, /已阻塞/)
   })
 })
 

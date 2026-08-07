@@ -11,6 +11,7 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 
 import { isForBot, isWhitelisted, normalizeMessage } from '../lark-gateway.mjs'
+import { classifyBugTaskStatus } from '../lark-bugtable-poller.mjs'
 import { resolveWorkContext, safeProject } from '../lark-worker.mjs'
 import { validateSource } from '../sync-lark-docs.mjs'
 
@@ -87,6 +88,29 @@ describe('normalizeMessage', () => {
     assert.equal(msg.text, '背景色不对')
     assert.equal(msg.attachments.length, 1)
     assert.deepEqual(msg.attachments[0], { type: 'image', imageKey: 'img_k1', width: 100, height: 200 })
+  })
+
+  it('引用消息降级文本：恢复两种图片占位格式并按 image_key 去重', () => {
+    const msg = normalizeMessage({
+      message_id: 'om_4',
+      chat_id: 'oc_4',
+      message_type: 'text',
+      content: '看这里 [Image: img_same] 和 ![Image](img_same)，另一个 ![Image](img_other)',
+      mentions: [],
+    })
+    assert.deepEqual(msg.attachments, [
+      { type: 'image', imageKey: 'img_same' },
+      { type: 'image', imageKey: 'img_other' },
+    ])
+  })
+})
+
+describe('bug table task status', () => {
+  it('blocked/waiting_confirmation 保持等待，不会被 poller 当新任务重入队', () => {
+    assert.equal(classifyBugTaskStatus('blocked'), 'waiting')
+    assert.equal(classifyBugTaskStatus('waiting_confirmation'), 'waiting')
+    assert.equal(classifyBugTaskStatus('verifying'), 'in-flight')
+    assert.equal(classifyBugTaskStatus(undefined), 'new')
   })
 })
 

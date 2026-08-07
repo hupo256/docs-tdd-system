@@ -14,6 +14,8 @@ const RECEIPT_STYLES = {
   queued: { template: 'blue', icon: '🔄', statusText: '已收到，正在排队处理' },
   done: { template: 'green', icon: '✅', statusText: '已完成' },
   failed: { template: 'red', icon: '⛔', statusText: '处理失败' },
+  waiting: { template: 'orange', icon: '⏳', statusText: '待确认，需补充材料' },
+  blocked: { template: 'orange', icon: '🚧', statusText: '已阻塞，等待外部材料 / 权限' },
   alert: { template: 'red', icon: '⚠️', statusText: 'Lark 长连接异常' },
 }
 
@@ -63,6 +65,19 @@ export const buildResultCard = ({ config, task, status, result }) => {
     config,
     kind: status === 'done' ? 'done' : 'failed',
     lines: [taskLine(task), executorLine(task), `**结果**：\n${resultText}`].filter(Boolean),
+    ...cardProjectOf(task, config),
+  })
+}
+
+// 任务因缺材料 / 待人工确认（waiting_confirmation）或外部阻塞（blocked）而暂停时的回执卡。
+// 与「完成/失败」是不同的一条独立消息：橙色 header，能识别责任人（mentionOpenId）时在群里 @ 其补料。
+export const buildWaitingCard = ({ config, task, status, result, mentionOpenId }) => {
+  const resultText = (result || '需人工确认 / 补充材料后才能继续。').trim()
+  const mentionLine = mentionOpenId ? `<at id=${mentionOpenId}></at> 请协助确认 / 补充上述材料后重新 @ 应用继续` : null
+  return buildCardContent({
+    config,
+    kind: status === 'blocked' ? 'blocked' : 'waiting',
+    lines: [mentionLine, taskLine(task), executorLine(task), `**结果**：\n${resultText}`].filter(Boolean),
     ...cardProjectOf(task, config),
   })
 }

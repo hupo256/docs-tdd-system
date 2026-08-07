@@ -30,11 +30,27 @@ const stripMentions = (text, mentions) => {
   return out.replace(/\s+/g, ' ').trim()
 }
 
+// lark-cli 拉取引用消息 / 合并转发时，图片有时不会保留 post 结构，而是降成
+// `[Image: img_xxx]` 或 `![Image](img_xxx)` 占位文本。把 image_key 恢复成附件，
+// 后续仍由带 messageId 的下载接口取真实二进制；仅接受 image_key 形态并去重。
+export const extractInlineImageAttachments = (text) => {
+  const input = String(text || '')
+  const keys = []
+  const patterns = [
+    /\[Image:\s*(img_[\w-]+)\]/gi,
+    /!\[Image\]\((img_[\w-]+)\)/gi,
+  ]
+  for (const pattern of patterns) {
+    for (const match of input.matchAll(pattern)) keys.push(match[1])
+  }
+  return [...new Set(keys)].map((imageKey) => ({ type: 'image', imageKey }))
+}
+
 export const parseTextAndAttachments = ({ messageType, rawContent, mentions }) => {
   // lark-cli 拍平：content 已是纯文本；官方 webhook：content 是 JSON 字符串
   const looksJson = typeof rawContent === 'string' && rawContent.trim().startsWith('{')
   if (typeof rawContent === 'string' && !looksJson) {
-    return { text: stripMentions(rawContent, mentions), attachments: [] }
+    return { text: stripMentions(rawContent, mentions), attachments: extractInlineImageAttachments(rawContent) }
   }
   try {
     const content = typeof rawContent === 'string' ? JSON.parse(rawContent || '{}') : rawContent || {}
@@ -51,7 +67,10 @@ export const parseTextAndAttachments = ({ messageType, rawContent, mentions }) =
         .map((el) => ({ type: 'image', imageKey: el.image_key, width: el.width, height: el.height }))
       return { text: stripMentions(text, mentions), attachments }
     }
-    return { text: stripMentions(content.text || '', mentions), attachments: [] }
+    return {
+      text: stripMentions(content.text || '', mentions),
+      attachments: extractInlineImageAttachments(content.text || ''),
+    }
   } catch {
     return { text: '', attachments: [] }
   }

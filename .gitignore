@@ -16,6 +16,7 @@ node_modules/
 # Lark bot runtime state — queued group tasks & downloaded group attachments may hold group content
 **/agent/lark-tasks/
 **/agent/lark-attachments/
+**/agent/lark-audits/
 **/agent/lark-bugtable-state.json
 
 # installation-specific consumer binding (each checkout/company sets its own;

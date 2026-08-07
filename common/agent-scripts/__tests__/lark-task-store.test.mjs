@@ -5,7 +5,7 @@
  */
 
 import assert from 'node:assert/strict'
-import { mkdtempSync, rmSync } from 'node:fs'
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, it } from 'node:test'
@@ -54,5 +54,47 @@ describe('createTaskStore', () => {
     createTaskStore({ tasksDir: dir, leaseMs: 1000 }).upsert({ id: 'persisted', status: 'queued', createdAt: '2026-01-01T00:00:00Z' })
     const reopened = createTaskStore({ tasksDir: dir, leaseMs: 1000 })
     assert.equal(reopened.has('persisted'), true)
+  })
+
+  it('retry 把 failed/blocked 任务重置为 queued 并清租约、自增 retryCount', () => {
+    const store = createTaskStore({ tasksDir: dir, leaseMs: 1000 })
+    store.upsert({ id: 'f', status: 'failed', claimedAt: '2026-01-01T00:00:00Z', createdAt: '2026-01-01T00:00:00Z' })
+    const retried = store.retry('f')
+    assert.equal(retried.status, 'queued')
+    assert.equal(retried.claimedAt, null)
+    assert.equal(retried.retryCount, 1)
+    assert.ok(retried.requeuedAt)
+    // 重置后能被 claimNext 领走，说明真的回到了 pending
+    assert.equal(store.claimNext().id, 'f')
+  })
+
+  it('retry 对非 failed/blocked（如 done/running）任务返回 null，不改状态', () => {
+    const store = createTaskStore({ tasksDir: dir, leaseMs: 1000 })
+    store.upsert({ id: 'd', status: 'done', createdAt: '2026-01-01T00:00:00Z' })
+    assert.equal(store.retry('d'), null)
+    assert.equal(store.retry('missing'), null)
+    assert.equal(store.get('d').status, 'done')
+  })
+
+  it('pruneTerminal 默认只删陈旧 done，failed 与新鲜 done 均保留', () => {
+    // upsert 会盖新鲜 updatedAt，故陈旧任务直接写盘再由构造函数恢复（恢复路径不盖时间戳）
+    const seed = (task) => writeFileSync(join(dir, `${task.id}.json`), JSON.stringify(task))
+    seed({ id: 'old-done', status: 'done', createdAt: '2000-01-01T00:00:00Z', updatedAt: '2000-01-01T00:00:00Z' })
+    seed({ id: 'old-failed', status: 'failed', createdAt: '2000-01-01T00:00:00Z', updatedAt: '2000-01-01T00:00:00Z' })
+    const store = createTaskStore({ tasksDir: dir, leaseMs: 1000 })
+    store.upsert({ id: 'fresh-done', status: 'done', createdAt: '2000-01-01T00:00:00Z' }) // upsert 盖新鲜 updatedAt
+    const removed = store.pruneTerminal({ olderThanMs: 60_000, statuses: ['done'] })
+    assert.deepEqual(removed, ['old-done'])
+    assert.equal(store.has('old-done'), false)
+    assert.equal(store.has('fresh-done'), true)
+    assert.equal(store.has('old-failed'), true) // 默认不碰 failed
+  })
+
+  it('pruneTerminal 显式传 failed 时可清陈旧 failed（对应 clean --failed）', () => {
+    writeFileSync(join(dir, 'old-failed.json'), JSON.stringify({ id: 'old-failed', status: 'failed', createdAt: '2000-01-01T00:00:00Z', updatedAt: '2000-01-01T00:00:00Z' }))
+    const store = createTaskStore({ tasksDir: dir, leaseMs: 1000 })
+    const removed = store.pruneTerminal({ olderThanMs: 60_000, statuses: ['done', 'failed', 'blocked'] })
+    assert.deepEqual(removed, ['old-failed'])
+    assert.equal(store.has('old-failed'), false)
   })
 })
