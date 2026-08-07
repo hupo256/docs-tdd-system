@@ -10,7 +10,7 @@
 | Mock 策略 | MSW 路线 B，`src/mocks/handlers/*`；本地 admin dev 通过 `NEXT_PUBLIC_ENABLE_MSW=true` 启 worker；dev:test/pre/prod 不注册 |
 | 业务开关 | 无 `USE_MOCK` 分支；service 只请求真实占位路径，MSW 在网络层拦截 |
 
-## 接口占位（A1-A6，真实路径待后端对账）
+## 接口占位（A1-A6b，真实路径待后端对账）
 
 | 编号 | 用途 | 方法 | 占位路径 | 备注 |
 |------|------|------|----------|------|
@@ -19,7 +19,8 @@
 | A3 | 执行失效 | POST | `/operate-api/trialFee/manualInvalidate/execute` | 携带 requestId 幂等 |
 | A4 | 导出 | GET | `/operate-api/trialFee/manualInvalidate/export` | blob 下载 |
 | A5 | 下载模板 | GET | `/operate-api/trialFee/manualInvalidate/template` | blob |
-| A6 | 批量上传 | POST | `/operate-api/trialFee/manualInvalidate/batchImport` | multipart，单阶段；文件内容校验由后端返回 |
+| A6a | 批量预校验 | POST | `/operate-api/trialFee/manualInvalidate/batchPreview` | multipart 上传文件；后端解析+预校验，返回影响汇总（同 A2）+ batchId；不执行 |
+| A6b | 批量执行 | POST | `/operate-api/trialFee/manualInvalidate/batchExecute` | 携带 batchId + requestId 幂等；执行已预校验批次失效 |
 
 ## 文案契约表（固定中文，逐字 copy PRD，禁意译）
 
@@ -42,13 +43,13 @@
 
 | # | 前置 | 落地 |
 |---|------|------|
-| 1 | handler 覆盖 normal / empty / error / unauthorized / edge 场景 | A1 list 支持 `scenario` 参数切 normal/empty/unauthorized；A2 preview edge（金额边界）；A6 error（文件校验失败） |
-| 2 | 契约测试：MSW fixture 用真实 `schema.safeParse` 校验，防 mock 与 schema 漂移 | `*.contract.test.ts` 对 A1/A2 响应跑 schema.parse |
+| 1 | handler 覆盖 normal / empty / error / unauthorized / edge 场景 | A1 list 支持 `scenario` 参数切 normal/empty/unauthorized；A2 preview edge（金额边界）；A6a batchPreview error（文件校验失败） |
+| 2 | 契约测试：MSW fixture 用真实 `schema.safeParse` 校验，防 mock 与 schema 漂移 | `*.contract.test.ts` 对 A1/A2/A6a 响应跑 schema.parse |
 | 3 | dev-only worker 注册：`src/mocks/browser.ts` + `useMockWorker`，仅 dev（`NODE_ENV==development && NEXT_PUBLIC_ENABLE_MSW==true`） | 生产 build 短路，worker 懒加载不入包 |
 | 4 | 真实接口 ready 后删/停 handler 即切真实路径，业务代码 0 改动 | service 请求真实占位路径不变，关闭 flag 即回真实接口 |
 
 ## 等待真实 API 对账清单
 
-- A1-A6 路径/方法/DTO/schema/错误码：真实接口 ready 后逐字段替换 + 补真实 fixture 对账测试。
-- 批量上传文件内容校验：对账 uids/couponCode/remark 缺失/超限/重复/格式错误的错误码与文案。
+- A1-A6b 路径/方法/DTO/schema/错误码：真实接口 ready 后逐字段替换 + 补真实 fixture 对账测试。
+- 批量两阶段（A6a 预校验 / A6b 执行）：对账 batchId 语义与有效期、A6a 返回的影响汇总字段、A6b 幂等口径；文件内容校验（uids/couponCode/remark 缺失/超限/重复/格式错误）的错误码与文案。
 - phone/email 脱敏口径、失效数量动态累计字段、仓位占用快照字段：以后端返回为准。

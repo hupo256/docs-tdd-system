@@ -39,6 +39,6 @@ larkEnabled: false
 - [x] G2 scope：第一轮 F01-F13 后台核心闭环（用户 / 2026-07-20）
 - [x] 第二轮 scope：F17-F23 流水枚举注入全量做、web 只做 web 不做 app、**MSW 为唯一 mock 策略**、文案口径后台记「手动失效（体验金）」/C端记「系统回收」（用户 / 2026-07-21）
 - [x] i18n 分治：仅 web 国际化（本地只写 zh-CN）；admin/futures-admin 后台文案**简体硬编码进组件**，不补/不依赖 .json key（用户 / 2026-07-21）
-- [x] 批量弹窗标题「批量手动过期」、笛卡尔积 10000、紫色主题、getUrl operate-api、单阶段上传
-- [ ] 落点A「数据概览-支出折合-来源明细」本轮跳过，待后端给 route/截图或确认属别 app
+- [x] 批量弹窗标题「批量手动过期」、笛卡尔积 10000、紫色主题、getUrl operate-api、~~单阶段上传~~ **改两阶段：上传→A6a 预校验→复用二次确认→A6b 执行**（用户 / 2026-08-07，与手输高风险闸口对齐）
+- [ ] 落点A「数据概览-支出折合-来源明细」前置已就绪（PR-02015 已合入），补点在 legacy-admin `contractBusinessTypeList`；因 businessType code 未知，用户拍板**等后端 code 到位再补一行**（2026-08-07）
 - [ ] 真实 API 到位后对账 A1-A6 + 第二轮各端真实 type code（现全用占位：admin 114/34、futures/admin `manual_invalidate_trial`、web 114）
