@@ -1,0 +1,431 @@
+{
+  "version": 1,
+  "projectId": "PR-02265",
+  "generatedAt": "2026-08-07T10:46:04.095Z",
+  "approvedFingerprint": "",
+  "sources": [
+    {
+      "path": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md",
+      "contentHash": "4f2d388814c455b916ce532a86ee821b57988dfad7fa0a1941ff53bacf65b311"
+    }
+  ],
+  "items": [
+    {
+      "sourceId": "PRD-EMBED-001",
+      "type": "embed",
+      "sourcePath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md",
+      "line": 12,
+      "locator": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md#L12:embed:1",
+      "contentHash": "407fd9aeb540f6b13197c814bcf7b12a3fea287b6f46e5d7361488865e5c569f",
+      "assetPath": "",
+      "assetHash": "",
+      "assetStatus": "not-applicable",
+      "status": "read",
+      "classification": "decorative",
+      "readMethod": "markdown-parse",
+      "summary": "变更记录作者署名 cite(Lucky)",
+      "featureIds": [],
+      "disposition": "装饰性：文档作者署名，不产生开发项",
+      "evidence": "evidence/prd-intake/README.md"
+    },
+    {
+      "sourceId": "PRD-EMBED-002",
+      "type": "embed",
+      "sourcePath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md",
+      "line": 12,
+      "locator": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md#L12:embed:2",
+      "contentHash": "407fd9aeb540f6b13197c814bcf7b12a3fea287b6f46e5d7361488865e5c569f",
+      "assetPath": "",
+      "assetHash": "",
+      "assetStatus": "not-applicable",
+      "status": "read",
+      "classification": "decorative",
+      "readMethod": "markdown-parse",
+      "summary": "变更记录作者署名 cite(Lucky)",
+      "featureIds": [],
+      "disposition": "装饰性：文档作者署名，不产生开发项",
+      "evidence": "evidence/prd-intake/README.md"
+    },
+    {
+      "sourceId": "PRD-TABLE-001",
+      "type": "table",
+      "sourcePath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md",
+      "line": 16,
+      "locator": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md#L16:table:1",
+      "contentHash": "3bc2270a6c8fa80321a535a710208c49896fa8bf9da0f0e8505bf49c594e7929",
+      "assetPath": "",
+      "assetHash": "",
+      "assetStatus": "not-applicable",
+      "status": "read",
+      "classification": "decorative",
+      "readMethod": "markdown-parse",
+      "summary": "二、评审记录表（空）",
+      "featureIds": [],
+      "disposition": "装饰性：空占位表，无需求内容",
+      "evidence": "evidence/prd-intake/README.md"
+    },
+    {
+      "sourceId": "PRD-TABLE-002",
+      "type": "table",
+      "sourcePath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md",
+      "line": 34,
+      "locator": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md#L34:table:1",
+      "contentHash": "b29ef4e3867c4001525ce373898c5dfaa4485587bfb38d8112f573b55ed5aa1a",
+      "assetPath": "",
+      "assetHash": "",
+      "assetStatus": "not-applicable",
+      "status": "read",
+      "classification": "decorative",
+      "readMethod": "markdown-parse",
+      "summary": "四、需求List 模块/变更类型/说明表（空）",
+      "featureIds": [],
+      "disposition": "装饰性：空占位表，无需求内容",
+      "evidence": "evidence/prd-intake/README.md"
+    },
+    {
+      "sourceId": "PRD-IMG-001",
+      "type": "image",
+      "sourcePath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md",
+      "line": 50,
+      "locator": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md#L50:image:1",
+      "contentHash": "9696f340a58903f813ba0ec2163db8094c306c2f7da0d5a1be451f1f226201e3",
+      "assetPath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/assets/img-001.png",
+      "assetHash": "b53a80e23a20ee0ddc4646ac0b2324a47056eab27af2ab54cd122f5637c46710",
+      "assetStatus": "local",
+      "status": "read",
+      "classification": "requirement",
+      "readMethod": "lark drive medias download + vision",
+      "summary": "5.1 顶部：现货管理后台 资产管理→做市账户工具→做市账户管理→外部做市商 列表与「添加外部做市商账户」弹窗；表单含 维持保证金倍率系数/开仓Maker/开仓Taker/平仓Maker/平仓Taker 手续费(%)/所属做市机构/描述；列表含手续费率列+编辑/移除",
+      "featureIds": [
+        "F01"
+      ],
+      "disposition": "",
+      "evidence": "evidence/prd-intake/README.md"
+    },
+    {
+      "sourceId": "PRD-IMG-002",
+      "type": "image",
+      "sourcePath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md",
+      "line": 54,
+      "locator": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md#L54:image:1",
+      "contentHash": "4797359c50a00b75918a925106543eed8fff4c9c80403c8c4c8d80865f341f54",
+      "assetPath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/assets/img-002.png",
+      "assetHash": "fe9225738abac5eb851b89d7ee11b320459480811f85bb2acc1e196db926ec0d",
+      "assetStatus": "local",
+      "status": "read",
+      "classification": "requirement",
+      "readMethod": "lark drive medias download + vision",
+      "summary": "5.1 现状：开仓Maker手续费输入框，校验提示「请输入【0，100】之间的数字，精度支持6位」（现状仅正数）",
+      "featureIds": [
+        "F01",
+        "F03"
+      ],
+      "disposition": "",
+      "evidence": "evidence/prd-intake/README.md"
+    },
+    {
+      "sourceId": "PRD-IMG-003",
+      "type": "image",
+      "sourcePath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md",
+      "line": 58,
+      "locator": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md#L58:image:1",
+      "contentHash": "98e5d4f2622b91e8ea7df92559a35d8f11cb52c57fb30782496b41c946e5e1b2",
+      "assetPath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/assets/img-003.png",
+      "assetHash": "647751d59e8380c269f543fdca53fb5ca7bce0d7db0bd4095e385512027a21e9",
+      "assetStatus": "local",
+      "status": "read",
+      "classification": "requirement",
+      "readMethod": "lark drive medias download + vision",
+      "summary": "5.1 优化后 mockup：校验提示显示「请输入数值，精度支持6位」——未含区间，与PRD正文「请输入【-100,100】之间的数字」不一致，需产品确认",
+      "featureIds": [
+        "F03"
+      ],
+      "disposition": "",
+      "evidence": "evidence/prd-intake/README.md"
+    },
+    {
+      "sourceId": "PRD-IMG-004",
+      "type": "image",
+      "sourcePath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md",
+      "line": 58,
+      "locator": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md#L58:image:2",
+      "contentHash": "2c3901bbd2755b70c063c4ecc9ad29a3b9b59296eba1bd6c7d9aad2a3d84306e",
+      "assetPath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/assets/img-004.png",
+      "assetHash": "20be685988da63bf5b6d79257747a4ce7c2d9da4ab0822705f41b41023b449a7",
+      "assetStatus": "local",
+      "status": "read",
+      "classification": "requirement",
+      "readMethod": "lark drive medias download + vision",
+      "summary": "5.1 优化后弹窗：4个费率输入框下方新增常驻提示「按对应订单类型分别收取，负值表示返佣费率(如-0.000001)」，其下为蓝框生效规则",
+      "featureIds": [
+        "F02"
+      ],
+      "disposition": "",
+      "evidence": "evidence/prd-intake/README.md"
+    },
+    {
+      "sourceId": "PRD-IMG-005",
+      "type": "image",
+      "sourcePath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md",
+      "line": 93,
+      "locator": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md#L93:image:1",
+      "contentHash": "95988dc79a0af262cf5a3147551d63488f0ff162e968d0c0b784f2fa300811d2",
+      "assetPath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/assets/img-005.png",
+      "assetHash": "984a09b35e5cdd161238189dcf0ebbbc1737ba5ff68fae4b6f9395355476d850",
+      "assetStatus": "local",
+      "status": "read",
+      "classification": "requirement",
+      "readMethod": "lark drive medias download + vision",
+      "summary": "5.3 前台 合约账户-资金流水弹窗：类型下拉含 开仓/平仓手续费，数量列当前显示负数(红字)——返佣需正数化展示位",
+      "featureIds": [
+        "F05"
+      ],
+      "disposition": "",
+      "evidence": "evidence/prd-intake/README.md"
+    },
+    {
+      "sourceId": "PRD-IMG-006",
+      "type": "image",
+      "sourcePath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md",
+      "line": 93,
+      "locator": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md#L93:image:2",
+      "contentHash": "40876bcc65887ec7c154eb63bca801fb6623a9c1721b137e0dd3bb614498a66c",
+      "assetPath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/assets/img-006.png",
+      "assetHash": "18789a07369f4b074ae95e66d20a0b9c3adf8cb42e314ce46cfce99a016819f5",
+      "assetStatus": "local",
+      "status": "read",
+      "classification": "requirement",
+      "readMethod": "lark drive medias download + vision",
+      "summary": "5.3 前台 合约交易-资金流水：开仓/平仓手续费展示位",
+      "featureIds": [
+        "F05"
+      ],
+      "disposition": "",
+      "evidence": "evidence/prd-intake/README.md"
+    },
+    {
+      "sourceId": "PRD-IMG-007",
+      "type": "image",
+      "sourcePath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md",
+      "line": 93,
+      "locator": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md#L93:image:3",
+      "contentHash": "310f0f4e9c4927d5b75560422baddcfa3e38ab9c26e44e0d7d85f4bdb9587fac",
+      "assetPath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/assets/img-007.png",
+      "assetHash": "a1cb92c35c1700824043578825aa12975b06e3892cce290157b8b5a28e2dd567",
+      "assetStatus": "local",
+      "status": "read",
+      "classification": "requirement",
+      "readMethod": "lark drive medias download + vision",
+      "summary": "5.3 前台 合约交易-历史成交：手续费展示位",
+      "featureIds": [
+        "F05"
+      ],
+      "disposition": "",
+      "evidence": "evidence/prd-intake/README.md"
+    },
+    {
+      "sourceId": "PRD-IMG-008",
+      "type": "image",
+      "sourcePath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md",
+      "line": 93,
+      "locator": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md#L93:image:4",
+      "contentHash": "cf34cfeceba5758f3403dc97458b8638c94a07d2b266fd51614833f3079f8dba",
+      "assetPath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/assets/img-008.png",
+      "assetHash": "7e2269cf5fce5b59a69f9507ce2c1a612dde18bc68e7b761e268c6b680797e7b",
+      "assetStatus": "local",
+      "status": "read",
+      "classification": "requirement",
+      "readMethod": "lark drive medias download + vision",
+      "summary": "5.3 前台 合约交易-仓位历史记录：手续费展示位",
+      "featureIds": [
+        "F05"
+      ],
+      "disposition": "",
+      "evidence": "evidence/prd-intake/README.md"
+    },
+    {
+      "sourceId": "PRD-IMG-009",
+      "type": "image",
+      "sourcePath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md",
+      "line": 93,
+      "locator": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md#L93:image:5",
+      "contentHash": "6ed3bee235bd6664c37f598638923c772892479aeb8d41fae4a203157306c45c",
+      "assetPath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/assets/img-009.png",
+      "assetHash": "2fc813d69a4d0a95eb993e0f9659551765d5c0fd065c675f36ff7b68a5c90bde",
+      "assetStatus": "local",
+      "status": "read",
+      "classification": "requirement",
+      "readMethod": "lark drive medias download + vision",
+      "summary": "5.3 现货管理后台 用户详情→合约账户→资金流水tab：开仓/平仓手续费展示位",
+      "featureIds": [
+        "F06"
+      ],
+      "disposition": "",
+      "evidence": "evidence/prd-intake/README.md"
+    },
+    {
+      "sourceId": "PRD-IMG-010",
+      "type": "image",
+      "sourcePath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md",
+      "line": 93,
+      "locator": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md#L93:image:6",
+      "contentHash": "b4204e05de7463e4a89dde18fd9357791b595aabbe6aa2ef42b10d847517464b",
+      "assetPath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/assets/img-010.png",
+      "assetHash": "c1caca52c847d470156530b49051b4ee1ea258e0530a181b9a94f1a4c1d82e6a",
+      "assetStatus": "local",
+      "status": "read",
+      "classification": "requirement",
+      "readMethod": "lark drive medias download + vision",
+      "summary": "5.3 合约管理后台 数据查询-仓位_已平仓：开平仓手续费字段展示位",
+      "featureIds": [
+        "F06"
+      ],
+      "disposition": "",
+      "evidence": "evidence/prd-intake/README.md"
+    },
+    {
+      "sourceId": "PRD-IMG-011",
+      "type": "image",
+      "sourcePath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md",
+      "line": 93,
+      "locator": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md#L93:image:7",
+      "contentHash": "619fef6a09e9f1143b6c938d3d775dc30d7e084c6a2592100301123822658a54",
+      "assetPath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/assets/img-011.png",
+      "assetHash": "4d7a92ef6a00695c006d5f2991431c63251f7734c46bdabc4badaae52b535279",
+      "assetStatus": "local",
+      "status": "read",
+      "classification": "requirement",
+      "readMethod": "lark drive medias download + vision",
+      "summary": "5.3 合约管理后台 数据查询-仓位_持仓中：开平仓手续费字段展示位",
+      "featureIds": [
+        "F06"
+      ],
+      "disposition": "",
+      "evidence": "evidence/prd-intake/README.md"
+    },
+    {
+      "sourceId": "PRD-IMG-012",
+      "type": "image",
+      "sourcePath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md",
+      "line": 93,
+      "locator": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md#L93:image:8",
+      "contentHash": "0aeb40b9987b465f133bfd6bfca909c70d1bfb83dbfc3ed22144d146b7fbae42",
+      "assetPath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/assets/img-012.png",
+      "assetHash": "02b53b949ac6e25336318dbd8a81abf06deab4895ae15f8508d5c896d5e4b84f",
+      "assetStatus": "local",
+      "status": "read",
+      "classification": "requirement",
+      "readMethod": "lark drive medias download + vision",
+      "summary": "5.3 合约管理后台 数据查询-成交记录：真金手续费列展示位",
+      "featureIds": [
+        "F06"
+      ],
+      "disposition": "",
+      "evidence": "evidence/prd-intake/README.md"
+    },
+    {
+      "sourceId": "PRD-IMG-013",
+      "type": "image",
+      "sourcePath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md",
+      "line": 93,
+      "locator": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md#L93:image:9",
+      "contentHash": "312e234ebb7ed3c847e20fda8790d03909bc89fc336e0eb15181ce2e25522eca",
+      "assetPath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/assets/img-013.png",
+      "assetHash": "160ce2fafb2476a1565080a2c0701410b74c83658a7ab5d0588ae33d6f9b1782",
+      "assetStatus": "local",
+      "status": "read",
+      "classification": "requirement",
+      "readMethod": "lark drive medias download + vision",
+      "summary": "5.3 合约管理后台 手续费-用户级别：贡献手续费展示位",
+      "featureIds": [
+        "F06"
+      ],
+      "disposition": "",
+      "evidence": "evidence/prd-intake/README.md"
+    },
+    {
+      "sourceId": "PRD-IMG-014",
+      "type": "image",
+      "sourcePath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md",
+      "line": 93,
+      "locator": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md#L93:image:10",
+      "contentHash": "367553a0b18c56da4fba5c6510639d6512d40a0760ab75b499081f01b49a0a3b",
+      "assetPath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/assets/img-014.png",
+      "assetHash": "874cc836ac5a0fc3b15d487c72b0c7f5ae15125f55298cc33d0ef3f9968a855d",
+      "assetStatus": "local",
+      "status": "read",
+      "classification": "requirement",
+      "readMethod": "lark drive medias download + vision",
+      "summary": "5.3 合约管理后台 资产-流水查询：开仓/平仓手续费展示位",
+      "featureIds": [
+        "F06"
+      ],
+      "disposition": "",
+      "evidence": "evidence/prd-intake/README.md"
+    },
+    {
+      "sourceId": "PRD-TABLE-003",
+      "type": "table",
+      "sourcePath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md",
+      "line": 103,
+      "locator": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md#L103:table:1",
+      "contentHash": "c4ebd9c6d9aa157e8813a06a697f7aae37b5424a950b6df37cd8a9dd3c2d5298",
+      "assetPath": "",
+      "assetHash": "",
+      "assetStatus": "not-applicable",
+      "status": "read",
+      "classification": "requirement",
+      "readMethod": "markdown-parse",
+      "summary": "5.4 异常处理：①手续费出款账户余额不足→不阻断交易(账户能否为负待确认)；②负费率改回正数→按当时费率计算，历史返佣流水不追溯",
+      "featureIds": [
+        "F07"
+      ],
+      "disposition": "",
+      "evidence": "evidence/prd-intake/README.md"
+    },
+    {
+      "sourceId": "PRD-IMG-015",
+      "type": "image",
+      "sourcePath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md",
+      "line": 120,
+      "locator": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md#L120:image:1",
+      "contentHash": "de36995f46e540cbf177582f748bd2e6a68fe1c6e16301f26ce3cbecc226b01c",
+      "assetPath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/assets/img-015.png",
+      "assetHash": "0eba25359435e89b6cb13e8857213cf4f09360cc8b6fca9c0822443e092ae329",
+      "assetStatus": "local",
+      "status": "read",
+      "classification": "requirement",
+      "readMethod": "lark drive medias download + vision",
+      "summary": "5.5 查询：做市账户管理-外部做市商 列表 手续费率列(示例0%/0.000001%/0.00000002%)，需兼容负费率显示",
+      "featureIds": [
+        "F04"
+      ],
+      "disposition": "",
+      "evidence": "evidence/prd-intake/README.md"
+    },
+    {
+      "sourceId": "PRD-EMBED-003",
+      "type": "embed",
+      "sourcePath": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md",
+      "line": 177,
+      "locator": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md#L177:embed:1",
+      "contentHash": "4820d2d04440e6be5659d0c8f76c6894d3b8c9a459ba72e0342bbe4be26e8a87",
+      "assetPath": "",
+      "assetHash": "",
+      "assetStatus": "not-applicable",
+      "status": "read",
+      "classification": "requirement",
+      "readMethod": "lark sheets +cells-get (uwyfAZ A1:D10)",
+      "summary": "5.9 核心验收标准 sheet(9条)：负值配置成功/精度校验/非法输入/负费率返佣计算/返佣入账与流水/前台正数化/后台正数化/编辑回显/对账",
+      "featureIds": [
+        "F01",
+        "F03",
+        "F04",
+        "F05",
+        "F06"
+      ],
+      "disposition": "",
+      "evidence": "evidence/prd-intake/README.md"
+    }
+  ]
+}

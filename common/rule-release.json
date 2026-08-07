@@ -1,8 +1,8 @@
 {
   "version": 1,
   "rulesetVersion": "local-2026.07-msw-v1",
-  "fingerprint": "d7278da4042c3eaab826b111818fcac3c12dc0a27eb165644c223c5cc61372f2",
-  "publishedAt": "2026-08-07T10:02:34.842Z",
+  "fingerprint": "a82db7bf74c321fbe4b33d06aab8d32806ea0bc96be371c31f2634830d52a12c",
+  "publishedAt": "2026-08-07T10:48:35.255Z",
   "fileCount": 135,
   "files": {
     "common/agent-scripts/__tests__/lark-ai-executor.test.mjs": "c9d15857f8c3985b63b63edf7cfabffed76c7eb020e96badccd054205dacb927",
@@ -34,7 +34,7 @@
     "common/agent-scripts/lib/roots.mjs": "69edba7b803c509dc5c5b98d35f5d3ef542e88d678da2a3fc72f8cf9733f2ccb",
     "common/agent-scripts/log-exec.mjs": "8746d44b6485fa19cac81d16b6c9902b135bfc2f9ea95487158ad9dfcb488c07",
     "common/agent-scripts/notify-lark.mjs": "92779715a20864b7ca468ba084534957b5b4c378ab969849baa827d40f6f9e13",
-    "common/agent-scripts/prd-intake.mjs": "0857c8910a7b83eaf3505a620701d49829c79882d57f4d6ae104c14798bd1532",
+    "common/agent-scripts/prd-intake.mjs": "28e5b8af58998c7c169d6051e718df5095f5843f5a5d87ce9c2137a0c973229d",
     "common/agent-scripts/prepare-coding-worktree.mjs": "9a764bf5e65b2e0eba4534c6c8742153e60691685b5a1847f566c19d8521802a",
     "common/agent-scripts/project-orchestrator.mjs": "7748ba323c0c63c221fb498ec4393df29e8d48b01baab1886b1b7972dd9199cc",
     "common/agent-scripts/render-delivery-summary.mjs": "e3bd239100f7d9f1d1f4a8edeb783e0ec22ed5f8aa6acdb347289eec4df7a527",

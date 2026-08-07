@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { createHash } from 'node:crypto'
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import assert from 'node:assert/strict'
@@ -43,15 +43,22 @@ function resolveAsset(sourcePath, raw, readAsset) {
 
 function scanMarkdown(text, sourcePath, readAsset) {
   const found = []
+  // 同一行同类型可能出现多个富媒体（HTML 表格/单行 JSON 导出稿把多张图挤在一行）；
+  // 给每次出现附加序号，避免 locator 冲突导致 manifest 按 locator 去重后匹配失败。
+  const seq = new Map()
   const add = (type, index, raw) => {
+    const line = lineNumber(text, index)
+    const key = `${line}:${type}`
+    const ordinal = (seq.get(key) || 0) + 1
+    seq.set(key, ordinal)
     const asset = type === 'image'
       ? resolveAsset(sourcePath, raw, readAsset)
       : { assetPath: '', assetHash: '', assetStatus: 'not-applicable' }
     found.push({
       type,
       sourcePath,
-      line: lineNumber(text, index),
-      locator: `${sourcePath}#L${lineNumber(text, index)}:${type}`,
+      line,
+      locator: `${sourcePath}#L${line}:${type}:${ordinal}`,
       contentHash: hash(`${raw}\n${asset.assetHash}`),
       ...asset,
     })
@@ -150,15 +157,24 @@ function projectPaths(projectId) {
   return { projectDir, manifestFile: join(projectDir, 'agent/prd-source-manifest.json') }
 }
 
+// 归属校验跟随软链接：apps/web/docs_tdd 可能是指向 docs 仓库根的 symlink，
+// 纯字符串 startsWith 会误判为「不在 docs_tdd 内」，故对存在的路径先取 realpath 再比对。
+function insideDocs(absolute) {
+  if (!existsSync(absolute)) return false
+  let real = absolute
+  try { real = realpathSync(absolute) } catch { /* keep absolute */ }
+  return real.startsWith(`${docsRoot}/`) || absolute.startsWith(`${docsRoot}/`)
+}
+
 function readProjectSource(sourcePath) {
   const absolute = resolve(repoRoot, sourcePath)
-  if (!absolute.startsWith(`${docsRoot}/`) || !existsSync(absolute)) return null
+  if (!insideDocs(absolute)) return null
   return readFileSync(absolute, 'utf8')
 }
 
 function readProjectAsset(assetPath) {
   const absolute = resolve(repoRoot, assetPath)
-  if (!absolute.startsWith(`${docsRoot}/`) || !existsSync(absolute)) return null
+  if (!insideDocs(absolute)) return null
   return readFileSync(absolute)
 }
 
