@@ -1,0 +1,394 @@
+{
+  "generatedAt": "2026-08-07T11:13:31.346Z",
+  "tool": "run-project-gate.mjs",
+  "projectId": "PR-02265",
+  "gate": "G2",
+  "ok": true,
+  "summary": {
+    "total": 38,
+    "ok": 38,
+    "warn": 0,
+    "waived": 0,
+    "fail": 0
+  },
+  "groups": {
+    "documentation": {
+      "total": 38,
+      "ok": 38,
+      "warn": 0,
+      "waived": 0,
+      "fail": 0
+    },
+    "implementation": {
+      "total": 0,
+      "ok": 0,
+      "warn": 0,
+      "waived": 0,
+      "fail": 0
+    }
+  },
+  "checks": [
+    {
+      "ruleId": "DOC-STRUCT-001",
+      "ok": true,
+      "message": "project directory exists: apps/web/docs_tdd/PR-02265",
+      "file": "../docs_tdd/PR-02265",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-STRUCT-002",
+      "ok": true,
+      "message": "required file exists: README.md",
+      "file": "../docs_tdd/PR-02265/README.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-STRUCT-003",
+      "ok": true,
+      "message": "required file exists: product/00-feature-inventory.md",
+      "file": "../docs_tdd/PR-02265/product/00-feature-inventory.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-STRUCT-004",
+      "ok": true,
+      "message": "required file exists: product/01-scope-and-phases.md",
+      "file": "../docs_tdd/PR-02265/product/01-scope-and-phases.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-STRUCT-005",
+      "ok": true,
+      "message": "required file exists: product/02-technical-design.md",
+      "file": "../docs_tdd/PR-02265/product/02-technical-design.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-STRUCT-006",
+      "ok": true,
+      "message": "required file exists: product/03-api-contract.md",
+      "file": "../docs_tdd/PR-02265/product/03-api-contract.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-STRUCT-007",
+      "ok": true,
+      "message": "required file exists: product/04-frontend-tasks.md",
+      "file": "../docs_tdd/PR-02265/product/04-frontend-tasks.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-STRUCT-008",
+      "ok": true,
+      "message": "required file exists: product/05-ui-and-interaction.md",
+      "file": "../docs_tdd/PR-02265/product/05-ui-and-interaction.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-STRUCT-009",
+      "ok": true,
+      "message": "required file exists: product/06-collaboration.md",
+      "file": "../docs_tdd/PR-02265/product/06-collaboration.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-STRUCT-010",
+      "ok": true,
+      "message": "required file exists: product/07-figma-spec.md",
+      "file": "../docs_tdd/PR-02265/product/07-figma-spec.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-STRUCT-011",
+      "ok": true,
+      "message": "required file exists: engineering/development-rules.md",
+      "file": "../docs_tdd/PR-02265/engineering/development-rules.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-STRUCT-012",
+      "ok": true,
+      "message": "required file exists: agent/README.md",
+      "file": "../docs_tdd/PR-02265/agent/README.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G0-001",
+      "ok": true,
+      "message": "feature inventory records PRD source",
+      "file": "../docs_tdd/PR-02265/product/00-feature-inventory.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G0-002",
+      "ok": true,
+      "message": "feature inventory has feature list section",
+      "file": "../docs_tdd/PR-02265/product/00-feature-inventory.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G0-003",
+      "ok": true,
+      "message": "feature inventory has acceptance mapping section",
+      "file": "../docs_tdd/PR-02265/product/00-feature-inventory.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G0-004",
+      "ok": true,
+      "message": "feature inventory has unreadable PRD content section",
+      "file": "../docs_tdd/PR-02265/product/00-feature-inventory.md",
+      "severity": "warn",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-PRD-001",
+      "ok": true,
+      "message": "PRD source manifest exists and has the expected project/collections",
+      "file": "../docs_tdd/PR-02265/agent/prd-source-manifest.json",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-PRD-002",
+      "ok": true,
+      "message": "PRD source exists: apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md",
+      "file": "../docs_tdd/PR-02265/agent/prd-source-manifest.json",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-PRD-008",
+      "ok": true,
+      "message": "PRD source hash has not drifted: apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md",
+      "file": "../docs_tdd/PR-02265/agent/prd-source-manifest.json",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-PRD-003",
+      "ok": true,
+      "message": "all PRD images/tables/embeds are inventoried",
+      "file": "../docs_tdd/PR-02265/agent/prd-source-manifest.json",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-PRD-008",
+      "ok": true,
+      "message": "local PRD image assets have not drifted",
+      "file": "../docs_tdd/PR-02265/agent/prd-source-manifest.json",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-PRD-004",
+      "ok": true,
+      "message": "PRD source IDs are unique",
+      "file": "../docs_tdd/PR-02265/agent/prd-source-manifest.json",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-PRD-005",
+      "ok": true,
+      "message": "all PRD rich-media inputs are locally readable, read, classified, summarized, and evidenced",
+      "file": "../docs_tdd/PR-02265/agent/prd-source-manifest.json",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-PRD-006",
+      "ok": true,
+      "message": "requirement inputs map to Feature IDs and decorative inputs record disposition",
+      "file": "../docs_tdd/PR-02265/agent/prd-source-manifest.json",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-PRD-007",
+      "ok": true,
+      "message": "requirement inputs and Feature IDs are traceable in frontend tasks",
+      "file": "../docs_tdd/PR-02265/agent/prd-source-manifest.json",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-PRD-009",
+      "ok": true,
+      "message": "G2-approved PRD fingerprint matches current intake (expected=c23c557680e18058, current=c23c557680e18058)",
+      "file": "../docs_tdd/PR-02265/agent/prd-source-manifest.json",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G1-001",
+      "ok": true,
+      "message": "G1 scope document records the current scope",
+      "file": "../docs_tdd/PR-02265/product/01-scope-and-phases.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G1-002",
+      "ok": true,
+      "message": "G1 technical design contains reuse inventory scaffold",
+      "file": "../docs_tdd/PR-02265/product/02-technical-design.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G1-003",
+      "ok": true,
+      "message": "G1 frontend tasks contain a task inventory",
+      "file": "../docs_tdd/PR-02265/product/04-frontend-tasks.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G1-004",
+      "ok": true,
+      "message": "G1 collaboration document records decisions or pending items",
+      "file": "../docs_tdd/PR-02265/product/06-collaboration.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G2-001",
+      "ok": true,
+      "message": "feature inventory has no blocking placeholders",
+      "file": "../docs_tdd/PR-02265/product/00-feature-inventory.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G2-002",
+      "ok": true,
+      "message": "G2 confirmer and date are filled",
+      "file": "../docs_tdd/PR-02265/product/00-feature-inventory.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G2-003",
+      "ok": true,
+      "message": "feature list has at least one feature row",
+      "file": "../docs_tdd/PR-02265/product/00-feature-inventory.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G2-004",
+      "ok": true,
+      "message": "each feature row has 本期=做/不做/延期",
+      "file": "../docs_tdd/PR-02265/product/00-feature-inventory.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G2-005",
+      "ok": true,
+      "message": "all 本期=做 feature IDs appear in frontend tasks",
+      "file": "../docs_tdd/PR-02265/product/04-frontend-tasks.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-BLOCK-001",
+      "ok": true,
+      "message": "blockers.json 合法（0 条登记）",
+      "file": "../docs_tdd/PR-02265/agent/blockers.json",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-BLOCK-002",
+      "ok": true,
+      "message": "无到达当前阶段(G2)仍未解除的阻塞",
+      "file": "../docs_tdd/PR-02265/agent/blockers.json",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-BLOCK-003",
+      "ok": true,
+      "message": "无其他 open 登记",
+      "file": "../docs_tdd/PR-02265/agent/blockers.json",
+      "severity": "warn",
+      "category": "documentation"
+    }
+  ],
+  "commands": [
+    {
+      "label": "verify-project-gate PR-02265 G2",
+      "status": 0,
+      "ok": true,
+      "startedAt": "2026-08-07T11:13:31.252Z",
+      "finishedAt": "2026-08-07T11:13:31.346Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02265/2026-08-07T11-13-31-252Z-verify-project-gate-g2.log"
+    },
+    {
+      "label": "set-project-stage PR-02265 G2",
+      "status": 0,
+      "ok": true,
+      "startedAt": "2026-08-07T11:13:31.885Z",
+      "finishedAt": "2026-08-07T11:13:32.017Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02265/2026-08-07T11-13-31-885Z-set-project-stage.log"
+    }
+  ],
+  "codeRules": {
+    "required": false,
+    "skipped": false,
+    "reason": "",
+    "ok": true
+  },
+  "buildQuality": {
+    "required": false,
+    "skipped": false,
+    "reason": "",
+    "ok": true,
+    "checkCount": 0,
+    "baselineFile": null
+  },
+  "source": {
+    "gateCommand": "/Users/aven/.nvm/versions/node/v24.7.0/bin/node /Users/aven/github/docs_tdd/common/agent-scripts/verify-project-gate.mjs PR-02265 G2 --json",
+    "parseError": null,
+    "codeRulesCommand": null,
+    "codeRulesParseError": null,
+    "buildQualityCommand": null,
+    "buildQualityParseError": null
+  },
+  "fingerprint": {
+    "headSha": "a8fa4fbb76e00d70aecccf7f95fd96d7f69afd4c",
+    "baseSha": "445876e97f3d118dec3d594d3582538d2f30b52f",
+    "dirtyHash": "ee91fec5beef70258d3f4e44aecf6ef1a5b8611e240a82b4d77c17fe7172f806",
+    "dirtyFileCount": 0,
+    "untrackedFileCount": 0,
+    "rulesetVersion": "local-2026.07-msw-v1",
+    "ruleReleaseFingerprint": "a82db7bf74c321fbe4b33d06aab8d32806ea0bc96be371c31f2634830d52a12c",
+    "effectiveRulesFingerprint": "d999243ba97f5c97ecd12baf8e81dcc894be6fc7f3af2ab3ff703bc490f550b2"
+  },
+  "cache": {
+    "hit": false,
+    "fingerprint": "21bce4be2509b2e6"
+  },
+  "stageSync": {
+    "attempted": true,
+    "ok": true
+  }
+}

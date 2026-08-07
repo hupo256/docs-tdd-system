@@ -1,19 +1,31 @@
 <!-- template-version: 2 -->
 <!-- template-effective-since: 2026-07-23 -->
 
-# Frontend Tasks — PR-02265 PR-02265
+# Frontend Tasks — PR-02265 外部做市商合约账户支持配置负手续费率
+
+> 范围：`fameex-web` monorepo **前端部分**（现货管理后台 / 合约管理后台 / 前台 web）。app / h5 为独立端，不在本仓；后端逻辑（F07）不在前端范围。
+> G2 scope 已确认（项目负责人 2026-08-07）：F01~F06 本期做，F07 后端不做。
 
 ## 任务清单
 
 | ID | 功能 ID | 需求依据 | 任务 | 状态 | 验收证据 |
 |----|---------|----------|------|------|----------|
-| T01 | F01 | PRD 正文 + `PRD-IMG-001` / `PRD-TABLE-001` | G0 完成 PRD intake 并填充功能清单 | 待办 | `agent/prd-source-manifest.json` + `00-feature-inventory.md` |
-| T02 | F01 | F01 对应 sourceId | G2 确认 scope 后进入编码 worktree | 待办 | G2 gate |
-| T03 | F01 | API 契约 | G3 API 未 ready 时补齐 MSW handler / 契约测试 / dev-only worker 注册 | 待办 | G3 gate + `03-api-contract.md` §6.1 |
+| T00 | F01 F02 F03 F04 F05 F06 F07 | PRD 全文 + `PRD-IMG-001`~`PRD-IMG-015` `PRD-EMBED-003` `PRD-TABLE-003` | G0 PRD intake：21 项富媒体读取/分类/本地化，填充功能清单 | 已完成 | `agent/prd-source-manifest.json` + `00-feature-inventory.md` |
+| T01 | F01 | PRD 正文 §5.1 + `PRD-IMG-001` `PRD-IMG-002` | 现货后台「添加/编辑外部做市商账户」弹窗：业务类型=合约做市账户时，4 个手续费率字段（开/平仓×Maker/Taker）允许负值；输入校验区间 `[0,100]`→`[-100,100]`，精度 6 位（超 6 位键入无反应）；非法输入清空+报错；非空校验（失焦/确定触发）；编辑回显负值 | 待办 | G6 验收 |
+| T02 | F02 | PRD 正文 §5.1 + `PRD-IMG-004` | 弹窗 4 费率输入框下方新增常驻提示：「按对应订单类型分别收取，负值表示返佣费率(如-0.000001)」 | 待办 | G6 验收 |
+| T03 | F03 | PRD 正文 §5.1 + `PRD-IMG-002` `PRD-IMG-003` | 校验失败提示文案统一为 **「请输入【-100,100】之间的数字，精度支持6位」**（以 PRD 正文为准；mockup `PRD-IMG-003`「请输入数值」文案作废） | 待办 | G6 验收 |
+| T04 | F04 | PRD 正文 §5.5 + `PRD-IMG-015` | 做市账户管理→外部做市商 查询列表「手续费率」列兼容负费率显示 | 待办 | G6 验收 |
+| T05 | F05 | PRD 正文 §5.3 + `PRD-IMG-005` `PRD-IMG-006` `PRD-IMG-007` `PRD-IMG-008` | 前台 **web** 正数化展示：合约账户-资金流水、合约交易-资金流水/历史成交/仓位历史 的开/平仓手续费；返佣（负费率触发）与手续费共用流水类型，展示为正数（eg +8.3 USDT，不出负号）。**app/h5 不在本仓** | 待办 | G6 验收 |
+| T06 | F06 | PRD 正文 §5.3 + `PRD-IMG-009` `PRD-IMG-010` `PRD-IMG-011` `PRD-IMG-012` `PRD-IMG-013` `PRD-IMG-014` | 后台正数化展示：现货后台(用户详情→合约账户→资金流水) + 合约后台(仓位_已平仓/持仓中开平仓手续费、成交记录真金手续费、手续费-用户级别贡献手续费、资产-流水查询) | 待办 | G6 验收 |
+| T07 | F01 F03 F04 F05 F06 | `PRD-EMBED-003`（5.9 验收标准 9 条） | 对照验收标准逐项自测（负值配置/精度校验 6 位/非法输入/前台正数化/后台正数化/编辑回显） | 待办 | `agent/acceptance-results.json` |
+| T08 | F07 | PRD 正文 §5.2 §5.4 + `PRD-TABLE-003` | 返佣计算/入账/异常处理（余额不足、负费率改回正数不追溯）为**后端逻辑**，前端不实现；G5 联调确认展示层不受影响，余额不足账户能否为负待产品确认（backend owner） | 待办（后端） | G5 联调 |
+| T09 | F01 F02 F03 F04 F05 F06 | scope 已定稿 | 进入 `feature/PR-02265` worktree（基线 `origin/online`），API 未 ready 时按 MSW 策略补 handler/契约测试 | 待办 | G4/G3 gate |
 
 ## 实现检查
 
-- [ ] 状态/文案/class/action 映射已收敛到 map/resolver。
+- [ ] 手续费率输入校验（区间 `[-100,100]`、精度 6 位、非法清空、非空校验）抽为纯函数 helper，可单测。
+- [ ] 正数化展示（`Math.abs` / 取绝对值显示）收敛到统一 resolver，前台/后台复用；返佣与手续费共用流水类型的展示分支明确。
+- [ ] 状态/文案/class/action 映射已收敛到 map/resolver（费率列、流水类型 → 展示文案）。
 - [ ] 可由 `tailwind-preset.js` 表达的尺寸/圆角/间距未写成 arbitrary class。
-- [ ] API DTO 未直接进入组件展示层；字段经 schema/mapper 对账。
+- [ ] API DTO 未直接进入组件展示层；费率/流水字段经 schema/mapper 对账（负值不被 schema 拒绝）。
 - [ ] loading / empty / error / disabled / 未登录 / 无权限完整。

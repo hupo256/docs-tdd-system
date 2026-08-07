@@ -1,4 +1,29 @@
 {
   "projectId": "PR-02265",
-  "runs": []
+  "runs": [
+    {
+      "gate": "G2",
+      "ok": true,
+      "generatedAt": "2026-08-07T11:13:31.346Z",
+      "tool": "run-project-gate.mjs",
+      "summary": {
+        "total": 38,
+        "ok": 38,
+        "warn": 0,
+        "waived": 0,
+        "fail": 0
+      },
+      "fingerprint": {
+        "headSha": "a8fa4fbb76e00d70aecccf7f95fd96d7f69afd4c",
+        "baseSha": "445876e97f3d118dec3d594d3582538d2f30b52f",
+        "dirtyHash": "ee91fec5beef70258d3f4e44aecf6ef1a5b8611e240a82b4d77c17fe7172f806",
+        "dirtyFileCount": 0,
+        "untrackedFileCount": 0,
+        "rulesetVersion": "local-2026.07-msw-v1",
+        "ruleReleaseFingerprint": "a82db7bf74c321fbe4b33d06aab8d32806ea0bc96be371c31f2634830d52a12c",
+        "effectiveRulesFingerprint": "d999243ba97f5c97ecd12baf8e81dcc894be6fc7f3af2ab3ff703bc490f550b2"
+      },
+      "evidence": "evidence/gate/2026-08-07-111331-g2/README.md"
+    }
+  ]
 }

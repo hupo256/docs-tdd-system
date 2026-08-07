@@ -1,8 +1,8 @@
 {
   "version": 1,
   "projectId": "PR-02265",
-  "generatedAt": "2026-08-07T10:46:04.095Z",
-  "approvedFingerprint": "",
+  "generatedAt": "2026-08-07T11:10:41.625Z",
+  "approvedFingerprint": "c23c557680e18058",
   "sources": [
     {
       "path": "apps/web/docs_tdd/PR-02265/inbox/lark-sync/prd-latest.extracted.md",
@@ -136,7 +136,7 @@
       "status": "read",
       "classification": "requirement",
       "readMethod": "lark drive medias download + vision",
-      "summary": "5.1 优化后 mockup：校验提示显示「请输入数值，精度支持6位」——未含区间，与PRD正文「请输入【-100,100】之间的数字」不一致，需产品确认",
+      "summary": "5.1 优化后 mockup：校验提示显示「请输入数值，精度支持6位」（无区间）。已确认以 PRD 正文为准「请输入【-100,100】之间的数字，精度支持6位」，此 mockup 文案作废",
       "featureIds": [
         "F03"
       ],
