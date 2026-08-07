@@ -1,0 +1,17 @@
+{
+  "projectId": "PR-02265",
+  "stages": {
+    "G5": {
+      "status": "pending",
+      "reason": "待完成真实 API 联调，或确认本项目无 API 联调范围。",
+      "evidence": [],
+      "updatedAt": "2026-08-07"
+    },
+    "G7": {
+      "status": "pending",
+      "reason": "待收到 QA 用例后执行，或明确记录未提供 QA 用例而跳过。",
+      "evidence": [],
+      "updatedAt": "2026-08-07"
+    }
+  }
+}

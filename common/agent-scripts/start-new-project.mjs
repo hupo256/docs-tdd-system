@@ -272,6 +272,7 @@ await writeFileIfMissing(path.join(projectDir, 'agent/code-review.json'), json({
   projectId,
   reviewedAt: today,
   reviewer: 'pending',
+  head: '0000000000000000000000000000000000000000',
   findings: [
     {
       id: 'CR-1',
@@ -283,7 +284,7 @@ await writeFileIfMissing(path.join(projectDir, 'agent/code-review.json'), json({
     },
   ],
 }));
-await writeFileIfMissing(path.join(projectDir, 'agent/acceptance-results.json'), json({ projectId, items: [] }));
+await writeFileIfMissing(path.join(projectDir, 'agent/acceptance-results.json'), json({ projectId, head: '0000000000000000000000000000000000000000', items: [] }));
 await writeFileIfMissing(path.join(projectDir, 'agent/delivery-status.json'), json({
   projectId,
   mode: 'local',

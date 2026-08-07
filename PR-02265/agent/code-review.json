@@ -1,0 +1,16 @@
+{
+  "projectId": "PR-02265",
+  "reviewedAt": "2026-08-07",
+  "reviewer": "pending",
+  "head": "0000000000000000000000000000000000000000",
+  "findings": [
+    {
+      "id": "CR-1",
+      "category": "other",
+      "severity": "high",
+      "summary": "G6 code review 尚未执行",
+      "disposition": "open",
+      "evidence": []
+    }
+  ]
+}

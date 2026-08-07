@@ -244,6 +244,8 @@ function listProjectDirs() {
     // PR-00000 是 golden-run 的保留夹具 ID（运行期临时物化），不是真实项目，不进 PROJECTS.md。
     .filter((name) => name !== 'PR-00000')
     .filter((name) => includeArchive || name !== 'archive')
+    // 真正的项目一定有 README.md（scaffold 必写）；只含 agent/lark-audits 等产物的孤儿目录不进索引，避免断链。
+    .filter((name) => existsSync(join(docsRoot, name, 'README.md')))
     .sort((a, b) => a.localeCompare(b))
 }
 
