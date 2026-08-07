@@ -10,7 +10,7 @@ import {
   resolveAiExecutor,
   validateAiExecutor,
 } from '../lib/lark-ai-executor.mjs'
-import { buildQueuedCard, buildResultCard, buildWaitingCard } from '../lib/lark-cards.mjs'
+import { buildQueuedCard, buildResultCard, buildWaitingCard, resolveOwnerMention } from '../lib/lark-cards.mjs'
 import { scanDiffForViolations } from '../lib/lark-lint-diff.mjs'
 import { buildFocusedRuleContext } from '../lib/lark-rule-context.mjs'
 import { buildAnalysisPrompt, buildTaskPrompt, buildValidationRequirements, requestJson } from '../lark-worker.mjs'
@@ -215,6 +215,16 @@ describe('structured result and cards', () => {
     assert.doesNotMatch(noMention.elements[0].text.content, /<at id=/)
   })
 
+  it('failed 结果带 failureKind/nextStep 时回执列出失败类型与下一步', () => {
+    const text = formatStructuredAiResult(
+      { status: 'failed', summary: '构建产物缺失', checks: [], changedFiles: [], failureKind: 'env', nextStep: '在 dev 克隆重装依赖后重试' },
+      'codex',
+    )
+    assert.match(text, /^处理失败。/)
+    assert.match(text, /失败类型：环境失败/)
+    assert.match(text, /下一步：在 dev 克隆重装依赖后重试/)
+  })
+
   it('blocked 结果和卡片使用阻塞语义', () => {
     const text = formatStructuredAiResult(
       { status: 'blocked', summary: '缺少权威文案', checks: ['只读分析通过'], changedFiles: [], blockers: ['PM 未提供 tips 文案'] },
@@ -230,6 +240,38 @@ describe('structured result and cards', () => {
     }))
     assert.equal(card.header.template, 'orange')
     assert.match(card.elements[0].text.content, /已阻塞/)
+  })
+
+  it('owner 命中 ownerMap → @ 责任人；命中关键词也算；未命中回落提单人并注明', () => {
+    // 精确命中角色
+    assert.deepEqual(
+      resolveOwnerMention({ owner: '产品', ownerMap: { 产品: 'ou_pm', QA: 'ou_qa' }, operator: 'ou_op' }),
+      { mentionOpenId: 'ou_pm', ownerNote: null, matched: true },
+    )
+    // 关键词包含命中（owner 文案里含配置 key）
+    assert.equal(resolveOwnerMention({ owner: '产品经理张三', ownerMap: { 产品: 'ou_pm' }, operator: 'ou_op' }).mentionOpenId, 'ou_pm')
+    // 未识别 → 回落提单人 + note
+    const fallback = resolveOwnerMention({ owner: '外部供应商', ownerMap: { 产品: 'ou_pm' }, operator: 'ou_op' })
+    assert.equal(fallback.mentionOpenId, 'ou_op')
+    assert.equal(fallback.matched, false)
+    assert.match(fallback.ownerNote, /未在责任人表识别「外部供应商」/)
+    // 无配置表 + 无 owner → 回落提单人、无 note
+    assert.deepEqual(resolveOwnerMention({ operator: 'ou_op' }), { mentionOpenId: 'ou_op', ownerNote: null, matched: false })
+    // bug 表任务无提单人 → 不 @
+    assert.equal(resolveOwnerMention({ owner: '产品', ownerMap: {} }).mentionOpenId, null)
+  })
+
+  it('waiting 卡携带 ownerNote 时在 @ 行后附注', () => {
+    const card = JSON.parse(buildWaitingCard({
+      config: { project: 'PR-01947', title: 'Test' },
+      task: { project: 'PR-01947', summary: 'tips', aiExecutor: 'codex' },
+      status: 'waiting_confirmation',
+      result: '缺文案',
+      mentionOpenId: 'ou_op',
+      ownerNote: '（未在责任人表识别「产品」，暂 @ 提单人）',
+    }))
+    assert.match(card.elements[0].text.content, /<at id=ou_op><\/at>/)
+    assert.match(card.elements[0].text.content, /未在责任人表识别「产品」/)
   })
 })
 
@@ -248,5 +290,59 @@ describe('unattended diff quality gate', () => {
   it('合法项目 token 不误报', () => {
     const violations = scanDiffForViolations('+++ b/apps/web/src/Button.tsx\n+<div className="rounded-m text-sem-g" />')
     assert.deepEqual(violations, [])
+  })
+
+  it('一行多违规全列（matchAll，不再只报首个）', () => {
+    const violations = scanDiffForViolations(
+      '+++ b/apps/web/src/Box.tsx\n+<div className="rounded-[8px] w-[10px] text-green" />',
+    )
+    assert.deepEqual(violations.map((v) => v.kind), ['arbitrary-value', 'arbitrary-value', 'invalid-color-class'])
+  })
+
+  it('补齐的 arbitrary 前缀（ring/aspect/content）也拦', () => {
+    const violations = scanDiffForViolations(
+      '+++ b/apps/web/src/A.tsx\n+<div className="ring-[3px] aspect-[16/9] content-[\'x\']" />',
+    )
+    assert.deepEqual(violations.map((v) => v.token), ['ring-[3px]', 'aspect-[16/9]', "content-['x']"])
+  })
+
+  it('className 语境限定：注释 / 散文里的类名不误报，引号内与 @apply 才算', () => {
+    // 注释行整行跳过
+    assert.deepEqual(scanDiffForViolations('+++ b/apps/web/src/A.tsx\n+// 用 rounded-[8px] 演示'), [])
+    // 非引号、非 @apply 的散文（如日志字符串外）：token 不在引号内 → 不算
+    assert.deepEqual(scanDiffForViolations('+++ b/apps/web/src/A.tsx\n+const doc = 见 rounded-[8px] 文档'), [])
+    // CSS @apply 语境仍拦
+    assert.equal(scanDiffForViolations('+++ b/apps/web/src/a.css\n+  @apply rounded-[8px];').length, 1)
+  })
+
+  it('裸 any（as any / : any / <any>）在 TS 文件被拦，非 TS 不查', () => {
+    const ts = scanDiffForViolations(
+      '+++ b/apps/web/src/x.ts\n+const a = data as any\n+let b: any\n+const c = x as unknown as any',
+    )
+    assert.deepEqual(ts.map((v) => v.kind), ['bare-any', 'bare-any', 'bare-any'])
+    // .js 也算 TS？否——TS_FILE_RE 只匹配 ts/tsx；js 里的 any 不查（无类型系统）
+    assert.deepEqual(scanDiffForViolations('+++ b/apps/web/src/x.js\n+const a = data as any'), [])
+  })
+
+  it('i18n 动态 key：t(变量) / t(模板插值) 被拦，t("literal") 放行', () => {
+    // 用拼接构造 t(`ns:${status}`)，避免在测试源码里出现真的模板占位（触发 lint 噪声）
+    const tmplKey = 't(`ns:' + '$' + '{status}`)'
+    const bad = scanDiffForViolations(`+++ b/apps/web/src/x.tsx\n+const s = t(reasonKey)\n+const d = ${tmplKey}`)
+    assert.deepEqual(bad.map((v) => v.kind), ['i18n-dynamic-key', 'i18n-dynamic-key'])
+    // 字面量 key 与带 options 的字面量不误报
+    assert.deepEqual(
+      scanDiffForViolations("+++ b/apps/web/src/x.tsx\n+const s = t('ns:a.b')\n+const c = t('ns:c', { count })"),
+      [],
+    )
+  })
+
+  it('JSX 文本硬编码中文被拦（限 tsx/jsx），表达式节点 {t()} 与属性不误报', () => {
+    assert.deepEqual(
+      scanDiffForViolations('+++ b/apps/web/src/x.tsx\n+<button>确定</button>').map((v) => v.kind),
+      ['i18n-hardcoded-cjk'],
+    )
+    // {t('x')} 表达式节点、以及 .ts 非 JSX 文件不误报
+    assert.deepEqual(scanDiffForViolations("+++ b/apps/web/src/x.tsx\n+<button>{t('ns:ok')}</button>"), [])
+    assert.deepEqual(scanDiffForViolations('+++ b/apps/web/src/x.ts\n+const label = "确定"'), [])
   })
 })

@@ -137,9 +137,46 @@ export const isWhitelisted = ({ msg, config, isMember = false }) => {
 
 export const summarize = (text) => (text || '').split('\n').find((line) => line.trim())?.trim().slice(0, 80) || '群内任务'
 
-// 群 @ 任务可在正文写项目号（PR-#### / PM-####）指定目标仓库，取首个匹配（大写归一）；
-// 无则回落群绑定的 config.project。worker 的 resolveWorkContext 会据此路由到对应 worktree / 主仓 hotfix。
-export const parseProjectFromText = (text) => {
-  const match = String(text || '').match(/(PR|PM)-\d{3,}/i)
+// 项目号词边界匹配：`\b(PR|PM)-\d{3,}\b`。词边界避免吞子串——`SUPR-01947` 里 `U`/`P` 同为词字符，
+// `\bPR` 不会命中（否则会把 `SUPR-01947` 误路由成 `PR-01947`）。大写归一。整串校验与自由文本提取共用同一正则，
+// 消除「poller 用锚定 `^…$`、parseProjectFromText 用无锚定」两链路对同一字符串解析出不同项目号的误路由。
+export const PROJECT_ID_RE = /\b(PR|PM)-\d{3,}\b/i
+
+// 从自由文本（群名 / 正文）提取首个项目号，无则 null。
+export const matchProjectId = (text) => {
+  const match = String(text || '').match(PROJECT_ID_RE)
   return match ? match[0].toUpperCase() : null
 }
+
+// 整串校验单个值是否恰为合法项目号（bug 表「项目ID」单元格用）：trim 后必须整串匹配，
+// 不接受「值里夹带项目号」这类脏单元格（如 `../../PR-01947`），交 worker 走 adhoc。
+export const isProjectId = (value) => {
+  const trimmed = String(value || '').trim()
+  return trimmed !== '' && new RegExp(`^${PROJECT_ID_RE.source}$`, 'i').test(trimmed)
+}
+
+// 群 @ 任务可在正文写项目号（PR-#### / PM-####）指定目标仓库，取首个匹配（大写归一）；
+// 无则回落群绑定的 config.project。worker 的 resolveWorkContext 会据此路由到对应 worktree / 主仓 hotfix。
+export const parseProjectFromText = (text) => matchProjectId(text)
+
+// 命令类型：任务首行以「类型：…」（中/英前缀 + 冒号）开头时归一为规范命令类型。
+// 首个命中规则胜出，都不命中则 null（普通 bug 修复正文）。Gateway 落 task.commandType，
+// worker 据此对只读命令走轻量分流（跳过临时 worktree 准备与代码提交）。
+const COMMAND_TYPE_RULES = [
+  { type: 'status', re: /^\s*(?:状态|status)\s*[:：]/i },
+  { type: 'docs', re: /^\s*(?:文档|docs)\s*[:：]/i },
+  { type: 'fix', re: /^\s*(?:修复|fix)\s*[:：]/i },
+  { type: 'test', re: /^\s*(?:自测|test)\s*[:：]/i },
+  { type: 'api', re: /^\s*(?:api)\s*[:：]/i },
+  { type: 'qa', re: /^\s*(?:qa)\s*[:：]/i },
+]
+
+// 只读命令：不改代码，worker 跳过临时 worktree 准备与代码提交闸，无本地 worktree 时就地在主仓只读回答。
+export const READ_ONLY_COMMAND_TYPES = new Set(['status'])
+
+export const parseCommandType = (text) => {
+  const firstLine = String(text || '').split('\n').find((line) => line.trim()) || ''
+  return COMMAND_TYPE_RULES.find(({ re }) => re.test(firstLine))?.type || null
+}
+
+export const isReadOnlyCommand = (commandType) => READ_ONLY_COMMAND_TYPES.has(commandType)

@@ -8,11 +8,17 @@
  */
 
 import assert from 'node:assert/strict'
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { describe, it } from 'node:test'
 
-import { isForBot, isWhitelisted, normalizeMessage } from '../lark-gateway.mjs'
+import { handleStatusUpdate, isForBot, isWhitelisted, normalizeMessage } from '../lark-gateway.mjs'
 import { classifyBugTaskStatus } from '../lark-bugtable-poller.mjs'
-import { resolveWorkContext, safeProject } from '../lark-worker.mjs'
+import { createTaskStore } from '../lib/lark-task-store.mjs'
+import { isProjectId, isReadOnlyCommand, matchProjectId, parseCommandType, parseProjectFromText } from '../lib/lark-message.mjs'
+import { classifyLarkTask, extractMarkdownSection } from '../lib/lark-rule-context.mjs'
+import { assessDoneResult, classifyWorkerFailure, crossCheckChangedFiles, detectChangeTier, resolveWorkContext, safeProject } from '../lark-worker.mjs'
 import { validateSource } from '../sync-lark-docs.mjs'
 
 const BOT = 'ou_bot'
@@ -234,6 +240,54 @@ describe('resolveWorkContext', () => {
     const ctx = resolveWorkContext(cfg, { project: 'PR-99999', recordId: 'recABCDEFGH', id: 'om_ignored' })
     assert.ok(ctx.hotfixBranch.endsWith('ecABCDEFGH'.slice(-8)))
   })
+
+  it('只读命令（状态/status）本地无 worktree → 主仓就地只读，不建临时 worktree、无分支', () => {
+    const ctx = resolveWorkContext(cfg, { project: 'PR-99999', text: '状态：登录改造进度？', id: 'om_ro1234567890' })
+    assert.equal(ctx.readOnly, true)
+    assert.equal(ctx.hotfixBranch, undefined)
+    assert.equal(ctx.projectId, 'PR-99999')
+    assert.ok(!ctx.cwd.includes('.lark-hotfix'))
+  })
+
+  it('只读命令用 gateway 落的 commandType（无需再解析 text）', () => {
+    const ctx = resolveWorkContext(cfg, { commandType: 'status', id: 'om_ro0987654321' })
+    assert.equal(ctx.readOnly, true)
+    assert.equal(ctx.hotfixBranch, undefined)
+  })
+
+  it('非只读命令（修复）仍走临时 worktree', () => {
+    const ctx = resolveWorkContext(cfg, { project: 'PR-99999', text: '修复：登录报错', id: 'om_fix1234567890' })
+    assert.ok(!ctx.readOnly)
+    assert.ok(ctx.hotfixBranch?.startsWith('hotfix/PR-99999-'))
+  })
+})
+
+// ---------------------------------------------------------------------------
+// parseCommandType：命令前缀归一 + 只读命令判定
+// ---------------------------------------------------------------------------
+describe('parseCommandType', () => {
+  it('识别中英前缀（大小写/全半角冒号），取首行', () => {
+    assert.equal(parseCommandType('状态：进度？'), 'status')
+    assert.equal(parseCommandType('STATUS: progress?'), 'status')
+    assert.equal(parseCommandType('文档: 更新'), 'docs')
+    assert.equal(parseCommandType('修复：登录报错'), 'fix')
+    assert.equal(parseCommandType('自测：跑用例'), 'test')
+    assert.equal(parseCommandType('QA：验收'), 'qa')
+    assert.equal(parseCommandType('api：补接口'), 'api')
+  })
+
+  it('首行无命令前缀 → null（普通 bug 正文）', () => {
+    assert.equal(parseCommandType('登录页按钮点不动'), null)
+    assert.equal(parseCommandType(''), null)
+    assert.equal(parseCommandType(null), null)
+  })
+
+  it('只读命令集合仅含 status', () => {
+    assert.equal(isReadOnlyCommand('status'), true)
+    assert.equal(isReadOnlyCommand('docs'), false)
+    assert.equal(isReadOnlyCommand('fix'), false)
+    assert.equal(isReadOnlyCommand(null), false)
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -267,3 +321,223 @@ describe('validateSource (read-only guard)', () => {
     )
   })
 })
+
+// ---------------------------------------------------------------------------
+// 项目号解析：matchProjectId（自由文本提取，词边界）/ isProjectId（整串校验）
+// 两链路（群 @ 正文 vs bug 表单元格）共用同一正则，回归防「解析不一致导致误路由」。
+// ---------------------------------------------------------------------------
+describe('matchProjectId（自由文本提取）', () => {
+  it('提取正文首个项目号并大写归一', () => {
+    assert.equal(matchProjectId('修复 pr-01947 的登录 bug'), 'PR-01947')
+    assert.equal(matchProjectId('见 PM-1469 需求'), 'PM-1469')
+  })
+  it('词边界：SUPR-01947 不吞出 PR-01947（否则误路由）', () => {
+    assert.equal(matchProjectId('SUPR-01947 是别的东西'), null)
+    assert.equal(matchProjectId('XPM-1469'), null)
+  })
+  it('无项目号 / 空输入 → null', () => {
+    assert.equal(matchProjectId('没有项目号'), null)
+    assert.equal(matchProjectId(''), null)
+    assert.equal(matchProjectId(null), null)
+  })
+  it('parseProjectFromText 与 matchProjectId 同源同结果', () => {
+    assert.equal(parseProjectFromText('SUPR-01947'), matchProjectId('SUPR-01947'))
+    assert.equal(parseProjectFromText('pr-02172 页面'), 'PR-02172')
+  })
+})
+
+describe('isProjectId（整串校验）', () => {
+  it('恰为合法项目号（含尾部空白/换行）→ true', () => {
+    assert.equal(isProjectId('PR-01947'), true)
+    assert.equal(isProjectId('pm-1469'), true)
+    assert.equal(isProjectId('PM-1469\n'), true)
+  })
+  it('夹带脏字符 / 子串 / 空 → false（交 worker 走 adhoc）', () => {
+    assert.equal(isProjectId('../../PR-01947'), false)
+    assert.equal(isProjectId('SUPR-01947'), false)
+    assert.equal(isProjectId('PR-01947 附注'), false)
+    assert.equal(isProjectId(''), false)
+    assert.equal(isProjectId(null), false)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// handleStatusUpdate epoch fencing：worker 迟到回写（epoch 过期）被拒，防覆盖新一代执行。
+// 只测 network-free 分支：epoch 不匹配 → 早返回 409；epoch 缺省 → 向后兼容放行（running 不发卡）。
+// ---------------------------------------------------------------------------
+describe('handleStatusUpdate epoch fencing', () => {
+  let dir
+  const freshStore = () => {
+    dir = mkdtempSync(join(tmpdir(), 'lark-gw-'))
+    return createTaskStore({ tasksDir: dir, leaseMs: 1000 })
+  }
+  const cleanup = () => dir && rmSync(dir, { recursive: true, force: true })
+
+  it('epoch 与当前不匹配 → 拒绝 409，不改状态', async () => {
+    const store = freshStore()
+    store.upsert({ id: 't', status: 'running', epoch: 2, createdAt: '2026-01-01T00:00:00Z' })
+    const outcome = await handleStatusUpdate({ config: {}, store, id: 't', status: 'done', epoch: 1 })
+    assert.equal(outcome.ok, false)
+    assert.equal(outcome.code, 409)
+    assert.equal(store.get('t').status, 'running') // 未被旧 worker 覆盖
+    cleanup()
+  })
+
+  it('epoch 匹配 → 放行（running 态无群卡，纯 network-free）', async () => {
+    const store = freshStore()
+    store.upsert({ id: 't', status: 'running', epoch: 2, createdAt: '2026-01-01T00:00:00Z' })
+    const outcome = await handleStatusUpdate({ config: {}, store, id: 't', status: 'running', epoch: 2 })
+    assert.equal(outcome.ok, true)
+    cleanup()
+  })
+
+  it('epoch 缺省 → 向后兼容放行（不校验）', async () => {
+    const store = freshStore()
+    store.upsert({ id: 't', status: 'running', epoch: 5, createdAt: '2026-01-01T00:00:00Z' })
+    const outcome = await handleStatusUpdate({ config: {}, store, id: 't', status: 'running' })
+    assert.equal(outcome.ok, true)
+    cleanup()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 变更分级探测 + changedFiles 交叉校验 + done 可信度评估（worker 侧无人值守验证加强，P2-13）
+// ---------------------------------------------------------------------------
+describe('detectChangeTier（契约/共享/类型敏感路径 → L2+）', () => {
+  it('命中 schema/mapper/api/.d.ts/packages 任一即 L2，附原因', () => {
+    assert.equal(detectChangeTier(['apps/web/src/x/order.schema.ts']).tier, 'L2')
+    assert.equal(detectChangeTier(['apps/web/src/api/order.ts']).tier, 'L2')
+    assert.equal(detectChangeTier(['apps/web/src/mappers/orderMapper.ts']).tier, 'L2')
+    assert.equal(detectChangeTier(['packages/ui/src/Button.tsx']).tier, 'L2')
+    assert.equal(detectChangeTier(['apps/web/src/types/global.d.ts']).tier, 'L2')
+  })
+  it('纯样式/文案改动 → L1，无原因', () => {
+    const { tier, reasons } = detectChangeTier(['apps/web/src/x/Panel.tsx', 'apps/web/src/x/panel.css'])
+    assert.equal(tier, 'L1')
+    assert.deepEqual(reasons, [])
+  })
+})
+
+describe('crossCheckChangedFiles（AI 自报 vs 真实 git diff）', () => {
+  it('一致 → consistent，无差集', () => {
+    const r = crossCheckChangedFiles({ reported: ['a.ts', './b.ts'], actual: ['a.ts', 'b.ts'] })
+    assert.equal(r.consistent, true)
+    assert.equal(r.actualEmpty, false)
+  })
+  it('漏报 / 虚报分别落到两个差集', () => {
+    const r = crossCheckChangedFiles({ reported: ['a.ts', 'ghost.ts'], actual: ['a.ts', 'real.ts'] })
+    assert.deepEqual(r.missingFromReport, ['real.ts']) // 真改了 AI 没报
+    assert.deepEqual(r.notActuallyChanged, ['ghost.ts']) // AI 报了实际没改
+    assert.equal(r.consistent, false)
+  })
+  it('实际零改动 → actualEmpty', () => {
+    assert.equal(crossCheckChangedFiles({ reported: ['a.ts'], actual: [] }).actualEmpty, true)
+  })
+})
+
+describe('assessDoneResult（done 可信度评估）', () => {
+  it('done 但工作区零改动 → 不可信（需人工复核）', () => {
+    const a = assessDoneResult({ reportedChangedFiles: ['a.ts'], actualChangedFiles: [], checks: ['tsc'] })
+    assert.equal(a.trustworthy, false)
+    assert.match(a.notes[0], /无任何改动/)
+  })
+  it('只读任务（状态/status）豁免零改动降级', () => {
+    const a = assessDoneResult({ reportedChangedFiles: [], actualChangedFiles: [], readOnly: true })
+    assert.equal(a.trustworthy, true)
+    assert.deepEqual(a.notes, [])
+  })
+  it('L2+ 改动但 AI checks 不含 type-check → 挂 note（仍可信）', () => {
+    const a = assessDoneResult({
+      reportedChangedFiles: ['x.schema.ts'],
+      actualChangedFiles: ['x.schema.ts'],
+      checks: ['biome', '单测通过'],
+    })
+    assert.equal(a.trustworthy, true)
+    assert.equal(a.tier, 'L2')
+    assert.ok(a.notes.some((n) => /type-check/.test(n)))
+  })
+  it('L2+ 改动且 checks 含 tsc → 无 type-check note', () => {
+    const a = assessDoneResult({
+      reportedChangedFiles: ['x.schema.ts'],
+      actualChangedFiles: ['x.schema.ts'],
+      checks: ['tsc --noEmit 通过'],
+    })
+    assert.ok(!a.notes.some((n) => /type-check/.test(n)))
+  })
+  it('漏报改动文件 → 挂 note 但不阻断（可信）', () => {
+    const a = assessDoneResult({
+      reportedChangedFiles: ['a.tsx'],
+      actualChangedFiles: ['a.tsx', 'b.tsx'],
+      checks: [],
+    })
+    assert.equal(a.trustworthy, true)
+    assert.ok(a.notes.some((n) => /漏报/.test(n) && /b\.tsx/.test(n)))
+  })
+})
+
+// ---------------------------------------------------------------------------
+// classifyLarkTask 多标签 + 图片/fix 强制 UI/STYLE + extractMarkdownSection（P3-18）
+// ---------------------------------------------------------------------------
+describe('classifyLarkTask（多标签叠加）', () => {
+  it('混合任务 ui+api 同时给标签（不再单一胜出）', () => {
+    const { scenarios } = classifyLarkTask('修改接口字段后同步更新弹窗组件样式')
+    assert.ok(scenarios.includes('write_api'))
+    assert.ok(scenarios.includes('write_ui'))
+  })
+  it('纯样式任务 → write_ui + style 信号', () => {
+    const { scenario, scenarios, signals } = classifyLarkTask('调整按钮圆角和背景色')
+    assert.equal(scenario, scenarios[0])
+    assert.ok(scenarios.includes('write_ui'))
+    assert.ok(signals.includes('style'))
+  })
+  it('无信号 → g4_coding_worktree 兜底', () => {
+    assert.deepEqual(classifyLarkTask('随便改点东西').scenarios, ['g4_coding_worktree'])
+  })
+  it('有图片附件 → 强制并入 UI+STYLE（防「字段」误判成纯 API 丢样式规则）', () => {
+    const withoutImage = classifyLarkTask('字段对不上')
+    assert.ok(!withoutImage.scenarios.includes('write_ui')) // 纯文字「字段」判成 API
+    const withImage = classifyLarkTask('字段对不上', { hasImage: true })
+    assert.ok(withImage.signals.includes('style'))
+    assert.ok(withImage.scenarios.includes('write_ui'))
+  })
+  it('fix 命令 → 强制并入 UI+STYLE', () => {
+    const fix = classifyLarkTask('接口返回异常', { isFix: true })
+    assert.ok(fix.scenarios.includes('write_ui'))
+    assert.ok(fix.scenarios.includes('write_api')) // 原 api 信号仍在
+  })
+})
+
+describe('extractMarkdownSection', () => {
+  const doc = '# T\n\n## A\n\na1\na2\n\n## B\n\nb1\n'
+  it('抽出指定标题到下一同级标题前', () => {
+    assert.equal(extractMarkdownSection(doc, '## A'), '## A\n\na1\na2')
+  })
+  it('标题不存在 → 空串（供 buildFocusedRuleContext 判章节缺失告警）', () => {
+    assert.equal(extractMarkdownSection(doc, '## Z'), '')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// classifyWorkerFailure：Worker 层技术性失败归因（preflight / timeout / worktree / exit）（P3-17）
+// ---------------------------------------------------------------------------
+describe('classifyWorkerFailure', () => {
+  it('超时类 → tool 失败', () => {
+    assert.equal(classifyWorkerFailure(new Error('AI process timeout after 1800000ms')).failureKind, 'tool')
+    assert.equal(classifyWorkerFailure(new Error('killed by SIGKILL')).failureKind, 'tool')
+  })
+  it('登录 / 权限类 → permission 失败', () => {
+    const r = classifyWorkerFailure(new Error('Codex 未登录：login required'))
+    assert.equal(r.failureKind, 'permission')
+    assert.match(r.nextStep, /登录/)
+  })
+  it('缺二进制 / worktree / git 类 → env 失败', () => {
+    assert.equal(classifyWorkerFailure(new Error('spawn codex ENOENT')).failureKind, 'env')
+    assert.equal(classifyWorkerFailure(new Error('git worktree add failed')).failureKind, 'env')
+  })
+  it('未知错误 → tool 兜底，带下一步', () => {
+    const r = classifyWorkerFailure(new Error('something odd'))
+    assert.equal(r.failureKind, 'tool')
+    assert.ok(r.nextStep)
+  })
+})
+

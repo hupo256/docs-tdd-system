@@ -3,26 +3,45 @@
  * 逻辑集中在此，便于单测（`node --test`）覆盖租约回收与优先级排序。
  */
 
-import { mkdirSync, readFileSync, readdirSync, unlinkSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, readdirSync, renameSync, unlinkSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-export const createTaskStore = ({ tasksDir, leaseMs }) => {
+// 孤儿自动重入队上限：crash 型毒任务（每次都让 worker/AI 崩）会绕过「failed 需人工 retry」闭环
+// 被无限 reclaim→领取→再崩，无限烧钱。达上限即转 failed（死信），停止自动重投，交人工。
+const maxRequeue = Number(process.env.LARK_MAX_REQUEUE || 2)
+// 人工 retry 上限（人在环里，主要防误触发的连环重跑；给得比自动 requeue 宽松）。
+const maxRetry = Number(process.env.LARK_MAX_RETRY || 5)
+
+export const createTaskStore = ({ tasksDir, leaseMs, onDeadLetter } = {}) => {
   mkdirSync(tasksDir, { recursive: true })
   const tasks = new Map()
 
-  // 启动时恢复未完成任务
+  // 启动时恢复未完成任务。解析失败的文件改名为 .corrupt 并告警，不静默跳过——
+  // persist 崩溃中断会截断出非法 JSON，静默 continue 会让该任务从恢复集里彻底消失（静默丢单）。
   for (const file of readdirSync(tasksDir)) {
     if (!file.endsWith('.json')) continue
+    const full = join(tasksDir, file)
     try {
-      const task = JSON.parse(readFileSync(join(tasksDir, file), 'utf8'))
+      const task = JSON.parse(readFileSync(full, 'utf8'))
       tasks.set(task.id, task)
-    } catch {
-      // 损坏的任务文件跳过，不阻塞启动
+    } catch (error) {
+      const corruptPath = `${full}.corrupt`
+      try {
+        renameSync(full, corruptPath)
+      } catch {
+        // 改名失败也不阻塞启动，但下面的告警仍会打
+      }
+      console.warn(`[lark-gateway] ⚠ 任务文件损坏，已隔离为 ${file}.corrupt（需人工排查是否丢单）：${String(error).slice(0, 120)}`)
     }
   }
 
+  // 原子写：先写同目录 .tmp 再 rename（同文件系统 rename 是原子替换），
+  // 避免进程在写一半时被 kill/断电，把唯一副本截断成非法 JSON。
   const persist = (task) => {
-    writeFileSync(join(tasksDir, `${task.id}.json`), JSON.stringify(task, null, 2))
+    const target = join(tasksDir, `${task.id}.json`)
+    const tmp = `${target}.tmp`
+    writeFileSync(tmp, JSON.stringify(task, null, 2))
+    renameSync(tmp, target)
   }
 
   const removeFile = (id) => {
@@ -37,16 +56,35 @@ export const createTaskStore = ({ tasksDir, leaseMs }) => {
     task.status === 'running' && task.claimedAt && now - new Date(task.claimedAt).getTime() > leaseMs
 
   // 回收租约过期的孤儿 running 任务（worker 崩溃/被杀后任务不会永卡 running），重新入队待领取。
+  // 达 maxRequeue 上限的任务判定为毒任务（每次都让 worker/AI 崩），转 failed 死信、停止自动重投，
+  // 交人工 —— 否则会无限 reclaim→领取→再崩、无限烧钱。
   const reclaimOrphans = () => {
     const now = Date.now()
     for (const task of tasks.values()) {
       if (!isOrphan(task, now)) continue
+      if ((task.requeueCount || 0) >= maxRequeue) {
+        task.status = 'failed'
+        task.claimedAt = null
+        task.deadLetterReason = `孤儿重入队达上限（${maxRequeue} 次仍未跑完），判定为毒任务，停止自动重投，需人工排查后 retry`
+        task.updatedAt = new Date(now).toISOString()
+        persist(task)
+        console.warn(`[lark-gateway] 孤儿任务 ${task.id} 达重投上限，转 failed 死信：${task.deadLetterReason}`)
+        try {
+          onDeadLetter?.(task)
+        } catch (error) {
+          console.error(`[lark-gateway] onDeadLetter 回调异常：${String(error).slice(0, 120)}`)
+        }
+        continue
+      }
       task.status = 'queued'
       task.claimedAt = null
       task.requeuedAt = new Date(now).toISOString()
       task.requeueCount = (task.requeueCount || 0) + 1
+      // fencing token：每次重投递增 epoch，让被判死的旧 worker 迟到回写（带旧 epoch）在
+      // handleStatusUpdate 处被拒，不覆盖新一代执行的状态。
+      task.epoch = (task.epoch || 0) + 1
       persist(task)
-      console.warn(`[lark-gateway] 租约过期，重新入队孤儿任务 ${task.id}（第 ${task.requeueCount} 次）`)
+      console.warn(`[lark-gateway] 租约过期，重新入队孤儿任务 ${task.id}（第 ${task.requeueCount} 次，epoch=${task.epoch}）`)
     }
   }
 
@@ -66,15 +104,43 @@ export const createTaskStore = ({ tasksDir, leaseMs }) => {
     retry(id) {
       const task = tasks.get(id)
       if (!task || (task.status !== 'failed' && task.status !== 'blocked')) return null
+      // 人工 retry 上限：主要防误触发的连环重跑。达上限返回带原因的信号，交调用方提示人工 clean。
+      if ((task.retryCount || 0) >= maxRetry) {
+        return { task: null, reason: `已达人工重试上限（${maxRetry} 次），请人工排查根因后 clean 再重建，或调高 LARK_MAX_RETRY` }
+      }
       task.status = 'queued'
       task.claimedAt = null
       task.requeuedAt = new Date().toISOString()
       task.retryCount = (task.retryCount || 0) + 1
+      // 人工 retry 同样递增 epoch：万一旧执行仍有残留 worker，其迟到回写会被 epoch 校验拒掉。
+      task.epoch = (task.epoch || 0) + 1
       task.updatedAt = task.requeuedAt
       persist(task)
       return task
     },
-    // 陈旧终态清理：删除 updatedAt 早于 olderThanMs 的指定终态任务（默认只清 done），
+    // waiting_confirmation / blocked 续任务：用户补料后复用**原任务**继续跑（而非新建孤儿任务）。
+    // 把补料 append 到原 task.text 并重置为 queued；因复用同一 task.id，resolveWorkContext 会算出
+    // 同一 hotfix 分支/worktree，天然复用原执行现场。bump epoch 挡掉旧执行残留 worker 的迟到回写。
+    resumeWithSupplement({ id, supplementText = '', supplementAttachments = [] } = {}) {
+      const task = tasks.get(id)
+      if (!task || (task.status !== 'waiting_confirmation' && task.status !== 'blocked')) return null
+      const supplement = String(supplementText || '').trim()
+      if (supplement) {
+        task.text = `${task.text || ''}\n\n【补料】\n${supplement}`.trim()
+        task.summary = task.summary || supplement.slice(0, 80)
+      }
+      if (supplementAttachments.length) {
+        task.attachments = [...(task.attachments || []), ...supplementAttachments]
+      }
+      task.status = 'queued'
+      task.claimedAt = null
+      task.requeuedAt = new Date().toISOString()
+      task.resumeCount = (task.resumeCount || 0) + 1
+      task.epoch = (task.epoch || 0) + 1
+      task.updatedAt = task.requeuedAt
+      persist(task)
+      return task
+    },
     // 让 /lark/health 计数不再单调增长。返回被删除的 id 列表。
     // 注意：清 failed 会让 bug 表对应记录（若仍待处理）在 poller 下一轮被当新任务重投，
     // 等于变相自动重试，故 failed 默认保留、交由人工 retry/clear 处置。
@@ -101,6 +167,7 @@ export const createTaskStore = ({ tasksDir, leaseMs }) => {
       if (!pending) return null
       pending.status = 'running'
       pending.claimedAt = new Date(Date.now()).toISOString()
+      pending.epoch = pending.epoch || 0 // fencing token 基线，worker 回写时须带上
       persist(pending)
       return pending
     },
@@ -112,19 +179,39 @@ export const createTaskStore = ({ tasksDir, leaseMs }) => {
       if (!task || (task.status !== 'queued' && task.status !== 'received')) return null
       task.status = 'running'
       task.claimedAt = new Date(Date.now()).toISOString()
+      task.epoch = task.epoch || 0 // fencing token 基线，worker 回写时须带上
       persist(task)
       return task
     },
-    // 健康检查用：各状态计数 + 租约已过期仍 running 的卡住任务 id
+    // 健康检查用：各状态计数 + 卡住任务 + 队列年龄 / 租约余量 / requeue·retry Top / 死信数
     stats() {
       const now = Date.now()
       const byStatus = {}
       const stuck = []
+      let oldestQueuedAgeMs = 0 // 最老 pending 的排队时长（积压信号）
+      let minLeaseRemainingMs = null // 所有 running 里离租约到期最近的余量（负=已超期=孤儿）
+      let deadLetters = 0 // 已转 failed 的死信（deadLetterReason 存在）
+      const requeued = [] // 有 requeueCount/retryCount 的任务，供暴露 Top
       for (const task of tasks.values()) {
         byStatus[task.status] = (byStatus[task.status] || 0) + 1
         if (isOrphan(task, now)) stuck.push(task.id)
+        if (task.deadLetterReason) deadLetters += 1
+        if (task.requeueCount || task.retryCount) {
+          requeued.push({ id: task.id, requeueCount: task.requeueCount || 0, retryCount: task.retryCount || 0 })
+        }
+        if (task.status === 'queued' || task.status === 'received') {
+          const age = now - new Date(task.createdAt || now).getTime()
+          if (Number.isFinite(age) && age > oldestQueuedAgeMs) oldestQueuedAgeMs = age
+        }
+        if (task.status === 'running' && task.claimedAt) {
+          const remaining = leaseMs - (now - new Date(task.claimedAt).getTime())
+          if (minLeaseRemainingMs === null || remaining < minLeaseRemainingMs) minLeaseRemainingMs = remaining
+        }
       }
-      return { counts: byStatus, stuck }
+      const topRequeued = requeued
+        .sort((a, b) => b.requeueCount + b.retryCount - (a.requeueCount + a.retryCount))
+        .slice(0, 5)
+      return { counts: byStatus, stuck, oldestQueuedAgeMs, minLeaseRemainingMs, deadLetters, topRequeued }
     },
   }
 }

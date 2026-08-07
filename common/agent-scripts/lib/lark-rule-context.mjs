@@ -87,52 +87,66 @@ export const extractMarkdownSection = (text, heading) => {
   return lines.slice(start, end).join('\n').trim()
 }
 
-export const classifyLarkTask = (taskText) => {
+export const classifyLarkTask = (taskText, { hasImage = false, isFix = false } = {}) => {
   const text = String(taskText || '')
-  const signals = Object.entries(SIGNALS)
-    .filter(([, pattern]) => pattern.test(text))
-    .map(([name]) => name)
-  const signalSet = new Set(signals)
-  const scenario = signalSet.has('mock')
-    ? 'write_msw'
-    : signalSet.has('mapper')
-      ? 'write_mapper'
-      : signalSet.has('query')
-        ? 'write_query_hook'
-        : signalSet.has('state')
-          ? 'write_state'
-          : signalSet.has('api')
-            ? 'write_api'
-            : signalSet.has('ui') || signalSet.has('copy') || signalSet.has('style')
-              ? 'write_ui'
-              : 'g4_coding_worktree'
-  return { scenario, signals }
+  const signalSet = new Set(
+    Object.entries(SIGNALS)
+      .filter(([, pattern]) => pattern.test(text))
+      .map(([name]) => name),
+  )
+  // 图片附件或 fix 命令 → 强制并入 UI+STYLE 信号：视觉/修复类常只写「字段 / 背景 / 不对」等短语，
+  // 易被误判成纯 API 任务而丢掉 UI/样式 token 规则（g4 空档）。图片本身就是视觉线索。
+  if (hasImage || isFix) {
+    signalSet.add('ui')
+    signalSet.add('style')
+  }
+  // 多标签叠加：不再「单一胜出」，命中的语义都产出对应 scenario 标签（如 ui+api 同时给），
+  // refsFor 按标签并集加载规则，避免混合任务漏掉某一维度的 token 规则。
+  const scenarios = []
+  if (signalSet.has('mock')) scenarios.push('write_msw')
+  if (signalSet.has('mapper')) scenarios.push('write_mapper')
+  if (signalSet.has('query')) scenarios.push('write_query_hook')
+  if (signalSet.has('state')) scenarios.push('write_state')
+  if (signalSet.has('api')) scenarios.push('write_api')
+  if (signalSet.has('ui') || signalSet.has('copy') || signalSet.has('style')) scenarios.push('write_ui')
+  if (!scenarios.length) scenarios.push('g4_coding_worktree')
+  // scenario 保留为主标签（首个，供 prompt/audit 单值展示），scenarios 为全量标签集。
+  return { scenario: scenarios[0], scenarios, signals: [...signalSet] }
 }
 
-const refsFor = ({ scenario, signals }) => {
+const refsFor = ({ scenarios = [], signals = [] }) => {
+  const scenarioSet = new Set(scenarios)
   const signalSet = new Set(signals)
   const refs = [...BASE_REFS]
-  if (scenario === 'write_ui') refs.push(...UI_REFS)
+  if (scenarioSet.has('write_ui')) refs.push(...UI_REFS)
   if (signalSet.has('copy')) refs.push(...COPY_REFS)
   if (signalSet.has('style')) refs.push(...STYLE_REFS)
-  if (['write_api', 'write_mapper', 'write_query_hook'].includes(scenario)) refs.push(...API_REFS)
-  if (['write_state', 'write_query_hook'].includes(scenario)) refs.push(...STATE_REFS)
-  if (scenario === 'write_msw') refs.push(...MOCK_REFS, ...API_REFS)
+  if (['write_api', 'write_mapper', 'write_query_hook'].some((s) => scenarioSet.has(s))) refs.push(...API_REFS)
+  if (['write_state', 'write_query_hook'].some((s) => scenarioSet.has(s))) refs.push(...STATE_REFS)
+  if (scenarioSet.has('write_msw')) refs.push(...MOCK_REFS, ...API_REFS)
   return refs
 }
 
-export const buildFocusedRuleContext = ({ taskText }) => {
-  const classification = classifyLarkTask(taskText)
+export const buildFocusedRuleContext = ({ taskText, hasImage = false, isFix = false } = {}) => {
+  const classification = classifyLarkTask(taskText, { hasImage, isFix })
   const sources = []
   const excerpts = []
+  const warnings = []
   const seen = new Set()
 
   for (const ref of refsFor(classification)) {
     const key = `${ref.file}#${ref.heading}`
-    if (seen.has(key) || !existsSync(ref.file)) continue
+    if (seen.has(key)) continue
     seen.add(key)
+    if (!existsSync(ref.file)) continue // 全局规则文件可能不在本机，静默跳过
     const excerpt = extractMarkdownSection(readFileSync(ref.file, 'utf8'), ref.heading)
-    if (!excerpt) continue
+    if (!excerpt) {
+      // 文件在但抽到空段 = 源文档改了标题 → 规则被静默丢弃。记 warn + audit，不静默 continue。
+      const warning = `规则章节缺失：${ref.label} 未找到「${ref.heading}」（源文档可能改了标题，规则被静默丢弃，需人工核对路由）`
+      warnings.push(warning)
+      console.warn(`[lark-rule-context] ⚠ ${warning}`)
+      continue
+    }
     const sha256 = createHash('sha256').update(excerpt).digest('hex')
     sources.push({ path: ref.label, section: ref.heading, sha256 })
     excerpts.push(`### Source: ${ref.label} · ${ref.heading}\n\n${excerpt}`)
@@ -141,6 +155,7 @@ export const buildFocusedRuleContext = ({ taskText }) => {
   return {
     ...classification,
     sources,
+    warnings,
     fingerprint: createHash('sha256').update(sources.map((item) => `${item.path}#${item.section}:${item.sha256}`).join('\n')).digest('hex').slice(0, 16),
     text: excerpts.join('\n\n'),
   }

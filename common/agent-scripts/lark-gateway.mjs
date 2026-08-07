@@ -31,10 +31,11 @@ import {
   isForBot,
   isWhitelisted,
   normalizeMessage,
+  parseCommandType,
   parseProjectFromText,
   summarize,
 } from './lib/lark-message.mjs'
-import { buildCardContent, buildQueuedCard, buildResultCard, buildWaitingCard, formatDisplayTime } from './lib/lark-cards.mjs'
+import { buildCardContent, buildQueuedCard, buildResultCard, buildWaitingCard, formatDisplayTime, resolveOwnerMention } from './lib/lark-cards.mjs'
 import {
   downloadAttachments,
   fetchReferencedContext,
@@ -88,11 +89,11 @@ export const resolveGatewayAiExecutor = ({ requestedExecutor, config, env = proc
 
 const writeBackBugRecord = async ({ config, task }) => {
   const bug = config.bugTable
-  if (!bug?.appToken || !bug?.tableId || !task.recordId) return
+  if (!bug?.appToken || !bug?.tableId || !task.recordId) return { ok: true } // 无表可写，视作无需回写
   // doneValue 缺失就不写：文档 §5.3 明确「处理中」非合法枚举，写非法值只会让 lark-cli 报错
   if (!bug.doneValue) {
     console.warn(`[lark-gateway] bug write-back skipped: config.bugTable.doneValue 未配置，不写非法值`)
-    return
+    return { ok: true } // 配置缺失是人工要处理的另一回事，不该把任务永卡中间态
   }
 
   const args = [
@@ -103,19 +104,35 @@ const writeBackBugRecord = async ({ config, task }) => {
     JSON.stringify({ record_id_list: [task.recordId], patch: { [bug.statusField]: bug.doneValue } }),
   ]
   const outcome = await runLarkCliWithRetry(args, { logPrefix: `bug write-back ${task.recordId} -> ${bug.doneValue}` })
-  if (outcome.ok) return
+  if (outcome.ok) return { ok: true }
 
-  // 重试仍失败 → 发群告警。否则「群里已报完成 + poller 已 seen 不再捞 + 表格永卡待处理」会静默不一致
+  // 重试仍失败 → 发群告警。否则「群里已报完成 + poller 已 seen 不再捞 + 表格永卡待处理」会静默不一致。
+  // 调用方据 ok=false 把任务置 done_pending_writeback，交定时器后续重试，直至表格与实际一致。
   await sendChatMessage({
     chatId: task.chatId,
     card: buildCardContent({
       config,
       kind: 'alert',
-      lines: [`**详情**：记录 ${task.recordId} 状态回写「${bug.doneValue}」失败，请手动在 bug 表改状态。原因：${outcome.reason}`],
+      lines: [`**详情**：记录 ${task.recordId} 状态回写「${bug.doneValue}」失败，将自动重试；如持续失败请手动在 bug 表改状态。原因：${outcome.reason}`],
     }),
     logPrefix: 'writeback alert',
     idempotencyKey: `${task.recordId}-writeback-alert`,
   })
+  return { ok: false, reason: outcome.reason }
+}
+
+// 回写失败挂起的 bug 任务（done_pending_writeback）：定时器重试回写，成功后才落地 done。
+// 只有回写与实际状态一致，poller 才会 seen 掉不再捞；否则会「群报完成 + 表格永卡待处理」。
+const retryPendingWriteback = async ({ config, store }) => {
+  const pending = store.list().filter((task) => task.status === 'done_pending_writeback')
+  for (const task of pending) {
+    const wb = await writeBackBugRecord({ config, task })
+    if (wb.ok) {
+      task.status = 'done'
+      store.upsert(task)
+      console.log(`[lark-gateway] 回写重试成功，${task.id} 落地 done`)
+    }
+  }
 }
 
 const appendNotificationLog = ({ config, row }) => {
@@ -145,12 +162,49 @@ const resolveProject = async ({ chatId, text }) => {
 const resolveMembership = async ({ msg, config }) =>
   config.allowedChatIds === 'auto' && msg.chatType !== 'p2p' ? isChatMember(msg.chatId) : false
 
+// 正在摄入中的 messageId（同步占位，防 TOCTOU 双跑）：lark-cli 可能把同一事件投递两次，
+// 两个 onLine 并发进 ingest 会各自在 `store.has` 后、`store.upsert` 前的 await 窗口里都判为「新」，
+// 双跑同一 messageId。此 Set 在任何 await 前同步占位，只有首个能进入；持久化后由 store.has 接管去重。
+const ingestingMessageIds = new Set()
+
 const ingestLarkEvent = async ({ raw, config, store }) => {
   const msg = normalizeMessage(raw)
-  if (!msg || store.has(msg.messageId)) return // 非消息事件 / 幂等
+  if (!msg || store.has(msg.messageId) || ingestingMessageIds.has(msg.messageId)) return // 非消息事件 / 幂等 / 并发占位
+  ingestingMessageIds.add(msg.messageId)
+  try {
+    await ingestWhitelistedEvent({ msg, config, store })
+  } finally {
+    ingestingMessageIds.delete(msg.messageId)
+  }
+}
+
+const ingestWhitelistedEvent = async ({ msg, config, store }) => {
   const isMember = await resolveMembership({ msg, config })
   if (!isWhitelisted({ msg, config, isMember }) || !isForBot({ msg, config })) return
   if (!msg.text && !msg.attachments.length && !msg.replyTo) return
+
+  // waiting_confirmation / blocked 续任务：本条是对一条「仍卡在待确认/阻塞」的原任务的回复补料时，
+  // 复用原任务续跑（append 补料 + 复用原分支/worktree），而不是新建一个孤儿任务。
+  const parentTask = msg.replyTo ? store.get(msg.replyTo) : null
+  if (parentTask && (parentTask.status === 'waiting_confirmation' || parentTask.status === 'blocked')) {
+    const supplementAttachments = await downloadAttachments({
+      repoRoot,
+      project: parentTask.project || config.project,
+      messageId: msg.messageId,
+      attachments: msg.attachments,
+    })
+    const resumed = store.resumeWithSupplement({ id: parentTask.id, supplementText: msg.text, supplementAttachments })
+    if (resumed) {
+      console.log(`[lark-gateway] resumed task ${resumed.id} with supplement（第 ${resumed.resumeCount} 次续跑）: ${msg.text?.slice(0, 60) || '(仅附件)'}`)
+      await sendChatMessage({
+        chatId: resumed.chatId,
+        card: buildQueuedCard({ config, task: resumed, note: '**说明**：已收到补充材料，续跑原任务（复用原分支/worktree）。' }),
+        logPrefix: 'resume receipt',
+        idempotencyKey: `${resumed.id}-resume-${resumed.resumeCount}`,
+      })
+      return
+    }
+  }
 
   // 合并被引用/被回复消息（真正的 bug 正文与截图多在父消息里）
   const refCtx = msg.replyTo ? await fetchReferencedContext(msg.replyTo) : null
@@ -182,6 +236,7 @@ const ingestLarkEvent = async ({ raw, config, store }) => {
     messageId: msg.messageId,
     operator: msg.senderOpenId,
     project: project || null,
+    commandType: parseCommandType(mergedText),
     projectTitle: config.title,
     text: mergedText,
     // 卡片「任务」摘要优先展示用户本条附言，其次被引用消息首行
@@ -213,13 +268,16 @@ const ingestLarkEvent = async ({ raw, config, store }) => {
 // 长连接自愈：lark-cli 事件消费子进程掉线（WS 抖动/服务端踢连接/进程崩溃）后，
 // 若不重连就静默收不到事件。这里用退避重连 + 稳定运行后重置退避 + 连续失败发群告警（可选）。
 const RECONNECT_BACKOFFS_MS = [1000, 2000, 5000, 10000, 30000, 60000]
-const STABLE_UPTIME_MS = 60000 // 连接存活超过此时长视为已稳定，下次掉线从最小退避重来
-const ALERT_AFTER_RESTARTS = 3 // 连续重连达到此次数仍未稳定 -> 发一次群告警
+const STABLE_UPTIME_MS = 60000 // 连接存活超过此时长视为已稳定，下次掉线的退避延迟从最小重来
+const ALERT_AFTER_RESTARTS = 3 // 滑动窗口内重连达到此次数 -> 发一次群告警
+const RECONNECT_ALERT_WINDOW_MS = Number(process.env.LARK_RECONNECT_ALERT_WINDOW_MS || 10 * 60 * 1000) // 抖动统计窗口（默认 10min）
 
 // 通用长连接消费（当前用于 im.message.receive_v1 收群 @）。
 // onLine(raw) 处理逐行 JSON 事件；onDownAlert 可选（掉线告警）；maxRestarts 可选（未订阅类错误设上限免刷日志）。
 const startConsumer = ({ eventKey, onLine, onDownAlert, maxRestarts }) => {
-  const state = { child: null, stopped: false, restarts: 0, alerted: false }
+  // backoffAttempts 只驱动退避延迟（稳定存活后归零）；restartWindow 是滑动窗口内的掉线时间戳，
+  // 驱动告警——「每 61s 抖一次」这类稳定即归零 backoff 但仍在持续掉线的情况，靠窗口计数才能告警。
+  const state = { child: null, stopped: false, backoffAttempts: 0, restartWindow: [], alerted: false, lastEventAt: 0 }
 
   const spawnOnce = () => {
     const child = spawn(process.env.LARK_CLI_BIN || 'lark-cli', ['event', 'consume', eventKey], { stdio: ['pipe', 'pipe', 'pipe'] })
@@ -241,6 +299,7 @@ const startConsumer = ({ eventKey, onLine, onDownAlert, maxRestarts }) => {
         } catch {
           continue
         }
+        state.lastEventAt = Date.now() // 观测：最近一次收到事件；health 据此判活
         Promise.resolve(onLine(raw)).catch((error) =>
           console.error(`[lark-gateway] ${eventKey} handler error:`, error.message),
         )
@@ -252,27 +311,31 @@ const startConsumer = ({ eventKey, onLine, onDownAlert, maxRestarts }) => {
       state.child = null
       if (state.stopped) return
 
-      // 连接曾稳定存活足够久 -> 视为一次独立掉线，重置退避与告警
-      if (Date.now() - spawnedAt >= STABLE_UPTIME_MS) {
-        state.restarts = 0
-        state.alerted = false
-      }
+      const now = Date.now()
+      // 连接曾稳定存活足够久 -> 退避延迟从头来（但不清空告警窗口：持续抖动仍需被统计到）
+      if (now - spawnedAt >= STABLE_UPTIME_MS) state.backoffAttempts = 0
 
-      if (maxRestarts && state.restarts >= maxRestarts) {
+      // 滑动窗口：记录本次掉线、剔除窗口外的旧记录
+      state.restartWindow.push(now)
+      state.restartWindow = state.restartWindow.filter((ts) => now - ts <= RECONNECT_ALERT_WINDOW_MS)
+      // 窗口内已恢复安静（仅剩本次）则允许下一轮再次告警
+      if (state.restartWindow.length <= 1) state.alerted = false
+
+      if (maxRestarts && state.backoffAttempts >= maxRestarts) {
         console.error(
-          `[lark-gateway] ${eventKey} 连续 ${state.restarts} 次消费失败，已停止重试（多为后台未订阅该事件）；订阅后 lark-bot restart 生效`,
+          `[lark-gateway] ${eventKey} 连续 ${state.backoffAttempts} 次消费失败，已停止重试（多为后台未订阅该事件）；订阅后 lark-bot restart 生效`,
         )
         return
       }
 
-      const delay = RECONNECT_BACKOFFS_MS[Math.min(state.restarts, RECONNECT_BACKOFFS_MS.length - 1)]
-      state.restarts += 1
+      const delay = RECONNECT_BACKOFFS_MS[Math.min(state.backoffAttempts, RECONNECT_BACKOFFS_MS.length - 1)]
+      state.backoffAttempts += 1
       console.error(
-        `[lark-gateway] ${eventKey} consumer exited (code ${code}); reconnecting in ${delay}ms (attempt ${state.restarts})`,
+        `[lark-gateway] ${eventKey} consumer exited (code ${code}); reconnecting in ${delay}ms (窗口内第 ${state.restartWindow.length} 次抖动)`,
       )
-      if (onDownAlert && state.restarts >= ALERT_AFTER_RESTARTS && !state.alerted) {
+      if (onDownAlert && state.restartWindow.length >= ALERT_AFTER_RESTARTS && !state.alerted) {
         state.alerted = true
-        onDownAlert(state.restarts).catch((error) =>
+        onDownAlert(state.restartWindow.length).catch((error) =>
           console.error(`[lark-gateway] ${eventKey} down alert failed:`, error.message),
         )
       }
@@ -286,6 +349,14 @@ const startConsumer = ({ eventKey, onLine, onDownAlert, maxRestarts }) => {
 
   return {
     isAlive: () => state.child != null && state.child.exitCode === null,
+    // 观测快照：health 用来暴露长连接健康度（最近事件时间 / 抖动窗口计数 / 是否已告警 / 退避档位）
+    observe: () => ({
+      alive: state.child != null && state.child.exitCode === null,
+      lastEventAt: state.lastEventAt || null,
+      restartsInWindow: state.restartWindow.length,
+      alerted: state.alerted,
+      backoffAttempts: state.backoffAttempts,
+    }),
     stop: () => {
       state.stopped = true
       state.child?.kill('SIGTERM')
@@ -335,18 +406,29 @@ const normalizeAiExecutor = (value) => {
   return normalized
 }
 
-const handleStatusUpdate = async ({ config, store, id, status, result, aiExecutor }) => {
+export const handleStatusUpdate = async ({ config, store, id, status, result, aiExecutor, epoch, owner }) => {
   if (!VALID_STATUSES.has(status)) return { ok: false, error: `invalid status: ${status}` }
   const task = store.get(id)
   if (!task) return { ok: false, error: 'task not found' }
-  task.status = status
+  // fencing token：worker 回写须带领取时的 epoch。不匹配 = 该 worker 的领取已被租约回收/人工 retry 作废，
+  // 任务已由新一代执行接管，拒绝这条迟到回写（409），防旧 worker 覆盖新执行的状态。
+  // epoch 缺省（旧 worker / --once 未带）时不校验，保持向后兼容。
+  if (epoch != null && Number(epoch) !== (task.epoch || 0)) {
+    return { ok: false, code: 409, error: `stale epoch: got ${epoch}, current ${task.epoch || 0}` }
+  }
   task.result = result
   task.aiExecutor = normalizeAiExecutor(aiExecutor) || task.aiExecutor
-  store.upsert(task)
+  if (owner != null) task.owner = owner
 
+  // done + bug 表来源：必须回写成功才落地 done。回写失败置中间态 done_pending_writeback，
+  // 由 retryPendingWriteback 定时重试，避免 poller 依 gateway=done 置 seen 后表格永卡待处理。
   if (status === 'done' && task.source === 'lark-bugtable') {
-    await writeBackBugRecord({ config, task })
+    const wb = await writeBackBugRecord({ config, task })
+    task.status = wb.ok ? 'done' : 'done_pending_writeback'
+  } else {
+    task.status = status
   }
+  store.upsert(task)
   if (status === 'done' || status === 'failed') {
     await sendChatMessage({
       chatId: task.chatId,
@@ -359,12 +441,14 @@ const handleStatusUpdate = async ({ config, store, id, status, result, aiExecuto
       row: `| ${formatDisplayTime()} | Lark Job | ${status === 'done' ? '已完成' : '阻塞中'} | ${task.summary}：${(result || '').slice(0, 60)} | real | ${status === 'done' ? 'success' : 'failed'} |`,
     })
   }
-  // 待确认 / 阻塞：单独一条橙色回执（区别于完成/失败），能识别触发人时 @ 其补料。
-  // task.operator = 群 @ 的发送人 open_id（bug 表任务通常没有，则不 @、仅发群）。
+  // 待确认 / 阻塞：单独一条橙色回执（区别于完成/失败）。责任人识别：AI 自报 owner（角色/关键词）
+  // 命中 config.ownerMap 则 @ 对应责任人，否则回落 @ 提单人（task.operator）并注明未识别。
+  // bug 表任务通常无 operator，则不 @、仅发群。
   if (status === 'waiting_confirmation' || status === 'blocked') {
+    const { mentionOpenId, ownerNote } = resolveOwnerMention({ owner: task.owner, ownerMap: config.ownerMap, operator: task.operator })
     await sendChatMessage({
       chatId: task.chatId,
-      card: buildWaitingCard({ config, task, status, result, mentionOpenId: task.operator }),
+      card: buildWaitingCard({ config, task, status, result, mentionOpenId, ownerNote }),
       logPrefix: `${status} receipt`,
       idempotencyKey: `${task.id}-${status}`,
     })
@@ -383,7 +467,23 @@ export async function runLarkGateway({ configPath, port = defaultPort }) {
   if (!membershipMode && !config.allowedChatIds?.length && !config.allowedOpenIds?.length) {
     console.warn('[lark-gateway] ⚠ 未配置任何白名单（allowedChatIds/allowedOpenIds），将拒绝所有事件（fail-closed）。请填 allowedChatIds:"auto"（bot 所在群）或显式群 id。')
   }
-  const store = createTaskStore({ tasksDir: join(docsDir(config.project), 'agent/lark-tasks'), leaseMs: taskLeaseMs })
+  const store = createTaskStore({
+    tasksDir: join(docsDir(config.project), 'agent/lark-tasks'),
+    leaseMs: taskLeaseMs,
+    // 孤儿达重投上限转 failed 死信时发一次告警卡：无人值守下这是人工介入的唯一信号
+    onDeadLetter: (task) => {
+      sendChatMessage({
+        chatId: task.chatId || config.bugTable?.chatId || config.allowedChatIds?.[0],
+        card: buildCardContent({
+          config,
+          kind: 'alert',
+          lines: [`**详情**：任务「${task.summary || task.id}」${task.deadLetterReason}。已停止自动重投，请人工排查（修复根因后 \`lark-bot retry ${task.id}\`）。`],
+        }),
+        logPrefix: 'dead-letter alert',
+        idempotencyKey: `${task.id}-deadletter`,
+      })
+    },
+  })
 
   const alertConsumerDown = (attempt) =>
     sendChatMessage({
@@ -413,7 +513,19 @@ export async function runLarkGateway({ configPath, port = defaultPort }) {
         return sendJson(res, 401, { ok: false, error: 'unauthorized' })
       }
       if (req.method === 'GET' && pathname === '/lark/health') {
-        return sendJson(res, 200, { ok: true, consumer: consumer.isAlive(), ...store.stats() })
+        const consumerObs = consumer.observe()
+        // 事件静默阈值：长连接「活着」但久无事件也可能是暗掉（服务端不再推）。仅当曾收到过事件才判静默，
+        // 空闲期（从未有事件）不误报。consumer 死亡或事件过久静默 -> 非 200，供外部探活/告警。
+        const staleMs = Number(process.env.LARK_EVENT_STALE_MS || 30 * 60 * 1000)
+        const eventStale = consumerObs.lastEventAt != null && Date.now() - consumerObs.lastEventAt > staleMs
+        const healthy = consumerObs.alive && !eventStale
+        return sendJson(res, healthy ? 200 : 503, {
+          ok: healthy,
+          consumer: consumerObs.alive,
+          consumerDetail: consumerObs,
+          eventStale,
+          ...store.stats(),
+        })
       }
       if (req.method === 'GET' && pathname === '/lark/tasks') {
         return sendJson(res, 200, { tasks: store.list() })
@@ -425,8 +537,13 @@ export async function runLarkGateway({ configPath, port = defaultPort }) {
       // bug 表任务只能走这里重跑（POST 幂等命中旧 failed）；群 @ 任务也可直接重新 @。
       const retryMatch = pathname.match(/^\/lark\/tasks\/([^/]+)\/retry$/)
       if (req.method === 'POST' && retryMatch) {
-        const task = store.retry(decodeURIComponent(retryMatch[1]))
-        if (!task) return sendJson(res, 404, { ok: false, error: 'task not found or not retryable (must be failed/blocked)' })
+        const outcome = store.retry(decodeURIComponent(retryMatch[1]))
+        // retry 返回 task（成功）或 { task:null, reason }（达上限）或 null（不存在/非 failed·blocked）
+        const task = outcome && 'task' in outcome ? outcome.task : outcome
+        if (!task) {
+          const reason = outcome?.reason || 'task not found or not retryable (must be failed/blocked)'
+          return sendJson(res, 404, { ok: false, error: reason })
+        }
         await sendChatMessage({
           chatId: task.chatId,
           card: buildQueuedCard({ config, task }),
@@ -458,7 +575,10 @@ export async function runLarkGateway({ configPath, port = defaultPort }) {
           source: body.source || 'lark-bugtable',
           chatId: body.chatId || config.bugTable?.chatId || config.allowedChatIds?.[0],
           recordId: body.recordId,
-          project: body.project || config.project,
+          // 无 project 一律走 adhoc 临时 hotfix worktree（与 ingest 的 project||null 口径统一）；
+          // 不再回落 config.project，否则填错/跨项目的 bug 会被塞进 gateway 主项目常驻 worktree 并提交进去。
+          project: body.project || null,
+          commandType: parseCommandType(body.text),
           projectTitle: config.title,
           text: body.text || '',
           summary: summarize(body.text),
@@ -480,8 +600,10 @@ export async function runLarkGateway({ configPath, port = defaultPort }) {
           status: body.status,
           result: body.result,
           aiExecutor: body.aiExecutor,
+          epoch: body.epoch,
+          owner: body.owner,
         })
-        return sendJson(res, outcome.ok ? 200 : 404, outcome)
+        return sendJson(res, outcome.ok ? 200 : (outcome.code || 404), outcome)
       }
       return sendJson(res, 404, { ok: false, error: 'not found' })
     } catch (error) {
@@ -502,8 +624,17 @@ export async function runLarkGateway({ configPath, port = defaultPort }) {
   }, 60 * 60 * 1000)
   pruneTimer.unref?.()
 
+  // 回写重试：done_pending_writeback 的 bug 任务每 5min 重试回写，成功即落地 done。
+  const writebackTimer = setInterval(() => {
+    retryPendingWriteback({ config, store }).catch((error) =>
+      console.error(`[lark-gateway] 回写重试异常：${String(error).slice(0, 120)}`),
+    )
+  }, 5 * 60 * 1000)
+  writebackTimer.unref?.()
+
   const shutdown = () => {
     clearInterval(pruneTimer)
+    clearInterval(writebackTimer)
     consumer.stop()
     server.close()
     process.exit(0)

@@ -7,6 +7,46 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-08-07（Lark 无人值守链路 P3 能力扩展）
+
+- **接续同日 P0/P1/P2**，补 5 项能力缺口（价值高、改动大），仍只碰 `common/agent-scripts/**` 与本文档，不碰业务代码。
+- **P3-18 规则场景多标签 + 图片/fix 强制 UI/STYLE + 缺章告警**（`lib/lark-rule-context.mjs`）：`classifyLarkTask` 由「单一胜出」改**多标签叠加**（ui+api 命中就都产出 scenario，`refsFor` 按标签并集加载）；有图片附件或 `fix` 命令**强制并入 UI+STYLE 信号**（防「字段/背景/不对」等短语误判成纯 API 任务丢样式 token 规则）；`extractMarkdownSection` 抽到空段（源文档改了标题→规则被静默丢弃）时 `warn`+记 `warnings`/audit，不静默 continue。保留 `scenario` 主标签向后兼容。
+- **P3-17 failureKind 分级 + nextStep**（`lark-ai-result.schema.json` / `lib/lark-ai-executor.mjs` / `lark-worker.mjs`）：AI 结构化 `failed` 增可选 `failureKind`（`tool/env/permission/requirement`）与 `nextStep`；`formatStructuredAiResult` 回执列「失败类型 + 下一步」；worker `classifyWorkerFailure` 对 preflight/超时/exit code 分别归因（超时→tool、登录/权限→permission、ENOENT/worktree/git→env），替代恒定的「Worker 执行异常」。
+- **P3-15 commandType 解析 + status/docs 只读分流**（`lib/lark-message.mjs` / `lark-gateway.mjs` / `lark-worker.mjs`）：抽公共 `parseCommandType`（首行前缀→`status/docs/fix/test/api/qa`），Gateway 摄入与 POST 落 `task.commandType`；worker 对只读命令（`status`）本地无 worktree 时**不新建临时 worktree**（省 `git worktree add`），主仓就地只读回答、跳过 WIP 与代码提交、Codex 用 `read-only` 沙箱。
+- **P3-16 owner @ 落地**（`lib/lark-cards.mjs` / `lark-gateway.mjs` / `lark-worker.mjs`）：新增纯函数 `resolveOwnerMention`——AI 自报 `owner`（随状态回写带给 Gateway）命中项目 `config.ownerMap`（`角色/关键词→open_id`，精确+关键词包含，可选表）则 `<at>` 责任人，未命中回落 `<at>` 提单人并注明「未识别，暂 @ 提单人」，无提单人则仅发群（不硬失败）。
+- **P3-14 waiting_confirmation 续任务闭环**（`lib/lark-task-store.mjs` / `lark-gateway.mjs`）：`store.resumeWithSupplement` 复用**原任务**续跑——用户回复一条仍卡 `waiting_confirmation`/`blocked` 的任务时，append 补料到 `task.text`+合并新附件+复用同 `task.id`（→ `resolveWorkContext` 算出同一分支/worktree），置回 `queued` 并 bump `epoch`，不新建孤儿任务。
+- **测试**：`lark-ai-executor.test.mjs` 补 failureKind/nextStep 回执 + `resolveOwnerMention` 命中/关键词/回落/无表 + 卡片 ownerNote 共 3 例（29）；`lark-pure.test.mjs` 补只读路由 3 例 + `parseCommandType`/`isReadOnlyCommand` 3 例（65）；`lark-task-store.test.mjs` 补 `resumeWithSupplement` 续跑/拒非法态 2 例（16）。三文件共 110 用例全绿；触达 `.mjs` 过 Biome。
+- **生效边界**：`ownerMap` 为项目级可选配置，缺表始终回落提单人；续任务走「回复命中仍处 waiting/blocked 的原任务」路径。改动在 `docs_tdd` 源，上线需同步到 `docs_tdd-dev` 后 `lark-bot restart`（本轮按用户要求不动 dev）。
+
+## 2026-08-07（Lark 无人值守链路 P2 规范闸/验证加强）
+
+- **接续同日 P0/P1**，补规范闸扩检与 worker 侧验证加强，仍只碰 `common/agent-scripts/**` 与本文档；只扫本次 diff 新增行、不碰存量债、不改团队 CI。
+- **P2-12 规范闸扩检**（`lib/lark-lint-diff.mjs`）：① 补裸 `any` 检测（`as any` / `: any` / `<any>`，限 `.ts/.tsx`）；② `.match` → `matchAll`，一行多违规全列（原只报首个）；③ arbitrary 前缀补 `ring/outline/aspect/columns/indent/content`；④ className 语境限定——arbitrary/裸色只在引号字符串内或 CSS `@apply` 才算，跳过纯注释行，降注释/散文/i18n 文案误报；⑤ i18n 高置信项：动态 key（`t(变量)` 或模板插值 key，限 TS）与 JSX 文本硬编码中文（`>…中文…<`，限 tsx/jsx）。advice 走 `Record` 查表。
+- **P2-13 worker 侧分级探测 + changedFiles 交叉校验**（`lark-worker.mjs`）：新增纯函数 `detectChangeTier`（命中 `*.schema.*`/`mapper`/`/api/`/`*.d.ts`/`packages/` 跨包即 L2+）、`crossCheckChangedFiles`（AI 自报 vs 真实 `git diff --name-only HEAD`，分漏报/虚报差集）、`assessDoneResult`（done 可信度评估）。worker 在 done 分支：**done 但工作区零改动 → 降级 failed 需人工复核**（无改动=无修复=不可信；状态/status 只读任务豁免）；L2+ 改动但 AI 自报 checks 不含 type-check、或漏报/虚报改动文件 → 挂人工可见 `⚠` note（非阻塞）。「done+空 changedFiles 不算成功」落在 worker 层而非纯 parser——只有此处能拿到真实 git 改动并区分只读任务，比盲目 throw 更稳。
+- **测试**：`lark-ai-executor.test.mjs` 补 lint-diff 扩检 6 例（多违规/新前缀/className 语境/any/i18n 动态 key/JSX 中文）；`lark-pure.test.mjs` 补 `detectChangeTier`/`crossCheckChangedFiles`/`assessDoneResult` 共 11 例。三文件共 88 用例全绿；触达 `.mjs` 过 Biome。
+
+## 2026-08-07（Lark 无人值守链路 P1 健壮性加固）
+
+- **接续同日 P0**，补 4 项无人值守健壮性（改动更大、需设计），仍只碰 `common/agent-scripts/**` 与本文档。
+- **P1-8 claim epoch / fencing token**（`lib/lark-task-store.mjs` + `lark-gateway.mjs` + `lark-worker.mjs`）：孤儿重投 / 人工 retry 递增 `task.epoch`；claim 返回 epoch 基线，worker 回写 status 带 `epoch`；`handleStatusUpdate` epoch 不匹配返回 409。防「旧 worker 迟到回写覆盖新一代执行」。epoch 缺省时不校验（向后兼容）。
+- **P1-9 事件摄入同步占位防 TOCTOU**（`lark-gateway.mjs`）：`ingestLarkEvent` 在任何 await 前用内存 `ingestingMessageIds` Set 同步占位，只有首个能进 ingest；持久化后交 `store.has` 去重。堵 lark-cli 重投同一事件时两个 `onLine` 并发双跑同一 messageId。
+- **P1-10 重连告警滑动窗口 + lastEventAt**（`lark-gateway.mjs`）：退避延迟（`backoffAttempts`，稳定存活归零）与告警判定（`restartWindow` 滑动窗口计数，默认 10min）解耦——「每 61s 抖一次」这类稳定即归零 backoff 但持续掉线的情况现在也能告警；记录 `lastEventAt`（每收到事件更新）。
+- **P1-11 /lark/health 观测增强**（`lark-gateway.mjs` + `lib/lark-task-store.mjs` stats）：health 补 `consumerDetail`（lastEventAt / 窗口抖动数 / alerted / backoff）、`oldestQueuedAgeMs`、`minLeaseRemainingMs`、`deadLetters`、`topRequeued`；consumer 死亡或事件静默超 `LARK_EVENT_STALE_MS`（默认 30min，仅在曾收到事件后判）时返回 503 供外部探活。
+- **测试**：`lark-pure.test.mjs` 补 epoch fencing 三态（不匹配 409 / 匹配放行 / 缺省兼容，导出 `handleStatusUpdate` 只测 network-free 分支）；`lark-task-store.test.mjs` 补 epoch 递增与 stats 观测字段。三文件共 72 用例全绿；触达 `.mjs` 过 Biome。
+
+## 2026-08-07（Lark 无人值守链路 P0 安全兜底）
+
+- **背景**：对「借 lark-cli 自动修 bug」链路做四维审查，本次落地 P0 层——堵住无人值守下「烧钱 / 丢单 / 跨项目污染 / 双跑覆写」四类硬伤。只改 `common/agent-scripts/**` 与本文档，不碰业务代码。
+- **P0-1 毒任务死信 cap**（`lib/lark-task-store.mjs`）：孤儿重投 `requeueCount` 达 `LARK_MAX_REQUEUE`（默认 2）转 `failed` 死信并打 `deadLetterReason`、触发注入的 `onDeadLetter`（Gateway 侧发一次告警卡），停止自动重投；人工 `retry` 达 `LARK_MAX_RETRY`（默认 5）返回 `{task:null,reason}`。防 crash 型 bug 绕过闭环无限烧钱。
+- **P0-2 POST 项目回落**（`lark-gateway.mjs`）：`POST /lark/tasks` 的 `body.project || config.project` 改 `body.project || null`，与 ingest 口径统一；无效/缺失项目号走 adhoc 临时 worktree，不再塞进 Gateway 主项目常驻 worktree。
+- **P0-3 持久化原子写 + 损坏告警**（`lib/lark-task-store.mjs`）：`persist` 改 `writeFileSync(.tmp)+renameSync` 原子替换；启动恢复遇非法 JSON 改名 `.corrupt` 并 `console.warn`，不再静默 continue 丢单。
+- **P0-4 项目号正则统一 + 锚定**（`lib/lark-message.mjs` + `lark-bugtable-poller.mjs`）：抽公共 `matchProjectId`（自由文本提取，词边界 `\b(PR|PM)-\d{3,}\b`）/ `isProjectId`（整串校验），poller 与 `parseProjectFromText` 共用；消除 `SUPR-01947` 吞子串与两链路解析不一致的误路由。
+- **P0-5 规范闸口径修正**（`lark-worker.mjs`）：`enforceCodeQuality` 的 `diffOf` 由裸 `git diff`（仅未暂存）改 `git diff HEAD`，与 `snapshotWorktree` 统一；AI 自行 `git add`/commit 后不再扫到 0 违规静默放行。
+- **P0-6 回写成功再置 done + 告警重试**（`lark-gateway.mjs` + poller）：bug 表任务先回写成功才落地 `done`，失败置中间态 `done_pending_writeback`（poller 视作 in-flight，不再入队/不 seen），Gateway 每 5min 重试回写直至一致；消除「群报完成 + 表格永卡待处理」。
+- **P0-7 AI 超时 < lease 启动断言**（`lark-worker.mjs` + `lib/lark-ai-executor.mjs` 导出 `aiTimeoutMs`）：worker 启动断言 `LARK_WORKER_AI_TIMEOUT_MS < LARK_TASK_LEASE_MS`，不满足拒绝启动；焊死「孤儿回收不与活着的 AI 双跑同一 worktree」这条唯一防线。
+- **测试**：`lark-pure.test.mjs` 补 `matchProjectId`/`isProjectId` 边界；`lark-task-store.test.mjs` 补死信 cap、retry 上限、损坏文件隔离。三个测试文件共 66 用例全绿（原 57）；触达 `.mjs` 过 Biome。
+- **上线边界**：本改动在 `docs_tdd` 源；`lark-bot` launcher 实跑在 `docs_tdd-dev` 克隆，需同步后 `lark-bot restart` 才生效（dev 分支暂不动）。不引入 launchd/cron，不改团队级 CI/lint。
+
 ## 2026-08-06（Lark 自动修复增加 Codex executor）
 
 - Lark Worker 的 AI 执行器收敛为 `claude|codex` 固定枚举，接通 task / 环境变量 / 本机配置三级选择，并支持群消息 `[codex]` / `[claude]` 单次覆盖；卡片记录实际执行器。

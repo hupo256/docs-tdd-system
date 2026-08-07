@@ -14,9 +14,11 @@ import { spawn } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve, join, dirname } from 'node:path'
 
+import { isProjectId } from './lib/lark-message.mjs'
+
 const larkCliBin = process.env.LARK_CLI_BIN || 'lark-cli'
 const defaultGatewayUrl = process.env.LARK_GATEWAY_URL || 'http://127.0.0.1:3005'
-const ACTIVE_TASK_STATUSES = new Set(['received', 'queued', 'running', 'verifying'])
+const ACTIVE_TASK_STATUSES = new Set(['received', 'queued', 'running', 'verifying', 'done_pending_writeback'])
 const WAITING_TASK_STATUSES = new Set(['blocked', 'waiting_confirmation'])
 
 export const classifyBugTaskStatus = (status) => {
@@ -33,8 +35,6 @@ const defaultIdleOffMs = Number(process.env.LARK_BUGTABLE_IDLE_OFF_MS || 4 * 60 
 const larkCliTimeoutMs = Number(process.env.LARK_CLI_TIMEOUT_MS || 60000)
 // 与 gateway 约定的本地 API 共享密钥（可选）
 const gatewaySecret = process.env.LARK_GATEWAY_SECRET || ''
-
-const PROJECT_ID_RE = /^(PR|PM)-\d{3,}$/i
 
 const runLarkCli = (args, { timeoutMs = larkCliTimeoutMs } = {}) =>
   new Promise((resolveFn) => {
@@ -187,7 +187,7 @@ const enqueueTask = async ({ gatewayUrl, record, bug, chatId }) => {
   // 校验项目号：只把合法 PR-#### / PM-#### 传给 gateway；异常单元格（如 ../../x）不作为 project，
   // 交由 worker 走 adhoc 临时 worktree，避免污染路径/分支名。
   const rawProject = readProjectId({ fields: record.fields || {}, bug })
-  const project = PROJECT_ID_RE.test(rawProject) ? rawProject.toUpperCase() : undefined
+  const project = isProjectId(rawProject) ? rawProject.toUpperCase() : undefined
   const response = await fetch(`${gatewayUrl}/lark/tasks`, {
     method: 'POST',
     headers: {

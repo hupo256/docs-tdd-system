@@ -29,6 +29,15 @@
     "owner": {
       "type": "string",
       "description": "可推断到的责任人或角色（如 产品 / QA / 设计），用于回群 @ 提示"
+    },
+    "failureKind": {
+      "type": "string",
+      "enum": ["tool", "env", "permission", "requirement"],
+      "description": "status=failed 时的失败归因：tool 工具失败 / env 环境失败 / permission 权限失败 / requirement 需求不清"
+    },
+    "nextStep": {
+      "type": "string",
+      "description": "status=failed/blocked/waiting_confirmation 时给人的下一步建议（一句话，人能照做）"
     }
   }
 }

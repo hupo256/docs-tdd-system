@@ -13,6 +13,8 @@ import { docsSystemRoot } from './roots.mjs'
 const AI_EXECUTORS = new Set(['claude', 'codex'])
 const DEFAULT_EXECUTOR = 'claude'
 const defaultAiTimeoutMs = Number(process.env.LARK_WORKER_AI_TIMEOUT_MS || process.env.LARK_WORKER_CODEX_TIMEOUT_MS || 1800000)
+// 导出供 worker 启动断言用：AI 超时必须 < gateway 租约（否则孤儿回收会与活着的 AI 双跑）。
+export const aiTimeoutMs = defaultAiTimeoutMs
 const codexResultSchema = join(docsSystemRoot, 'common/schemas/lark-ai-result.schema.json')
 const codexAnalysisSchema = join(docsSystemRoot, 'common/schemas/lark-ai-analysis.schema.json')
 
@@ -44,6 +46,7 @@ export const buildAiExecutorCommand = ({
   codexModel,
   codexReasoningEffort,
   resultKind = 'task',
+  readOnly = false,
 }) => {
   if (executor === 'codex') {
     const imageArgs = attachments
@@ -56,7 +59,7 @@ export const buildAiExecutorCommand = ({
         'exec', '--ephemeral',
         ...(codexModel ? ['--model', codexModel] : []),
         ...(codexReasoningEffort ? ['--config', `model_reasoning_effort=${JSON.stringify(codexReasoningEffort)}`] : []),
-        '--sandbox', resultKind === 'analysis' ? 'read-only' : 'workspace-write',
+        '--sandbox', resultKind === 'analysis' || readOnly ? 'read-only' : 'workspace-write',
         '-c', 'sandbox_workspace_write.network_access=false',
         '--cd', cwd,
         '--output-schema', resultKind === 'analysis' ? codexAnalysisSchema : codexResultSchema,
@@ -121,6 +124,12 @@ const parseStructuredAiResult = (resultPath) => {
   if (result.owner != null && typeof result.owner !== 'string') {
     throw new Error('Codex 结构化结果 owner 必须是字符串')
   }
+  if (result.failureKind != null && !['tool', 'env', 'permission', 'requirement'].includes(result.failureKind)) {
+    throw new Error('Codex 结构化结果 failureKind 必须是 tool/env/permission/requirement 之一')
+  }
+  if (result.nextStep != null && typeof result.nextStep !== 'string') {
+    throw new Error('Codex 结构化结果 nextStep 必须是字符串')
+  }
   return result
 }
 
@@ -156,6 +165,13 @@ const appendAudit = (auditLogPath, value) => {
   appendFileSync(auditLogPath, value)
 }
 
+export const FAILURE_KIND_LABELS = {
+  tool: '工具失败',
+  env: '环境失败',
+  permission: '权限失败',
+  requirement: '需求不清',
+}
+
 export const formatStructuredAiResult = (result, executor = 'codex') => {
   const header = result.status === 'done'
     ? '已完成。'
@@ -166,10 +182,14 @@ export const formatStructuredAiResult = (result, executor = 'codex') => {
         : '处理失败。'
   const lines = [header, `1. ${result.summary.trim()}`, `2. 执行器：${executor}`]
   let n = 3
+  if (result.status === 'failed' && result.failureKind) {
+    lines.push(`${n++}. 失败类型：${FAILURE_KIND_LABELS[result.failureKind] || result.failureKind}`)
+  }
   if ((result.status === 'waiting_confirmation' || result.status === 'blocked') && Array.isArray(result.blockers) && result.blockers.length) {
     lines.push(`${n++}. 待补充：${result.blockers.join('；')}`)
   }
   if (result.owner) lines.push(`${n++}. 建议责任人：${result.owner}`)
+  if (result.nextStep) lines.push(`${n++}. 下一步：${result.nextStep}`)
   if (result.checks.length) lines.push(`${n++}. 验证：${result.checks.join('；')}`)
   if (result.changedFiles.length) lines.push(`${n++}. 文件：${result.changedFiles.join('、')}`)
   return lines.join('\n')
@@ -183,6 +203,7 @@ export const execAiExecutor = async ({
   codexModel,
   codexReasoningEffort,
   resultKind = 'task',
+  readOnly = false,
   auditLogPath,
 }) => {
   const resultDir = executor === 'codex' ? mkdtempSync(join(tmpdir(), 'lark-codex-result-')) : null
@@ -196,6 +217,7 @@ export const execAiExecutor = async ({
     codexModel,
     codexReasoningEffort,
     resultKind,
+    readOnly,
   })
 
   try {

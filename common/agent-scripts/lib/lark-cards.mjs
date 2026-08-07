@@ -69,11 +69,34 @@ export const buildResultCard = ({ config, task, status, result }) => {
   })
 }
 
+// 角色/关键词 → open_id 映射：AI 推断的 owner（如「产品」「QA」「设计」）命中配置表 config.ownerMap
+// 则 @ 对应责任人；否则回落 @ 提单人（operator）并注明「未识别责任人」。ownerMap 为可选配置，缺表即始终回落。
+// 纯函数便于单测：先精确命中 key，再把 key 当关键词做包含匹配（owner 文案里出现该关键词即命中）。
+export const resolveOwnerMention = ({ owner, ownerMap = {}, operator } = {}) => {
+  const normalizedOwner = String(owner || '').trim()
+  if (normalizedOwner && ownerMap) {
+    const exact = ownerMap[normalizedOwner]
+    const keywordHit = exact
+      ? null
+      : Object.entries(ownerMap).find(([keyword]) => keyword && normalizedOwner.includes(keyword))?.[1]
+    const ownerOpenId = exact || keywordHit
+    if (ownerOpenId) return { mentionOpenId: ownerOpenId, ownerNote: null, matched: true }
+  }
+  return {
+    mentionOpenId: operator || null,
+    // 有 owner 文案但没配到 open_id、且能回落到提单人时，注明「暂 @ 提单人」，让人知道责任人未识别。
+    ownerNote: normalizedOwner && operator ? `（未在责任人表识别「${normalizedOwner}」，暂 @ 提单人）` : null,
+    matched: false,
+  }
+}
+
 // 任务因缺材料 / 待人工确认（waiting_confirmation）或外部阻塞（blocked）而暂停时的回执卡。
 // 与「完成/失败」是不同的一条独立消息：橙色 header，能识别责任人（mentionOpenId）时在群里 @ 其补料。
-export const buildWaitingCard = ({ config, task, status, result, mentionOpenId }) => {
+export const buildWaitingCard = ({ config, task, status, result, mentionOpenId, ownerNote }) => {
   const resultText = (result || '需人工确认 / 补充材料后才能继续。').trim()
-  const mentionLine = mentionOpenId ? `<at id=${mentionOpenId}></at> 请协助确认 / 补充上述材料后重新 @ 应用继续` : null
+  const mentionLine = mentionOpenId
+    ? `<at id=${mentionOpenId}></at> 请协助确认 / 补充上述材料后重新 @ 应用继续${ownerNote ? `\n${ownerNote}` : ''}`
+    : null
   return buildCardContent({
     config,
     kind: status === 'blocked' ? 'blocked' : 'waiting',

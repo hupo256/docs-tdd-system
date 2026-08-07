@@ -6,12 +6,14 @@ import { dirname, isAbsolute, join } from 'node:path'
 import { docsSystemRoot, resolveRoots } from './lib/roots.mjs'
 import { scanDiffForViolations, formatViolations } from './lib/lark-lint-diff.mjs'
 import { buildFocusedRuleContext } from './lib/lark-rule-context.mjs'
+import { isReadOnlyCommand, parseCommandType } from './lib/lark-message.mjs'
 import {
   buildAnalysisPrompt,
   buildTaskPrompt,
   buildValidationRequirements,
 } from './lib/lark-worker-prompts.mjs'
 import {
+  aiTimeoutMs,
   execAiExecutor,
   formatStructuredAiResult,
   preflightAiExecutor,
@@ -129,12 +131,18 @@ const tempWorktreeCtx = ({ projectId, projectName, projectDocs, branch }) => {
 
 export const resolveWorkContext = (workerConfig, task) => {
   const project = safeProject(task.project)
+  // 只读命令（状态/status）不改代码：命中已有 worktree 就地只读；无 worktree 也不新建临时 worktree
+  // （git worktree add + origin/online 拉取很贵），直接在主仓只读回答，跳过提交闸。
+  const readOnly = isReadOnlyCommand(task.commandType || parseCommandType(task.text))
   // 取 id 尾部做分支后缀：同一群的 messageId 共享长前缀，取头部会导致所有任务算出同一分支名而撞车
   const short = String(task.recordId || task.id || '').replace(/[^\w]/g, '').slice(-8) || 'x'
   if (project) {
     const worktree = join(worktreesDir, project)
     if (existsSync(worktree)) {
-      return { cwd: worktree, projectId: project, projectName: task.projectTitle || project, projectDocs: projectDocsFor(project) }
+      return { cwd: worktree, projectId: project, projectName: task.projectTitle || project, projectDocs: projectDocsFor(project), readOnly }
+    }
+    if (readOnly) {
+      return { cwd: repoRoot, projectId: project, projectName: task.projectTitle || project, projectDocs: projectDocsFor(project), readOnly: true }
     }
     return tempWorktreeCtx({
       projectId: project,
@@ -142,6 +150,9 @@ export const resolveWorkContext = (workerConfig, task) => {
       projectDocs: projectDocsFor(project),
       branch: `hotfix/${project}-${short}`,
     })
+  }
+  if (readOnly) {
+    return { cwd: repoRoot, projectId: '(adhoc)', projectName: task.projectTitle || '临时修复', projectDocs: [], readOnly: true }
   }
   // 无项目号 → 临时 worktree（adhoc 分支）
   return tempWorktreeCtx({ projectId: '(adhoc)', projectName: task.projectTitle || '临时修复', projectDocs: [], branch: `hotfix/adhoc-${short}` })
@@ -413,14 +424,20 @@ const blockedResultFromAnalysis = (analysis) => ({
 const runAI = async (workerConfig, task, workContext, auditContext) => {
   const executor = resolveAiExecutor(workerConfig, task)
   const cwd = workContext.cwd || repoRoot
-  const ruleContext = buildFocusedRuleContext({ taskText: task.text })
+  const ruleContext = buildFocusedRuleContext({
+    taskText: task.text,
+    hasImage: (task.attachments || []).some((item) => item?.type === 'image'),
+    isFix: /^\s*(修复|fix)\s*[:：]/i.test(task.text || ''),
+  })
   updateTaskAudit(auditContext, {
     status: executor === 'codex' ? 'analyzing' : 'running',
     rules: {
       scenario: ruleContext.scenario,
+      scenarios: ruleContext.scenarios,
       signals: ruleContext.signals,
       fingerprint: ruleContext.fingerprint,
       sources: ruleContext.sources,
+      warnings: ruleContext.warnings,
     },
   })
 
@@ -431,6 +448,8 @@ const runAI = async (workerConfig, task, workContext, auditContext) => {
     codexModel: workerConfig.localConfig?.codexModel,
     codexReasoningEffort: workerConfig.localConfig?.codexReasoningEffort,
     auditLogPath: auditContext?.logPath,
+    // 只读命令（状态/status）：codex 用只读沙箱，绝不落任何写。
+    readOnly: Boolean(workContext.readOnly),
   }
 
   if (executor !== 'codex') {
@@ -467,13 +486,71 @@ const runAI = async (workerConfig, task, workContext, auditContext) => {
   return { ...implementationRun, analysis: analysisRun.result, ruleContext }
 }
 
+// 变更分级探测（L1/L2）：命中契约 / 共享 / 类型敏感路径即 L2+（需 type-check 兜底）。纯函数便于单测。
+// L2+ 触发：schema 契约、mapper 映射、/api/ 层、.d.ts 声明、跨包 packages/ 改动。
+const L2_PATH_RULES = [
+  { re: /\.schema\./i, reason: 'schema 契约文件' },
+  { re: /mapper/i, reason: 'mapper 映射层' },
+  { re: /\/api\//i, reason: 'api 层' },
+  { re: /\.d\.ts$/i, reason: '类型声明 .d.ts' },
+  { re: /(?:^|\/)packages\//i, reason: '跨包 packages/ 共享改动' },
+]
+export const detectChangeTier = (files = []) => {
+  const reasons = []
+  for (const file of files) {
+    for (const rule of L2_PATH_RULES) {
+      if (rule.re.test(String(file || '')) && !reasons.includes(rule.reason)) reasons.push(rule.reason)
+    }
+  }
+  return { tier: reasons.length ? 'L2' : 'L1', reasons }
+}
+
+// AI 自报 changedFiles 与真实 `git diff --name-only HEAD` 交叉校验：归一路径后比较，actual 为准
+// （AI 可能漏报真改的文件，也可能虚报没改的文件）。纯函数便于单测。
+export const crossCheckChangedFiles = ({ reported = [], actual = [] } = {}) => {
+  const norm = (list) => new Set((list || []).map((f) => String(f || '').trim().replace(/^\.\//, '')).filter(Boolean))
+  const reportedSet = norm(reported)
+  const actualSet = norm(actual)
+  const missingFromReport = [...actualSet].filter((f) => !reportedSet.has(f)) // 真改了但 AI 没报
+  const notActuallyChanged = [...reportedSet].filter((f) => !actualSet.has(f)) // AI 报了但没真改
+  return {
+    actualEmpty: actualSet.size === 0,
+    reportedEmpty: reportedSet.size === 0,
+    missingFromReport,
+    notActuallyChanged,
+    consistent: missingFromReport.length === 0 && notActuallyChanged.length === 0,
+  }
+}
+
+// 已声明 done 的结果可信度评估：只读任务（状态/status）豁免；否则用真实改动交叉校验 + 分级探测，
+// 产出人工可见 notes。done 但工作区零改动 → 判不可信（无改动=无修复=不可信，降级需复核）；
+// L2+ 改动但 AI 自报 checks 不含 type-check → 挂 note 提示人工确认契约/类型无回归。纯函数便于单测。
+const TYPECHECK_RE = /tsc|type[\s-]?check|typecheck/i
+export const assessDoneResult = ({ reportedChangedFiles = [], actualChangedFiles = [], checks = [], readOnly = false } = {}) => {
+  if (readOnly) return { trustworthy: true, notes: [], tier: 'L1' }
+  const cross = crossCheckChangedFiles({ reported: reportedChangedFiles, actual: actualChangedFiles })
+  const { tier, reasons } = detectChangeTier(actualChangedFiles)
+  const notes = []
+  if (cross.actualEmpty) {
+    return { trustworthy: false, tier, notes: ['AI 报告 done 但工作区无任何改动（git diff HEAD 为空），无法确认已真正修复，需人工复核'] }
+  }
+  if (cross.missingFromReport.length) notes.push(`AI 漏报改动文件：${cross.missingFromReport.join('、')}`)
+  if (cross.notActuallyChanged.length) notes.push(`AI 自报改了但实际未改：${cross.notActuallyChanged.join('、')}`)
+  if (tier === 'L2' && !checks.some((c) => TYPECHECK_RE.test(String(c || '')))) {
+    notes.push(`L2+ 改动（${reasons.join('、')}）但未见 type-check，建议人工确认类型/契约无回归`)
+  }
+  return { trustworthy: true, tier, notes }
+}
+
 // 无人值守规范闸：扫本次 diff 新增行的 arbitrary value / 失效裸色类；有违规先让 AI 定向纠正一次，
 // 仍残留则把清单附到完成消息里（醒目、供人工 review），不静默放过。只对代码类改动生效。
 const enforceCodeQuality = async (workerConfig, task, workContext, auditContext) => {
   const cwd = workContext.cwd || repoRoot
   const diffOf = () => {
     gitAt(cwd, ['add', '-A', '-N']) // 让新增文件也进 diff（intent-to-add，非破坏性）
-    return gitAt(cwd, ['diff']).stdout || ''
+    // 用 `git diff HEAD`（工作区 vs HEAD）而非裸 `git diff`（仅未暂存）：AI 若自行 git add/commit，
+    // 裸 diff 会扫到 0 违规静默放行。口径与 snapshotWorktree 的 `git diff HEAD` 统一。
+    return gitAt(cwd, ['diff', 'HEAD']).stdout || ''
   }
   let violations = scanDiffForViolations(diffOf())
   if (!violations.length) return { ok: true, remaining: [] }
@@ -514,14 +591,42 @@ const buildNeedsReviewResult = (task) => {
   return `处理失败。\n1. 任务：${summary.slice(0, 80)}；\n2. AI 已执行结束但未显式回写完成结果，无法确认改动是否成功或已验证；\n3. 需人工查看 Worker/AI 日志与分支改动后再定，禁止按已完成处理。`
 }
 
+// Worker 层技术性失败归因（preflight / timeout / worktree / exit code）：把恒定的「Worker 执行异常」
+// 换成定型的失败类型 + 下一步。纯函数便于单测。返回 { failureKind, kindLabel, nextStep }。
+const FAILURE_KIND_LABELS = {
+  tool: '工具失败',
+  env: '环境失败',
+  permission: '权限失败',
+  requirement: '需求不清',
+}
+export const classifyWorkerFailure = (error) => {
+  const message = (error instanceof Error ? error.message : String(error || '')).toLowerCase()
+  if (/timeout|超时|sigterm|sigkill/.test(message)) {
+    return { failureKind: 'tool', kindLabel: FAILURE_KIND_LABELS.tool, nextStep: '查看 AI 日志确认是否卡死；可调大 LARK_WORKER_AI_TIMEOUT_MS 或拆小任务后重试' }
+  }
+  if (/登录|login|unauthor|forbidden|permission|token/.test(message)) {
+    return { failureKind: 'permission', kindLabel: FAILURE_KIND_LABELS.permission, nextStep: '在本机完成对应 AI CLI 登录（如 `codex login`）后重试' }
+  }
+  if (/enoent|not found|command not found|缺.*二进制|no such file|worktree|git/.test(message)) {
+    return { failureKind: 'env', kindLabel: FAILURE_KIND_LABELS.env, nextStep: '检查本机 AI CLI / 依赖 / worktree / git 状态后重试' }
+  }
+  return { failureKind: 'tool', kindLabel: FAILURE_KIND_LABELS.tool, nextStep: '查看本地任务记录与 Worker/AI 日志定位后重试' }
+}
+
 const buildFailureResult = (task, error) => {
   const summary = (task.text || '').split('\n').find((line) => line.trim())?.trim() || '群内任务'
   const message = error instanceof Error ? error.message : String(error)
-
-  return `处理失败。\n1. 任务：${summary.slice(0, 80)}；\n2. 失败类型：Worker 执行异常；下一步请查看本地任务记录。${message ? `错误：${message.slice(0, 160)}` : ''}`
+  const { kindLabel, nextStep } = classifyWorkerFailure(error)
+  return `处理失败。\n1. 任务：${summary.slice(0, 80)}；\n2. 失败类型：${kindLabel}；\n3. 下一步：${nextStep}。${message ? `\n4. 错误：${message.slice(0, 160)}` : ''}`
 }
 
-const isCommandTask = (task) => /^\s*(文档|docs|修复|fix|自测|test|api|qa)\s*[:：]/i.test(task.text || '')
+const commandTypeOf = (task) => task.commandType || parseCommandType(task.text)
+
+// 命令类型任务（状态/文档/修复/自测/api/qa）触发项目文档同步；其中「状态」为只读。
+const isCommandTask = (task) => commandTypeOf(task) != null
+
+// 只读任务（状态/status）不改代码，done 时工作区本就无改动，故豁免「done+零改动」的可信度降级。
+const isReadOnlyTask = (task) => isReadOnlyCommand(commandTypeOf(task))
 
 export async function runLarkWorker({
   argv = process.argv.slice(2),
@@ -538,6 +643,17 @@ export async function runLarkWorker({
     throw new Error('runLarkWorker requires projectId and projectName')
   }
 
+  // 焊死「孤儿回收不与活着的 AI 双跑」这条唯一防线：AI 执行超时必须 < gateway 租约。
+  // 否则 AI 还在跑，gateway 已判租约过期把任务重投/领走，两个 AI 同 worktree 改文件打架。
+  // 默认 30min < 40min 成立；env 覆盖（LARK_WORKER_AI_TIMEOUT_MS / LARK_TASK_LEASE_MS）可能破坏，故启动即断言。
+  const leaseMs = Number(process.env.LARK_TASK_LEASE_MS || 40 * 60 * 1000)
+  if (Number.isFinite(aiTimeoutMs) && aiTimeoutMs > 0 && aiTimeoutMs >= leaseMs) {
+    throw new Error(
+      `[lark-worker] 配置冲突：AI 超时(${aiTimeoutMs}ms) 必须小于任务租约 LARK_TASK_LEASE_MS(${leaseMs}ms)，` +
+        '否则孤儿回收会与活着的 AI 双跑同一 worktree。请调低 LARK_WORKER_AI_TIMEOUT_MS 或调高 LARK_TASK_LEASE_MS。',
+    )
+  }
+
   const localConfig = loadWorkerLocalConfig(configPath)
   const workerConfig = { projectId, projectName, projectDocs, aiExecutor, localConfig, repoCwd }
   const startupExecutor = resolveAiExecutor(workerConfig, {})
@@ -547,10 +663,10 @@ export async function runLarkWorker({
   console.log(`[lark-worker] AI executor=${startupExecutor}${codexProfile}（task > env > config > wrapper）`)
   const request = (path, options) => requestJson(gatewayUrl, path, options)
   const reliableRequest = (path, options = {}) => requestJson(gatewayUrl, path, { ...options, retryTransient: true })
-  const updateTask = (taskId, status, result, executor) =>
+  const updateTask = (taskId, status, result, executor, epoch, owner) =>
     reliableRequest(`/lark/tasks/${encodeURIComponent(taskId)}/status`, {
       method: 'POST',
-      body: JSON.stringify({ status, result, aiExecutor: executor }),
+      body: JSON.stringify({ status, result, aiExecutor: executor, epoch, owner }),
     })
 
   const getTask = async (taskId) => {
@@ -567,8 +683,11 @@ export async function runLarkWorker({
   // 与调度器挑选时用的 cwd 一致（同一 worktree 串行的判定依据）。异常在内部吞掉并回写 failed，
   // 不向外抛（调度器里各任务并行 detached，抛出会变未捕获 rejection）。
   const runTask = async (task, workContext) => {
+    // 回写统一带上领取时的 epoch（fencing token）：若本次领取已被租约回收/人工 retry 作废，
+    // 迟到回写会被 Gateway 以 409 拒掉，不覆盖新一代执行的状态。
+    const reportStatus = (status, result, executor, owner) => updateTask(task.id, status, result, executor, task.epoch, owner)
     if (!task.text?.trim()) {
-      await updateTask(task.id, 'failed', '处理失败。\n1. 这条 Lark 任务内容为空；\n2. 请重新 @ 应用并写清需要处理的事项。')
+      await reportStatus('failed', '处理失败。\n1. 这条 Lark 任务内容为空；\n2. 请重新 @ 应用并写清需要处理的事项。')
       return
     }
 
@@ -584,7 +703,7 @@ export async function runLarkWorker({
         error: error instanceof Error ? error.message : String(error),
         completedAt: new Date().toISOString(),
       })
-      await updateTask(task.id, 'failed', buildFailureResult(task, error))
+      await reportStatus('failed', buildFailureResult(task, error))
       return
     }
 
@@ -592,13 +711,13 @@ export async function runLarkWorker({
     console.log(`[lark-worker] routing ${task.id} → ${workContext.cwd}${workContext.hotfixBranch ? ` (临时 worktree ${workContext.hotfixBranch})` : ''}`)
     // 命中已有 worktree 且进来时已有未提交 WIP → 先把 WIP 单独提交一笔隔离，
     // 与随后本任务的改动分成两个 commit，避免你的 WIP 和 bot 改动混作一团。
-    if (!workContext.hotfixBranch) commitPreexistingWip({ cwd: workContext.cwd })
+    if (!workContext.hotfixBranch && !workContext.readOnly) commitPreexistingWip({ cwd: workContext.cwd })
     try {
       if (workContext.hotfixBranch) {
         try {
           prepareTempWorktree({ path: workContext.cwd, branch: workContext.hotfixBranch })
         } catch (prepError) {
-          await updateTask(task.id, 'failed', `处理失败。\n1. 项目 ${workContext.projectId} 本地无 worktree，需临时 worktree；\n2. ${prepError.message}`)
+          await reportStatus('failed', `处理失败。\n1. 项目 ${workContext.projectId} 本地无 worktree，需临时 worktree；\n2. ${prepError.message}`)
           return
         }
       }
@@ -609,22 +728,42 @@ export async function runLarkWorker({
 
       task.aiExecutor = selectedExecutor
       // 先持久化实际执行器，排障与最终卡片都不依赖 AI 自报。
-      await updateTask(task.id, 'running', undefined, selectedExecutor)
+      await reportStatus('running', undefined, selectedExecutor)
       const aiRun = await runAI(workerConfig, task, workContext, auditContext)
 
       let latestTask = await getTask(task.id)
       let qualityGate = null
       // Codex 不开放工具网络，无法也不应自行请求 Gateway；结构化结果由 Worker 统一回写。
       if (aiRun.result && latestTask?.status === 'running') {
+        const warnNotes = []
         if (aiRun.result.status === 'done') {
           qualityGate = await enforceCodeQuality(workerConfig, task, workContext, auditContext)
+          // changedFiles 交叉校验 + 分级探测：enforceCodeQuality 已 `git add -A -N`，此处 name-only diff 含新增文件。
+          const actualChangedFiles = (gitAt(workContext.cwd, ['diff', '--name-only', 'HEAD']).stdout || '')
+            .split('\n').map((line) => line.trim()).filter(Boolean)
+          const assessment = assessDoneResult({
+            reportedChangedFiles: aiRun.result.changedFiles,
+            actualChangedFiles,
+            checks: aiRun.result.checks,
+            readOnly: isReadOnlyTask(task),
+          })
+          if (!assessment.trustworthy) {
+            // done 但工作区零改动等强信号 → 不按已完成处理（无改动=无修复=不可信），降级需人工复核。
+            const failText = `${buildNeedsReviewResult(task)}\n附：${assessment.notes.join('；')}`
+            await reportStatus('failed', failText, aiRun.executor)
+            updateTaskAudit(auditContext, { status: 'failed', gateway: { status: 'failed', result: failText } })
+            return
+          }
+          warnNotes.push(...assessment.notes)
         }
         let resultText = formatStructuredAiResult(aiRun.result, aiRun.executor)
         if (qualityGate && !qualityGate.ok) {
           task.qualityNote = `含 ${qualityGate.remaining.length} 处未修正规范问题（arbitrary value / 失效色类），需人工处理`
-          resultText += `\n5. ⚠ ${task.qualityNote}`
+          warnNotes.push(task.qualityNote)
         }
-        await updateTask(task.id, aiRun.result.status, resultText, aiRun.executor)
+        if (warnNotes.length) resultText += `\n⚠ ${warnNotes.join('；')}`
+        // owner（AI 推断的责任人角色/关键词）随回写带给 Gateway，用于 waiting/blocked 卡片 @ 责任人。
+        await reportStatus(aiRun.result.status, resultText, aiRun.executor, aiRun.result.owner)
         latestTask = await getTask(task.id)
         updateTaskAudit(auditContext, {
           status: latestTask?.status || aiRun.result.status,
@@ -634,7 +773,7 @@ export async function runLarkWorker({
 
       if (latestTask?.status === 'running') {
         // AI 退出但没显式回写 done/failed → 一律判失败待人工复核（不分任务类型，绝不兜底成功）
-        await updateTask(task.id, 'failed', buildNeedsReviewResult(task))
+        await reportStatus('failed', buildNeedsReviewResult(task))
         updateTaskAudit(auditContext, {
           status: 'failed',
           gateway: { status: 'failed', result: buildNeedsReviewResult(task) },
@@ -653,15 +792,16 @@ export async function runLarkWorker({
       }
 
       // 命中已有 worktree（非临时）且任务成功 → 提交到该 worktree 当前分支。
-      // 失败/阻塞不提交（不往你的活跃分支写半成品）；临时 worktree 走 finally 里的 finalizeTempWorktree。
-      if (!workContext.hotfixBranch) {
+      // 只读任务在主仓就地回答，绝不提交；失败/阻塞不提交（不往你的活跃分支写半成品）；
+      // 临时 worktree 走 finally 里的 finalizeTempWorktree。
+      if (!workContext.hotfixBranch && !workContext.readOnly) {
         const finalTask = await getTask(task.id)
         if (finalTask?.status === 'done') finalizeExistingWorktree({ cwd: workContext.cwd, task })
       }
     } catch (error) {
       const latestTask = await getTask(task.id)
       if (latestTask?.status === 'running') {
-        await updateTask(task.id, 'failed', buildFailureResult(task, error))
+        await reportStatus('failed', buildFailureResult(task, error))
       }
       updateTaskAudit(auditContext, {
         status: latestTask?.status === 'running' ? 'failed' : latestTask?.status || 'failed',
