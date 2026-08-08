@@ -15,7 +15,7 @@ larkEnabled: false
 
 # <PROJECT-ID> <TITLE>
 
-> 本文件顶部 YAML frontmatter 是机器可读的元数据真值源，修改后请运行 `node apps/web/docs_tdd/common/agent-scripts/update-project-index.mjs --write` 刷新 PROJECTS.md。
+> 本文件顶部 YAML frontmatter 是机器可读的元数据真值源，修改后请运行 `node apps/web/docs_tdd/common/engine/agent-scripts/update-project-index.mjs --write` 刷新 PROJECTS.md。
 
 ## 状态
 

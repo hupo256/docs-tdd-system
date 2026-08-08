@@ -4,7 +4,7 @@
 # <PROJECT-ID> Context Summary
 
 > AI 恢复项目时优先读本文件；只保留当前决策、下一步和 gate 结果，不复制公共规则。细则按 `../../common/rule-router.md` 命中后再读。
-> 可用 `node apps/web/docs_tdd/common/agent-scripts/update-context-summary.mjs <PROJECT-ID> --stage G6 --write` 从项目文档刷新本文件。
+> 可用 `node apps/web/docs_tdd/common/engine/agent-scripts/update-context-summary.mjs <PROJECT-ID> --stage G6 --write` 从项目文档刷新本文件。
 > **新鲜度自检**：恢复时先比对下方 `刷新于` 阶段与 `agent/gate-results.json` 最新 gate——若本文件停在早于实际进度的阶段（如这里写 G2、gate 已到 G6），说明摘要过期，先跑上面的 `update-context-summary.mjs --write` 再据此决策，勿信旧快照。
 
 <!-- 刷新于: G0 / 未运行（由 update-context-summary.mjs --write 覆盖为真实阶段+时间戳） -->
@@ -40,10 +40,10 @@
 ## Gate Commands
 
 ```bash
-node apps/web/docs_tdd/common/agent-scripts/verify-project-gate.mjs <PROJECT-ID> G2
-node apps/web/docs_tdd/common/agent-scripts/verify-code-rules.mjs --project <PROJECT-ID>
-node apps/web/docs_tdd/common/agent-scripts/verify-project-gate.mjs <PROJECT-ID> G6
-node apps/web/docs_tdd/common/agent-scripts/update-context-summary.mjs <PROJECT-ID> --stage G6 --write
+node apps/web/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs <PROJECT-ID> G2
+node apps/web/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --project <PROJECT-ID>
+node apps/web/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs <PROJECT-ID> G6
+node apps/web/docs_tdd/common/engine/agent-scripts/update-context-summary.mjs <PROJECT-ID> --stage G6 --write
 ```
 
 ## Latest Gate Results

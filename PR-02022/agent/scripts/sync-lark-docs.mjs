@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { runSyncLarkDocs } from '../../../common/agent-scripts/sync-lark-docs.mjs'
+import { runSyncLarkDocs } from '../../../common/engine/agent-scripts/sync-lark-docs.mjs'
 
 runSyncLarkDocs({
   defaultConfigPath: 'apps/web/docs_tdd/PR-02022/agent/lark-sources.json',

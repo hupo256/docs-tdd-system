@@ -10,7 +10,7 @@
  * 规则见 apps/web/docs_tdd/common/execution-evidence.md。
  *
  * 用法（在 settings hooks.command 里）：
- *   node <repo>/apps/web/docs_tdd/common/agent-scripts/log-exec.mjs --out <abs-log-path>
+ *   node <repo>/apps/web/docs_tdd/common/engine/agent-scripts/log-exec.mjs --out <abs-log-path>
  *
  * stdin：Claude Code PostToolUse 传入的 JSON
  *   { tool_name, tool_input:{command}, tool_response:{stdout,stderr,interrupted}, cwd, session_id, ... }

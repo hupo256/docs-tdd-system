@@ -9,7 +9,7 @@
 2. 读路由与本项目场景：
    ```bash
    cd /Users/aven/github/fameex-web
-   node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs context PR-02265 g4_coding_worktree
+   node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs context PR-02265 g4_coding_worktree
    ```
 3. 代码在 **worktree**：`/Users/aven/github/PR-02265`，分支 `feature/PR-02265`（基线 `origin/online`），dev 端口 `4101`。**所有代码改动在这个 worktree 里做**，不要在主 checkout 改。
 4. 读 `apps/web/docs_tdd/PR-02265/product/02-technical-design.md`（改点 file:line 全在里面）和 `03-api-contract.md`。
@@ -64,10 +64,10 @@
 
 ```bash
 # 改代码后（无自动 hook）
-node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs changed PR-02265
+node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs changed PR-02265
 # 阶段门禁
-node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs gate PR-02265 G5   # 联调
-node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs gate PR-02265 G6   # review + biome/tsc/vitest
+node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs gate PR-02265 G5   # 联调
+node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs gate PR-02265 G6   # review + biome/tsc/vitest
 ```
 - G6 会实跑 biome/tsc/vitest，findings 必须清零或登记 waiver。
 - Lark 素材需重拉时：`lark-cli auth login`（user token，drive/sheets scope），图片走 `drive/v1/medias/{token}/download`。
@@ -90,4 +90,4 @@ node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs gate PR-02265 G6   # re
 
 - `docs_tdd` 是软链接进 fameex-web；脚本已修复跟随软链接（prd-intake 等）。
 - rule-waivers.json 的 `file` 字段若填了必须与 check.file 完全一致，否则豁免不生效——**省略 `file` 字段**按 ruleId 匹配最稳（本项目 7 条 MSW 豁免已这么做）。
-- 提交 docs 改动时排除非本任务文件（如 `PR-01947/agent/notification-log.md`、根 `common/agent-scripts/lark-gateway.mjs` 等他人在途改动）。
+- 提交 docs 改动时排除非本任务文件（如 `PR-01947/agent/notification-log.md`、根 `common/engine/agent-scripts/lark-gateway.mjs` 等他人在途改动）。

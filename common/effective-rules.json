@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "fingerprint": "d27c3d2e1dcb7274ef4af39600d4b5d6cd96e33e518b493cbd8d2fe5e7ca5779",
-  "publishedAt": "2026-08-08T17:38:10.436Z",
-  "l3RuleReleaseFingerprint": "ddc7ddc960f956e5c1b5c1e03a56503085d6aa8597072b7c8922a15decb4153e",
+  "fingerprint": "8c2baa0576d619e56c1718e2e02394bc0d7f5a26ea3aeaa748bb51d78609fe6c",
+  "publishedAt": "2026-08-08T18:09:03.180Z",
+  "l3RuleReleaseFingerprint": "1e63fd7594804f36e0a030d5f0880b0bb90a97f75cf414fa85e0fc648548825a",
   "fileCount": 86,
   "skillTargets": {
     "~/.codex/skills/coding-quality": "~/.ai-rules/skills/coding-quality",
@@ -88,12 +88,12 @@
     ".cursor/rules/state-context-interface.mdc": "cd3f3cf0da916c2315646c9d7b157391931ed2d6d2b6e6b756f87edf550b47c9",
     ".cursor/rules/state-decouple-implementation.mdc": "720aea501afbe5908f518ac8f072b2dfd5f4cfda6cf3cbee8b5c40ae8c109609",
     ".cursor/rules/state-lift-state.mdc": "98fd28e2f0c89a98ffb077ca5ba0a0b1777ebfffab2e4a13ea6a03b31282db8a",
-    "~/.ai-rules/AGENT.md": "b188927e0d5aad82fdf1f60ebc2ec2872755204c050c58fa59190df945d18ffc",
+    "~/.ai-rules/AGENT.md": "d671486e6b1ea659645b7033d96bc1a5faaad2d1e8cd8dfcc69528c26f370c53",
     "~/.ai-rules/skills/coding-quality/SKILL.md": "bdb66c9349c3257b6f6c3422c1a3717aa21ad30dafa00d9852fedce5d2e61aa5",
     "~/.ai-rules/skills/figma-read/SKILL.md": "eeeb764b0427e91c94f0c815cedd4edb26c13ba0dc5b705859152d6781edd86f",
-    "~/.claude/CLAUDE.md": "b188927e0d5aad82fdf1f60ebc2ec2872755204c050c58fa59190df945d18ffc",
-    "~/.claude/settings.json": "2b3d1590a41974466e7a1485b403f13b03d869cb4afffdb9beab2fde4007efa6",
-    "~/.codex/AGENTS.md": "b188927e0d5aad82fdf1f60ebc2ec2872755204c050c58fa59190df945d18ffc",
+    "~/.claude/CLAUDE.md": "d671486e6b1ea659645b7033d96bc1a5faaad2d1e8cd8dfcc69528c26f370c53",
+    "~/.claude/settings.json": "912380be5ee1444da526f849da3f50c84249de7cccadd30458025f6803e081df",
+    "~/.codex/AGENTS.md": "d671486e6b1ea659645b7033d96bc1a5faaad2d1e8cd8dfcc69528c26f370c53",
     "~/.cursor/rules/fameex-local-governance.mdc": "c60d72526b9e5dcf11a5d97b10b90911e305e0968987ead49546110bf39abfbe",
     "AGENTS.md": "392064b3caa6942371cdf5380c7c8b6e368e6ba36d5cae03753afc5d6001c480",
     "CLAUDE.md": "0ae6e4eb08c82210d63d4ad8634de80e5f6078b7989d12ea84dfb5eedd274453"

@@ -9,7 +9,7 @@
 
 ## 2026-08-08（「AI 自动修 bug」Lark 服务抽成 `common/lark-bot/` 专属单例子树）
 
-- **背景**：这套 bot 是**机器级全局单例**（一个 gateway + 一个 worker，launchd 常驻），却「寄居」两处：入口/lib/schema/测试埋在 `common/agent-scripts/`（与按项目跑的 docs-tdd 工具混在一起，看不出是常驻服务），启动 shim + 单例配置 `lark-bot.local.json` 挂在 `PR-01947/agent/scripts/`（全机唯一服务塞进某具体项目目录）。
+- **背景**：这套 bot 是**机器级全局单例**（一个 gateway + 一个 worker，launchd 常驻），却「寄居」两处：入口/lib/schema/测试埋在 `common/engine/agent-scripts/`（与按项目跑的 docs-tdd 工具混在一起，看不出是常驻服务），启动 shim + 单例配置 `lark-bot.local.json` 挂在 `PR-01947/agent/scripts/`（全机唯一服务塞进某具体项目目录）。
 - **收拢**（`git mv` 保留历史）：入口 `lark-{gateway,worker,bugtable-poller}.mjs`、`lib/lark-*.mjs`（8 个）、`schemas/lark-ai-{analysis,result}.schema.json`、`__tests__/lark-*.test.mjs` 全部迁入 `common/lark-bot/{,lib/,schemas/,__tests__/}`；运行时 shim + `launchd-node.sh` + `lark-bot.local.json`（gitignore）落到 `common/lark-bot/runtime/`。共享的 `lib/roots.mjs`（大量非 lark 脚本在用）、`notify-lark.mjs`、`sync-lark-docs.mjs`、`lark-sources.schema.json` **不动**。
 - **路径修正**：入口/lib 的 `roots.mjs` 引用改跨目录到 `agent-scripts/lib/roots.mjs`；schema join 改 `common/lark-bot/schemas/`；shim 引用与 `configPath` 改 `common/lark-bot/runtime/`；两份 plist `ProgramArguments` 指向新 runtime 路径（`WorkingDirectory`=fameex-web、worker `repoCwd`=PR-01947 不变）。
 - **旁路同步**：`rule-release.mjs` 的 `isLarkPlumbing` 加 `common/lark-bot/` 前缀（整棵子树排除出规则指纹，避免基建高频改动把规则发布拖成假性 stale）；`check-doc-budget.mjs` 删悬空的 `agent-scripts/lib/lark-*` 自检豁免；`lark-bot-gateway.md` 登记 `DOC_BUDGET_OVERRIDES`（按需查阅型运维大文件）。
@@ -26,7 +26,7 @@
 
 ## 2026-08-07（Lark 无人值守链路 P3 能力扩展）
 
-- **接续同日 P0/P1/P2**，补 5 项能力缺口（价值高、改动大），仍只碰 `common/agent-scripts/**` 与本文档，不碰业务代码。
+- **接续同日 P0/P1/P2**，补 5 项能力缺口（价值高、改动大），仍只碰 `common/engine/agent-scripts/**` 与本文档，不碰业务代码。
 - **P3-18 规则场景多标签 + 图片/fix 强制 UI/STYLE + 缺章告警**（`lib/lark-rule-context.mjs`）：`classifyLarkTask` 由「单一胜出」改**多标签叠加**（ui+api 命中就都产出 scenario，`refsFor` 按标签并集加载）；有图片附件或 `fix` 命令**强制并入 UI+STYLE 信号**（防「字段/背景/不对」等短语误判成纯 API 任务丢样式 token 规则）；`extractMarkdownSection` 抽到空段（源文档改了标题→规则被静默丢弃）时 `warn`+记 `warnings`/audit，不静默 continue。保留 `scenario` 主标签向后兼容。
 - **P3-17 failureKind 分级 + nextStep**（`lark-ai-result.schema.json` / `lib/lark-ai-executor.mjs` / `lark-worker.mjs`）：AI 结构化 `failed` 增可选 `failureKind`（`tool/env/permission/requirement`）与 `nextStep`；`formatStructuredAiResult` 回执列「失败类型 + 下一步」；worker `classifyWorkerFailure` 对 preflight/超时/exit code 分别归因（超时→tool、登录/权限→permission、ENOENT/worktree/git→env），替代恒定的「Worker 执行异常」。
 - **P3-15 commandType 解析 + status/docs 只读分流**（`lib/lark-message.mjs` / `lark-gateway.mjs` / `lark-worker.mjs`）：抽公共 `parseCommandType`（首行前缀→`status/docs/fix/test/api/qa`），Gateway 摄入与 POST 落 `task.commandType`；worker 对只读命令（`status`）本地无 worktree 时**不新建临时 worktree**（省 `git worktree add`），主仓就地只读回答、跳过 WIP 与代码提交、Codex 用 `read-only` 沙箱。
@@ -37,14 +37,14 @@
 
 ## 2026-08-07（Lark 无人值守链路 P2 规范闸/验证加强）
 
-- **接续同日 P0/P1**，补规范闸扩检与 worker 侧验证加强，仍只碰 `common/agent-scripts/**` 与本文档；只扫本次 diff 新增行、不碰存量债、不改团队 CI。
+- **接续同日 P0/P1**，补规范闸扩检与 worker 侧验证加强，仍只碰 `common/engine/agent-scripts/**` 与本文档；只扫本次 diff 新增行、不碰存量债、不改团队 CI。
 - **P2-12 规范闸扩检**（`lib/lark-lint-diff.mjs`）：① 补裸 `any` 检测（`as any` / `: any` / `<any>`，限 `.ts/.tsx`）；② `.match` → `matchAll`，一行多违规全列（原只报首个）；③ arbitrary 前缀补 `ring/outline/aspect/columns/indent/content`；④ className 语境限定——arbitrary/裸色只在引号字符串内或 CSS `@apply` 才算，跳过纯注释行，降注释/散文/i18n 文案误报；⑤ i18n 高置信项：动态 key（`t(变量)` 或模板插值 key，限 TS）与 JSX 文本硬编码中文（`>…中文…<`，限 tsx/jsx）。advice 走 `Record` 查表。
 - **P2-13 worker 侧分级探测 + changedFiles 交叉校验**（`lark-worker.mjs`）：新增纯函数 `detectChangeTier`（命中 `*.schema.*`/`mapper`/`/api/`/`*.d.ts`/`packages/` 跨包即 L2+）、`crossCheckChangedFiles`（AI 自报 vs 真实 `git diff --name-only HEAD`，分漏报/虚报差集）、`assessDoneResult`（done 可信度评估）。worker 在 done 分支：**done 但工作区零改动 → 降级 failed 需人工复核**（无改动=无修复=不可信；状态/status 只读任务豁免）；L2+ 改动但 AI 自报 checks 不含 type-check、或漏报/虚报改动文件 → 挂人工可见 `⚠` note（非阻塞）。「done+空 changedFiles 不算成功」落在 worker 层而非纯 parser——只有此处能拿到真实 git 改动并区分只读任务，比盲目 throw 更稳。
 - **测试**：`lark-ai-executor.test.mjs` 补 lint-diff 扩检 6 例（多违规/新前缀/className 语境/any/i18n 动态 key/JSX 中文）；`lark-pure.test.mjs` 补 `detectChangeTier`/`crossCheckChangedFiles`/`assessDoneResult` 共 11 例。三文件共 88 用例全绿；触达 `.mjs` 过 Biome。
 
 ## 2026-08-07（Lark 无人值守链路 P1 健壮性加固）
 
-- **接续同日 P0**，补 4 项无人值守健壮性（改动更大、需设计），仍只碰 `common/agent-scripts/**` 与本文档。
+- **接续同日 P0**，补 4 项无人值守健壮性（改动更大、需设计），仍只碰 `common/engine/agent-scripts/**` 与本文档。
 - **P1-8 claim epoch / fencing token**（`lib/lark-task-store.mjs` + `lark-gateway.mjs` + `lark-worker.mjs`）：孤儿重投 / 人工 retry 递增 `task.epoch`；claim 返回 epoch 基线，worker 回写 status 带 `epoch`；`handleStatusUpdate` epoch 不匹配返回 409。防「旧 worker 迟到回写覆盖新一代执行」。epoch 缺省时不校验（向后兼容）。
 - **P1-9 事件摄入同步占位防 TOCTOU**（`lark-gateway.mjs`）：`ingestLarkEvent` 在任何 await 前用内存 `ingestingMessageIds` Set 同步占位，只有首个能进 ingest；持久化后交 `store.has` 去重。堵 lark-cli 重投同一事件时两个 `onLine` 并发双跑同一 messageId。
 - **P1-10 重连告警滑动窗口 + lastEventAt**（`lark-gateway.mjs`）：退避延迟（`backoffAttempts`，稳定存活归零）与告警判定（`restartWindow` 滑动窗口计数，默认 10min）解耦——「每 61s 抖一次」这类稳定即归零 backoff 但持续掉线的情况现在也能告警；记录 `lastEventAt`（每收到事件更新）。
@@ -53,7 +53,7 @@
 
 ## 2026-08-07（Lark 无人值守链路 P0 安全兜底）
 
-- **背景**：对「借 lark-cli 自动修 bug」链路做四维审查，本次落地 P0 层——堵住无人值守下「烧钱 / 丢单 / 跨项目污染 / 双跑覆写」四类硬伤。只改 `common/agent-scripts/**` 与本文档，不碰业务代码。
+- **背景**：对「借 lark-cli 自动修 bug」链路做四维审查，本次落地 P0 层——堵住无人值守下「烧钱 / 丢单 / 跨项目污染 / 双跑覆写」四类硬伤。只改 `common/engine/agent-scripts/**` 与本文档，不碰业务代码。
 - **P0-1 毒任务死信 cap**（`lib/lark-task-store.mjs`）：孤儿重投 `requeueCount` 达 `LARK_MAX_REQUEUE`（默认 2）转 `failed` 死信并打 `deadLetterReason`、触发注入的 `onDeadLetter`（Gateway 侧发一次告警卡），停止自动重投；人工 `retry` 达 `LARK_MAX_RETRY`（默认 5）返回 `{task:null,reason}`。防 crash 型 bug 绕过闭环无限烧钱。
 - **P0-2 POST 项目回落**（`lark-gateway.mjs`）：`POST /lark/tasks` 的 `body.project || config.project` 改 `body.project || null`，与 ingest 口径统一；无效/缺失项目号走 adhoc 临时 worktree，不再塞进 Gateway 主项目常驻 worktree。
 - **P0-3 持久化原子写 + 损坏告警**（`lib/lark-task-store.mjs`）：`persist` 改 `writeFileSync(.tmp)+renameSync` 原子替换；启动恢复遇非法 JSON 改名 `.corrupt` 并 `console.warn`，不再静默 continue 丢单。
@@ -88,7 +88,7 @@
 ## 2026-08-03（阻塞与变更协议：`agent/blockers.json` 机器可读单一源）
 
 - **补的是哪一层**：阻塞和需求变更此前只存在于 `06-collaboration.md §7` 的散文表格里——交付摘要靠正则 grep「待修复/未处理/待确认」字样（改口径就漏），gate 也拦不住「错误码待后端销账」这类项一路飘到 G8。改为机器可读单一源 `agent/blockers.json`，散文层退化为叙述补充而非真值源。
-- **新增 `agent-scripts/lib/blockers.mjs`（纯语义，含 17 用例自测）+ `common/schemas/blockers.schema.json` + `common/blocking-and-change-protocol.md`**：`verify-project-gate.mjs`（每个 gate）与 `render-delivery-summary.mjs`（G8 第 4/5 段）共用同一份判定，不各写一份。登记支持 `blocker`/`change` 两型，生命周期 `open → resolved` 必须带非空 `resolution`+`resolvedAt`（禁静默清零），`open` 的 blocker 必填 `blocksGate`（否则 gate 无从拦截）。
+- **新增 `agent-scripts/lib/blockers.mjs`（纯语义，含 17 用例自测）+ `common/engine/schemas/blockers.schema.json` + `common/blocking-and-change-protocol.md`**：`verify-project-gate.mjs`（每个 gate）与 `render-delivery-summary.mjs`（G8 第 4/5 段）共用同一份判定，不各写一份。登记支持 `blocker`/`change` 两型，生命周期 `open → resolved` 必须带非空 `resolution`+`resolvedAt`（禁静默清零），`open` 的 blocker 必填 `blocksGate`（否则 gate 无从拦截）。
 - **三条规则 + 缺文件即合法**：`DOC-BLOCK-001`（结构合法，不可豁免）、`DOC-BLOCK-002`（无 open 且 `blocksGate ≤ 当前 gate` 的项未解除即阻断，可豁免——豁免走 `rule-waivers.json`，owner 具名带期限担责）、`DOC-BLOCK-003`（其余 open 项 warn）。无 `blockers.json` = 不发任何 check，存量项目零回填。与 `stage-status.blocked`（G5/G7 阶段处置）分工：后者答「阶段整体什么状态」，前者答「具体卡在哪几件、谁负责、什么解除」。
 - **交付摘要结构化**：`render-delivery-summary.mjs` 第 4 段从 `openBlockers(entries)` 派生未解除阻塞与未收口变更（id+owner+blocksGate+摘要），第 5 段把 open 的 blocker 作为上线风险再点一次；散文 grep 降级为「补充线索，以 blockers.json 为准」。
 - **接线验证**：`lib/blockers.mjs` rule ID 纳入台账扫描（`check-doc-budget` 校验 5 改为递归 `lib/`）；`blockers.schema.json` 进校验 13；golden 加 3 个变异用例（open blocker 到点→002、resolved 缺 resolution→001、waiver 降级 002→waived），基线夹具含 1 条 resolved blocker 证明不误伤。发布链已重跑（`7dd0184a5345`/`2c1eb69fc05e`），`docs-tdd golden` 22 项全绿，`doctor` error=0。

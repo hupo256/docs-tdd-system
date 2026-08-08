@@ -43,10 +43,10 @@
 ## Gate 命令
 
 ```bash
-node apps/web/docs_tdd/common/agent-scripts/verify-code-rules.mjs --project PR-01947
-node apps/web/docs_tdd/common/agent-scripts/verify-project-gate.mjs PR-01947 G6
+node apps/web/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --project PR-01947
+node apps/web/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-01947 G6
 # G5 对账完成后：
-node apps/web/docs_tdd/common/agent-scripts/verify-project-gate.mjs PR-01947 G8 --write
+node apps/web/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-01947 G8 --write
 ```
 
 ## Lark 能力

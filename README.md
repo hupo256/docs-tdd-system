@@ -16,11 +16,11 @@ AI 编码的两个顽疾：**跳过需求确认直接写码**、**规则散落�
 | --- | --- | --- |
 | **常驻路由** | 开工唯一入口：启动协议 + 硬规则 + 场景表 | [common/rule-router.md](./common/rule-router.md) |
 | **按需专题** | 架构/状态/API/Mock/UI/Figma/协作/门禁等规则，命中场景才加载 | `common/*.md`（人工索引见 [common/README.md](./common/README.md)，机器路由见 `common/rule-index.json`） |
-| **门禁脚本** | 阶段验证、机器事实层、发布指纹、golden 自回归 | `common/agent-scripts/*.mjs` |
+| **门禁脚本** | 阶段验证、机器事实层、发布指纹、golden 自回归 | `common/engine/agent-scripts/*.mjs` |
 | **模板** | 新需求复制使用的文档骨架 | `templates/` |
 | **项目实例** | 各需求的文档/证据（清单见自动生成的 [PROJECTS.md](./PROJECTS.md)） | `PR-xxxxx/` |
 
-核心命令（统一入口 `common/agent-scripts/docs-tdd.mjs`）：
+核心命令（统一入口 `common/engine/agent-scripts/docs-tdd.mjs`）：
 
 ```bash
 docs-tdd context <PROJECT-ID> <SCENARIO>   # 按场景生成 compact 规则包
@@ -39,7 +39,7 @@ docs-tdd guard                             # 机器层兜底：一条命令跑 g
 
 1. **挂载**：在消费仓库里把 `<app>/docs_tdd` 软链到本仓库真身（各 worktree 同样直指真身）。
 2. **绑定**：在消费仓库根放一份 `docs-tdd.config.json`（gitignored，各安装/各公司自带），声明 `consumerRoot` 等；可复用默认值在已提交的 [docs-tdd.config.default.json](./docs-tdd.config.default.json)。
-3. **根解析**：[common/agent-scripts/lib/roots.mjs](./common/agent-scripts/lib/roots.mjs) 的 `resolveRoots()` 把三个根解耦——
+3. **根解析**：[common/engine/agent-scripts/lib/roots.mjs](./common/engine/agent-scripts/lib/roots.mjs) 的 `resolveRoots()` 把三个根解耦——
    - `docsSystemRoot`：本系统自身（从脚本位置推，与物理位置无关）
    - `consumerRoot`：被指导项目主仓（由 config 绑定确定）
    - `consumerWorktree`：当前编码 worktree（cwd 的 git 根）
@@ -48,7 +48,7 @@ docs-tdd guard                             # 机器层兜底：一条命令跑 g
 
 ## 如何使用（Step by Step）
 
-以「用本系统跑一个新需求」为例的日常流程（首次接入新仓库见上一节「挂载」）。命令统一走 `common/agent-scripts/docs-tdd.mjs`（下文简写 `docs-tdd`）。
+以「用本系统跑一个新需求」为例的日常流程（首次接入新仓库见上一节「挂载」）。命令统一走 `common/engine/agent-scripts/docs-tdd.mjs`（下文简写 `docs-tdd`）。
 
 **0. 前置**：系统已挂载到消费仓库（软链 + `docs-tdd.config.json`），`docs-tdd doctor <任意ID>` 适配项全 PASS。
 
@@ -68,8 +68,8 @@ AI 会先读 `common/rule-router.md`，再执行 `docs-tdd kickoff PR-01234 --pr
 
 **6. G4 建编码 worktree**：
 ```bash
-node <mount>/common/agent-scripts/prepare-coding-worktree.mjs PR-01234 --dry-run   # 先看
-node <mount>/common/agent-scripts/prepare-coding-worktree.mjs PR-01234             # 建分支+软链+装依赖+起 dev
+node <mount>/common/engine/agent-scripts/prepare-coding-worktree.mjs PR-01234 --dry-run   # 先看
+node <mount>/common/engine/agent-scripts/prepare-coding-worktree.mjs PR-01234             # 建分支+软链+装依赖+起 dev
 ```
 从最新 `origin/online` 切 `feature/PR-01234`，基线校验通过才算 ready。
 
@@ -91,8 +91,8 @@ docs-tdd gate PR-01234 G8      # production build + Git 可交付状态 + 交付
 
 **9. 上线后回收**：需求合入 `origin/online` 并验证后，回收一次性 worktree（保留 `PR-01234/` 文档）：
 ```bash
-node <mount>/common/agent-scripts/decommission-worktree.mjs PR-01234 --dry-run
-node <mount>/common/agent-scripts/decommission-worktree.mjs PR-01234
+node <mount>/common/engine/agent-scripts/decommission-worktree.mjs PR-01234 --dry-run
+node <mount>/common/engine/agent-scripts/decommission-worktree.mjs PR-01234
 ```
 
 > 维护系统本身（改规则/加专题/发指纹）用场景 `docs_tdd_maintenance`；改完依次 `docs-tdd check`、`rule-release.mjs --write`、`effective-rules.mjs --write`，否则发布漂移会阻断 context/changed/gate。

@@ -81,12 +81,12 @@ PROJECTS.md                    # 顶层项目状态索引，由 update-project-i
 - 项目 `agent/README.md` 只写恢复顺序、启用状态、配置路径、项目差异;不复制公共 Lark/Bot Gateway/G0-G8/质量检查全文。
 - 开发中出现可复用规则,先更新 `common/`,再在项目文档引用。
 - 新 chat 用「根据 apps/web/docs_tdd 下的文档,开始新的需求...」启动时,先执行 [new-project-kickoff.md](./new-project-kickoff.md),再进入项目文档生成。
-- 新项目目录优先由 `common/agent-scripts/start-new-project.mjs` 生成,避免手工漏建 `00-feature-inventory.md`、`lark-sources.json` 或薄包装脚本。
+- 新项目目录优先由 `common/engine/agent-scripts/start-new-project.mjs` 生成,避免手工漏建 `00-feature-inventory.md`、`lark-sources.json` 或薄包装脚本。
 - 一句话启动优先使用 `docs-tdd kickoff <PROJECT-ID> --prd <source>`；中断后用 `docs-tdd status/next/resume`，不要靠对话记忆猜下一步。
-- 顶层 `PROJECTS.md` 由 `common/agent-scripts/update-project-index.mjs --write` 生成,只做导航汇总;不要手工维护表格,也不要把它当项目事实源。
+- 顶层 `PROJECTS.md` 由 `common/engine/agent-scripts/update-project-index.mjs --write` 生成,只做导航汇总;不要手工维护表格,也不要把它当项目事实源。
 - 新需求 G0/G1 必须记录 Lark 主动发群、群内 @ 应用自动建 task 是否启用;两项 nice to have,不配也能开发。
 - 决定启用群通知:必须在 `agent/` 建 Lark/webhook 配置说明和通知记录;可复制 `templates/notification-log-template.md`。
-- 决定启用群通知:`agent/scripts/notify-lark.mjs` 只能是调用 `common/agent-scripts/notify-lark.mjs` 的薄包装,不复制旧项目完整通知脚本。
+- 决定启用群通知:`agent/scripts/notify-lark.mjs` 只能是调用 `common/engine/agent-scripts/notify-lark.mjs` 的薄包装,不复制旧项目完整通知脚本。
 - 决定启用群内 @ 反馈 bug/QA/自测任务:必须在 `agent/` 建 Lark 应用事件订阅和 Worker 处理规则,继承 `common/collaboration-and-notifications.md`。
 - 新项目 G0 前 Agent **必须自动**创建 `product/00-feature-inventory.md`（见 [prd-feature-inventory.md](./prd-feature-inventory.md) §3）,登记 PRD 来源并优先用 Lark CLI 同步到 `inbox/lark-sync/`;G2 定稿前不写业务代码。
 - 新项目 G2/G5/G6/G7/G8 前必须按 [rule-ids-and-gates.md](./rule-ids-and-gates.md) 依次跑项目 gate；正式入口写最近结果、追加成功历史和独立证据，代码静态扫描只检查新增/已修改文件。

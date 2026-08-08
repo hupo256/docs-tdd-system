@@ -334,9 +334,9 @@
     "ok": true
   },
   "source": {
-    "gateCommand": "/opt/homebrew/Cellar/node/26.3.1/bin/node /Users/aven/github/fameex-web/apps/web/docs_tdd/common/agent-scripts/verify-project-gate.mjs PR-02074 G6 --json",
+    "gateCommand": "/opt/homebrew/Cellar/node/26.3.1/bin/node /Users/aven/github/fameex-web/apps/web/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-02074 G6 --json",
     "parseError": null,
-    "codeRulesCommand": "/opt/homebrew/Cellar/node/26.3.1/bin/node /Users/aven/github/fameex-web/apps/web/docs_tdd/common/agent-scripts/verify-code-rules.mjs --project PR-02074 --json",
+    "codeRulesCommand": "/opt/homebrew/Cellar/node/26.3.1/bin/node /Users/aven/github/fameex-web/apps/web/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --project PR-02074 --json",
     "codeRulesParseError": null
   },
   "stageSync": {

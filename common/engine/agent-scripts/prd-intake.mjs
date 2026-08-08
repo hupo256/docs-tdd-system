@@ -219,12 +219,12 @@ function initManifest(projectId, sourcePaths) {
 }
 
 function runSelfTest() {
-  const fixturePath = join(docsRoot, 'common/fixtures/prd-intake/prd.md')
+  const fixturePath = join(docsRoot, 'common/engine/fixtures/prd-intake/prd.md')
   const fixture = readFileSync(fixturePath, 'utf8')
-  const sourcePath = 'apps/web/docs_tdd/common/fixtures/prd-intake/prd.md'
+  const sourcePath = 'apps/web/docs_tdd/common/engine/fixtures/prd-intake/prd.md'
   const fixtureAssets = new Map([
-    ['apps/web/docs_tdd/common/fixtures/prd-intake/approval-flow.png', Buffer.from('flow-v1')],
-    ['apps/web/docs_tdd/common/fixtures/prd-intake/decoration.png', Buffer.from('decoration-v1')],
+    ['apps/web/docs_tdd/common/engine/fixtures/prd-intake/approval-flow.png', Buffer.from('flow-v1')],
+    ['apps/web/docs_tdd/common/engine/fixtures/prd-intake/decoration.png', Buffer.from('decoration-v1')],
   ])
   const found = scanMarkdown(fixture, sourcePath, (assetPath) => fixtureAssets.get(assetPath) ?? null)
   assert.deepEqual(found.map(({ type }) => type), ['image', 'table', 'embed', 'image'])
@@ -247,7 +247,7 @@ function runSelfTest() {
   const drifted = `${fixture}\nchanged`
   assert(inspectManifest({ manifest, projectId: 'PR-00001', stage: 'G2', readSource: () => drifted, readAsset, inventoryText: 'F01', taskText: `F01 ${items.map((item) => item.sourceId).join(' ')}` }).some((check) => check.ruleId === 'DOC-PRD-008' && !check.ok))
   const changedAssets = new Map(fixtureAssets)
-  changedAssets.set('apps/web/docs_tdd/common/fixtures/prd-intake/approval-flow.png', Buffer.from('flow-v2'))
+  changedAssets.set('apps/web/docs_tdd/common/engine/fixtures/prd-intake/approval-flow.png', Buffer.from('flow-v2'))
   assert(inspectManifest({ manifest, projectId: 'PR-00001', stage: 'G2', readSource, readAsset: (assetPath) => changedAssets.get(assetPath) ?? null, inventoryText: 'F01', taskText: `F01 ${items.map((item) => item.sourceId).join(' ')}` }).some((check) => check.ruleId === 'DOC-PRD-008' && !check.ok))
   console.log('prd-intake self-test passed (scan, omitted image, unresolved input, source drift, and binary image drift).')
 }

@@ -81,11 +81,11 @@
 
 从「AI 自动化开发」视角对 `docs_tdd/` 做结构化升级，减少 Agent 恢复项目时的启发式猜测：
 
-- **README frontmatter schema 固化**：`common/schemas/project-frontmatter.schema.json` 定义 `projectId/status/stage/branch/worktree/port/visualFidelity/prdSource/figmaNode/larkEnabled`；`check-doc-budget.mjs` 校验 9 个项目 frontmatter + `agent/gate-results.json` + `agent/rule-waivers.json` + `agent/lark-sources.json` 全部通过 schema。`lark-sources.json` 补齐 `operation` 字段，`gate-results.schema.json` 补齐 `stageSync`。
+- **README frontmatter schema 固化**：`common/engine/schemas/project-frontmatter.schema.json` 定义 `projectId/status/stage/branch/worktree/port/visualFidelity/prdSource/figmaNode/larkEnabled`；`check-doc-budget.mjs` 校验 9 个项目 frontmatter + `agent/gate-results.json` + `agent/rule-waivers.json` + `agent/lark-sources.json` 全部通过 schema。`lark-sources.json` 补齐 `operation` 字段，`gate-results.schema.json` 补齐 `stageSync`。
 - **JSON Schema 轻量校验器内联**：不引入外部依赖，`check-doc-budget.mjs` 内置 draft-07 子集校验，覆盖 type/required/enum/pattern/array/object/minimum/additionalProperties。
 - **统一 handoff 交接模板**：新增 `templates/handoff-template.md`，固定「一句话 / 环境 / 已完成 / 必读顺序 / 代码落点 / 编码指南 / 验证命令 / 待办 / 已知陷阱 / 升级路径」章节；`start-new-project.mjs` 生成的 `agent/README.md` 自带交接索引区；存量项目 `agent/README.md` 补交接文件索引。
 - **Evidence 二进制文件门禁（VERIFY-G6-004）**：`verify-project-gate.mjs` G6 扫描 `evidence/` 下 `.png/.jpg/.html` 等二进制/临时文件，warn 提示应移至 `/tmp/` 或 `.gitignore` 目录，保持证据目录只存文字报告。
-- **Agent 脚本 `--help` 全覆盖**：`common/agent-scripts/` 下 17 个脚本均支持 `--help`；`common/README.md` 脚本索引表从 6 行扩展到 18 行，覆盖全部脚本及典型用法。
+- **Agent 脚本 `--help` 全覆盖**：`common/engine/agent-scripts/` 下 17 个脚本均支持 `--help`；`common/README.md` 脚本索引表从 6 行扩展到 18 行，覆盖全部脚本及典型用法。
 - **engineering/development-rules.md 空文件口径**：`start-new-project.mjs` 生成时明确「暂无特殊约束也保留本文件并写『暂无』」；存量空文件补记说明，避免 AI 怀疑文件缺失。
 - **common/README.md 编号唯一性**：修复「专题全索引」中 `workflow-gates.md` 重复、`project-doc-structure.md` 与 `lark-doc-sync.md` 同号 27 的问题；`check-doc-budget.mjs` 新增编号唯一性校验。
 - **模板版本化机制**：14 个核心模板顶部加 `template-version` + `template-effective-since` 标记；`check-doc-budget.mjs` 校验模板版本标记，为后续「活跃项目模板版本一致性检查」打基础。
@@ -129,7 +129,7 @@ Review 后三项收敛（Mock 文档主路径前置 + `/code-review` gate 收紧
 
 本地 docs_tdd 自动化闭环优化（不污染项目根配置；`apps/web/docs_tdd` 仍是本机自用、不提交）：
 
-- **一键 gate + 证据落盘**：新增并加固 `common/agent-scripts/run-project-gate.mjs`，统一执行 `verify-project-gate`，G5+ 同步跑 `verify-code-rules --project`，并在 `--write` 时生成 `agent/gate-results.json` + `evidence/gate/<date>-<HHmmss>-g*/README.md`；`--refresh-index` 先写 gate JSON、再刷新 `PROJECTS.md`、最后写 evidence，命令结果统一落入 `commands` 摘要。
+- **一键 gate + 证据落盘**：新增并加固 `common/engine/agent-scripts/run-project-gate.mjs`，统一执行 `verify-project-gate`，G5+ 同步跑 `verify-code-rules --project`，并在 `--write` 时生成 `agent/gate-results.json` + `evidence/gate/<date>-<HHmmss>-g*/README.md`；`--refresh-index` 先写 gate JSON、再刷新 `PROJECTS.md`、最后写 evidence，命令结果统一落入 `commands` 摘要。
 - **代码规则跳过收紧**：G6/G7/G8 使用 `--skip-code-rules` 必须带 `--skip-code-rules-reason`；reason 同步写入 `gate-results.json` 和 evidence Summary，避免无痕跳过。
 - **G8 自举修复**：`VERIFY-G8-001` 现在接受 `verify-project-gate.mjs --write` 和 `run-project-gate.mjs --write` 两种真实来源，避免聚合脚本生成的合法交付证据被旧规则误判。
 - **入口口径收敛**：`common/README.md` 新增“本地脚本入口”，明确不往根 `package.json` 加 docs_tdd 命令；`execution-evidence.md` 和 `feature-doc-checklist.md` 改为优先使用 `run-project-gate.mjs --write`，并继续强调 `docs_tdd` 管项目工程证据，代码质量细则交给 Codex 配置 / skill / `.cursor/rules`。
@@ -189,7 +189,7 @@ Review 后三项收敛（Mock 文档主路径前置 + `/code-review` gate 收紧
 - **模板存在性校验**：`check-doc-budget.mjs` 现校验 7 个核心模板存在，避免索引提到但模板缺失。
 - **README 索引覆盖校验**：`check-doc-budget.mjs` 现校验 `common/README.md` 专题全索引覆盖全部专题文件，避免人工查阅入口漏新规则。
 - **Markdown 断链校验**：新增 `check-doc-links.mjs` 并接入 `check-doc-budget.mjs`，校验 `common/` 与 `templates/` 中本地 Markdown 链接的目标文件存在；跨文件 `#anchor` 禁用，统一写文件链接 + 章节号文字，避免中文 slug 规则跨渲染器误判；`check-doc-budget.mjs` 会运行其 `--self-test`。
-- **公共脚本引用校验**：`check-doc-budget.mjs` 会扫描 `common/` 与 `templates/` 中直接写到的 `common/agent-scripts/*.mjs`，防命令示例、JSON 或代码块引用不存在的公共脚本。
+- **公共脚本引用校验**：`check-doc-budget.mjs` 会扫描 `common/` 与 `templates/` 中直接写到的 `common/engine/agent-scripts/*.mjs`，防命令示例、JSON 或代码块引用不存在的公共脚本。
 - **模板引用校验**：`check-doc-budget.mjs` 会扫描 `common/` 与 `templates/` 中直接写到的 `templates/*`，防说明、代码块或脚手架字符串引用不存在的模板文件。
 - **恢复摘要自动化**：新增 `update-context-summary.mjs`，从项目 feature inventory、collaboration 和 gate-results 生成固定结构的 `agent/context-summary.md`；功能清单按表头定位 `本期` 列，并用 `--self-test` 防列位漂移，`check-doc-budget.mjs` 会运行该自测和 fixture 对账自测。
 - **G4 gate 定位修正**：`verify-project-gate.mjs` 的 `GIT-G4-*` 改用 `process.cwd()` 的 git toplevel 求值，不再因 worktree 里 `docs_tdd` symlink 解析回主仓而恒判分支不符。

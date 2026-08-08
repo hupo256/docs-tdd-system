@@ -100,9 +100,9 @@ G0-G3 完成，**前台 F01-F17（除 F15）+ MSW 试点 + 后台 F19-F21 展示
 
 ```bash
 cd /Users/aven/github/fameex-web   # 或对应工作副本根
-node apps/web/docs_tdd/common/agent-scripts/verify-project-gate.mjs PR-01947 G3   # 应 PASS 21/21
-node apps/web/docs_tdd/common/agent-scripts/verify-code-rules.mjs --project PR-01947
-node apps/web/docs_tdd/common/agent-scripts/verify-project-gate.mjs PR-01947 G6   # 编码后
+node apps/web/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-01947 G3   # 应 PASS 21/21
+node apps/web/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --project PR-01947
+node apps/web/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-01947 G6   # 编码后
 ```
 
 ## 待后端确认（Q3-Q7，见 06-collaboration.md，不阻塞本轮 UI）

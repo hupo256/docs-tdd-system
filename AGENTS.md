@@ -29,7 +29,7 @@ Codex 侧编码规则入口不放在 `docs_tdd`：短硬规则常驻 `~/.codex/A
 
 ## 3. 当前项目索引
 
-**唯一真值源是自动生成的 [PROJECTS.md](./PROJECTS.md)**（项目清单 / 状态 / G2 / 最新 gate / worktree 归属 / 责任模块，由 `common/agent-scripts/update-project-index.mjs --write` 从各项目 `README` + `git worktree list` 派生）。
+**唯一真值源是自动生成的 [PROJECTS.md](./PROJECTS.md)**（项目清单 / 状态 / G2 / 最新 gate / worktree 归属 / 责任模块，由 `common/engine/agent-scripts/update-project-index.mjs --write` 从各项目 `README` + `git worktree list` 派生）。
 
 本文件不再手抄项目清单——手抄副本必然漂移（曾出现新项目只进自动表、三处手动表全漏）。新增/更新项目后跑一次 `--write` 重新生成 `PROJECTS.md` 即可；`check-doc-budget.mjs` 会拦「手动导航文件里再硬编码 `PR-xxxxx` 项目行」。
 

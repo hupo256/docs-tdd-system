@@ -6,7 +6,7 @@ import { resolve } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
-import { diffStrippedKeys } from '<repo>/apps/web/docs_tdd/common/agent-scripts/schema-fixture-reconcile.mjs'
+import { diffStrippedKeys } from '<repo>/apps/web/docs_tdd/common/engine/agent-scripts/schema-fixture-reconcile.mjs'
 // import { detailSchema } from '<feature schema path>'
 
 // fixture 是「某时刻真实响应」的快照,是本套件里唯一会过期的测试（接口改了 → 快照旧了）。

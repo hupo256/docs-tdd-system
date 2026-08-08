@@ -18,8 +18,8 @@
 | 命令 | 目标文件 / 场景 | 结果 | 备注 |
 |------|-----------------|------|------|
 | `pnpm exec biome ...` | 触达 JS/TS/JSON | PASS / FAIL / 未覆盖 | 若输出 `0 files`，补 `node --check` / 专项脚本 |
-| `node apps/web/docs_tdd/common/agent-scripts/verify-code-rules.mjs --project <PROJECT-ID>` | 本次改动文件 | PASS / FAIL | findings 已修 / 已登记豁免 |
-| `node apps/web/docs_tdd/common/agent-scripts/verify-project-gate.mjs <PROJECT-ID> G6` | 项目 gate | PASS / FAIL | 阻塞项见下表 |
+| `node apps/web/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --project <PROJECT-ID>` | 本次改动文件 | PASS / FAIL | findings 已修 / 已登记豁免 |
+| `node apps/web/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs <PROJECT-ID> G6` | 项目 gate | PASS / FAIL | 阻塞项见下表 |
 
 ## Browser / UI Evidence
 

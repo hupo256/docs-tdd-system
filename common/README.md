@@ -40,7 +40,7 @@
 29. [project-doc-structure.md](./project-doc-structure.md)：项目文档目录规范。
 30. [CHANGELOG.md](./CHANGELOG.md)：公共规则、gate 脚本和模板的框架变更日志。
 
-顶层项目索引用 `node apps/web/docs_tdd/common/agent-scripts/update-project-index.mjs --write` 生成到 `../PROJECTS.md`。它只做导航汇总；项目事实由各项目 `README.md`、`product/00-feature-inventory.md`、`agent/stage-status.json` 和 `agent/gate-history.json` 共同表达，`agent/gate-results.json` 只代表最近一次 gate 运行结果，不能证明历史阶段已通过。
+顶层项目索引用 `node apps/web/docs_tdd/common/engine/agent-scripts/update-project-index.mjs --write` 生成到 `../PROJECTS.md`。它只做导航汇总；项目事实由各项目 `README.md`、`product/00-feature-inventory.md`、`agent/stage-status.json` 和 `agent/gate-history.json` 共同表达，`agent/gate-results.json` 只代表最近一次 gate 运行结果，不能证明历史阶段已通过。
 
 ## 本地脚本入口
 
@@ -50,34 +50,34 @@
 
 | 场景 | 命令 |
 |------|------|
-| 公共规则/链接/脚本自检 | `node apps/web/docs_tdd/common/agent-scripts/check-doc-budget.mjs` |
-| 自检通过后发布当前规则内容指纹 | `node apps/web/docs_tdd/common/agent-scripts/rule-release.mjs --write` |
-| 检查规则发布状态是否 fresh | `node apps/web/docs_tdd/common/agent-scripts/rule-release.mjs --check` |
-| 安装/修复三端本地规则适配器 | `node apps/web/docs_tdd/common/agent-scripts/install-local-agent-rules.mjs` |
-| 发布 L1+adapter+L2+L3 组合指纹 | `node apps/web/docs_tdd/common/agent-scripts/effective-rules.mjs --write` |
-| 诊断三端规则加载、冲突和隔离 | `node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs doctor PR-01234` |
-| 生成按场景裁剪的上下文包 | `node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs context PR-01234 write_msw [--full]` |
-| 按改动推荐场景（非自动裁决） | `node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs recommend PR-01234` |
-| 增量检查改动 | `node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs changed PR-01234 [--no-cache]` |
-| 单阶段 gate 只看结果 | `node apps/web/docs_tdd/common/agent-scripts/verify-project-gate.mjs PR-01234 G6` |
-| 正式阶段 gate + 落证据/历史/阶段 | `node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs gate PR-01234 G6 [--no-cache]` |
-| G8 交付 gate（阶段/索引自动同步） | `node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs gate PR-01234 G8` |
-| 阶段同步内部脚本（仅排障/回退） | `node apps/web/docs_tdd/common/agent-scripts/set-project-stage.mjs PR-01234 G4 --force` |
-| 只刷新项目索引 | `node apps/web/docs_tdd/common/agent-scripts/update-project-index.mjs --write` |
-| warn-first 晋级台账（记录/复核/候选） | `node apps/web/docs_tdd/common/agent-scripts/warn-ledger.mjs --report`（gate --write 自动记录；`--mark <RULE> <PR> <true-positive\|false-positive> --write` 复核） |
-| Markdown 本地链接检查 | `node apps/web/docs_tdd/common/agent-scripts/check-doc-links.mjs` |
-| PostToolUse hook 门禁分发 | `node apps/web/docs_tdd/common/agent-scripts/claude-posttooluse-gate.mjs` |
-| 上线后回收编码 worktree | `node apps/web/docs_tdd/common/agent-scripts/decommission-worktree.mjs PR-01234 [--dry-run]` |
+| 公共规则/链接/脚本自检 | `node apps/web/docs_tdd/common/engine/agent-scripts/check-doc-budget.mjs` |
+| 自检通过后发布当前规则内容指纹 | `node apps/web/docs_tdd/common/engine/agent-scripts/rule-release.mjs --write` |
+| 检查规则发布状态是否 fresh | `node apps/web/docs_tdd/common/engine/agent-scripts/rule-release.mjs --check` |
+| 安装/修复三端本地规则适配器 | `node apps/web/docs_tdd/common/engine/agent-scripts/install-local-agent-rules.mjs` |
+| 发布 L1+adapter+L2+L3 组合指纹 | `node apps/web/docs_tdd/common/engine/agent-scripts/effective-rules.mjs --write` |
+| 诊断三端规则加载、冲突和隔离 | `node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs doctor PR-01234` |
+| 生成按场景裁剪的上下文包 | `node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs context PR-01234 write_msw [--full]` |
+| 按改动推荐场景（非自动裁决） | `node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs recommend PR-01234` |
+| 增量检查改动 | `node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs changed PR-01234 [--no-cache]` |
+| 单阶段 gate 只看结果 | `node apps/web/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-01234 G6` |
+| 正式阶段 gate + 落证据/历史/阶段 | `node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs gate PR-01234 G6 [--no-cache]` |
+| G8 交付 gate（阶段/索引自动同步） | `node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs gate PR-01234 G8` |
+| 阶段同步内部脚本（仅排障/回退） | `node apps/web/docs_tdd/common/engine/agent-scripts/set-project-stage.mjs PR-01234 G4 --force` |
+| 只刷新项目索引 | `node apps/web/docs_tdd/common/engine/agent-scripts/update-project-index.mjs --write` |
+| warn-first 晋级台账（记录/复核/候选） | `node apps/web/docs_tdd/common/engine/agent-scripts/warn-ledger.mjs --report`（gate --write 自动记录；`--mark <RULE> <PR> <true-positive\|false-positive> --write` 复核） |
+| Markdown 本地链接检查 | `node apps/web/docs_tdd/common/engine/agent-scripts/check-doc-links.mjs` |
+| PostToolUse hook 门禁分发 | `node apps/web/docs_tdd/common/engine/agent-scripts/claude-posttooluse-gate.mjs` |
+| 上线后回收编码 worktree | `node apps/web/docs_tdd/common/engine/agent-scripts/decommission-worktree.mjs PR-01234 [--dry-run]` |
 | Lark Bot Gateway 任务 worker | `node apps/web/docs_tdd/common/lark-bot/lark-worker.mjs [--once]` |
-| PostToolUse Bash 执行证据日志 | `node apps/web/docs_tdd/common/agent-scripts/log-exec.mjs --out <abs-log-path>` |
-| 发送 Lark 阶段卡片 | `node apps/web/docs_tdd/common/agent-scripts/notify-lark.mjs G6 已完成 "摘要" --config apps/web/docs_tdd/PR-01234/agent/scripts/pr-01234.json` |
-| 创建编码 worktree | `node apps/web/docs_tdd/common/agent-scripts/prepare-coding-worktree.mjs PR-01234` |
-| 字段对账（schema vs fixture） | `node apps/web/docs_tdd/common/agent-scripts/schema-fixture-reconcile.mjs` |
-| 新建项目文档骨架 | `node apps/web/docs_tdd/common/agent-scripts/start-new-project.mjs PR-01234 --prd <Lark URL 或本地 md>` |
-| 只读同步 Lark 资料 | `node apps/web/docs_tdd/common/agent-scripts/sync-lark-docs.mjs --config apps/web/docs_tdd/PR-01234/agent/lark-sources.json` |
-| PRD 图片/表格/嵌入盘点与漂移检查 | `node apps/web/docs_tdd/common/agent-scripts/prd-intake.mjs PR-01234 --init --source <repo-relative-prd.md>` |
-| 生成项目恢复摘要 | `node apps/web/docs_tdd/common/agent-scripts/update-context-summary.mjs PR-01234 --stage G6 --write` |
-| 静态代码规则扫描 | `node apps/web/docs_tdd/common/agent-scripts/verify-code-rules.mjs --project PR-01234` |
+| PostToolUse Bash 执行证据日志 | `node apps/web/docs_tdd/common/engine/agent-scripts/log-exec.mjs --out <abs-log-path>` |
+| 发送 Lark 阶段卡片 | `node apps/web/docs_tdd/common/engine/agent-scripts/notify-lark.mjs G6 已完成 "摘要" --config apps/web/docs_tdd/PR-01234/agent/scripts/pr-01234.json` |
+| 创建编码 worktree | `node apps/web/docs_tdd/common/engine/agent-scripts/prepare-coding-worktree.mjs PR-01234` |
+| 字段对账（schema vs fixture） | `node apps/web/docs_tdd/common/engine/agent-scripts/schema-fixture-reconcile.mjs` |
+| 新建项目文档骨架 | `node apps/web/docs_tdd/common/engine/agent-scripts/start-new-project.mjs PR-01234 --prd <Lark URL 或本地 md>` |
+| 只读同步 Lark 资料 | `node apps/web/docs_tdd/common/engine/agent-scripts/sync-lark-docs.mjs --config apps/web/docs_tdd/PR-01234/agent/lark-sources.json` |
+| PRD 图片/表格/嵌入盘点与漂移检查 | `node apps/web/docs_tdd/common/engine/agent-scripts/prd-intake.mjs PR-01234 --init --source <repo-relative-prd.md>` |
+| 生成项目恢复摘要 | `node apps/web/docs_tdd/common/engine/agent-scripts/update-context-summary.mjs PR-01234 --stage G6 --write` |
+| 静态代码规则扫描 | `node apps/web/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --project PR-01234` |
 
 `docs-tdd.mjs gate` 是正式阶段推进的唯一入口，默认调用 runner 持久化 `agent/gate-results.json`、`evidence/gate/<date>-<HHmmss>-g*/README.md`，成功后先追加 `agent/gate-history.json`，再由 `set-project-stage.mjs` 校验同阶段 PASS 历史并同步 README 机器行、frontmatter `stage`、机器版 `context-summary.md` 和 `PROJECTS.md`。失败只更新最近结果和索引，不追加成功历史。G6/G7/G8 必须分别已有 G5/G6/G7 PASS 历史，禁止跳级；`set-project-stage.mjs` 不能替代 gate，`--force` 只允许回退。G5+ 默认同步跑 `verify-code-rules.mjs --project <PROJECT-ID>`；G6/G7/G8 临时跳过代码规则必须带具体原因并落证据。
 
@@ -93,7 +93,7 @@
 - 每次发现“以前定过但新项目没继承”，视为文档流程缺陷，先补 `common/`。
 - 维护 `docs_tdd` 时先按 [rule-inheritance.md](./rule-inheritance.md) §0.1/§0.2 判断载体；不要把 L1/L2 代码规范正文复制进 L3。
 - 新需求 / 缺清单项目：Agent 必须自动执行 [prd-feature-inventory.md](./prd-feature-inventory.md) §3（复制模板 → G0 初稿 → G2 定稿 → 再写代码）。
-- 新需求一句话启动时：Agent 优先执行 `common/agent-scripts/start-new-project.mjs` 创建项目骨架、登记 PRD 来源和薄包装脚本，再进入 G0 / G1 文档生成。
+- 新需求一句话启动时：Agent 优先执行 `common/engine/agent-scripts/start-new-project.mjs` 创建项目骨架、登记 PRD 来源和薄包装脚本，再进入 G0 / G1 文档生成。
 - 项目晋级只能运行 `docs-tdd.mjs gate <PROJECT-ID> <GATE>`；runner 在成功历史落盘后自动同步阶段。`set-project-stage.mjs` 仅供内部同步、排障和显式回退，缺少同阶段 PASS 历史时拒绝推进。README 状态表的「最新通过门禁」机器行只由脚本写入；人工叙述写「当前阶段」行，二者不混用。
 - 新需求进入编码前：Agent 必须按 [coding-worktree.md](./coding-worktree.md) 创建或确认同级 worktree，不在主仓直接改业务代码。
 - 新需求进入 G2 / G5 / G6 / G7 / G8 前：Agent 必须按 [rule-ids-and-gates.md](./rule-ids-and-gates.md) 依次跑对应 gate；代码静态扫描只检查本次新增或已修改文件。

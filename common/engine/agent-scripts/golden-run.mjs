@@ -3,7 +3,7 @@
 // - 为什么需要：各脚本的 `--self-test` 只覆盖导出的纯函数；「聚合器能不能跑起来、
 //   规则 ID 有没有真的连到判定、有没有误伤旁边的规则」这类接线问题它一条都拦不住。
 //   本会话就出现过 run-project-gate 处于不可运行状态、只靠人工翻代码才发现。
-// - 怎么测：把 `common/fixtures/golden-project` 物化成临时项目 PR-00000（基线刚好全绿），
+// - 怎么测：把 `common/engine/fixtures/golden-project` 物化成临时项目 PR-00000（基线刚好全绿），
 //   然后每个变异用例只破坏一处，断言「预期规则 ID 正好命中」且「没有其他 error 级规则被牵连」。
 //   后者是防误报的那一半——规则变宽会让基线之外的项一起红，这里会直接失败。
 // - 边界：端到端覆盖文档类 gate G0-G7（G4 的 GIT-G4 point-in-time 检查依赖真实 feature 分支，故 baseline 走 G5
@@ -23,7 +23,7 @@ import { resolveRoots } from './lib/roots.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot } = resolveRoots()
-const fixtureDir = join(docsRoot, 'common/fixtures/golden-project')
+const fixtureDir = join(docsRoot, 'common/engine/fixtures/golden-project')
 
 export const GOLDEN_PROJECT_ID = 'PR-00000'
 const targetDir = join(docsRoot, GOLDEN_PROJECT_ID)

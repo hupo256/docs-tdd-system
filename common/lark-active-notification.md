@@ -25,7 +25,7 @@ Webhook / bot 通道只能发消息；不能冒充群内 @ 应用接收链路。
   notification-log.md       # 实际发送记录
   scripts/
     <PROJECT-ID>.json       # 本机 webhookUrl / secret / project / title，禁止提交公开仓库
-    notify-lark.mjs         # 只做薄包装，调用 common/agent-scripts/notify-lark.mjs
+    notify-lark.mjs         # 只做薄包装，调用 common/engine/agent-scripts/notify-lark.mjs
 ```
 
 项目文档只写：
@@ -39,7 +39,7 @@ Webhook / bot 通道只能发消息；不能冒充群内 @ 应用接收链路。
 
 不要在项目文档重复整份 G0-G8、签名算法、消息格式和安全边界；这些继承本文。
 
-硬规则：项目级 `notify-lark.mjs` 不允许复制整份消息模板。新项目只能创建薄包装入口，调用 `apps/web/docs_tdd/common/agent-scripts/notify-lark.mjs`，并通过 `--config` 或默认配置文件传入项目差异。若公共消息格式调整，只能改公共脚本和公共规则，不能在单个项目里私改卡片字段顺序、字段名或编号规则。
+硬规则：项目级 `notify-lark.mjs` 不允许复制整份消息模板。新项目只能创建薄包装入口，调用 `apps/web/docs_tdd/common/engine/agent-scripts/notify-lark.mjs`，并通过 `--config` 或默认配置文件传入项目差异。若公共消息格式调整，只能改公共脚本和公共规则，不能在单个项目里私改卡片字段顺序、字段名或编号规则。
 
 ## 3. 配置文件约定
 
@@ -99,7 +99,7 @@ node apps/web/docs_tdd/<PROJECT-ID>/agent/scripts/notify-lark.mjs <G0-G8> [状�
 ```js
 #!/usr/bin/env node
 
-import { runNotifyLark } from '../../../common/agent-scripts/notify-lark.mjs'
+import { runNotifyLark } from '../../../common/engine/agent-scripts/notify-lark.mjs'
 
 runNotifyLark({
   defaultConfigPath: 'apps/web/docs_tdd/<PROJECT-ID>/agent/scripts/<project-id>.json',

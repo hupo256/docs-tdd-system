@@ -35,7 +35,7 @@ node apps/web/docs_tdd/PR-02006/agent/scripts/sync-lark-docs.mjs --dry-run
 node apps/web/docs_tdd/PR-02006/agent/scripts/sync-lark-docs.mjs
 ```
 
-同步配置：`agent/lark-sources.json`。项目脚本是薄包装，只调用 `common/agent-scripts/sync-lark-docs.mjs`。
+同步配置：`agent/lark-sources.json`。项目脚本是薄包装，只调用 `common/engine/agent-scripts/sync-lark-docs.mjs`。
 
 ## 快速恢复提示
 

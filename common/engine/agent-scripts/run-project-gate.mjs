@@ -256,7 +256,7 @@ function appendGateHistory(projectDir, payload, evidenceFile) {
 // 无理由跳过 = error（否则 --skip-build-quality 就是万能后门）；有理由跳过 = warn，进 warn 台账留痕。
 export function buildQualityGuardCheck({ gate, required, skipped, reason, run, parsed }) {
   if (!required) return null
-  const base = { ruleId: 'VERIFY-BUILD-001', category: 'build-quality', file: 'common/agent-scripts/verify-build-quality.mjs' }
+  const base = { ruleId: 'VERIFY-BUILD-001', category: 'build-quality', file: 'common/engine/agent-scripts/verify-build-quality.mjs' }
   if (skipped) {
     const trimmed = (reason || '').trim()
     return trimmed

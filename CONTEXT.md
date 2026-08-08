@@ -33,7 +33,7 @@
 
 ### docs_tdd 公共规则薄包装整理
 
-- 公共规则唯一入口：`apps/web/docs_tdd/common/`；可执行公共脚本如 `common/agent-scripts/notify-lark.mjs`。
+- 公共规则唯一入口：`apps/web/docs_tdd/common/`；可执行公共脚本如 `common/engine/agent-scripts/notify-lark.mjs`。
 - 已启用 Lark 通知项目的 `notify-lark.mjs` 保持薄包装，项目脚本不得复制公共实现；项目文档只写当前项目事实/配置/状态/例外，公共规则不得在项目目录复制全文。
 
 ## 非活跃历史项目

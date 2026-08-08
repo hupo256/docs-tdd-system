@@ -25,8 +25,8 @@ G2 scope 确认后，按 ../../common/coding-worktree.md 创建 feature/PR-02074
 ## Gate 命令
 
 ```bash
-node apps/web/docs_tdd/common/agent-scripts/verify-project-gate.mjs PR-02074 G2
-node apps/web/docs_tdd/common/agent-scripts/verify-code-rules.mjs --project PR-02074
-node apps/web/docs_tdd/common/agent-scripts/verify-project-gate.mjs PR-02074 G6
-node apps/web/docs_tdd/common/agent-scripts/update-context-summary.mjs PR-02074 --stage G6 --write
+node apps/web/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-02074 G2
+node apps/web/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --project PR-02074
+node apps/web/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-02074 G6
+node apps/web/docs_tdd/common/engine/agent-scripts/update-context-summary.mjs PR-02074 --stage G6 --write
 ```

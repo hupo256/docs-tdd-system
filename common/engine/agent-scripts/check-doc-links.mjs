@@ -7,7 +7,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { dirname, extname, join, normalize, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const COMMON_DIR = join(dirname(fileURLToPath(import.meta.url)), '..')
+const COMMON_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const DOCS_TDD_DIR = join(COMMON_DIR, '..')
 const TARGET_DIRS = [COMMON_DIR, join(DOCS_TDD_DIR, 'templates')]
 const TARGET_FILES = [join(DOCS_TDD_DIR, 'PROJECTS.md')]

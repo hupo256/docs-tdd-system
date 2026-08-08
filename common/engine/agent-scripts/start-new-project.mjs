@@ -153,7 +153,7 @@ for (const dir of dirs) {
   await ensureDir(dir);
 }
 
-await writeFileIfMissing(path.join(projectDir, 'README.md'), `---\nprojectId: ${projectId}\nstatus: active\nstage: G0\nbranch: ${branchName}\nworktree: ""\nport: ""\nvisualFidelity: standard\nprdSource: ${prd}\nfigmaNode: ""\nlarkEnabled: false\n---\n\n# ${projectId} ${title}\n\n> 本文件顶部 YAML frontmatter 是机器可读的元数据真值源，修改后请运行 \`node ${docsMountPath}/common/agent-scripts/update-project-index.mjs --write\` 刷新 PROJECTS.md。\n\n## 状态\n\n| 字段 | 值 |\n|------|-----|\n| 当前阶段 | G0 资料接收 |\n| 最新通过门禁 | |\n| 公共规则 | 继承 ../common/README.md |\n| PRD 来源 | ${prd} |\n| visualFidelity | standard |\n\n## 文档地图\n\n- product/00-feature-inventory.md\n- product/01-scope-and-phases.md\n- product/02-technical-design.md\n- product/03-api-contract.md\n- product/04-frontend-tasks.md\n- product/05-ui-and-interaction.md\n- product/06-collaboration.md\n- product/07-figma-spec.md\n- engineering/development-rules.md\n- agent/README.md\n\n## 待确认\n\n- [ ] G2 scope 确认人和日期\n- [ ] Figma / API / QA 资料是否补充\n- [ ] API 未 ready 时是否按 MSW 路线 B 落地 handler / 契约测试 / dev-only worker\n- [ ] Lark 主动通知是否启用\n- [ ] 群内 @ 应用转 task 是否启用\n`);
+await writeFileIfMissing(path.join(projectDir, 'README.md'), `---\nprojectId: ${projectId}\nstatus: active\nstage: G0\nbranch: ${branchName}\nworktree: ""\nport: ""\nvisualFidelity: standard\nprdSource: ${prd}\nfigmaNode: ""\nlarkEnabled: false\n---\n\n# ${projectId} ${title}\n\n> 本文件顶部 YAML frontmatter 是机器可读的元数据真值源，修改后请运行 \`node ${docsMountPath}/common/engine/agent-scripts/update-project-index.mjs --write\` 刷新 PROJECTS.md。\n\n## 状态\n\n| 字段 | 值 |\n|------|-----|\n| 当前阶段 | G0 资料接收 |\n| 最新通过门禁 | |\n| 公共规则 | 继承 ../common/README.md |\n| PRD 来源 | ${prd} |\n| visualFidelity | standard |\n\n## 文档地图\n\n- product/00-feature-inventory.md\n- product/01-scope-and-phases.md\n- product/02-technical-design.md\n- product/03-api-contract.md\n- product/04-frontend-tasks.md\n- product/05-ui-and-interaction.md\n- product/06-collaboration.md\n- product/07-figma-spec.md\n- engineering/development-rules.md\n- agent/README.md\n\n## 待确认\n\n- [ ] G2 scope 确认人和日期\n- [ ] Figma / API / QA 资料是否补充\n- [ ] API 未 ready 时是否按 MSW 路线 B 落地 handler / 契约测试 / dev-only worker\n- [ ] Lark 主动通知是否启用\n- [ ] 群内 @ 应用转 task 是否启用\n`);
 
 const featureInventoryTemplate = await readTemplate(
   'feature-inventory-template.md',
@@ -208,7 +208,7 @@ for (const [name, content] of Object.entries(productDocs)) {
 
 await writeFileIfMissing(path.join(projectDir, 'engineering/development-rules.md'), `# ${projectId} 开发规则\n\n继承 ../../common/README.md。本文只记录项目特殊约束，不复制公共规则。\n\n## 项目特殊约束\n\n暂无。（若本期确无特殊约束，保留本文件并写「暂无」；不要删除此文件，否则 G0 gate 会报缺失。）\n`);
 
-await writeFileIfMissing(path.join(projectDir, 'agent/README.md'), `# ${projectId} Agent 恢复说明\n\n## 必读顺序\n\n1. ../../common/rule-router.md\n2. 执行 \`node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs context ${projectId} <SCENARIO>\`\n3. 读取命令生成的临时 context pack\n4. ./handoff-*.md（最新交接文件，若无则跳过）\n\ncontext pack 自动包含 ./context-summary.md 与场景专题；不要一次性读取整个 common。\n\n## 交接文件索引\n\n> 按 handoff-YYYY-MM-DD[-seq].md 命名；新交接产生时在此追加索引。\n\n- 暂无\n\n## Lark 能力\n\n- 主动发群消息：待确认\n- 群内 @ 应用转 task：待确认\n\n## 编码环境\n\nG2 scope 确认后，按 ../../common/coding-worktree.md 创建 feature/${projectId} 同级 worktree。\n\n## Gate 命令\n\n\`\`\`bash\nnode apps/web/docs_tdd/common/agent-scripts/prd-intake.mjs ${projectId} --init --source <repo-relative-prd.md>\nnode apps/web/docs_tdd/common/agent-scripts/prd-intake.mjs ${projectId} --approve\nnode apps/web/docs_tdd/common/agent-scripts/verify-project-gate.mjs ${projectId} G2\nnode apps/web/docs_tdd/common/agent-scripts/verify-code-rules.mjs --project ${projectId}\nnode apps/web/docs_tdd/common/agent-scripts/verify-project-gate.mjs ${projectId} G6\nnode apps/web/docs_tdd/common/agent-scripts/update-context-summary.mjs ${projectId} --stage G6 --write\n\`\`\`\n`);
+await writeFileIfMissing(path.join(projectDir, 'agent/README.md'), `# ${projectId} Agent 恢复说明\n\n## 必读顺序\n\n1. ../../common/rule-router.md\n2. 执行 \`node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs context ${projectId} <SCENARIO>\`\n3. 读取命令生成的临时 context pack\n4. ./handoff-*.md（最新交接文件，若无则跳过）\n\ncontext pack 自动包含 ./context-summary.md 与场景专题；不要一次性读取整个 common。\n\n## 交接文件索引\n\n> 按 handoff-YYYY-MM-DD[-seq].md 命名；新交接产生时在此追加索引。\n\n- 暂无\n\n## Lark 能力\n\n- 主动发群消息：待确认\n- 群内 @ 应用转 task：待确认\n\n## 编码环境\n\nG2 scope 确认后，按 ../../common/coding-worktree.md 创建 feature/${projectId} 同级 worktree。\n\n## Gate 命令\n\n\`\`\`bash\nnode apps/web/docs_tdd/common/engine/agent-scripts/prd-intake.mjs ${projectId} --init --source <repo-relative-prd.md>\nnode apps/web/docs_tdd/common/engine/agent-scripts/prd-intake.mjs ${projectId} --approve\nnode apps/web/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs ${projectId} G2\nnode apps/web/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --project ${projectId}\nnode apps/web/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs ${projectId} G6\nnode apps/web/docs_tdd/common/engine/agent-scripts/update-context-summary.mjs ${projectId} --stage G6 --write\n\`\`\`\n`);
 
 await writeFileIfMissing(path.join(projectDir, 'agent/context-summary.md'), contextSummaryContent);
 await writeFileIfMissing(path.join(projectDir, 'evidence/ui-ux/README.md'), evidenceReadmeContent);
@@ -313,9 +313,9 @@ await writeFileIfMissing(path.join(projectDir, 'agent/lark-sources.json'), json(
   ],
 }));
 
-await writeFileIfMissing(path.join(projectDir, 'agent/scripts/sync-lark-docs.mjs'), `#!/usr/bin/env node\n\nimport { runSyncLarkDocs } from '../../../common/agent-scripts/sync-lark-docs.mjs'\n\nrunSyncLarkDocs({\n  defaultConfigPath: '${docsMountPath}/${projectId}/agent/lark-sources.json',\n}).catch((error) => {\n  console.error(error.message)\n  process.exit(1)\n})\n`);
+await writeFileIfMissing(path.join(projectDir, 'agent/scripts/sync-lark-docs.mjs'), `#!/usr/bin/env node\n\nimport { runSyncLarkDocs } from '../../../common/engine/agent-scripts/sync-lark-docs.mjs'\n\nrunSyncLarkDocs({\n  defaultConfigPath: '${docsMountPath}/${projectId}/agent/lark-sources.json',\n}).catch((error) => {\n  console.error(error.message)\n  process.exit(1)\n})\n`);
 
-await writeFileIfMissing(path.join(projectDir, 'agent/scripts/notify-lark.mjs'), `#!/usr/bin/env node\n\nimport { runNotifyLark } from '../../../common/agent-scripts/notify-lark.mjs'\n\nrunNotifyLark({\n  defaultConfigPath: '${docsMountPath}/${projectId}/agent/scripts/${lowerProjectId}.json',\n}).catch((error) => {\n  console.error(error.message)\n  process.exit(1)\n})\n`);
+await writeFileIfMissing(path.join(projectDir, 'agent/scripts/notify-lark.mjs'), `#!/usr/bin/env node\n\nimport { runNotifyLark } from '../../../common/engine/agent-scripts/notify-lark.mjs'\n\nrunNotifyLark({\n  defaultConfigPath: '${docsMountPath}/${projectId}/agent/scripts/${lowerProjectId}.json',\n}).catch((error) => {\n  console.error(error.message)\n  process.exit(1)\n})\n`);
 
 if (!dryRun) {
   await fs.chmod(path.join(projectDir, 'agent/scripts/sync-lark-docs.mjs'), 0o755);
@@ -328,5 +328,5 @@ console.log(JSON.stringify({
   projectId,
   projectDir: path.relative(repoRoot, projectDir),
   prd,
-  next: `node ${docsMountPath}/common/agent-scripts/update-project-index.mjs --write`,
+  next: `node ${docsMountPath}/common/engine/agent-scripts/update-project-index.mjs --write`,
 }, null, 2));

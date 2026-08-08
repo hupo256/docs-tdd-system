@@ -124,8 +124,8 @@ node /Users/aven/github/docs_tdd/PR-01947/agent/scripts/lark-bugtable-poller.mjs
 - **幂等防刷群**：幂等键 = `<PID>-<Gx>-<sha1(gate 指纹)[:12]>`，同代码状态重复跑同一 gate 不会重复发（lark-cli 服务端 `--idempotency-key` 去重）。
 
 **实现位置**：
-- `common/agent-scripts/docs-tdd.mjs` → `maybeBroadcastGate(id, gate)`，在 gate 分支 exit 0 后调用；spawn **项目薄包装** `notify-lark.mjs`（不能直调 common，见 §4 软链主守卫坑）。
-- `common/agent-scripts/notify-lark.mjs` → `resolveTransport` / `deliverViaBot` + `--idempotency-key`；`createPayload` 卡片结构与 G0-G8 手动播报完全一致（图1 样式）。
+- `common/engine/agent-scripts/docs-tdd.mjs` → `maybeBroadcastGate(id, gate)`，在 gate 分支 exit 0 后调用；spawn **项目薄包装** `notify-lark.mjs`（不能直调 common，见 §4 软链主守卫坑）。
+- `common/engine/agent-scripts/notify-lark.mjs` → `resolveTransport` / `deliverViaBot` + `--idempotency-key`；`createPayload` 卡片结构与 G0-G8 手动播报完全一致（图1 样式）。
 
 **配置字段（lark-bot.local.json，gitignored）**：`notifyTransport:'bot'`、`notifyOnGate:true`、`notifyChatId`（缺省回落 `allowedChatIds[0]`）。
 
@@ -143,7 +143,7 @@ bug 多维表格是**全公司共享表**，Aven.tong 名下的 bug 横跨多个
 - 无 `project`（既没解析到、也无 `config.project`）→ 同样临时 worktree，分支 `hotfix/adhoc-<msgId前6>`。群 @ 任务的项目号解析见 §8.1。
 - 干完回写表格状态 `待处理 → 待推版`（`doneValue`）。
 
-**路由实现**：`common/agent-scripts/lark-worker.mjs` → `resolveWorkContext(workerConfig, task)`（已导出，可只读单测）+ `prepareTempWorktree` / `finalizeTempWorktree`。
+**路由实现**：`common/engine/agent-scripts/lark-worker.mjs` → `resolveWorkContext(workerConfig, task)`（已导出，可只读单测）+ `prepareTempWorktree` / `finalizeTempWorktree`。
 
 **并行调度（2026-08-06 加）**：worker 从单串行改成**按 worktree 并行**——调度键 = `resolveWorkContext(task).cwd`，同一 worktree 串行、不同 worktree 并行，并发上限 `LARK_WORKER_CONCURRENCY`（默认 3）。靠 store `claimById` + gateway `POST /lark/tasks/:id/claim` 原子按 id 领取。临时 worktree 建好后 `linkNodeModules` 软链主仓 node_modules（根+apps/*+packages/*）免 `pnpm install`；hotfix 任务 prompt 验证收窄到触达包/文件（不跑全仓 tsc）。详见 `common/lark-bot-gateway.md` §14。
 

@@ -14,7 +14,7 @@
 每次代码变更后：
 
 - 触达 JS/TS/JSON 跑 Biome。
-- 机器静态规则跑 `node apps/web/docs_tdd/common/agent-scripts/verify-code-rules.mjs --project <PROJECT-ID>`（只检查新增/已改文件，内容类规则只看 diff 新增行）。
+- 机器静态规则跑 `node apps/web/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --project <PROJECT-ID>`（只检查新增/已改文件，内容类规则只看 diff 新增行）。
 - 已启用 `pilot.prdIntake` 的项目跑 `docs-tdd changed <PROJECT-ID>`；通过标准消费 [lark-doc-sync.md §8](./lark-doc-sync.md) 与 [prd-feature-inventory.md §3](./prd-feature-inventory.md)。
 - 需要浏览器才能证明的交互/集成行为必须真实执行 [browser-e2e-mcp.md](./browser-e2e-mcp.md)；能由 Vitest/DOM 契约证明的优先自动断言；纯视觉、手感与响应式默认交人工清单，分工以 [verification-division-of-labor.md](./verification-division-of-labor.md) 为准。
 - 报告字段、目录和命令 fallback 统一执行 [execution-evidence.md](./execution-evidence.md)，本清单不维护格式副本。
@@ -116,7 +116,7 @@ G7 是「有 QA 用例时执行」的阶段，非必经阻塞点。无 QA 用例
 
 **第 1/2/3 段由机器生成，不靠 Agent 复述自己干过什么**：`docs-tdd gate <PROJECT-ID> G8 --write` 会自动跑 `render-delivery-summary.mjs`，从 `agent/gate-results.json`（命令 + 真实退出码 + 机器事实层结论）、append-only 的 `agent/gate-history.json`（各阶段 PASS 时点与证据路径）、`product/00-feature-inventory.md` 和 git diff 派生，写入 `agent/delivery-summary.machine.md`。第 4/5 段机器只给线索（生效中豁免、改动文件里的 `// ASSUMED:`、`06-collaboration.md` 悬空项、warn 级 findings、mock 残留 grep），产品/设计口径这类判断留 `<!-- 人工补充 -->` 占位，机器不代人拍板。
 
-手动重跑：`node apps/web/docs_tdd/common/agent-scripts/render-delivery-summary.mjs --project PR-01234 --write`（不带 `--write` 只打 stdout）。
+手动重跑：`node apps/web/docs_tdd/common/engine/agent-scripts/render-delivery-summary.mjs --project PR-01234 --write`（不带 `--write` 只打 stdout）。
 
 ### 交付摘要模板
 

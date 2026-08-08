@@ -28,7 +28,7 @@
 
 - [ ] `00-feature-inventory.md` G2 已定稿：每条「做/不做/延期」+ G2 确认人 & 日期（**未定稿禁止写业务代码**）
 - [ ] 每个 requirement sourceId 已追踪到 Feature + Task；decorative 项有判断依据；已运行 `prd-intake.mjs <PROJECT-ID> --approve`
-- [ ] G2 已运行 `node apps/web/docs_tdd/common/agent-scripts/verify-project-gate.mjs <PROJECT-ID> G2`，机器可判定项通过或阻塞项已登记
+- [ ] G2 已运行 `node apps/web/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs <PROJECT-ID> G2`，机器可判定项通过或阻塞项已登记
 - [ ] `01-scope-and-phases.md`
 - [ ] `02-technical-design.md`
 - [ ] `02-technical-design.md` 已填写复用盘点表；每项新增能力都有“直接复用 / 轻量封装 / 抽公共能力 / 新建实现”判断，新建项已写不复用原因
@@ -44,7 +44,7 @@
 - [ ] `engineering/development-rules.md`
 - [ ] `agent/README.md`
 - [ ] 已记录是否启用 Lark 主动发群消息；未启用时写明本期人工同步，启用时配置 `agent/lark-integration.md`、发送脚本或复用方式
-- [ ] 若启用 Lark 主动发群消息，`agent/scripts/notify-lark.mjs` 是调用 `common/agent-scripts/notify-lark.mjs` 的薄包装
+- [ ] 若启用 Lark 主动发群消息，`agent/scripts/notify-lark.mjs` 是调用 `common/engine/agent-scripts/notify-lark.mjs` 的薄包装
 - [ ] 已记录是否启用群内 @ 应用自动生成 task；未启用时写明本期人工整理任务，启用时配置事件订阅、Bot Gateway、白名单和任务队列说明
 - [ ] 若启用 Lark 能力，已建立通知记录位置，并说明接收任务、执行、自测、回群通知和记录策略
 
@@ -57,6 +57,6 @@
 - [ ] **代码 Review 逐项过 [quality-checklist.md §5](../common/quality-checklist.md)**（300 行/活注释/mapper 同名/字段对账/mock 零残留拆除/复用/no-any/Zustand/薄路由 等代码级硬项，单一权威源，此处不重复）
 - [ ] 已运行 `verify-code-rules.mjs --project <PROJECT-ID>`；静态代码扫描只检查新增或已修改文件，findings 已修或登记豁免
 - [ ] G6 已跑 `/code-review` skill 审本次 diff，findings 已修或登记原因
-- [ ] G6 已运行 `node apps/web/docs_tdd/common/agent-scripts/run-project-gate.mjs <PROJECT-ID> G6 --write`，结果已写入 `agent/gate-results.json` 和 `evidence/gate/`；若跳过代码规则，已带 `--skip-code-rules-reason` 并记录原因
+- [ ] G6 已运行 `node apps/web/docs_tdd/common/engine/agent-scripts/run-project-gate.mjs <PROJECT-ID> G6 --write`，结果已写入 `agent/gate-results.json` 和 `evidence/gate/`；若跳过代码规则，已带 `--skip-code-rules-reason` 并记录原因
 - [ ] **桌面首屏、390px H5、dark/light、主题默认、核心 CTA/表单/弹窗、空态/错误态/loading 逐项过 [quality-checklist.md §3.2](../common/quality-checklist.md)**（含 L2 走查清单标准，见 [component-reuse-and-visual-fidelity.md §3.0](../common/component-reuse-and-visual-fidelity.md)；单一权威源，此处不重复）
 - [ ] 若提供 QA 用例，已先比对 PRD / Figma / API 差异；若未提供，已记录 G7 跳过且不阻塞交付

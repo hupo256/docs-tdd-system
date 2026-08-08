@@ -21,13 +21,13 @@
 公共入口:
 
 ```bash
-node apps/web/docs_tdd/common/agent-scripts/verify-project-gate.mjs PR-01234 G2
-node apps/web/docs_tdd/common/agent-scripts/verify-project-gate.mjs PR-01234 G6 --json
-node apps/web/docs_tdd/common/agent-scripts/verify-project-gate.mjs PR-01234 G6 --verbose  # 全量逐条
-node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs gate PR-01234 G5              # 正式落证据并推进
-node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs gate PR-01234 G6 --no-cache
-node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs gate PR-01234 G7
-node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs gate PR-01234 G8
+node apps/web/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-01234 G2
+node apps/web/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-01234 G6 --json
+node apps/web/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-01234 G6 --verbose  # 全量逐条
+node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs gate PR-01234 G5              # 正式落证据并推进
+node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs gate PR-01234 G6 --no-cache
+node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs gate PR-01234 G7
+node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs gate PR-01234 G8
 ```
 
 默认瘦输出:只打印需行动行（`FAIL`/`WARN`/`WAIV`）+ 一行 summary,通过项折叠成计数;`--verbose` 才逐条全量,`--json` 输出结构化结果不受影响。
@@ -65,11 +65,11 @@ node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs gate PR-01234 G8
 公共入口:
 
 ```bash
-node apps/web/docs_tdd/common/agent-scripts/verify-code-rules.mjs
-node apps/web/docs_tdd/common/agent-scripts/verify-code-rules.mjs --project PR-01234
-node apps/web/docs_tdd/common/agent-scripts/verify-code-rules.mjs --base origin/online --json
-node apps/web/docs_tdd/common/agent-scripts/verify-code-rules.mjs --files apps/web/src/foo.tsx,package.json
-node apps/web/docs_tdd/common/agent-scripts/verify-code-rules.mjs --no-global-scan
+node apps/web/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs
+node apps/web/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --project PR-01234
+node apps/web/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --base origin/online --json
+node apps/web/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --files apps/web/src/foo.tsx,package.json
+node apps/web/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --no-global-scan
 ```
 
 默认收集文件集合:① `origin/online...HEAD` 中新增/修改/重命名的文件;② 当前 unstaged 修改;③ 当前 staged 修改;④ 当前 untracked 文件。
@@ -120,10 +120,10 @@ node apps/web/docs_tdd/common/agent-scripts/verify-code-rules.mjs --no-global-sc
 `VERIFY-*` 里 §2 那批只检查「证据文档有没有写命令」;本节这批**自己执行工具链**,退出码来自真实子进程,不接受任何自述。公共入口:
 
 ```bash
-node apps/web/docs_tdd/common/agent-scripts/verify-build-quality.mjs --project PR-01234
-node apps/web/docs_tdd/common/agent-scripts/verify-build-quality.mjs --project PR-01234 --json
-node apps/web/docs_tdd/common/agent-scripts/verify-build-quality.mjs --files apps/web/src/foo.ts --skip TYPE
-node apps/web/docs_tdd/common/agent-scripts/verify-build-quality.mjs --project PR-01234 --write-baseline
+node apps/web/docs_tdd/common/engine/agent-scripts/verify-build-quality.mjs --project PR-01234
+node apps/web/docs_tdd/common/engine/agent-scripts/verify-build-quality.mjs --project PR-01234 --json
+node apps/web/docs_tdd/common/engine/agent-scripts/verify-build-quality.mjs --files apps/web/src/foo.ts --skip TYPE
+node apps/web/docs_tdd/common/engine/agent-scripts/verify-build-quality.mjs --project PR-01234 --write-baseline
 ```
 
 `docs-tdd gate` 在 **G6/G7/G8 自动调用**（G5 之前代码还在联调,存量报错会让它天天红,反而训练出「习惯性忽略」）。它的 checks 直接并入 `gate-results.json` 的 `checks`,因此 summary / 证据表 / warn 台账 / BLOCK 判定复用同一条链路,不存在第二套结论口径。跳过用 `--skip-build-quality` + `--skip-build-quality-reason`,无理由跳过判 `error`。
@@ -164,7 +164,7 @@ node apps/web/docs_tdd/common/agent-scripts/verify-build-quality.mjs --project P
 
 ## 3.8 Golden run（回归 gate 机器自己）
 
-各脚本的 `--self-test` 只覆盖导出的纯谓词，覆盖不到「规则 ID 有没有真的连到判定、聚合器还能不能跑起来、规则改宽后有没有误伤旁边的项」。`golden-run.mjs` 填这一层：把 `common/fixtures/golden-project` 物化成保留 ID 项目 `PR-00000`（模板 v2 基线刚好通过 G0/G1/G2/G3/G6），再逐个变异用例只破坏一处，断言预期规则 ID 正好命中且不牵连基线之外的 error 规则。
+各脚本的 `--self-test` 只覆盖导出的纯谓词，覆盖不到「规则 ID 有没有真的连到判定、聚合器还能不能跑起来、规则改宽后有没有误伤旁边的项」。`golden-run.mjs` 填这一层：把 `common/engine/fixtures/golden-project` 物化成保留 ID 项目 `PR-00000`（模板 v2 基线刚好通过 G0/G1/G2/G3/G6），再逐个变异用例只破坏一处，断言预期规则 ID 正好命中且不牵连基线之外的 error 规则。
 
 ```bash
 docs-tdd golden                 # 完整跑（含聚合器烟测，需指纹链已发布）

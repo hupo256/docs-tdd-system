@@ -26,7 +26,7 @@
 
 ## 3. 字段与生命周期
 
-一条登记的形状（完整字段见 `common/schemas/blockers.schema.json`）：
+一条登记的形状（完整字段见 `common/engine/schemas/blockers.schema.json`）：
 
 ```json
 [

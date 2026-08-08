@@ -8,7 +8,7 @@ import { dirname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
-const docsRoot = resolve(scriptDir, '../..')
+const docsRoot = resolve(scriptDir, '../../..')
 const commonDir = join(docsRoot, 'common')
 const templatesDir = join(docsRoot, 'templates')
 const manifestFile = join(commonDir, 'rule-release.json')

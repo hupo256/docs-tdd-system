@@ -2,8 +2,8 @@
 
 // 编码 worktree 退役 / 回收（上线后）。
 // 用法：
-//   node apps/web/docs_tdd/common/agent-scripts/decommission-worktree.mjs PR-01234 --dry-run
-//   node apps/web/docs_tdd/common/agent-scripts/decommission-worktree.mjs PR-01234
+//   node apps/web/docs_tdd/common/engine/agent-scripts/decommission-worktree.mjs PR-01234 --dry-run
+//   node apps/web/docs_tdd/common/engine/agent-scripts/decommission-worktree.mjs PR-01234
 // 策略（见 common/coding-worktree.md §7）：
 //   - 上线 = 已合入 origin/online；worktree 是一次性脚手架，上线后回收。
 //   - 只 `git worktree remove`，不 `rm -rf`（后者留 git 元数据孤儿）。

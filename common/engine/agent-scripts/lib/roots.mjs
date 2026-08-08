@@ -16,8 +16,8 @@ import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:pat
 import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
 
-const here = dirname(fileURLToPath(import.meta.url)) // <docs>/common/agent-scripts/lib
-export const docsSystemRoot = resolve(here, '../../..') // -> <docs> root, host-independent
+const here = dirname(fileURLToPath(import.meta.url)) // <docs>/common/engine/agent-scripts/lib
+export const docsSystemRoot = resolve(here, '../../../..') // -> <docs> root, host-independent
 const defaultConfigFile = join(docsSystemRoot, 'docs-tdd.config.default.json')
 
 // --- Domain roots (three-domain reorg indirection layer) ---
@@ -27,11 +27,11 @@ const defaultConfigFile = join(docsSystemRoot, 'docs-tdd.config.default.json')
 // flips one constant here instead of chasing scattered path joins. Values below
 // point at the PRE-reorg locations, so introducing this layer is zero behavior
 // change; each later phase flips exactly one line:
-//   Phase 1 (engine): engineRoot   -> join(docsSystemRoot, 'common', 'engine')
+//   Phase 1 (engine): engineRoot   -> join(docsSystemRoot, 'common', 'engine')   [DONE]
 //   Phase 2 (prds):   resolveProjectRoot -> join(docsSystemRoot, 'prds', projectId)
 //   Phase 3 (rules):  rulesRoot     -> join(docsSystemRoot, 'common', 'rules')
 export const rulesRoot = join(docsSystemRoot, 'common')
-export const engineRoot = join(docsSystemRoot, 'common', 'agent-scripts')
+export const engineRoot = join(docsSystemRoot, 'common', 'engine')
 export const prdsRoot = docsSystemRoot
 export function resolveProjectRoot(projectId) {
   if (typeof projectId !== 'string' || !projectId.trim()) throw new Error('projectId is empty')

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { runLarkWorker } from '../../../common/agent-scripts/lark-worker.mjs'
+import { runLarkWorker } from '../../../common/engine/agent-scripts/lark-worker.mjs'
 
 runLarkWorker({
   projectId: 'PR-01973',

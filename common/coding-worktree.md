@@ -90,14 +90,14 @@ GIT_VER=$(git describe --tags --always) PORT=4107 pnpm exec next dev
 推荐用公共脚本，先 dry-run 再真正创建：
 
 ```bash
-node apps/web/docs_tdd/common/agent-scripts/prepare-coding-worktree.mjs PR-01234 --dry-run
-node apps/web/docs_tdd/common/agent-scripts/prepare-coding-worktree.mjs PR-01234
+node apps/web/docs_tdd/common/engine/agent-scripts/prepare-coding-worktree.mjs PR-01234 --dry-run
+node apps/web/docs_tdd/common/engine/agent-scripts/prepare-coding-worktree.mjs PR-01234
 ```
 
 可选参数：
 
 ```bash
-node apps/web/docs_tdd/common/agent-scripts/prepare-coding-worktree.mjs PR-01234 --port 4001 --verify-path /zh-CN
+node apps/web/docs_tdd/common/engine/agent-scripts/prepare-coding-worktree.mjs PR-01234 --port 4001 --verify-path /zh-CN
 ```
 
 脚本必须完成/检查：
@@ -196,8 +196,8 @@ Agent 检查点：① 基线校验通过（见 §5，方向语义见 [git-branch
 ### 7.2 退役动作（用脚本，先 dry-run）
 
 ```bash
-node apps/web/docs_tdd/common/agent-scripts/decommission-worktree.mjs PR-01234 --dry-run
-node apps/web/docs_tdd/common/agent-scripts/decommission-worktree.mjs PR-01234
+node apps/web/docs_tdd/common/engine/agent-scripts/decommission-worktree.mjs PR-01234 --dry-run
+node apps/web/docs_tdd/common/engine/agent-scripts/decommission-worktree.mjs PR-01234
 ```
 
 脚本做：跑 7.1 前置校验（不过即 abort，除非 `--force`）→ `git worktree remove`（**不 `rm -rf`**，避免 git 元数据孤儿）→ `git worktree prune` → 打印待手改项。

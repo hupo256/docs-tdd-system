@@ -103,8 +103,8 @@ pnpm --filter @fameex/web lint
 Gate（文档侧，编码后可选）：
 
 ```bash
-node apps/web/docs_tdd/common/agent-scripts/verify-code-rules.mjs --project <PROJECT-ID>
-node apps/web/docs_tdd/common/agent-scripts/verify-project-gate.mjs <PROJECT-ID> G6
+node apps/web/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --project <PROJECT-ID>
+node apps/web/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs <PROJECT-ID> G6
 ```
 
 ---

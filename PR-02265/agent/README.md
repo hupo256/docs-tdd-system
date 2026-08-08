@@ -3,7 +3,7 @@
 ## 必读顺序
 
 1. ../../common/rule-router.md
-2. 执行 `node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs context PR-02265 <SCENARIO>`
+2. 执行 `node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs context PR-02265 <SCENARIO>`
 3. 读取命令生成的临时 context pack
 4. ./handoff-*.md（最新交接文件，若无则跳过）
 
@@ -27,10 +27,10 @@ G2 scope 确认后，按 ../../common/coding-worktree.md 创建 feature/PR-02265
 ## Gate 命令
 
 ```bash
-node apps/web/docs_tdd/common/agent-scripts/prd-intake.mjs PR-02265 --init --source <repo-relative-prd.md>
-node apps/web/docs_tdd/common/agent-scripts/prd-intake.mjs PR-02265 --approve
-node apps/web/docs_tdd/common/agent-scripts/verify-project-gate.mjs PR-02265 G2
-node apps/web/docs_tdd/common/agent-scripts/verify-code-rules.mjs --project PR-02265
-node apps/web/docs_tdd/common/agent-scripts/verify-project-gate.mjs PR-02265 G6
-node apps/web/docs_tdd/common/agent-scripts/update-context-summary.mjs PR-02265 --stage G6 --write
+node apps/web/docs_tdd/common/engine/agent-scripts/prd-intake.mjs PR-02265 --init --source <repo-relative-prd.md>
+node apps/web/docs_tdd/common/engine/agent-scripts/prd-intake.mjs PR-02265 --approve
+node apps/web/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-02265 G2
+node apps/web/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --project PR-02265
+node apps/web/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-02265 G6
+node apps/web/docs_tdd/common/engine/agent-scripts/update-context-summary.mjs PR-02265 --stage G6 --write
 ```

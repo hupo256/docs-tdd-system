@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // 常驻上下文预算校验：确保 docs_tdd 规则体系"规则可变多，常驻恒定小"不漂移。
-// 用法：node apps/web/docs_tdd/common/agent-scripts/check-doc-budget.mjs
+// 用法：node apps/web/docs_tdd/common/engine/agent-scripts/check-doc-budget.mjs
 // 不变量（见 common/rule-router.md §3）：
 //   1. 常驻文件 = 且仅 = 带 <!-- RESIDENT-DOC --> 标记的文件，且只能有一个（当前 rule-router.md）。
 //   2. 该常驻文件 ≤ RESIDENT_BUDGET 字符（码点数，Array.from 计，与"字符数"直觉一致；不用 wc -m，后者受 locale 影响会按字节膨胀）。
@@ -13,9 +13,9 @@ import { spawnSync } from 'node:child_process'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const COMMON_DIR = join(dirname(fileURLToPath(import.meta.url)), '..')
+const COMMON_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const DOCS_TDD_DIR = join(COMMON_DIR, '..')
-const SCRIPTS_DIR = join(COMMON_DIR, 'agent-scripts')
+const SCRIPTS_DIR = join(COMMON_DIR, 'engine', 'agent-scripts')
 const TEMPLATES_DIR = join(DOCS_TDD_DIR, 'templates')
 const LINK_CHECK_SCRIPT = join(SCRIPTS_DIR, 'check-doc-links.mjs')
 const REQUIRED_SCRIPTS = [
@@ -652,7 +652,7 @@ if (missingScriptRefs.length) {
    ${missingScriptRefs.join('\n   ')}`,
   )
 } else {
-  console.log('✅ 公共脚本引用：文档/模板中引用的 common/agent-scripts/*.mjs 均存在。')
+  console.log('✅ 公共脚本引用：文档/模板中引用的 common/engine/agent-scripts/*.mjs 均存在。')
 }
 
 // 校验 9：文档/模板里直接写到的 templates/* 必须存在。
@@ -811,12 +811,12 @@ if (missingTemplateRefs.length) {
     if (!machineMatch) {
       syncErrors.push(
         `❌ 'DOC-SYNC-001' ${name}：gate-results 已 ${gateData.gate} PASS，但 README 缺「最新通过门禁」机器行。` +
-          `\n   修复：node apps/web/docs_tdd/common/agent-scripts/set-project-stage.mjs ${name} ${gateData.gate}`,
+          `\n   修复：node apps/web/docs_tdd/common/engine/agent-scripts/set-project-stage.mjs ${name} ${gateData.gate}`,
       )
     } else if (machineGate !== gateData.gate) {
       syncErrors.push(
         `❌ 'DOC-SYNC-001' ${name}：README 机器行=${machineGate}，gate-results=${gateData.gate}。` +
-          `\n   修复：node apps/web/docs_tdd/common/agent-scripts/set-project-stage.mjs ${name} ${gateData.gate}`,
+          `\n   修复：node apps/web/docs_tdd/common/engine/agent-scripts/set-project-stage.mjs ${name} ${gateData.gate}`,
       )
     }
     const summaryFile = join(DOCS_TDD_DIR, name, 'agent/context-summary.md')
@@ -829,7 +829,7 @@ if (missingTemplateRefs.length) {
         } else if (stageMatch[1] !== gateData.gate) {
           syncErrors.push(
             `❌ 'DOC-SYNC-002' ${name}：context-summary 当前阶段=${stageMatch[1]}，gate-results=${gateData.gate}。` +
-              `\n   修复：node apps/web/docs_tdd/common/agent-scripts/set-project-stage.mjs ${name} ${gateData.gate}`,
+              `\n   修复：node apps/web/docs_tdd/common/engine/agent-scripts/set-project-stage.mjs ${name} ${gateData.gate}`,
           )
         }
       }
@@ -844,7 +844,7 @@ if (missingTemplateRefs.length) {
       if (normalize(regen.stdout) !== normalize(readFileSync(projectsFile, 'utf8'))) {
         syncErrors.push(
           `❌ 'DOC-SYNC-003' PROJECTS.md 与即时重生成结果不一致（内容漂移）。` +
-            `\n   修复：node apps/web/docs_tdd/common/agent-scripts/update-project-index.mjs --write`,
+            `\n   修复：node apps/web/docs_tdd/common/engine/agent-scripts/update-project-index.mjs --write`,
         )
       }
     }
@@ -912,7 +912,7 @@ if (missingTemplateRefs.length) {
 // 校验 13：项目元数据 schema 校验（frontmatter + agent JSON 状态文件）。
 // 把「高质量但需启发式解析」升级为「机器可直接消费」，防止 AI 读写时格式漂移。
 {
-  const SCHEMA_DIR = join(COMMON_DIR, 'schemas')
+  const SCHEMA_DIR = join(COMMON_DIR, 'engine', 'schemas')
   const schemas = {
     frontmatter: { file: 'project-frontmatter.schema.json', data: null },
     gateResults: { file: 'gate-results.schema.json', data: null },
@@ -934,13 +934,13 @@ if (missingTemplateRefs.length) {
   for (const [key, { file }] of Object.entries(schemas)) {
     const path = join(SCHEMA_DIR, file)
     if (!existsSync(path)) {
-      schemaLoadErrors.push(`❌ schema 文件缺失：common/schemas/${file}`)
+      schemaLoadErrors.push(`❌ schema 文件缺失：common/engine/schemas/${file}`)
       continue
     }
     try {
       schemas[key].data = JSON.parse(readFileSync(path, 'utf8'))
     } catch (error) {
-      schemaLoadErrors.push(`❌ common/schemas/${file} 不是合法 JSON：${error.message}`)
+      schemaLoadErrors.push(`❌ common/engine/schemas/${file} 不是合法 JSON：${error.message}`)
     }
   }
   if (schemaLoadErrors.length) {

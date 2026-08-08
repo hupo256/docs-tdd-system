@@ -41,7 +41,7 @@
 
 - 主动发群消息：已启用项目级脚本，配置路径为 `.lark-fe-task/PR-01988.json`；真实发送成功后必须记录到 `notification-log.md`。
 - 群内 @ 应用自动生成 task：未启用；Webhook 不能接收群内 @，如需启用必须另接 Lark 应用事件订阅、Bot Gateway 和 Worker。
-- 项目脚本为薄包装：`agent/scripts/notify-lark.mjs` 调用 `../../common/agent-scripts/notify-lark.mjs`，项目差异见 `agent/lark-integration.md`。
+- 项目脚本为薄包装：`agent/scripts/notify-lark.mjs` 调用 `../../common/engine/agent-scripts/notify-lark.mjs`，项目差异见 `agent/lark-integration.md`。
 
 ## 下一步动作
 

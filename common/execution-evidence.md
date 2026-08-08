@@ -36,7 +36,7 @@ apps/web/docs_tdd/<PROJECT-ID>/
 公共脚本：
 
 ```bash
-node apps/web/docs_tdd/common/agent-scripts/log-exec.mjs --out apps/web/docs_tdd/PR-01234/agent/execution-log.md
+node apps/web/docs_tdd/common/engine/agent-scripts/log-exec.mjs --out apps/web/docs_tdd/PR-01234/agent/execution-log.md
 ```
 
 `log-exec.mjs` 设计为 PostToolUse hook 的公共实现。它只追加真实工具执行后的 Bash 命令和截断输出摘要，且无论记录成功与否都不阻断主流程。
@@ -46,10 +46,10 @@ node apps/web/docs_tdd/common/agent-scripts/log-exec.mjs --out apps/web/docs_tdd
 首选一键脚本落证据：
 
 ```bash
-node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs gate PR-01234 G5
-node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs gate PR-01234 G6
-node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs gate PR-01234 G7
-node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs gate PR-01234 G8
+node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs gate PR-01234 G5
+node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs gate PR-01234 G6
+node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs gate PR-01234 G7
+node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs gate PR-01234 G8
 ```
 
 它会写入：
@@ -65,9 +65,9 @@ node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs gate PR-01234 G8
 需要拆开排查时，可用只读 verifier 查看 G2/G5/G6/G7/G8 判定；正式晋级仍必须回到 `docs-tdd.mjs gate`：
 
 ```bash
-node apps/web/docs_tdd/common/agent-scripts/verify-project-gate.mjs PR-01234 G2 --json
-node apps/web/docs_tdd/common/agent-scripts/verify-code-rules.mjs --project PR-01234 --json
-node apps/web/docs_tdd/common/agent-scripts/verify-project-gate.mjs PR-01234 G6 --json
+node apps/web/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-01234 G2 --json
+node apps/web/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --project PR-01234 --json
+node apps/web/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-01234 G6 --json
 ```
 
 每个阶段出口必须由 `docs-tdd.mjs gate` 写入最近结果、成功历史和独立 evidence。不要只在最终回复里写“已通过”，也不要把 `gate-results.json` 的单次 PASS 当成前序阶段执行证明。
@@ -77,14 +77,14 @@ node apps/web/docs_tdd/common/agent-scripts/verify-project-gate.mjs PR-01234 G6 
 | 命令 | 目标文件 / 场景 | 结果 | 备注 |
 |------|-----------------|------|------|
 | `pnpm exec biome ...` | 触达 JS/TS/JSON | PASS / FAIL / 未覆盖 | 若输出 `0 files`，必须补 `node --check` / 专项脚本作为 fallback |
-| `node apps/web/docs_tdd/common/agent-scripts/verify-code-rules.mjs --project PR-01234` | 本次改动文件 | PASS / FAIL | findings 已修 / 已登记豁免 |
+| `node apps/web/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --project PR-01234` | 本次改动文件 | PASS / FAIL | findings 已修 / 已登记豁免 |
 
 `0 files` 不是通过证据，只能说明 Biome 没覆盖到目标文件；ignored 文档或脚本场景必须记录 fallback 命令和结果。
 
 阶段切换或交付前同步恢复摘要：
 
 ```bash
-node apps/web/docs_tdd/common/agent-scripts/update-context-summary.mjs PR-01234 --stage G6 --write
+node apps/web/docs_tdd/common/engine/agent-scripts/update-context-summary.mjs PR-01234 --stage G6 --write
 ```
 
 ## 5. UI / UX 证据

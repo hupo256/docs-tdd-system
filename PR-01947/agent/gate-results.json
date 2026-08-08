@@ -470,9 +470,9 @@
     "ok": true
   },
   "source": {
-    "gateCommand": "/Users/aven/.nvm/versions/node/v24.7.0/bin/node /Users/aven/github/fameex-web/apps/web/docs_tdd/common/agent-scripts/verify-project-gate.mjs PR-01947 G5 --json",
+    "gateCommand": "/Users/aven/.nvm/versions/node/v24.7.0/bin/node /Users/aven/github/fameex-web/apps/web/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-01947 G5 --json",
     "parseError": null,
-    "codeRulesCommand": "/Users/aven/.nvm/versions/node/v24.7.0/bin/node /Users/aven/github/fameex-web/apps/web/docs_tdd/common/agent-scripts/verify-code-rules.mjs --project PR-01947 --json",
+    "codeRulesCommand": "/Users/aven/.nvm/versions/node/v24.7.0/bin/node /Users/aven/github/fameex-web/apps/web/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --project PR-01947 --json",
     "codeRulesParseError": null
   },
   "fingerprint": {

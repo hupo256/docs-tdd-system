@@ -18,10 +18,10 @@ const protocol = `
 ## FameEX Local Execution Protocol
 
 - In \`${repoRoot}\` or its feature worktrees, read \`${repoRoot}/apps/web/docs_tdd/common/rule-router.md\` first.
-- Load only routed L3 rules with \`node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs context <PROJECT-ID> <SCENARIO>\`.
-- After edits run \`node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs changed <PROJECT-ID>\` when no automatic hook is available.
-- At a stage boundary run \`node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs gate <PROJECT-ID> <Gx>\`.
-- Diagnose rule loading and drift with \`node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs doctor <PROJECT-ID>\`.
+- Load only routed L3 rules with \`node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs context <PROJECT-ID> <SCENARIO>\`.
+- After edits run \`node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs changed <PROJECT-ID>\` when no automatic hook is available.
+- At a stage boundary run \`node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs gate <PROJECT-ID> <Gx>\`.
+- Diagnose rule loading and drift with \`node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs doctor <PROJECT-ID>\`.
 `
 
 function printHelp() {
@@ -71,9 +71,9 @@ L3 source: \`${repoRoot}/apps/web/docs_tdd/common/rule-router.md\`.
 
 For FameEX tasks, read \`rule-router.md\` first and use:
 
-- \`node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs context <PROJECT-ID> <SCENARIO>\`
-- \`node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs changed <PROJECT-ID>\` after edits
-- \`node apps/web/docs_tdd/common/agent-scripts/docs-tdd.mjs gate <PROJECT-ID> <Gx>\` at stage exit
+- \`node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs context <PROJECT-ID> <SCENARIO>\`
+- \`node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs changed <PROJECT-ID>\` after edits
+- \`node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs gate <PROJECT-ID> <Gx>\` at stage exit
 
 Cursor has no trusted local PostToolUse gate in this setup, so \`changed\` is mandatory fallback. Do not copy rule bodies into this adapter.
 `
@@ -84,7 +84,7 @@ Cursor has no trusted local PostToolUse gate in this setup, so \`changed\` is ma
 function mergeClaudeHook() {
   const settingsFile = join(home, '.claude/settings.json')
   const settings = existsSync(settingsFile) ? JSON.parse(readFileSync(settingsFile, 'utf8')) : {}
-  const command = `node ${repoRoot}/apps/web/docs_tdd/common/agent-scripts/claude-posttooluse-gate.mjs`
+  const command = `node ${repoRoot}/apps/web/docs_tdd/common/engine/agent-scripts/claude-posttooluse-gate.mjs`
   const postToolUse = Array.isArray(settings.hooks?.PostToolUse) ? settings.hooks.PostToolUse : []
   const present = postToolUse.some((group) => group.hooks?.some((hook) => hook.command === command))
   if (!present) {

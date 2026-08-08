@@ -127,7 +127,7 @@ L3 写规则时默认使用“触发 → 动作 → 证据 → 失败处理”�
 
 | 场景 | 公共入口 | 项目目录只允许放 |
 |------|----------|------------------|
-| Lark 主动通知 | `common/agent-scripts/notify-lark.mjs` | `agent/scripts/notify-lark.mjs` 薄包装、`<project-id>.json` 配置 |
+| Lark 主动通知 | `common/engine/agent-scripts/notify-lark.mjs` | `agent/scripts/notify-lark.mjs` 薄包装、`<project-id>.json` 配置 |
 | G0-G8 门禁 | `common/workflow-gates.md` | 项目当前状态和特殊门禁说明 |
 | 文档结构 | `common/project-doc-structure.md` | 当前项目实际文件和状态 |
 | 功能清单 | `common/prd-feature-inventory.md`、`templates/feature-inventory-template.md` | `product/00-feature-inventory.md` 的项目功能事实 |
@@ -144,7 +144,7 @@ L3 写规则时默认使用“触发 → 动作 → 证据 → 失败处理”�
 4. 有脚本时,dry-run/自测必须覆盖至少一个旧项目和一个规则来源项目,确认两边输出一致。
 5. 修复后把原因写入公共规则,不能只修当前项目。
 
-2026-06-16 复盘:Lark 消息格式已在公共规则定义,但部分历史项目仍用项目内复制的旧 `notify-lark.mjs`,导致字段名/顺序/编号规则可能漂移。已将通知脚本上移到 `common/agent-scripts/notify-lark.mjs`,后续项目脚本必须改薄包装,不复制整份通知脚本。该原则扩展到所有公共规则:项目只保留差异,不复制公共规则全文。
+2026-06-16 复盘:Lark 消息格式已在公共规则定义,但部分历史项目仍用项目内复制的旧 `notify-lark.mjs`,导致字段名/顺序/编号规则可能漂移。已将通知脚本上移到 `common/engine/agent-scripts/notify-lark.mjs`,后续项目脚本必须改薄包装,不复制整份通知脚本。该原则扩展到所有公共规则:项目只保留差异,不复制公共规则全文。
 
 ## 7. 新项目薄包装检查清单
 
@@ -154,7 +154,7 @@ L3 写规则时默认使用“触发 → 动作 → 证据 → 失败处理”�
 - [ ] 项目 README 只写状态、文档地图、待确认项,已链接 `../common/README.md`。
 - [ ] `engineering/development-rules.md` 只写项目特殊约束,没复制公共工程规则全文。
 - [ ] `agent/README.md` 只写恢复顺序、项目启用状态、配置路径,没复制公共 Agent/Lark 规则全文。
-- [ ] 启用 Lark 主动通知则 `agent/scripts/notify-lark.mjs` 是薄包装,调用 `common/agent-scripts/notify-lark.mjs`。
+- [ ] 启用 Lark 主动通知则 `agent/scripts/notify-lark.mjs` 是薄包装,调用 `common/engine/agent-scripts/notify-lark.mjs`。
 - [ ] 未启用 Lark 则只记录未启用和人工同步方式,不创建无配置的伪脚本。
 - [ ] `product/00-feature-inventory.md` 来自模板,内容只保留当前项目功能事实和 G2 结论。
 - [ ] 质量检查、Browser/Playwright、Biome、i18n、主题、H5 等规则只引用公共规则;项目文件只写执行结果、跳过原因或项目特殊补充。
