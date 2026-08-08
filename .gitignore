@@ -20,6 +20,7 @@ common/lark-bot/runtime/*.local.json
 **/agent/lark-attachments/
 **/agent/lark-audits/
 **/agent/lark-bugtable-state.json
+**/agent/notification-log.md
 
 # installation-specific consumer binding (each checkout/company sets its own;
 # the committed docs-tdd.config.default.json holds the reusable defaults)
