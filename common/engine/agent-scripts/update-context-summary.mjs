@@ -4,7 +4,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { resolveRoots } from './lib/roots.mjs'
+import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 
 const scriptPath = fileURLToPath(import.meta.url)
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot } = resolveRoots()
@@ -90,7 +90,7 @@ if (!/^PR-\d{5}$/.test(projectId || '')) {
 const stage = readOption('--stage', 'G0')
 if (!/^G[0-8](\s+.+)?$/.test(stage)) fail('--stage must start with G0..G8')
 
-const projectDir = join(docsRoot, projectId)
+const projectDir = resolveProjectRoot(projectId)
 if (!existsSync(projectDir)) fail(`project directory does not exist: ${relative(repoRoot, projectDir)}`)
 
 function read(pathFromProject) {

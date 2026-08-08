@@ -1,0 +1,20 @@
+{
+  "sourceName": "【PR-01685】【增长需求】活动落地页数据统计需求",
+  "sourceType": "wiki",
+  "sourceUrl": "https://qfglxo2m3dc.sg.larksuite.com/wiki/SXaGw5ciuiXeRFk24lTl2pLagCc",
+  "syncedAt": "2026-06-20T06:04:39.619Z",
+  "readOnly": true,
+  "command": [
+    "lark-cli",
+    "docs",
+    "+fetch",
+    "--api-version",
+    "v2",
+    "--doc",
+    "https://qfglxo2m3dc.sg.larksuite.com/wiki/SXaGw5ciuiXeRFk24lTl2pLagCc",
+    "--doc-format",
+    "markdown"
+  ],
+  "stderr": null,
+  "target": "apps/web/docs_tdd/prds/PR-01685/inbox/lark-sync/activity-landing-page-qa.md"
+}

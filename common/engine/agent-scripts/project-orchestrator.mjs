@@ -4,7 +4,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { resolveRoots } from './lib/roots.mjs'
+import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, config } = resolveRoots()
@@ -29,7 +29,7 @@ function readJson(file) {
 }
 
 function stateFile(id) {
-  return join(docsRoot, id, 'agent/run-state.json')
+  return join(resolveProjectRoot(id), 'agent/run-state.json')
 }
 
 function writeState(id, patch) {
@@ -65,7 +65,7 @@ function print(state) {
 }
 
 function syncAndInit(id) {
-  const configFile = join(docsRoot, id, 'agent/lark-sources.json')
+  const configFile = join(resolveProjectRoot(id), 'agent/lark-sources.json')
   const sources = readJson(configFile)
   if (!sources?.sources?.length) return { ok: false, nextAction: 'sync_prd', error: 'lark-sources.json 缺失或为空' }
   const sync = run('sync-lark-docs.mjs', ['--config', configFile])
@@ -85,7 +85,7 @@ function kickoff() {
   const prd = option('--prd')
   const title = option('--title', projectId)
   if (!prd) throw new Error('kickoff requires --prd <Lark URL or local Markdown>')
-  const projectDir = join(docsRoot, projectId)
+  const projectDir = resolveProjectRoot(projectId)
   if (!existsSync(projectDir)) {
     const scaffold = run('start-new-project.mjs', [projectId, '--prd', prd, '--title', title])
     if (scaffold.status !== 0) throw new Error((scaffold.stderr || scaffold.stdout).trim())
@@ -111,7 +111,7 @@ function kickoff() {
 }
 
 function status() {
-  const projectDir = join(docsRoot, projectId)
+  const projectDir = resolveProjectRoot(projectId)
   const stored = readJson(stateFile(projectId))
   const readme = existsSync(join(projectDir, 'README.md')) ? readFileSync(join(projectDir, 'README.md'), 'utf8') : ''
   const inventoryText = existsSync(join(projectDir, 'product/00-feature-inventory.md')) ? readFileSync(join(projectDir, 'product/00-feature-inventory.md'), 'utf8') : ''

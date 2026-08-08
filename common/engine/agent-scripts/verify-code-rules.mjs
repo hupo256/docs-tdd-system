@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
-import { resolveRoots } from './lib/roots.mjs'
+import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 
 const scriptPath = fileURLToPath(import.meta.url)
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, config } = resolveRoots()
@@ -57,7 +57,7 @@ if (args.includes('--help')) {
 
 function readProjectText(pathFromProject) {
   if (!projectId) return ''
-  const file = join(docsRoot, projectId, pathFromProject)
+  const file = join(resolveProjectRoot(projectId), pathFromProject)
   return existsSync(file) ? readFileSync(file, 'utf8') : ''
 }
 
@@ -835,7 +835,7 @@ if (globalScan) {
 // finding 降级为 waived（保留在输出、不计入 ok）；过期 / 无 expiresAt / 文件非法一律不生效。
 function applyWaivers(list) {
   const waiverFile = waiversPath ? resolve(worktreeRoot, waiversPath) : ''
-  const localOnlyWaiverFile = projectId ? join(docsRoot, projectId, 'agent/rule-waivers.json') : ''
+  const localOnlyWaiverFile = projectId ? join(resolveProjectRoot(projectId), 'agent/rule-waivers.json') : ''
   const resolvedWaiverFile = existsSync(waiverFile) ? waiverFile : localOnlyWaiverFile
   if (!resolvedWaiverFile || !existsSync(resolvedWaiverFile)) return
   let waivers

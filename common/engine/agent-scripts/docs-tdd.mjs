@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { codeFingerprint, matchesGateFingerprint } from './lib/fingerprint.mjs'
-import { resolveRoots } from './lib/roots.mjs'
+import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, consumerWorktree, config } = resolveRoots()
@@ -220,9 +220,9 @@ function changedFingerprint(id, worktree, effectiveFingerprint) {
     const absolute = join(worktree, file)
     return existsSync(absolute) ? `${file}\n${readFileSync(absolute)}` : file
   }).join('\n')
-  const prdFile = join(docsRoot, id, 'agent/prd-source-manifest.json')
+  const prdFile = join(resolveProjectRoot(id), 'agent/prd-source-manifest.json')
   const prdHash = existsSync(prdFile) ? createHash('sha256').update(readFileSync(prdFile)).digest('hex') : 'none'
-  const projectDir = join(docsRoot, id)
+  const projectDir = resolveProjectRoot(id)
   const projectDocs = ['product/00-feature-inventory.md', 'product/03-api-contract.md', 'product/04-frontend-tasks.md', 'product/06-collaboration.md', 'agent/project-manifest.json', 'agent/msw-manifest.json', 'agent/assumptions.json']
     .map((file) => {
       const absolute = join(projectDir, file)
@@ -246,7 +246,7 @@ function runChanged(id, worktree, effectiveFingerprint) {
     return 0
   }
 
-  const projectManifest = readOptionalJson(join(docsRoot, id, 'agent/project-manifest.json'))
+  const projectManifest = readOptionalJson(join(resolveProjectRoot(id), 'agent/project-manifest.json'))
   const checks = [
     { label: 'code-rules', args: [join(scriptDir, 'verify-code-rules.mjs'), '--project', id] },
   ]
@@ -294,7 +294,7 @@ function recommendScenarios(worktree) {
 }
 
 function resolveProjectWorktree(id) {
-  const projectDir = id ? join(docsRoot, id) : ''
+  const projectDir = id ? resolveProjectRoot(id) : ''
   const readmeFile = projectDir ? join(projectDir, 'README.md') : ''
   const readme = readmeFile && existsSync(readmeFile) ? readFileSync(readmeFile, 'utf8') : ''
   const configured = readme.match(/^worktree:\s*(.*)$/m)?.[1]?.replace(/^['"]|['"]$/g, '').trim()
@@ -326,7 +326,7 @@ function gateHeartbeat(id, resolvedWorktree) {
   if (!located) return { level: 'skip' } // pre-G4 / 未配置 worktree
   const current = codeFingerprint(resolvedWorktree.worktree, config.baseRef || 'origin/online')
   const noDivergence = current.headSha === current.baseSha && current.dirtyFileCount === 0 && current.untrackedFileCount === 0
-  const gate = readOptionalJson(join(docsRoot, id, 'agent/gate-results.json'))
+  const gate = readOptionalJson(join(resolveProjectRoot(id), 'agent/gate-results.json'))
   return heartbeatDecision({
     located,
     isGitRepo: current.isGitRepo,
@@ -345,17 +345,17 @@ function printGateHeartbeat(id, resolvedWorktree) {
 // 阶段推进自动播报：gate 通过（exit 0）后，仅当项目 notify 配置 notifyOnGate===true 才发「Gx 已完成」卡片。
 // 非阻塞——发送失败只 warn，绝不改 gate 退出码；指纹入幂等键，同代码状态重复跑 gate 不重复刷群。
 function maybeBroadcastGate(id, gate) {
-  const configPath = join(docsRoot, id, 'agent/scripts', `${id.toLowerCase()}.json`)
+  const configPath = join(resolveProjectRoot(id), 'agent/scripts', `${id.toLowerCase()}.json`)
   const notifyConfig = readOptionalJson(configPath)
   if (!notifyConfig?.notifyOnGate) return
 
-  const wrapper = join(docsRoot, id, 'agent/scripts/notify-lark.mjs')
+  const wrapper = join(resolveProjectRoot(id), 'agent/scripts/notify-lark.mjs')
   if (!existsSync(wrapper)) {
     console.warn(`⚠ notifyOnGate 开启但缺 notify-lark 薄包装：${wrapper}`)
     return
   }
 
-  const gateResult = readOptionalJson(join(docsRoot, id, 'agent/gate-results.json'))
+  const gateResult = readOptionalJson(join(resolveProjectRoot(id), 'agent/gate-results.json'))
   const baseSummary = typeof gateResult?.summary === 'string' && gateResult.summary.trim()
     ? gateResult.summary.trim()
     : `${gate} 机器校验通过`
@@ -383,7 +383,7 @@ function maybeBroadcastGate(id, gate) {
 }
 
 function capability(id) {
-  const projectDir = id ? join(docsRoot, id) : ''
+  const projectDir = id ? resolveProjectRoot(id) : ''
   const manifestFile = projectDir ? join(projectDir, 'agent/project-manifest.json') : ''
   const manifest = manifestFile && existsSync(manifestFile) ? readJson(manifestFile) : null
   const resolvedWorktree = resolveProjectWorktree(id)

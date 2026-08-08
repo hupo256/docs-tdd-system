@@ -4,7 +4,7 @@ import { existsSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { resolveDocsPath, resolveRoots } from './lib/roots.mjs';
+import { resolveDocsPath, resolveProjectRoot, resolveRoots } from './lib/roots.mjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, config } = resolveRoots();
@@ -122,14 +122,14 @@ const title = readOption('--title', projectId);
 if (!prd) fail('--prd is required');
 validatePrdSource(prd);
 
-const projectDir = path.join(docsRoot, projectId);
+const projectDir = resolveProjectRoot(projectId);
 const sourceType = sourceTypeFromPrd(prd);
 const lowerProjectId = projectId.toLowerCase();
 const today = new Date().toISOString().slice(0, 10);
 const ruleset = JSON.parse(await fs.readFile(path.join(docsRoot, 'common/ruleset.json'), 'utf8'));
 const branchName = `${config.branchPrefix || 'feature/'}${projectId}`;
 const docsMountPath = config.docsMountPath || 'apps/web/docs_tdd';
-const larkOutputDir = String(config.larkOutputDir || `${docsMountPath}/\${projectId}/inbox/lark-sync`)
+const larkOutputDir = String(config.larkOutputDir || `${docsMountPath}/prds/\${projectId}/inbox/lark-sync`)
   .replaceAll('${projectId}', projectId);
 const templateReplacements = {
   '<PROJECT-ID>': projectId,
@@ -313,9 +313,9 @@ await writeFileIfMissing(path.join(projectDir, 'agent/lark-sources.json'), json(
   ],
 }));
 
-await writeFileIfMissing(path.join(projectDir, 'agent/scripts/sync-lark-docs.mjs'), `#!/usr/bin/env node\n\nimport { runSyncLarkDocs } from '../../../common/engine/agent-scripts/sync-lark-docs.mjs'\n\nrunSyncLarkDocs({\n  defaultConfigPath: '${docsMountPath}/${projectId}/agent/lark-sources.json',\n}).catch((error) => {\n  console.error(error.message)\n  process.exit(1)\n})\n`);
+await writeFileIfMissing(path.join(projectDir, 'agent/scripts/sync-lark-docs.mjs'), `#!/usr/bin/env node\n\nimport { runSyncLarkDocs } from '../../../../common/engine/agent-scripts/sync-lark-docs.mjs'\n\nrunSyncLarkDocs({\n  defaultConfigPath: '${docsMountPath}/prds/${projectId}/agent/lark-sources.json',\n}).catch((error) => {\n  console.error(error.message)\n  process.exit(1)\n})\n`);
 
-await writeFileIfMissing(path.join(projectDir, 'agent/scripts/notify-lark.mjs'), `#!/usr/bin/env node\n\nimport { runNotifyLark } from '../../../common/engine/agent-scripts/notify-lark.mjs'\n\nrunNotifyLark({\n  defaultConfigPath: '${docsMountPath}/${projectId}/agent/scripts/${lowerProjectId}.json',\n}).catch((error) => {\n  console.error(error.message)\n  process.exit(1)\n})\n`);
+await writeFileIfMissing(path.join(projectDir, 'agent/scripts/notify-lark.mjs'), `#!/usr/bin/env node\n\nimport { runNotifyLark } from '../../../../common/engine/agent-scripts/notify-lark.mjs'\n\nrunNotifyLark({\n  defaultConfigPath: '${docsMountPath}/prds/${projectId}/agent/scripts/${lowerProjectId}.json',\n}).catch((error) => {\n  console.error(error.message)\n  process.exit(1)\n})\n`);
 
 if (!dryRun) {
   await fs.chmod(path.join(projectDir, 'agent/scripts/sync-lark-docs.mjs'), 0o755);

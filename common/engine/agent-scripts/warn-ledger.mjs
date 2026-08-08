@@ -10,7 +10,7 @@ import { spawnSync } from 'node:child_process'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { codeFingerprint } from './lib/fingerprint.mjs'
-import { resolveRoots } from './lib/roots.mjs'
+import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot } = resolveRoots()
@@ -92,10 +92,10 @@ function nowIso() { return new Date().toISOString() }
 function today() { return nowIso().slice(0, 10) }
 
 function readWorktree(projectId) {
-  const readmeFile = join(docsRoot, projectId, 'README.md')
+  const readmeFile = join(resolveProjectRoot(projectId), 'README.md')
   const readme = existsSync(readmeFile) ? readFileSync(readmeFile, 'utf8') : ''
   const configured = readme.match(/^worktree:\s*(.*)$/m)?.[1]?.replace(/^['"]|['"]$/g, '').trim()
-  const worktree = configured ? resolve(docsRoot, projectId, configured) : repoRoot
+  const worktree = configured ? resolve(resolveProjectRoot(projectId), configured) : repoRoot
   return existsSync(worktree) ? worktree : repoRoot
 }
 

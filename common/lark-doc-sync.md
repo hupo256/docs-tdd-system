@@ -37,7 +37,7 @@ readOnly: true
 ```json
 {
   "projectId": "PR-00000",
-  "outputDir": "apps/web/docs_tdd/PR-00000/inbox/lark-sync",
+  "outputDir": "apps/web/docs_tdd/prds/PR-00000/inbox/lark-sync",
   "sources": [
     {
       "type": "doc",

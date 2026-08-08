@@ -1,0 +1,89 @@
+{
+  "startedAt": "2026-06-20T11:07:52.512Z",
+  "runName": "2026-06-20-yapi-mock-flow-rerun",
+  "pages": [
+    {
+      "slug": "daily-income",
+      "title": "预测市场每日收入",
+      "url": "http://127.0.0.1:3001/zh-CN/prediction/daily-income",
+      "rows": 4,
+      "screenshot": "/Users/aven/github/fameex-web/apps/web/docs_tdd/prds/PR-01988/evidence/ui-ux/2026-06-20-yapi-mock-flow-rerun/daily-income.png"
+    },
+    {
+      "slug": "categories",
+      "title": "预测市场分类管理",
+      "url": "http://127.0.0.1:3001/zh-CN/prediction/categories",
+      "rows": 4,
+      "screenshot": "/Users/aven/github/fameex-web/apps/web/docs_tdd/prds/PR-01988/evidence/ui-ux/2026-06-20-yapi-mock-flow-rerun/categories.png"
+    },
+    {
+      "slug": "events",
+      "title": "预测市场事件管理",
+      "url": "http://127.0.0.1:3001/zh-CN/prediction/events",
+      "rows": 5,
+      "screenshot": "/Users/aven/github/fameex-web/apps/web/docs_tdd/prds/PR-01988/evidence/ui-ux/2026-06-20-yapi-mock-flow-rerun/events.png"
+    },
+    {
+      "slug": "orders",
+      "title": "预测市场订单查询",
+      "url": "http://127.0.0.1:3001/zh-CN/prediction/orders",
+      "rows": 5,
+      "screenshot": "/Users/aven/github/fameex-web/apps/web/docs_tdd/prds/PR-01988/evidence/ui-ux/2026-06-20-yapi-mock-flow-rerun/orders.png"
+    },
+    {
+      "slug": "positions",
+      "title": "预测市场仓位查询",
+      "url": "http://127.0.0.1:3001/zh-CN/prediction/positions",
+      "rows": 4,
+      "screenshot": "/Users/aven/github/fameex-web/apps/web/docs_tdd/prds/PR-01988/evidence/ui-ux/2026-06-20-yapi-mock-flow-rerun/positions.png"
+    },
+    {
+      "slug": "reconciliation",
+      "title": "预测市场对账与平账",
+      "url": "http://127.0.0.1:3001/zh-CN/prediction/reconciliation",
+      "rows": 5,
+      "screenshot": "/Users/aven/github/fameex-web/apps/web/docs_tdd/prds/PR-01988/evidence/ui-ux/2026-06-20-yapi-mock-flow-rerun/reconciliation.png"
+    },
+    {
+      "slug": "alerts",
+      "title": "预测市场告警配置",
+      "url": "http://127.0.0.1:3001/zh-CN/prediction/alerts",
+      "rows": 5,
+      "screenshot": "/Users/aven/github/fameex-web/apps/web/docs_tdd/prds/PR-01988/evidence/ui-ux/2026-06-20-yapi-mock-flow-rerun/alerts.png"
+    }
+  ],
+  "checks": [
+    {
+      "name": "orders keyword filter",
+      "status": "passed",
+      "rows": 3,
+      "screenshot": "/Users/aven/github/fameex-web/apps/web/docs_tdd/prds/PR-01988/evidence/ui-ux/2026-06-20-yapi-mock-flow-rerun/orders-filter-uid-100382.png"
+    },
+    {
+      "name": "orders mock error state",
+      "status": "passed",
+      "screenshot": "/Users/aven/github/fameex-web/apps/web/docs_tdd/prds/PR-01988/evidence/ui-ux/2026-06-20-yapi-mock-flow-rerun/orders-error-state.png"
+    },
+    {
+      "name": "category create modal",
+      "status": "passed",
+      "screenshot": "/Users/aven/github/fameex-web/apps/web/docs_tdd/prds/PR-01988/evidence/ui-ux/2026-06-20-yapi-mock-flow-rerun/categories-create-modal.png"
+    },
+    {
+      "name": "reconciliation manual settle modal",
+      "status": "passed",
+      "screenshot": "/Users/aven/github/fameex-web/apps/web/docs_tdd/prds/PR-01988/evidence/ui-ux/2026-06-20-yapi-mock-flow-rerun/reconciliation-manual-modal.png"
+    }
+  ],
+  "issues": [
+    {
+      "type": "console:error",
+      "message": "Warning: [antd: compatible] antd v5 support React is 16 ~ 18. see https://u.ant.design/v5-for-19 for compatible."
+    },
+    {
+      "type": "console:error",
+      "message": "Warning: [antd: compatible] antd v5 support React is 16 ~ 18. see https://u.ant.design/v5-for-19 for compatible."
+    }
+  ],
+  "finishedAt": "2026-06-20T11:08:45.864Z"
+}

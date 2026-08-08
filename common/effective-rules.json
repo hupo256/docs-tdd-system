@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "fingerprint": "8c2baa0576d619e56c1718e2e02394bc0d7f5a26ea3aeaa748bb51d78609fe6c",
-  "publishedAt": "2026-08-08T18:09:03.180Z",
-  "l3RuleReleaseFingerprint": "1e63fd7594804f36e0a030d5f0880b0bb90a97f75cf414fa85e0fc648548825a",
+  "fingerprint": "70827bebbf143345970b33c50cec962dbf90a46b5d960317540676c67f78a042",
+  "publishedAt": "2026-08-08T18:38:45.187Z",
+  "l3RuleReleaseFingerprint": "7fb2df2367e221cd5b82bec55bc72099d14cc6d4fe73794200e765f24a5a5836",
   "fileCount": 86,
   "skillTargets": {
     "~/.codex/skills/coding-quality": "~/.ai-rules/skills/coding-quality",

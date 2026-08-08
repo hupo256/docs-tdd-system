@@ -3,7 +3,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, isAbsolute, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { resolveRoots } from './lib/roots.mjs'
+import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, consumerWorktree } = resolveRoots()
@@ -68,7 +68,7 @@ function runSelfTest() {
 if (process.argv.includes('--self-test')) runSelfTest()
 if (!/^PR-\d{5}$/.test(projectId || '')) failUsage()
 
-const projectDir = join(docsRoot, projectId)
+const projectDir = resolveProjectRoot(projectId)
 const manifestFile = join(projectDir, 'agent/msw-manifest.json')
 const assumptionsFile = join(projectDir, 'agent/assumptions.json')
 const { data: manifest, error: manifestError } = readJson(manifestFile)

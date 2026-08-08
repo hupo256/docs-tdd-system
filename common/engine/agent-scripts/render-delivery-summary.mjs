@@ -14,7 +14,7 @@ import { spawnSync } from 'node:child_process'
 import { dirname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { openBlockers } from './lib/blockers.mjs'
-import { resolveRoots } from './lib/roots.mjs'
+import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 
 const scriptPath = fileURLToPath(import.meta.url)
 const scriptDir = dirname(scriptPath)
@@ -381,7 +381,7 @@ const projectId = readOption('--project')
 if (!projectId) fail('missing --project <PR-ID>（或用 --self-test / --help）')
 
 const baseRef = readOption('--base', config.baseRef || 'origin/online')
-const projectDir = join(docsRoot, projectId)
+const projectDir = resolveProjectRoot(projectId)
 if (!existsSync(projectDir)) fail(`project not found: ${relative(repoRoot, projectDir)}`)
 
 const baseResolvable = spawnSync('git', ['rev-parse', '--verify', '--quiet', `${baseRef}^{commit}`], {

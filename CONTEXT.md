@@ -27,7 +27,7 @@
 
 ### PR-01685 活动落地页（当前主项目）
 
-- 项目目录：`apps/web/docs_tdd/PR-01685/`；worktree 见 PROJECTS.md（分支 `feature/PR-01685-1`；注意 `feature/PR-01685` 是后台分支、非基线）。
+- 项目目录：`apps/web/docs_tdd/prds/PR-01685/`；worktree 见 PROJECTS.md（分支 `feature/PR-01685-1`；注意 `feature/PR-01685` 是后台分支、非基线）。
 - 焦点/下一步：已切真实接口联调；Browser/Playwright 验收、JF 95% UI 还原；`06-collaboration §7` 仅余 `B10 ruleContent` 格式与联调环境网关实测待关闭。
 - 全量待确认登记唯一来源：`product/06-collaboration.md §7`。
 

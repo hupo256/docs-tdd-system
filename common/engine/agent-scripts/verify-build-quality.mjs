@@ -14,7 +14,7 @@ import { spawnSync } from 'node:child_process'
 import { basename, dirname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { tmpdir } from 'node:os'
-import { resolveRoots } from './lib/roots.mjs'
+import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 
 const scriptPath = fileURLToPath(import.meta.url)
 const scriptDir = dirname(scriptPath)
@@ -47,7 +47,7 @@ const writeBaseline = hasFlag('--write-baseline')
 const productionBuild = hasFlag('--production-build')
 const packageManager = readOption('--pm', 'pnpm')
 const projectManifest = projectId ? (() => {
-  try { return JSON.parse(readFileSync(join(docsRoot, projectId, 'agent/project-manifest.json'), 'utf8')) } catch { return null }
+  try { return JSON.parse(readFileSync(join(resolveProjectRoot(projectId), 'agent/project-manifest.json'), 'utf8')) } catch { return null }
 })() : null
 const strictTestEvidence = (projectManifest?.templateVersion || 0) >= 2
 
@@ -450,7 +450,7 @@ if (hasFlag('--self-test')) selfTest()
 
 const changedFiles = collectChangedFiles().filter((file) => /^(?:apps|packages)\//.test(file) || file === 'package.json')
 const changedSet = new Set(changedFiles)
-const baselineFile = projectId ? join(docsRoot, projectId, 'agent/tsc-baseline.json') : ''
+const baselineFile = projectId ? join(resolveProjectRoot(projectId), 'agent/tsc-baseline.json') : ''
 
 function readBaseline() {
   if (!baselineFile || !existsSync(baselineFile)) return { version: 1, baseRef, roots: {} }
@@ -629,7 +629,7 @@ if (productionBuild) {
 // 与 verify-code-rules 同口径：命中的 error 可被未过期 waiver 降级为 waived。
 function applyWaivers(list) {
   if (!projectId) return
-  const waiverFile = join(docsRoot, projectId, 'agent/rule-waivers.json')
+  const waiverFile = join(resolveProjectRoot(projectId), 'agent/rule-waivers.json')
   if (!existsSync(waiverFile)) return
   let waivers
   try {

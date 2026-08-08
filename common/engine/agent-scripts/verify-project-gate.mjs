@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process'
 import { blockerChecks } from './lib/blockers.mjs'
 import { codeReviewChecks } from './lib/code-review.mjs'
 import { acceptanceChecks } from './lib/acceptance-results.mjs'
-import { resolveRoots } from './lib/roots.mjs'
+import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 
 const scriptPath = fileURLToPath(import.meta.url)
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, config } = resolveRoots()
@@ -202,7 +202,7 @@ if (args.includes('--self-test')) runSelfTest()
 
 if (!/^PR-\d{5}$/.test(projectId || '') || !/^G[0-8]$/.test(gate)) failUsage()
 
-const projectDir = join(docsRoot, projectId)
+const projectDir = resolveProjectRoot(projectId)
 const checks = []
 
 function rel(file) {

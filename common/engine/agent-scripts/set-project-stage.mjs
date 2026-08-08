@@ -12,7 +12,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { resolveRoots } from './lib/roots.mjs'
+import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 
 const scriptPath = fileURLToPath(import.meta.url)
 const scriptDir = dirname(scriptPath)
@@ -193,7 +193,7 @@ if (!/^PR-\d{5}$/.test(projectId || '') || !/^G[0-8]$/.test(gate)) {
   fail('usage: set-project-stage.mjs PR-01234 G6 [--force] [--dry-run] [--json] [--no-index] [--no-summary]')
 }
 
-const projectDir = join(docsRoot, projectId)
+const projectDir = resolveProjectRoot(projectId)
 if (!existsSync(projectDir)) fail(`project directory does not exist: ${relative(repoRoot, projectDir)}`)
 
 const result = { projectId, gate, readme: '', previousGate: '', summary: 'skipped', index: 'skipped', warnings: [] }

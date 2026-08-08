@@ -299,7 +299,7 @@ export async function runSyncLarkDocs({ argv = process.argv.slice(2), defaultCon
   })
 
   const config = await readJson(configPath)
-  const outputDir = config.outputDir || `apps/web/docs_tdd/${config.projectId}/inbox/lark-sync`
+  const outputDir = config.outputDir || `apps/web/docs_tdd/prds/${config.projectId}/inbox/lark-sync`
   const rows = []
 
   for (const source of config.sources || []) {

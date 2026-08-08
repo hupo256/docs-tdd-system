@@ -19,14 +19,14 @@ import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } fr
 import { spawnSync } from 'node:child_process'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { resolveRoots } from './lib/roots.mjs'
+import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot } = resolveRoots()
 const fixtureDir = join(docsRoot, 'common/engine/fixtures/golden-project')
 
 export const GOLDEN_PROJECT_ID = 'PR-00000'
-const targetDir = join(docsRoot, GOLDEN_PROJECT_ID)
+const targetDir = resolveProjectRoot(GOLDEN_PROJECT_ID)
 
 const args = process.argv.slice(2)
 const keepFixture = args.includes('--keep')

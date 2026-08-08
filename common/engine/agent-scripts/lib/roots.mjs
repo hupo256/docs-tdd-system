@@ -10,7 +10,7 @@
 //   - consumerWorktree: the worktree the agent is actually coding in (git toplevel of cwd).
 //   - config         : consumer binding (docs-tdd.config.json), merged over bundled defaults.
 
-import { existsSync, readFileSync, realpathSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync, realpathSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -28,14 +28,23 @@ const defaultConfigFile = join(docsSystemRoot, 'docs-tdd.config.default.json')
 // point at the PRE-reorg locations, so introducing this layer is zero behavior
 // change; each later phase flips exactly one line:
 //   Phase 1 (engine): engineRoot   -> join(docsSystemRoot, 'common', 'engine')   [DONE]
-//   Phase 2 (prds):   resolveProjectRoot -> join(docsSystemRoot, 'prds', projectId)
+//   Phase 2 (prds):   resolveProjectRoot -> join(docsSystemRoot, 'prds', projectId)   [DONE]
 //   Phase 3 (rules):  rulesRoot     -> join(docsSystemRoot, 'common', 'rules')
 export const rulesRoot = join(docsSystemRoot, 'common')
 export const engineRoot = join(docsSystemRoot, 'common', 'engine')
-export const prdsRoot = docsSystemRoot
+export const prdsRoot = join(docsSystemRoot, 'prds')
 export function resolveProjectRoot(projectId) {
   if (typeof projectId !== 'string' || !projectId.trim()) throw new Error('projectId is empty')
   return join(prdsRoot, projectId.trim())
+}
+// List all project instance IDs (PR-* dirs) under the current prds root. Single
+// source for the several sites that used to readdirSync the docs root directly, so
+// the prds/ move needs no per-site path knowledge — they follow prdsRoot.
+export function listProjectIds() {
+  if (!existsSync(prdsRoot)) return []
+  return readdirSync(prdsRoot, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && /^PR-/.test(entry.name))
+    .map((entry) => entry.name)
 }
 
 function isInside(parent, child) {
@@ -45,7 +54,7 @@ function isInside(parent, child) {
 
 // Resolve a path that belongs to docs_tdd whether callers provide:
 // - the physical standalone docs path,
-// - a consumer-repo mount path such as apps/web/docs_tdd/PR-xxxxx/..., or
+// - a consumer-repo mount path such as apps/web/docs_tdd/prds/PR-xxxxx/..., or
 // - a docs-root-relative path such as PR-xxxxx/inbox/prd.md.
 // Existing inputs are realpath-resolved so a legitimate symlink mount is accepted without
 // weakening the boundary check; output paths are mapped to the physical docs root first.
@@ -61,7 +70,10 @@ export function resolveDocsPath(value, { consumerRoot, docsMountPath = 'apps/web
       : input
   } else if (input === docsMountPath || input.startsWith(mountPrefix)) {
     candidate = join(docsSystemRoot, input === docsMountPath ? '' : input.slice(mountPrefix.length))
-  } else if (/^(?:PR-[^/]+|common|templates)(?:\/|$)/.test(input)) {
+  } else if (/^PR-[^/]+(?:\/|$)/.test(input)) {
+    // bare project-relative input (legacy callers) -> current prds root
+    candidate = join(prdsRoot, input)
+  } else if (/^(?:prds|common|templates)(?:\/|$)/.test(input)) {
     candidate = join(docsSystemRoot, input)
   } else {
     candidate = resolve(consumerRoot || docsSystemRoot, input)

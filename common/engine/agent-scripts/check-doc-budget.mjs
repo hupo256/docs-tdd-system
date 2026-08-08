@@ -15,6 +15,7 @@ import { fileURLToPath } from 'node:url'
 
 const COMMON_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const DOCS_TDD_DIR = join(COMMON_DIR, '..')
+const PRDS_DIR = join(DOCS_TDD_DIR, 'prds') // 项目实例根（PR-* 已从仓库根收进 prds/）
 const SCRIPTS_DIR = join(COMMON_DIR, 'engine', 'agent-scripts')
 const TEMPLATES_DIR = join(DOCS_TDD_DIR, 'templates')
 const LINK_CHECK_SCRIPT = join(SCRIPTS_DIR, 'check-doc-links.mjs')
@@ -684,7 +685,7 @@ if (missingTemplateRefs.length) {
   const positive = '| [PR-00001](./PR-00001/README.md) | G4 中 | 用户 |'
   const positiveBacktick = '| `PR-01947` | 未记录 |'
   const negativeLink = '各需求项目文档目录；完整清单见 [PR-01685](./PR-01685/README.md)'
-  const negativeInline = '- 项目目录：`apps/web/docs_tdd/PR-01685/`；worktree 见 PROJECTS.md'
+  const negativeInline = '- 项目目录：`apps/web/docs_tdd/prds/PR-01685/`；worktree 见 PROJECTS.md'
   const selfOk =
     PROJECT_TABLE_ROW_RE.test(positive) &&
     PROJECT_TABLE_ROW_RE.test(positiveBacktick) &&
@@ -790,12 +791,12 @@ if (missingTemplateRefs.length) {
 // 只检查「已有 gate-results.json 且 ok=true」的项目——没有机器真值的项目无从漂移。
 {
   const syncErrors = []
-  const projectNames = readdirSync(DOCS_TDD_DIR, { withFileTypes: true })
+  const projectNames = readdirSync(PRDS_DIR, { withFileTypes: true })
     .filter((entry) => isRealProjectDir(entry, /^PR-\d{5}$/))
     .map((entry) => entry.name)
   let checkedGates = 0
   for (const name of projectNames) {
-    const gateFile = join(DOCS_TDD_DIR, name, 'agent/gate-results.json')
+    const gateFile = join(PRDS_DIR, name, 'agent/gate-results.json')
     if (!existsSync(gateFile)) continue
     let gateData = null
     try {
@@ -805,7 +806,7 @@ if (missingTemplateRefs.length) {
     }
     if (!gateData.ok || !/^G[0-8]$/.test(gateData.gate || '')) continue
     checkedGates += 1
-    const readmeText = readFileSync(join(DOCS_TDD_DIR, name, 'README.md'), 'utf8')
+    const readmeText = readFileSync(join(PRDS_DIR, name, 'README.md'), 'utf8')
     const machineMatch = MACHINE_ROW_RE.exec(readmeText)
     const machineGate = machineMatch ? machineMatch[1].trim().replace(/^\*\*|\*\*$/g, '') : ''
     if (!machineMatch) {
@@ -819,7 +820,7 @@ if (missingTemplateRefs.length) {
           `\n   修复：node apps/web/docs_tdd/common/engine/agent-scripts/set-project-stage.mjs ${name} ${gateData.gate}`,
       )
     }
-    const summaryFile = join(DOCS_TDD_DIR, name, 'agent/context-summary.md')
+    const summaryFile = join(PRDS_DIR, name, 'agent/context-summary.md')
     if (existsSync(summaryFile)) {
       const summaryText = readFileSync(summaryFile, 'utf8')
       if (summaryText.includes(MACHINE_SUMMARY_MARKER)) {
@@ -862,12 +863,12 @@ if (missingTemplateRefs.length) {
 {
   const chainErrors = []
   const requiredSequence = ['G5', 'G6', 'G7', 'G8']
-  const projectNames = readdirSync(DOCS_TDD_DIR, { withFileTypes: true })
+  const projectNames = readdirSync(PRDS_DIR, { withFileTypes: true })
     .filter((entry) => isRealProjectDir(entry, /^PR-/))
     .map((entry) => entry.name)
   let checkedProjects = 0
   for (const name of projectNames) {
-    const projectDir = join(DOCS_TDD_DIR, name)
+    const projectDir = join(PRDS_DIR, name)
     const readmeFile = join(projectDir, 'README.md')
     if (!existsSync(readmeFile)) continue
     const frontmatter = parseFrontmatter(readFileSync(readmeFile, 'utf8'))
@@ -946,12 +947,12 @@ if (missingTemplateRefs.length) {
   if (schemaLoadErrors.length) {
     errors.push(...schemaLoadErrors)
   } else {
-    const projectNames = readdirSync(DOCS_TDD_DIR, { withFileTypes: true })
+    const projectNames = readdirSync(PRDS_DIR, { withFileTypes: true })
       .filter((entry) => isRealProjectDir(entry, /^PR-/))
       .map((entry) => entry.name)
     const schemaErrors = []
     for (const name of projectNames) {
-      const projectDir = join(DOCS_TDD_DIR, name)
+      const projectDir = join(PRDS_DIR, name)
       const readmePath = join(projectDir, 'README.md')
       if (existsSync(readmePath)) {
         const fm = parseFrontmatter(readFileSync(readmePath, 'utf8'))

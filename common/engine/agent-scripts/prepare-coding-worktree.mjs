@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-import { existsSync, lstatSync, mkdirSync, readFileSync, readlinkSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, lstatSync, mkdirSync, readFileSync, readlinkSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn, spawnSync } from 'node:child_process';
-import { resolveRoots } from './lib/roots.mjs';
+import { listProjectIds, resolveProjectRoot, resolveRoots } from './lib/roots.mjs';
 
 const scriptPath = fileURLToPath(import.meta.url);
 const { docsSystemRoot, consumerRoot: repoRoot, config } = resolveRoots();
@@ -25,13 +25,12 @@ function frontmatterValue(file, key) {
 }
 
 function allocatePort() {
-  const projectReadme = join(docsSystemRoot, projectId || '', 'README.md');
+  const projectReadme = projectId ? join(resolveProjectRoot(projectId), 'README.md') : join(docsSystemRoot, 'README.md');
   const existing = frontmatterValue(projectReadme, 'port');
   if (/^\d+$/.test(existing)) return existing;
   const used = new Set();
-  for (const entry of readdirSync(docsSystemRoot, { withFileTypes: true })) {
-    if (!entry.isDirectory() || !/^PR-/.test(entry.name)) continue;
-    const value = frontmatterValue(join(docsSystemRoot, entry.name, 'README.md'), 'port');
+  for (const name of listProjectIds()) {
+    const value = frontmatterValue(join(resolveProjectRoot(name), 'README.md'), 'port');
     if (/^\d+$/.test(value)) used.add(Number(value));
   }
   let candidate = Number(config.portRangeStart || config.defaultPort || 4101);
@@ -277,7 +276,7 @@ async function verifyDevServer() {
 await verifyDevServer();
 
 function updateProjectMetadata() {
-  const readme = join(docsSystemRoot, projectId, 'README.md');
+  const readme = join(resolveProjectRoot(projectId), 'README.md');
   if (!existsSync(readme)) fail(`project README missing: ${readme}`);
   if (dryRun) {
     console.log(`[dry-run] update README frontmatter worktree=${worktreeDir} port=${port} branch=${branchName}`);

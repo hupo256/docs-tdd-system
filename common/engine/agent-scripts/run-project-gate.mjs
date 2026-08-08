@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url'
 import { tmpdir } from 'node:os'
 import { codeFingerprint } from './lib/fingerprint.mjs'
 import { recordFindings, loadLedger, saveLedger } from './warn-ledger.mjs'
-import { resolveRoots } from './lib/roots.mjs'
+import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 
 const scriptPath = fileURLToPath(import.meta.url)
 const scriptDir = dirname(scriptPath)
@@ -440,7 +440,7 @@ if (effectiveRulesCheck.status !== 0) {
   fail('effective rules release is missing or stale')
 }
 
-const projectDir = join(docsRoot, projectId)
+const projectDir = resolveProjectRoot(projectId)
 if (!existsSync(projectDir)) fail(`project directory does not exist: ${relative(repoRoot, projectDir)}`)
 const cacheFingerprint = gateCacheFingerprint(projectDir)
 const cacheDir = join(tmpdir(), 'docs-tdd-gate-cache')

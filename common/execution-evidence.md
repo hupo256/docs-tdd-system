@@ -36,7 +36,7 @@ apps/web/docs_tdd/<PROJECT-ID>/
 公共脚本：
 
 ```bash
-node apps/web/docs_tdd/common/engine/agent-scripts/log-exec.mjs --out apps/web/docs_tdd/PR-01234/agent/execution-log.md
+node apps/web/docs_tdd/common/engine/agent-scripts/log-exec.mjs --out apps/web/docs_tdd/prds/PR-01234/agent/execution-log.md
 ```
 
 `log-exec.mjs` 设计为 PostToolUse hook 的公共实现。它只追加真实工具执行后的 Bash 命令和截断输出摘要，且无论记录成功与否都不阻断主流程。

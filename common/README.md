@@ -70,11 +70,11 @@
 | 上线后回收编码 worktree | `node apps/web/docs_tdd/common/engine/agent-scripts/decommission-worktree.mjs PR-01234 [--dry-run]` |
 | Lark Bot Gateway 任务 worker | `node apps/web/docs_tdd/common/lark-bot/lark-worker.mjs [--once]` |
 | PostToolUse Bash 执行证据日志 | `node apps/web/docs_tdd/common/engine/agent-scripts/log-exec.mjs --out <abs-log-path>` |
-| 发送 Lark 阶段卡片 | `node apps/web/docs_tdd/common/engine/agent-scripts/notify-lark.mjs G6 已完成 "摘要" --config apps/web/docs_tdd/PR-01234/agent/scripts/pr-01234.json` |
+| 发送 Lark 阶段卡片 | `node apps/web/docs_tdd/common/engine/agent-scripts/notify-lark.mjs G6 已完成 "摘要" --config apps/web/docs_tdd/prds/PR-01234/agent/scripts/pr-01234.json` |
 | 创建编码 worktree | `node apps/web/docs_tdd/common/engine/agent-scripts/prepare-coding-worktree.mjs PR-01234` |
 | 字段对账（schema vs fixture） | `node apps/web/docs_tdd/common/engine/agent-scripts/schema-fixture-reconcile.mjs` |
 | 新建项目文档骨架 | `node apps/web/docs_tdd/common/engine/agent-scripts/start-new-project.mjs PR-01234 --prd <Lark URL 或本地 md>` |
-| 只读同步 Lark 资料 | `node apps/web/docs_tdd/common/engine/agent-scripts/sync-lark-docs.mjs --config apps/web/docs_tdd/PR-01234/agent/lark-sources.json` |
+| 只读同步 Lark 资料 | `node apps/web/docs_tdd/common/engine/agent-scripts/sync-lark-docs.mjs --config apps/web/docs_tdd/prds/PR-01234/agent/lark-sources.json` |
 | PRD 图片/表格/嵌入盘点与漂移检查 | `node apps/web/docs_tdd/common/engine/agent-scripts/prd-intake.mjs PR-01234 --init --source <repo-relative-prd.md>` |
 | 生成项目恢复摘要 | `node apps/web/docs_tdd/common/engine/agent-scripts/update-context-summary.mjs PR-01234 --stage G6 --write` |
 | 静态代码规则扫描 | `node apps/web/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --project PR-01234` |

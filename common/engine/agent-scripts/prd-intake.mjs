@@ -5,7 +5,7 @@ import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import assert from 'node:assert/strict'
-import { resolveRoots } from './lib/roots.mjs'
+import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot } = resolveRoots()
@@ -153,7 +153,7 @@ function inspectManifest({ manifest, projectId, stage, readSource, readAsset, in
 }
 
 function projectPaths(projectId) {
-  const projectDir = join(docsRoot, projectId)
+  const projectDir = resolveProjectRoot(projectId)
   return { projectDir, manifestFile: join(projectDir, 'agent/prd-source-manifest.json') }
 }
 
