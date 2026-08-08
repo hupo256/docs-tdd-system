@@ -20,6 +20,24 @@ const here = dirname(fileURLToPath(import.meta.url)) // <docs>/common/agent-scri
 export const docsSystemRoot = resolve(here, '../../..') // -> <docs> root, host-independent
 const defaultConfigFile = join(docsSystemRoot, 'docs-tdd.config.default.json')
 
+// --- Domain roots (three-domain reorg indirection layer) ---
+// The system splits into three internal domains under common/ (rules / lark-bot /
+// engine) plus project instances (prds/). Callers must resolve those locations
+// through THESE helpers, never by hand-joining docsSystemRoot, so a physical move
+// flips one constant here instead of chasing scattered path joins. Values below
+// point at the PRE-reorg locations, so introducing this layer is zero behavior
+// change; each later phase flips exactly one line:
+//   Phase 1 (engine): engineRoot   -> join(docsSystemRoot, 'common', 'engine')
+//   Phase 2 (prds):   resolveProjectRoot -> join(docsSystemRoot, 'prds', projectId)
+//   Phase 3 (rules):  rulesRoot     -> join(docsSystemRoot, 'common', 'rules')
+export const rulesRoot = join(docsSystemRoot, 'common')
+export const engineRoot = join(docsSystemRoot, 'common', 'agent-scripts')
+export const prdsRoot = docsSystemRoot
+export function resolveProjectRoot(projectId) {
+  if (typeof projectId !== 'string' || !projectId.trim()) throw new Error('projectId is empty')
+  return join(prdsRoot, projectId.trim())
+}
+
 function isInside(parent, child) {
   const rel = relative(parent, child)
   return rel === '' || (!rel.startsWith('..') && !isAbsolute(rel))

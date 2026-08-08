@@ -1,8 +1,8 @@
 {
   "version": 1,
   "rulesetVersion": "local-2026.07-msw-v1",
-  "fingerprint": "718c42c2a54b6e0d37bcab7ff7218f7d2f1ce39d22306b2bbd8b9d08ccf7dc99",
-  "publishedAt": "2026-08-08T13:39:57.008Z",
+  "fingerprint": "ddc7ddc960f956e5c1b5c1e03a56503085d6aa8597072b7c8922a15decb4153e",
+  "publishedAt": "2026-08-08T17:38:10.392Z",
   "fileCount": 119,
   "files": {
     "common/agent-scripts/check-doc-budget.mjs": "9339b4b38f922b40ef1e8e98b822d0ab6222be668626fe6fe493d9cd948e457a",
@@ -17,7 +17,7 @@
     "common/agent-scripts/lib/blockers.mjs": "3c55feaf004469a9470980803b5c33e84d2516944207cf40eb391a5ead0fd2b3",
     "common/agent-scripts/lib/code-review.mjs": "7d00cd9ae93a2981b0ff0866a45b5be4e45fe8c3a60cb65f3bea4761763e0330",
     "common/agent-scripts/lib/fingerprint.mjs": "ff496266fb29393bfd0b70999a43d6c7bb7357c3ed9784a5037859d882621c47",
-    "common/agent-scripts/lib/roots.mjs": "69edba7b803c509dc5c5b98d35f5d3ef542e88d678da2a3fc72f8cf9733f2ccb",
+    "common/agent-scripts/lib/roots.mjs": "a988767535551025e56e903fe24e59cf73b14ab3f49dc267b6ea45173224de69",
     "common/agent-scripts/log-exec.mjs": "8746d44b6485fa19cac81d16b6c9902b135bfc2f9ea95487158ad9dfcb488c07",
     "common/agent-scripts/notify-lark.mjs": "92779715a20864b7ca468ba084534957b5b4c378ab969849baa827d40f6f9e13",
     "common/agent-scripts/prd-intake.mjs": "28e5b8af58998c7c169d6051e718df5095f5843f5a5d87ce9c2137a0c973229d",
