@@ -61,7 +61,7 @@ function main() {
       }
     }
   }
-  if (/^apps\/web\/docs_tdd\/common\/[^/]+\.md$/.test(rel) || rel === 'apps/web/docs_tdd/common/rule-index.json' || /^apps\/web\/docs_tdd\/templates\/[^/]+\.md$/.test(rel)) {
+  if (/^apps\/web\/docs_tdd\/common\/rules\/[^/]+\.md$/.test(rel) || rel === 'apps/web/docs_tdd/common/rules/rule-index.json' || /^apps\/web\/docs_tdd\/templates\/[^/]+\.md$/.test(rel)) {
     const s = join(SCRIPT_DIR, 'check-doc-budget.mjs')
     if (existsSync(s)) {
       const r = spawnSync('node', [s], { cwd: root, encoding: 'utf8', stdio: ['ignore','pipe','pipe'], timeout: T })

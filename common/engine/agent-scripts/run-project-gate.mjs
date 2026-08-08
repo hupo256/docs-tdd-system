@@ -192,7 +192,7 @@ function summarizeCommand(item) {
 
 function createFingerprint() {
   const code = codeFingerprint(callerCwd, config.baseRef || 'origin/online')
-  const rulesetFile = join(docsRoot, 'common/ruleset.json')
+  const rulesetFile = join(docsRoot, 'common/rules/ruleset.json')
   const ruleset = existsSync(rulesetFile) ? JSON.parse(readFileSync(rulesetFile, 'utf8')) : { version: 'unknown' }
   const releaseFile = join(docsRoot, 'common/rule-release.json')
   const release = existsSync(releaseFile) ? JSON.parse(readFileSync(releaseFile, 'utf8')) : { fingerprint: 'unknown' }

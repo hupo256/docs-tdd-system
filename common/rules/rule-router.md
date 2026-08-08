@@ -1,7 +1,7 @@
 <!-- RESIDENT-DOC: 唯一常驻规则；预算和覆盖校验见 check-doc-budget.mjs -->
 # docs_tdd 启动路由
 
-> 开工只读本文件并按场景加载；禁止全读 `common/`。机器路由见 [rule-index.json](./rule-index.json)，人工索引见 [README.md](./README.md)。
+> 开工只读本文件并按场景加载；禁止全读 `common/`。机器路由见 [rule-index.json](./rule-index.json)，人工索引见 [README.md](../README.md)。
 
 ## 1. 启动协议
 

@@ -1,14 +1,14 @@
 # PR-01988 Agent 流程
 
-> 状态：G2 已确认，G4 Admin UI/UX 已完成，G5 接口联调已完成，当前进入 G6/G7 QA 用例同步和验收证据收口。公共协作规则继承 [`../../common/collaboration-and-notifications.md`](../../../common/collaboration-and-notifications.md)。
+> 状态：G2 已确认，G4 Admin UI/UX 已完成，G5 接口联调已完成，当前进入 G6/G7 QA 用例同步和验收证据收口。公共协作规则继承 [`../../common/rules/collaboration-and-notifications.md`](../../../common/rules/collaboration-and-notifications.md)。
 
 ## 恢复顺序
 
 1. `apps/web/docs_tdd/AGENTS.md`
 2. `apps/web/docs_tdd/CONTEXT.md`
 3. `apps/web/docs_tdd/common/README.md`
-4. `apps/web/docs_tdd/common/prd-feature-inventory.md`
-5. `apps/web/docs_tdd/common/project-doc-structure.md`
+4. `apps/web/docs_tdd/common/rules/prd-feature-inventory.md`
+5. `apps/web/docs_tdd/common/rules/project-doc-structure.md`
 6. `apps/web/docs_tdd/prds/PR-01988/README.md`
 7. `apps/web/docs_tdd/prds/PR-01988/product/00-feature-inventory.md`
 8. `apps/web/docs_tdd/prds/PR-01988/product/06-collaboration.md`

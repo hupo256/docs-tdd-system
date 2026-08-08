@@ -18,7 +18,7 @@ PROJECTS.md                    # 顶层项目状态索引，由 update-project-i
     lark-sync/                # Lark 只读同步落地（见 lark-doc-sync.md）
     figma/                    # 原始 Figma MCP 导出（可选）
   product/
-    00-feature-inventory.md   # 可选编号 00；G0 初稿、G2 定稿（见 common/prd-feature-inventory.md）
+    00-feature-inventory.md   # 可选编号 00；G0 初稿、G2 定稿（见 common/rules/prd-feature-inventory.md）
     01-scope-and-phases.md
     02-technical-design.md
     03-api-contract.md        # G1 从 templates/03-api-contract-template.md 复制；含字段对账表
@@ -87,7 +87,7 @@ PROJECTS.md                    # 顶层项目状态索引，由 update-project-i
 - 新需求 G0/G1 必须记录 Lark 主动发群、群内 @ 应用自动建 task 是否启用;两项 nice to have,不配也能开发。
 - 决定启用群通知:必须在 `agent/` 建 Lark/webhook 配置说明和通知记录;可复制 `templates/notification-log-template.md`。
 - 决定启用群通知:`agent/scripts/notify-lark.mjs` 只能是调用 `common/engine/agent-scripts/notify-lark.mjs` 的薄包装,不复制旧项目完整通知脚本。
-- 决定启用群内 @ 反馈 bug/QA/自测任务:必须在 `agent/` 建 Lark 应用事件订阅和 Worker 处理规则,继承 `common/collaboration-and-notifications.md`。
+- 决定启用群内 @ 反馈 bug/QA/自测任务:必须在 `agent/` 建 Lark 应用事件订阅和 Worker 处理规则,继承 `common/rules/collaboration-and-notifications.md`。
 - 新项目 G0 前 Agent **必须自动**创建 `product/00-feature-inventory.md`（见 [prd-feature-inventory.md](./prd-feature-inventory.md) §3）,登记 PRD 来源并优先用 Lark CLI 同步到 `inbox/lark-sync/`;G2 定稿前不写业务代码。
 - 新项目 G2/G5/G6/G7/G8 前必须按 [rule-ids-and-gates.md](./rule-ids-and-gates.md) 依次跑项目 gate；正式入口写最近结果、追加成功历史和独立证据，代码静态扫描只检查新增/已修改文件。
 

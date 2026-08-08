@@ -1,6 +1,6 @@
 # PR-01988 Lark 接入
 
-> 项目差异配置；通用规则继承 [`../../common/lark-active-notification.md`](../../../common/lark-active-notification.md) 和 [`../../common/collaboration-and-notifications.md`](../../../common/collaboration-and-notifications.md)。
+> 项目差异配置；通用规则继承 [`../../common/rules/lark-active-notification.md`](../../../common/rules/lark-active-notification.md) 和 [`../../common/rules/collaboration-and-notifications.md`](../../../common/rules/collaboration-and-notifications.md)。
 
 ## 启用状态
 

@@ -7,7 +7,7 @@
  * 由 Claude Code 的 PostToolUse hook 在工具真实执行后调用（harness 触发，模型无法用叙述伪造）。
  * 因此日志里的每一条都对应一次真实执行——可用来反查“声称执行过但其实没执行”的幻觉。
  *
- * 规则见 apps/web/docs_tdd/common/execution-evidence.md。
+ * 规则见 apps/web/docs_tdd/common/rules/execution-evidence.md。
  *
  * 用法（在 settings hooks.command 里）：
  *   node <repo>/apps/web/docs_tdd/common/engine/agent-scripts/log-exec.mjs --out <abs-log-path>

@@ -1,6 +1,6 @@
 # Feature Inventory — PR-02022 合约跟单引导页
 
-> 规则：../../common/prd-feature-inventory.md。
+> 规则：../../common/rules/prd-feature-inventory.md。
 
 | 字段 | 值 |
 |------|-----|

@@ -1,6 +1,6 @@
 # PR-02074 Lark 集成
 
-继承 ../../common/collaboration-and-notifications.md。
+继承 ../../common/rules/collaboration-and-notifications.md。
 
 ## 启用状态
 

@@ -4,7 +4,7 @@
 # Feature Inventory — `PR-02265 外部做市商合约账户支持配置负手续费率`
 
 > **Agent 自动创建**：新需求 G0 前，由 Agent 从 [feature-inventory-template.md](../../../templates/feature-inventory-template.md) 复制到本路径，勿等负责人手动操作。  
-> 规则：[common/prd-feature-inventory.md](../../../common/prd-feature-inventory.md) §3（G0 初稿 → G2 定稿 → 再写代码）。
+> 规则：[common/rules/prd-feature-inventory.md](../../../common/rules/prd-feature-inventory.md) §3（G0 初稿 → G2 定稿 → 再写代码）。
 
 | 字段 | 值 |
 |------|-----|

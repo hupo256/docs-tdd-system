@@ -55,7 +55,7 @@
 | H3 | 当前是否开始 UI 开发 | 已完成 Mock 开发里程碑；后续聚焦 API 联调、QA 回归、Lark 集成 |
 | H4 | Swagger/OpenAPI 地址或文件 | 已提供 YApi：项目 276 / 分类 1205；已整理接口清单和字段摘要 |
 | H5 | Figma 状态稿与适配规则 | F1–F4、F6、F9、F10 已确认；深/浅色 token + Mobile Web 见 07-figma-spec §11 |
-| H6 | 分享组件级方案 | 按 [common/component-reuse-and-visual-fidelity.md](../../../common/component-reuse-and-visual-fidelity.md)：渠道行复用 `ShareActionButtons`；活动弹窗内容区可定制 | 已落地（2026-06-27） |
+| H6 | 分享组件级方案 | 按 [common/rules/component-reuse-and-visual-fidelity.md](../../../common/rules/component-reuse-and-visual-fidelity.md)：渠道行复用 `ShareActionButtons`；活动弹窗内容区可定制 | 已落地（2026-06-27） |
 | H7 | Web 埋点/事件文档内容 | 已导出 Markdown；只处理 Web 前端事件与公共参数 |
 | H8 | 登录、已报名、未报名、KYC、受限、排行榜等测试账号 | 暂无；Browser/Playwright 自动验收前由 Lark 机器人向负责人索取 |
 | H12 | Lark 应用审批 | 已审批通过并发布；机器人已可接收群内 @ 事件 |

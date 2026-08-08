@@ -1,6 +1,6 @@
 # UI And Interaction — PR-02022 合约跟单引导页
 
-继承 [../../common/ui-style-token-rules.md](../../../common/ui-style-token-rules.md)。详细 Figma 规格见 [07-figma-spec.md](./07-figma-spec.md)。
+继承 [../../common/rules/ui-style-token-rules.md](../../../common/rules/ui-style-token-rules.md)。详细 Figma 规格见 [07-figma-spec.md](./07-figma-spec.md)。
 
 ## 页面 / 路由
 

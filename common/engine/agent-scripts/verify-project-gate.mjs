@@ -822,7 +822,7 @@ validators[gate]()
 // Local pilots keep their creation-time contract. Newly introduced checks are report-only
 // until a project explicitly opts into blocking current rules.
 const projectManifest = readJson(join(projectDir, 'agent/project-manifest.json'))
-const ruleset = readJson(join(docsRoot, 'common/ruleset.json'))
+const ruleset = readJson(join(docsRoot, 'common/rules/ruleset.json'))
 if (projectManifest?.gatePolicy?.legacyRules === 'report-only') {
   for (const check of checks) {
     if (!check.ok && /^DOC-G3-00[1-7]$/.test(check.ruleId)) check.severity = 'warn'

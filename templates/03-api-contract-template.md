@@ -5,10 +5,10 @@
 
 > **模板**：`templates/03-api-contract-template.md`
 > **配套规则**：
-> - 单一来源字段默认贴合契约、仅两类改名例外：[api-and-mapper.md](../common/api-and-mapper.md) §2
-> - 文案像接口 contract 一样管理：[architecture-and-state.md](../common/architecture-and-state.md) §7.1
-> - 真实接口到位后的字段对账关卡：[architecture-and-state.md](../common/architecture-and-state.md) §8.1
-> - 新功能 mock 强制 MSW 路线 B：[architecture-and-state.md](../common/architecture-and-state.md) §8.4.1
+> - 单一来源字段默认贴合契约、仅两类改名例外：[api-and-mapper.md](../common/rules/api-and-mapper.md) §2
+> - 文案像接口 contract 一样管理：[architecture-and-state.md](../common/rules/architecture-and-state.md) §7.1
+> - 真实接口到位后的字段对账关卡：[architecture-and-state.md](../common/rules/architecture-and-state.md) §8.1
+> - 新功能 mock 强制 MSW 路线 B：[architecture-and-state.md](../common/rules/architecture-and-state.md) §8.4.1
 > **使用**：G1 复制到项目 `product/03-api-contract.md`；G3 补 Mock 场景和文案契约；G5 联调时逐行更新 §5 字段对账并做减法。
 
 ## 0. 元信息
@@ -69,7 +69,7 @@ interface FooDetailDTO {
 
 ## 4. UI 领域模型
 
-按 [api-and-mapper.md](../common/api-and-mapper.md) §2：**单一来源默认与 API 同名**。类型/格式变化与消歧也默认保持原名；仅跨来源统一或多字段派生允许新字段名。
+按 [api-and-mapper.md](../common/rules/api-and-mapper.md) §2：**单一来源默认与 API 同名**。类型/格式变化与消歧也默认保持原名；仅跨来源统一或多字段派生允许新字段名。
 
 ```ts
 type FooView = {
@@ -86,7 +86,7 @@ type FooView = {
 **规则**：
 - 每个 UI 领域字段一行。
 - 「mapper 取值」列写清 fallback 链，例如 `dto.rewardName ?? dto.rewardType`。
-- 「契约字段」列必须是 §3 DTO 里真实存在的字段路径。**找不到唯一来源的字段是 mock 阶段臆造，必须删除或与其它字段合并**（[architecture-and-state.md](../common/architecture-and-state.md) §8.1 反面案例）。
+- 「契约字段」列必须是 §3 DTO 里真实存在的字段路径。**找不到唯一来源的字段是 mock 阶段臆造，必须删除或与其它字段合并**（[architecture-and-state.md](../common/rules/architecture-and-state.md) §8.1 反面案例）。
 - 「映射类型」四选一：`同名直传` / `同名转换` / `跨来源统一` / `多字段派生`。后两类必须在 mapper 写 §3.1 结构化理由；类型变化和消歧不是改名理由。
 
 ### 5.1 `FooView` ← `FooDetailDTO`（`A1`）
@@ -116,7 +116,7 @@ expect(diffStrippedKeys(rawPayload, detailSchema.parse(rawPayload))).toEqual([])
 
 ## 6. Mock 场景矩阵
 
-> 强制路线：新功能使用 MSW（[architecture-and-state.md §8.4.1](../common/architecture-and-state.md) 路线 B）。service / hook / mapper 从第一天只写真实请求；mock 只在 `src/mocks/handlers/<feature>.ts`，并用真实 schema 做契约测试。无法采用 MSW 时，必须先在 `agent/rule-waivers.json` 登记豁免，才允许使用 §6.2 路线 A。
+> 强制路线：新功能使用 MSW（[architecture-and-state.md §8.4.1](../common/rules/architecture-and-state.md) 路线 B）。service / hook / mapper 从第一天只写真实请求；mock 只在 `src/mocks/handlers/<feature>.ts`，并用真实 schema 做契约测试。无法采用 MSW 时，必须先在 `agent/rule-waivers.json` 登记豁免，才允许使用 §6.2 路线 A。
 
 | 场景 | 说明 | Mock 触发 | 覆盖字段 |
 |------|------|----------|---------|
@@ -126,7 +126,7 @@ expect(diffStrippedKeys(rawPayload, detailSchema.parse(rawPayload))).toEqual([])
 | unauthorized | 未登录 / 未报名 | MSW handler 场景参数 / fixture | 隐藏 CTA、脱敏字段 |
 | edge | 极值 / 长文案 / 精度 | MSW handler 场景参数 / fixture | 大数、长标题、多档位 |
 
-Mock response 必须过真实 schema；建议新增 `<feature>.contract.test.ts` 断言 handler response 与 schema 同源。fixture 位置、schema、mapper 必须与真实接口同链路（[architecture-and-state.md](../common/architecture-and-state.md) §8）。
+Mock response 必须过真实 schema；建议新增 `<feature>.contract.test.ts` 断言 handler response 与 schema 同源。fixture 位置、schema、mapper 必须与真实接口同链路（[architecture-and-state.md](../common/rules/architecture-and-state.md) §8）。
 
 ## 6.1 MSW 路线 B 清单（强制，G3 建，G5 切真实）
 
@@ -147,7 +147,7 @@ Mock response 必须过真实 schema；建议新增 `<feature>.contract.test.ts`
 
 > 使用本节前必须已有 `agent/rule-waivers.json` 豁免记录，说明为什么不能采用 MSW、替代隔离方案、owner、过期时间。
 
-Mock 是临时脚手架，真实接口就绪 + §5 对账通过后**立即删光、零残留**（路线 A 见 [mock-legacy-route-a.md §8.0.3](../common/mock-legacy-route-a.md)；MSW 删 handler 即可）。写 mock 时同步登记每个待删点：
+Mock 是临时脚手架，真实接口就绪 + §5 对账通过后**立即删光、零残留**（路线 A 见 [mock-legacy-route-a.md §8.0.3](../common/rules/mock-legacy-route-a.md)；MSW 删 handler 即可）。写 mock 时同步登记每个待删点：
 
 | # | mock 待删点（文件 / 分支 / env / 标记） | 替换它的真实接口 | 标记 | 状态 |
 |---|------------------------------------------|------------------|------|------|
@@ -164,7 +164,7 @@ Mock 是临时脚手架，真实接口就绪 + §5 对账通过后**立即删光
 
 ## 7. 文案契约表（强制）
 
-> 固定文案按 [architecture-and-state.md §7.1](../common/architecture-and-state.md) 管理；未入表的新文案不要直接落 JSX 或 locale。实现阶段只维护 zh-CN。
+> 固定文案按 [architecture-and-state.md §7.1](../common/rules/architecture-and-state.md) 管理；未入表的新文案不要直接落 JSX 或 locale。实现阶段只维护 zh-CN。
 > **逐字硬性**：「默认中文」列必须逐字 copy 自 PRD/Figma/运营原文，禁意译/复述/改写；固定文案实现必须配「值 === 来源原文」字面断言测试（`it.each` + `toBe`）。反面案例 PR-02022：有表仍意译、结构断言拦不住。
 
 | 文案 ID | 页面/组件 | 来源 | Owner | zh-CN key | 默认中文（逐字原文） | 动态变量 | 展示条件 | 状态 |

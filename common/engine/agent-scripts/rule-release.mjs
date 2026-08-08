@@ -100,7 +100,7 @@ function checkRelease() {
   const current = createSnapshot()
   const published = readManifest()
   const diff = compareFiles(published?.files, current.files)
-  const ruleset = JSON.parse(readFileSync(join(commonDir, 'ruleset.json'), 'utf8'))
+  const ruleset = JSON.parse(readFileSync(join(commonDir, 'rules', 'ruleset.json'), 'utf8'))
   const manifestValid = Boolean(
     published &&
       !published.parseError &&
@@ -171,7 +171,7 @@ function publish() {
   }
 
   const snapshot = createSnapshot()
-  const ruleset = JSON.parse(readFileSync(join(commonDir, 'ruleset.json'), 'utf8'))
+  const ruleset = JSON.parse(readFileSync(join(commonDir, 'rules', 'ruleset.json'), 'utf8'))
   const manifest = {
     version: 1,
     rulesetVersion: ruleset.version,

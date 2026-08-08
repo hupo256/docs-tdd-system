@@ -1,6 +1,6 @@
 # Feature Inventory — `PR-01988 预测市场二期`
 
-> 规则：[common/prd-feature-inventory.md](../../../common/prd-feature-inventory.md) §3（G0 初稿 → G2 定稿 → 再写代码）。  
+> 规则：[common/rules/prd-feature-inventory.md](../../../common/rules/prd-feature-inventory.md) §3（G0 初稿 → G2 定稿 → 再写代码）。  
 > 当前状态：G2 已确认；Admin UI/UX 已完成；YApi project 459 已拉取 32 个接口，mock-first 保留兜底，真实 API / 高风险 mutation 仍需权限、环境、路径稳定性和安全确认。
 
 | 字段 | 值 |

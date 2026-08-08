@@ -1,7 +1,7 @@
 # Feature Inventory — `PR-01973 TradFi 落地页`
 
-> **追溯补齐说明**：本项目首版已交付，本清单为结构对齐时按 [common/prd-feature-inventory.md](../../../common/prd-feature-inventory.md) 追溯整理，内容全部来自已确认的 [01-scope-and-phases.md](./01-scope-and-phases.md)、[README.md](../README.md) 与 [06-collaboration.md](./06-collaboration.md)，不重新定义 scope。  
-> 规则：[common/prd-feature-inventory.md](../../../common/prd-feature-inventory.md) §3（G0 初稿 → G2 定稿 → 再写代码）。
+> **追溯补齐说明**：本项目首版已交付，本清单为结构对齐时按 [common/rules/prd-feature-inventory.md](../../../common/rules/prd-feature-inventory.md) 追溯整理，内容全部来自已确认的 [01-scope-and-phases.md](./01-scope-and-phases.md)、[README.md](../README.md) 与 [06-collaboration.md](./06-collaboration.md)，不重新定义 scope。  
+> 规则：[common/rules/prd-feature-inventory.md](../../../common/rules/prd-feature-inventory.md) §3（G0 初稿 → G2 定稿 → 再写代码）。
 
 | 字段 | 值 |
 |------|-----|

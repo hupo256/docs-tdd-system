@@ -1,6 +1,6 @@
 # API Contract — PR-01947
 
-> 继承 ../../common/architecture-and-state.md §3（schema 单源）/§8（Mock 生命周期）。  
+> 继承 ../../common/rules/architecture-and-state.md §3（schema 单源）/§8（Mock 生命周期）。  
 > **YApi 已同步（2026-07-14）**：原始 JSON → [`../inbox/yapi/project-587-cat-1489/`](../inbox/yapi/project-587-cat-1489/) · 整理稿 → [`../inbox/yapi/yapi-cat-1489-follow-setting.md`](../inbox/yapi/yapi-cat-1489-follow-setting.md) · [Project 587 Cat 1489](http://35.240.211.100:3333/project/587/interface/api/cat_1489)
 
 ## 0. YApi 确认口径（2026-07-14；前台字段 G5 文档对账 2026-07-21 通过）

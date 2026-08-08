@@ -59,7 +59,7 @@
 
 本地规则试点升级（保持 `docs_tdd` local-only，不改项目根配置、不进入团队版本管理）：
 
-- **本地 ruleset + 项目版本边界**：新增 `common/ruleset.json` 与 `agent/project-manifest.json`，规则带 maturity/blocking/waivable 元数据；PR-01947、PR-02074 固定当前本地规则版本并采用 report-only，避免规则迭代回溯阻断存量项目。
+- **本地 ruleset + 项目版本边界**：新增 `common/rules/ruleset.json` 与 `agent/project-manifest.json`，规则带 maturity/blocking/waivable 元数据；PR-01947、PR-02074 固定当前本地规则版本并采用 report-only，避免规则迭代回溯阻断存量项目。
 - **MSW 事实清单取代纯关键词声明**：新增 `agent/msw-manifest.json`、`agent/assumptions.json` 及 schema/verifier，校验真实 handler、fixture、契约测试、注册链、场景矩阵、退役证据和 API 假设清零；planned 生命周期允许 G3 前 endpoint 清单为空。
 - **Agent-neutral 执行入口**：新增 `docs-tdd.mjs` 统一提供 capability/context/changed/gate/check；从项目 README 解析 worktree，并在对应 feature worktree 执行代码扫描和 gate，Claude/Codex 配置只保留薄适配与无 hook 时的显式 fallback。
 - **证据可复现性**：gate 产物新增命令结束时间、Git/dirty/ruleset fingerprint，以及 documentation/implementation 分组统计；新字段保持向后兼容，不要求历史证据回填。
@@ -197,7 +197,7 @@ Review 后三项收敛（Mock 文档主路径前置 + `/code-review` gate 收紧
 - **G8 证据反糊弄**：`VERIFY-G8-001` 改查 `gate-results.json` 含 `generatedAt`+`tool`（须由 `--write` 真实产出）；脚手架不再预建空 `gate-results.json`。
 - **PostToolUse 反误阻断**：`verify-code-rules.mjs` 在 `--files` 模式下跳过全仓 `CODE-MOCK-004/005` 扫描，避免别处存量残留阻断无关单文件编辑、并避免 git grep 撞 hook 5s 超时。
 - **rule ID 台账**：`rule-ids-and-gates.md` §5 补齐全部阶段 gate ID 台账；`check-doc-budget.mjs` 新增校验 5——脚本里的每个 rule ID 必须登记进台账，否则失败。
-- **还原度判定单一源加固**：`≥95%` 在 `browser-e2e-mcp.md`、`verification-division-of-labor.md` 补链到 [component-reuse §3.0](./component-reuse-and-visual-fidelity.md)（清单逐项 pass 为准，`≥95%` 是简写）；修正 verification-division §5 悬空修订引用。
+- **还原度判定单一源加固**：`≥95%` 在 `browser-e2e-mcp.md`、`verification-division-of-labor.md` 补链到 [component-reuse §3.0](./rules/component-reuse-and-visual-fidelity.md)（清单逐项 pass 为准，`≥95%` 是简写）；修正 verification-division §5 悬空修订引用。
 - **housekeeping**：`CONTEXT.md` 主仓分支 `dev`→`online`；清理 `.DS_Store`；旧 `automation-upgrade-report-2026-07-05.md` 内容并入本日志。
 
 ## 2026-07-05（原 automation-upgrade-report）

@@ -206,7 +206,7 @@ const optionalText = (v?: string) =>
 
 ### 8.4 路线 B：MSW 当前策略
 
-新功能默认用 MSW 在网络层拦截请求；service/hook/mapper/组件只实现真实请求链路。PR-01947 已验证「停用 handler 即切真实接口，业务代码不因拆 mock 而修改」，历史决策过程只在 [CHANGELOG.md](./CHANGELOG.md) 保留。遗留 `if (USE_MOCK)` 功能才消费 [mock-legacy-route-a.md](./mock-legacy-route-a.md)。
+新功能默认用 MSW 在网络层拦截请求；service/hook/mapper/组件只实现真实请求链路。PR-01947 已验证「停用 handler 即切真实接口，业务代码不因拆 mock 而修改」，历史决策过程只在 [CHANGELOG.md](../CHANGELOG.md) 保留。遗留 `if (USE_MOCK)` 功能才消费 [mock-legacy-route-a.md](./mock-legacy-route-a.md)。
 
 ### 8.4.1 新功能 MSW 执行契约
 

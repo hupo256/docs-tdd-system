@@ -34,7 +34,7 @@
 - `apps/web/src/services/api/campaign/campaign.ts` 已按 YApi 路径封装，固定走真实接口。
 - `fetchCampaignDetail`：先拉详情 DTO，再按排行榜 `taskGroupId` 补拉 ranking，共用 `mapYapiCampaignDetail`。
 - `apps/web/src/apps/Campaign/common/yapiTypes.ts`、`mapYapiCampaign.ts` 已按 YApi 2026-06-26 校准（见 §0.5）。
-- **Mock 已零残留拆除（2026-07-03）**：按 [architecture-and-state.md §8.0.3](../../../common/architecture-and-state.md) 拆除三道闸删除 `apps/Campaign/mock/`、`services/api/campaign/mockApi.ts`、`campaign.integration.test.ts`、`NEXT_PUBLIC_CAMPAIGN_USE_MOCK` flag、`CampaignScenario` 类型；`grep -rn "mock" apps/web/src/apps/Campaign apps/web/src/services/api/campaign`、`grep -rn "USE_MOCK" apps/web` 均已归零。
+- **Mock 已零残留拆除（2026-07-03）**：按 [architecture-and-state.md §8.0.3](../../../common/rules/architecture-and-state.md) 拆除三道闸删除 `apps/Campaign/mock/`、`services/api/campaign/mockApi.ts`、`campaign.integration.test.ts`、`NEXT_PUBLIC_CAMPAIGN_USE_MOCK` flag、`CampaignScenario` 类型；`grep -rn "mock" apps/web/src/apps/Campaign apps/web/src/services/api/campaign`、`grep -rn "USE_MOCK" apps/web` 均已归零。
 - 埋点：`apps/web/src/apps/Campaign/common/campaignTracking.ts`，沿用 PostHog（模式同 `worldCupTracking.ts`）。
 - **仍待联调确认**：`ruleContent` 渲染格式（当前纯文本）；`GET /api/activity/list` 本期不接入。
 - **C 端字段映射（2026-07 dev 联调）**：任务卡片 `buttonStatus` 仅 `taskViews[]` 级保证下发，见 [engineering/campaign-api.md](../engineering/campaign-api.md)。

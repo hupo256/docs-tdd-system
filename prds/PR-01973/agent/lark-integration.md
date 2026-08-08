@@ -1,9 +1,9 @@
 # PR-01973 Lark 集成说明
 
 > 本文只记录 PR-01973 项目差异、当前运行状态和历史验证结果。通用规则继承：
-> - 主动通知：[../../common/lark-active-notification.md](../../../common/lark-active-notification.md)
-> - 群内 @ 应用转任务：[../../common/lark-bot-gateway.md](../../../common/lark-bot-gateway.md)
-> - 协作边界：[../../common/collaboration-and-notifications.md](../../../common/collaboration-and-notifications.md)
+> - 主动通知：[../../common/rules/lark-active-notification.md](../../../common/rules/lark-active-notification.md)
+> - 群内 @ 应用转任务：[../../common/rules/lark-bot-gateway.md](../../../common/rules/lark-bot-gateway.md)
+> - 协作边界：[../../common/rules/collaboration-and-notifications.md](../../../common/rules/collaboration-and-notifications.md)
 
 ## 1. 启用状态
 

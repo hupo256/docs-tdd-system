@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "fingerprint": "70827bebbf143345970b33c50cec962dbf90a46b5d960317540676c67f78a042",
-  "publishedAt": "2026-08-08T18:38:45.187Z",
-  "l3RuleReleaseFingerprint": "7fb2df2367e221cd5b82bec55bc72099d14cc6d4fe73794200e765f24a5a5836",
+  "fingerprint": "4fbc26867802c81a98f2a82d1dcfb55520d3d35a0eae12c7b163f9b4ab4b74e5",
+  "publishedAt": "2026-08-08T19:03:09.193Z",
+  "l3RuleReleaseFingerprint": "63a0f56132e2426605ab6b23d108aeeb75f4e15d00a44777101e7fef3a0bb413",
   "fileCount": 86,
   "skillTargets": {
     "~/.codex/skills/coding-quality": "~/.ai-rules/skills/coding-quality",
@@ -88,12 +88,12 @@
     ".cursor/rules/state-context-interface.mdc": "cd3f3cf0da916c2315646c9d7b157391931ed2d6d2b6e6b756f87edf550b47c9",
     ".cursor/rules/state-decouple-implementation.mdc": "720aea501afbe5908f518ac8f072b2dfd5f4cfda6cf3cbee8b5c40ae8c109609",
     ".cursor/rules/state-lift-state.mdc": "98fd28e2f0c89a98ffb077ca5ba0a0b1777ebfffab2e4a13ea6a03b31282db8a",
-    "~/.ai-rules/AGENT.md": "d671486e6b1ea659645b7033d96bc1a5faaad2d1e8cd8dfcc69528c26f370c53",
+    "~/.ai-rules/AGENT.md": "e273895164184d45aef9925d8423825c783512b0d88ad075f6f18974f352fea3",
     "~/.ai-rules/skills/coding-quality/SKILL.md": "bdb66c9349c3257b6f6c3422c1a3717aa21ad30dafa00d9852fedce5d2e61aa5",
     "~/.ai-rules/skills/figma-read/SKILL.md": "eeeb764b0427e91c94f0c815cedd4edb26c13ba0dc5b705859152d6781edd86f",
-    "~/.claude/CLAUDE.md": "d671486e6b1ea659645b7033d96bc1a5faaad2d1e8cd8dfcc69528c26f370c53",
+    "~/.claude/CLAUDE.md": "e273895164184d45aef9925d8423825c783512b0d88ad075f6f18974f352fea3",
     "~/.claude/settings.json": "912380be5ee1444da526f849da3f50c84249de7cccadd30458025f6803e081df",
-    "~/.codex/AGENTS.md": "d671486e6b1ea659645b7033d96bc1a5faaad2d1e8cd8dfcc69528c26f370c53",
+    "~/.codex/AGENTS.md": "e273895164184d45aef9925d8423825c783512b0d88ad075f6f18974f352fea3",
     "~/.cursor/rules/fameex-local-governance.mdc": "c60d72526b9e5dcf11a5d97b10b90911e305e0968987ead49546110bf39abfbe",
     "AGENTS.md": "392064b3caa6942371cdf5380c7c8b6e368e6ba36d5cae03753afc5d6001c480",
     "CLAUDE.md": "0ae6e4eb08c82210d63d4ad8634de80e5f6078b7989d12ea84dfb5eedd274453"

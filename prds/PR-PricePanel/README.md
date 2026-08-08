@@ -23,8 +23,8 @@ larkEnabled: false
 | 项 | 值 |
 |----|-----|
 | 开发基线分支 | `feature/PR-PricePanel`（从 `online` HEAD 切出） |
-| worktree | `/Users/aven/github/PR-PricePanel` · 端口 `4106`（`apps/web/package.json` 的 `dev*` 脚本已改 `PORT=4106`；见 [common/coding-worktree.md §2 端口注册表](../../common/coding-worktree.md)） |
-| 公共规则 | 通用 `docs_tdd/common/` 规则在 `dev` / `PR-01685` 线维护；本目录只写本需求差异，遵循 [common/project-doc-structure.md](../../common/project-doc-structure.md) 的薄包装原则 |
+| worktree | `/Users/aven/github/PR-PricePanel` · 端口 `4106`（`apps/web/package.json` 的 `dev*` 脚本已改 `PORT=4106`；见 [common/rules/coding-worktree.md §2 端口注册表](../../common/rules/coding-worktree.md)） |
+| 公共规则 | 通用 `docs_tdd/common/` 规则在 `dev` / `PR-01685` 线维护；本目录只写本需求差异，遵循 [common/rules/project-doc-structure.md](../../common/rules/project-doc-structure.md) 的薄包装原则 |
 
 代码落点（均在 `feature/PR-PricePanel`）：
 

@@ -32,7 +32,7 @@
 
 ## MSW 路线 B 落地决策（G3）
 
-> API 未 ready 时的 **MSW 路线 B** 落地清单（决策依据 `common/architecture-and-state.md` §8.4.1，参考 PR-01947 实践）：
+> API 未 ready 时的 **MSW 路线 B** 落地清单（决策依据 `common/rules/architecture-and-state.md` §8.4.1，参考 PR-01947 实践）：
 
 - **决策**：三期所有新接口（`getTagEventsList` 扩展 / `getCategoryTree` / `searchEvents` / `getEstimatedProfit`）在后端 ready 前一律走 MSW handler mock，业务代码按真实 schema 编写；后端 ready 后按 handler 粒度删除/停用即切真实，`schemas.ts`/`mapper`/UI 类型零改动。
 - **当前状态（2026-07-25）**：API 文档仍未输出，继续执行路线 B；本轮 UI/UX 还原不新增组件内 mock 或直连 fixture。

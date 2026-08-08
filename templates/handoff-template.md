@@ -48,7 +48,7 @@
 | 7 | `../product/03-api-contract.md` | schema / ASSUMED（改 UI 勿破坏传参） |
 | 8 | `../product/06-collaboration.md` | 待确认项与风险 |
 | 9 | `./context-summary.md` | 短摘要 + 关键决策 |
-| 10 | `../../common/rule-router.md` | 开工路由 |
+| 10 | `../../common/rules/rule-router.md` | 开工路由 |
 
 ---
 

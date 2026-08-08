@@ -126,7 +126,7 @@ const projectDir = resolveProjectRoot(projectId);
 const sourceType = sourceTypeFromPrd(prd);
 const lowerProjectId = projectId.toLowerCase();
 const today = new Date().toISOString().slice(0, 10);
-const ruleset = JSON.parse(await fs.readFile(path.join(docsRoot, 'common/ruleset.json'), 'utf8'));
+const ruleset = JSON.parse(await fs.readFile(path.join(docsRoot, 'common/rules/ruleset.json'), 'utf8'));
 const branchName = `${config.branchPrefix || 'feature/'}${projectId}`;
 const docsMountPath = config.docsMountPath || 'apps/web/docs_tdd';
 const larkOutputDir = String(config.larkOutputDir || `${docsMountPath}/prds/\${projectId}/inbox/lark-sync`)
@@ -157,14 +157,14 @@ await writeFileIfMissing(path.join(projectDir, 'README.md'), `---\nprojectId: ${
 
 const featureInventoryTemplate = await readTemplate(
   'feature-inventory-template.md',
-  `# Feature Inventory — ${projectId} ${title}\n\n> 规则：../../common/prd-feature-inventory.md。\n\n| 字段 | 值 |\n|------|-----|\n| 工单 | ${projectId} |\n| PRD 来源 | ${prd} |\n| Figma 主画板 | 待补 |\n| 清单维护人 | Agent |\n| G2 确认人 & 日期 | 待确认 |\n| 责任模块目录 | 待 G2 确认 |\n| visualFidelity | standard |\n\n## 功能清单\n\n| ID | PRD 来源锚点 | PRD 章节 | 功能简述 | 页面 / 路由 | Figma | 与主画板关系 | 本期 | 确认 | 任务 / 代码 |\n|----|--------------|---------|---------|------------|-------|-------------|------|------|------------|\n| F01 | 待读取 | 待读取 | 待填写 | 待确认 | 待确认 | 待确认 | 待 G2 确认 | | |\n`,
+  `# Feature Inventory — ${projectId} ${title}\n\n> 规则：../../common/rules/prd-feature-inventory.md。\n\n| 字段 | 值 |\n|------|-----|\n| 工单 | ${projectId} |\n| PRD 来源 | ${prd} |\n| Figma 主画板 | 待补 |\n| 清单维护人 | Agent |\n| G2 确认人 & 日期 | 待确认 |\n| 责任模块目录 | 待 G2 确认 |\n| visualFidelity | standard |\n\n## 功能清单\n\n| ID | PRD 来源锚点 | PRD 章节 | 功能简述 | 页面 / 路由 | Figma | 与主画板关系 | 本期 | 确认 | 任务 / 代码 |\n|----|--------------|---------|---------|------------|-------|-------------|------|------|------------|\n| F01 | 待读取 | 待读取 | 待填写 | 待确认 | 待确认 | 待确认 | 待 G2 确认 | | |\n`,
   templateReplacements,
 )
 const featureInventoryContent = featureInventoryTemplate
   .replace('| 工单 | |', `| 工单 | ${projectId} |`)
   .replace('| PRD 来源 | `inbox/...md` / Lark 链接 |', `| PRD 来源 | ${prd} |`)
   .replace('| 清单维护人 | |', '| 清单维护人 | Agent |')
-  .replace('| visualFidelity | `standard` / `high`（高保真判定见 [component-reuse-and-visual-fidelity.md §3.0](../common/component-reuse-and-visual-fidelity.md)） |', '| visualFidelity | standard |')
+  .replace('| visualFidelity | `standard` / `high`（高保真判定见 [component-reuse-and-visual-fidelity.md §3.0](../common/rules/component-reuse-and-visual-fidelity.md)） |', '| visualFidelity | standard |')
 const projectFeatureInventoryContent = rewriteTemplateLinksForProjectDoc(featureInventoryContent)
 await writeFileIfMissing(path.join(projectDir, 'product/00-feature-inventory.md'), projectFeatureInventoryContent);
 
@@ -182,7 +182,7 @@ const apiContractContent = await readTemplate(
 
 const contextSummaryContent = (await readTemplate(
   'context-summary-template.md',
-  `# ${projectId} Context Summary\n\n> 由 \`update-context-summary.mjs\` 生成（机器版，可被脚本重写）。\n\n## Current State\n\n| 字段 | 值 |\n|------|-----|\n| 项目 | ${projectId} |\n| 当前阶段 | G0 资料接收 |\n| PRD 来源 | ${prd} |\n| 责任模块目录 | 待 G2 确认 |\n\n## Read Next\n\n1. ../../common/rule-router.md\n2. ../product/00-feature-inventory.md\n3. ../product/06-collaboration.md\n`,
+  `# ${projectId} Context Summary\n\n> 由 \`update-context-summary.mjs\` 生成（机器版，可被脚本重写）。\n\n## Current State\n\n| 字段 | 值 |\n|------|-----|\n| 项目 | ${projectId} |\n| 当前阶段 | G0 资料接收 |\n| PRD 来源 | ${prd} |\n| 责任模块目录 | 待 G2 确认 |\n\n## Read Next\n\n1. ../../common/rules/rule-router.md\n2. ../product/00-feature-inventory.md\n3. ../product/06-collaboration.md\n`,
   templateReplacements,
 )).replace('| PRD 来源 | 待补 |', `| PRD 来源 | ${prd} |`);
 
@@ -208,7 +208,7 @@ for (const [name, content] of Object.entries(productDocs)) {
 
 await writeFileIfMissing(path.join(projectDir, 'engineering/development-rules.md'), `# ${projectId} 开发规则\n\n继承 ../../common/README.md。本文只记录项目特殊约束，不复制公共规则。\n\n## 项目特殊约束\n\n暂无。（若本期确无特殊约束，保留本文件并写「暂无」；不要删除此文件，否则 G0 gate 会报缺失。）\n`);
 
-await writeFileIfMissing(path.join(projectDir, 'agent/README.md'), `# ${projectId} Agent 恢复说明\n\n## 必读顺序\n\n1. ../../common/rule-router.md\n2. 执行 \`node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs context ${projectId} <SCENARIO>\`\n3. 读取命令生成的临时 context pack\n4. ./handoff-*.md（最新交接文件，若无则跳过）\n\ncontext pack 自动包含 ./context-summary.md 与场景专题；不要一次性读取整个 common。\n\n## 交接文件索引\n\n> 按 handoff-YYYY-MM-DD[-seq].md 命名；新交接产生时在此追加索引。\n\n- 暂无\n\n## Lark 能力\n\n- 主动发群消息：待确认\n- 群内 @ 应用转 task：待确认\n\n## 编码环境\n\nG2 scope 确认后，按 ../../common/coding-worktree.md 创建 feature/${projectId} 同级 worktree。\n\n## Gate 命令\n\n\`\`\`bash\nnode apps/web/docs_tdd/common/engine/agent-scripts/prd-intake.mjs ${projectId} --init --source <repo-relative-prd.md>\nnode apps/web/docs_tdd/common/engine/agent-scripts/prd-intake.mjs ${projectId} --approve\nnode apps/web/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs ${projectId} G2\nnode apps/web/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --project ${projectId}\nnode apps/web/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs ${projectId} G6\nnode apps/web/docs_tdd/common/engine/agent-scripts/update-context-summary.mjs ${projectId} --stage G6 --write\n\`\`\`\n`);
+await writeFileIfMissing(path.join(projectDir, 'agent/README.md'), `# ${projectId} Agent 恢复说明\n\n## 必读顺序\n\n1. ../../common/rules/rule-router.md\n2. 执行 \`node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs context ${projectId} <SCENARIO>\`\n3. 读取命令生成的临时 context pack\n4. ./handoff-*.md（最新交接文件，若无则跳过）\n\ncontext pack 自动包含 ./context-summary.md 与场景专题；不要一次性读取整个 common。\n\n## 交接文件索引\n\n> 按 handoff-YYYY-MM-DD[-seq].md 命名；新交接产生时在此追加索引。\n\n- 暂无\n\n## Lark 能力\n\n- 主动发群消息：待确认\n- 群内 @ 应用转 task：待确认\n\n## 编码环境\n\nG2 scope 确认后，按 ../../common/rules/coding-worktree.md 创建 feature/${projectId} 同级 worktree。\n\n## Gate 命令\n\n\`\`\`bash\nnode apps/web/docs_tdd/common/engine/agent-scripts/prd-intake.mjs ${projectId} --init --source <repo-relative-prd.md>\nnode apps/web/docs_tdd/common/engine/agent-scripts/prd-intake.mjs ${projectId} --approve\nnode apps/web/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs ${projectId} G2\nnode apps/web/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --project ${projectId}\nnode apps/web/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs ${projectId} G6\nnode apps/web/docs_tdd/common/engine/agent-scripts/update-context-summary.mjs ${projectId} --stage G6 --write\n\`\`\`\n`);
 
 await writeFileIfMissing(path.join(projectDir, 'agent/context-summary.md'), contextSummaryContent);
 await writeFileIfMissing(path.join(projectDir, 'evidence/ui-ux/README.md'), evidenceReadmeContent);
@@ -295,7 +295,7 @@ await writeFileIfMissing(path.join(projectDir, 'agent/delivery-status.json'), js
   note: 'G8 前更新为 pushed / merged / released；gate 会用 Git 实际状态复核。',
 }));
 
-await writeFileIfMissing(path.join(projectDir, 'agent/lark-integration.md'), `# ${projectId} Lark 集成\n\n继承 ../../common/collaboration-and-notifications.md。\n\n## 启用状态\n\n- 主动发群消息：待确认\n- 群内 @ 应用转 task：待确认\n\n## 配置路径\n\n- 自定义机器人配置：agent/scripts/${lowerProjectId}.json（本机 ignored，禁止提交密钥）\n- 通知记录：agent/notification-log.md\n`);
+await writeFileIfMissing(path.join(projectDir, 'agent/lark-integration.md'), `# ${projectId} Lark 集成\n\n继承 ../../common/rules/collaboration-and-notifications.md。\n\n## 启用状态\n\n- 主动发群消息：待确认\n- 群内 @ 应用转 task：待确认\n\n## 配置路径\n\n- 自定义机器人配置：agent/scripts/${lowerProjectId}.json（本机 ignored，禁止提交密钥）\n- 通知记录：agent/notification-log.md\n`);
 
 await writeFileIfMissing(path.join(projectDir, 'agent/notification-log.md'), `# ${projectId} 通知记录\n\n| 时间 | 门禁 | 状态 | 摘要 | 方式 | 结果 |\n|------|------|------|------|------|------|\n`);
 

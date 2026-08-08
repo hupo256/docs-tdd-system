@@ -26,4 +26,4 @@ pnpm vitest run apps/web/src/services/api/campaign
 - `?mock=1` — 强制 Mock，无需改 env / 重启 dev
 - `?scenario=active|claimable|restricted|...` — 场景切换
 
-Browser/Playwright 规范见 `apps/web/docs_tdd/common/browser-e2e-mcp.md`（自测默认不截图）。
+Browser/Playwright 规范见 `apps/web/docs_tdd/common/rules/browser-e2e-mcp.md`（自测默认不截图）。

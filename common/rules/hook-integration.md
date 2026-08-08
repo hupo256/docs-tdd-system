@@ -30,7 +30,7 @@ node apps/web/docs_tdd/common/engine/agent-scripts/claude-posttooluse-gate.mjs
 | `package.json` | `verify-code-rules.mjs --files package.json --json` |
 | `apps/web/config/environments/.env*` | `verify-code-rules.mjs --files <env> --global-scan --json` |
 | `apps/web/docs_tdd/common/*.md` | `check-doc-budget.mjs` |
-| `apps/web/docs_tdd/common/rule-index.json` | `check-doc-budget.mjs` |
+| `apps/web/docs_tdd/common/rules/rule-index.json` | `check-doc-budget.mjs` |
 | `apps/web/docs_tdd/templates/*.md` | `check-doc-budget.mjs` |
 
 `--files` 模式默认不跑全量 mock 扫描，避免无关存量残留阻断单文件编辑；env 文件会显式加 `--global-scan`。

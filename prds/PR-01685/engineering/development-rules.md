@@ -14,7 +14,7 @@ PR-01685 是运营活动落地页，当前验收目标为 **Figma 还原度至�
 1. 现有实现大量使用项目通用 token 近似 Figma，例如 `min-h-120`、`rounded-m`、`text-h-l`、`space-y-12`，适合普通业务页，但无法保证运营页 95% 还原。
 2. Figma 规格已经记录到 `product/07-figma-spec.md`，但代码阶段没有把这些规格变成强验收项，导致“文档有、实现弱”。
 3. 视觉验收目前只有局部 Playwright 历史实测记录，缺少桌面浅色、桌面深色、390px H5 与 Figma 节点逐项对照的完整报告。
-4. **分享弹窗曾犯两类流程失误**（已写入 [`../../common/component-reuse-and-visual-fidelity.md`](../../../common/component-reuse-and-visual-fidelity.md)）：L1「能打开」冒充 L2 视觉完成；未复用全站 `ShareActionButtons` 手写渠道行。
+4. **分享弹窗曾犯两类流程失误**（已写入 [`../../common/rules/component-reuse-and-visual-fidelity.md`](../../../common/rules/component-reuse-and-visual-fidelity.md)）：L1「能打开」冒充 L2 视觉完成；未复用全站 `ShareActionButtons` 手写渠道行。
 
 ### 0.2 执行方案
 
@@ -68,7 +68,7 @@ services/api/campaign: request + schema + mapper
 项目特殊规则：
 
 - 五种任务类型由 `TaskRenderer` 或同等分发组件承接，不在页面容器里写大量 switch UI。
-- `TaskRenderer` 等 2+ 入参组件遵循 [../../common/react-component-props-types.md](../../../common/react-component-props-types.md)（`TaskRendererParams` + `props` 解构）。
+- `TaskRenderer` 等 2+ 入参组件遵循 [../../common/rules/react-component-props-types.md](../../../common/rules/react-component-props-types.md)（`TaskRendererParams` + `props` 解构）。
 - 纯计算集中在 `common/calc.ts`，例如活动状态、任务按钮态、组合任务、阶梯任务、进度。
 - API DTO 经过 `mapCampaignDetail` 收敛为 UI 领域模型后再进入组件。
 - 活动详情、排行榜、报名、领取分别走 React Query；排行榜按 `activityId + taskId + page` 缓存。
@@ -143,7 +143,7 @@ FUTURES → BTC 合约交易页
 
 - 分享链接拼接由 `useCampaignShare` 或 `buildCampaignShareUrl` 统一生成。
 - Web 固定渠道：复制、Telegram、WhatsApp、X。
-- **渠道行必须复用** `ShareActionButtons`（`hideSave`）；内容区（标题 + 链接框）在 `CampaignShareModal` 定制。见 `common/component-reuse-and-visual-fidelity.md`。
+- **渠道行必须复用** `ShareActionButtons`（`hideSave`）；内容区（标题 + 链接框）在 `CampaignShareModal` 定制。见 `common/rules/component-reuse-and-visual-fidelity.md`。
 - 分享弹窗 L2 视觉以 Figma `9336:133821` 与 `07-figma-spec.md` §4.10 图标映射为准；L1 通过不得标 JF6 完成。
 
 埋点：

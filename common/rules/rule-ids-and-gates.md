@@ -16,7 +16,7 @@
 
 ## 2. 项目阶段 gate
 
-当前本地规则集见 `common/ruleset.json`。试点规则按 `experimental → trial → stable` 晋级：`experimental` 只诊断，`trial` 默认只阻断新项目，`stable` 才进入常规阻断。项目在 `agent/project-manifest.json` 固定 `rulesetVersion` 与 gate policy；规则升级默认不回查阻断存量项目。
+当前本地规则集见 `common/rules/ruleset.json`。试点规则按 `experimental → trial → stable` 晋级：`experimental` 只诊断，`trial` 默认只阻断新项目，`stable` 才进入常规阻断。项目在 `agent/project-manifest.json` 固定 `rulesetVersion` 与 gate policy；规则升级默认不回查阻断存量项目。
 
 公共入口:
 
@@ -198,7 +198,7 @@ docs-tdd golden --keep          # 保留 PR-00000 供手工排查
 - **项目 gate**:`verify-project-gate.mjs` 自动读 `<PROJECT-ID>/agent/rule-waivers.json`;命中的 `error` 失败项降级 `waived`（输出标 `WAIV`,不计入退出码）,需 `ruleId` 匹配、`file` 省略或精确匹配、且未过期。
 - **代码静态扫描**:`verify-code-rules.mjs --project <PROJECT-ID>` 默认读取 `apps/web/docs_tdd/<PROJECT-ID>/agent/rule-waivers.json`;也可用 `--waivers <path>` 显式指定。命中的 `error` finding 降级 `waived`,不计入 `ok`。
 
-`common/ruleset.json` 可把高风险事实校验标为 `waivable: false`；此类规则即使出现在项目 waiver 中也不会降级。当前 MSW 注册链完整性与生命周期阻断假设清零属于不可豁免项，试点期仍可由 `blocking: false` 保持诊断态，晋级后才转阻断。
+`common/rules/ruleset.json` 可把高风险事实校验标为 `waivable: false`；此类规则即使出现在项目 waiver 中也不会降级。当前 MSW 注册链完整性与生命周期阻断假设清零属于不可豁免项，试点期仍可由 `blocking: false` 保持诊断态，晋级后才转阻断。
 
 四重防护防「永久/静默绕过」:无 `expiresAt` → 忽略;已过期 → 仍拦截;文件非法 JSON → 忽略;命中 non-waivable 规则 → 忽略。其中 **`verify-project-gate.mjs`** 分别发 `DOC-WAIVER-002` / `DOC-WAIVER-003` / `DOC-WAIVER-001` / `DOC-WAIVER-004` 的 `WARN` 明示;**`verify-code-rules.mjs`** 对失效豁免静默忽略（不发 WARN、无 `DOC-WAIVER` ID）,但同样仍强制原规则。豁免必须写 `reason`、`owner`、`expiresAt`。
 

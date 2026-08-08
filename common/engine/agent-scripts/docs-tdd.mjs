@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { codeFingerprint, matchesGateFingerprint } from './lib/fingerprint.mjs'
-import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
+import { resolveProjectRoot, resolveRoots, rulesRoot } from './lib/roots.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, consumerWorktree, config } = resolveRoots()
@@ -154,18 +154,25 @@ function selectMarkdownSections(text, selector) {
 
 function createContextPack(id, scenario, release, effectiveRules, mode = 'compact') {
   const started = Date.now()
-  const index = readJson(join(docsRoot, 'common/rule-index.json'))
+  const index = readJson(join(docsRoot, 'common/rules/rule-index.json'))
   const refs = expandScenarioRefs(index, scenario)
 
-  const summaryRef = { file: `${id}/agent/context-summary.md`, sections: '' }
+  const summaryRef = { file: `${id}/agent/context-summary.md`, sections: '', abs: join(resolveProjectRoot(id), 'agent/context-summary.md') }
   const sources = [
     summaryRef,
     ...refs.map((normalized) => {
-      return { file: `common/${normalized.file}`, sections: mode === 'full' ? '' : normalized.sections }
+      // 规则文档在 common/rules/；少数被场景引用的 common/ 层文件（如 CHANGELOG.md）回退到 common/。
+      const rulesPath = join(rulesRoot, normalized.file)
+      const inRules = existsSync(rulesPath)
+      return {
+        file: inRules ? `common/rules/${normalized.file}` : `common/${normalized.file}`,
+        abs: inRules ? rulesPath : join(docsRoot, 'common', normalized.file),
+        sections: mode === 'full' ? '' : normalized.sections,
+      }
     }),
   ]
   const sections = sources.map((source) => {
-    const file = join(docsRoot, source.file)
+    const file = source.abs
     if (!existsSync(file)) throw new Error(`context source does not exist: ${source.file}`)
     const raw = readFileSync(file, 'utf8')
     return {
@@ -173,7 +180,7 @@ function createContextPack(id, scenario, release, effectiveRules, mode = 'compac
       text: selectMarkdownSections(raw, source.sections),
     }
   })
-  const ruleset = readJson(join(docsRoot, 'common/ruleset.json'))
+  const ruleset = readJson(join(docsRoot, 'common/rules/ruleset.json'))
   const payload = sections.map(({ label, text }) => `${label}\n${text}`).join('\n')
   const fingerprint = createHash('sha256').update(`${effectiveRules.currentFingerprint}\n${scenario}\n${mode}\n${payload}`).digest('hex').slice(0, 12)
   const cacheDir = join(tmpdir(), 'docs-tdd-context')
@@ -387,7 +394,7 @@ function capability(id) {
   const manifestFile = projectDir ? join(projectDir, 'agent/project-manifest.json') : ''
   const manifest = manifestFile && existsSync(manifestFile) ? readJson(manifestFile) : null
   const resolvedWorktree = resolveProjectWorktree(id)
-  const ruleset = readJson(join(docsRoot, 'common/ruleset.json'))
+  const ruleset = readJson(join(docsRoot, 'common/rules/ruleset.json'))
   const release = inspectRuleRelease()
   const effectiveRules = inspectEffectiveRules()
   const hook = process.env.CLAUDE_PROJECT_DIR ? 'claude-posttooluse' : 'manual-agent-adapter'
@@ -406,9 +413,9 @@ function capability(id) {
 }
 
 if (process.argv.includes('--self-test')) {
-  const ruleset = readJson(join(docsRoot, 'common/ruleset.json'))
+  const ruleset = readJson(join(docsRoot, 'common/rules/ruleset.json'))
   if (!ruleset.version || !ruleset.maturity) process.exit(1)
-  const index = readJson(join(docsRoot, 'common/rule-index.json'))
+  const index = readJson(join(docsRoot, 'common/rules/rule-index.json'))
   if (!Array.isArray(index.scenarios?.write_mapper) || index.scenarios.write_mapper.length === 0) process.exit(1)
   const markdown = ['# Test', '', '## 1. One', 'one', '', '## 2 Two', 'two', '', '## 3. Three', 'three'].join('\n')
   assert.equal(selectMarkdownSections(markdown, '2'), ['## 2 Two', 'two', '', ''].join('\n'))

@@ -117,7 +117,7 @@ https://www.figma.com/design/KzvWxAYxqfgpoiYuKdxMAE/%E3%80%8CFameEX%E4%B8%89%E6%
 | `9517:137819` | 底部浮层 | 700×60；`rounded-[12px]` | `CampaignBottomCta` |
 | `9336:133821` | 分享弹窗 | 400 宽；渠道 48×48 **圆形** | `ShareActionButtons` |
 
-> 走查时 **禁止**只对父 Frame 调一次 `get_design_context`；按钮/图标/档位等必须按 [figma-mcp-read-workflow.md](../../../common/figma-mcp-read-workflow.md) 逐 node 读取 `cornerRadius`。
+> 走查时 **禁止**只对父 Frame 调一次 `get_design_context`；按钮/图标/档位等必须按 [figma-mcp-read-workflow.md](../../../common/rules/figma-mcp-read-workflow.md) 逐 node 读取 `cornerRadius`。
 
 ### 2.2 组件画板 `web组件`（node `3068:7`）
 

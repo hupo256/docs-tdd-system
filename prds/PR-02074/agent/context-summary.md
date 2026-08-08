@@ -11,7 +11,7 @@
 | PRD 来源 | https://qfglxo2m3dc.sg.larksuite.com/wiki/G7DYwcDijiUnYbkMuiilT8y8gch |
 | Figma | ⚠️ PRD 未附 Figma，仅 bitmart 截图；待补（见「待确认」） |
 | G2 确认 | ✅ aven / 2026-07-22 |
-| 责任模块目录 | `apps/web/src/apps/Prediction/**`、`apps/web/src/services/api/prediction/**`、`apps/web/src/mocks/**`（MSW）（改动边界白名单，见 [change-scope-boundary.md §1.1](../../../common/change-scope-boundary.md)） |
+| 责任模块目录 | `apps/web/src/apps/Prediction/**`、`apps/web/src/services/api/prediction/**`、`apps/web/src/mocks/**`（MSW）（改动边界白名单，见 [change-scope-boundary.md §1.1](../../../common/rules/change-scope-boundary.md)） |
 
 ## Scope / Fingerprints
 

@@ -40,7 +40,7 @@ function allocatePort() {
 
 const port = readOption('--port', '') || allocatePort();
 const verifyPath = readOption('--verify-path', config.verifyPath || '/zh-CN');
-// 强制规则：所有功能分支一律从最新 origin/online 切（见 common/git-branch-flow.md §1）。
+// 强制规则：所有功能分支一律从最新 origin/online 切（见 common/rules/git-branch-flow.md §1）。
 // 仅在极少数确需其他基线时用 --base-ref 显式覆盖，并自负其责。
 const baseRef = readOption('--base-ref', config.baseRef || 'origin/online');
 

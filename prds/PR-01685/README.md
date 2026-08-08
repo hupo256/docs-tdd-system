@@ -41,7 +41,7 @@ larkEnabled: true
 | 路由常量 | `apps/web/src/constants/pathnames.ts` → `CAMPAIGN_DETAIL` |
 | i18n | `apps/web/src/i18n/locales/zh-CN/campaign.json` |
 
-> Mock 已按 [architecture-and-state.md §8.0.3](../../common/architecture-and-state.md) 零残留拆除（2026-07-03）：`apps/Campaign/mock/`、`mockApi.ts`、`NEXT_PUBLIC_CAMPAIGN_USE_MOCK` flag、`CampaignScenario` 类型均已删除，页面固定走真实接口。
+> Mock 已按 [architecture-and-state.md §8.0.3](../../common/rules/architecture-and-state.md) 零残留拆除（2026-07-03）：`apps/Campaign/mock/`、`mockApi.ts`、`NEXT_PUBLIC_CAMPAIGN_USE_MOCK` flag、`CampaignScenario` 类型均已删除，页面固定走真实接口。
 
 ## 文档地图
 

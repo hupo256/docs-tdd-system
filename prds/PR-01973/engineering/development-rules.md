@@ -84,7 +84,7 @@ services/api or existing market stores + mapper
 
 ## 6. UI 组件规则
 
-通用组件体量、导出注释、短注释、Tailwind token、H5 与主题规则继承 [`../../common/development-rules.md`](../../../common/development-rules.md)、[`../../common/ui-style-token-rules.md`](../../../common/ui-style-token-rules.md) 和 [`../../common/quality-checklist.md`](../../../common/quality-checklist.md)。本节只保留 TradFi 专有补充：
+通用组件体量、导出注释、短注释、Tailwind token、H5 与主题规则继承 [`../../common/rules/development-rules.md`](../../../common/rules/development-rules.md)、[`../../common/rules/ui-style-token-rules.md`](../../../common/rules/ui-style-token-rules.md) 和 [`../../common/rules/quality-checklist.md`](../../../common/rules/quality-checklist.md)。本节只保留 TradFi 专有补充：
 
 - 交易对卡片、Tab、FAQ、排序表头应有稳定尺寸，避免行情刷新造成布局抖动。
 - 不复制现有 Markets 表格的大段代码；若复用成本高，抽 helper 或做 TradFi 专用小表格。
@@ -100,7 +100,7 @@ services/api or existing market stores + mapper
 
 ## 8. 测试与验证
 
-通用 Biome、typecheck、Browser / Playwright、dark / light、390px H5 和 QA 用例处理规则继承 [`../../common/quality-checklist.md`](../../../common/quality-checklist.md)。本节只列 TradFi 专有补充。
+通用 Biome、typecheck、Browser / Playwright、dark / light、390px H5 和 QA 用例处理规则继承 [`../../common/rules/quality-checklist.md`](../../../common/rules/quality-checklist.md)。本节只列 TradFi 专有补充。
 
 建议补纯函数测试：
 

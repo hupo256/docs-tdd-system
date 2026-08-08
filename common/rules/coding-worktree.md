@@ -178,7 +178,7 @@ for item in "$src"/*; do
 done
 ```
 
-Agent 检查点：① 基线校验通过（见 §5，方向语义见 [git-branch-flow.md](./git-branch-flow.md) §1），不过即切错基线不得编码；② `apps/web/docs_tdd/common/coding-worktree.md` 可读，否则视为未就绪。
+Agent 检查点：① 基线校验通过（见 §5，方向语义见 [git-branch-flow.md](./git-branch-flow.md) §1），不过即切错基线不得编码；② `apps/web/docs_tdd/common/rules/coding-worktree.md` 可读，否则视为未就绪。
 
 ## 7. 退役 / 回收（上线后）
 

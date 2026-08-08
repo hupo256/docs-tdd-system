@@ -1,7 +1,7 @@
 # Feature Inventory — `PR-02074 预测市场三期`
 
 > **Agent 自动创建**：新需求 G0 前，由 Agent 从 [feature-inventory-template.md](../../../templates/feature-inventory-template.md) 复制到本路径。
-> 规则：[common/prd-feature-inventory.md](../../../common/prd-feature-inventory.md) §3（G0 初稿 → G2 定稿 → 再写代码）。
+> 规则：[common/rules/prd-feature-inventory.md](../../../common/rules/prd-feature-inventory.md) §3（G0 初稿 → G2 定稿 → 再写代码）。
 
 | 字段 | 值 |
 |------|-----|
@@ -13,7 +13,7 @@
 | Figma 主画板 | ⚠️ PRD 未附 Figma，仅 bitmart 截图；待补（见「待确认」）|
 | 清单维护人 | Agent |
 | G2 确认人 & 日期 | ✅ aven / 2026-07-22 |
-| 责任模块目录 | `apps/web/src/apps/Prediction/**`、`apps/web/src/services/api/prediction/**`、`apps/web/src/mocks/**`（MSW）（改动边界白名单，见 [change-scope-boundary.md §1.1](../../../common/change-scope-boundary.md)）|
+| 责任模块目录 | `apps/web/src/apps/Prediction/**`、`apps/web/src/services/api/prediction/**`、`apps/web/src/mocks/**`（MSW）（改动边界白名单，见 [change-scope-boundary.md §1.1](../../../common/rules/change-scope-boundary.md)）|
 | visualFidelity | standard（**G2 定：以 bitmart 截图为视觉基线**；Figma 后补且改动不大）|
 
 ## G2 决策（aven / 2026-07-22，锁定）

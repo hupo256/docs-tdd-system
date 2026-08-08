@@ -19,7 +19,7 @@
 |------|------|------|------|
 | 主仓库 | `/Users/aven/github/fameex-web` | `online` | 写 / 改 `docs_tdd`、公共规则沉淀 |
 
-> 各 feature worktree 均已 symlink `docs_tdd`；具体路径见 `git worktree list` / PROJECTS.md。启动端口不再固定登记，运行时按需 `PORT=4xxx pnpm dev` 传入（见 [common/coding-worktree.md §2.1](./common/coding-worktree.md)）。
+> 各 feature worktree 均已 symlink `docs_tdd`；具体路径见 `git worktree list` / PROJECTS.md。启动端口不再固定登记，运行时按需 `PORT=4xxx pnpm dev` 传入（见 [common/rules/coding-worktree.md §2.1](./common/rules/coding-worktree.md)）。
 
 ## 当前活跃项目
 
@@ -42,11 +42,11 @@
 
 ## 恢复工作时先读（当前工作）
 
-线程中断或上下文压缩后，**走 [common/rule-router.md](./common/rule-router.md) §1 启动协议**，不要在这里再列一遍读取顺序——本文件曾硬编码一份 10 步全读清单，与 router 的「禁止全读 `common/`」直接冲突，冷启动的 Agent 命中哪份全看运气。
+线程中断或上下文压缩后，**走 [common/rules/rule-router.md](./common/rules/rule-router.md) §1 启动协议**，不要在这里再列一遍读取顺序——本文件曾硬编码一份 10 步全读清单，与 router 的「禁止全读 `common/`」直接冲突，冷启动的 Agent 命中哪份全看运气。
 
 冷启动只需三件事：
 
-1. 读 [common/rule-router.md](./common/rule-router.md)（唯一常驻规则文件）。
+1. 读 [common/rules/rule-router.md](./common/rules/rule-router.md)（唯一常驻规则文件）。
 2. 读当前项目的 `agent/context-summary.md`（机器版，含阶段真值）。
 3. 按任务场景跑 `docs-tdd context <PROJECT-ID> <SCENARIO>`，只加载命中的专题。
 

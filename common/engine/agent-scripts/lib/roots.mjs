@@ -29,8 +29,8 @@ const defaultConfigFile = join(docsSystemRoot, 'docs-tdd.config.default.json')
 // change; each later phase flips exactly one line:
 //   Phase 1 (engine): engineRoot   -> join(docsSystemRoot, 'common', 'engine')   [DONE]
 //   Phase 2 (prds):   resolveProjectRoot -> join(docsSystemRoot, 'prds', projectId)   [DONE]
-//   Phase 3 (rules):  rulesRoot     -> join(docsSystemRoot, 'common', 'rules')
-export const rulesRoot = join(docsSystemRoot, 'common')
+//   Phase 3 (rules):  rulesRoot     -> join(docsSystemRoot, 'common', 'rules')   [DONE]
+export const rulesRoot = join(docsSystemRoot, 'common', 'rules')
 export const engineRoot = join(docsSystemRoot, 'common', 'engine')
 export const prdsRoot = join(docsSystemRoot, 'prds')
 export function resolveProjectRoot(projectId) {

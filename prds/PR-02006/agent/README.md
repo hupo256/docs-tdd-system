@@ -1,15 +1,15 @@
 # PR-02006 Agent 流程
 
-> 状态：G2 已确认，允许 mock-first 进入开发。公共协作规则继承 [`../../common/collaboration-and-notifications.md`](../../../common/collaboration-and-notifications.md)。
+> 状态：G2 已确认，允许 mock-first 进入开发。公共协作规则继承 [`../../common/rules/collaboration-and-notifications.md`](../../../common/rules/collaboration-and-notifications.md)。
 
 ## 恢复顺序
 
 1. `apps/web/docs_tdd/AGENTS.md`
 2. `apps/web/docs_tdd/CONTEXT.md`
 3. `apps/web/docs_tdd/common/README.md`
-4. `apps/web/docs_tdd/common/new-project-kickoff.md`
-5. `apps/web/docs_tdd/common/prd-feature-inventory.md`
-6. `apps/web/docs_tdd/common/lark-doc-sync.md`
+4. `apps/web/docs_tdd/common/rules/new-project-kickoff.md`
+5. `apps/web/docs_tdd/common/rules/prd-feature-inventory.md`
+6. `apps/web/docs_tdd/common/rules/lark-doc-sync.md`
 7. `apps/web/docs_tdd/prds/PR-02006/README.md`
 8. `apps/web/docs_tdd/prds/PR-02006/product/00-feature-inventory.md`
 9. `apps/web/docs_tdd/prds/PR-02006/product/06-collaboration.md`

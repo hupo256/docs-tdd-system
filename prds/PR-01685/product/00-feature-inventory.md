@@ -1,7 +1,7 @@
 # Feature Inventory — PR-01685 活动落地页
 
 > **状态**：G2 范围已定稿（见下方 [G2 范围定稿结论](#g2-范围定稿结论)）。本文基于 PRD、范围文档、Figma 规格和 YApi 当前版本整理，作为 `feature/PR-01685-1` 后续开发的范围基线。
-> 规则：[../../common/prd-feature-inventory.md](../../../common/prd-feature-inventory.md) §3（G0 初稿 → G2 定稿 → 再写代码）。
+> 规则：[../../common/rules/prd-feature-inventory.md](../../../common/rules/prd-feature-inventory.md) §3（G0 初稿 → G2 定稿 → 再写代码）。
 
 | 字段 | 值 |
 |------|-----|

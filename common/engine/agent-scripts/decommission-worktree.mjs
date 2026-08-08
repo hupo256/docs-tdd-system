@@ -4,7 +4,7 @@
 // 用法：
 //   node apps/web/docs_tdd/common/engine/agent-scripts/decommission-worktree.mjs PR-01234 --dry-run
 //   node apps/web/docs_tdd/common/engine/agent-scripts/decommission-worktree.mjs PR-01234
-// 策略（见 common/coding-worktree.md §7）：
+// 策略（见 common/rules/coding-worktree.md §7）：
 //   - 上线 = 已合入 origin/online；worktree 是一次性脚手架，上线后回收。
 //   - 只 `git worktree remove`，不 `rm -rf`（后者留 git 元数据孤儿）。
 //   - **保留 feature/* 分支**（本地 + 远端），便于日后回查 / 补丁；只删工作树目录。
@@ -144,7 +144,7 @@ console.log(`
    分支 ${branch} 已保留（本地/远端未删）。
 
 后续手动更新（脚本不代改，避免误伤文档措辞）：
-  1. common/coding-worktree.md 端口注册表：把 ${projectId} 行状态改为「已回收（上线 <日期>）」。
+  1. common/rules/coding-worktree.md 端口注册表：把 ${projectId} 行状态改为「已回收（上线 <日期>）」。
   2. CONTEXT.md：把 ${projectId} 从「当前活跃项目」移到「非活跃历史项目」，并从 worktree symlink 表移除。
   3. 若该项目 README 在顶层项目索引表，状态改为「已上线 / 已关闭」。
   4. docs_tdd/${projectId}/ 文档保留（历史经验），不删。

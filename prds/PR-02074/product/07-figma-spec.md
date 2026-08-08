@@ -1,7 +1,7 @@
 # 07 — Figma 设计规格
 
-> **读取流程**：[figma-mcp-read-workflow.md](../../../common/figma-mcp-read-workflow.md)  
-> **Token 规则**：[ui-style-token-rules.md](../../../common/ui-style-token-rules.md)（禁止为单页修改 `packages/config/tailwind-preset.js`）
+> **读取流程**：[figma-mcp-read-workflow.md](../../../common/rules/figma-mcp-read-workflow.md)  
+> **Token 规则**：[ui-style-token-rules.md](../../../common/rules/ui-style-token-rules.md)（禁止为单页修改 `packages/config/tailwind-preset.js`）
 
 ## 0. 元信息
 

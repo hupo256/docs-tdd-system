@@ -7,7 +7,7 @@
 ```text
 根据 apps/web/docs_tdd 下的文档，开始新的需求 <PROJECT-ID>，PRD 文档是：<PRD 链接或本地路径>。
 
-请先读取 apps/web/docs_tdd/common/rule-router.md，只按命中场景读取专题文档，不要一次性读取整个 common。
+请先读取 apps/web/docs_tdd/common/rules/rule-router.md，只按命中场景读取专题文档，不要一次性读取整个 common。
 新项目优先执行 start-new-project.mjs 建骨架；G2/G5/G6/G7/G8 必须依次运行对应 gate，不得跳级。
 代码静态扫描只 review 新增或已修改文件。
 ```
@@ -24,8 +24,8 @@ QA：<链接>
 
 ## Agent 启动顺序
 
-1. 读取 `common/rule-router.md`。
-2. 如需机器路由，读取 `common/rule-index.json` 中的 `new_project` 场景。
+1. 读取 `common/rules/rule-router.md`。
+2. 如需机器路由，读取 `common/rules/rule-index.json` 中的 `new_project` 场景。
 3. 执行统一编排入口：
 
 ```bash

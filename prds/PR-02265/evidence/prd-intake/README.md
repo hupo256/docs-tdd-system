@@ -1,6 +1,6 @@
 # PRD Intake Evidence — PR-02265
 
-> 逐项引用 `agent/prd-source-manifest.json` 的 `sourceId`，记录读取方式、提取结论与歧义。不复制 manifest 全文。规则：[lark-doc-sync.md §8](../../../../common/lark-doc-sync.md) + [execution-evidence.md §6](../../../../common/execution-evidence.md)。
+> 逐项引用 `agent/prd-source-manifest.json` 的 `sourceId`，记录读取方式、提取结论与歧义。不复制 manifest 全文。规则：[lark-doc-sync.md §8](../../../../common/rules/lark-doc-sync.md) + [execution-evidence.md §6](../../../../common/rules/execution-evidence.md)。
 
 ## 概况
 

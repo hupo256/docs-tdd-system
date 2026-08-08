@@ -4,7 +4,7 @@
 
 ## 1. 原则
 
-UI/UX 自测用 **系统 Chrome + Chrome Playwright 扩展 + Cursor Playwright MCP**,不在 monorepo 内装浏览器自动化依赖。规则成熟前**只维护在 `apps/web/docs_tdd/`**（含 `common/` 与各项目 `agent/`）;Agent 入口见 [../AGENTS.md](../AGENTS.md);不写入 `~/.cursor/rules/` 或仓库根 `AGENTS.md`。
+UI/UX 自测用 **系统 Chrome + Chrome Playwright 扩展 + Cursor Playwright MCP**,不在 monorepo 内装浏览器自动化依赖。规则成熟前**只维护在 `apps/web/docs_tdd/`**（含 `common/` 与各项目 `agent/`）;Agent 入口见 [../AGENTS.md](../../AGENTS.md);不写入 `~/.cursor/rules/` 或仓库根 `AGENTS.md`。
 
 ## 2. 禁止
 

@@ -1,7 +1,7 @@
 # QA 用例回归 — PR-02022（2026-07-13）
 
 > 用例来源：[inbox/lark-sync/test-cases-latest.md](../inbox/lark-sync/test-cases-latest.md)（Lark 同步，32 条）。
-> 分工依据：[verification-division-of-labor.md](../../../common/verification-division-of-labor.md) —— Agent 负责逻辑/数据/边界（Vitest + 真实接口网络层核对），人工负责 UI 视觉/交互走查（见 [ui-ux/manual-walkthrough-checklist.md](ui-ux/manual-walkthrough-checklist.md)，已全部通过）。
+> 分工依据：[verification-division-of-labor.md](../../../common/rules/verification-division-of-labor.md) —— Agent 负责逻辑/数据/边界（Vitest + 真实接口网络层核对），人工负责 UI 视觉/交互走查（见 [ui-ux/manual-walkthrough-checklist.md](ui-ux/manual-walkthrough-checklist.md)，已全部通过）。
 > 环境：dev（`pfyys.com`），真实登录态，端口 4107。
 
 ## 结论速览

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // 常驻上下文预算校验：确保 docs_tdd 规则体系"规则可变多，常驻恒定小"不漂移。
 // 用法：node apps/web/docs_tdd/common/engine/agent-scripts/check-doc-budget.mjs
-// 不变量（见 common/rule-router.md §3）：
+// 不变量（见 common/rules/rule-router.md §3）：
 //   1. 常驻文件 = 且仅 = 带 <!-- RESIDENT-DOC --> 标记的文件，且只能有一个（当前 rule-router.md）。
 //   2. 该常驻文件 ≤ RESIDENT_BUDGET 字符（码点数，Array.from 计，与"字符数"直觉一致；不用 wc -m，后者受 locale 影响会按字节膨胀）。
 //   3. 每个 common/*.md（除常驻文件与 README）都必须被 rule-index 和 README 收录，否则入口会漂移。
@@ -16,6 +16,7 @@ import { fileURLToPath } from 'node:url'
 const COMMON_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const DOCS_TDD_DIR = join(COMMON_DIR, '..')
 const PRDS_DIR = join(DOCS_TDD_DIR, 'prds') // 项目实例根（PR-* 已从仓库根收进 prds/）
+const RULES_DIR = join(COMMON_DIR, 'rules') // 规则知识层（规则文档 + rule-index/ruleset/ownership 已从 common/ 收进 rules/）
 const SCRIPTS_DIR = join(COMMON_DIR, 'engine', 'agent-scripts')
 const TEMPLATES_DIR = join(DOCS_TDD_DIR, 'templates')
 const LINK_CHECK_SCRIPT = join(SCRIPTS_DIR, 'check-doc-links.mjs')
@@ -259,12 +260,12 @@ function validateSchema(value, schema, path = '') {
 }
 
 const errors = []
-const mdFiles = readdirSync(COMMON_DIR).filter((n) => n.endsWith('.md'))
+const mdFiles = readdirSync(RULES_DIR).filter((n) => n.endsWith('.md'))
 
 // 扫描所有 common/*.md，找带常驻标记的文件
 const residents = []
 for (const name of mdFiles) {
-  const text = readFileSync(join(COMMON_DIR, name), 'utf8')
+  const text = readFileSync(join(RULES_DIR, name), 'utf8')
   if (text.includes(RESIDENT_MARKER)) residents.push({ name, size: charCount(text) })
 }
 
@@ -295,7 +296,7 @@ for (const r of residents) {
   const overCap = []
   for (const name of mdFiles) {
     if (BUDGET_EXEMPT.has(name) || residents.some((r) => r.name === name)) continue
-    const size = charCount(readFileSync(join(COMMON_DIR, name), 'utf8'))
+    const size = charCount(readFileSync(join(RULES_DIR, name), 'utf8'))
     const budget = DOC_BUDGET_OVERRIDES[name] || DOC_BUDGET_DEFAULT
     if (size > budget.fail) {
       overCap.push(
@@ -348,7 +349,7 @@ for (const r of residents) {
 }
 
 // Router 只保留启动协议；专题覆盖由机器索引承担，避免常驻文件手抄全量文件名。
-const routerText = readFileSync(join(COMMON_DIR, ROUTER_FILE), 'utf8')
+const routerText = readFileSync(join(RULES_DIR, ROUTER_FILE), 'utf8')
 
 // 校验 3.1：README 人工总索引也必须覆盖每个专题 md。router 是机器入口，README 是人工查阅入口，二者都不能漂。
 const readmeText = readFileSync(join(COMMON_DIR, README_FILE), 'utf8')
@@ -365,7 +366,7 @@ if (readmeMissing.length) {
 }
 
 // 校验 4：机器可读路由索引必须可解析，且引用的 common 文档真实存在。
-const ruleIndexPath = join(COMMON_DIR, RULE_INDEX_FILE)
+const ruleIndexPath = join(RULES_DIR, RULE_INDEX_FILE)
 const indexedRuleRefs = new Set()
 const knownScenarioNames = new Set()
 if (!existsSync(ruleIndexPath)) {
@@ -407,7 +408,9 @@ if (!existsSync(ruleIndexPath)) {
         }
         const { file, sections = '' } = normalized
         if (file.endsWith('.md')) indexedRuleRefs.add(file)
-        const absolute = join(COMMON_DIR, file)
+        // 规则文档在 rules/；个别被场景引用的 common/ 层文件（如 CHANGELOG.md）回退到 common/。
+        const rulesPath = join(RULES_DIR, file)
+        const absolute = existsSync(rulesPath) ? rulesPath : join(COMMON_DIR, file)
         if (!existsSync(absolute)) {
           errors.push(`❌ ${RULE_INDEX_FILE}.scenarios.${name} 引用了不存在的文件：${file}`)
           continue
@@ -446,7 +449,7 @@ if (indexOrphans.length) {
 
 // 校验 4.5：专题正文只有一个所有者；总览/启动文档不得重新复制已收敛规则块。
 {
-  const ownershipPath = join(COMMON_DIR, RULE_OWNERSHIP_FILE)
+  const ownershipPath = join(RULES_DIR, RULE_OWNERSHIP_FILE)
   if (!existsSync(ownershipPath)) {
     errors.push(`❌ 缺少 ${RULE_OWNERSHIP_FILE}（专题唯一正文所有权表）。`)
   } else {
@@ -461,7 +464,7 @@ if (indexOrphans.length) {
           invalid.push(`${topic}: source 缺失`)
           continue
         }
-        if (!existsSync(join(COMMON_DIR, entry.source))) invalid.push(`${topic}: ${entry.source} 不存在`)
+        if (!existsSync(join(RULES_DIR, entry.source))) invalid.push(`${topic}: ${entry.source} 不存在`)
         if (entry.sections && !/^\d+(?:-\d+)?$/.test(entry.sections)) invalid.push(`${topic}: sections=${entry.sections} 无效`)
       }
       if (invalid.length) {
@@ -476,7 +479,7 @@ if (indexOrphans.length) {
 
   const duplicateOffenders = []
   for (const [file, fragments] of Object.entries(FORBIDDEN_DUPLICATE_BLOCKS)) {
-    const text = readFileSync(join(COMMON_DIR, file), 'utf8')
+    const text = readFileSync(join(RULES_DIR, file), 'utf8')
     for (const fragment of fragments) {
       if (text.includes(fragment)) duplicateOffenders.push(`${file}: ${fragment}`)
     }
@@ -492,7 +495,7 @@ if (indexOrphans.length) {
 
 // 校验 5：脚本里实装的每个 rule ID 必须登记进 rule-ids-and-gates.md 台账。
 // 防「脚本改了 ID、台账没跟」的脱节（此前 DOC-STRUCT-*/DOC-G0-* 等在台账 0 命中）。
-const ledgerPath = join(COMMON_DIR, LEDGER_FILE)
+const ledgerPath = join(RULES_DIR, LEDGER_FILE)
 if (!existsSync(ledgerPath)) {
   errors.push(`❌ 缺少 ${LEDGER_FILE}（rule ID 台账）。`)
 } else {
@@ -581,8 +584,8 @@ if (missingScripts.length) {
 // 校验 8：文档/模板里直接写到的公共 agent-scripts/*.mjs 必须存在。
 // Markdown 链接检查抓不到命令行里的脚本路径；这里补齐命令/代码块/JSON 字符串中的脚本断链。
 const docFilesForScriptRefs = [
-  ...mdFiles.map((name) => join(COMMON_DIR, name)),
-  join(COMMON_DIR, RULE_INDEX_FILE),
+  ...mdFiles.map((name) => join(RULES_DIR, name)),
+  join(RULES_DIR, RULE_INDEX_FILE),
   ...readdirSync(TEMPLATES_DIR).filter((name) => ['.md', '.ts'].some((ext) => name.endsWith(ext))).map((name) => join(TEMPLATES_DIR, name)),
 ]
 
@@ -743,8 +746,8 @@ if (missingTemplateRefs.length) {
     }
     return null
   }
-  const positive = '1. `apps/web/docs_tdd/AGENTS.md`\n2. `apps/web/docs_tdd/CONTEXT.md`\n3. `apps/web/docs_tdd/common/README.md`\n4. `apps/web/docs_tdd/common/rule-inheritance.md`'
-  const negative = '1. 读 [common/rule-router.md](./common/rule-router.md)（唯一常驻规则文件），按场景命中才展开专题正文，禁止全读。'
+  const positive = '1. `apps/web/docs_tdd/AGENTS.md`\n2. `apps/web/docs_tdd/CONTEXT.md`\n3. `apps/web/docs_tdd/common/README.md`\n4. `apps/web/docs_tdd/common/rules/rule-inheritance.md`'
+  const negative = '1. 读 [common/rules/rule-router.md](./common/rules/rule-router.md)（唯一常驻规则文件），按场景命中才展开专题正文，禁止全读。'
   if (!findReadingList(positive) || findReadingList(negative)) {
     errors.push('❌ 校验 10.4 自测失败：多步阅读清单判据漂移（正/反样例不符预期），先修脚本再继续。')
   } else {

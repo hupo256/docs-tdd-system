@@ -4,7 +4,7 @@
 # Feature Inventory — `<TICKET-ID> <需求名>`
 
 > **Agent 自动创建**：新需求 G0 前，由 Agent 从 [feature-inventory-template.md](../templates/feature-inventory-template.md) 复制到本路径，勿等负责人手动操作。  
-> 规则：[common/prd-feature-inventory.md](../common/prd-feature-inventory.md) §3（G0 初稿 → G2 定稿 → 再写代码）。
+> 规则：[common/rules/prd-feature-inventory.md](../common/rules/prd-feature-inventory.md) §3（G0 初稿 → G2 定稿 → 再写代码）。
 
 | 字段 | 值 |
 |------|-----|
@@ -13,8 +13,8 @@
 | Figma 主画板 | node id |
 | 清单维护人 | |
 | G2 确认人 & 日期 | |
-| 责任模块目录 | 如 `apps/web/src/apps/<Feature>/**, services/api/<domain>/**`（改动边界白名单，见 [change-scope-boundary.md §1.1](../common/change-scope-boundary.md)） |
-| visualFidelity | `standard` / `high`（高保真判定见 [component-reuse-and-visual-fidelity.md §3.0](../common/component-reuse-and-visual-fidelity.md)） |
+| 责任模块目录 | 如 `apps/web/src/apps/<Feature>/**, services/api/<domain>/**`（改动边界白名单，见 [change-scope-boundary.md §1.1](../common/rules/change-scope-boundary.md)） |
+| visualFidelity | `standard` / `high`（高保真判定见 [component-reuse-and-visual-fidelity.md §3.0](../common/rules/component-reuse-and-visual-fidelity.md)） |
 
 ## 功能清单
 

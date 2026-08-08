@@ -62,7 +62,7 @@ L1/L2 的具体落点:全局短规则与 `coding-quality`、`figma-read` 只在 
 
 每个新需求进入 G0 时必须完成:
 
-1. 读 `common/rule-router.md`，再通过 `docs-tdd.mjs context <PROJECT-ID> <SCENARIO>` 只加载命中专题；禁止全读 `common/`。
+1. 读 `common/rules/rule-router.md`，再通过 `docs-tdd.mjs context <PROJECT-ID> <SCENARIO>` 只加载命中专题；禁止全读 `common/`。
 2. 读最近一个成熟项目的 `engineering/development-rules.md`。
 3. 对照是否有通用规则尚未进入 `common/`。
 4. 若有,先提炼到 `common/`,再写当前项目文档或代码。
@@ -77,13 +77,13 @@ L1/L2 的具体落点:全局短规则与 `coding-quality`、`figma-read` 只在 
 | 纯通用编码手艺(命名类型/DRY/300行/查表/活注释/禁假默认) | **L1** `~/.ai-rules/AGENT.md` + `~/.ai-rules/skills/*`(非本表) |
 | 编码手艺 + fameex 锚点(分层/API/mapper/state/token/H5/i18n) | **L2** `.cursor/rules/*.mdc`(非本表) |
 | 所有项目都应遵守的**流程规则** | `common/` 对应专题文件；所有权见 `rule-ownership.json` |
-| 工作流/门禁/通知 | `common/workflow-gates.md`、`common/collaboration-and-notifications.md` |
-| 目录结构 | `common/project-doc-structure.md` |
-| UI token/Figma 映射(流程与门禁侧) | `common/ui-style-token-rules.md` |
-| API、schema、mapper(流程与门禁侧) | `common/api-and-mapper.md` |
-| 状态所有权、Mock(流程与门禁侧) | `common/architecture-and-state.md` |
-| 测试、自测、Review | `common/quality-checklist.md` |
-| Browser/Playwright MCP | `common/browser-e2e-mcp.md` |
+| 工作流/门禁/通知 | `common/rules/workflow-gates.md`、`common/rules/collaboration-and-notifications.md` |
+| 目录结构 | `common/rules/project-doc-structure.md` |
+| UI token/Figma 映射(流程与门禁侧) | `common/rules/ui-style-token-rules.md` |
+| API、schema、mapper(流程与门禁侧) | `common/rules/api-and-mapper.md` |
+| 状态所有权、Mock(流程与门禁侧) | `common/rules/architecture-and-state.md` |
+| 测试、自测、Review | `common/rules/quality-checklist.md` |
+| Browser/Playwright MCP | `common/rules/browser-e2e-mcp.md` |
 | 当前项目特有约束 | `<PROJECT-ID>/engineering/development-rules.md` |
 | 未确认需求、PRD/Figma/API 差异 | `<PROJECT-ID>/product/06-collaboration.md` |
 
@@ -128,12 +128,12 @@ L3 写规则时默认使用“触发 → 动作 → 证据 → 失败处理”�
 | 场景 | 公共入口 | 项目目录只允许放 |
 |------|----------|------------------|
 | Lark 主动通知 | `common/engine/agent-scripts/notify-lark.mjs` | `agent/scripts/notify-lark.mjs` 薄包装、`<project-id>.json` 配置 |
-| G0-G8 门禁 | `common/workflow-gates.md` | 项目当前状态和特殊门禁说明 |
-| 文档结构 | `common/project-doc-structure.md` | 当前项目实际文件和状态 |
-| 功能清单 | `common/prd-feature-inventory.md`、`templates/feature-inventory-template.md` | `product/00-feature-inventory.md` 的项目功能事实 |
-| Agent 流程 | `common/collaboration-and-notifications.md`、`common/lark-bot-gateway.md` | 项目恢复顺序、启用状态、配置路径 |
-| 工程规则 | `common/development-rules.md` 专题入口 + `rule-ownership.json` 指向的唯一正文 | 项目特殊约束、模块边界、例外说明 |
-| 质量检查 | `common/quality-checklist.md` | 当前项目执行记录和跳过原因 |
+| G0-G8 门禁 | `common/rules/workflow-gates.md` | 项目当前状态和特殊门禁说明 |
+| 文档结构 | `common/rules/project-doc-structure.md` | 当前项目实际文件和状态 |
+| 功能清单 | `common/rules/prd-feature-inventory.md`、`templates/feature-inventory-template.md` | `product/00-feature-inventory.md` 的项目功能事实 |
+| Agent 流程 | `common/rules/collaboration-and-notifications.md`、`common/rules/lark-bot-gateway.md` | 项目恢复顺序、启用状态、配置路径 |
+| 工程规则 | `common/rules/development-rules.md` 专题入口 + `rule-ownership.json` 指向的唯一正文 | 项目特殊约束、模块边界、例外说明 |
+| 质量检查 | `common/rules/quality-checklist.md` | 当前项目执行记录和跳过原因 |
 | 通知记录 | `templates/notification-log-template.md` | 当前项目实际发送记录 |
 
 防复发规则:

@@ -32,7 +32,7 @@
 
 ### 1.3 映射落盘
 
-凡 ② 平替或 ③ 相近，须在 `product/07-figma-spec.md` §Figma→preset 映射表写清 Figma 值、采用 class、映射类型、理由。模板见 [templates/07-figma-spec-template.md](../templates/07-figma-spec-template.md)。
+凡 ② 平替或 ③ 相近，须在 `product/07-figma-spec.md` §Figma→preset 映射表写清 Figma 值、采用 class、映射类型、理由。模板见 [templates/07-figma-spec-template.md](../../templates/07-figma-spec-template.md)。
 
 ### 1.4 决策口诀（同 §1.1）
 

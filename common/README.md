@@ -2,42 +2,42 @@
 
 `common/` 是新项目继承项目流程、门禁、自测、边界和证据规则的唯一公共入口。项目目录只放当前需求的差异化规则、PRD、Figma、API 和任务。通用代码质量归全局 AGENTS/skill，FameEX 代码锚点归 `.cursor/rules/*.mdc`；本目录只记录何时加载、如何验证、证据落哪里。
 
-> **开工不要全读本索引**：常驻只读 [rule-router.md](./rule-router.md)，再执行 `docs-tdd.mjs context <PROJECT-ID> <SCENARIO>` 读取带 fingerprint 的临时 context pack。下面是**专题全索引，供人工查阅**，不是每次全读清单。
+> **开工不要全读本索引**：常驻只读 [rule-router.md](./rules/rule-router.md)，再执行 `docs-tdd.mjs context <PROJECT-ID> <SCENARIO>` 读取带 fingerprint 的临时 context pack。下面是**专题全索引，供人工查阅**，不是每次全读清单。
 
 ## 专题全索引（查阅用）
 
-1. [rule-router.md](./rule-router.md)：**渐进披露路由表**（开工唯一常驻入口，按场景命中才读正文）。
-2. [new-project-kickoff.md](./new-project-kickoff.md)：新 chat 一句话启动项目的自动链路。
-3. [startup-prompt.md](./startup-prompt.md)：新需求启动口令模板。
-4. [rule-index.json](./rule-index.json)：机器可读场景路由索引。
-   - [rule-ownership.json](./rule-ownership.json)：专题唯一正文所有权表；Router、Gate、模板只消费，不复制正文。
-5. [rule-inheritance.md](./rule-inheritance.md)：规则如何从旧项目沉淀到公共区。
-6. [prd-feature-inventory.md](./prd-feature-inventory.md)：**PRD 全量功能清单**（防 Figma 边界误裁 scope）。
-7. [workflow-gates.md](./workflow-gates.md)：G0-G8 开发门禁（含 G3 MSW 前置、G5 字段对账、G6 自动验收）。
-8. [rule-ids-and-gates.md](./rule-ids-and-gates.md)：规则 ID、阶段 gate、只扫新增/修改文件的静态检查。
-   - [blocking-and-change-protocol.md](./blocking-and-change-protocol.md)：阻塞与需求变更的机器可读单一源 `agent/blockers.json`（`DOC-BLOCK-*`，gate 能拦、交付摘要能派生）。
-9. [rule-execution-model.md](./rule-execution-model.md)：规则从触发、加载、执行、证据到失败阻断的保障模型。
-10. [hook-integration.md](./hook-integration.md)：PostToolUse hook 接入、调度范围和降级手动命令。
-11. [execution-evidence.md](./execution-evidence.md)：命令、gate、自测和交付证据记录。
-12. [coding-worktree.md](./coding-worktree.md)：进入编码前创建 `feature/<PROJECT-ID>` 分支和同级 worktree。
-13. [git-branch-flow.md](./git-branch-flow.md)：**Git 分支流与合并规则**（功能分支单向合入环境分支、永不反向；冲突本地解决再 push）。
-14. [development-rules.md](./development-rules.md)：人工专题入口，不定义规则正文。
-15. [architecture-and-state.md](./architecture-and-state.md)：分层、状态管理与 Mock 项目门禁总览。
-16. [api-and-mapper.md](./api-and-mapper.md)：API/schema/mapper 权威专题；单一来源同名与两类改名例外。
-    - [mock-legacy-route-a.md](./mock-legacy-route-a.md)：Mock 路线 A（`if(USE_MOCK)`）隔离/拆除税，仅未采用 MSW 的遗留功能适用。
-17. [ui-style-token-rules.md](./ui-style-token-rules.md)：Figma、Tailwind token、dark / light、H5 的项目验收流程。
-18. [figma-mcp-read-workflow.md](./figma-mcp-read-workflow.md)：**Figma MCP 原子节点读取、cornerRadius 落盘**（防 rounded-full 等漏读）。
-19. [component-reuse-and-visual-fidelity.md](./component-reuse-and-visual-fidelity.md)：组件复用盘点、弹窗/UI 双层视觉验收。
-20. [change-scope-boundary.md](./change-scope-boundary.md)：**改动边界与影响半径**——改动收敛责任模块内；越界（公共/共享 或 其他业务模块）先警告 + 重点 check，确保不影响无关功能。
-21. [react-component-props-types.md](./react-component-props-types.md)：React 组件 2+ 入参 Props/Params 已上移 L1 的本地指针。
-22. [quality-checklist.md](./quality-checklist.md)：测试、自测、Review checklist。
-23. [verification-division-of-labor.md](./verification-division-of-labor.md)：**验证分工**——Agent 跑逻辑/边界/数据/DOM 契约（Vitest+取值比对），人工跑视觉/手感/响应式（修订旧文「Agent 自己完成 L2 并排」）。
-24. [browser-e2e-mcp.md](./browser-e2e-mcp.md)：Browser / Playwright MCP 自测（禁止项目内安装 Playwright）。
-25. [collaboration-and-notifications.md](./collaboration-and-notifications.md)：协作通知总入口和安全边界。
-26. [lark-active-notification.md](./lark-active-notification.md)：自定义机器人主动发群消息（G0-G8）规则。
-27. [lark-bot-gateway.md](./lark-bot-gateway.md)：群内 @ 应用触发任务的完整链路（Bot Gateway / Worker）。
-28. [lark-doc-sync.md](./lark-doc-sync.md)：Lark CLI 只读同步 PRD / Wiki / Drive / Markdown 到 `docs_tdd` 的规则。
-29. [project-doc-structure.md](./project-doc-structure.md)：项目文档目录规范。
+1. [rule-router.md](./rules/rule-router.md)：**渐进披露路由表**（开工唯一常驻入口，按场景命中才读正文）。
+2. [new-project-kickoff.md](./rules/new-project-kickoff.md)：新 chat 一句话启动项目的自动链路。
+3. [startup-prompt.md](./rules/startup-prompt.md)：新需求启动口令模板。
+4. [rule-index.json](./rules/rule-index.json)：机器可读场景路由索引。
+   - [rule-ownership.json](./rules/rule-ownership.json)：专题唯一正文所有权表；Router、Gate、模板只消费，不复制正文。
+5. [rule-inheritance.md](./rules/rule-inheritance.md)：规则如何从旧项目沉淀到公共区。
+6. [prd-feature-inventory.md](./rules/prd-feature-inventory.md)：**PRD 全量功能清单**（防 Figma 边界误裁 scope）。
+7. [workflow-gates.md](./rules/workflow-gates.md)：G0-G8 开发门禁（含 G3 MSW 前置、G5 字段对账、G6 自动验收）。
+8. [rule-ids-and-gates.md](./rules/rule-ids-and-gates.md)：规则 ID、阶段 gate、只扫新增/修改文件的静态检查。
+   - [blocking-and-change-protocol.md](./rules/blocking-and-change-protocol.md)：阻塞与需求变更的机器可读单一源 `agent/blockers.json`（`DOC-BLOCK-*`，gate 能拦、交付摘要能派生）。
+9. [rule-execution-model.md](./rules/rule-execution-model.md)：规则从触发、加载、执行、证据到失败阻断的保障模型。
+10. [hook-integration.md](./rules/hook-integration.md)：PostToolUse hook 接入、调度范围和降级手动命令。
+11. [execution-evidence.md](./rules/execution-evidence.md)：命令、gate、自测和交付证据记录。
+12. [coding-worktree.md](./rules/coding-worktree.md)：进入编码前创建 `feature/<PROJECT-ID>` 分支和同级 worktree。
+13. [git-branch-flow.md](./rules/git-branch-flow.md)：**Git 分支流与合并规则**（功能分支单向合入环境分支、永不反向；冲突本地解决再 push）。
+14. [development-rules.md](./rules/development-rules.md)：人工专题入口，不定义规则正文。
+15. [architecture-and-state.md](./rules/architecture-and-state.md)：分层、状态管理与 Mock 项目门禁总览。
+16. [api-and-mapper.md](./rules/api-and-mapper.md)：API/schema/mapper 权威专题；单一来源同名与两类改名例外。
+    - [mock-legacy-route-a.md](./rules/mock-legacy-route-a.md)：Mock 路线 A（`if(USE_MOCK)`）隔离/拆除税，仅未采用 MSW 的遗留功能适用。
+17. [ui-style-token-rules.md](./rules/ui-style-token-rules.md)：Figma、Tailwind token、dark / light、H5 的项目验收流程。
+18. [figma-mcp-read-workflow.md](./rules/figma-mcp-read-workflow.md)：**Figma MCP 原子节点读取、cornerRadius 落盘**（防 rounded-full 等漏读）。
+19. [component-reuse-and-visual-fidelity.md](./rules/component-reuse-and-visual-fidelity.md)：组件复用盘点、弹窗/UI 双层视觉验收。
+20. [change-scope-boundary.md](./rules/change-scope-boundary.md)：**改动边界与影响半径**——改动收敛责任模块内；越界（公共/共享 或 其他业务模块）先警告 + 重点 check，确保不影响无关功能。
+21. [react-component-props-types.md](./rules/react-component-props-types.md)：React 组件 2+ 入参 Props/Params 已上移 L1 的本地指针。
+22. [quality-checklist.md](./rules/quality-checklist.md)：测试、自测、Review checklist。
+23. [verification-division-of-labor.md](./rules/verification-division-of-labor.md)：**验证分工**——Agent 跑逻辑/边界/数据/DOM 契约（Vitest+取值比对），人工跑视觉/手感/响应式（修订旧文「Agent 自己完成 L2 并排」）。
+24. [browser-e2e-mcp.md](./rules/browser-e2e-mcp.md)：Browser / Playwright MCP 自测（禁止项目内安装 Playwright）。
+25. [collaboration-and-notifications.md](./rules/collaboration-and-notifications.md)：协作通知总入口和安全边界。
+26. [lark-active-notification.md](./rules/lark-active-notification.md)：自定义机器人主动发群消息（G0-G8）规则。
+27. [lark-bot-gateway.md](./rules/lark-bot-gateway.md)：群内 @ 应用触发任务的完整链路（Bot Gateway / Worker）。
+28. [lark-doc-sync.md](./rules/lark-doc-sync.md)：Lark CLI 只读同步 PRD / Wiki / Drive / Markdown 到 `docs_tdd` 的规则。
+29. [project-doc-structure.md](./rules/project-doc-structure.md)：项目文档目录规范。
 30. [CHANGELOG.md](./CHANGELOG.md)：公共规则、gate 脚本和模板的框架变更日志。
 
 顶层项目索引用 `node apps/web/docs_tdd/common/engine/agent-scripts/update-project-index.mjs --write` 生成到 `../PROJECTS.md`。它只做导航汇总；项目事实由各项目 `README.md`、`product/00-feature-inventory.md`、`agent/stage-status.json` 和 `agent/gate-history.json` 共同表达，`agent/gate-results.json` 只代表最近一次 gate 运行结果，不能证明历史阶段已通过。
@@ -87,13 +87,13 @@
 
 - 修改规则后先跑公共自检，再依次执行 `rule-release.mjs --write`、`effective-rules.mjs --write` 和 `docs-tdd doctor`；`context/changed/gate` 只消费两层 fresh release。
 - 新项目启动时只从 `common/` 继承公共规则。
-- 用户用“根据 apps/web/docs_tdd 下的文档，开始新的需求...”启动时，Agent 必须先执行 [new-project-kickoff.md](./new-project-kickoff.md)。
+- 用户用“根据 apps/web/docs_tdd 下的文档，开始新的需求...”启动时，Agent 必须先执行 [new-project-kickoff.md](./rules/new-project-kickoff.md)。
 - 旧项目里发现可复用规则，必须提炼到 `common/`，再继续当前项目。
 - 项目 `engineering/development-rules.md` 只写特殊约束，不复制整份公共规则。
 - 每次发现“以前定过但新项目没继承”，视为文档流程缺陷，先补 `common/`。
-- 维护 `docs_tdd` 时先按 [rule-inheritance.md](./rule-inheritance.md) §0.1/§0.2 判断载体；不要把 L1/L2 代码规范正文复制进 L3。
-- 新需求 / 缺清单项目：Agent 必须自动执行 [prd-feature-inventory.md](./prd-feature-inventory.md) §3（复制模板 → G0 初稿 → G2 定稿 → 再写代码）。
+- 维护 `docs_tdd` 时先按 [rule-inheritance.md](./rules/rule-inheritance.md) §0.1/§0.2 判断载体；不要把 L1/L2 代码规范正文复制进 L3。
+- 新需求 / 缺清单项目：Agent 必须自动执行 [prd-feature-inventory.md](./rules/prd-feature-inventory.md) §3（复制模板 → G0 初稿 → G2 定稿 → 再写代码）。
 - 新需求一句话启动时：Agent 优先执行 `common/engine/agent-scripts/start-new-project.mjs` 创建项目骨架、登记 PRD 来源和薄包装脚本，再进入 G0 / G1 文档生成。
 - 项目晋级只能运行 `docs-tdd.mjs gate <PROJECT-ID> <GATE>`；runner 在成功历史落盘后自动同步阶段。`set-project-stage.mjs` 仅供内部同步、排障和显式回退，缺少同阶段 PASS 历史时拒绝推进。README 状态表的「最新通过门禁」机器行只由脚本写入；人工叙述写「当前阶段」行，二者不混用。
-- 新需求进入编码前：Agent 必须按 [coding-worktree.md](./coding-worktree.md) 创建或确认同级 worktree，不在主仓直接改业务代码。
-- 新需求进入 G2 / G5 / G6 / G7 / G8 前：Agent 必须按 [rule-ids-and-gates.md](./rule-ids-and-gates.md) 依次跑对应 gate；代码静态扫描只检查本次新增或已修改文件。
+- 新需求进入编码前：Agent 必须按 [coding-worktree.md](./rules/coding-worktree.md) 创建或确认同级 worktree，不在主仓直接改业务代码。
+- 新需求进入 G2 / G5 / G6 / G7 / G8 前：Agent 必须按 [rule-ids-and-gates.md](./rules/rule-ids-and-gates.md) 依次跑对应 gate；代码静态扫描只检查本次新增或已修改文件。

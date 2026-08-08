@@ -19,8 +19,8 @@
 1. `apps/web/docs_tdd/AGENTS.md`
 2. `apps/web/docs_tdd/CONTEXT.md`
 3. `apps/web/docs_tdd/common/README.md`
-4. `apps/web/docs_tdd/common/workflow-gates.md`
-5. `apps/web/docs_tdd/common/collaboration-and-notifications.md`
+4. `apps/web/docs_tdd/common/rules/workflow-gates.md`
+5. `apps/web/docs_tdd/common/rules/collaboration-and-notifications.md`
 6. `apps/web/docs_tdd/prds/PR-01973/README.md`
 7. `apps/web/docs_tdd/prds/PR-01973/product/04-frontend-tasks.md`
 8. `apps/web/docs_tdd/prds/PR-01973/engineering/development-rules.md`

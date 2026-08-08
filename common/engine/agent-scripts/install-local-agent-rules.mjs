@@ -17,7 +17,7 @@ const protocol = `
 
 ## FameEX Local Execution Protocol
 
-- In \`${repoRoot}\` or its feature worktrees, read \`${repoRoot}/apps/web/docs_tdd/common/rule-router.md\` first.
+- In \`${repoRoot}\` or its feature worktrees, read \`${repoRoot}/apps/web/docs_tdd/common/rules/rule-router.md\` first.
 - Load only routed L3 rules with \`node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs context <PROJECT-ID> <SCENARIO>\`.
 - After edits run \`node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs changed <PROJECT-ID>\` when no automatic hook is available.
 - At a stage boundary run \`node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs gate <PROJECT-ID> <Gx>\`.
@@ -67,7 +67,7 @@ alwaysApply: true
 
 L1 source: \`${sharedRoot}/AGENT.md\` and \`${sharedRoot}/skills/*\`.
 L2 source: repository \`AGENTS.md\`, \`CLAUDE.md\`, and matching \`.cursor/rules/*.mdc\`.
-L3 source: \`${repoRoot}/apps/web/docs_tdd/common/rule-router.md\`.
+L3 source: \`${repoRoot}/apps/web/docs_tdd/common/rules/rule-router.md\`.
 
 For FameEX tasks, read \`rule-router.md\` first and use:
 

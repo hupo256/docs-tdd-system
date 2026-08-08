@@ -4,8 +4,8 @@
 # 07 — Figma 设计规格
 
 > **模板**：`templates/07-figma-spec-template.md`  
-> **读取流程**：[figma-mcp-read-workflow.md](../common/figma-mcp-read-workflow.md)  
-> **Token 规则**：[ui-style-token-rules.md](../common/ui-style-token-rules.md)（**禁止为单页改 `packages/config/tailwind-preset.js`**）
+> **读取流程**：[figma-mcp-read-workflow.md](../common/rules/figma-mcp-read-workflow.md)  
+> **Token 规则**：[ui-style-token-rules.md](../common/rules/ui-style-token-rules.md)（**禁止为单页改 `packages/config/tailwind-preset.js`**）
 
 ## 0. 元信息
 
@@ -66,7 +66,7 @@ https://www.figma.com/design/{fileKey}/...?node-id={nodeId}&m=dev
 
 ## 4. Figma → Tailwind preset 映射表
 
-> 实现顺序见 [ui-style-token-rules.md](../common/ui-style-token-rules.md) §1：  
+> 实现顺序见 [ui-style-token-rules.md](../common/rules/ui-style-token-rules.md) §1：  
 > **① preset 已有 class → ② 同值不同名平替 → ③ 最相近 preset → ④ 高保真 arbitrary（仅项目声明时）**
 
 | Figma / MCP 输出 | 像素值 | preset class（采用） | 映射类型 | 备注 |
@@ -83,7 +83,7 @@ https://www.figma.com/design/{fileKey}/...?node-id={nodeId}&m=dev
 
 ## 4.1 Design Token 对齐链
 
-> 需要做到 Figma UI 稿高还原时，每个自定义颜色 / 字号 / 阴影 token 都必须能追踪完整链路。来源与规则见 [ui-style-token-rules.md](../common/ui-style-token-rules.md) §1.5。
+> 需要做到 Figma UI 稿高还原时，每个自定义颜色 / 字号 / 阴影 token 都必须能追踪完整链路。来源与规则见 [ui-style-token-rules.md](../common/rules/ui-style-token-rules.md) §1.5。
 
 链路格式：
 

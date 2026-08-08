@@ -2,7 +2,7 @@
 
 > **状态：✅ 人工走查全部通过（2026-07-06，Aven）**
 >
-> 生成：2026-07-01 by Agent（按 [common/verification-division-of-labor.md](../../../../common/verification-division-of-labor.md) 分工：视觉/手感/响应式由人工过）
+> 生成：2026-07-01 by Agent（按 [common/rules/verification-division-of-labor.md](../../../../common/rules/verification-division-of-labor.md) 分工：视觉/手感/响应式由人工过）
 > Agent 已固化的部分见本目录 `../../README` 的 G7 结论 + Vitest（15 用例全绿）+ 真实页集成验证。
 
 ## 前置

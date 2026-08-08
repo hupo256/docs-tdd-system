@@ -8,14 +8,14 @@
 
 AI 编码的两个顽疾：**跳过需求确认直接写码**、**规则散落导致每次重新解释**。docs_tdd 把开发拆成 G0-G8 阶段门禁，每阶段有机器可读的证据要求（gate 脚本实跑 biome/tsc/vitest、校验字段对账、阻塞登记、通知记录），AI「已读/已注意」不算数，只认执行契约产出的证据。
 
-规则本身遵循「**规则可变多，常驻恒定小**」：AI 开工只常驻读一个路由文件（`common/rule-router.md`，≤5000 字符机器守），其余按场景加载，避免上下文膨胀。
+规则本身遵循「**规则可变多，常驻恒定小**」：AI 开工只常驻读一个路由文件（`common/rules/rule-router.md`，≤5000 字符机器守），其余按场景加载，避免上下文膨胀。
 
 ## 架构
 
 | 层 | 内容 | 位置 |
 | --- | --- | --- |
-| **常驻路由** | 开工唯一入口：启动协议 + 硬规则 + 场景表 | [common/rule-router.md](./common/rule-router.md) |
-| **按需专题** | 架构/状态/API/Mock/UI/Figma/协作/门禁等规则，命中场景才加载 | `common/*.md`（人工索引见 [common/README.md](./common/README.md)，机器路由见 `common/rule-index.json`） |
+| **常驻路由** | 开工唯一入口：启动协议 + 硬规则 + 场景表 | [common/rules/rule-router.md](./common/rules/rule-router.md) |
+| **按需专题** | 架构/状态/API/Mock/UI/Figma/协作/门禁等规则，命中场景才加载 | `common/*.md`（人工索引见 [common/README.md](./common/README.md)，机器路由见 `common/rules/rule-index.json`） |
 | **门禁脚本** | 阶段验证、机器事实层、发布指纹、golden 自回归 | `common/engine/agent-scripts/*.mjs` |
 | **模板** | 新需求复制使用的文档骨架 | `templates/` |
 | **项目实例** | 各需求的文档/证据（清单见自动生成的 [PROJECTS.md](./PROJECTS.md)） | `PR-xxxxx/` |
@@ -56,7 +56,7 @@ docs-tdd guard                             # 机器层兜底：一条命令跑 g
 ```text
 根据 docs_tdd 下的文档，开始新的需求 PR-01234，PRD 文档是：<PRD 链接或本地路径>。
 ```
-AI 会先读 `common/rule-router.md`，再执行 `docs-tdd kickoff PR-01234 --prd <source>`。命令幂等创建项目、同步 PRD、初始化 intake 并写 `agent/run-state.json`；中断后用 `status/next/resume` 恢复。
+AI 会先读 `common/rules/rule-router.md`，再执行 `docs-tdd kickoff PR-01234 --prd <source>`。命令幂等创建项目、同步 PRD、初始化 intake 并写 `agent/run-state.json`；中断后用 `status/next/resume` 恢复。
 
 **2. G0 资料接收**：把 PRD / Figma / API 资料放进 `PR-01234/inbox/`。含图片、表格、嵌入对象时先完成 `prd_intake`（`docs-tdd context PR-01234 prd_intake`），逐项读取分类，读不了即阻断，不猜。
 
@@ -87,7 +87,7 @@ docs-tdd gate PR-01234 G8      # production build + Git 可交付状态 + 交付
 ```
 `docs-tdd doctor PR-01234` 随时自检适配/冲突/发布状态；缓存仅复用同输入 PASS，强制实跑加 `--no-cache`。
 
-> **人机分界（自动化边界要如实）**：G0–G4（需求→文档→方案→MSW 编码）高度自动；G5–G8 是**人机协同**——gate 机器实跑 biome/tsc/vitest/build 与结构化验收/字段对账，但**真实接口联调、视觉还原（Figma 并排 ≥95%）、交互手感、响应式、QA 用例执行以人工确认为锚点**（分工见 [common/verification-division-of-labor.md](./common/verification-division-of-labor.md)：Agent 固化能回归的逻辑/边界/数据/DOM 契约，人工过一眼能判的像素/手感/响应式）。判断层的 `acceptance-results.json`/`code-review.json` 由 Agent 产出、gate 校验其结构与证据锚点真实性，但语义正确性仍需人工/Review 兜底（执行强度分级见 [common/rule-execution-model.md §3](./common/rule-execution-model.md)）。
+> **人机分界（自动化边界要如实）**：G0–G4（需求→文档→方案→MSW 编码）高度自动；G5–G8 是**人机协同**——gate 机器实跑 biome/tsc/vitest/build 与结构化验收/字段对账，但**真实接口联调、视觉还原（Figma 并排 ≥95%）、交互手感、响应式、QA 用例执行以人工确认为锚点**（分工见 [common/rules/verification-division-of-labor.md](./common/rules/verification-division-of-labor.md)：Agent 固化能回归的逻辑/边界/数据/DOM 契约，人工过一眼能判的像素/手感/响应式）。判断层的 `acceptance-results.json`/`code-review.json` 由 Agent 产出、gate 校验其结构与证据锚点真实性，但语义正确性仍需人工/Review 兜底（执行强度分级见 [common/rules/rule-execution-model.md §3](./common/rules/rule-execution-model.md)）。
 
 **9. 上线后回收**：需求合入 `origin/online` 并验证后，回收一次性 worktree（保留 `PR-01234/` 文档）：
 ```bash
@@ -102,7 +102,7 @@ node <mount>/common/engine/agent-scripts/decommission-worktree.mjs PR-01234
 | 路径 | 用途 |
 | --- | --- |
 | [common/](./common/) | 跨项目复用的规则、门禁脚本、schema、模板索引 |
-| [common/rule-router.md](./common/rule-router.md) | **开工常驻入口**（渐进披露路由） |
+| [common/rules/rule-router.md](./common/rules/rule-router.md) | **开工常驻入口**（渐进披露路由） |
 | [common/README.md](./common/README.md) | 公共规则专题的人工全索引 |
 | [templates/](./templates/) | 新需求文档模板 |
 | [AGENTS.md](./AGENTS.md) | 给 AI Agent 的行为规则与接入流程 |
@@ -123,4 +123,4 @@ node <mount>/common/engine/agent-scripts/decommission-worktree.mjs PR-01234
 
 - `common/` 是新项目继承规则的唯一公共入口；项目目录只沉淀当前需求的差异，一旦可跨项目复用必须回写 `common/`。
 - 跨项目脚本有公共实现，项目脚本只做薄包装。
-- 通用 React/TypeScript 手艺归全局 AI 规则与 skill，框架代码锚点归各仓库 `.cursor/rules`；`docs_tdd` 只承载项目流程、门禁、Mock 策略、证据与豁免。详见 [common/rule-inheritance.md](./common/rule-inheritance.md)。
+- 通用 React/TypeScript 手艺归全局 AI 规则与 skill，框架代码锚点归各仓库 `.cursor/rules`；`docs_tdd` 只承载项目流程、门禁、Mock 策略、证据与豁免。详见 [common/rules/rule-inheritance.md](./common/rules/rule-inheritance.md)。

@@ -130,7 +130,7 @@ Figma 9336:133830 → 48×48, cornerRadius 24 → rounded-full, border-text-5 �
 | [component-reuse-and-visual-fidelity.md](./component-reuse-and-visual-fidelity.md) | L2 并排、≥95% 还原 |
 | 本文件 | MCP 怎么读、参数怎么落盘 |
 | `<PROJECT>/product/07-figma-spec.md` | 项目几何表与 node 索引 |
-| [templates/07-figma-spec-template.md](../templates/07-figma-spec-template.md) | 新项目 G1 复制模板 |
+| [templates/07-figma-spec-template.md](../../templates/07-figma-spec-template.md) | 新项目 G1 复制模板 |
 
 ## 8. 快速参考:分享渠道按钮（教训）
 

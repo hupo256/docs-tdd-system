@@ -53,7 +53,7 @@
 
 ### G7 自测（Browser/Playwright + Figma L2）
 
-> 2026-07-01：按 [common/verification-division-of-labor.md](../../../common/verification-division-of-labor.md) 分工执行。逻辑/边界/数据/DOM 契约由 Agent 用 Vitest + 真实页取值验证；视觉/手感/响应式转人工走查清单（[evidence/ui-ux/manual-walkthrough-checklist.md](../evidence/ui-ux/manual-walkthrough-checklist.md)）。
+> 2026-07-01：按 [common/rules/verification-division-of-labor.md](../../../common/rules/verification-division-of-labor.md) 分工执行。逻辑/边界/数据/DOM 契约由 Agent 用 Vitest + 真实页取值验证；视觉/手感/响应式转人工走查清单（[evidence/ui-ux/manual-walkthrough-checklist.md](../evidence/ui-ux/manual-walkthrough-checklist.md)）。
 
 - [x] 引导全流程：第一步起 → 翻页 → 跳过/完成 → 状态不可逆 → 刷新不再现（Agent 真实页验证：翻页 1→2→3、完成上报 `completed`、跳过上报 `ended`；状态不可逆由 `shouldStartGuide` Vitest 覆盖；真实「刷新不再现」已随后端 GET `guide/status` 闭环）
 - [x] 互斥：带单员未读时只出弹窗（Agent 验证：弹窗开启时 driver 未激活、popover 不存在）

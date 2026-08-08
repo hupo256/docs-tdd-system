@@ -2,7 +2,7 @@
 
 > 状态：**计划 / 待执行**（重启 session 加载 Playwright MCP 后开跑，跑完原地回填「结果」列）
 > 触发原因：API 有更新 + 本地接入了 calc.ts 业务规则函数（阶梯最高档 / 进阶逐档可叠加 / 领取按钮活动状态门槛），需完整回归一次。
-> 关联规范：[../../../../common/browser-e2e-mcp.md](../../../../../common/browser-e2e-mcp.md)（默认不截图，文字报告为主）
+> 关联规范：[../../../../common/rules/browser-e2e-mcp.md](../../../../../common/rules/browser-e2e-mcp.md)（默认不截图，文字报告为主）
 
 ## 环境
 

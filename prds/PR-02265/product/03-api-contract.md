@@ -5,9 +5,9 @@
 
 > **模板**：`templates/03-api-contract-template.md`
 > **配套规则**：
-> - 单一来源字段默认贴合契约、仅两类改名例外：[api-and-mapper.md](../../../common/api-and-mapper.md) §2
-> - 文案像接口 contract 一样管理：[architecture-and-state.md](../../../common/architecture-and-state.md) §7.1
-> - 真实接口到位后的字段对账关卡：[architecture-and-state.md](../../../common/architecture-and-state.md) §8.1
+> - 单一来源字段默认贴合契约、仅两类改名例外：[api-and-mapper.md](../../../common/rules/api-and-mapper.md) §2
+> - 文案像接口 contract 一样管理：[architecture-and-state.md](../../../common/rules/architecture-and-state.md) §7.1
+> - 真实接口到位后的字段对账关卡：[architecture-and-state.md](../../../common/rules/architecture-and-state.md) §8.1
 > **使用**：G1 复制到项目；G3 补 Mock 场景和文案契约；G5 联调时逐行更新 §5 字段对账。
 
 ## 0. 元信息

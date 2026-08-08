@@ -2,10 +2,10 @@
 
 > **模板**：`templates/03-api-contract-template.md`
 > **配套规则**：
-> - 字段命名默认贴合契约、四类改名例外：[architecture-and-state.md](../../../common/architecture-and-state.md) §3.1
-> - 文案像接口 contract 一样管理：[architecture-and-state.md](../../../common/architecture-and-state.md) §7.1
-> - 真实接口到位后的字段对账关卡：[architecture-and-state.md](../../../common/architecture-and-state.md) §8.1
-> - 新功能 mock 强制 MSW 路线 B：[architecture-and-state.md](../../../common/architecture-and-state.md) §8.4.1
+> - 字段命名默认贴合契约、四类改名例外：[architecture-and-state.md](../../../common/rules/architecture-and-state.md) §3.1
+> - 文案像接口 contract 一样管理：[architecture-and-state.md](../../../common/rules/architecture-and-state.md) §7.1
+> - 真实接口到位后的字段对账关卡：[architecture-and-state.md](../../../common/rules/architecture-and-state.md) §8.1
+> - 新功能 mock 强制 MSW 路线 B：[architecture-and-state.md](../../../common/rules/architecture-and-state.md) §8.4.1
 > **使用**：G1 复制到项目；**G3 补 Mock 场景和文案契约（← 本次 T01 填充）**；G5 联调时逐行更新 §5 字段对账并做减法。
 
 ## 0. 元信息

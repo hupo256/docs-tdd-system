@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "blockers.schema.json",
   "title": "docs_tdd Blockers & Changes",
-  "description": "跨阶段的阻塞与需求变更登记（机器可读单一源）。缺失文件即合法（零回填）。语义见 common/blocking-and-change-protocol.md。",
+  "description": "跨阶段的阻塞与需求变更登记（机器可读单一源）。缺失文件即合法（零回填）。语义见 common/rules/blocking-and-change-protocol.md。",
   "type": "array",
   "items": {
     "type": "object",

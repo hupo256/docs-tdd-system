@@ -19,8 +19,8 @@
 
 1. `apps/web/docs_tdd/AGENTS.md`
 2. `apps/web/docs_tdd/common/README.md`
-3. `apps/web/docs_tdd/common/workflow-gates.md`
-4. `apps/web/docs_tdd/common/collaboration-and-notifications.md`
+3. `apps/web/docs_tdd/common/rules/workflow-gates.md`
+4. `apps/web/docs_tdd/common/rules/collaboration-and-notifications.md`
 5. `apps/web/docs_tdd/prds/PR-01685/README.md`
 6. `apps/web/docs_tdd/prds/PR-01685/product/00-feature-inventory.md`
 7. `apps/web/docs_tdd/prds/PR-01685/product/03-api-contract.md`
