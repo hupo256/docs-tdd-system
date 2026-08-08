@@ -17,11 +17,11 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 // 把 lark-cli 命令包成 Promise，返回 { code, stdout, stderr }。带超时兜底：
 // 到点先 SIGTERM，宽限 3s 仍未退再 SIGKILL，并立即以 code -1 结算，避免调用方永久挂起。
-export const runLarkCli = (args, { timeoutMs = larkCliTimeoutMs } = {}) =>
+export const runLarkCli = (args, { timeoutMs = larkCliTimeoutMs, cwd } = {}) =>
   new Promise((resolve) => {
     // 强制 bot 身份：lark-cli `defaultAs:auto` 在同时登录了 user + bot 时会解析成 user，
     // 导致发消息/读表报 missing_scope（user 无 im:message 等 scope）。所有系统调用都应走 bot。
-    const child = spawn(larkCliBin, ['--as', 'bot', ...args], { stdio: ['ignore', 'pipe', 'pipe'] })
+    const child = spawn(larkCliBin, ['--as', 'bot', ...args], { stdio: ['ignore', 'pipe', 'pipe'], cwd })
     let stdout = ''
     let stderr = ''
     let settled = false
@@ -97,15 +97,19 @@ export const downloadAttachments = async ({ repoRoot, project, messageId, attach
   for (const [index, a] of attachments.entries()) {
     // imageKey 会拼进本地文件名，sanitize 掉路径分隔符等，避免越目录写入
     const safeKey = String(a.imageKey || 'img').replace(/[^\w.-]/g, '_').slice(0, 80)
-    const output = join(outDir, `${index + 1}-${safeKey}.img`)
+    const fileName = `${index + 1}-${safeKey}.img`
+    // lark-cli `messages-resources-download` 的 --output 拒绝绝对路径（invalid_argument），
+    // 故传相对文件名 + 把子进程 cwd 设到 outDir，落地路径仍是 join(outDir, fileName)。
     const result = await runLarkCli([
       'im', '+messages-resources-download',
       '--message-id', messageId,
       '--file-key', a.imageKey,
       '--type', 'image',
-      '--output', output,
-    ])
-    resolved.push(result.code === 0 ? { ...a, localPath: output } : { ...a, downloadError: (result.stderr || result.stdout).slice(0, 120) })
+      '--output', fileName,
+    ], { cwd: outDir })
+    resolved.push(larkCallFailed(result)
+      ? { ...a, downloadError: (result.stdout || result.stderr).slice(0, 200) }
+      : { ...a, localPath: join(outDir, fileName) })
   }
   return resolved
 }

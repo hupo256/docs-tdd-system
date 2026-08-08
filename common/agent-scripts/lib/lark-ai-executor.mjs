@@ -4,7 +4,7 @@
  */
 
 import { spawn, spawnSync } from 'node:child_process'
-import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 
@@ -17,6 +17,17 @@ const defaultAiTimeoutMs = Number(process.env.LARK_WORKER_AI_TIMEOUT_MS || proce
 export const aiTimeoutMs = defaultAiTimeoutMs
 const codexResultSchema = join(docsSystemRoot, 'common/schemas/lark-ai-result.schema.json')
 const codexAnalysisSchema = join(docsSystemRoot, 'common/schemas/lark-ai-analysis.schema.json')
+// codex workspace-write 沙箱默认只放行 cwd（worktree）。但 `apps/web/docs_tdd` 是指向本 docs 仓
+// (docsSystemRoot) 的软链、落在 worktree 之外，登记文档写入会被 seatbelt 拒（patch: failed → 权限失败）。
+// 把 docsSystemRoot 真实路径加进 writable_roots，codex 才能合规写 docs_tdd/<PR>/product/*.md。
+// realpath 兜底：symlink/大小写卷等情况下 seatbelt 按规范路径判定。
+const codexDocsWritableRoot = (() => {
+  try {
+    return realpathSync(docsSystemRoot)
+  } catch {
+    return docsSystemRoot
+  }
+})()
 
 export const validateAiExecutor = (value, source = 'AI executor') => {
   const normalized = String(value || '').trim().toLowerCase()
@@ -52,6 +63,7 @@ export const buildAiExecutorCommand = ({
     const imageArgs = attachments
       .filter((item) => item.type === 'image' && item.localPath && existsSync(item.localPath))
       .flatMap((item) => ['--image', item.localPath])
+    const workspaceWrite = !(resultKind === 'analysis' || readOnly)
     return {
       cmd: 'codex',
       args: [
@@ -59,8 +71,10 @@ export const buildAiExecutorCommand = ({
         'exec', '--ephemeral',
         ...(codexModel ? ['--model', codexModel] : []),
         ...(codexReasoningEffort ? ['--config', `model_reasoning_effort=${JSON.stringify(codexReasoningEffort)}`] : []),
-        '--sandbox', resultKind === 'analysis' || readOnly ? 'read-only' : 'workspace-write',
+        '--sandbox', workspaceWrite ? 'workspace-write' : 'read-only',
         '-c', 'sandbox_workspace_write.network_access=false',
+        // 仅 workspace-write 时放行 docs_tdd 软链目标，read-only 阶段无写、无需加。
+        ...(workspaceWrite ? ['-c', `sandbox_workspace_write.writable_roots=${JSON.stringify([codexDocsWritableRoot])}`] : []),
         '--cd', cwd,
         '--output-schema', resultKind === 'analysis' ? codexAnalysisSchema : codexResultSchema,
         '--output-last-message', resultPath,
@@ -76,7 +90,9 @@ export const buildAiExecutorCommand = ({
       cmd: 'claude',
       args: ['-p', '--dangerously-skip-permissions', promptText],
       stdin: null,
-      resultMode: 'gateway-callback',
+      // claude 与 codex 同构：不自调 Gateway，把结构化结果写进 resultPath（写入指令由 prompt 末尾注入），
+      // Worker 解析后用正确 epoch 统一回写。彻底去掉旧的 gateway-callback（claude 无从得知运行时 epoch/密钥）。
+      resultMode: 'structured',
     }
   }
   throw new Error(`unknown AI executor: ${executor} (expected claude or codex)`)
@@ -98,40 +114,46 @@ export const preflightAiExecutor = (executor) => {
   preflightedExecutors.add(executor)
 }
 
-const parseStructuredAiResult = (resultPath) => {
+const parseStructuredAiResult = (resultPath, executor = 'codex') => {
+  const label = executor === 'claude' ? 'Claude' : 'Codex'
   let result
   try {
     result = JSON.parse(readFileSync(resultPath, 'utf8'))
   } catch (error) {
-    throw new Error(`Codex 未返回合法结构化结果：${error.message}`)
+    throw new Error(`${label} 未返回合法结构化结果：${error.message}`)
   }
   if (!['done', 'failed', 'waiting_confirmation', 'blocked'].includes(result.status) || typeof result.summary !== 'string' || !result.summary.trim()) {
-    throw new Error('Codex 结构化结果缺少合法 status/summary')
+    throw new Error(`${label} 结构化结果缺少合法 status/summary`)
   }
   if (!Array.isArray(result.checks) || !result.checks.every((item) => typeof item === 'string' && item.trim())) {
-    throw new Error('Codex 结构化结果 checks 必须是字符串数组')
+    throw new Error(`${label} 结构化结果 checks 必须是字符串数组`)
   }
   if (!Array.isArray(result.changedFiles) || !result.changedFiles.every((item) => typeof item === 'string' && item.trim())) {
-    throw new Error('Codex 结构化结果 changedFiles 必须是字符串数组')
+    throw new Error(`${label} 结构化结果 changedFiles 必须是字符串数组`)
   }
   // waiting_confirmation / blocked 必须带 blockers；owner 为可选补充字段。
   if (result.blockers != null && (!Array.isArray(result.blockers) || !result.blockers.every((item) => typeof item === 'string'))) {
-    throw new Error('Codex 结构化结果 blockers 必须是字符串数组')
+    throw new Error(`${label} 结构化结果 blockers 必须是字符串数组`)
   }
   if (['waiting_confirmation', 'blocked'].includes(result.status) && !result.blockers?.length) {
-    throw new Error(`Codex ${result.status} 结构化结果必须列出 blockers`)
+    throw new Error(`${label} ${result.status} 结构化结果必须列出 blockers`)
   }
   if (result.owner != null && typeof result.owner !== 'string') {
-    throw new Error('Codex 结构化结果 owner 必须是字符串')
+    throw new Error(`${label} 结构化结果 owner 必须是字符串`)
   }
   if (result.failureKind != null && !['tool', 'env', 'permission', 'requirement'].includes(result.failureKind)) {
-    throw new Error('Codex 结构化结果 failureKind 必须是 tool/env/permission/requirement 之一')
+    throw new Error(`${label} 结构化结果 failureKind 必须是 tool/env/permission/requirement 之一`)
   }
   if (result.nextStep != null && typeof result.nextStep !== 'string') {
-    throw new Error('Codex 结构化结果 nextStep 必须是字符串')
+    throw new Error(`${label} 结构化结果 nextStep 必须是字符串`)
   }
   return result
 }
+
+// claude CLI 没有 codex 的 --output-schema/--output-last-message，改由 prompt 末尾给出具体结果文件路径，
+// 指示它把符合约定字段的 JSON 写进该文件作为最后一步；Worker 随后按结构化结果统一回写（同 codex）。
+const buildClaudeResultFileInstruction = (resultPath) => `结果文件路径：${resultPath}
+把上面「完成后」要求的最终结果 JSON 用你的文件写入能力覆盖写入这个文件，作为本次任务的最后一步；只写 JSON 本身，不要 markdown 代码围栏、不要多余文字。这一步是 Worker 判定任务结果的唯一依据，务必完成。`
 
 const parseStructuredAnalysisResult = (resultPath) => {
   let result
@@ -180,6 +202,9 @@ export const formatStructuredAiResult = (result, executor = 'codex') => {
       : result.status === 'blocked'
         ? '已阻塞，需外部材料 / 权限后才能继续。'
         : '处理失败。'
+  // 群卡片给领导/PM 看，只保留高层信息：状态 + 结论 + 执行器 + 待补充 + 失败类型。
+  // 落点/验证/下一步/文件等实现细节不上卡（仍在结构化结果与 worker 日志里），owner 也不再列一行——
+  // 它单独传给 reportStatus 用于卡片 @ 责任人，展示成一行文字对群里是噪声。
   const lines = [header, `1. ${result.summary.trim()}`, `2. 执行器：${executor}`]
   let n = 3
   if (result.status === 'failed' && result.failureKind) {
@@ -188,10 +213,6 @@ export const formatStructuredAiResult = (result, executor = 'codex') => {
   if ((result.status === 'waiting_confirmation' || result.status === 'blocked') && Array.isArray(result.blockers) && result.blockers.length) {
     lines.push(`${n++}. 待补充：${result.blockers.join('；')}`)
   }
-  if (result.owner) lines.push(`${n++}. 建议责任人：${result.owner}`)
-  if (result.nextStep) lines.push(`${n++}. 下一步：${result.nextStep}`)
-  if (result.checks.length) lines.push(`${n++}. 验证：${result.checks.join('；')}`)
-  if (result.changedFiles.length) lines.push(`${n++}. 文件：${result.changedFiles.join('、')}`)
   return lines.join('\n')
 }
 
@@ -206,11 +227,15 @@ export const execAiExecutor = async ({
   readOnly = false,
   auditLogPath,
 }) => {
-  const resultDir = executor === 'codex' ? mkdtempSync(join(tmpdir(), 'lark-codex-result-')) : null
-  const resultPath = resultDir ? join(resultDir, 'result.json') : null
+  const resultDir = mkdtempSync(join(tmpdir(), `lark-${executor}-result-`))
+  const resultPath = join(resultDir, 'result.json')
+  // codex 用 --output-schema/--output-last-message 落盘；claude CLI 无此开关，改由 prompt 末尾指示它写入 resultPath。
+  const effectivePrompt = executor === 'claude'
+    ? `${promptText}\n\n${buildClaudeResultFileInstruction(resultPath)}`
+    : promptText
   const { cmd, args, stdin, resultMode } = buildAiExecutorCommand({
     executor,
-    promptText,
+    promptText: effectivePrompt,
     cwd,
     resultPath,
     attachments,
@@ -271,9 +296,9 @@ export const execAiExecutor = async ({
       }
     })
     return resultMode === 'structured'
-      ? { executor, result: resultKind === 'analysis' ? parseStructuredAnalysisResult(resultPath) : parseStructuredAiResult(resultPath) }
+      ? { executor, result: resultKind === 'analysis' ? parseStructuredAnalysisResult(resultPath) : parseStructuredAiResult(resultPath, executor) }
       : { executor, result: null }
   } finally {
-    if (resultDir) rmSync(resultDir, { recursive: true, force: true })
+    rmSync(resultDir, { recursive: true, force: true })
   }
 }

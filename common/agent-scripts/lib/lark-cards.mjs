@@ -43,6 +43,8 @@ export const buildCardContent = ({ config, kind, lines, project, projectTitle })
 
 const taskLine = (task) => `**任务**：${(task.summary || task.text || '').slice(0, 200)}`
 const executorLine = (task) => task.aiExecutor ? `**执行器**：${task.aiExecutor === 'codex' ? 'Codex' : 'Claude'}` : null
+// 改动落在哪个分支（去哪 review / push）。领取时即写入 task.branch，只读任务无分支则不显示。
+const branchLine = (task) => task.branch ? `**分支**：${task.branch}` : null
 
 // 卡片标题用的项目段：有项目号用它（仅当 == config.project 才带 config.title 后缀），
 // 无项目号（adhoc 主仓 hotfix）显示「主仓 hotfix」。
@@ -64,7 +66,7 @@ export const buildResultCard = ({ config, task, status, result }) => {
   return buildCardContent({
     config,
     kind: status === 'done' ? 'done' : 'failed',
-    lines: [taskLine(task), executorLine(task), `**结果**：\n${resultText}`].filter(Boolean),
+    lines: [taskLine(task), executorLine(task), branchLine(task), `**结果**：\n${resultText}`].filter(Boolean),
     ...cardProjectOf(task, config),
   })
 }

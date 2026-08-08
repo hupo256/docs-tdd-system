@@ -16,9 +16,10 @@ import { describe, it } from 'node:test'
 import { handleStatusUpdate, isForBot, isWhitelisted, normalizeMessage } from '../lark-gateway.mjs'
 import { classifyBugTaskStatus } from '../lark-bugtable-poller.mjs'
 import { createTaskStore } from '../lib/lark-task-store.mjs'
+import { buildResultCard } from '../lib/lark-cards.mjs'
 import { isProjectId, isReadOnlyCommand, matchProjectId, parseCommandType, parseProjectFromText } from '../lib/lark-message.mjs'
 import { classifyLarkTask, extractMarkdownSection } from '../lib/lark-rule-context.mjs'
-import { assessDoneResult, classifyWorkerFailure, crossCheckChangedFiles, detectChangeTier, resolveWorkContext, safeProject } from '../lark-worker.mjs'
+import { assessDoneResult, classifyWorkerFailure, crossCheckChangedFiles, detectChangeTier, resolveWorkContext, safeProject, splitViolations } from '../lark-worker.mjs'
 import { validateSource } from '../sync-lark-docs.mjs'
 
 const BOT = 'ou_bot'
@@ -418,6 +419,19 @@ describe('detectChangeTier（契约/共享/类型敏感路径 → L2+）', () =>
   })
 })
 
+describe('buildResultCard（结果卡渲染分支行）', () => {
+  const config = { project: 'PR-01645', title: '冒烟', bugTable: {} }
+  it('有 task.branch → 卡片含分支行', () => {
+    const card = buildResultCard({ config, task: { summary: 'x', branch: 'hotfix/PR-01645-ab12cd' }, status: 'done', result: '已完成。' })
+    assert.match(card, /hotfix\/PR-01645-ab12cd/)
+    assert.match(card, /分支/)
+  })
+  it('无 task.branch（只读任务）→ 卡片不含分支行', () => {
+    const card = buildResultCard({ config, task: { summary: 'x' }, status: 'done', result: '已完成。' })
+    assert.ok(!/\*\*分支\*\*/.test(card))
+  })
+})
+
 describe('crossCheckChangedFiles（AI 自报 vs 真实 git diff）', () => {
   it('一致 → consistent，无差集', () => {
     const r = crossCheckChangedFiles({ reported: ['a.ts', './b.ts'], actual: ['a.ts', 'b.ts'] })
@@ -472,6 +486,26 @@ describe('assessDoneResult（done 可信度评估）', () => {
     })
     assert.equal(a.trustworthy, true)
     assert.ok(a.notes.some((n) => /漏报/.test(n) && /b\.tsx/.test(n)))
+  })
+})
+
+describe('splitViolations（规范闸残留分级：色类硬拦 / 其余 note）', () => {
+  it('失效裸色类进硬桶，arbitrary value 等进软桶', () => {
+    const violations = [
+      { kind: 'invalid-color-class', token: 'text-green', file: 'a.tsx' },
+      { kind: 'arbitrary-value', token: 'rounded-[12px]', file: 'a.tsx' },
+      { kind: 'bare-any', token: 'as any', file: 'a.ts' },
+    ]
+    const { hardRemaining, softRemaining } = splitViolations(violations)
+    assert.deepEqual(hardRemaining.map((v) => v.kind), ['invalid-color-class'])
+    assert.deepEqual(softRemaining.map((v) => v.kind), ['arbitrary-value', 'bare-any'])
+  })
+  it('只有 arbitrary value 时硬桶为空（不阻断 done，仅 note）', () => {
+    const { hardRemaining, softRemaining } = splitViolations([
+      { kind: 'arbitrary-value', token: 'w-[336px]', file: 'a.tsx' },
+    ])
+    assert.equal(hardRemaining.length, 0)
+    assert.equal(softRemaining.length, 1)
   })
 })
 

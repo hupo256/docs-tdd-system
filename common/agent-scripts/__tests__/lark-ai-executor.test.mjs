@@ -64,14 +64,16 @@ describe('Codex non-interactive command', () => {
     assert.deepEqual(command.args.slice(command.args.indexOf('--model'), command.args.indexOf('--model') + 2), ['--model', 'gpt-5.6-sol'])
     assert.ok(command.args.includes('model_reasoning_effort="high"'))
     assert.ok(command.args.includes('sandbox_workspace_write.network_access=false'))
+    // workspace-write 阶段放行 docs_tdd 软链目标，否则登记文档写入被 seatbelt 拒
+    assert.ok(command.args.some((a) => /^sandbox_workspace_write\.writable_roots=/.test(a)))
     assert.equal(command.args.at(-1), '-')
     assert.equal(command.args.includes('--dangerously-bypass-approvals-and-sandbox'), false)
   })
 
-  it('Claude 保持现有无人值守参数', () => {
+  it('Claude 保持现有无人值守参数，并与 codex 同构走结构化结果', () => {
     const command = buildAiExecutorCommand({ executor: 'claude', promptText: 'fix it', cwd: '/tmp/repo' })
     assert.deepEqual(command.args, ['-p', '--dangerously-skip-permissions', 'fix it'])
-    assert.equal(command.resultMode, 'gateway-callback')
+    assert.equal(command.resultMode, 'structured')
   })
 
   it('Codex 分析阶段使用只读沙箱和独立分析 Schema', () => {
@@ -83,6 +85,8 @@ describe('Codex non-interactive command', () => {
       resultKind: 'analysis',
     })
     assert.deepEqual(command.args.slice(command.args.indexOf('--sandbox'), command.args.indexOf('--sandbox') + 2), ['--sandbox', 'read-only'])
+    // 只读阶段无写、不加 writable_roots
+    assert.equal(command.args.some((a) => /^sandbox_workspace_write\.writable_roots=/.test(a)), false)
     const schemaPath = command.args[command.args.indexOf('--output-schema') + 1]
     assert.match(schemaPath, /lark-ai-analysis\.schema\.json$/)
   })
@@ -179,11 +183,14 @@ describe('structured result and cards', () => {
     changedFiles: ['apps/web/button.tsx'],
   }
 
-  it('Worker 把结构化结果转成稳定回执', () => {
+  it('Worker 把结构化结果转成稳定回执（群卡精简：不列验证/文件明细）', () => {
     const text = formatStructuredAiResult(result, 'codex')
     assert.match(text, /^已完成。/)
     assert.match(text, /执行器：codex/)
-    assert.match(text, /button.test.tsx 通过/)
+    assert.match(text, /修复登录按钮颜色。/)
+    // 验证/文件等实现细节不上群卡
+    assert.doesNotMatch(text, /button.test.tsx 通过/)
+    assert.doesNotMatch(text, /文件：/)
   })
 
   it('排队卡与结果卡展示实际执行器', () => {
@@ -193,14 +200,15 @@ describe('structured result and cards', () => {
     assert.match(JSON.parse(buildResultCard({ config, task, status: 'done', result: 'ok' })).elements[0].text.content, /执行器.*Codex/)
   })
 
-  it('waiting_confirmation 结果转成「待确认」回执并列出 blockers/owner', () => {
+  it('waiting_confirmation 结果转成「待确认」回执并列出 blockers（群卡不列建议责任人）', () => {
     const text = formatStructuredAiResult(
       { status: 'waiting_confirmation', summary: '需要 hover tips 文案', checks: [], changedFiles: [], blockers: ['缺 tips 文案原文'], owner: '产品' },
       'codex',
     )
     assert.match(text, /^需人工确认/)
     assert.match(text, /待补充：缺 tips 文案原文/)
-    assert.match(text, /建议责任人：产品/)
+    // owner 单独用于卡片 @ 责任人，不再在正文列一行
+    assert.doesNotMatch(text, /建议责任人/)
   })
 
   it('待确认卡为橙色、能识别触发人时 @ 其补料', () => {
@@ -215,14 +223,15 @@ describe('structured result and cards', () => {
     assert.doesNotMatch(noMention.elements[0].text.content, /<at id=/)
   })
 
-  it('failed 结果带 failureKind/nextStep 时回执列出失败类型与下一步', () => {
+  it('failed 结果带 failureKind 时回执列出失败类型（群卡不列下一步）', () => {
     const text = formatStructuredAiResult(
       { status: 'failed', summary: '构建产物缺失', checks: [], changedFiles: [], failureKind: 'env', nextStep: '在 dev 克隆重装依赖后重试' },
       'codex',
     )
     assert.match(text, /^处理失败。/)
     assert.match(text, /失败类型：环境失败/)
-    assert.match(text, /下一步：在 dev 克隆重装依赖后重试/)
+    // 下一步属实现细节，不上群卡
+    assert.doesNotMatch(text, /下一步/)
   })
 
   it('blocked 结果和卡片使用阻塞语义', () => {

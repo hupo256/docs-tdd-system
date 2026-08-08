@@ -96,14 +96,7 @@ const writeBackBugRecord = async ({ config, task }) => {
     return { ok: true } // 配置缺失是人工要处理的另一回事，不该把任务永卡中间态
   }
 
-  const args = [
-    'base', '+record-batch-update',
-    '--base-token', bug.appToken,
-    '--table-id', bug.tableId,
-    '--json',
-    JSON.stringify({ record_id_list: [task.recordId], patch: { [bug.statusField]: bug.doneValue } }),
-  ]
-  const outcome = await runLarkCliWithRetry(args, { logPrefix: `bug write-back ${task.recordId} -> ${bug.doneValue}` })
+  const outcome = await patchBugRecordStatus({ config, task, value: bug.doneValue })
   if (outcome.ok) return { ok: true }
 
   // 重试仍失败 → 发群告警。否则「群里已报完成 + poller 已 seen 不再捞 + 表格永卡待处理」会静默不一致。
@@ -119,6 +112,32 @@ const writeBackBugRecord = async ({ config, task }) => {
     idempotencyKey: `${task.recordId}-writeback-alert`,
   })
   return { ok: false, reason: outcome.reason }
+}
+
+// 通用 bug 表状态回写：patch statusField=value，返回 runLarkCliWithRetry 的 outcome。
+// 完成回写（待推版）与领取置「修复中」共用这一条底层调用，避免两处拼 lark-cli 参数漂移。
+const patchBugRecordStatus = ({ config, task, value }) => {
+  const bug = config.bugTable
+  return runLarkCliWithRetry(
+    [
+      'base', '+record-batch-update',
+      '--base-token', bug.appToken,
+      '--table-id', bug.tableId,
+      '--json',
+      JSON.stringify({ record_id_list: [task.recordId], patch: { [bug.statusField]: value } }),
+    ],
+    { logPrefix: `bug status ${task.recordId} -> ${value}` },
+  )
+}
+
+// 领取即把 bug 记录置「修复中」（inProgressValue），让表格实时反映“正在处理”。
+// best-effort：这是知会性状态、非终态一致性要求，写失败仅告警日志、绝不阻塞任务或改任务态。
+// 仅 bug 表来源且配了 inProgressValue 才写；失败态按约定不写表（停在「修复中」，靠群失败卡 + 人工 retry）。
+const markBugRecordInProgress = async ({ config, task }) => {
+  const bug = config.bugTable
+  if (!bug?.appToken || !bug?.tableId || !task.recordId || !bug.inProgressValue) return
+  const outcome = await patchBugRecordStatus({ config, task, value: bug.inProgressValue })
+  if (!outcome.ok) console.warn(`[lark-gateway] bug 置「${bug.inProgressValue}」失败（不阻塞任务）：${outcome.reason}`)
 }
 
 // 回写失败挂起的 bug 任务（done_pending_writeback）：定时器重试回写，成功后才落地 done。
@@ -408,7 +427,7 @@ const normalizeAiExecutor = (value) => {
   return normalized
 }
 
-export const handleStatusUpdate = async ({ config, store, id, status, result, aiExecutor, epoch, owner }) => {
+export const handleStatusUpdate = async ({ config, store, id, status, result, aiExecutor, epoch, owner, branch }) => {
   if (!VALID_STATUSES.has(status)) return { ok: false, error: `invalid status: ${status}` }
   const task = store.get(id)
   if (!task) return { ok: false, error: 'task not found' }
@@ -421,6 +440,14 @@ export const handleStatusUpdate = async ({ config, store, id, status, result, ai
   task.result = result
   task.aiExecutor = normalizeAiExecutor(aiExecutor) || task.aiExecutor
   if (owner != null) task.owner = owner
+  // 目标提交分支：worker 在 running 回写时（AI 跑之前）就带上，故 done 卡构建时 task.branch 已就位，
+  // 让完成卡显示改动落在哪个分支（去哪 review / push）。只读任务无分支，不覆盖。
+  if (branch) task.branch = branch
+
+  // 领取（worker 首次回写 running）即把 bug 记录置「修复中」，让表格实时反映“正在处理”。best-effort，不阻塞。
+  if (status === 'running' && task.source === 'lark-bugtable') {
+    await markBugRecordInProgress({ config, task })
+  }
 
   // done + bug 表来源：必须回写成功才落地 done。回写失败置中间态 done_pending_writeback，
   // 由 retryPendingWriteback 定时重试，避免 poller 依 gateway=done 置 seen 后表格永卡待处理。
@@ -546,6 +573,20 @@ export async function runLarkGateway({ configPath, port = defaultPort }) {
           const reason = outcome?.reason || 'task not found or not retryable (must be failed/blocked)'
           return sendJson(res, 404, { ok: false, error: reason })
         }
+        // 若上次因下载 bug（如历史绝对路径 --output）失败的附件，retry 时用 task.messageId 重下一次；
+        // 修了下载链路后 retry 才能真正恢复视觉任务。ref 消息附件的原 messageId 未单独留存，best-effort。
+        const failedAttachments = (task.attachments || []).filter((a) => a.imageKey && !a.localPath && a.downloadError)
+        if (failedAttachments.length && task.messageId) {
+          const redownloaded = await downloadAttachments({
+            repoRoot,
+            project: task.project || config.project,
+            messageId: task.messageId,
+            attachments: failedAttachments,
+          })
+          const byKey = new Map(redownloaded.map((a) => [a.imageKey, a]))
+          task.attachments = task.attachments.map((a) => byKey.get(a.imageKey) || a)
+          store.upsert(task)
+        }
         await sendChatMessage({
           chatId: task.chatId,
           card: buildQueuedCard({ config, task }),
@@ -604,6 +645,7 @@ export async function runLarkGateway({ configPath, port = defaultPort }) {
           aiExecutor: body.aiExecutor,
           epoch: body.epoch,
           owner: body.owner,
+          branch: body.branch,
         })
         return sendJson(res, outcome.ok ? 200 : (outcome.code || 404), outcome)
       }

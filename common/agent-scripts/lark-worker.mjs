@@ -542,8 +542,15 @@ export const assessDoneResult = ({ reportedChangedFiles = [], actualChangedFiles
   return { trustworthy: true, tier, notes }
 }
 
-// 无人值守规范闸：扫本次 diff 新增行的 arbitrary value / 失效裸色类；有违规先让 AI 定向纠正一次，
-// 仍残留则把清单附到完成消息里（醒目、供人工 review），不静默放过。只对代码类改动生效。
+// 无人值守规范闸：扫本次 diff 新增行的 arbitrary value / 失效裸色类；有违规先让 AI 定向纠正一次。
+// 纠正后仍残留时分两桶：失效裸色类（invalid-color-class，一定是 bug 且必可修）为「硬」违规——不判 done、
+// 降级人工；其余（arbitrary value 等，可能无对应 token）为「软」违规——附清单到完成消息供人工 review，不静默放过。
+// 只对代码类改动生效。
+const HARD_GATE_KINDS = new Set(['invalid-color-class'])
+export const splitViolations = (violations) => ({
+  hardRemaining: violations.filter((v) => HARD_GATE_KINDS.has(v.kind)),
+  softRemaining: violations.filter((v) => !HARD_GATE_KINDS.has(v.kind)),
+})
 const enforceCodeQuality = async (workerConfig, task, workContext, auditContext) => {
   const cwd = workContext.cwd || repoRoot
   const diffOf = () => {
@@ -553,7 +560,7 @@ const enforceCodeQuality = async (workerConfig, task, workContext, auditContext)
     return gitAt(cwd, ['diff', 'HEAD']).stdout || ''
   }
   let violations = scanDiffForViolations(diffOf())
-  if (!violations.length) return { ok: true, remaining: [] }
+  if (!violations.length) return { ok: true, remaining: [], hardRemaining: [], softRemaining: [] }
 
   console.warn(`[lark-worker] 规范闸命中 ${violations.length} 处违规，触发定向纠正 pass（${task.id}）`)
   try {
@@ -571,7 +578,14 @@ const enforceCodeQuality = async (workerConfig, task, workContext, auditContext)
   }
 
   violations = scanDiffForViolations(diffOf())
-  return { ok: violations.length === 0, remaining: violations }
+  return { ok: violations.length === 0, remaining: violations, ...splitViolations(violations) }
+}
+
+// 规范硬闸命中（残留失效裸色类）→ done 降级为失败待人工的结果文案。色类会被 Tailwind 静默丢弃、
+// 根本不生效，属可修的确定性 bug，不能带病判完成。
+const buildQualityBlockedResult = (task, hardRemaining) => {
+  const summary = (task.summary || task.text || 'fix').split('\n').find((line) => line.trim())?.trim() || '群内反馈的问题'
+  return `处理失败。\n1. 任务：${summary.slice(0, 80)}；\n2. 改动引入 ${hardRemaining.length} 处失效裸色类（Tailwind 会静默丢弃、根本不生效），定向纠正后仍残留，不能按已完成处理；\n3. 需人工把这些类换成项目语义 token（text-sem-g / text-sem-r / text-1..8 等）后再重跑：\n${formatViolations(hardRemaining)}`
 }
 
 const buildLintFixPrompt = (cwd, violations) =>
@@ -580,8 +594,6 @@ const buildLintFixPrompt = (cwd, violations) =>
 ${formatViolations(violations)}
 
 规则：Tailwind 一律用 packages/config/tailwind-preset.js 里定义的 token，不用 arbitrary value \`[..]\`；颜色必须是 preset 里真实存在的类（未知类如 text-green 会被 Tailwind 静默丢弃、根本不生效）。改完用 \`git diff\` 自查这些点已全部换成 token。`
-
-
 
 // AI 进程退出但没有显式回写 done/failed 时的结果文案：一律判失败待人工复核。
 // 不分任务类型都不能兜底谎报「已完成」——无回写 = 无验证 = 不可信（AI 可能中途放弃/崩溃/未按要求回调）。
@@ -663,10 +675,10 @@ export async function runLarkWorker({
   console.log(`[lark-worker] AI executor=${startupExecutor}${codexProfile}（task > env > config > wrapper）`)
   const request = (path, options) => requestJson(gatewayUrl, path, options)
   const reliableRequest = (path, options = {}) => requestJson(gatewayUrl, path, { ...options, retryTransient: true })
-  const updateTask = (taskId, status, result, executor, epoch, owner) =>
+  const updateTask = (taskId, status, result, executor, epoch, owner, branch) =>
     reliableRequest(`/lark/tasks/${encodeURIComponent(taskId)}/status`, {
       method: 'POST',
-      body: JSON.stringify({ status, result, aiExecutor: executor, epoch, owner }),
+      body: JSON.stringify({ status, result, aiExecutor: executor, epoch, owner, branch }),
     })
 
   const getTask = async (taskId) => {
@@ -685,7 +697,7 @@ export async function runLarkWorker({
   const runTask = async (task, workContext) => {
     // 回写统一带上领取时的 epoch（fencing token）：若本次领取已被租约回收/人工 retry 作废，
     // 迟到回写会被 Gateway 以 409 拒掉，不覆盖新一代执行的状态。
-    const reportStatus = (status, result, executor, owner) => updateTask(task.id, status, result, executor, task.epoch, owner)
+    const reportStatus = (status, result, executor, owner, branch) => updateTask(task.id, status, result, executor, task.epoch, owner, branch)
     if (!task.text?.trim()) {
       await reportStatus('failed', '处理失败。\n1. 这条 Lark 任务内容为空；\n2. 请重新 @ 应用并写清需要处理的事项。')
       return
@@ -727,17 +739,29 @@ export async function runLarkWorker({
       }
 
       task.aiExecutor = selectedExecutor
-      // 先持久化实际执行器，排障与最终卡片都不依赖 AI 自报。
-      await reportStatus('running', undefined, selectedExecutor)
+      // 先持久化实际执行器 + 目标分支：都在 AI 跑之前定好，故 done 卡构建时 task.branch 已就位。
+      // 只读任务不提交、无分支；hotfix 走临时分支；命中已有 worktree 用其当前分支。
+      const targetBranch = workContext.readOnly
+        ? null
+        : workContext.hotfixBranch || (gitAt(workContext.cwd, ['rev-parse', '--abbrev-ref', 'HEAD']).stdout || '').trim() || null
+      await reportStatus('running', undefined, selectedExecutor, undefined, targetBranch)
       const aiRun = await runAI(workerConfig, task, workContext, auditContext)
 
       let latestTask = await getTask(task.id)
       let qualityGate = null
-      // Codex 不开放工具网络，无法也不应自行请求 Gateway；结构化结果由 Worker 统一回写。
+      // claude / codex 都不自调 Gateway；两者都把结构化结果落盘，由 Worker 用正确 epoch 统一回写。
       if (aiRun.result && latestTask?.status === 'running') {
         const warnNotes = []
         if (aiRun.result.status === 'done') {
           qualityGate = await enforceCodeQuality(workerConfig, task, workContext, auditContext)
+          if (qualityGate.hardRemaining.length) {
+            // 失效裸色类硬闸：定向纠正后仍残留 → 不判 done，降级失败待人工（色类会被 Tailwind 静默丢弃，带病完成）。
+            const failText = buildQualityBlockedResult(task, qualityGate.hardRemaining)
+            console.error(`[lark-worker] ⛔ ${task.id} 规范硬闸拦截（失效色类）：\n${formatViolations(qualityGate.hardRemaining)}`)
+            await reportStatus('failed', failText, aiRun.executor)
+            updateTaskAudit(auditContext, { status: 'failed', gateway: { status: 'failed', result: failText } })
+            return
+          }
           // changedFiles 交叉校验 + 分级探测：enforceCodeQuality 已 `git add -A -N`，此处 name-only diff 含新增文件。
           const actualChangedFiles = (gitAt(workContext.cwd, ['diff', '--name-only', 'HEAD']).stdout || '')
             .split('\n').map((line) => line.trim()).filter(Boolean)
@@ -754,11 +778,14 @@ export async function runLarkWorker({
             updateTaskAudit(auditContext, { status: 'failed', gateway: { status: 'failed', result: failText } })
             return
           }
+          // L2+ 改动的 type-check 提示由 assessDoneResult 产出（note 级，不硬卡）：整包 tsc 基线本身就红，
+          // 按 exit code 硬判会因历史欠债误伤所有 L2 改动，故只提示「需人工确认类型/契约无回归」，不阻断 done。
           warnNotes.push(...assessment.notes)
         }
         let resultText = formatStructuredAiResult(aiRun.result, aiRun.executor)
-        if (qualityGate && !qualityGate.ok) {
-          task.qualityNote = `含 ${qualityGate.remaining.length} 处未修正规范问题（arbitrary value / 失效色类），需人工处理`
+        if (qualityGate?.softRemaining.length) {
+          // 软违规（arbitrary value 等，可能无对应 token）不硬拦，附清单到完成消息供人工 review。
+          task.qualityNote = `含 ${qualityGate.softRemaining.length} 处未修正规范问题（arbitrary value 等），需人工确认`
           warnNotes.push(task.qualityNote)
         }
         if (warnNotes.length) resultText += `\n⚠ ${warnNotes.join('；')}`
@@ -781,8 +808,8 @@ export async function runLarkWorker({
         return
       }
 
-      // 规范闸（仅任务成功后、提交前）：扫本次 diff 违规 → AI 定向纠正一次 → 残留记入 commit message
-      // 供人工 review 时看见。claude 已自报 done、完成卡已发，故此处不重发卡片，只保证「进分支的代码」变干净。
+      // 规范闸兜底：正常结构化 done 已在上面回写时跑过规范闸（qualityGate 已置），此处仅覆盖极端遗漏路径。
+      // 结果卡已由上面的 reportStatus 发出，故此处不重发卡片，只保证「进分支的代码」变干净。
       if (latestTask?.status === 'done' && !qualityGate) {
         const gate = await enforceCodeQuality(workerConfig, task, workContext, auditContext)
         if (!gate.ok) {
