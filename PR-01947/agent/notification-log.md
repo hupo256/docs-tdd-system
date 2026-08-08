@@ -97,3 +97,18 @@
 1. 任务：修复：Lark bug 表待处理项 [[lark-bot e2e] README 顶部补一行说明 | real | failed |
 | 2026/8/7 14:55:33 | Lark Job | 已完成 | 修复：Lark bug 表待处理项 [[lark-bot e2e] README 顶部补一行说明注释]：已完成。
 1. 已完成：在 apps/web/README.md 顶部添加指定注释，未改动其他内容。改动位于分支 hot | real | success |
+| 2026/8/7 20:08:46 | Lark Job | 阻塞中 | 状态：汇总当前分支、未提交变更与最近一次提交（lark-bot 端到端自测，只读）：处理失败。
+1. 任务：状态：汇总当前分支、未提交变更与最近一次提交（lark-bot 端到端自测，只读）；
+2. 失败 | real | failed |
+| 2026/8/7 20:09:46 | Lark Job | 进行中 | 收到群任务(PR-01947)：看一下这个需求的状态 | real | success |
+| 2026/8/7 20:09:51 | Lark Job | 阻塞中 | 看一下这个需求的状态：处理失败。
+1. 任务：看一下这个需求的状态；
+2. 失败类型：工具失败；
+3. 下一步：查看本地任务记录与 Worke | real | failed |
+| 2026/8/7 22:45:46 | Lark Job | 已完成 | status 自检：请只回一句『claude executor 已通』，不要改任何文件：claude executor 已通。
+
+任务：status 自检（(adhoc) CopyTrading 跟单设置）
+ | real | success |
+| 2026/8/7 23:01:56 | Lark Job | 阻塞中 | status 自检：只回一句『codex executor 已通』，不要改任何文件：处理失败。
+1. 任务：status 自检：只回一句『codex executor 已通』，不要改任何文件；
+2. 失败 | real | failed |

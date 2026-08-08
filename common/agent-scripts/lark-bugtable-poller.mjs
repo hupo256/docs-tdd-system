@@ -38,7 +38,8 @@ const gatewaySecret = process.env.LARK_GATEWAY_SECRET || ''
 
 const runLarkCli = (args, { timeoutMs = larkCliTimeoutMs } = {}) =>
   new Promise((resolveFn) => {
-    const child = spawn(larkCliBin, args, { stdio: ['ignore', 'pipe', 'pipe'] })
+    // 强制 bot 身份（同 lib/lark-cli.mjs）：defaultAs:auto 会选 user，bitable 读写需 bot scope。
+    const child = spawn(larkCliBin, ['--as', 'bot', ...args], { stdio: ['ignore', 'pipe', 'pipe'] })
     let stdout = ''
     let stderr = ''
     let settled = false

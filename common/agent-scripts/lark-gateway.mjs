@@ -280,7 +280,9 @@ const startConsumer = ({ eventKey, onLine, onDownAlert, maxRestarts }) => {
   const state = { child: null, stopped: false, backoffAttempts: 0, restartWindow: [], alerted: false, lastEventAt: 0 }
 
   const spawnOnce = () => {
-    const child = spawn(process.env.LARK_CLI_BIN || 'lark-cli', ['event', 'consume', eventKey], { stdio: ['pipe', 'pipe', 'pipe'] })
+    // `--as bot`：lark-cli defaultAs:auto 会解析成 user 身份，而 event consume 只支持 bot
+    // （报 "only supports: bot, use --as bot"）。显式指定，避免 consumer 反复 exit 2。
+    const child = spawn(process.env.LARK_CLI_BIN || 'lark-cli', ['--as', 'bot', 'event', 'consume', eventKey], { stdio: ['pipe', 'pipe', 'pipe'] })
     state.child = child
     const spawnedAt = Date.now()
     let buffer = ''

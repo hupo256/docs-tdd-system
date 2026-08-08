@@ -19,7 +19,9 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 // 到点先 SIGTERM，宽限 3s 仍未退再 SIGKILL，并立即以 code -1 结算，避免调用方永久挂起。
 export const runLarkCli = (args, { timeoutMs = larkCliTimeoutMs } = {}) =>
   new Promise((resolve) => {
-    const child = spawn(larkCliBin, args, { stdio: ['ignore', 'pipe', 'pipe'] })
+    // 强制 bot 身份：lark-cli `defaultAs:auto` 在同时登录了 user + bot 时会解析成 user，
+    // 导致发消息/读表报 missing_scope（user 无 im:message 等 scope）。所有系统调用都应走 bot。
+    const child = spawn(larkCliBin, ['--as', 'bot', ...args], { stdio: ['ignore', 'pipe', 'pipe'] })
     let stdout = ''
     let stderr = ''
     let settled = false
