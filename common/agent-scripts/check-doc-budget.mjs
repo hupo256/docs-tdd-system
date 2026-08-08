@@ -74,6 +74,7 @@ const DOC_BUDGET_OVERRIDES = {
   'rule-ids-and-gates.md': { warn: 25000, fail: 29000 }, // rule ID 台账，随规则条目增长
   'architecture-and-state.md': { warn: 15000, fail: 17000 },
   'CHANGELOG.md': { warn: 15000, fail: 18000 }, // 轮转后保留近期条目；历史在 CHANGELOG-archive.md
+  'lark-bot-gateway.md': { warn: 16000, fail: 18000 }, // AI 自动修 bug 常驻服务运维手册（网关/worker/bug 表/健壮性兜底全链路），按需查阅型大文件，不进常驻上下文
 }
 const BUDGET_EXEMPT = new Set(['CHANGELOG-archive.md']) // 纯历史归档，不进 context、不参与覆盖/预算
 // 门禁脚本体量预算（码点）：脚本天然比文档大，但仍需天花板，防单个 gate 脚本无限膨胀——它们恰是 AI 最难 review、
@@ -92,22 +93,12 @@ const SELF_TEST_EXEMPT = new Set([
   'check-doc-budget.mjs', // 顶层校验入口本身：无导出纯函数，逻辑每次实跑即自检，并被 golden 间接覆盖
   'claude-posttooluse-gate.mjs', // hook 分发薄包装
   'decommission-worktree.mjs', // worktree 回收 IO
-  'lark-bugtable-poller.mjs', // Lark Base 轮询 IO；解析/安全边界由 __tests__/lark-pure.test.mjs 覆盖
-  'lark-gateway.mjs', // HTTP/长连接编排；纯逻辑由 __tests__/lark-pure.test.mjs 与 lark-ai-executor.test.mjs 覆盖
-  'lark-worker.mjs', // Lark 任务 worker（外部依赖）
   'log-exec.mjs', // 执行日志 IO
-  'notify-lark.mjs', // Lark 发送薄包装
+  'notify-lark.mjs', // Lark 发送薄包装（文档只读同步链路，非 bot）
   'prepare-coding-worktree.mjs', // worktree 准备 IO
   'start-new-project.mjs', // 项目骨架 IO
   'sync-lark-docs.mjs', // Lark 只读同步 IO
-  'lib/lark-ai-executor.mjs', // AI 子进程 IO；命令/选择/输出由 __tests__/lark-ai-executor.test.mjs 覆盖
-  'lib/lark-cards.mjs', // 纯卡片构建，由 __tests__/lark-ai-executor.test.mjs 覆盖
-  'lib/lark-cli.mjs', // lark-cli 子进程 IO
-  'lib/lark-lint-diff.mjs', // diff 扫描纯逻辑，由 __tests__/lark-ai-executor.test.mjs 覆盖
-  'lib/lark-message.mjs', // 消息归一/白名单纯逻辑，由 __tests__/lark-pure.test.mjs 覆盖
-  'lib/lark-rule-context.mjs', // 精准规则抽取纯逻辑，由 __tests__/lark-ai-executor.test.mjs 覆盖
-  'lib/lark-task-store.mjs', // 文件队列，由 __tests__/lark-task-store.test.mjs 覆盖
-  'lib/lark-worker-prompts.mjs', // 两阶段 Prompt 纯构建逻辑，由 __tests__/lark-ai-executor.test.mjs 覆盖
+  // 注：AI 自动修 bug 的常驻服务已抽到 common/lark-bot/（含 lib/__tests__），不在本 agent-scripts 预算/自测扫描范围。
   'lib/fingerprint.mjs', // 指纹小工具（被 rule-release/effective-rules self-test 间接覆盖）
   'lib/roots.mjs', // 根解析（被多脚本 self-test 间接覆盖）
 ])

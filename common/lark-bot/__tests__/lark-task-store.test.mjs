@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * createTaskStore 单测：领取优先级 + 租约过期回收孤儿。拆分成独立 lib 后这段队列逻辑才可单测。
- *   node --test common/agent-scripts/__tests__/lark-task-store.test.mjs
+ *   node --test common/lark-bot/__tests__/lark-task-store.test.mjs
  */
 
 import assert from 'node:assert/strict'

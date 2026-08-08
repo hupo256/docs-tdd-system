@@ -4,7 +4,7 @@
  * 覆盖 review 后加固的四个判定点：白名单 fail-closed、事件归一化、项目号 path-injection 防护、
  * 文档同步禁写校验。这些是无监督改代码的信任边界，回归必须挡住。
  *
- *   node --test common/agent-scripts/__tests__/lark-pure.test.mjs
+ *   node --test common/lark-bot/__tests__/lark-pure.test.mjs
  */
 
 import assert from 'node:assert/strict'
@@ -20,7 +20,7 @@ import { buildResultCard } from '../lib/lark-cards.mjs'
 import { isProjectId, isReadOnlyCommand, matchProjectId, parseCommandType, parseProjectFromText } from '../lib/lark-message.mjs'
 import { classifyLarkTask, extractMarkdownSection } from '../lib/lark-rule-context.mjs'
 import { assessDoneResult, classifyWorkerFailure, crossCheckChangedFiles, detectChangeTier, resolveWorkContext, safeProject, splitViolations } from '../lark-worker.mjs'
-import { validateSource } from '../sync-lark-docs.mjs'
+import { validateSource } from '../../agent-scripts/sync-lark-docs.mjs'
 
 const BOT = 'ou_bot'
 const ME = 'ou_me'

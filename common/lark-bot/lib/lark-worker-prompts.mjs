@@ -2,7 +2,7 @@
  * Lark Worker 的可信 Prompt 构建器。只组合任务、附件、现有规则原文和分析结论，不执行外部命令。
  */
 
-import { resolveRoots } from './roots.mjs'
+import { resolveRoots } from '../../agent-scripts/lib/roots.mjs'
 
 const { consumerRoot: repoRoot } = resolveRoots()
 

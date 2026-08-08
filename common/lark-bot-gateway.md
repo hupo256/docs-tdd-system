@@ -241,7 +241,7 @@ Worker 完成后必须回群，并写入项目通知记录。回群内容固定�
 - Worker 处理边界（可处理哪些命令类型、哪些需确认）。
 - 通知记录位置（`agent/notification-log.md`）。
 
-项目级 `agent/scripts/lark-worker.mjs` 必须是薄包装，只调用 `common/agent-scripts/lark-worker.mjs` 并传入项目编号、项目名称和需要读取的项目文档。Gateway 轮询、任务领取、Codex prompt、状态回写、空任务失败处理和兜底完成消息都由公共 Worker 维护；不得在项目目录复制完整 Worker 实现。
+该 bot 是**机器级全局单例**（一个 gateway + 一个 worker，launchd 常驻），代码与运行时集中在 `common/lark-bot/`：启动薄包装 `common/lark-bot/runtime/lark-worker.mjs` 只调用 `common/lark-bot/lark-worker.mjs` 并传入项目编号、项目名称和需要读取的项目文档。Gateway 轮询、任务领取、Codex prompt、状态回写、空任务失败处理和兜底完成消息都由公共 Worker 维护；不得在项目目录复制完整 Worker 实现。单例配置（webhook/appToken/bug 表等，gitignore）为 `common/lark-bot/runtime/lark-bot.local.json`。
 
 AI 执行器只允许 `claude` / `codex`，优先级为：task > `LARK_AI_EXECUTOR` > `lark-bot.local.json.aiExecutor` > wrapper > `claude`。群消息开头 `[codex]` / `[claude]` 可单次覆盖，外部投递可传 `aiExecutor`；未知值拒绝，入队即解析，排队/结果卡均显示实际执行器。可用 `codexModel` / `codexReasoningEffort` 固定本 Worker 的 Codex 模型/推理强度，不影响其它会话。
 
@@ -251,13 +251,13 @@ Codex 两阶段均为 `ephemeral + approval never + 工具网络关闭`：先把
 
 ## 12. 当前实现：lark-cli 长连接（替代公网 tunnel）
 
-历史上 Gateway 是独立 Koa 服务，靠公网 cloudflared tunnel 收 Lark 事件回调并做 challenge / 验签。当前推荐实现改为 **lark-cli 官方长连接**，`common/agent-scripts/lark-gateway.mjs` 是本地专用 Gateway：
+历史上 Gateway 是独立 Koa 服务，靠公网 cloudflared tunnel 收 Lark 事件回调并做 challenge / 验签。当前推荐实现改为 **lark-cli 官方长连接**，`common/lark-bot/lark-gateway.mjs` 是本地专用 Gateway：
 
 - 事件源：子进程 `lark-cli event consume im.message.receive_v1`（长连接），不再需要公网 tunnel、challenge 端点、手写签名校验。event bus 守护进程实测约 35MB。
 - HTTP 契约：`GET /lark/health|tasks`、`POST /lark/tasks|tasks/next|tasks/:id/claim|tasks/:id/status|tasks/:id/retry|tasks/prune`；状态接口接受 done/failed/blocked/waiting_confirmation，触发对应卡片，仅 done 回写 bug 表。状态回写带领取时的 `epoch`（fencing token），与当前不匹配返回 **409**（旧 worker 迟到回写被拒，不覆盖新一代执行）。`POST /lark/tasks` 缺失/无效项目号一律 `project=null`（与 ingest 口径统一），走 adhoc 临时 worktree，不塞 Gateway 主项目常驻 worktree。`retry` 重置 failed/blocked 为 queued，`prune` 清陈旧终态（默认 done）。
 - 发消息、下载图片、读写多维表格统一走 lark-cli 已登录的 bot 身份（keychain）；配置文件里不放 app 级 `appSecret`。图片经 `lark-cli im +messages-resources-download` 落到 `<PROJECT>/agent/lark-attachments/<messageId>/`。
 - 上线前置：Lark 后台开启事件订阅 `im.message.receive_v1` 并授 `im:message.p2p_msg:readonly` + 群消息收发 / `im:resource` / bitable 相关 scope；白名单 `allowedChatIds` / `allowedOpenIds` 与 `botOpenId` 写入项目配置。
-- 相关脚本：接收链路 `common/agent-scripts/lark-gateway.mjs`；bug 多维表格链路 `common/agent-scripts/lark-bugtable-poller.mjs`（`base +record-list` 拉「负责人=我 且 状态=待处理」→ 投递 Gateway 队列 → done 后 `base +record-batch-update` 回写状态）。
+- 相关脚本：接收链路 `common/lark-bot/lark-gateway.mjs`；bug 多维表格链路 `common/lark-bot/lark-bugtable-poller.mjs`（`base +record-list` 拉「负责人=我 且 状态=待处理」→ 投递 Gateway 队列 → done 后 `base +record-batch-update` 回写状态）。
 - **健壮性兜底**（无人值守必需）：
   - **领取租约 + AI 超时启动断言**：`claimNext` 领走任务时盖 `claimedAt`，超过 `LARK_TASK_LEASE_MS`（默认 40min）仍 `running` 视为孤儿（worker 崩了），下次领取时自动重入队。worker 启动即断言 `LARK_WORKER_AI_TIMEOUT_MS < LARK_TASK_LEASE_MS`，不满足拒绝启动——焊死「孤儿回收不与活着的 AI 双跑同一 worktree」这条唯一防线。
   - **毒任务死信 cap**：孤儿重投达 `LARK_MAX_REQUEUE`（默认 2）转 `failed` 死信、打 `deadLetterReason`、发一次告警卡，停止自动重投交人工；人工 `retry` 达 `LARK_MAX_RETRY`（默认 5）拒绝并提示 clean。防 crash 型 bug 绕过闭环无限烧钱。

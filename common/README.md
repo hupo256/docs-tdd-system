@@ -68,7 +68,7 @@
 | Markdown 本地链接检查 | `node apps/web/docs_tdd/common/agent-scripts/check-doc-links.mjs` |
 | PostToolUse hook 门禁分发 | `node apps/web/docs_tdd/common/agent-scripts/claude-posttooluse-gate.mjs` |
 | 上线后回收编码 worktree | `node apps/web/docs_tdd/common/agent-scripts/decommission-worktree.mjs PR-01234 [--dry-run]` |
-| Lark Bot Gateway 任务 worker | `node apps/web/docs_tdd/common/agent-scripts/lark-worker.mjs [--once]` |
+| Lark Bot Gateway 任务 worker | `node apps/web/docs_tdd/common/lark-bot/lark-worker.mjs [--once]` |
 | PostToolUse Bash 执行证据日志 | `node apps/web/docs_tdd/common/agent-scripts/log-exec.mjs --out <abs-log-path>` |
 | 发送 Lark 阶段卡片 | `node apps/web/docs_tdd/common/agent-scripts/notify-lark.mjs G6 已完成 "摘要" --config apps/web/docs_tdd/PR-01234/agent/scripts/pr-01234.json` |
 | 创建编码 worktree | `node apps/web/docs_tdd/common/agent-scripts/prepare-coding-worktree.mjs PR-01234` |

@@ -53,6 +53,10 @@ function toDocsRelative(file) {
 // （含 agent-scripts/、agent-scripts/lib/、agent-scripts/__tests__/ 下的 lark 插件与其测试）；
 // 规则引擎本体（code-review/gate runner/effective-rules 等）仍参与指纹，保证真规则/门禁变更强制重发布 + golden-run。
 function isLarkPlumbing(rel) {
+  // AI 自动修 bug 的常驻服务整棵子树（入口/lib/schemas/__tests__/runtime）均为纯基建，
+  // 不定义规则或门禁语义 → 全部排除出规则指纹，避免其高频改动把规则发布拖成假性 stale。
+  if (rel.startsWith('common/lark-bot/')) return true
+  // 兼容历史：曾散落在 agent-scripts 下的 lark 插件（现已迁至 common/lark-bot/）。
   return /(?:^|\/)agent-scripts\/(?:[^/]+\/)?lark-[^/]*\.mjs$/.test(rel)
 }
 

@@ -8,15 +8,15 @@ import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realp
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 
-import { docsSystemRoot } from './roots.mjs'
+import { docsSystemRoot } from '../../agent-scripts/lib/roots.mjs'
 
 const AI_EXECUTORS = new Set(['claude', 'codex'])
 const DEFAULT_EXECUTOR = 'claude'
 const defaultAiTimeoutMs = Number(process.env.LARK_WORKER_AI_TIMEOUT_MS || process.env.LARK_WORKER_CODEX_TIMEOUT_MS || 1800000)
 // 导出供 worker 启动断言用：AI 超时必须 < gateway 租约（否则孤儿回收会与活着的 AI 双跑）。
 export const aiTimeoutMs = defaultAiTimeoutMs
-const codexResultSchema = join(docsSystemRoot, 'common/schemas/lark-ai-result.schema.json')
-const codexAnalysisSchema = join(docsSystemRoot, 'common/schemas/lark-ai-analysis.schema.json')
+const codexResultSchema = join(docsSystemRoot, 'common/lark-bot/schemas/lark-ai-result.schema.json')
+const codexAnalysisSchema = join(docsSystemRoot, 'common/lark-bot/schemas/lark-ai-analysis.schema.json')
 // codex workspace-write 沙箱默认只放行 cwd（worktree）。但 `apps/web/docs_tdd` 是指向本 docs 仓
 // (docsSystemRoot) 的软链、落在 worktree 之外，登记文档写入会被 seatbelt 拒（patch: failed → 权限失败）。
 // 把 docsSystemRoot 真实路径加进 writable_roots，codex 才能合规写 docs_tdd/<PR>/product/*.md。

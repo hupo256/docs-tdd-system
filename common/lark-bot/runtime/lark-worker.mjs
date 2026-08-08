@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { runLarkWorker } from '../../../common/agent-scripts/lark-worker.mjs'
+import { runLarkWorker } from '../lark-worker.mjs'
 
 runLarkWorker({
   projectId: 'PR-01947',
@@ -11,7 +11,7 @@ runLarkWorker({
   ],
   // AI 在 PR-01947 worktree 内执行；executor 可被 lark-bot.local.json / task / LARK_AI_EXECUTOR 覆盖
   repoCwd: '/Users/aven/github/PR-01947',
-  configPath: 'apps/web/docs_tdd/PR-01947/agent/scripts/lark-bot.local.json',
+  configPath: 'apps/web/docs_tdd/common/lark-bot/runtime/lark-bot.local.json',
 }).catch((error) => {
   console.error(error)
   process.exit(1)

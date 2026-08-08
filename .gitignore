@@ -10,7 +10,9 @@ node_modules/
 .env
 .env.*
 
-# Lark bot per-project local secret configs (webhookUrl/secret/appToken/chat_id) — machine-local only
+# Lark bot local secret configs (webhookUrl/secret/appToken/chat_id) — machine-local only.
+# Singleton runtime config now lives under common/lark-bot/runtime/; legacy per-project path kept for safety.
+common/lark-bot/runtime/*.local.json
 **/agent/scripts/*.json
 
 # Lark bot runtime state — queued group tasks & downloaded group attachments may hold group content

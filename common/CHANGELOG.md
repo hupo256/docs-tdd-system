@@ -7,6 +7,14 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-08-08（「AI 自动修 bug」Lark 服务抽成 `common/lark-bot/` 专属单例子树）
+
+- **背景**：这套 bot 是**机器级全局单例**（一个 gateway + 一个 worker，launchd 常驻），却「寄居」两处：入口/lib/schema/测试埋在 `common/agent-scripts/`（与按项目跑的 docs-tdd 工具混在一起，看不出是常驻服务），启动 shim + 单例配置 `lark-bot.local.json` 挂在 `PR-01947/agent/scripts/`（全机唯一服务塞进某具体项目目录）。
+- **收拢**（`git mv` 保留历史）：入口 `lark-{gateway,worker,bugtable-poller}.mjs`、`lib/lark-*.mjs`（8 个）、`schemas/lark-ai-{analysis,result}.schema.json`、`__tests__/lark-*.test.mjs` 全部迁入 `common/lark-bot/{,lib/,schemas/,__tests__/}`；运行时 shim + `launchd-node.sh` + `lark-bot.local.json`（gitignore）落到 `common/lark-bot/runtime/`。共享的 `lib/roots.mjs`（大量非 lark 脚本在用）、`notify-lark.mjs`、`sync-lark-docs.mjs`、`lark-sources.schema.json` **不动**。
+- **路径修正**：入口/lib 的 `roots.mjs` 引用改跨目录到 `agent-scripts/lib/roots.mjs`；schema join 改 `common/lark-bot/schemas/`；shim 引用与 `configPath` 改 `common/lark-bot/runtime/`；两份 plist `ProgramArguments` 指向新 runtime 路径（`WorkingDirectory`=fameex-web、worker `repoCwd`=PR-01947 不变）。
+- **旁路同步**：`rule-release.mjs` 的 `isLarkPlumbing` 加 `common/lark-bot/` 前缀（整棵子树排除出规则指纹，避免基建高频改动把规则发布拖成假性 stale）；`check-doc-budget.mjs` 删悬空的 `agent-scripts/lib/lark-*` 自检豁免；`lark-bot-gateway.md` 登记 `DOC_BUDGET_OVERRIDES`（按需查阅型运维大文件）。
+- **验证**：114 单测全绿；`common/lark-bot/**/*.mjs` 全过 `node --check`；重载 launchd 后 `/lark/health` `ok:true`。全程不 push、不改真实 bug 表。
+
 ## 2026-08-07（Lark 链路上线修复：lark-cli 身份 `--as bot` + launchd/executor）
 
 - **背景**：P0–P3 合入 main 后首次实连拉起，gateway 长连接反复 `exit 2`、发消息报 `missing_scope`。根因：`lark-cli` 1.0.70 的 `defaultAs:auto` 在 user + bot 双登录下解析成 **user** 身份，而 `event consume` 只支持 bot、发消息/读表需 bot scope。
