@@ -13,7 +13,7 @@ larkEnabled: false
 
 # PR-02006 需求文档
 
-> 状态：**已上线（2026-07-01）**。Web + Admin 币种配置已实现并合入（`ea8c24750`），G6 自测完成。项目已关闭；如有真实 API / QA 验收差异，回本项目 `product/06-collaboration.md` 补记。公共规则入口见 [`../common/README.md`](../../common/README.md)。
+> 状态：**已上线（2026-07-01）**。Web + Admin 币种配置已实现并合入（`ea8c24750`），G6 自测完成。项目已关闭；如有真实 API / QA 验收差异，回本项目 `product/06-collaboration.md` 补记。公共规则入口见 [`../../common/README.md`](../../common/README.md)。
 
 ## 当前基线
 
@@ -49,7 +49,7 @@ larkEnabled: false
 
 | 项 | 结论 |
 |----|------|
-| 已读公共规则入口 | 是，见 `../common/README.md` |
+| 已读公共规则入口 | 是，见 `../../common/README.md` |
 | 已对照最近成熟项目 | 是，`PR-01988/engineering/development-rules.md` |
 | 是否发现需新增到 common 的通用规则 | 暂无 |
 | 薄包装检查 | 已通过；项目文件只记录 PR-02006 状态和差异 |

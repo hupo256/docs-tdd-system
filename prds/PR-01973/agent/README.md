@@ -1,6 +1,6 @@
 # PR-01973 Agent 流程
 
-> 本文只记录 PR-01973 项目差异和恢复顺序。通用门禁、Lark、Browser / Playwright、QA、质量检查规则继承 `../../common/`。
+> 本文只记录 PR-01973 项目差异和恢复顺序。通用门禁、Lark、Browser / Playwright、QA、质量检查规则继承 `../../../common/`。
 
 ## 1. 当前运行口径
 

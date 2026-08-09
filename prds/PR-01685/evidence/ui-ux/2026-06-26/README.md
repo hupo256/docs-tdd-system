@@ -25,7 +25,7 @@
 
 ## K1–K3 场景矩阵 + 溢出
 
-7 个 scenario × 2 视口均已用 `browser_snapshot` 走查；自测截图已按 [browser-e2e-mcp.md](../../../../common/rules/browser-e2e-mcp.md) §5 清理，仅保留本报告。
+7 个 scenario × 2 视口均已用 `browser_snapshot` 走查；自测截图已按 [browser-e2e-mcp.md](../../../../../common/rules/browser-e2e-mcp.md) §5 清理，仅保留本报告。
 
 | scenario | 桌面溢出 | 移动溢出 | 关键文案 |
 |----------|----------|----------|----------|

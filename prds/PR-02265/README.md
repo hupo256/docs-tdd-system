@@ -21,7 +21,7 @@ larkEnabled: false
 |------|-----|
 | 当前阶段 | G0 资料接收 |
 | 最新通过门禁 | G4 |
-| 公共规则 | 继承 ../common/README.md |
+| 公共规则 | 继承 ../../common/README.md |
 | PRD 来源 | https://qfglxo2m3dc.sg.larksuite.com/docx/P2xud4WYyoapp6xfjskl7UI3gKc |
 | visualFidelity | standard |
 

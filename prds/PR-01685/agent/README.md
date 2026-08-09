@@ -1,6 +1,6 @@
 # PR-01685 Agent 流程
 
-> 本文只记录 PR-01685 项目差异和恢复顺序。通用门禁、Lark、Browser / Playwright、QA、质量检查规则继承 `../../common/`。
+> 本文只记录 PR-01685 项目差异和恢复顺序。通用门禁、Lark、Browser / Playwright、QA、质量检查规则继承 `../../../common/`。
 
 > 项目已于 2026-07-30 上线并在 2026-08-01 完成归档；编码 worktree 已回收。以下内容仅供历史回查。
 

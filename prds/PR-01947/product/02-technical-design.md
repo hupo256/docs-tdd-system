@@ -1,6 +1,6 @@
 # Technical Design — PR-01947
 
-> 继承 ../../common/rules/architecture-and-state.md、component-reuse-and-visual-fidelity.md。本期前端职责 = **参数配置 UI + 传参 + 展示合约返回失败原因**，不实现隔离/钳制/复制/最小开仓判定（PRD 7.4.5 末：跟单只传参，能否下单由合约判定）。
+> 继承 ../../../common/rules/architecture-and-state.md、component-reuse-and-visual-fidelity.md。本期前端职责 = **参数配置 UI + 传参 + 展示合约返回失败原因**，不实现隔离/钳制/复制/最小开仓判定（PRD 7.4.5 末：跟单只传参，能否下单由合约判定）。
 
 ## 1. 责任模块
 

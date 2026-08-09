@@ -1,6 +1,6 @@
 # Collaboration — PR-01947
 
-> G2 待确认清单。规则：../../common/rules/prd-feature-inventory.md、new-project-kickoff.md §4。
+> G2 待确认清单。规则：../../../common/rules/prd-feature-inventory.md、new-project-kickoff.md §4。
 
 ## A. Scope 待确认（G2 定稿前必须回）
 

@@ -89,7 +89,7 @@ Webhook / bot 通道只能发消息；不能冒充群内 @ 应用接收链路。
 推荐项目脚本格式：
 
 ```bash
-node apps/web/docs_tdd/<PROJECT-ID>/agent/scripts/notify-lark.mjs <G0-G8> [状态] [说明] [--dry-run] [--config <path>]
+node apps/web/docs_tdd/prds/<PROJECT-ID>/agent/scripts/notify-lark.mjs <G0-G8> [状态] [说明] [--dry-run] [--config <path>]
 ```
 
 消息时间行规则：只展示时间值，不加“时间”标签或其他汉字，格式为 `YYYY/M/D HH:mm:ss`，例如 `2026/6/16 18:52:11`；该行使用 Lark 卡片 `note` 元素展示，避免 `lark_md` 忽略 hex 色值导致颜色不生效。
@@ -102,7 +102,7 @@ node apps/web/docs_tdd/<PROJECT-ID>/agent/scripts/notify-lark.mjs <G0-G8> [状�
 import { runNotifyLark } from '../../../common/engine/agent-scripts/notify-lark.mjs'
 
 runNotifyLark({
-  defaultConfigPath: 'apps/web/docs_tdd/<PROJECT-ID>/agent/scripts/<project-id>.json',
+  defaultConfigPath: 'apps/web/docs_tdd/prds/<PROJECT-ID>/agent/scripts/<project-id>.json',
 }).catch((error) => {
   console.error(error.message)
   process.exit(1)

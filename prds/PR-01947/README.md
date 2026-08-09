@@ -92,4 +92,4 @@ larkEnabled: false
 
 ## 公共规则
 
-继承 `../common/README.md`；开工读 `../common/rules/rule-router.md`。
+继承 `../../common/README.md`；开工读 `../../common/rules/rule-router.md`。

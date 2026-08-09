@@ -1,4 +1,4 @@
-# Development Rules — PR-01930（项目差异，公共规则见 ../../common/）
+# Development Rules — PR-01930（项目差异，公共规则见 ../../../common/）
 
 > 只写本项目特殊约束；通用规则继承 `common/`，不复制全文。
 

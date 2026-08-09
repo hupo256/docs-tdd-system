@@ -53,7 +53,7 @@ Codex 侧编码规则入口不放在 `docs_tdd`：短硬规则常驻 `~/.codex/A
 
 ### 5.2 项目目录初始化（与 5.1 并行）
 
-1. 创建 `apps/web/docs_tdd/<PROJECT-ID>/`，例如 `apps/web/docs_tdd/prds/PR-01234/`。
+1. 创建 `apps/web/docs_tdd/prds/<PROJECT-ID>/`，例如 `apps/web/docs_tdd/prds/PR-01234/`。
 2. 执行 **5.1 步骤 A–B**（创建并填写 `00-feature-inventory.md`）。
 3. 复制 [templates/feature-doc-checklist.md](./templates/feature-doc-checklist.md) 到项目 README 或任务跟踪处。
 4. 如需通知记录，复制 [templates/notification-log-template.md](./templates/notification-log-template.md) 到项目 `agent/notification-log.md`。

@@ -15,7 +15,7 @@ larkEnabled: true
 
 > **状态**：**已上线（2026-07-11），worktree 已回收**（`decommission-worktree.mjs`，分支 `feature/PR-01988` 保留便于回查）。Admin 运营后台闭环 + Web 侧 F01 埋点 / F07 交易禁用态已合入 online。
 > **PRD**：`apps/web/docs_tdd/prds/PR-01988/inbox/【PR-01988】预测市场二期方案.md`。  
-> **公共规则**：继承 [../common/README.md](../../common/README.md)，当前已通过 G2，mock-first 保留为兜底；真实接口联调已完成，高风险操作仍保留安全闸口和验收证据要求。
+> **公共规则**：继承 [../../common/README.md](../../common/README.md)，当前已通过 G2，mock-first 保留为兜底；真实接口联调已完成，高风险操作仍保留安全闸口和验收证据要求。
 
 ## 文档地图
 

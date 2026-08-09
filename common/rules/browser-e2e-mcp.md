@@ -73,7 +73,7 @@ browser_snapshot → URL 已变化 / 弹窗 DOM 已消失  →  pass ✓
 
 自测结论以 **Markdown 文字报告**为主;**L2 视觉验收**的肉眼像素/手感/响应式判定默认**人工**过走查清单,**Agent** 负责 DOM 契约取值比对（class/computed style == token）与生成清单——分工以 [verification-division-of-labor.md](./verification-division-of-labor.md) 为准,不把截图存下来给负责人去对。
 
-报告写入 `docs_tdd/<PROJECT-ID>/evidence/<category>/<date>/README.md`,须含:
+报告写入 `docs_tdd/prds/<PROJECT-ID>/evidence/<category>/<date>/README.md`,须含:
 - URL、视口、主题、Mock 场景
 - **Figma 节点 ID**、模块名、L2 走查清单逐项 pass/fail（还原度判定见 [component-reuse-and-visual-fidelity.md §3.0](./component-reuse-and-visual-fidelity.md),以清单全 pass 为准,非估算百分比）
 - 操作步骤、结论与残留风险

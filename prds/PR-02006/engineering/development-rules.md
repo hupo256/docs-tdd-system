@@ -1,6 +1,6 @@
 # PR-02006 工程规则
 
-> **适用范围**：TradFi Header 浮层、交易页交易对弹层、TradFi 落地页、行情页 TradFi 板块，以及待确认的 Admin 币种别名多语言配置。公共规则继承 [`../../common/README.md`](../../../common/README.md)，本文只写当前项目特殊约束。
+> **适用范围**：TradFi Header 浮层、交易页交易对弹层、TradFi 落地页、行情页 TradFi 板块，以及待确认的 Admin 币种别名多语言配置。公共规则继承 [`../../../common/README.md`](../../../common/README.md)，本文只写当前项目特殊约束。
 
 ## 当前项目约束
 
@@ -36,7 +36,7 @@
 
 | 项 | 结论 |
 |----|------|
-| 已读公共规则入口 | 是，见 `../../common/README.md` |
+| 已读公共规则入口 | 是，见 `../../../common/README.md` |
 | 已对照最近成熟项目 | 是，`PR-01988/engineering/development-rules.md` |
 | 是否发现需新增到 common 的通用规则 | 暂无 |
 | 薄包装检查 | 已通过；本文只写项目差异 |

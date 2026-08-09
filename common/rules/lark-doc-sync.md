@@ -10,7 +10,7 @@
 
 - 只允许读取：`doc`、`wiki`、`drive`、`markdown` 的 `read/search` 类命令。
 - 不允许创建、更新、patch、删除 Lark 云文档，除非负责人后续单独确认写权限边界。
-- 不同步到业务代码目录；所有输出只能落到 `apps/web/docs_tdd/<PROJECT-ID>/inbox/lark-sync/` 或项目指定的 `docs_tdd` 子目录。
+- 不同步到业务代码目录；所有输出只能落到 `apps/web/docs_tdd/prds/<PROJECT-ID>/inbox/lark-sync/` 或项目指定的 `docs_tdd` 子目录。
 - 敏感项(OAuth token、App Secret、Webhook、Cookie、账号密码)不写仓库、不写 `docs_tdd` 正文、不发群——「禁止同步」硬清单见 [collaboration-and-notifications.md](./collaboration-and-notifications.md) §2。
 - 同步失败不能静默使用旧资料；开发报告必须标明失败来源和下一步需要谁补权限或链接。
 
@@ -67,8 +67,8 @@ lark-cli auth status
 项目同步：
 
 ```bash
-node apps/web/docs_tdd/<PROJECT-ID>/agent/scripts/sync-lark-docs.mjs --dry-run
-node apps/web/docs_tdd/<PROJECT-ID>/agent/scripts/sync-lark-docs.mjs
+node apps/web/docs_tdd/prds/<PROJECT-ID>/agent/scripts/sync-lark-docs.mjs --dry-run
+node apps/web/docs_tdd/prds/<PROJECT-ID>/agent/scripts/sync-lark-docs.mjs
 ```
 
 ## 6. 新项目接入两步
@@ -79,8 +79,8 @@ node apps/web/docs_tdd/<PROJECT-ID>/agent/scripts/sync-lark-docs.mjs
 2. 执行项目薄包装脚本：
 
 ```bash
-node apps/web/docs_tdd/<PROJECT-ID>/agent/scripts/sync-lark-docs.mjs --dry-run
-node apps/web/docs_tdd/<PROJECT-ID>/agent/scripts/sync-lark-docs.mjs
+node apps/web/docs_tdd/prds/<PROJECT-ID>/agent/scripts/sync-lark-docs.mjs --dry-run
+node apps/web/docs_tdd/prds/<PROJECT-ID>/agent/scripts/sync-lark-docs.mjs
 ```
 
 `doc` / `wiki` 链接会统一走官方推荐的只读命令：
@@ -96,7 +96,7 @@ dry-run 也必须校验本地 Markdown 路径是否存在且位于 `apps/web/doc
 仅当新机器或临时环境没有全局 `lark-cli` 时，才使用 `LARK_CLI_BIN` 指向 npm/npx 缓存或手动安装的二进制作为兜底：
 
 ```bash
-LARK_CLI_BIN=/path/to/lark-cli node apps/web/docs_tdd/<PROJECT-ID>/agent/scripts/sync-lark-docs.mjs
+LARK_CLI_BIN=/path/to/lark-cli node apps/web/docs_tdd/prds/<PROJECT-ID>/agent/scripts/sync-lark-docs.mjs
 ```
 
 ## 7. Worker 接入策略

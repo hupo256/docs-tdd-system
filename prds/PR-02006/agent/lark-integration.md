@@ -1,6 +1,6 @@
 # PR-02006 Lark 集成
 
-> 公共规则继承 [`../../common/rules/collaboration-and-notifications.md`](../../../common/rules/collaboration-and-notifications.md)、[`../../common/rules/lark-doc-sync.md`](../../../common/rules/lark-doc-sync.md)、[`../../common/rules/lark-active-notification.md`](../../../common/rules/lark-active-notification.md)。本文只记录当前项目状态和差异。
+> 公共规则继承 [`../../../common/rules/collaboration-and-notifications.md`](../../../common/rules/collaboration-and-notifications.md)、[`../../../common/rules/lark-doc-sync.md`](../../../common/rules/lark-doc-sync.md)、[`../../../common/rules/lark-active-notification.md`](../../../common/rules/lark-active-notification.md)。本文只记录当前项目状态和差异。
 
 ## 当前决策
 

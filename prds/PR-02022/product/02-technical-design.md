@@ -1,6 +1,6 @@
 # Technical Design — PR-02022 合约跟单引导页
 
-继承 [../../common/rules/architecture-and-state.md](../../../common/rules/architecture-and-state.md)。
+继承 [../../../common/rules/architecture-and-state.md](../../../common/rules/architecture-and-state.md)。
 
 ## 0. 方案总览
 

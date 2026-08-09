@@ -14,7 +14,7 @@
 每个项目推荐维护：
 
 ```text
-apps/web/docs_tdd/<PROJECT-ID>/
+apps/web/docs_tdd/prds/<PROJECT-ID>/
   agent/
     execution-log.md       # 命令执行摘要，可由 log-exec.mjs 追加
     gate-results.json      # 最近一次 gate 结果，可为 PASS 或 BLOCK

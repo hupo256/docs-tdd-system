@@ -1,7 +1,7 @@
 # TradFi 落地页模块开发规则
 
 > **适用范围**：后续 `apps/web/src/apps/TradFi/`、`apps/web/src/services/api/tradfi/`、顶部导航 TradFi 入口、合约交易下拉 TradFi 入口。  
-> **状态**：当前 PR-01973 代码实现和后续 refactor / 自测规则。公共规则先读 [`../../common/README.md`](../../../common/README.md)。
+> **状态**：当前 PR-01973 代码实现和后续 refactor / 自测规则。公共规则先读 [`../../../common/README.md`](../../../common/README.md)。
 > **继承关系**：本文只写 TradFi 项目特殊约束；若与 `common/` 冲突，以 `common/` 为准。
 
 ## 1. 开发入口
@@ -84,7 +84,7 @@ services/api or existing market stores + mapper
 
 ## 6. UI 组件规则
 
-通用组件体量、导出注释、短注释、Tailwind token、H5 与主题规则继承 [`../../common/rules/development-rules.md`](../../../common/rules/development-rules.md)、[`../../common/rules/ui-style-token-rules.md`](../../../common/rules/ui-style-token-rules.md) 和 [`../../common/rules/quality-checklist.md`](../../../common/rules/quality-checklist.md)。本节只保留 TradFi 专有补充：
+通用组件体量、导出注释、短注释、Tailwind token、H5 与主题规则继承 [`../../../common/rules/development-rules.md`](../../../common/rules/development-rules.md)、[`../../../common/rules/ui-style-token-rules.md`](../../../common/rules/ui-style-token-rules.md) 和 [`../../../common/rules/quality-checklist.md`](../../../common/rules/quality-checklist.md)。本节只保留 TradFi 专有补充：
 
 - 交易对卡片、Tab、FAQ、排序表头应有稳定尺寸，避免行情刷新造成布局抖动。
 - 不复制现有 Markets 表格的大段代码；若复用成本高，抽 helper 或做 TradFi 专用小表格。
@@ -100,7 +100,7 @@ services/api or existing market stores + mapper
 
 ## 8. 测试与验证
 
-通用 Biome、typecheck、Browser / Playwright、dark / light、390px H5 和 QA 用例处理规则继承 [`../../common/rules/quality-checklist.md`](../../../common/rules/quality-checklist.md)。本节只列 TradFi 专有补充。
+通用 Biome、typecheck、Browser / Playwright、dark / light、390px H5 和 QA 用例处理规则继承 [`../../../common/rules/quality-checklist.md`](../../../common/rules/quality-checklist.md)。本节只列 TradFi 专有补充。
 
 建议补纯函数测试：
 

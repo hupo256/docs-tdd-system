@@ -81,7 +81,7 @@ larkEnabled: false
 ## 当前阶段
 
 - 当前阶段：**已上线（2026-07-22）**；`useUserType`/`useChangeFirstEnter` 直连 YApi 5608/5611，`@mock-only` 已归零；QA 回归 + dev 真机验证 + 交付摘要均已完成，无遗留 bug
-- 公共规则：继承 [../common/README.md](../../common/README.md)
+- 公共规则：继承 [../../common/README.md](../../common/README.md)
 - PRD 来源：[Lark PRD](https://qfglxo2m3dc.sg.larksuite.com/docx/WQECd5jNWo3qdBxUfiqlUAnmgfg)（revision 633，2026-06-29，已同步到 `inbox/lark-sync/prd-latest.md`）
 - 提测演示用例来源：[Lark 测试用例表](https://qfglxo2m3dc.sg.larksuite.com/wiki/T1eTwACdaibCB8kPG3plR08jg1d)（32 条，2026-07-13 已同步到 `inbox/lark-sync/test-cases-latest.md`，为下一步自测提供依据）
 - Figma（web）：4 node（引导 1/2/3 步 + 带单员弹窗），fileKey=`KzvWxAYxqfgpoiYuKdxMAE`，规格见 07-figma-spec

@@ -19,7 +19,7 @@ larkEnabled: false
 |------|-----|
 | 最新可信门禁 | G4（2026-08-01 门禁链审计后回退；原 G8 结果缺少 G5/G6/G7 前置历史，不再作为阶段结论） |
 | 当前阶段 | G5 阻塞：代码与部分 G6 自测证据已落盘，但后端真实 API 未 ready，尚未完成真实字段/错误码对账与 MSW 退役；不得进入 G6/G7/G8 |
-| 公共规则 | 继承 ../common/README.md |
+| 公共规则 | 继承 ../../common/README.md |
 | PRD 来源 | `inbox/lark-sync/prd-latest.extracted.md`（Lark revision 4103）+ `inbox/prd-assets/` 真图 |
 | 本轮范围 | 第一轮 F01-F13 后台核心闭环 + 第二轮 F17-F23 流水枚举注入（现货后台/合约后台/C 端 web，只做 web 不碰 app）|
 | visualFidelity | standard |

@@ -172,7 +172,7 @@ R=负责实现，A=最终确认，C=咨询，I=知情。
 
 为达到 95%，后续执行策略已写入：
 
-1. 公共规则：`../../common/rules/ui-style-token-rules.md` 的“高保真视觉例外”。
+1. 公共规则：`../../../common/rules/ui-style-token-rules.md` 的“高保真视觉例外”。
 2. 项目规则：`../engineering/development-rules.md` 的“95% UI 还原专项策略”。
 3. 前端任务：`04-frontend-tasks.md` 的 `JF. 95% UI 还原专项` 与 `K12`。
 

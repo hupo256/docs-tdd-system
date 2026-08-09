@@ -1,10 +1,10 @@
 # PR-01947 Lark 集成
 
 > 只记录 PR-01947 项目差异与运行状态。通用规则继承：
-> - 群内 @ 应用转任务：[../../common/rules/lark-bot-gateway.md](../../../common/rules/lark-bot-gateway.md)
-> - 主动发群消息：[../../common/rules/lark-active-notification.md](../../../common/rules/lark-active-notification.md)
-> - Lark 文档只读同步：[../../common/rules/lark-doc-sync.md](../../../common/rules/lark-doc-sync.md)
-> - 协作边界：[../../common/rules/collaboration-and-notifications.md](../../../common/rules/collaboration-and-notifications.md)
+> - 群内 @ 应用转任务：[../../../common/rules/lark-bot-gateway.md](../../../common/rules/lark-bot-gateway.md)
+> - 主动发群消息：[../../../common/rules/lark-active-notification.md](../../../common/rules/lark-active-notification.md)
+> - Lark 文档只读同步：[../../../common/rules/lark-doc-sync.md](../../../common/rules/lark-doc-sync.md)
+> - 协作边界：[../../../common/rules/collaboration-and-notifications.md](../../../common/rules/collaboration-and-notifications.md)
 
 ## 1. 架构（lark-cli 长连接，无公网 tunnel）
 

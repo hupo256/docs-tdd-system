@@ -1,6 +1,6 @@
 # Feature Inventory — PR-01947 【跟单】跟单设置优化（保证金/杠杆/复制仓位）
 
-> 规则：../../common/rules/prd-feature-inventory.md。核心原则：**Figma 没有 ≠ PRD 不做**；每条写清在哪个路由/页面实现。
+> 规则：../../../common/rules/prd-feature-inventory.md。核心原则：**Figma 没有 ≠ PRD 不做**；每条写清在哪个路由/页面实现。
 
 | 字段 | 值 |
 |------|-----|

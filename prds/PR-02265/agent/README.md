@@ -2,7 +2,7 @@
 
 ## 必读顺序
 
-1. ../../common/rules/rule-router.md
+1. ../../../common/rules/rule-router.md
 2. 执行 `node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs context PR-02265 <SCENARIO>`
 3. 读取命令生成的临时 context pack
 4. ./handoff-*.md（最新交接文件，若无则跳过）
@@ -22,7 +22,7 @@ context pack 自动包含 ./context-summary.md 与场景专题；不要一次性
 
 ## 编码环境
 
-G2 scope 确认后，按 ../../common/rules/coding-worktree.md 创建 feature/PR-02265 同级 worktree。
+G2 scope 确认后，按 ../../../common/rules/coding-worktree.md 创建 feature/PR-02265 同级 worktree。
 
 ## Gate 命令
 

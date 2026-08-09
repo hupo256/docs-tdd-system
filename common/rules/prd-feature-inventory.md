@@ -22,18 +22,18 @@ G2 未完成前不写业务代码（同 [workflow-gates.md](./workflow-gates.md)
 
 ## 3. Agent 自动执行流程（强制）
 
-适用:AI 接手 `@fameex/web` 新需求或首次进入某 `docs_tdd/<PROJECT-ID>/` 时。步骤由 Agent 自行完成,不要求负责人手动复制模板;缺文件则 Agent 创建填写。
+适用:AI 接手 `@fameex/web` 新需求或首次进入某 `docs_tdd/prds/<PROJECT-ID>/` 时。步骤由 Agent 自行完成,不要求负责人手动复制模板;缺文件则 Agent 创建填写。
 
 ### 3.0 触发条件（满足任一即执行）
 
-- 新建 `docs_tdd/<PROJECT-ID>/` 目录;
+- 新建 `docs_tdd/prds/<PROJECT-ID>/` 目录;
 - 目录存在但缺 `product/00-feature-inventory.md`;
 - 负责人给 PRD/工单要求开始,且该项目无 G2 定稿清单;
 - 从其他项目 fork 文档结构但清单未迁移。
 
 ### 3.1 步骤 A — 创建清单文件（G0 前,自动）
 
-1. 确认路径 `docs_tdd/<PROJECT-ID>/`（不存在按 [project-doc-structure.md](./project-doc-structure.md) 建骨架）。
+1. 确认路径 `docs_tdd/prds/<PROJECT-ID>/`（不存在按 [project-doc-structure.md](./project-doc-structure.md) 建骨架）。
 2. 复制 `templates/feature-inventory-template.md` → `<PROJECT-ID>/product/00-feature-inventory.md`（Agent 写文件即等同复制）。
 3. 填文首元信息:工单号、PRD 路径（`inbox/*.md`）、Figma node、维护人（未知留空）。
 
@@ -131,7 +131,7 @@ G2 未完成前不写业务代码（同 [workflow-gates.md](./workflow-gates.md)
 
 ```text
 【Feature Inventory】
-- 文件：apps/web/docs_tdd/<PROJECT-ID>/product/00-feature-inventory.md
+- 文件：apps/web/docs_tdd/prds/<PROJECT-ID>/product/00-feature-inventory.md
 - PRD 已读：inbox/<文件名>（含验收标准 §x.x）
 - 清单条目：N 条；本期做 M / 不做 K / 延期 L
 - Figma 未覆盖但 PRD 要求：…（无则「无」）

@@ -149,7 +149,7 @@ curl -i http://localhost:4001/zh-CN
 - G4-G8 的业务代码修改、Biome、typecheck、test、dev server、Playwright 自测都在项目 worktree 执行。
 - worktree ready = 基线校验通过 + 依赖装完 + dev server 可启 + 基础页非 404/空白；只建目录分支不算 ready。
 - `docs_tdd` 以主仓为准，worktree 只软链读取，不复制新副本。
-- 项目文档、通知记录、PRD 同步产物仍写主仓 `docs_tdd/<PROJECT-ID>/`。
+- 项目文档、通知记录、PRD 同步产物仍写主仓 `docs_tdd/prds/<PROJECT-ID>/`。
 - 交付摘要写清 worktree 路径、分支名、验证命令、未完成项。
 - 只做文档整理可留主仓；一旦写业务代码必须切到对应 worktree。
 
@@ -203,7 +203,7 @@ node apps/web/docs_tdd/common/engine/agent-scripts/decommission-worktree.mjs PR-
 脚本做：跑 7.1 前置校验（不过即 abort，除非 `--force`）→ `git worktree remove`（**不 `rm -rf`**，避免 git 元数据孤儿）→ `git worktree prune` → 打印待手改项。
 
 - **保留 `feature/*` 分支**（本地 + 远端不删），便于回查/补丁；只删工作树目录。
-- 脚本**不代改文字文档**，退役后 Agent 按打印手动更新：① 本文件 §2 端口注册表该行状态改「已回收（上线 `<日期>`）」；② `CONTEXT.md` 项目移到「非活跃历史」并从 worktree symlink 表移除；③ 顶层 `README.md` 项目索引状态改「已上线/已关闭」；④ `docs_tdd/<PROJECT-ID>/` 文档**保留**。
+- 脚本**不代改文字文档**，退役后 Agent 按打印手动更新：① 本文件 §2 端口注册表该行状态改「已回收（上线 `<日期>`）」；② `CONTEXT.md` 项目移到「非活跃历史」并从 worktree symlink 表移除；③ 顶层 `README.md` 项目索引状态改「已上线/已关闭」；④ `docs_tdd/prds/<PROJECT-ID>/` 文档**保留**。
 
 ### 7.3 端口回收
 

@@ -1,6 +1,6 @@
 # PR-02006 Agent 流程
 
-> 状态：G2 已确认，允许 mock-first 进入开发。公共协作规则继承 [`../../common/rules/collaboration-and-notifications.md`](../../../common/rules/collaboration-and-notifications.md)。
+> 状态：G2 已确认，允许 mock-first 进入开发。公共协作规则继承 [`../../../common/rules/collaboration-and-notifications.md`](../../../common/rules/collaboration-and-notifications.md)。
 
 ## 恢复顺序
 

@@ -23,5 +23,5 @@
   "typecheckRoots": ["apps/web", "apps/admin"],
   "productionBuild": ["pnpm", "--filter", "@fameex/web", "build"],
   "moduleImportAliases": ["@fameex/ui"],
-  "larkOutputDir": "apps/web/docs_tdd/${projectId}/inbox/lark-sync"
+  "larkOutputDir": "apps/web/docs_tdd/prds/${projectId}/inbox/lark-sync"
 }

@@ -3,7 +3,7 @@
 
 # 新需求文档 Checklist
 
-复制本清单到 `apps/web/docs_tdd/<PROJECT-ID>/README.md` 或任务文档中使用。
+复制本清单到 `apps/web/docs_tdd/prds/<PROJECT-ID>/README.md` 或任务文档中使用。
 
 > **模板演进是前向的，不回填存量项目**：`common/`/`templates/` 的模板会随迭代新增章节/关卡（如 `03-api-contract §7 文案契约表`、context-summary 新鲜度自检）。既有项目文档是复制时点的快照，**不强制回填**——回填会制造无收益的 churn。判据:新增关卡只对「本次迭代起新建或正在改的项目」硬性生效;存量项目改到相关模块时顺手对齐即可,未触及不追。若恢复一个旧项目发现其文档缺当前模板的章节,那是时点差异非缺陷,按需补,勿视作 gate 失败。新模板关卡若属硬闸,应同时在 `common/CHANGELOG.md` 记明生效边界（哪些项目受约束）。
 

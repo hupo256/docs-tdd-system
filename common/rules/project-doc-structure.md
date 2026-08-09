@@ -1,6 +1,6 @@
 # 项目文档目录规范
 
-> AI 主用:每个需求在 `apps/web/docs_tdd/<PROJECT-ID>/` 下独立维护,避免不同项目 PRD/Figma/API/任务互相污染。
+> AI 主用:每个需求在 `apps/web/docs_tdd/prds/<PROJECT-ID>/` 下独立维护,避免不同项目 PRD/Figma/API/任务互相污染。
 
 ## 变量约定
 

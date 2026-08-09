@@ -2,7 +2,7 @@
 
 ## 必读顺序
 
-1. ../../common/README.md
+1. ../../../common/README.md
 2. ../README.md
 3. ../product/00-feature-inventory.md
 4. ../product/06-collaboration.md

@@ -58,8 +58,17 @@ function json(value) {
   return `${JSON.stringify(value, null, 2)}\n`;
 }
 
-function rewriteTemplateLinksForProjectDoc(content) {
-  return content.replaceAll('(../common/', '(../../common/').replaceAll('(../templates/', '(../../templates/');
+// Templates author cross-domain links (to common/ or templates/) with the ../ depth
+// correct for a file sitting directly under templates/. A materialized project doc lives
+// at prds/<id>/<sub>/…, whose distance to the docs root varies by subdir (product/ vs
+// agent/ vs evidence/ui-ux/), so a single fixed prefix can't be right for all of them.
+// Recompute the ../ run from the TARGET file's own depth; idempotent if links are already
+// correct. Matches any leading ../ run before common/ or templates/, whether or not it sits
+// inside a markdown () link, so bare "继承 ../common/README.md" mentions are fixed too.
+function rewriteTemplateLinksForProjectDoc(content, targetPath) {
+  const ups = path.relative(path.dirname(targetPath), docsRoot).split(path.sep).filter((seg) => seg === '..').length;
+  const prefix = '../'.repeat(ups);
+  return content.replace(/(?:\.\.\/)+(?=(?:common|templates)\/)/g, prefix);
 }
 
 async function readTemplate(templateName, fallback, replacements = {}) {
@@ -78,6 +87,10 @@ async function readTemplate(templateName, fallback, replacements = {}) {
 
 async function writeFileIfMissing(filePath, content) {
   assertInside(docsRoot, filePath, 'output');
+  // Depth-correct cross-domain links for every materialized markdown doc, based on where
+  // the file actually lands under prds/<id>/… — the single choke point so no call site
+  // can emit a stale ../ depth (see rewriteTemplateLinksForProjectDoc).
+  const finalContent = filePath.endsWith('.md') ? rewriteTemplateLinksForProjectDoc(content, filePath) : content;
   if (existsSync(filePath)) {
     console.log(`exists: ${path.relative(repoRoot, filePath)}`);
     return;
@@ -87,7 +100,7 @@ async function writeFileIfMissing(filePath, content) {
     return;
   }
   await fs.mkdir(path.dirname(filePath), { recursive: true });
-  await fs.writeFile(filePath, content);
+  await fs.writeFile(filePath, finalContent);
 }
 
 async function ensureDir(dirPath) {
@@ -165,7 +178,7 @@ const featureInventoryContent = featureInventoryTemplate
   .replace('| PRD 来源 | `inbox/...md` / Lark 链接 |', `| PRD 来源 | ${prd} |`)
   .replace('| 清单维护人 | |', '| 清单维护人 | Agent |')
   .replace('| visualFidelity | `standard` / `high`（高保真判定见 [component-reuse-and-visual-fidelity.md §3.0](../common/rules/component-reuse-and-visual-fidelity.md)） |', '| visualFidelity | standard |')
-const projectFeatureInventoryContent = rewriteTemplateLinksForProjectDoc(featureInventoryContent)
+const projectFeatureInventoryContent = featureInventoryContent
 await writeFileIfMissing(path.join(projectDir, 'product/00-feature-inventory.md'), projectFeatureInventoryContent);
 
 const figmaSpecContent = await readTemplate(
@@ -203,7 +216,7 @@ const productDocs = {
 };
 
 for (const [name, content] of Object.entries(productDocs)) {
-  await writeFileIfMissing(path.join(projectDir, 'product', name), rewriteTemplateLinksForProjectDoc(content));
+  await writeFileIfMissing(path.join(projectDir, 'product', name), content);
 }
 
 await writeFileIfMissing(path.join(projectDir, 'engineering/development-rules.md'), `# ${projectId} 开发规则\n\n继承 ../../common/README.md。本文只记录项目特殊约束，不复制公共规则。\n\n## 项目特殊约束\n\n暂无。（若本期确无特殊约束，保留本文件并写「暂无」；不要删除此文件，否则 G0 gate 会报缺失。）\n`);
@@ -313,9 +326,9 @@ await writeFileIfMissing(path.join(projectDir, 'agent/lark-sources.json'), json(
   ],
 }));
 
-await writeFileIfMissing(path.join(projectDir, 'agent/scripts/sync-lark-docs.mjs'), `#!/usr/bin/env node\n\nimport { runSyncLarkDocs } from '../../../../common/engine/agent-scripts/sync-lark-docs.mjs'\n\nrunSyncLarkDocs({\n  defaultConfigPath: '${docsMountPath}/prds/${projectId}/agent/lark-sources.json',\n}).catch((error) => {\n  console.error(error.message)\n  process.exit(1)\n})\n`);
+await writeFileIfMissing(path.join(projectDir, 'agent/scripts/sync-lark-docs.mjs'), `#!/usr/bin/env node\n\nimport { runSyncLarkDocs } from '#common/engine/agent-scripts/sync-lark-docs.mjs'\n\nrunSyncLarkDocs({\n  defaultConfigPath: '${docsMountPath}/prds/${projectId}/agent/lark-sources.json',\n}).catch((error) => {\n  console.error(error.message)\n  process.exit(1)\n})\n`);
 
-await writeFileIfMissing(path.join(projectDir, 'agent/scripts/notify-lark.mjs'), `#!/usr/bin/env node\n\nimport { runNotifyLark } from '../../../../common/engine/agent-scripts/notify-lark.mjs'\n\nrunNotifyLark({\n  defaultConfigPath: '${docsMountPath}/prds/${projectId}/agent/scripts/${lowerProjectId}.json',\n}).catch((error) => {\n  console.error(error.message)\n  process.exit(1)\n})\n`);
+await writeFileIfMissing(path.join(projectDir, 'agent/scripts/notify-lark.mjs'), `#!/usr/bin/env node\n\nimport { runNotifyLark } from '#common/engine/agent-scripts/notify-lark.mjs'\n\nrunNotifyLark({\n  defaultConfigPath: '${docsMountPath}/prds/${projectId}/agent/scripts/${lowerProjectId}.json',\n}).catch((error) => {\n  console.error(error.message)\n  process.exit(1)\n})\n`);
 
 if (!dryRun) {
   await fs.chmod(path.join(projectDir, 'agent/scripts/sync-lark-docs.mjs'), 0o755);

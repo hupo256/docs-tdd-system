@@ -196,7 +196,7 @@ docs-tdd golden --keep          # 保留 PR-00000 供手工排查
 
 两个脚本都已接入 `rule-waivers.json`:
 - **项目 gate**:`verify-project-gate.mjs` 自动读 `<PROJECT-ID>/agent/rule-waivers.json`;命中的 `error` 失败项降级 `waived`（输出标 `WAIV`,不计入退出码）,需 `ruleId` 匹配、`file` 省略或精确匹配、且未过期。
-- **代码静态扫描**:`verify-code-rules.mjs --project <PROJECT-ID>` 默认读取 `apps/web/docs_tdd/<PROJECT-ID>/agent/rule-waivers.json`;也可用 `--waivers <path>` 显式指定。命中的 `error` finding 降级 `waived`,不计入 `ok`。
+- **代码静态扫描**:`verify-code-rules.mjs --project <PROJECT-ID>` 默认读取 `apps/web/docs_tdd/prds/<PROJECT-ID>/agent/rule-waivers.json`;也可用 `--waivers <path>` 显式指定。命中的 `error` finding 降级 `waived`,不计入 `ok`。
 
 `common/rules/ruleset.json` 可把高风险事实校验标为 `waivable: false`；此类规则即使出现在项目 waiver 中也不会降级。当前 MSW 注册链完整性与生命周期阻断假设清零属于不可豁免项，试点期仍可由 `blocking: false` 保持诊断态，晋级后才转阻断。
 
