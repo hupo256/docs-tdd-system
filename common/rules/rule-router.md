@@ -7,6 +7,7 @@
 
 1. 确认项目 ID/阶段；恢复项目先读 `<PROJECT>/agent/context-summary.md`。
 2. 执行 `docs-tdd context <PROJECT-ID> <SCENARIO>` 并读取 `/tmp/docs-tdd-context/...md`；默认 compact，歧义或失败调查才用 `--full`，不得自行全读规则。
+   编码场景同时生成带 L1/L2/L3 fingerprint 的 `agent/rule-session.json`；G2 未通过、规则冲突或发布过期时不生成会话，也不得写业务代码。
 3. 编辑后执行 `docs-tdd changed <PROJECT-ID>`；阶段交付执行 `docs-tdd gate <PROJECT-ID> <Gx>`。缓存仅复用同输入 PASS，需强制实跑时加 `--no-cache`。
 4. 无自动 hook 时显式执行 changed/gate；适配、冲突和发布状态用 `docs-tdd doctor <PROJECT-ID>`，能力摘要用 `docs-tdd capability <PROJECT-ID>`。
 
@@ -47,5 +48,6 @@
 - context pack 是带 L3/effective fingerprint 的 `/tmp` 可丢弃缓存；规则真值仍是各层权威源。
 - Gate 完成、场景切换、PRD/契约 fingerprint 变化或处理大量日志/图片后，更新 `context-summary.md`；新任务只恢复 Router、摘要和当前 compact pack。
 - 修改规则后依次运行 `docs-tdd check`、`rule-release.mjs --write`、`effective-rules.mjs --write`；任一发布漂移会阻断 context/changed/gate，但不阻断 check/capability/doctor。
+- 规则维护优先使用 `docs-tdd release <PROJECT-ID> --scenario <SCENARIO>` 原子发布两层 manifest、doctor、golden 和 context smoke；任一步失败自动恢复旧 manifest。
 - 常驻文件仅本文件且 ≤5000 字符；专题必须被 `rule-index.json` 至少一个场景引用，并被 README 人工索引收录。
 - 新主题只新增/更新场景索引和 on-demand 文件；机器已拦的细则不在常驻层重复。

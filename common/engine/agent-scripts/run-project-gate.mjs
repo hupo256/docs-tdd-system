@@ -1,25 +1,19 @@
 #!/usr/bin/env node
+
 // Run a project gate, persist machine-readable results, and write a reviewable evidence README.
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { tmpdir } from 'node:os'
-import { recordFindings, loadLedger, saveLedger } from './warn-ledger.mjs'
-import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
-import { formatEvidenceRunId, renderEvidence, summarizeCommand } from './lib/gate-evidence.mjs'
-import {
-  buildQualityGuardCheck,
-  derivePayloadOk,
-  parseJsonOutput,
-  selfTest,
-  shouldUseGateCache,
-  summarizeChecks,
-  syncCommandSummary,
-} from './lib/gate-payload.mjs'
 import { appendGateHistory, createFingerprint, gateCacheFingerprint } from './lib/gate-cache.mjs'
+import { formatEvidenceRunId, renderEvidence, summarizeCommand } from './lib/gate-evidence.mjs'
+import { buildQualityGuardCheck, derivePayloadOk, parseJsonOutput, selfTest, shouldUseGateCache, summarizeChecks, syncCommandSummary } from './lib/gate-payload.mjs'
+import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
+import { requireRuleSession } from './lib/rule-session-runtime.mjs'
 import { persistRunLog as persistRunLogRaw, printFailureSummary, run } from './lib/run-log.mjs'
+import { loadLedger, recordFindings, saveLedger } from './warn-ledger.mjs'
 
 const scriptPath = fileURLToPath(import.meta.url)
 const scriptDir = dirname(scriptPath)
@@ -128,12 +122,26 @@ if (skipRuleFreshness) {
 
 const projectDir = resolveProjectRoot(projectId)
 if (!existsSync(projectDir)) fail(`project directory does not exist: ${relative(repoRoot, projectDir)}`)
+if (codeRuleGates.includes(gate)) {
+  const release = JSON.parse(readFileSync(join(docsRoot, 'common/rule-release.json'), 'utf8'))
+  const effectiveRules = JSON.parse(readFileSync(join(docsRoot, 'common/effective-rules.json'), 'utf8'))
+  if (!requireRuleSession(projectId, callerCwd, { currentFingerprint: release.fingerprint }, { currentFingerprint: effectiveRules.fingerprint })) {
+    fail(`rerun docs-tdd context ${projectId} <coding-scenario>`)
+  }
+}
 const fingerprintCtx = { projectId, gate, callerCwd, config, docsRoot }
 const cacheFingerprint = gateCacheFingerprint(projectDir, fingerprintCtx)
 const cacheDir = join(tmpdir(), 'docs-tdd-gate-cache')
 const cacheFile = join(cacheDir, `${projectId}-${gate}-${cacheFingerprint}.json`)
 const cached = existsSync(cacheFile) ? JSON.parse(readFileSync(cacheFile, 'utf8')) : null
-if (shouldUseGateCache({ isWrite: write, isNoCache: noCache, cacheExists: Boolean(cached), cachedOk: cached?.ok })) {
+if (
+  shouldUseGateCache({
+    isWrite: write,
+    isNoCache: noCache,
+    cacheExists: Boolean(cached),
+    cachedOk: cached?.ok,
+  })
+) {
   if (json) console.log(JSON.stringify({ ...cached, cache: { hit: true, fingerprint: cacheFingerprint } }, null, 2))
   else console.log(`run-project-gate: ${projectId} ${gate} — PASS (cache=hit, fingerprint=${cacheFingerprint})`)
   process.exit(0)
@@ -144,7 +152,11 @@ const gateRun = run([join(scriptDir, 'verify-project-gate.mjs'), projectId, gate
 persistRunLog(`verify-project-gate-${gate}`, gateRun)
 const gateResult = parseJsonOutput(gateRun)
 const commands = [
-  { label: `verify-project-gate ${projectId} ${gate}`, target: '项目 gate', result: gateRun },
+  {
+    label: `verify-project-gate ${projectId} ${gate}`,
+    target: '项目 gate',
+    result: gateRun,
+  },
 ]
 
 let codeRulesRun = null
@@ -153,7 +165,11 @@ if (!skipCodeRules && codeRuleGates.includes(gate)) {
   codeRulesRun = run([join(scriptDir, 'verify-code-rules.mjs'), '--project', projectId, '--json'])
   persistRunLog('verify-code-rules', codeRulesRun)
   codeRulesResult = parseJsonOutput(codeRulesRun)
-  commands.push({ label: `verify-code-rules --project ${projectId}`, target: '责任模块 / 改动文件', result: codeRulesRun })
+  commands.push({
+    label: `verify-code-rules --project ${projectId}`,
+    target: '责任模块 / 改动文件',
+    result: codeRulesRun,
+  })
 }
 
 // 机器事实层：真跑 biome/tsc/vitest。它的 checks 直接并入 payload.checks，
@@ -164,7 +180,11 @@ if (!skipBuildQuality && buildQualityGates.includes(gate)) {
   buildQualityRun = run([join(scriptDir, 'verify-build-quality.mjs'), '--project', projectId, '--json', ...(gate === 'G8' ? ['--production-build'] : [])])
   persistRunLog('verify-build-quality', buildQualityRun)
   buildQualityResult = parseJsonOutput(buildQualityRun)
-  commands.push({ label: `verify-build-quality --project ${projectId}`, target: 'biome / tsc / vitest 实跑', result: buildQualityRun })
+  commands.push({
+    label: `verify-build-quality --project ${projectId}`,
+    target: 'biome / tsc / vitest 实跑',
+    result: buildQualityRun,
+  })
 }
 
 const buildQualityChecks = Array.isArray(buildQualityResult?.checks) ? buildQualityResult.checks : []
@@ -229,7 +249,10 @@ if (write) {
   // 成功历史必须先于阶段同步落盘；set-project-stage 只消费已存在的同阶段 PASS 历史。
   if (payload.ok) {
     writeFileSync(evidenceFile, renderEvidence(payload, commands, reviewer))
-    appendGateHistory(projectDir, payload, evidenceFile, { repoRoot, onError: fail })
+    appendGateHistory(projectDir, payload, evidenceFile, {
+      repoRoot,
+      onError: fail,
+    })
   }
   // 阶段同步是 gate 通过后的默认动作；gate 未通过时仍刷索引（PROJECTS.md 的 Latest gate 列需反映 BLOCK）。
   // 同步失败不翻转 gate 结论，但会留在 Command Evidence 表和 stderr，防止阶段真值悄悄漂移。
@@ -237,7 +260,11 @@ if (write) {
     if (payload.ok) {
       const stageRun = run([join(scriptDir, 'set-project-stage.mjs'), projectId, gate])
       persistRunLog('set-project-stage', stageRun)
-      commands.push({ label: `set-project-stage ${projectId} ${gate}`, target: 'README 机器行 / context-summary / PROJECTS.md', result: stageRun })
+      commands.push({
+        label: `set-project-stage ${projectId} ${gate}`,
+        target: 'README 机器行 / context-summary / PROJECTS.md',
+        result: stageRun,
+      })
       payload.stageSync = { attempted: true, ok: stageRun.ok }
       if (!stageRun.ok) {
         console.error('run-project-gate: ⚠ gate 结论不变，但阶段同步失败，请按上面 set-project-stage 输出手工排查')
@@ -245,7 +272,11 @@ if (write) {
     } else {
       const indexRun = run([join(scriptDir, 'update-project-index.mjs'), '--write'])
       persistRunLog('update-project-index', indexRun)
-      commands.push({ label: 'update-project-index --write', target: 'PROJECTS.md', result: indexRun })
+      commands.push({
+        label: 'update-project-index --write',
+        target: 'PROJECTS.md',
+        result: indexRun,
+      })
       payload.stageSync = { attempted: false, ok: false }
     }
   } else {
@@ -258,8 +289,16 @@ if (write) {
   if (gate === 'G8') {
     const summaryRun = run([join(scriptDir, 'render-delivery-summary.mjs'), '--project', projectId, '--write'])
     persistRunLog('render-delivery-summary', summaryRun)
-    commands.push({ label: `render-delivery-summary --project ${projectId} --write`, target: 'agent/delivery-summary.machine.md', result: summaryRun })
-    payload.deliverySummary = { attempted: true, ok: summaryRun.ok, file: 'agent/delivery-summary.machine.md' }
+    commands.push({
+      label: `render-delivery-summary --project ${projectId} --write`,
+      target: 'agent/delivery-summary.machine.md',
+      result: summaryRun,
+    })
+    payload.deliverySummary = {
+      attempted: true,
+      ok: summaryRun.ok,
+      file: 'agent/delivery-summary.machine.md',
+    }
     syncCommandSummary(payload, commands)
     writeFileSync(gateResultsFile, `${JSON.stringify(payload, null, 2)}\n`)
     writeFileSync(evidenceFile, renderEvidence(payload, commands, reviewer))
@@ -267,7 +306,12 @@ if (write) {
   // warn-first 晋级台账：把本 PR 命中的可晋级 warn 规则自动入账。无论 gate PASS/BLOCK 都记录。
   if (codeRulesResult?.findings?.length) {
     const ledger = loadLedger()
-    const { recorded } = recordFindings(ledger, { projectId, fingerprint: payload.fingerprint.headSha, at: payload.generatedAt.slice(0, 10), findings: codeRulesResult.findings })
+    const { recorded } = recordFindings(ledger, {
+      projectId,
+      fingerprint: payload.fingerprint.headSha,
+      at: payload.generatedAt.slice(0, 10),
+      findings: codeRulesResult.findings,
+    })
     if (recorded.length) {
       saveLedger(ledger, payload.generatedAt)
       console.error(`run-project-gate: warn-ledger 已记录 ${projectId} 命中 ${recorded.join(', ')}（warn-ledger --report 查晋级候选）`)
@@ -283,9 +327,7 @@ if (payload.ok && !write && !noCache) {
 if (json) {
   console.log(JSON.stringify({ ...payload, commands: commands.map(summarizeCommand) }, null, 2))
 } else {
-  const groupText = payload.groups?.documentation && payload.groups?.implementation
-    ? `; documentation=${payload.groups.documentation.ok}/${payload.groups.documentation.total}; implementation=${payload.groups.implementation.ok}/${payload.groups.implementation.total}`
-    : ''
+  const groupText = payload.groups?.documentation && payload.groups?.implementation ? `; documentation=${payload.groups.documentation.ok}/${payload.groups.documentation.total}; implementation=${payload.groups.implementation.ok}/${payload.groups.implementation.total}` : ''
   console.log(`run-project-gate: ${projectId} ${gate} — ${payload.ok ? 'PASS' : 'BLOCK'} (fail=${summary.fail}, warn=${summary.warn}, waived=${summary.waived}${groupText})`)
   if (!gateRun.ok) printFailureSummary(`verify-project-gate ${projectId} ${gate}`, gateRun, gateResult)
   if (codeRulesRun && !codeRulesRun.ok) printFailureSummary(`verify-code-rules --project ${projectId}`, codeRulesRun, codeRulesResult)

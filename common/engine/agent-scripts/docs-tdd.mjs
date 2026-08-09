@@ -1,14 +1,15 @@
 #!/usr/bin/env node
 
-import { createHash } from 'node:crypto'
 import assert from 'node:assert/strict'
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
+import { createHash } from 'node:crypto'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { codeFingerprint, matchesGateFingerprint } from './lib/fingerprint.mjs'
 import { resolveProjectRoot, resolveRoots, rulesRoot } from './lib/roots.mjs'
+import { CODING_SCENARIOS, requireRuleSession, verifyG2Ready, writeRuleSession } from './lib/rule-session-runtime.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, consumerWorktree, config } = resolveRoots()
@@ -28,7 +29,11 @@ function run(args, cwd = repoRoot) {
 
 function runCaptured(args, cwd = repoRoot) {
   const started = Date.now()
-  const result = spawnSync(process.execPath, args, { cwd, encoding: 'utf8', stdio: 'pipe' })
+  const result = spawnSync(process.execPath, args, {
+    cwd,
+    encoding: 'utf8',
+    stdio: 'pipe',
+  })
   return {
     status: result.status ?? 1,
     stdout: result.stdout || '',
@@ -38,7 +43,13 @@ function runCaptured(args, cwd = repoRoot) {
 }
 
 function safeLogLabel(value) {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 64) || 'check'
+  return (
+    value
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 64) || 'check'
+  )
 }
 
 function persistCapturedLog(id, label, result) {
@@ -46,22 +57,15 @@ function persistCapturedLog(id, label, result) {
   const stamp = new Date().toISOString().replace(/[:.]/g, '-')
   const logFile = join(logDir, `${stamp}-${safeLogLabel(label)}.log`)
   mkdirSync(logDir, { recursive: true })
-  writeFileSync(logFile, [
-    `status: ${result.status}`,
-    `durationMs: ${result.durationMs}`,
-    '',
-    '--- stdout ---',
-    result.stdout.trim(),
-    '',
-    '--- stderr ---',
-    result.stderr.trim(),
-    '',
-  ].join('\n'))
+  writeFileSync(logFile, [`status: ${result.status}`, `durationMs: ${result.durationMs}`, '', '--- stdout ---', result.stdout.trim(), '', '--- stderr ---', result.stderr.trim(), ''].join('\n'))
   return logFile
 }
 
 function conciseFailure(result, limit = 12) {
-  const lines = `${result.stderr}\n${result.stdout}`.split('\n').map((line) => line.trim()).filter(Boolean)
+  const lines = `${result.stderr}\n${result.stdout}`
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
   const actionable = lines.filter((line) => /\b(?:fail|block|error|warn|action|required|missing|invalid)\b/i.test(line))
   return (actionable.length ? actionable : lines).slice(0, limit)
 }
@@ -79,16 +83,29 @@ function inspectRuleRelease() {
   try {
     return { ...JSON.parse(result.stdout), exitCode: result.status ?? 1 }
   } catch (error) {
-    return { fresh: false, status: 'invalid', parseError: error.message, exitCode: result.status ?? 1 }
+    return {
+      fresh: false,
+      status: 'invalid',
+      parseError: error.message,
+      exitCode: result.status ?? 1,
+    }
   }
 }
 
 function inspectEffectiveRules() {
-  const result = spawnSync(process.execPath, [effectiveRulesScript, '--check', '--json'], { cwd: repoRoot, encoding: 'utf8' })
+  const result = spawnSync(process.execPath, [effectiveRulesScript, '--check', '--json'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+  })
   try {
     return { ...JSON.parse(result.stdout), exitCode: result.status ?? 1 }
   } catch (error) {
-    return { fresh: false, status: 'invalid', parseError: error.message, exitCode: result.status ?? 1 }
+    return {
+      fresh: false,
+      status: 'invalid',
+      parseError: error.message,
+      exitCode: result.status ?? 1,
+    }
   }
 }
 
@@ -134,7 +151,9 @@ function expandScenarioRefs(index, scenario, stack = []) {
   if (stack.includes(scenario)) throw new Error(`scenario cycle: ${[...stack, scenario].join(' -> ')}`)
   const refs = index.scenarios?.[scenario]
   if (!Array.isArray(refs) || refs.length === 0) {
-    const available = Object.keys(index.scenarios || {}).sort().join(', ')
+    const available = Object.keys(index.scenarios || {})
+      .sort()
+      .join(', ')
     throw new Error(`unknown scenario: ${scenario}; available: ${available}`)
   }
   const expanded = refs.flatMap((ref) => {
@@ -169,7 +188,11 @@ function createContextPack(id, scenario, release, effectiveRules, mode = 'compac
   const index = readJson(join(docsRoot, 'common/rules/rule-index.json'))
   const refs = expandScenarioRefs(index, scenario)
 
-  const summaryRef = { file: `${id}/agent/context-summary.md`, sections: '', abs: join(resolveProjectRoot(id), 'agent/context-summary.md') }
+  const summaryRef = {
+    file: `${id}/agent/context-summary.md`,
+    sections: '',
+    abs: join(resolveProjectRoot(id), 'agent/context-summary.md'),
+  }
   const sources = [
     summaryRef,
     ...refs.map((normalized) => {
@@ -197,6 +220,7 @@ function createContextPack(id, scenario, release, effectiveRules, mode = 'compac
   const fingerprint = createHash('sha256').update(`${effectiveRules.currentFingerprint}\n${scenario}\n${mode}\n${payload}`).digest('hex').slice(0, 12)
   const cacheDir = join(tmpdir(), 'docs-tdd-context')
   const output = join(cacheDir, `${id}-${scenario}-${mode}-${fingerprint}.md`)
+  const conflictOverrides = effectiveRules.clientMatrix?.codex?.conflictOverrides || []
   const body = [
     '<!-- GENERATED CONTEXT PACK: disposable cache; source of truth remains docs_tdd -->',
     `# ${id} / ${scenario}`,
@@ -204,6 +228,7 @@ function createContextPack(id, scenario, release, effectiveRules, mode = 'compac
     `- ruleset: \`${ruleset.version}\``,
     `- rule release: \`${release.currentFingerprint}\``,
     `- effective rules: \`${effectiveRules.currentFingerprint}\``,
+    ...conflictOverrides.map((override) => `- L2 conflict override: \`${override.loserFiles.join(', ')}\` -> **${override.winner}** (\`${override.id}\`)`),
     `- mode: \`${mode}\``,
     `- fingerprint: \`${fingerprint}\``,
     `- sources: ${sections.map(({ label }) => `\`${label}\``).join(', ')}`,
@@ -215,6 +240,7 @@ function createContextPack(id, scenario, release, effectiveRules, mode = 'compac
   const cacheHit = existsSync(output)
   if (!cacheHit) writeFileSync(output, `${body}\n`)
   return {
+    scenario,
     fingerprint,
     output,
     refs: sections.map(({ label }) => label),
@@ -228,17 +254,23 @@ function createContextPack(id, scenario, release, effectiveRules, mode = 'compac
 }
 
 function gitOutput(args, cwd) {
-  const result = spawnSync('git', args, { cwd, encoding: 'utf8', stdio: 'pipe' })
+  const result = spawnSync('git', args, {
+    cwd,
+    encoding: 'utf8',
+    stdio: 'pipe',
+  })
   return result.status === 0 ? result.stdout : ''
 }
 
 function changedFingerprint(id, worktree, effectiveFingerprint) {
   const trackedDiff = gitOutput(['diff', '--binary', config.baseRef || 'origin/online'], worktree)
   const untracked = gitOutput(['ls-files', '--others', '--exclude-standard'], worktree).trim().split('\n').filter(Boolean)
-  const untrackedPayload = untracked.map((file) => {
-    const absolute = join(worktree, file)
-    return existsSync(absolute) ? `${file}\n${readFileSync(absolute)}` : file
-  }).join('\n')
+  const untrackedPayload = untracked
+    .map((file) => {
+      const absolute = join(worktree, file)
+      return existsSync(absolute) ? `${file}\n${readFileSync(absolute)}` : file
+    })
+    .join('\n')
   const prdFile = join(resolveProjectRoot(id), 'agent/prd-source-manifest.json')
   const prdHash = existsSync(prdFile) ? createHash('sha256').update(readFileSync(prdFile)).digest('hex') : 'none'
   const projectDir = resolveProjectRoot(id)
@@ -248,10 +280,7 @@ function changedFingerprint(id, worktree, effectiveFingerprint) {
       return existsSync(absolute) ? `${file}\n${readFileSync(absolute)}` : `${file}\nmissing`
     })
     .join('\n')
-  return createHash('sha256')
-    .update(`changed-v2\n${id}\n${effectiveFingerprint}\n${prdHash}\n${projectDocs}\n${trackedDiff}\n${untrackedPayload}`)
-    .digest('hex')
-    .slice(0, 16)
+  return createHash('sha256').update(`changed-v2\n${id}\n${effectiveFingerprint}\n${prdHash}\n${projectDocs}\n${trackedDiff}\n${untrackedPayload}`).digest('hex').slice(0, 16)
 }
 
 function runChanged(id, worktree, effectiveFingerprint) {
@@ -267,10 +296,21 @@ function runChanged(id, worktree, effectiveFingerprint) {
 
   const projectManifest = readOptionalJson(join(resolveProjectRoot(id), 'agent/project-manifest.json'))
   const checks = [
-    { label: 'code-rules', args: [join(scriptDir, 'verify-code-rules.mjs'), '--project', id] },
+    {
+      label: 'code-rules',
+      args: [join(scriptDir, 'verify-code-rules.mjs'), '--project', id],
+    },
   ]
-  if (projectManifest?.pilot?.msw) checks.push({ label: 'msw-manifest', args: [join(scriptDir, 'verify-msw-manifest.mjs'), id] })
-  if (projectManifest?.pilot?.prdIntake) checks.push({ label: 'prd-intake', args: [join(scriptDir, 'prd-intake.mjs'), id, '--stage', 'G2'] })
+  if (projectManifest?.pilot?.msw)
+    checks.push({
+      label: 'msw-manifest',
+      args: [join(scriptDir, 'verify-msw-manifest.mjs'), id],
+    })
+  if (projectManifest?.pilot?.prdIntake)
+    checks.push({
+      label: 'prd-intake',
+      args: [join(scriptDir, 'prd-intake.mjs'), id, '--stage', 'G2'],
+    })
 
   let status = 0
   for (const check of checks) {
@@ -294,10 +334,14 @@ function runChanged(id, worktree, effectiveFingerprint) {
 }
 
 function recommendScenarios(worktree) {
-  const files = new Set([
-    ...gitOutput(['diff', '--name-only', config.baseRef || 'origin/online'], worktree).trim().split('\n'),
-    ...gitOutput(['ls-files', '--others', '--exclude-standard'], worktree).trim().split('\n'),
-  ].filter(Boolean))
+  const files = new Set(
+    [
+      ...gitOutput(['diff', '--name-only', config.baseRef || 'origin/online'], worktree)
+        .trim()
+        .split('\n'),
+      ...gitOutput(['ls-files', '--others', '--exclude-standard'], worktree).trim().split('\n'),
+    ].filter(Boolean),
+  )
   const recommendations = []
   const add = (scenario, reason) => {
     if (!recommendations.some((item) => item.scenario === scenario)) recommendations.push({ scenario, reason })
@@ -316,9 +360,12 @@ function resolveProjectWorktree(id) {
   const projectDir = id ? resolveProjectRoot(id) : ''
   const readmeFile = projectDir ? join(projectDir, 'README.md') : ''
   const readme = readmeFile && existsSync(readmeFile) ? readFileSync(readmeFile, 'utf8') : ''
-  const configured = readme.match(/^worktree:\s*(.*)$/m)?.[1]?.replace(/^['"]|['"]$/g, '').trim()
+  const configured = readme
+    .match(/^worktree:\s*(.*)$/m)?.[1]
+    ?.replace(/^['"]|['"]$/g, '')
+    .trim()
   const cwdWorktree = consumerWorktree && consumerWorktree !== docsRoot ? consumerWorktree : ''
-  const worktree = configured ? resolve(projectDir, configured) : (cwdWorktree || repoRoot)
+  const worktree = configured ? resolve(projectDir, configured) : cwdWorktree || repoRoot
   return {
     configured: Boolean(configured),
     exists: existsSync(worktree),
@@ -334,10 +381,23 @@ function resolveProjectWorktree(id) {
 // 若 worktree 与 base 零差异（还没代码可 gate）也跳过，避免对 pre-coding 项目催跑 gate。
 function heartbeatDecision({ located, isGitRepo, noDivergence, gate, matches }) {
   if (!located || !isGitRepo) return { level: 'skip' }
-  if (!gate) return noDivergence ? { level: 'skip' } : { level: 'warn', message: '尚无 gate-results.json（从未跑过 gate）；交付前先跑 docs-tdd gate' }
-  if (gate.ok !== true) return { level: 'warn', message: `上次 ${gate.gate} 未通过（ok=false）；修复后重跑 docs-tdd gate ${gate.gate}` }
+  if (!gate)
+    return noDivergence
+      ? { level: 'skip' }
+      : {
+          level: 'warn',
+          message: '尚无 gate-results.json（从未跑过 gate）；交付前先跑 docs-tdd gate',
+        }
+  if (gate.ok !== true)
+    return {
+      level: 'warn',
+      message: `上次 ${gate.gate} 未通过（ok=false）；修复后重跑 docs-tdd gate ${gate.gate}`,
+    }
   if (matches) return { level: 'ok', message: `${gate.gate} PASS 与当前代码一致` }
-  return { level: 'warn', message: `距上次 ${gate.gate} PASS 后 worktree 代码已变更（worktree 级，非文件级）；交付前先跑 docs-tdd changed/gate` }
+  return {
+    level: 'warn',
+    message: `距上次 ${gate.gate} PASS 后 worktree 代码已变更（worktree 级，非文件级）；交付前先跑 docs-tdd changed/gate`,
+  }
 }
 
 function gateHeartbeat(id, resolvedWorktree) {
@@ -375,25 +435,18 @@ function maybeBroadcastGate(id, gate) {
   }
 
   const gateResult = readOptionalJson(join(resolveProjectRoot(id), 'agent/gate-results.json'))
-  const baseSummary = typeof gateResult?.summary === 'string' && gateResult.summary.trim()
-    ? gateResult.summary.trim()
-    : `${gate} 机器校验通过`
+  const baseSummary = typeof gateResult?.summary === 'string' && gateResult.summary.trim() ? gateResult.summary.trim() : `${gate} 机器校验通过`
   // bug 轮询窗口提醒：进 G6/G7（自测/QA，bug 密集期）提醒开轮询，G8（交付）提醒收工。
   // 这是系统内唯一能感知「进 QA」的信号（收不到 bug 机器人推送），故顺 gate 播报带出。
-  const pollHint = (gate === 'G6' || gate === 'G7')
-    ? '；建议 lark-bot poll-on 开始接 bug'
-    : gate === 'G8'
-      ? '；bug 处理完可 lark-bot poll-off 收工'
-      : ''
+  const pollHint = gate === 'G6' || gate === 'G7' ? '；建议 lark-bot poll-on 开始接 bug' : gate === 'G8' ? '；bug 处理完可 lark-bot poll-off 收工' : ''
   const summary = `${baseSummary}${pollHint}`
-  const fpKey = createHash('sha1').update(JSON.stringify(gateResult?.fingerprint ?? gate)).digest('hex').slice(0, 12)
+  const fpKey = createHash('sha1')
+    .update(JSON.stringify(gateResult?.fingerprint ?? gate))
+    .digest('hex')
+    .slice(0, 12)
   const idempotencyKey = `${id}-${gate}-${fpKey}`
 
-  const result = spawnSync(
-    process.execPath,
-    [wrapper, gate, '已完成', summary, '--config', configPath, '--idempotency-key', idempotencyKey],
-    { cwd: repoRoot, encoding: 'utf8' },
-  )
+  const result = spawnSync(process.execPath, [wrapper, gate, '已完成', summary, '--config', configPath, '--idempotency-key', idempotencyKey], { cwd: repoRoot, encoding: 'utf8' })
   if (result.status === 0) {
     console.log(`✓ 阶段播报已发：${id} ${gate} 已完成`)
   } else {
@@ -443,11 +496,53 @@ if (process.argv.includes('--self-test')) {
   // gate 心跳判定
   assert.equal(heartbeatDecision({ located: false }).level, 'skip')
   assert.equal(heartbeatDecision({ located: true, isGitRepo: false }).level, 'skip')
-  assert.equal(heartbeatDecision({ located: true, isGitRepo: true, noDivergence: true, gate: null }).level, 'skip') // 无代码可 gate → 不催
-  assert.equal(heartbeatDecision({ located: true, isGitRepo: true, noDivergence: false, gate: null }).level, 'warn') // 有改动却从未跑 → 催
-  assert.equal(heartbeatDecision({ located: true, isGitRepo: true, noDivergence: false, gate: { ok: false, gate: 'G5' } }).level, 'warn')
-  assert.equal(heartbeatDecision({ located: true, isGitRepo: true, noDivergence: false, gate: { ok: true, gate: 'G5' }, matches: true }).level, 'ok')
-  assert.equal(heartbeatDecision({ located: true, isGitRepo: true, noDivergence: false, gate: { ok: true, gate: 'G5' }, matches: false }).level, 'warn')
+  assert.equal(
+    heartbeatDecision({
+      located: true,
+      isGitRepo: true,
+      noDivergence: true,
+      gate: null,
+    }).level,
+    'skip',
+  ) // 无代码可 gate → 不催
+  assert.equal(
+    heartbeatDecision({
+      located: true,
+      isGitRepo: true,
+      noDivergence: false,
+      gate: null,
+    }).level,
+    'warn',
+  ) // 有改动却从未跑 → 催
+  assert.equal(
+    heartbeatDecision({
+      located: true,
+      isGitRepo: true,
+      noDivergence: false,
+      gate: { ok: false, gate: 'G5' },
+    }).level,
+    'warn',
+  )
+  assert.equal(
+    heartbeatDecision({
+      located: true,
+      isGitRepo: true,
+      noDivergence: false,
+      gate: { ok: true, gate: 'G5' },
+      matches: true,
+    }).level,
+    'ok',
+  )
+  assert.equal(
+    heartbeatDecision({
+      located: true,
+      isGitRepo: true,
+      noDivergence: false,
+      gate: { ok: true, gate: 'G5' },
+      matches: false,
+    }).level,
+    'warn',
+  )
   console.log('docs-tdd self-test passed.')
   process.exit(0)
 }
@@ -458,7 +553,11 @@ if (command === 'capability') {
 }
 
 if (command === 'doctor') {
-  process.exit(run([effectiveRulesScript, '--doctor']))
+  process.exit(run([effectiveRulesScript, '--doctor', ...cliArgs.slice(2).filter((arg) => arg.startsWith('--'))]))
+}
+
+if (command === 'release') {
+  process.exit(run([join(scriptDir, 'publish-rule-chain.mjs'), ...cliArgs.slice(1)]))
 }
 
 // golden 不针对具体项目：它用保留夹具 PR-00000 回归 gate 机器自己，所以必须在项目 ID 校验之前分流。
@@ -486,7 +585,7 @@ if (command === 'guard') {
 }
 
 if (!new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(projectId || '')) {
-  console.error('usage: docs-tdd.mjs <kickoff|status|resume|next|capability|doctor|golden|guard|check|gate|context|changed|recommend> PR-01234 [G0-G8|scenario] [--compact|--full|--no-cache]')
+  console.error('usage: docs-tdd.mjs <kickoff|status|resume|next|capability|doctor|release|golden|guard|check|gate|context|changed|recommend> PR-01234 [G0-G8|scenario] [--compact|--full|--no-cache]')
   process.exit(1)
 }
 
@@ -505,13 +604,16 @@ else {
   const effectiveRules = requireFreshEffectiveRules()
   if (!effectiveRules) process.exit(1)
   if (command === 'gate') {
+    if (['G5', 'G6', 'G7', 'G8'].includes((detail || 'G3').toUpperCase()) && !requireRuleSession(projectId, worktree, release, effectiveRules)) process.exit(1)
     status = run([join(scriptDir, 'run-project-gate.mjs'), projectId, detail || 'G3', '--write', ...(noCache ? ['--no-cache'] : [])], worktree)
     if (status === 0) maybeBroadcastGate(projectId, (detail || 'G3').toUpperCase())
   } else if (command === 'changed') {
+    if (!requireRuleSession(projectId, worktree, release, effectiveRules)) process.exit(1)
     status = runChanged(projectId, worktree, effectiveRules.currentFingerprint)
   } else if (command === 'context') {
     try {
       const scenario = detail || 'g0_g2_scope'
+      if (CODING_SCENARIOS.has(scenario) && !verifyG2Ready(projectId, worktree, scriptDir)) process.exit(1)
       const pack = createContextPack(projectId, scenario, release, effectiveRules, fullContext ? 'full' : 'compact')
       console.log(`scenario: ${scenario}`)
       console.log(`context mode: ${pack.mode}`)
@@ -519,6 +621,7 @@ else {
       console.log(`context pack: ${pack.output}`)
       console.log(`context metrics: sources=${pack.refs.length}, sourceChars=${pack.sourceChars}, packChars=${pack.packChars}, cache=${pack.cacheHit ? 'hit' : 'miss'}, duration=${pack.durationMs}ms`)
       console.log(`routed rules: ${pack.refs.join(', ')}`)
+      if (CODING_SCENARIOS.has(scenario)) writeRuleSession(projectId, worktree, release, effectiveRules, pack)
       printGateHeartbeat(projectId, resolvedWorktree)
     } catch (error) {
       console.error(error.message)

@@ -29,6 +29,7 @@ docs-tdd status|next|resume <PROJECT-ID>   # 状态、唯一下一步、断点�
 docs-tdd changed <PROJECT-ID>              # 编辑后跑 code-rules / mock 校验
 docs-tdd gate    <PROJECT-ID> <Gx>         # 阶段交付门禁
 docs-tdd doctor  <PROJECT-ID>              # 适配/冲突/发布状态自检
+docs-tdd release <PROJECT-ID> --scenario X # 原子发布 L3/effective + doctor/golden/context smoke
 docs-tdd golden                            # 让门禁机器自己被回归测试
 docs-tdd guard                             # 机器层兜底：一条命令跑 golden + 发布 fresh 检查 + doctor
 ```
@@ -62,7 +63,7 @@ AI 会先读 `common/rules/rule-router.md`，再执行 `docs-tdd kickoff PR-0123
 
 **3. G1 文档生成**：AI 基于启动器生成的模板填写 PRD 全量功能清单、scope、技术方案初稿、任务与协作记录；G1 有独立机器出口，不与 G0 共用空骨架判定。
 
-**4. 按场景加载规则**：`docs-tdd context PR-01234 <SCENARIO>` 生成 compact 规则包，只读命中场景的专题，不全读 `common/`。常用场景：`g0_g2_scope` `write_api` `write_mapper` `write_query_hook` `write_ui` `write_figma` `write_msw` `g6_verify`（全表见 `rule-router.md §3`）。
+**4. 按场景加载规则**：`docs-tdd context PR-01234 <SCENARIO>` 生成 compact 规则包，只读命中场景的专题，不全读 `common/`。编码场景须先通过 G2，并签发绑定规则指纹、G2 输入与 HEAD 的 24 小时 rule session；`changed` 和 G5-G8 拒绝缺失或过期会话。常用场景：`g0_g2_scope` `write_api` `write_mapper` `write_query_hook` `write_ui` `write_figma` `write_msw` `g6_verify`（全表见 `rule-router.md §3`）。
 
 **5. G2 方案定稿**：对功能清单逐条确认「做 / 不做 / 延期」，写完 `product/02-technical-design.md`（含复用盘点、PRD 路径核验）后**才允许写业务代码**。
 

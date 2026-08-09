@@ -4,11 +4,10 @@ import assert from 'node:assert/strict'
 import { existsSync, lstatSync, mkdirSync, readFileSync, readlinkSync, renameSync, symlinkSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { dirname, join, relative, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { createCursorAdapter } from './lib/agent-rule-adapters.mjs'
 import { resolveRoots } from './lib/roots.mjs'
 
-const scriptDir = dirname(fileURLToPath(import.meta.url))
-const { consumerRoot: repoRoot } = resolveRoots()
+const { consumerRoot: repoRoot, config } = resolveRoots()
 const home = homedir()
 const sharedRoot = join(home, '.ai-rules')
 const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
@@ -18,6 +17,7 @@ const protocol = `
 ## FameEX Local Execution Protocol
 
 - In \`${repoRoot}\` or its feature worktrees, read \`${repoRoot}/apps/web/docs_tdd/common/rules/rule-router.md\` first.
+- Before business coding, load repository \`AGENTS.md\`, repository \`CLAUDE.md\`, and the matching \`.cursor/rules/*.mdc\`; unresolved conflicts block coding, while local config overrides are fingerprinted into the context pack.
 - Load only routed L3 rules with \`node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs context <PROJECT-ID> <SCENARIO>\`.
 - After edits run \`node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs changed <PROJECT-ID>\` when no automatic hook is available.
 - At a stage boundary run \`node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs gate <PROJECT-ID> <Gx>\`.
@@ -58,25 +58,7 @@ function backupAndLink(entry, target) {
 function writeCursorAdapter() {
   const file = join(home, '.cursor/rules/fameex-local-governance.mdc')
   mkdirSync(dirname(file), { recursive: true })
-  const content = `---
-description: Local FameEX rule router and execution protocol shared with Codex and Claude
-alwaysApply: true
----
-
-# FameEX Local Rule Adapter
-
-L1 source: \`${sharedRoot}/AGENT.md\` and \`${sharedRoot}/skills/*\`.
-L2 source: repository \`AGENTS.md\`, \`CLAUDE.md\`, and matching \`.cursor/rules/*.mdc\`.
-L3 source: \`${repoRoot}/apps/web/docs_tdd/common/rules/rule-router.md\`.
-
-For FameEX tasks, read \`rule-router.md\` first and use:
-
-- \`node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs context <PROJECT-ID> <SCENARIO>\`
-- \`node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs changed <PROJECT-ID>\` after edits
-- \`node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs gate <PROJECT-ID> <Gx>\` at stage exit
-
-Cursor has no trusted local PostToolUse gate in this setup, so \`changed\` is mandatory fallback. Do not copy rule bodies into this adapter.
-`
+  const content = createCursorAdapter({ sharedRoot, repoRoot, conflictOverrides: config.ruleConflictOverrides || [] })
   writeFileSync(file, content)
   console.log(`adapter: ${file}`)
 }
@@ -88,7 +70,10 @@ function mergeClaudeHook() {
   const postToolUse = Array.isArray(settings.hooks?.PostToolUse) ? settings.hooks.PostToolUse : []
   const present = postToolUse.some((group) => group.hooks?.some((hook) => hook.command === command))
   if (!present) {
-    postToolUse.push({ matcher: 'Edit|Write|MultiEdit', hooks: [{ type: 'command', command }] })
+    postToolUse.push({
+      matcher: 'Edit|Write|MultiEdit',
+      hooks: [{ type: 'command', command }],
+    })
   }
   settings.hooks = { ...(settings.hooks || {}), PostToolUse: postToolUse }
   writeFileSync(settingsFile, `${JSON.stringify(settings, null, 2)}\n`)

@@ -55,8 +55,9 @@
 | 检查规则发布状态是否 fresh | `node apps/web/docs_tdd/common/engine/agent-scripts/rule-release.mjs --check` |
 | 安装/修复三端本地规则适配器 | `node apps/web/docs_tdd/common/engine/agent-scripts/install-local-agent-rules.mjs` |
 | 发布 L1+adapter+L2+L3 组合指纹 | `node apps/web/docs_tdd/common/engine/agent-scripts/effective-rules.mjs --write` |
+| 原子发布完整规则链并回归 | `node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs release PR-01234 --scenario write_ui` |
 | 诊断三端规则加载、冲突和隔离 | `node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs doctor PR-01234` |
-| 生成按场景裁剪的上下文包 | `node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs context PR-01234 write_msw [--full]` |
+| 生成按场景裁剪的上下文包；编码场景同时签发 rule session | `node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs context PR-01234 write_msw [--full]` |
 | 按改动推荐场景（非自动裁决） | `node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs recommend PR-01234` |
 | 增量检查改动 | `node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs changed PR-01234 [--no-cache]` |
 | 单阶段 gate 只看结果 | `node apps/web/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-01234 G6` |

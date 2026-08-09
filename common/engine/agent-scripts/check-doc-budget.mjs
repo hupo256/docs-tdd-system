@@ -8,8 +8,8 @@
 //   4. rule-index、rule ID 台账、核心模板、核心脚本、自测入口和本地链接策略必须有效。
 // 退出码 0 = 通过；1 = 任一不变量失败。CI / pre-commit 可挂此脚本。
 
-import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -28,6 +28,7 @@ const REQUIRED_SCRIPTS = [
   'install-local-agent-rules.mjs',
   'prd-intake.mjs',
   'project-orchestrator.mjs',
+  'publish-rule-chain.mjs',
   'rule-release.mjs',
   'render-delivery-summary.mjs',
   'run-project-gate.mjs',
@@ -42,6 +43,7 @@ const SELF_TEST_SCRIPTS = [
   ['docs-tdd.mjs', '--self-test'],
   ['effective-rules.mjs', '--self-test'],
   ['golden-run.mjs', '--self-test'],
+  ['lib/agent-rule-adapters.mjs', '--self-test'],
   ['lib/acceptance-results.mjs', '--self-test'],
   ['lib/blockers.mjs', '--self-test'],
   ['lib/code-review.mjs', '--self-test'],
@@ -51,9 +53,11 @@ const SELF_TEST_SCRIPTS = [
   ['lib/prd-manifest.mjs', '--self-test'],
   ['lib/project-index.mjs', '--self-test'],
   ['lib/project-scaffold.mjs', '--self-test'],
+  ['lib/rule-session.mjs', '--self-test'],
   ['install-local-agent-rules.mjs', '--self-test'],
   ['prd-intake.mjs', '--self-test'],
   ['project-orchestrator.mjs', '--self-test'],
+  ['publish-rule-chain.mjs', '--self-test'],
   ['rule-release.mjs', '--self-test'],
   ['render-delivery-summary.mjs', '--self-test'],
   ['run-project-gate.mjs', '--self-test'],
@@ -113,6 +117,7 @@ const SELF_TEST_EXEMPT = new Set([
   'lib/gate-evidence.mjs', // gate 证据渲染（纯字符串），由 lib/gate-payload.mjs --self-test 经 renderEvidence 覆盖
   'lib/gate-cache.mjs', // gate 指纹/缓存/历史 IO，被 golden-run 聚合器烟测端到端覆盖
   'lib/run-log.mjs', // 子进程执行 + 日志 IO，被 golden-run 聚合器烟测端到端覆盖
+  'lib/rule-session-runtime.mjs',
   'lib/lark-command.mjs', // Lark 只读同步命令构造/校验；validateSource 由 common/lark-bot/__tests__/lark-pure.test.mjs 经 sync-lark-docs re-export 覆盖
 ])
 const ROUTER_FILE = 'rule-router.md'
@@ -141,13 +146,7 @@ const COVERAGE_EXEMPT = new Set([README_FILE, ROUTER_FILE, 'CHANGELOG-archive.md
 const SCRIPT_REF_RE = /(?:common\/agent-scripts\/|agent-scripts\/)([A-Za-z0-9_.-]+\.mjs)/g
 const TEMPLATE_REF_RE = /(?:templates\/|\.\.\/templates\/)([A-Za-z0-9_.-]+\.(?:md|ts))/g
 const FORBIDDEN_DUPLICATE_BLOCKS = {
-  'development-rules.md': [
-    '## 1. 工作顺序',
-    '## 2. 架构、状态、API',
-    '## 6. UI、Figma 与主题',
-    '## 7. i18n',
-    '## 9. Review Checklist',
-  ],
+  'development-rules.md': ['## 1. 工作顺序', '## 2. 架构、状态、API', '## 6. UI、Figma 与主题', '## 7. i18n', '## 9. Review Checklist'],
   'architecture-and-state.md': ['为何不现在全量引入', '下一个需要 mock 的新功能', '试点结论：MSW 升为新功能强制路线'],
   'new-project-kickoff.md': ['## 5. 默认产物清单', '## 6. 默认成功标准', 'apps/web/docs_tdd/<PROJECT-ID>/\n  README.md'],
   // 去重后锁位：以下签名内容各有唯一权威源，次要文件不得再复述（回潮即打回）。
@@ -284,10 +283,7 @@ for (const name of mdFiles) {
 if (residents.length === 0) {
   errors.push(`❌ 没有找到带 ${RESIDENT_MARKER} --> 标记的常驻文件（应为 ${ROUTER_FILE}）。`)
 } else if (residents.length > 1) {
-  errors.push(
-    `❌ 出现 ${residents.length} 个常驻文件：${residents.map((r) => r.name).join(', ')}。` +
-      `\n   常驻集只能一份，其余改为"按需读"并移除标记。`,
-  )
+  errors.push(`❌ 出现 ${residents.length} 个常驻文件：${residents.map((r) => r.name).join(', ')}。` + `\n   常驻集只能一份，其余改为"按需读"并移除标记。`)
 }
 
 // 校验 2：常驻文件大小
@@ -326,9 +322,13 @@ for (const r of residents) {
 // 且每个含可测逻辑的脚本都应有 self-test（"规则即测试"）；无 self-test 的须显式登记豁免。
 {
   const scriptFiles = [
-    ...readdirSync(SCRIPTS_DIR).filter((n) => n.endsWith('.mjs')).map((n) => n),
+    ...readdirSync(SCRIPTS_DIR)
+      .filter((n) => n.endsWith('.mjs'))
+      .map((n) => n),
     ...(existsSync(join(SCRIPTS_DIR, 'lib'))
-      ? readdirSync(join(SCRIPTS_DIR, 'lib')).filter((n) => n.endsWith('.mjs')).map((n) => `lib/${n}`)
+      ? readdirSync(join(SCRIPTS_DIR, 'lib'))
+          .filter((n) => n.endsWith('.mjs'))
+          .map((n) => `lib/${n}`)
       : []),
   ]
   const selfTested = new Set(SELF_TEST_SCRIPTS.map((entry) => entry[0]))
@@ -392,7 +392,7 @@ if (!existsSync(ruleIndexPath)) {
     }
     const scenarios = ruleIndex.scenarios || {}
     const scenarioNames = Object.keys(scenarios)
-    scenarioNames.forEach((name) => knownScenarioNames.add(name))
+    for (const name of scenarioNames) knownScenarioNames.add(name)
     if (!scenarioNames.length) {
       errors.push(`❌ ${RULE_INDEX_FILE}.scenarios 不能为空。`)
     }
@@ -450,10 +450,7 @@ if (!existsSync(ruleIndexPath)) {
 
 const indexOrphans = mdFiles.filter((name) => !COVERAGE_EXEMPT.has(name) && !indexedRuleRefs.has(name))
 if (indexOrphans.length) {
-  errors.push(
-    `❌ 以下规则文件未被 ${RULE_INDEX_FILE} 任一场景收录（孤儿规则）：\n   ${indexOrphans.join('\n   ')}` +
-      `\n   请把文件加入最匹配的 scenario。`,
-  )
+  errors.push(`❌ 以下规则文件未被 ${RULE_INDEX_FILE} 任一场景收录（孤儿规则）：\n   ${indexOrphans.join('\n   ')}` + `\n   请把文件加入最匹配的 scenario。`)
 } else {
   console.log(`✅ 机器路由覆盖：${mdFiles.length - COVERAGE_EXEMPT.size} 个专题文件全部被 ${RULE_INDEX_FILE} 收录。`)
 }
@@ -496,9 +493,7 @@ if (indexOrphans.length) {
     }
   }
   if (duplicateOffenders.length) {
-    errors.push(
-      `❌ 已收敛的重复规则块重新出现：\n   ${duplicateOffenders.join('\n   ')}\n   请改为引用 ${RULE_OWNERSHIP_FILE} 指向的正文源。`,
-    )
+    errors.push(`❌ 已收敛的重复规则块重新出现：\n   ${duplicateOffenders.join('\n   ')}\n   请改为引用 ${RULE_OWNERSHIP_FILE} 指向的正文源。`)
   } else {
     console.log('✅ 规则去重回归：总览、MSW 与启动协议未重新复制已收敛正文。')
   }
@@ -515,9 +510,13 @@ if (!existsSync(ledgerPath)) {
   const scriptIds = new Set()
   // 顶层脚本 + lib/ 子模块都要扫：阻塞语义等纯规则实装在 lib/blockers.mjs，rule ID 台账不能漏掉它。
   const idSourceFiles = [
-    ...readdirSync(SCRIPTS_DIR).filter((n) => n.endsWith('.mjs')).map((n) => join(SCRIPTS_DIR, n)),
+    ...readdirSync(SCRIPTS_DIR)
+      .filter((n) => n.endsWith('.mjs'))
+      .map((n) => join(SCRIPTS_DIR, n)),
     ...(existsSync(join(SCRIPTS_DIR, 'lib'))
-      ? readdirSync(join(SCRIPTS_DIR, 'lib')).filter((n) => n.endsWith('.mjs')).map((n) => join(SCRIPTS_DIR, 'lib', n))
+      ? readdirSync(join(SCRIPTS_DIR, 'lib'))
+          .filter((n) => n.endsWith('.mjs'))
+          .map((n) => join(SCRIPTS_DIR, 'lib', n))
       : []),
   ]
   for (const file of idSourceFiles) {
@@ -527,8 +526,7 @@ if (!existsSync(ledgerPath)) {
   const unregistered = [...scriptIds].filter((id) => !ledgerText.includes(id)).sort()
   if (unregistered.length) {
     errors.push(
-      `❌ 以下 rule ID 在脚本里实装但未登记进 ${LEDGER_FILE}（脱节，Review/通知无法引用）：\n   ${unregistered.join('\n   ')}` +
-        `\n   请在 ${LEDGER_FILE} §3/§4/§5 补台账行。`,
+      `❌ 以下 rule ID 在脚本里实装但未登记进 ${LEDGER_FILE}（脱节，Review/通知无法引用）：\n   ${unregistered.join('\n   ')}` + `\n   请在 ${LEDGER_FILE} §3/§4/§5 补台账行。`,
     )
   } else {
     console.log(`✅ rule ID 台账：${scriptIds.size} 个脚本 ID 全部登记于 ${LEDGER_FILE}。`)
@@ -576,7 +574,10 @@ if (missingScripts.length) {
 } else {
   console.log(`✅ 核心脚本存在性：${REQUIRED_SCRIPTS.length} 个核心脚本均存在。`)
   for (const [script, ...scriptArgs] of SELF_TEST_SCRIPTS) {
-    const selfTest = spawnSync(process.execPath, [join(SCRIPTS_DIR, script), ...scriptArgs], { cwd: DOCS_TDD_DIR, encoding: 'utf8' })
+    const selfTest = spawnSync(process.execPath, [join(SCRIPTS_DIR, script), ...scriptArgs], {
+      cwd: DOCS_TDD_DIR,
+      encoding: 'utf8',
+    })
     if (selfTest.status !== 0) {
       errors.push(selfTest.stderr.trim() || selfTest.stdout.trim() || `❌ ${script} ${scriptArgs.join(' ')} 自测失败。`)
     }
@@ -584,7 +585,10 @@ if (missingScripts.length) {
   if (!errors.some((error) => error.includes('self-test') || error.includes('自测失败'))) {
     console.log(`✅ 核心脚本自测：${SELF_TEST_SCRIPTS.length} 个自测入口均通过。`)
   }
-  const linkCheck = spawnSync(process.execPath, [LINK_CHECK_SCRIPT], { cwd: DOCS_TDD_DIR, encoding: 'utf8' })
+  const linkCheck = spawnSync(process.execPath, [LINK_CHECK_SCRIPT], {
+    cwd: DOCS_TDD_DIR,
+    encoding: 'utf8',
+  })
   if (linkCheck.status !== 0) {
     errors.push(linkCheck.stderr.trim() || linkCheck.stdout.trim() || '❌ Markdown 本地链接检查失败。')
   } else {
@@ -597,7 +601,9 @@ if (missingScripts.length) {
 const docFilesForScriptRefs = [
   ...mdFiles.map((name) => join(RULES_DIR, name)),
   join(RULES_DIR, RULE_INDEX_FILE),
-  ...readdirSync(TEMPLATES_DIR).filter((name) => ['.md', '.ts'].some((ext) => name.endsWith(ext))).map((name) => join(TEMPLATES_DIR, name)),
+  ...readdirSync(TEMPLATES_DIR)
+    .filter((name) => ['.md', '.ts'].some((ext) => name.endsWith(ext)))
+    .map((name) => join(TEMPLATES_DIR, name)),
 ]
 
 // 文档里的字面量场景名必须真实存在于 rule-index。占位符 <SCENARIO> 不检查；
@@ -641,8 +647,12 @@ const docFilesForScriptRefs = [
     errors.push('❌ 缺少 docs-tdd.config.default.json。')
   } else {
     const scriptFiles = [
-      ...readdirSync(SCRIPTS_DIR).filter((name) => name.endsWith('.mjs')).map((name) => join(SCRIPTS_DIR, name)),
-      ...readdirSync(join(SCRIPTS_DIR, 'lib')).filter((name) => name.endsWith('.mjs')).map((name) => join(SCRIPTS_DIR, 'lib', name)),
+      ...readdirSync(SCRIPTS_DIR)
+        .filter((name) => name.endsWith('.mjs'))
+        .map((name) => join(SCRIPTS_DIR, name)),
+      ...readdirSync(join(SCRIPTS_DIR, 'lib'))
+        .filter((name) => name.endsWith('.mjs'))
+        .map((name) => join(SCRIPTS_DIR, 'lib', name)),
     ]
     const sources = scriptFiles.map((file) => readFileSync(file, 'utf8')).join('\n')
     const unused = coreConfigKeys.filter((key) => !sources.includes(`config.${key}`))
@@ -701,10 +711,7 @@ if (missingTemplateRefs.length) {
   const negativeLink = '各需求项目文档目录；完整清单见 [PR-01685](./PR-01685/README.md)'
   const negativeInline = '- 项目目录：`apps/web/docs_tdd/prds/PR-01685/`；worktree 见 PROJECTS.md'
   const selfOk =
-    PROJECT_TABLE_ROW_RE.test(positive) &&
-    PROJECT_TABLE_ROW_RE.test(positiveBacktick) &&
-    !PROJECT_TABLE_ROW_RE.test(negativeLink) &&
-    !PROJECT_TABLE_ROW_RE.test(negativeInline)
+    PROJECT_TABLE_ROW_RE.test(positive) && PROJECT_TABLE_ROW_RE.test(positiveBacktick) && !PROJECT_TABLE_ROW_RE.test(negativeLink) && !PROJECT_TABLE_ROW_RE.test(negativeInline)
   if (!selfOk) {
     errors.push('❌ 校验 10 自测失败：PROJECT_TABLE_ROW_RE 判据漂移（正/反样例不符预期），先修脚本再继续。')
   } else {
@@ -712,14 +719,14 @@ if (missingTemplateRefs.length) {
     for (const navFile of NAV_FILES_NO_PROJECT_TABLE) {
       const full = join(DOCS_TDD_DIR, navFile)
       if (!existsSync(full)) continue
-      readFileSync(full, 'utf8').split('\n').forEach((line, idx) => {
-        if (PROJECT_TABLE_ROW_RE.test(line)) offenders.push(`${navFile}:${idx + 1}: ${line.trim()}`)
-      })
+      readFileSync(full, 'utf8')
+        .split('\n')
+        .forEach((line, idx) => {
+          if (PROJECT_TABLE_ROW_RE.test(line)) offenders.push(`${navFile}:${idx + 1}: ${line.trim()}`)
+        })
     }
     if (offenders.length) {
-      errors.push(
-        `❌ 手动导航文件出现手抄项目清单行（应删除，改指向自动生成的 PROJECTS.md）：\n   ${offenders.join('\n   ')}`,
-      )
+      errors.push(`❌ 手动导航文件出现手抄项目清单行（应删除，改指向自动生成的 PROJECTS.md）：\n   ${offenders.join('\n   ')}`)
     } else {
       console.log('✅ 导航单一源：README/AGENTS/CONTEXT 未手抄项目清单，项目索引唯一真值源为 PROJECTS.md。')
     }
@@ -757,7 +764,8 @@ if (missingTemplateRefs.length) {
     }
     return null
   }
-  const positive = '1. `apps/web/docs_tdd/AGENTS.md`\n2. `apps/web/docs_tdd/CONTEXT.md`\n3. `apps/web/docs_tdd/common/README.md`\n4. `apps/web/docs_tdd/common/rules/rule-inheritance.md`'
+  const positive =
+    '1. `apps/web/docs_tdd/AGENTS.md`\n2. `apps/web/docs_tdd/CONTEXT.md`\n3. `apps/web/docs_tdd/common/README.md`\n4. `apps/web/docs_tdd/common/rules/rule-inheritance.md`'
   const negative = '1. 读 [common/rules/rule-router.md](./common/rules/rule-router.md)（唯一常驻规则文件），按场景命中才展开专题正文，禁止全读。'
   if (!findReadingList(positive) || findReadingList(negative)) {
     errors.push('❌ 校验 10.4 自测失败：多步阅读清单判据漂移（正/反样例不符预期），先修脚本再继续。')
@@ -770,9 +778,7 @@ if (missingTemplateRefs.length) {
       if (hit) offenders.push(`${navFile}:${hit[0]}-${hit[hit.length - 1]}`)
     }
     if (offenders.length) {
-      errors.push(
-        `❌ 手动导航文件出现多步「按顺序读这些规则文件」清单（与 rule-router.md §1 渐进披露冲突，应改为指向 router）：\n   ${offenders.join('\n   ')}`,
-      )
+      errors.push(`❌ 手动导航文件出现多步「按顺序读这些规则文件」清单（与 rule-router.md §1 渐进披露冲突，应改为指向 router）：\n   ${offenders.join('\n   ')}`)
     } else {
       console.log('✅ 冷启动单一协议：README/AGENTS/CONTEXT 未再硬编码全读清单，启动顺序唯一真值源为 rule-router.md §1。')
     }
@@ -785,11 +791,10 @@ if (missingTemplateRefs.length) {
   const sectionStart = readmeText.indexOf('## 专题全索引')
   const sectionEnd = readmeText.indexOf('## ', sectionStart + 1)
   const section = sectionStart === -1 ? '' : readmeText.slice(sectionStart, sectionEnd === -1 ? undefined : sectionEnd)
-  const numRe = /^(\d+)\.\s+\[/mg
+  const numRe = /^(\d+)\.\s+\[/gm
   const seen = new Map()
   const duplicates = []
-  let match
-  while ((match = numRe.exec(section)) !== null) {
+  for (let match = numRe.exec(section); match !== null; match = numRe.exec(section)) {
     const num = match[1]
     if (seen.has(num)) duplicates.push(num)
     seen.set(num, (seen.get(num) || 0) + 1)
@@ -853,13 +858,15 @@ if (missingTemplateRefs.length) {
   }
   const projectsFile = join(DOCS_TDD_DIR, 'PROJECTS.md')
   if (existsSync(projectsFile)) {
-    const regen = spawnSync(process.execPath, [join(SCRIPTS_DIR, 'update-project-index.mjs')], { cwd: DOCS_TDD_DIR, encoding: 'utf8' })
+    const regen = spawnSync(process.execPath, [join(SCRIPTS_DIR, 'update-project-index.mjs')], {
+      cwd: DOCS_TDD_DIR,
+      encoding: 'utf8',
+    })
     if (regen.status === 0) {
       const normalize = (text) => text.replace(/at \d{4}-\d{2}-\d{2}T[\d:.]+Z/, 'at <TS>')
       if (normalize(regen.stdout) !== normalize(readFileSync(projectsFile, 'utf8'))) {
         syncErrors.push(
-          `❌ 'DOC-SYNC-003' PROJECTS.md 与即时重生成结果不一致（内容漂移）。` +
-            `\n   修复：node apps/web/docs_tdd/common/engine/agent-scripts/update-project-index.mjs --write`,
+          `❌ 'DOC-SYNC-003' PROJECTS.md 与即时重生成结果不一致（内容漂移）。` + `\n   修复：node apps/web/docs_tdd/common/engine/agent-scripts/update-project-index.mjs --write`,
         )
       }
     }
@@ -905,9 +912,7 @@ if (missingTemplateRefs.length) {
     const runs = Array.isArray(history.runs) ? history.runs : []
     let previousIndex = -1
     for (const requiredGate of requiredSequence.slice(0, stageIndex + 1)) {
-      const runIndex = runs.findIndex((run, index) => (
-        index > previousIndex && run?.gate === requiredGate && run?.ok === true && run?.summary?.fail === 0
-      ))
+      const runIndex = runs.findIndex((run, index) => index > previousIndex && run?.gate === requiredGate && run?.ok === true && run?.summary?.fail === 0)
       if (runIndex === -1) {
         chainErrors.push(`❌ 'DOC-SYNC-004' ${name}：stage=${frontmatter.stage}，但缺少按顺序写入的 ${requiredGate} PASS 历史。`)
         break
@@ -945,7 +950,7 @@ if (missingTemplateRefs.length) {
     deliveryStatus: { file: 'delivery-status.schema.json', data: null },
     runState: { file: 'run-state.schema.json', data: null },
   }
-  let schemaLoadErrors = []
+  const schemaLoadErrors = []
   for (const [key, { file }] of Object.entries(schemas)) {
     const path = join(SCHEMA_DIR, file)
     if (!existsSync(path)) {

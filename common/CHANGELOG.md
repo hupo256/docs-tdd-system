@@ -7,6 +7,13 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-08-09（三端同源规则链与编码 rule session 加固）
+
+- Codex/Claude 的 L1 继续使用同一软链源；Cursor adapter 改由共享生成器产出并逐字校验，doctor 同时验证真实 router/CLI 目标，旧路径不再能靠关键词假通过。
+- `effective-rules` v2 发布三端 source matrix，直接依赖当前 L3 fresh，并把未解决的 SWR/React Query 冲突升级为 error；个人可在 gitignored 的 `docs-tdd.config.json` 显式声明 winner/loser，覆盖进入 adapter、context 与 effective fingerprint，不修改 FameEX tracked 规则。
+- 新增原子 `docs-tdd release`：L3、effective、doctor、golden、context smoke 任一步失败即恢复两份旧 manifest，消除半发布状态。
+- 编码场景 context 在 G2 通过后签发 24 小时 `agent/rule-session.json`；`changed` 与 G5-G8 以 `VERIFY-RULE-002` 校验规则/G2/HEAD 漂移，未真实加载当前规则不能交付。
+
 ## 2026-08-08（「AI 自动修 bug」Lark 服务抽成 `common/lark-bot/` 专属单例子树）
 
 - **背景**：这套 bot 是**机器级全局单例**（一个 gateway + 一个 worker，launchd 常驻），却「寄居」两处：入口/lib/schema/测试埋在 `common/engine/agent-scripts/`（与按项目跑的 docs-tdd 工具混在一起，看不出是常驻服务），启动 shim + 单例配置 `lark-bot.local.json` 挂在 `PR-01947/agent/scripts/`（全机唯一服务塞进某具体项目目录）。
