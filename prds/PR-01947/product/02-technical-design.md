@@ -27,6 +27,14 @@
 | services / API | copyTrading/follow/{before-follow,save-follow,setting-save}.ts | 扩 schema | 轻量封装 | 见 §3 |
 | stores | 三表单本地 useState + RQ，无 Zustand | 沿用 | 直接复用 | 服务端态走 RQ，派生态不进 store |
 | utils | `getSaveFollowForbiddenMessage`（save-follow.ts）失败原因展示范式 | 复用 | 直接复用 | — |
+| 组件-跟单方式 Tab 提示 | `apps/web/src/components/{Tabs,Tooltip}.tsx`；`SettingForm/index.tsx` 的跟单方式配置 | 复用现有 Tab 与默认 hover Tooltip | 直接复用 | — |
+
+### 2.1 2026-08-09 Lark 增量：三个跟单方式 Tab Tooltip
+
+- 改动谓词：所有且仅 `SettingForm` 中的跟单方式 Tab（`FollowType.smart` / `fixed` / `proportional`）增加 Tooltip；其他 Tab、表单内容、状态和埋点不变。
+- `Record<FollowType, ...>` 锁定三个成员的 label/content 全集，Tooltip 与 title 均为必填，漏项由 TypeScript 阻断。
+- title 直接复用对应 label 作为 `Tooltip.content`，保持 Tooltip 默认 hover 触发，不新增组件、状态、API 或翻译 key。
+- 验证：聚焦 Vitest 覆盖三个标签与提示逐字相等、点击切换和 `onTabChange`；桌面与 390px 检查 hover、选中态和布局。
 
 ## 3. 数据 / 契约改动（详见 03-api-contract.md）
 

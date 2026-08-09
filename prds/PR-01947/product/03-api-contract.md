@@ -197,3 +197,17 @@ export enum CopyPositionMode {
 **导出加列 = 后端职责**：`buildExportParams`/`buildFollowerExportParams` 仅传查询条件，`outExcel` 后端生成 CSV → 前端不改。G5 核对后端 `leaderExport`/`followerExport` CSV 已加对应列即可，无前端销账项。
 
 **F21 布尔转三态待 Q4**：后台原「跟单后复制全部仓位」若后端仍回布尔 isCopyPos，需定 `1→All / 0→None?` 映射；现前端按三态 `copyPositionMode` 假定，与 web 端统一。
+
+## 10. 文案契约
+
+### 10.1 2026-08-09 Lark 增量：跟单方式 Tab Tooltip
+
+> 来源：Lark 群任务 `om_x100b684561b020a0e2e687a8ef26b0c`；要求 Tooltip 内容就是对应 label。现有 label 逐字复用，不新增文案或动态变量。
+
+| 文案 ID | 页面 / 组件 | 来源 | owner | zh-CN key | 默认中文 | 动态变量 | 展示条件 | 状态 |
+|----------|-------------|------|-------|-----------|----------|----------|----------|------|
+| copy-setting-tab-smart | `SettingForm` 智能比例 Tab 与 Tooltip | 现有 label + Lark 增量任务 | 产品 | `CopySetting.smartRate` | 智能比例 | 无 | Tab 常驻；hover 展示同文 Tooltip | 已确认 |
+| copy-setting-tab-fixed | `SettingForm` 固定额度 Tab 与 Tooltip | 现有 label + Lark 增量任务 | 产品 | `CopySetting.fixedAmount` | 固定额度 | 无 | Tab 常驻；hover 展示同文 Tooltip | 已确认 |
+| copy-setting-tab-proportional | `SettingForm` 倍率 Tab 与 Tooltip | 现有 label + Lark 增量任务 | 产品 | `CopySetting.multiplier` | 倍率 | 无 | Tab 常驻；hover 展示同文 Tooltip | 已确认 |
+
+变更记录：2026-08-09 仅增加三个现有 label 的 hover 展示条件；key、默认中文和变量均未变。

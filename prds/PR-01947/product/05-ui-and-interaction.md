@@ -3,6 +3,13 @@
 > **范围**：仅 `SmartCopyForm` + `SmartAdvancedSettings` + `FollowParams/`（固定/倍率 Tab 见各自 Frame，**本期不还原**）。  
 > **Figma 基准**：`15089:25554` · 规格见 `07-figma-spec.md`
 
+## 2026-08-09 Lark 增量：跟单方式 Tab Tooltip
+
+- 范围：智能比例、固定额度、倍率三个跟单方式 Tab，且仅这三个 Tab。
+- 交互：桌面端 hover 任一 Tab label 时展示默认 Tooltip；Tooltip trigger 不阻断点击，切换与选中态沿用现状。
+- 文案：Tooltip 内容逐字等于对应可见 label，即「智能比例」「固定额度」「倍率」。
+- 响应式：390px 下保持现有三 Tab 布局与点击切换；无 hover 的触屏设备不新增替代交互。
+
 ## 页面 / 路由
 
 | 项 | 值 |
