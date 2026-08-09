@@ -108,7 +108,7 @@ Codex / Cursor Worker 领取任务后：
 | `triaging` | Worker 正在读取 docs_tdd、分支状态和影响范围 | 判断是否可自动执行 |
 | `waiting_confirmation` | 范围、PRD、API、QA、登录账号、权限、环境或其他材料存在需人工确认 / 补充项 | 自动发送待确认 / 补信息通知，尽量 @ 具体责任人，回群等确认 |
 | `running` | 已开始改文档 / 代码 / 自测 | 持续记录进展 |
-| `verifying` | 已完成修改，正在跑 Biome、测试、Browser / Playwright | 生成验证摘要 |
+| `verifying` | 已完成修改，正在跑 Biome、测试、type-check | 生成验证摘要 |
 | `done` | 完成并回群汇报 | 写通知记录 |
 | `blocked` | 无法继续，需要外部资料或权限 | 回群说明阻塞 |
 | `failed` | 执行异常或命令失败 | 回群说明失败和下一步 |
@@ -121,7 +121,7 @@ Gateway / Worker 至少提取：
 - 项目范围：优先从消息中的项目名、PR 号、路由、文档路径推断；推断不到则回群询问。
 - 目标文件或页面：如 `/tradfi`、`apps/web/src/apps/TradFi`、`docs_tdd/common`。
 - 附件内容：post 富文本里的图片必须进入 task，例如 `imageKey`、`width`、`height`；能配置 Lark 应用凭证时必须下载成 `localPath`，让 Codex / Worker 可以直接看图。
-- 是否需要确认：涉及 scope 裁剪、真实环境、敏感信息、提交发布动作时必须确认。
+- 是否需要确认：群任务和 Bug 表反馈只确认修改范围；安全动作仍按原边界处理，不混成 G2。
 - 责任人：优先从 @ 对象、消息上下文、项目文档负责人字段、QA / API / 设计归属推断；无法推断时标记为项目负责人 / 群内负责人。
 - 回群线程：使用原消息 thread / message id 作为汇报目标，避免刷屏。
 
@@ -131,12 +131,14 @@ Gateway / Worker 至少提取：
 
 - 文档补充、格式修正、状态同步。
 - 小范围 bug 修复、UI 偏差修复、测试补充。
-- 运行本地验证命令、Browser / Playwright 自测。
+- 运行风险分级要求的静态检查和最小测试。
 - 输出 QA / PRD / Figma 差异清单。
+
+**测试反馈**：白名单群任务和 Bug 表任务即依据。只确认范围；能由任务、附件和代码定位便实施。G2、历史 gate 不阻断，风险级只决定验证；仅范围不清、越界或扩大公共能力时询问。
 
 以下只生成 task，不自动执行，必须先回群确认：
 
-- 需求 scope 不清或与 `00-feature-inventory.md` 冲突。
+- 常规任务 scope 不清；群任务 / Bug 表反馈仅在范围不唯一或越界时确认，不受历史清单状态阻断。
 - 缺 PRD、Figma、API 样例、QA 用例、登录账号、账号权限、测试环境、后台配置或验收数据。
 - 需要新增全局设计 token、公共架构调整或跨项目重构。
 - 需要读取生产数据、密钥、账号、Cookie 或内网敏感地址。
@@ -165,6 +167,7 @@ Worker 完成后必须回群，并写入项目通知记录。回群内容固定�
 - 任务 ID、触达文件、验证命令、失败命令输出写入项目文档或任务记录，不放进普通完成消息。
 - 如果失败，群消息只说明失败类型和下一步；详细错误写入任务记录。
 - 如果失败，必须说明是工具失败、环境失败、权限失败还是需求不清。
+- 未明确要求时跳过 Browser / Playwright，不启动 dev server，也不把缺少视觉验收列为 warning；必需检查通过即完成回群。
 - **AI 退出但未显式回写 done/failed 时，一律判 `failed`（待人工复核），不分任务类型都不得兜底谎报「已完成」**——无回写 = 无验证 = 不可信（AI 可能中途放弃/崩溃/未按要求回调 Gateway）。
 - 图片 / 视觉任务不能因为文字简短就快速失败；项目配置已经提供项目编号和标题，Worker 必须结合当前项目文档、代码、PRD / Figma 资料和图片附件自动定位。只有 Lark 图片下载凭证缺失、图片下载失败、代码不可访问等技术原因，才能回写 failed，并明确说明具体技术卡点。
 
@@ -172,7 +175,7 @@ Worker 完成后必须回群，并写入项目通知记录。回群内容固定�
 
 以下任务必须先回群等待确认，不自动执行：
 
-- QA 用例与 PRD 不一致，需要决定以谁为准。
+- 无新指令时 QA / PRD 冲突需确认；已有明确修改指令时以最新群反馈为准。
 - API 文档与当前 Mock / PRD 冲突。
 - 需要 commit、push、开 PR 或改公共配置。
 - 需要新增或修改全局设计 token / Tailwind preset。
@@ -189,7 +192,7 @@ Worker 完成后必须回群，并写入项目通知记录。回群内容固定�
 - 修改 `apps/web/docs_tdd/**` 文档。
 - 修改当前项目相关前端代码。
 - 对触达 JS / TS / JSON 文件运行 Biome。
-- 启动本地 dev server 并用 Browser / Playwright 自测。
+- 任务明确要求视觉验收时仅复用已运行页面；沙箱内不启动 dev server。
 - 回群回复阶段结果、缺信息项和验证摘要。
 
 ## 9. 回复策略
@@ -243,7 +246,7 @@ Worker 完成后必须回群，并写入项目通知记录。回群内容固定�
 
 该 bot 是**机器级全局单例**（一个 gateway + 一个 worker，launchd 常驻），代码与运行时集中在 `common/lark-bot/`：启动薄包装 `common/lark-bot/runtime/lark-worker.mjs` 只调用 `common/lark-bot/lark-worker.mjs` 并传入项目编号、项目名称和需要读取的项目文档。Gateway 轮询、任务领取、Codex prompt、状态回写、空任务失败处理和兜底完成消息都由公共 Worker 维护；不得在项目目录复制完整 Worker 实现。单例配置（webhook/appToken/bug 表等，gitignore）为 `common/lark-bot/runtime/lark-bot.local.json`。
 
-AI 执行器只允许 `claude` / `codex`，优先级为：task > `LARK_AI_EXECUTOR` > `lark-bot.local.json.aiExecutor` > wrapper > `claude`。群消息开头 `[codex]` / `[claude]` 可单次覆盖，外部投递可传 `aiExecutor`；未知值拒绝，入队即解析，排队/结果卡均显示实际执行器。可用 `codexModel` / `codexReasoningEffort` 固定本 Worker 的 Codex 模型/推理强度，不影响其它会话。
+AI 执行器只允许 `claude` / `codex`，优先级为：task > `LARK_AI_EXECUTOR` > `lark-bot.local.json.aiExecutor` > wrapper > `claude`。群消息开头 `[codex]` / `[claude]` 可单次覆盖，标签后可直接接正文；外部投递可传 `aiExecutor`。未知值拒绝，入队即解析，排队/结果卡均显示实际执行器。可用 `codexModel` / `codexReasoningEffort` 固定本 Worker 的 Codex 模型/推理强度，不影响其它会话。
 
 Codex 两阶段均为 `ephemeral + approval never + 工具网络关闭`：先把按任务抽取的现有 L1/L3 规则交给 `read-only` 分析，前后校验 git 状态；`blocked` 直接回群，只有 `ready` 才把规则原文和分析结论交给 `workspace-write` 实现。图片走 `--image`，结构化结果由 Worker 回写；Claude 保持 callback，但同样接收精准规则上下文。
 
@@ -271,7 +274,7 @@ Codex 两阶段均为 `ephemeral + approval never + 工具网络关闭`：先把
   - **本地 API 鉴权（可选）**：配置 `LARK_GATEWAY_SECRET` 后，所有写操作 POST 必须带 `x-lark-gateway-secret`（worker/poller 从同名环境变量读取）；`readBody` 有 1MB 上限。未配置则仅靠 127.0.0.1 绑定兜底。
   - **附件文件名 sanitize、状态白名单校验**：`imageKey` 拼本地路径前清路径分隔符；`/status` 只接受合法生命周期状态。
   - **命令类型解析 + 只读分流**（`parseCommandType`）：Gateway 摄入时按任务首行前缀（`状态/status`、`文档/docs`、`修复/fix`、`自测/test`、`api`、`qa`）落 `task.commandType`。worker 对**只读命令**（`status`）走轻量分流：本地无 worktree 时不新建临时 worktree（省下 `git worktree add + origin/online` 拉取），直接在主仓只读回答、跳过 WIP 提交与代码提交闸；Codex 用 `read-only` 沙箱。
-  - **失败分级 failureKind + nextStep**（`lark-ai-result.schema.json` / worker `classifyWorkerFailure`）：AI 结构化 `failed` 可带 `failureKind`（`tool/env/permission/requirement`）与 `nextStep`；worker 侧对 preflight / 超时 / exit code 分别归因（超时→tool、登录/权限→permission、ENOENT/worktree/git→env），回执列「失败类型 + 下一步」，替代恒定的「Worker 执行异常」。
+  - **完成警告与失败分流**（`lark-ai-result.schema.json` / `lark-task-runner.mjs`）：AI 内部结果支持 `done_with_warnings` + `warnings[]`；自动视觉验收默认关闭，只有任务明确要求但现有页面不可用等非阻塞场景才提醒。Worker 仍执行规范闸和 diff 可信度评估，通过后归一为 Gateway `done`。真实 `failed` 才用 `failureKind` 与 `nextStep`。
   - **续任务闭环 + owner @ 落地**：见 §6.2——补料复用原任务续跑（`resumeWithSupplement`）、`owner` 命中 `config.ownerMap` 则 @ 责任人（`resolveOwnerMention`）。
 - **规则上下文（多标签 + 缺章告警）**（`lib/lark-rule-context.mjs`）：`classifyLarkTask` 由「单一胜出」改**多标签叠加**（如 ui+api 同时命中就都产出 scenario，`refsFor` 按标签并集加载规则）；**有图片附件或 `fix` 命令强制并入 UI+STYLE 信号**（视觉/修复类常只写「字段 / 背景 / 不对」易被误判成纯 API 任务丢样式 token 规则）；`extractMarkdownSection` 抽到空段（源文档改了标题 → 规则被静默丢弃）时 `console.warn` + 记 `warnings`/audit，不静默 continue。
 

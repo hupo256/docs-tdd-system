@@ -7,6 +7,15 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-08-09（Lark 测试反馈不再被 G2 / 非必要环境检查误阻断）
+
+- 真实事故：PR-01947 样式已改完，`git diff --check` 与 Biome 通过；随后本地端口权限导致 Playwright 页面验证无法启动，Codex 按旧契约返回 `failed/env`，群内收到错误的红色失败卡。
+- 结果契约新增内部态 `done_with_warnings` 与 `warnings[]`：实现和风险分级必需检查通过、仅额外视觉验证或无关历史门禁受限时用该状态；Worker 继续跑规范闸与 diff 可信度评估，通过后映射为 Gateway `done`，正常提交并发绿色完成卡，同时单列验证提醒。
+- Prompt 明确 `failed` 只用于实现未完成或本次风险等级必需检查无法通过；新增与事故同形的回归测试，防止 Playwright 环境问题再次覆盖代码完成事实。
+- 为缩短回群耗时，Lark Bot 自动视觉验收现默认关闭：不在 Codex 沙箱启动 dev server / Playwright，未明确要求的 hover / 像素验收交产品与 QA 在测试环境完成，也不作为 warning；明确要求时仅复用已运行页面。
+- 修复 `[codex]正文` 无空格时误回落 Claude：执行器标签现在可直接接正文；事故任务已停止 Claude、清理其未提交半成品并改回 Codex 排队。
+- 第二起事故：普通样式反馈已定位，但实现 Prompt 又重跑同步与 `docs-tdd context`，被 Keychain 和历史 G2 挡在改码前。初版只豁免 L1 style 仍过窄；现统一群任务与 Bug 表测试反馈：任务 / 附件就是当前依据，第一阶段只确认范围；明确时 L1-L3 均实施，不重复同步/context/gate。分析层把纯 G2 / 流程 blocker 自动转 ready，仅保留范围歧义、越界或真实访问失败。
+
 ## 2026-08-09（三端同源规则链与编码 rule session 加固）
 
 - Codex/Claude 的 L1 继续使用同一软链源；Cursor adapter 改由共享生成器产出并逐字校验，doctor 同时验证真实 router/CLI 目标，旧路径不再能靠关键词假通过。
