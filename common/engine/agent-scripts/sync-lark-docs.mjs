@@ -3,18 +3,22 @@
 import { spawn } from 'node:child_process'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { resolveDocsPath, resolveRoots } from './lib/roots.mjs'
+import {
+  assertInside,
+  docsRoot,
+  normalizeTargetPath,
+  resolveLocalMarkdownSource,
+  shellQuote,
+  validateSource,
+} from './lib/lark-command.mjs'
 
-const scriptDir = path.dirname(fileURLToPath(import.meta.url))
-const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, config: bindingConfig } = resolveRoots()
-const larkCliBin = process.env.LARK_CLI_BIN || 'lark-cli'
+// 安全边界 validateSource 沿用从本文件导入（common/lark-bot/__tests__/lark-pure.test.mjs 依赖此路径）。
+export { validateSource } from './lib/lark-command.mjs'
+
+const { consumerRoot: repoRoot, config: bindingConfig } = resolveRoots()
 // lark-cli 子进程超时兜底（默认 120s；文档同步可能较慢，给宽一点）
 const larkCliTimeoutMs = Number(process.env.LARK_CLI_TIMEOUT_MS || 120000)
-const allowedServices = new Set(['doc', 'docs', 'wiki', 'drive', 'markdown'])
-const allowedOperations = new Set(['read', 'search'])
-const forbiddenTokenPattern = /(create|update|patch|delete|remove|write|append|upload|send|reply|complete|move|copy|share|permission)/i
-const remoteUrlPattern = /^https?:\/\//i
 
 function printHelp() {
   console.log(`usage: sync-lark-docs.mjs [--config <path>] [--dry-run] [--help]
@@ -62,124 +66,6 @@ const parseArgs = (argv) => {
 }
 
 const readJson = async (filePath) => JSON.parse(await fs.readFile(filePath, 'utf8'))
-
-const isLocalMarkdownSource = (source) => {
-  const sourcePath = source.path || source.url
-  return source.type === 'markdown' && sourcePath && !remoteUrlPattern.test(sourcePath)
-}
-
-const resolveLocalMarkdownSource = (source) => {
-  return resolveDocsPath(source.path || source.url, {
-    consumerRoot: repoRoot,
-    docsMountPath: bindingConfig.docsMountPath,
-    mustExist: true,
-  })
-}
-
-const assertInside = (parent, child, label) => {
-  const relative = path.relative(parent, child)
-
-  if (relative.startsWith('..') || path.isAbsolute(relative)) {
-    throw new Error(`${label} must stay inside ${parent}: ${child}`)
-  }
-}
-
-const normalizeTargetPath = ({ outputDir, target }) => {
-  if (!target || path.isAbsolute(target) || target.includes('..')) {
-    throw new Error(`source target must be a safe relative path: ${target || '<empty>'}`)
-  }
-
-  const resolvedOutputDir = resolveDocsPath(outputDir, {
-    consumerRoot: repoRoot,
-    docsMountPath: bindingConfig.docsMountPath,
-  })
-
-  const targetPath = path.resolve(resolvedOutputDir, target)
-  assertInside(resolvedOutputDir, targetPath, 'target')
-
-  return { resolvedOutputDir, targetPath }
-}
-
-const shellQuote = (value) => {
-  if (/^[A-Za-z0-9_./:@%+=,-]+$/.test(value)) {
-    return value
-  }
-
-  return `'${String(value).replace(/'/g, `'\\''`)}'`
-}
-
-const buildDefaultCommand = (source) => {
-  const service = ['doc', 'docs', 'wiki'].includes(source.type) ? 'docs' : source.type
-  const operation = source.operation || 'read'
-
-  if (service === 'docs' && operation === 'read') {
-    return [larkCliBin, 'docs', '+fetch', '--api-version', 'v2', '--doc', source.url, '--doc-format', 'markdown']
-  }
-
-  const urlFlag = operation === 'search' ? '--query' : '--url'
-
-  return [larkCliBin, service, `+${operation}`, urlFlag, source.url, '--format', 'markdown']
-}
-
-const getCommand = (source) => {
-  if (Array.isArray(source.command) && source.command.length) {
-    return source.command.map(String)
-  }
-
-  return buildDefaultCommand(source)
-}
-
-export const validateSource = (source) => {
-  const type = String(source.type || '')
-  const operation = String(source.operation || 'read')
-
-  if (!allowedServices.has(type)) {
-    throw new Error(`unsupported Lark source type: ${type}`)
-  }
-
-  if (!allowedOperations.has(operation)) {
-    throw new Error(`unsupported Lark source operation: ${operation}`)
-  }
-
-  if (!source.url) {
-    throw new Error(`source ${source.name || '<unnamed>'} requires url`)
-  }
-
-  if (isLocalMarkdownSource(source)) {
-    resolveLocalMarkdownSource(source)
-    return null
-  }
-
-  const command = getCommand(source)
-  const [binary, service, ...rest] = command
-  const commandText = command.join(' ')
-  const shortcut = rest.find((token) => token.startsWith('+'))
-
-  if (binary !== 'lark-cli' && binary !== larkCliBin) {
-    throw new Error(`only lark-cli is allowed: ${commandText}`)
-  }
-
-  if (!allowedServices.has(service)) {
-    throw new Error(`lark-cli service is not read-sync allowed: ${service}`)
-  }
-
-  if (!shortcut || !['+read', '+search', '+fetch'].includes(shortcut)) {
-    throw new Error(`lark-cli command must use +read, +search, or docs +fetch: ${commandText}`)
-  }
-
-  if (shortcut === '+fetch' && service !== 'docs') {
-    throw new Error(`+fetch is only allowed for docs read sync: ${commandText}`)
-  }
-
-  // 禁写校验扫描整条命令的每个 token（不止 shortcut），防止 source.command 里夹带 --op=update /
-  // +batch-delete 之类的写命令；排除 source.url 本身以免 URL 路径里的普通词误触发。
-  const forbiddenHit = command.filter((token) => token !== source.url).find((token) => forbiddenTokenPattern.test(token))
-  if (forbiddenHit) {
-    throw new Error(`lark-cli command contains a forbidden write-like token (${forbiddenHit}): ${commandText}`)
-  }
-
-  return command
-}
 
 const runCommand = async (command) => {
   const [binary, ...args] = command

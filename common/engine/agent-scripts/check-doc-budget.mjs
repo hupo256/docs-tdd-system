@@ -45,6 +45,12 @@ const SELF_TEST_SCRIPTS = [
   ['lib/acceptance-results.mjs', '--self-test'],
   ['lib/blockers.mjs', '--self-test'],
   ['lib/code-review.mjs', '--self-test'],
+  ['lib/delivery-summary.mjs', '--self-test'],
+  ['lib/gate-payload.mjs', '--self-test'],
+  ['lib/golden-verdict.mjs', '--self-test'],
+  ['lib/prd-manifest.mjs', '--self-test'],
+  ['lib/project-index.mjs', '--self-test'],
+  ['lib/project-scaffold.mjs', '--self-test'],
   ['install-local-agent-rules.mjs', '--self-test'],
   ['prd-intake.mjs', '--self-test'],
   ['project-orchestrator.mjs', '--self-test'],
@@ -103,6 +109,11 @@ const SELF_TEST_EXEMPT = new Set([
   // 注：AI 自动修 bug 的常驻服务已抽到 common/lark-bot/（含 lib/__tests__），不在本 agent-scripts 预算/自测扫描范围。
   'lib/fingerprint.mjs', // 指纹小工具（被 rule-release/effective-rules self-test 间接覆盖）
   'lib/roots.mjs', // 根解析（被多脚本 self-test 间接覆盖）
+  'lib/golden-cases.mjs', // golden 变异用例数据表（apply/assert 闭包 + 数据，判定核心在 lib/golden-verdict.mjs 已自测；被 golden-run 端到端覆盖）
+  'lib/gate-evidence.mjs', // gate 证据渲染（纯字符串），由 lib/gate-payload.mjs --self-test 经 renderEvidence 覆盖
+  'lib/gate-cache.mjs', // gate 指纹/缓存/历史 IO，被 golden-run 聚合器烟测端到端覆盖
+  'lib/run-log.mjs', // 子进程执行 + 日志 IO，被 golden-run 聚合器烟测端到端覆盖
+  'lib/lark-command.mjs', // Lark 只读同步命令构造/校验；validateSource 由 common/lark-bot/__tests__/lark-pure.test.mjs 经 sync-lark-docs re-export 覆盖
 ])
 const ROUTER_FILE = 'rule-router.md'
 const README_FILE = 'README.md'

@@ -3,10 +3,13 @@
 import { existsSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { resolveDocsPath, resolveProjectRoot, resolveRoots } from './lib/roots.mjs';
+import {
+  buildAgentJsonFiles,
+  rewriteTemplateLinksForProjectDoc,
+  sourceTypeFromPrd,
+} from './lib/project-scaffold.mjs';
 
-const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, config } = resolveRoots();
 
 const args = process.argv.slice(2);
@@ -54,23 +57,6 @@ function assertInside(parent, child, label) {
   }
 }
 
-function json(value) {
-  return `${JSON.stringify(value, null, 2)}\n`;
-}
-
-// Templates author cross-domain links (to common/ or templates/) with the ../ depth
-// correct for a file sitting directly under templates/. A materialized project doc lives
-// at prds/<id>/<sub>/…, whose distance to the docs root varies by subdir (product/ vs
-// agent/ vs evidence/ui-ux/), so a single fixed prefix can't be right for all of them.
-// Recompute the ../ run from the TARGET file's own depth; idempotent if links are already
-// correct. Matches any leading ../ run before common/ or templates/, whether or not it sits
-// inside a markdown () link, so bare "继承 ../common/README.md" mentions are fixed too.
-function rewriteTemplateLinksForProjectDoc(content, targetPath) {
-  const ups = path.relative(path.dirname(targetPath), docsRoot).split(path.sep).filter((seg) => seg === '..').length;
-  const prefix = '../'.repeat(ups);
-  return content.replace(/(?:\.\.\/)+(?=(?:common|templates)\/)/g, prefix);
-}
-
 async function readTemplate(templateName, fallback, replacements = {}) {
   const templatePath = path.join(docsRoot, 'templates', templateName);
   try {
@@ -90,7 +76,7 @@ async function writeFileIfMissing(filePath, content) {
   // Depth-correct cross-domain links for every materialized markdown doc, based on where
   // the file actually lands under prds/<id>/… — the single choke point so no call site
   // can emit a stale ../ depth (see rewriteTemplateLinksForProjectDoc).
-  const finalContent = filePath.endsWith('.md') ? rewriteTemplateLinksForProjectDoc(content, filePath) : content;
+  const finalContent = filePath.endsWith('.md') ? rewriteTemplateLinksForProjectDoc(content, filePath, docsRoot) : content;
   if (existsSync(filePath)) {
     console.log(`exists: ${path.relative(repoRoot, filePath)}`);
     return;
@@ -110,13 +96,6 @@ async function ensureDir(dirPath) {
     return;
   }
   await fs.mkdir(dirPath, { recursive: true });
-}
-
-function sourceTypeFromPrd(prd) {
-  if (/larksuite\.com\/wiki\//i.test(prd)) return 'wiki';
-  if (/larksuite\.com\/(docx?|docs?)\//i.test(prd)) return 'doc';
-  if (/\.md($|[?#])/i.test(prd) || prd.endsWith('.md')) return 'markdown';
-  return 'doc';
 }
 
 function validatePrdSource(prd) {
@@ -229,84 +208,10 @@ await writeFileIfMissing(path.join(projectDir, 'evidence/ui-ux/README.md'), evid
 // 不预建 gate-results.json：VERIFY-G8-001 要求它由 verify-project-gate.mjs --write 真实产出
 // （含 generatedAt + tool）。开工桩文件会让 G8 证据检查形同虚设。
 
-await writeFileIfMissing(path.join(projectDir, 'agent/rule-waivers.json'), json([]));
-await writeFileIfMissing(path.join(projectDir, 'agent/project-manifest.json'), json({
-  projectId,
-  createdAt: today,
-  rulesetVersion: ruleset.version,
-  templateVersion: 2,
-  pilot: { msw: true, prdIntake: true },
-  gatePolicy: {
-    legacyRules: 'blocking',
-    currentTouchedRules: 'blocking',
-  },
-}));
-await writeFileIfMissing(path.join(projectDir, 'agent/stage-status.json'), json({
-  projectId,
-  stages: {
-    G5: {
-      status: 'pending',
-      reason: '待完成真实 API 联调，或确认本项目无 API 联调范围。',
-      evidence: [],
-      updatedAt: today,
-    },
-    G7: {
-      status: 'pending',
-      reason: '待收到 QA 用例后执行，或明确记录未提供 QA 用例而跳过。',
-      evidence: [],
-      updatedAt: today,
-    },
-  },
-}));
-await writeFileIfMissing(path.join(projectDir, 'agent/gate-history.json'), json({
-  projectId,
-  runs: [],
-}));
-await writeFileIfMissing(path.join(projectDir, 'agent/msw-manifest.json'), json({
-  projectId,
-  route: 'msw',
-  lifecycle: 'planned',
-  sourceRoot: '',
-  assets: {
-    handler: '',
-    fixture: '',
-    contractTest: '',
-    registration: 'apps/web/src/mocks/browser.ts',
-    workerHook: 'apps/web/src/mocks/useMockWorker.ts',
-    provider: 'apps/web/src/app/[lang]/Providers.tsx',
-    handlerExport: '',
-  },
-  endpoints: [],
-  retirement: { retiredAt: '', reconciliationEvidence: '' },
-}));
-await writeFileIfMissing(path.join(projectDir, 'agent/assumptions.json'), json({ projectId, assumptions: [] }));
-await writeFileIfMissing(path.join(projectDir, 'agent/blockers.json'), json([]));
-await writeFileIfMissing(path.join(projectDir, 'agent/code-review.json'), json({
-  projectId,
-  reviewedAt: today,
-  reviewer: 'pending',
-  head: '0000000000000000000000000000000000000000',
-  findings: [
-    {
-      id: 'CR-1',
-      category: 'other',
-      severity: 'high',
-      summary: 'G6 code review 尚未执行',
-      disposition: 'open',
-      evidence: [],
-    },
-  ],
-}));
-await writeFileIfMissing(path.join(projectDir, 'agent/acceptance-results.json'), json({ projectId, head: '0000000000000000000000000000000000000000', items: [] }));
-await writeFileIfMissing(path.join(projectDir, 'agent/delivery-status.json'), json({
-  projectId,
-  mode: 'local',
-  branch: branchName,
-  headSha: '',
-  pullRequestUrl: '',
-  evidence: [],
-  note: 'G8 前更新为 pushed / merged / released；gate 会用 Git 实际状态复核。',
-}));
+// agent/ 下的 JSON 状态文件初始内容集中在 lib/project-scaffold.mjs（buildAgentJsonFiles）。
+for (const [rel, content] of Object.entries(buildAgentJsonFiles({ projectId, today, branchName, rulesetVersion: ruleset.version }))) {
+  await writeFileIfMissing(path.join(projectDir, rel), content);
+}
 
 await writeFileIfMissing(path.join(projectDir, 'agent/lark-integration.md'), `# ${projectId} Lark 集成\n\n继承 ../../common/rules/collaboration-and-notifications.md。\n\n## 启用状态\n\n- 主动发群消息：待确认\n- 群内 @ 应用转 task：待确认\n\n## 配置路径\n\n- 自定义机器人配置：agent/scripts/${lowerProjectId}.json（本机 ignored，禁止提交密钥）\n- 通知记录：agent/notification-log.md\n`);
 

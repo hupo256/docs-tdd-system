@@ -92,7 +92,15 @@ function inspectEffectiveRules() {
   }
 }
 
+// 重构期临时开关：DOCS_TDD_SKIP_RULE_FRESHNESS=1 跳过新鲜度硬闸（context/changed/gate 前置），
+// 稳定后不设此 env 即恢复严格模式。
+const skipRuleFreshness = process.env.DOCS_TDD_SKIP_RULE_FRESHNESS === '1'
+
 function requireFreshRuleRelease() {
+  if (skipRuleFreshness) {
+    console.error('[docs-tdd] ⚠ DOCS_TDD_SKIP_RULE_FRESHNESS=1：跳过 rule-release 新鲜度检查（重构期临时开关）')
+    return { fresh: true, skipped: true }
+  }
   const release = inspectRuleRelease()
   if (release.fresh) return release
   console.error(`rule release is ${release.status || 'invalid'}; current=${release.currentFingerprint || 'unknown'} published=${release.publishedFingerprint || 'none'}`)
@@ -104,6 +112,10 @@ function requireFreshRuleRelease() {
 }
 
 function requireFreshEffectiveRules() {
+  if (skipRuleFreshness) {
+    console.error('[docs-tdd] ⚠ DOCS_TDD_SKIP_RULE_FRESHNESS=1：跳过 effective-rules 新鲜度检查（重构期临时开关）')
+    return { fresh: true, skipped: true }
+  }
   const release = inspectEffectiveRules()
   if (release.fresh) return release
   console.error(`effective rules release is ${release.status || 'invalid'}; current=${release.currentFingerprint || 'unknown'} published=${release.publishedFingerprint || 'none'}`)
