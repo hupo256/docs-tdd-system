@@ -96,6 +96,8 @@ node <mount>/common/engine/agent-scripts/decommission-worktree.mjs PR-01234
 ```
 
 > 维护系统本身（改规则/加专题/发指纹）用场景 `docs_tdd_maintenance`；改完依次 `docs-tdd check`、`rule-release.mjs --write`、`effective-rules.mjs --write`，否则发布漂移会阻断 context/changed/gate。
+>
+> **大规模重构期**（频繁改门禁脚本会让指纹链反复失效、每次都要重发布）可临时 `export DOCS_TDD_SKIP_RULE_FRESHNESS=1` 跳过 `run-project-gate` / `docs-tdd`（context/changed/gate）的规则发布/生效新鲜度硬闸；跳过会打 warn、不静默。稳定后 `unset`（或不设该 env）即自动恢复严格模式。
 
 ## 目录
 
@@ -116,6 +118,7 @@ node <mount>/common/engine/agent-scripts/decommission-worktree.mjs PR-01234
 
 - **常驻限额**：唯一常驻文件 `rule-router.md` ≤5000 字符，`check-doc-budget.mjs` 校验。
 - **按需文件预算**：每个 `common/*.md` 有告警线/硬上限（默认 9000 / 13000 字符，少数引用型大文件设有界的 grandfather 上限），超限即打回，逼迫拆分/归档/改指针。
+- **脚本体量预算**：`common/engine/agent-scripts/*.mjs` 与 `common/lark-bot/*.mjs` 同样有告警线/硬上限（默认 24000 / 30000 字符，大执行器设有界 grandfather 上限）。超限就按职责拆——纯逻辑下沉到同域 `lib/` 并带 `--self-test`，`check-doc-budget.mjs` 强制每个 `lib/*.mjs` 要么有自测要么显式登记豁免（门禁/服务脚本是 AI 最难 review、出错影响最大的部分，故拆小、可测、门面只做编排）。
 - **日志轮转**：`CHANGELOG.md` 只保留近期条目，旧条目轮转进 `CHANGELOG-archive.md`（不进 context、不参与预算）。
 - **防重复守护**：`FORBIDDEN_DUPLICATE_BLOCKS` 登记已收敛的唯一正文源签名，防规则正文在多处回潮重复。
 
