@@ -15,43 +15,81 @@ AI 编码的两个顽疾：**跳过需求确认直接写码**、**规则散落�
 | 层 | 内容 | 位置 |
 | --- | --- | --- |
 | **常驻路由** | 开工唯一入口：启动协议 + 硬规则 + 场景表 | [common/rules/rule-router.md](./common/rules/rule-router.md) |
-| **按需专题** | 架构/状态/API/Mock/UI/Figma/协作/门禁等规则，命中场景才加载 | `common/*.md`（人工索引见 [common/README.md](./common/README.md)，机器路由见 `common/rules/rule-index.json`） |
-| **门禁脚本** | 阶段验证、机器事实层、发布指纹、golden 自回归 | `common/engine/agent-scripts/*.mjs` |
+| **按需专题** | 架构/状态/API/Mock/UI/Figma/协作/门禁等规则，命中场景才加载 | `common/rules/*.md`（人工索引见 [common/README.md](./common/README.md)，机器路由见 `common/rules/rule-index.json`） |
+| **流程引擎** | 阶段验证、机器事实层、发布指纹、golden 自回归 | `common/engine/` |
 | **模板** | 新需求复制使用的文档骨架 | `templates/` |
-| **项目实例** | 各需求的文档/证据（清单见自动生成的 [PROJECTS.md](./PROJECTS.md)） | `PR-xxxxx/` |
+| **项目实例** | 各需求的文档/证据（清单见自动生成的 [PROJECTS.md](./PROJECTS.md)） | `prds/<PROJECT-ID>/` |
 
-核心命令（统一入口 `common/engine/agent-scripts/docs-tdd.mjs`）：
+核心命令统一走 `<mount>/common/engine/agent-scripts/docs-tdd.mjs`。下表中的 `docs-tdd` 是 `node <mount>/common/engine/agent-scripts/docs-tdd.mjs` 的阅读简写：
 
 ```bash
 docs-tdd context <PROJECT-ID> <SCENARIO>   # 按场景生成 compact 规则包
 docs-tdd kickoff <PROJECT-ID> --prd <src>  # 一句话幂等启动：骨架+同步+intake+run-state
 docs-tdd status|next|resume <PROJECT-ID>   # 状态、唯一下一步、断点恢复
+docs-tdd recommend <PROJECT-ID>            # 根据当前改动推荐场景
 docs-tdd changed <PROJECT-ID>              # 编辑后跑 code-rules / mock 校验
 docs-tdd gate    <PROJECT-ID> <Gx>         # 阶段交付门禁
-docs-tdd doctor  <PROJECT-ID>              # 适配/冲突/发布状态自检
+docs-tdd capability <PROJECT-ID>           # 查看 worktree、规则集与发布摘要
+docs-tdd doctor                            # 适配/冲突/发布状态自检
+docs-tdd check <PROJECT-ID>                # 校验文档、规则与脚本预算
 docs-tdd release <PROJECT-ID> --scenario X # 原子发布 L3/effective + doctor/golden/context smoke
 docs-tdd golden                            # 让门禁机器自己被回归测试
 docs-tdd guard                             # 机器层兜底：一条命令跑 golden + 发布 fresh 检查 + doctor
 ```
 
-## 与业务解耦：如何挂载到一个项目
+## 首次接入一个项目
 
-系统真身可放任意位置（如 `~/github/docs_tdd`），通过**软链 + 一份绑定配置**接入消费项目。流程引擎读取 `appSubpath/docsMountPath/baseRef/projectIdPattern/branchPrefix/typecheckRoots/productionBuild`；FameEX 专属代码扫描仍属于默认 profile，迁移到结构不同的仓库时应替换该 profile，而不是宣称零配置通用：
+系统可以放在任意绝对路径。接入只需要**一份本地配置 + 一个软链**，不需要理解内部路径解析逻辑。下面以默认挂载位置 `apps/web/docs_tdd` 为例；如果项目结构不同，同时修改软链位置和 `docsMountPath`。
 
-1. **挂载**：在消费仓库里把 `<app>/docs_tdd` 软链到本仓库真身（各 worktree 同样直指真身）。
-2. **绑定**：在消费仓库根放一份 `docs-tdd.config.json`（gitignored，各安装/各公司自带），声明 `consumerRoot` 等；可复用默认值在已提交的 [docs-tdd.config.default.json](./docs-tdd.config.default.json)。
-3. **根解析**：[common/engine/agent-scripts/lib/roots.mjs](./common/engine/agent-scripts/lib/roots.mjs) 的 `resolveRoots()` 把三个根解耦——
-   - `docsSystemRoot`：本系统自身（从脚本位置推，与物理位置无关）
-   - `consumerRoot`：被指导项目主仓（由 config 绑定确定）
-   - `consumerWorktree`：当前编码 worktree（cwd 的 git 根）
+### 1. 在消费仓库建立软链并复制配置
 
-同结构项目只需重复 1+2；不同结构项目需提供自己的 profile/config，但不改流程状态机和 gate 语义。
+```bash
+cd <CONSUMER_ROOT>
+mkdir -p apps/web
+ln -s /absolute/path/to/docs_tdd apps/web/docs_tdd
+cp apps/web/docs_tdd/docs-tdd.config.default.json docs-tdd.config.json
+```
+
+将下面两行加入消费仓库的 `.git/info/exclude`，避免把本机配置和软链提交到业务仓库：
+
+```gitignore
+docs-tdd.config.json
+apps/web/docs_tdd
+```
+
+### 2. 按当前项目修改 `docs-tdd.config.json`
+
+至少核对这些字段：
+
+| 字段 | 填什么 |
+| --- | --- |
+| `consumerRoot` | 消费仓库的绝对路径；建议显式填写 |
+| `appSubpath` / `docsMountPath` | 应用目录与上一步创建的软链位置 |
+| `baseRef` | 创建功能 worktree 时使用的远端基线 |
+| `projectIdPattern` / `branchPrefix` | 项目编号格式与功能分支前缀 |
+| `typecheckRoots` | 需要执行类型检查的包或应用目录 |
+| `productionBuild` | G8 实际执行的生产构建命令 |
+
+[docs-tdd.config.default.json](./docs-tdd.config.default.json) 是参考配置，不代表其他仓库可以零修改使用。仓库结构、包名或构建命令不同，就在本地配置中覆盖对应字段。
+
+### 3. 自检接入结果
+
+仍在消费仓库根目录执行：
+
+```bash
+node apps/web/docs_tdd/common/engine/agent-scripts/lib/roots.mjs --self-test
+node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs doctor
+```
+
+第一条最后显示 `roots: OK`，第二条检查规则适配、冲突、本地隔离和发布状态。失败时按输出修配置；日常使用不需要关注 `docsSystemRoot`、`consumerRoot`、`consumerWorktree` 这些内部变量。
+
+后续由 `prepare-coding-worktree.mjs` 创建的功能 worktree 会复用同一套配置，并自动挂载这份文档系统。
 
 ## 如何使用（Step by Step）
 
-以「用本系统跑一个新需求」为例的日常流程（首次接入新仓库见上一节「挂载」）。命令统一走 `common/engine/agent-scripts/docs-tdd.mjs`（下文简写 `docs-tdd`）。
+以「用本系统跑一个新需求」为例的日常流程（首次接入见上一节）。命令统一走 `<mount>/common/engine/agent-scripts/docs-tdd.mjs`（下文简写 `docs-tdd`）。
 
-**0. 前置**：系统已挂载到消费仓库（软链 + `docs-tdd.config.json`），`docs-tdd doctor <任意ID>` 适配项全 PASS。
+**0. 前置**：系统已挂载到消费仓库（软链 + `docs-tdd.config.json`），`docs-tdd doctor` 适配项全 PASS。
 
 **1. 启动新需求** — 对 AI 说启动口令：
 ```text
@@ -59,7 +97,7 @@ docs-tdd guard                             # 机器层兜底：一条命令跑 g
 ```
 AI 会先读 `common/rules/rule-router.md`，再执行 `docs-tdd kickoff PR-01234 --prd <source>`。命令幂等创建项目、同步 PRD、初始化 intake 并写 `agent/run-state.json`；中断后用 `status/next/resume` 恢复。
 
-**2. G0 资料接收**：把 PRD / Figma / API 资料放进 `PR-01234/inbox/`。含图片、表格、嵌入对象时先完成 `prd_intake`（`docs-tdd context PR-01234 prd_intake`），逐项读取分类，读不了即阻断，不猜。
+**2. G0 资料接收**：把 PRD / Figma / API 资料放进 `prds/PR-01234/inbox/`。含图片、表格、嵌入对象时先完成 `prd_intake`（`docs-tdd context PR-01234 prd_intake`），逐项读取分类，读不了即阻断，不猜。
 
 **3. G1 文档生成**：AI 基于启动器生成的模板填写 PRD 全量功能清单、scope、技术方案初稿、任务与协作记录；G1 有独立机器出口，不与 G0 共用空骨架判定。
 
@@ -72,7 +110,7 @@ AI 会先读 `common/rules/rule-router.md`，再执行 `docs-tdd kickoff PR-0123
 node <mount>/common/engine/agent-scripts/prepare-coding-worktree.mjs PR-01234 --dry-run   # 先看
 node <mount>/common/engine/agent-scripts/prepare-coding-worktree.mjs PR-01234             # 建分支+软链+装依赖+起 dev
 ```
-从最新 `origin/online` 切 `feature/PR-01234`，基线校验通过才算 ready。
+脚本按 `docs-tdd.config.json` 的 `baseRef` 和 `branchPrefix` 创建分支；基线校验通过才算 ready。
 
 **7. 编码 + 增量校验**：每次改完代码跑
 ```bash
@@ -86,17 +124,17 @@ docs-tdd gate PR-01234 G6      # 自测验收（实跑 biome/tsc/vitest + code r
 docs-tdd gate PR-01234 G7      # QA 用例回归
 docs-tdd gate PR-01234 G8      # production build + Git 可交付状态 + 交付摘要
 ```
-`docs-tdd doctor PR-01234` 随时自检适配/冲突/发布状态；缓存仅复用同输入 PASS，强制实跑加 `--no-cache`。
+`docs-tdd doctor` 随时自检适配/冲突/发布状态；缓存仅复用同输入 PASS，强制实跑加 `--no-cache`。
 
 > **人机分界（自动化边界要如实）**：G0–G4（需求→文档→方案→MSW 编码）高度自动；G5–G8 是**人机协同**——gate 机器实跑 biome/tsc/vitest/build 与结构化验收/字段对账，但**真实接口联调、视觉还原（Figma 并排 ≥95%）、交互手感、响应式、QA 用例执行以人工确认为锚点**（分工见 [common/rules/verification-division-of-labor.md](./common/rules/verification-division-of-labor.md)：Agent 固化能回归的逻辑/边界/数据/DOM 契约，人工过一眼能判的像素/手感/响应式）。判断层的 `acceptance-results.json`/`code-review.json` 由 Agent 产出、gate 校验其结构与证据锚点真实性，但语义正确性仍需人工/Review 兜底（执行强度分级见 [common/rules/rule-execution-model.md §3](./common/rules/rule-execution-model.md)）。
 
-**9. 上线后回收**：需求合入 `origin/online` 并验证后，回收一次性 worktree（保留 `PR-01234/` 文档）：
+**9. 上线后回收**：需求合入配置的 `baseRef` 并验证后，回收一次性 worktree（保留 `prds/PR-01234/` 文档）：
 ```bash
 node <mount>/common/engine/agent-scripts/decommission-worktree.mjs PR-01234 --dry-run
 node <mount>/common/engine/agent-scripts/decommission-worktree.mjs PR-01234
 ```
 
-> 维护系统本身（改规则/加专题/发指纹）用场景 `docs_tdd_maintenance`；改完依次 `docs-tdd check`、`rule-release.mjs --write`、`effective-rules.mjs --write`，否则发布漂移会阻断 context/changed/gate。
+> 维护系统本身（改规则/加专题/发指纹）使用场景 `docs_tdd_maintenance`；改完先运行 `docs-tdd check <PROJECT-ID>`，再运行 `docs-tdd release <PROJECT-ID> --scenario docs_tdd_maintenance` 原子发布并自检，否则发布漂移会阻断 context/changed/gate。
 >
 > **大规模重构期**（频繁改门禁脚本会让指纹链反复失效、每次都要重发布）可临时 `export DOCS_TDD_SKIP_RULE_FRESHNESS=1` 跳过 `run-project-gate` / `docs-tdd`（context/changed/gate）的规则发布/生效新鲜度硬闸；跳过会打 warn、不静默。稳定后 `unset`（或不设该 env）即自动恢复严格模式。
 
@@ -104,7 +142,10 @@ node <mount>/common/engine/agent-scripts/decommission-worktree.mjs PR-01234
 
 | 路径 | 用途 |
 | --- | --- |
-| [common/](./common/) | 跨项目复用的规则、门禁脚本、schema、模板索引 |
+| [common/rules/](./common/rules/) | 跨项目复用的规则与场景路由 |
+| [common/engine/](./common/engine/) | CLI、门禁脚本、schema 与 golden 夹具 |
+| [common/lark-bot/](./common/lark-bot/) | 可选的消息接入与任务执行服务 |
+| [prds/](./prds/) | 各项目的文档、状态与证据 |
 | [common/rules/rule-router.md](./common/rules/rule-router.md) | **开工常驻入口**（渐进披露路由） |
 | [common/README.md](./common/README.md) | 公共规则专题的人工全索引 |
 | [templates/](./templates/) | 新需求文档模板 |
@@ -118,7 +159,7 @@ node <mount>/common/engine/agent-scripts/decommission-worktree.mjs PR-01234
 「常驻恒定小」由机器强制，不靠自觉：
 
 - **常驻限额**：唯一常驻文件 `rule-router.md` ≤5000 字符，`check-doc-budget.mjs` 校验。
-- **按需文件预算**：每个 `common/*.md` 有告警线/硬上限（默认 9000 / 13000 字符，少数引用型大文件设有界的 grandfather 上限），超限即打回，逼迫拆分/归档/改指针。
+- **按需文件预算**：每个 `common/rules/*.md` 有告警线/硬上限（默认 9000 / 13000 字符，少数引用型大文件设有界的 grandfather 上限），超限即打回，逼迫拆分/归档/改指针。
 - **脚本体量预算**：`common/engine/agent-scripts/*.mjs` 与 `common/lark-bot/*.mjs` 同样有告警线/硬上限（默认 24000 / 30000 字符，大执行器设有界 grandfather 上限）。超限就按职责拆——纯逻辑下沉到同域 `lib/` 并带 `--self-test`，`check-doc-budget.mjs` 强制每个 `lib/*.mjs` 要么有自测要么显式登记豁免（门禁/服务脚本是 AI 最难 review、出错影响最大的部分，故拆小、可测、门面只做编排）。
 - **日志轮转**：`CHANGELOG.md` 只保留近期条目，旧条目轮转进 `CHANGELOG-archive.md`（不进 context、不参与预算）。
 - **防重复守护**：`FORBIDDEN_DUPLICATE_BLOCKS` 登记已收敛的唯一正文源签名，防规则正文在多处回潮重复。
