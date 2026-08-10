@@ -1,8 +1,8 @@
 {
   "version": 1,
   "rulesetVersion": "local-2026.07-msw-v1",
-  "fingerprint": "99771ba4027796489a15489c1a7b50e80d4b740d12c53fa1b5c3f430374f5f26",
-  "publishedAt": "2026-08-10T10:14:37.459Z",
+  "fingerprint": "be3fcf75ea33cfe1007cd5ca6457b5916fd4d3886a8bd6e53ca95ce48bb09d7d",
+  "publishedAt": "2026-08-10T11:24:31.119Z",
   "fileCount": 136,
   "files": {
     "common/CHANGELOG-archive.md": "3f6df9a2d04e917dc0ae67125c84a9209877de3196bd7952639040897e0077cc",
@@ -107,7 +107,7 @@
     "common/rules/git-branch-flow.md": "ed3e4f50a0427299f9d77f58a715fba955050c49130428dc42429b61746e92d8",
     "common/rules/hook-integration.md": "5f7b881ca63cd6b1c2ed67e161ce4dc40974a88838964aa83b42a8f04bf4be6d",
     "common/rules/lark-active-notification.md": "b12305e9cab2922791cff79e94ee93c26b616ed9e151c0f2884ea23296ff5e25",
-    "common/rules/lark-bot-gateway.md": "889bacc90bd9cd071f21ac3d711614f0eafabe2d21e54262d34d02cb68f180b0",
+    "common/rules/lark-bot-gateway.md": "bcccb870c584a3606dfb48956c8c276cd40916fe43d77f81efd5b5dd5deec3c3",
     "common/rules/lark-doc-sync.md": "29155c672d1477b874dda8da31e1db804358c9b30ded97f467894a7cda7581d3",
     "common/rules/mock-legacy-route-a.md": "04fdefbcc3d74092566f0532a4ceeef2cd31905e562d956aa3a2afc0acdcdd21",
     "common/rules/new-project-kickoff.md": "f8ff1f80a53414af1411c3c61ebced924952d3a1ac38a83be4a76c443b671d6f",
