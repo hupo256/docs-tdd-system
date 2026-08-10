@@ -6,7 +6,7 @@
 ## 1. 基础链路
 
 ```text
-Lark 群 @应用
+Lark 群 @应用，或 @配置的项目负责人
   ↓
 Lark 事件订阅 im.message.receive_v1
   ↓
@@ -28,7 +28,9 @@ Bot Gateway 是独立服务，不放进 `apps/web` 运行时。它负责：
 - 处理 Lark challenge。
 - 校验签名、encrypt key、verification token。
 - 只接受白名单群和白名单用户。信任边界是**白名单群**：群内 QA / PM / 后台 @ 都能触发，群消息只按群放行、不按发送人过滤；p2p 直发才按白名单用户放行。**推荐动态成员制 `allowedChatIds:"auto"`**：白名单 = bot 当前所在的群（`im +chat-list`），新群拉进去即时响应、无需改配置或重启（未知 chat 首次 @ 自动刷新再判）。**fail-closed 硬规则**：完全没配任何白名单（`allowedChatIds` 非 `"auto"` 且群 + 用户皆空）时拒绝所有事件，绝不因配置漏填而放行所有人。
-- 只处理群内 @ 应用消息，普通群聊默认忽略。
+- 群内 `@应用` / `@所有人` 保持直接入队；仅 `@taskMentionOpenIds` 中负责人的消息先走严格只读意图分类，只有中高置信度的 bug / 明确需求才正式入队，其余静默忽略。普通群聊永远不调用 AI。
+- `@负责人` 代理触发依赖 Lark 应用的“获取群组中所有消息”只读权限（申请项为 `im:message.group_msg:readonly`；当前应用 scope API 展示 tenant `im:message:readonly`）及 `im.message.receive_v1` 事件订阅；未获该权限时 Lark 不会投递未 @bot 的群消息，代码侧无法补救。
+- 前置分类必须持久化 `received` 后由 Worker 执行；Claude 仅开放 Read + plan 权限，Codex 使用 read-only + network off。分类失败落 `intake_failed`、不改代码、不发群失败卡；分类结论与 CLI 输出进入执行审计。全量消息中的 `sender_type=bot` 必须在触发判定前丢弃，防自身卡片回流。
 - 使用 `message_id` 做幂等，避免重复执行。
 - 将消息解析为 Job，写入任务队列。
 - 提供任务领取、任务状态回写和群通知能力。
@@ -104,6 +106,8 @@ Codex / Cursor Worker 领取任务后：
 | 状态 | 含义 | 下一步 |
 |------|------|--------|
 | `received` | Gateway 收到 Lark 事件并通过签名、白名单、幂等校验 | 解析命令 |
+| `ignored` | @负责人消息已判定不是 bug / 明确需求 | 静默终止，定期清理 |
+| `intake_failed` | @负责人消息的只读分类器异常 | 不执行代码；health 告警、保留审计 |
 | `queued` | 已生成 Job 并入队 | Worker 领取 |
 | `triaging` | Worker 正在读取 docs_tdd、分支状态和影响范围 | 判断是否可自动执行 |
 | `waiting_confirmation` | 范围、PRD、API、QA、登录账号、权限、环境或其他材料存在需人工确认 / 补充项 | 自动发送待确认 / 补信息通知，尽量 @ 具体责任人，回群等确认 |
@@ -257,10 +261,10 @@ Codex 两阶段均为 `ephemeral + approval never + 工具网络关闭`：先把
 历史上 Gateway 是独立 Koa 服务，靠公网 cloudflared tunnel 收 Lark 事件回调并做 challenge / 验签。当前推荐实现改为 **lark-cli 官方长连接**，`common/lark-bot/lark-gateway.mjs` 是本地专用 Gateway：
 
 - 事件源：子进程 `lark-cli event consume im.message.receive_v1`（长连接），不再需要公网 tunnel、challenge 端点、手写签名校验。event bus 守护进程实测约 35MB。
-- HTTP 契约：`GET /lark/health|tasks`、`POST /lark/tasks|tasks/next|tasks/:id/claim|tasks/:id/status|tasks/:id/retry|tasks/prune`；状态接口接受 done/failed/blocked/waiting_confirmation，触发对应卡片，仅 done 回写 bug 表。状态回写带领取时的 `epoch`（fencing token），与当前不匹配返回 **409**（旧 worker 迟到回写被拒，不覆盖新一代执行）。`POST /lark/tasks` 缺失/无效项目号一律 `project=null`（与 ingest 口径统一），走 adhoc 临时 worktree，不塞 Gateway 主项目常驻 worktree。`retry` 重置 failed/blocked 为 queued，`prune` 清陈旧终态（默认 done）。
+- HTTP 契约：`GET /lark/health|tasks`、`POST /lark/tasks|tasks/next|tasks/:id/claim|tasks/:id/intake|tasks/:id/status|tasks/:id/retry|tasks/:id/reopen|tasks/prune`；状态接口接受 done/failed/blocked/waiting_confirmation，触发对应卡片，仅 done 回写 bug 表。状态回写带领取时的 `epoch`（fencing token），与当前不匹配返回 **409**（旧 worker 迟到回写被拒，不覆盖新一代执行）。`intake` 只接受与已存结果一致的幂等重试，不允许二次覆盖分类。`POST /lark/tasks` 缺失/无效项目号一律 `project=null`（与 ingest 口径统一），走 adhoc 临时 worktree，不塞 Gateway 主项目常驻 worktree。`retry` 重置 failed/blocked 为 queued；`reopen` 接收 QA「验退」并保留上一轮历史后换代排队；`prune` 清陈旧终态（默认 done）。
 - 发消息、下载图片、读写多维表格统一走 lark-cli 已登录的 bot 身份（keychain）；配置文件里不放 app 级 `appSecret`。图片经 `lark-cli im +messages-resources-download` 落到 `<PROJECT>/agent/lark-attachments/<messageId>/`。
-- 上线前置：Lark 后台开启事件订阅 `im.message.receive_v1` 并授 `im:message.p2p_msg:readonly` + 群消息收发 / `im:resource` / bitable 相关 scope；白名单 `allowedChatIds` / `allowedOpenIds` 与 `botOpenId` 写入项目配置。
-- 相关脚本：接收链路 `common/lark-bot/lark-gateway.mjs`；bug 多维表格链路 `common/lark-bot/lark-bugtable-poller.mjs`（`base +record-list` 拉「负责人=我 且 状态=待处理」→ 投递 Gateway 队列 → done 后 `base +record-batch-update` 回写状态）。
+- 上线前置：Lark 后台开启事件订阅 `im.message.receive_v1` 并授 `im:message.p2p_msg:readonly` + 群消息收发 / `im:resource` / bitable 相关 scope；启用 `@负责人` 代理触发还必须授“获取群组中所有消息”只读权限。白名单 `allowedChatIds` / `allowedOpenIds`、`botOpenId` 与 `taskMentionOpenIds` 写入本机配置。
+- 相关脚本：接收链路 `common/lark-bot/lark-gateway.mjs`；bug 多维表格链路 `common/lark-bot/lark-bugtable-poller.mjs`（`base +record-list` 拉「负责人=我 且 状态=待处理/验退」→ 投递或重开 Gateway 任务 → done 后 `base +record-batch-update` 回写状态）。
 - **健壮性兜底**（无人值守必需）：
   - **领取租约 + AI 超时启动断言**：`claimNext` 领走任务时盖 `claimedAt`，超过 `LARK_TASK_LEASE_MS`（默认 40min）仍 `running` 视为孤儿（worker 崩了），下次领取时自动重入队。worker 启动即断言 `LARK_WORKER_AI_TIMEOUT_MS < LARK_TASK_LEASE_MS`，不满足拒绝启动——焊死「孤儿回收不与活着的 AI 双跑同一 worktree」这条唯一防线。
   - **毒任务死信 cap**：孤儿重投达 `LARK_MAX_REQUEUE`（默认 2）转 `failed` 死信、打 `deadLetterReason`、发一次告警卡，停止自动重投交人工；人工 `retry` 达 `LARK_MAX_RETRY`（默认 5）拒绝并提示 clean。防 crash 型 bug 绕过闭环无限烧钱。
@@ -287,6 +291,7 @@ bug 表按 `项目ID` 跨项目路由，与群 @ 共用 `resolveWorkContext`：
 - 无 worktree 时基于 `origin/online` 建 `hotfix/<项目ID|adhoc>-<id>`；仅 done 提交并清理，失败/阻塞有半成品则保留，无改动可删除。
 - 引用消息由 `messages-mget` 合并；`[Image: img_xxx]` / `![Image](img_xxx)` 占位会恢复、去重，并按实际项目下载。
 - 仅 bug 表来源的 done 任务回写表格；**回写成功才置 `done`**，回写失败置中间态 `done_pending_writeback`（poller 视作 in-flight，不入队、不 seen），Gateway 每 5min 重试回写直至一致——消除「群报完成 + 表格永卡待处理」。活动状态跳过，blocked/waiting_confirmation 等人工补料，failed 计入 `stuck-failed`；三者均不自动重跑。
+- **QA 验退重开**：配置 `rejectedValue:"验退"` 后，poller 同时查询待处理与验退。验退是明确的人工作业信号，会忽略旧 `seen`，把同一 `record_id` 的 done/done_pending_writeback/failed/no_change_needed 作为新轮次重开；活动态和 waiting/blocked 仍去重。重开会保存上一轮结果到 `executionHistory`、递增 `qaReturnCount` 与 `epoch`、补发领取卡，并在 prompt 中要求先分析上一轮未解决根因。临时 hotfix 复用原分支 tip 继续提交，不从 `origin/online` 重置；审计文件按 epoch 分轮保留。
 - **failed 人工重触发闭环**：群 @ 任务可直接重新 @（新 messageId 天然是新任务）；bug 表任务 id=record_id 固定、POST 幂等会命中旧 failed，只能显式重置 —— `lark-bot failed` 列出待处理失败项，`lark-bot retry <id>` 把 failed/blocked 重置为 queued（`retryCount++`、补发「已重新入队」卡片），worker 下一轮重跑。**不做自动重试**（避免对修不动的 bug 无限烧钱）。
 - poller 由 `lark-bot poll-on/off` 控制，空闲 `LARK_BUGTABLE_IDLE_OFF_MS` 后自动停止；G6/G7 提醒开启，G8 提醒关闭。
 - **陈旧终态清理**：Gateway 每小时自动清 `updatedAt` 早于 `pruneDoneAfterHours`（默认 24h）的 `done` 任务，`/lark/health` 计数不再单调增长；`lark-bot clean [hours]` 手动立即清 done，`lark-bot clean --failed [hours]` 一并清 failed/blocked。**failed 默认不自动删**：删掉后 bug 表若仍待处理，poller 下一轮会把它当新任务重投 = 变相自动重试，故 failed 只在人工确认后 `clean --failed` 或 `retry`。

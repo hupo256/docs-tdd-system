@@ -7,6 +7,19 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-08-10（群内 @负责人代理触发自动任务）
+
+- Gateway 支持本机 `taskMentionOpenIds`：群消息仅 @Aven、未 @bot 时先持久化为 `received`，普通群聊在成员查询、附件下载和 AI 调用之前本地过滤。
+- Worker 增加严格只读意图分类：bug / 明确需求且置信度不低才正式排队并发领取卡；普通聊天静默落 `ignored`，分类器异常落 `intake_failed`，两者都不会进入 worktree 或修改代码。
+- 分类沿用任务选择的 Claude/Codex；Claude 仅开放 Read + plan 权限，Codex 使用 read-only + network off。结论与 CLI 输出保留审计，兼容 Claude CLI 把 Schema JSON 置于 `result` 或完整 JSON 代码围栏的真实返回。
+- 全量消息下显式丢弃 `sender_type=bot`，防机器人自己的 @Aven 卡片回流；分类回写对同一结果幂等，发领取卡瞬时失败后可重试且不覆盖已决策结果。当前应用已授 tenant 级 `im:message:readonly`（获取群组中所有消息），`grant_status=1`。
+
+## 2026-08-10（Lark Bug「验退」自动进入下一轮修复）
+
+- Poller 从只查「待处理」扩为同时查询配置的 `rejectedValue:"验退"`；验退会忽略旧 seen，把同一 record_id 的既有终态显式重开，活动态/等待态仍去重，避免每轮重复入队。
+- Gateway 新增 QA return 重开路径：上一轮结果进入 `executionHistory`，`qaReturnCount`/`epoch` 换代，最新表格内容与上一轮结论一并交给 AI，要求先分析未解决根因再修复。
+- 临时 worktree 在验退轮次复用原 hotfix 分支 tip，不再用 `-B origin/online` 丢掉上一轮提交；Worker 审计文件名加入 epoch，多个修复轮次各自保留。配置已加入 `rejectedValue:"验退"`。
+
 ## 2026-08-10（Lark PRD 远端内容漂移门禁）
 
 - **事故根因**：PR-02265 在 2026-08-07 首次同步后，PM 又更新了 Lark PRD；原 gate 只校验本地快照与 manifest，未重新读取远端，因此新增需求在本地功能清单与 task 中从未出现。

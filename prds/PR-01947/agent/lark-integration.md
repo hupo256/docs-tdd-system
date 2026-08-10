@@ -27,7 +27,7 @@ Lark 群 @机器人 ─┐                         Lark bug 多维表格 ─┐
 |------|------|------|
 | 主动发群消息 | `scripts/notify-lark.mjs` | ✅ 卡片式进度可走 bot `im +messages-send` 直发（`notifyTransport:'bot'`，无需 webhook secret）或自定义机器人 webhook（默认）；本项目走 bot（见 §5、§7） |
 | 阶段推进自动播报 | `docs-tdd.mjs gate` → `notify-lark.mjs` | ✅ gate 通过后自动发「Gx 已完成」绿卡；仅对 `notifyOnGate:true` 项目生效；非阻塞 + 指纹幂等（见 §7） |
-| 群内 @我 转 task → AI → 回群 | `scripts/lark-gateway.mjs` + `scripts/lark-worker.mjs` | ✅ 真 @「汇报项目进度」全链路：入队→发「已收到」→worker 领取→claude 真执行→回「完成」 |
+| 群内 @bot / @Aven 转 task → AI → 回群 | `common/lark-bot/lark-gateway.mjs` + `common/lark-bot/lark-worker.mjs` | ✅ @bot 直接入队；仅 @Aven 先由 Worker 严格只读分类，bug / 明确需求才发领取卡并进入原任务流程，普通聊天静默忽略 |
 | 读 bug 表待处理项转 task（**跨项目**） | `scripts/lark-bugtable-poller.mjs` | ✅ 读取+分页+按「负责RD=Aven.tong(open_id)」过滤，**读 `项目ID` 列 → task.project**；worker 按项目号路由（见 §7）。当前名下 0 待处理，端到端待 QA 期真 bug |
 
 ## 3. 配置
@@ -36,7 +36,7 @@ Lark 群 @机器人 ─┐                         Lark bug 多维表格 ─┐
 |----|----|
 | 项目 / 标题 | PR-01947 / CopyTrading 跟单设置 |
 | 机器人 app | `cli_aabf9468b1789ed4`（Aven.tong 的 bot，已在试点群） |
-| 配置文件 | `scripts/lark-bot.local.json`（**本机 gitignored 的单一 bot 配置**，含 botOpenId/allowedChatIds/myOpenId/bugTable.appToken 等标识，禁提交）。**这是单一跨项目 bot 服务配置**，非 PR-01947 专属；`project`/`title` 仅作附件/任务落盘目录与 adhoc 兜底品牌 |
+| 配置文件 | `common/lark-bot/runtime/lark-bot.local.json`（**本机 gitignored 的单一 bot 配置**，含 botOpenId/taskMentionOpenIds/allowedChatIds/myOpenId/bugTable.appToken 等标识，禁提交）。**这是单一跨项目 bot 服务配置**，非 PR-01947 专属；`project`/`title` 仅作附件/任务落盘目录与 adhoc 兜底品牌 |
 | AI 执行器 | 仅允许 `claude` / `codex`；优先级 task（群消息开头 `[codex]`/`[claude]`）> `LARK_AI_EXECUTOR` > `lark-bot.local.json.aiExecutor` > 默认 `claude`。Codex 用 workspace-write、never、工具网络关闭及结构化结果，由 Worker 回写 Gateway；Claude 保持现有无人值守 callback。 |
 | 任务队列 | `agent/lark-tasks/*.json`（文件队列，gitignored） |
 | bug 去重状态 | `agent/lark-bugtable-state.json`（gitignored） |
@@ -73,10 +73,10 @@ node /Users/aven/github/docs_tdd/prds/PR-01947/agent/scripts/lark-bugtable-polle
 ## 5. 上线前置（均已完成）
 
 1. ✅ bot 已在试点群；`botOpenId` / `myOpenId` 已填入本机配置。**白名单用动态成员制 `allowedChatIds:"auto"`**：白名单 = bot 当前所在的群（Lark 只投递 bot 所在群的消息，群成员资格即信任边界）。新项目群把 bot 拉进去即时响应 @、无需改配置或重启（未知 chat 首次 @ 自动刷新 `im +chat-list` 再判）；仍 fail-closed（bot 不在该群则拒）。p2p 直发无群锚点，仍只放行 `allowedOpenIds` 显式用户。
-2. ✅ Lark 后台事件订阅 `im.message.receive_v1` 已开、应用已发布；bitable 读写 scope（`base:field:read` / `base:record:read` / `base:record:update`）已审批。
+2. ✅ Lark 后台事件订阅 `im.message.receive_v1` 已开、应用已发布；“获取群组中所有消息”只读权限已授予，应用 scope API 显示 tenant `im:message:readonly` 的 `grant_status=1`。bitable 读写 scope（`base:field:read` / `base:record:read` / `base:record:update`）已审批。
 3. ✅ bug 表字段已确认（表名「EX项目bug统计表」）：
    - `assigneeField` = **负责RD**（表内**无**「负责人」字段，人员类字段为 解决人员/负责RD/测试人员）
-   - `statusField` = **处理状态**，`pendingValue` = **待处理**，`doneValue` = **待推版**（「处理中」不是合法选项）
+   - `statusField` = **处理状态**，`pendingValue` = **待处理**，`rejectedValue` = **验退**，`inProgressValue` = **修复中**，`doneValue` = **待推版**
    - `titleField` = 问题标题，`descField` = 问题描述（复现步骤）
 4. 进度卡片通道：本项目走 bot `im +messages-send`（`notifyTransport:'bot'`，复用已登录 bot 身份，无需 webhook secret）；若改用自定义机器人 webhook 再填 `webhookUrl`/`secret` 并去掉 `notifyTransport`。
 
@@ -86,7 +86,7 @@ node /Users/aven/github/docs_tdd/prds/PR-01947/agent/scripts/lark-bugtable-polle
 |----|------|
 | 公共脚本 | ✅ `lark-gateway.mjs`（含拍平事件归一化器）、`lark-worker.mjs`（Claude/Codex executor 抽象 + 安全参数）、`lark-bugtable-poller.mjs`（列式解析 + 分页） |
 | 本地 HTTP 队列契约 | ✅ health / ingest / claim / status / 去重 / 落盘 / 两条独立回群消息 全通过 |
-| lark-cli 长连接 | ✅ `feishu-websocket: connected`，真 @ 事件已摄取解析 |
+| lark-cli 长连接 | ✅ `feishu-websocket: connected`；@bot 事件已验证，@Aven 全量群消息 scope 已生效且 Gateway/Worker 已重启，待一条真实 @Aven 消息做最后投递烟测 |
 | 能力2 全链路 | ✅ claude 真执行验证通过 |
 | 能力3 | ✅ 读取/分页/过滤/回写 shape 已验；当前 aven 名下无待处理 bug，缺真实数据端到端 |
 | codex 执行器 | ✅ 本机 ChatGPT App 内置 Codex CLI 可用；已接 `codex exec` 非交互模式、结构化结果与 Worker 回写；默认仍为 Claude，改本机 `aiExecutor` 或消息加 `[codex]` 灰度启用 |
@@ -94,7 +94,7 @@ node /Users/aven/github/docs_tdd/prds/PR-01947/agent/scripts/lark-bugtable-polle
 ### 关键实现坑（避免重踩）
 - **软链主守卫**：见 §4，只走薄包装入口。
 - **引用/回复消息要单独拉**：工作流是「在 QA 的原始 bug 消息下回复 + @bot」，真正 bug 正文/截图在**被引用的父消息**里；@ 这条本身往往只有「看这里」。gateway `normalizeMessage` 提 `reply_to`/`root_id`，`fetchReferencedContext` 用 `lark-cli im +messages-mget` 拉父消息合并进 task（`merge_forward` 合并转发的 `content` 已是可读字符串直接用；post/image 解析出文本+图片 image_key 再下载）。不拉则「看这里」类 @ 必然 failed（踩过）。
-- **lark-cli 事件是拍平顶层结构**（非官方嵌套 webhook schema）：`message_id/chat_id/sender_id` 在顶层、`content` 是已内联 mention 名的纯文本、`mentions[].id` 是字符串。gateway 已加归一化器（双 schema 容错 + 去 mention）。@bot 判定 = `mentions.some(m=>m.id===botOpenId)`。
+- **lark-cli 事件是拍平顶层结构**（非官方嵌套 webhook schema）：`message_id/chat_id/sender_id` 在顶层、`content` 是已内联 mention 名的纯文本、`mentions[].id` 是字符串。gateway 已加归一化器（双 schema 容错 + 去 mention）。@bot / @Aven 均按 open_id 精确匹配，普通消息在任何网络调用或 AI 调用前本地丢弃。
 - **`base +record-list` 返回列式结构**（`data.fields`=列名字符串数组 / `data.data`=行 / `data.record_id_list`），非 `data.items[].fields`；poller 已按列式解析并翻页。`+record-search` 强制要 `--keyword`，不适合列全部。
 - **worker `claude -p` 默认权限无法无人值守写文件/git**，已加 `--dangerously-skip-permissions`。
 - **Codex 不照搬 Claude 的全放权**：使用 `workspace-write + approval never + network=false + ephemeral`；AI 最终 JSON 由 Worker 回写本地 Gateway，避免为 callback 打开工具网络。
@@ -141,7 +141,7 @@ bug 多维表格是**全公司共享表**，Aven.tong 名下的 bug 横跨多个
 - `/Users/aven/github/<项目ID>` **有 worktree** → 就在该 worktree 改。**进来时若已有未提交 WIP → 先把 WIP 单独提交一笔隔离**（`commitPreexistingWip`，message 标明"非本任务产生"），再跑 AI；任务**真 done** 后把本任务改动 `git add -A && commit --no-verify` 到**当前分支**（`finalizeExistingWorktree`，每任务一个独立 commit）。失败/阻塞不提交、无改动不提交、commit 失败保留改动在工作区。→ 你的 WIP 与 bot 改动**永远分成两个 commit**，不混。
 - **无 worktree** → **一次性临时 worktree**：`git worktree add` 到 `~/github/.lark-hotfix/<分支slug>`（基于 `origin/online` 建 `hotfix/<项目ID>-<id>` 分支），在里面改；**不碰主仓**（主仓脏/在别的分支都不受影响，天然无并发/顺序碰撞）。干完**自动本地提交到该分支、删临时目录**（分支保留待 review，不 push/不合并）；无改动则连空分支一起删。
 - 无 `project`（既没解析到、也无 `config.project`）→ 同样临时 worktree，分支 `hotfix/adhoc-<msgId前6>`。群 @ 任务的项目号解析见 §8.1。
-- 干完回写表格状态 `待处理 → 待推版`（`doneValue`）。
+- 干完回写表格状态 `待处理/验退 → 修复中 → 待推版`。QA 在 test 验收不通过时改为「验退」，poller 会把同一记录作为新一轮重开，保留上一轮结果并继续原 hotfix 分支。
 
 **路由实现**：`common/engine/agent-scripts/lark-worker.mjs` → `resolveWorkContext(workerConfig, task)`（已导出，可只读单测）+ `prepareTempWorktree` / `finalizeTempWorktree`。
 
