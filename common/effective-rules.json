@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "fingerprint": "53d44466e3aafa2c7b3bc037cf523e605a9f9f0fdf03aeaab1d8c3aa3c3b167a",
-  "publishedAt": "2026-08-10T11:24:31.337Z",
+  "fingerprint": "4c085ed63eef559ae94d1200e23a09d95efc460822e415abb0755645ffba5619",
+  "publishedAt": "2026-08-10T11:38:18.775Z",
   "l3RuleReleaseFingerprint": "be3fcf75ea33cfe1007cd5ca6457b5916fd4d3886a8bd6e53ca95ce48bb09d7d",
   "clientMatrix": {
     "codex": {
@@ -622,7 +622,7 @@
     "AGENTS.md": "392064b3caa6942371cdf5380c7c8b6e368e6ba36d5cae03753afc5d6001c480",
     "CLAUDE.md": "0ae6e4eb08c82210d63d4ad8634de80e5f6078b7989d12ea84dfb5eedd274453",
     "common/lark-bot/lib/lark-rule-context.mjs": "34c78074b2c8fc036c5f725d8ce5f3288b959ed361b54fdd76f3b92d4958b512",
-    "common/lark-bot/lib/lark-worker-prompts.mjs": "56f30b97157f8aca0c1b8f907898a442714d1b34bf0cdeb4ce83d8a497d5e0b6",
+    "common/lark-bot/lib/lark-worker-prompts.mjs": "81b504fcac8ec1ad3ce1380e167f4678913219f16a9a8c294db5603a4bb84b9e",
     "common/lark-bot/lib/lark-worker-run.mjs": "2aafc6318d79fa0296f7709ba2a5ad147a993303d1579f7b768826f975807d09"
   }
 }
