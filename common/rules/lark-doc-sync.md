@@ -83,10 +83,10 @@ node apps/web/docs_tdd/prds/<PROJECT-ID>/agent/scripts/sync-lark-docs.mjs --dry-
 node apps/web/docs_tdd/prds/<PROJECT-ID>/agent/scripts/sync-lark-docs.mjs
 ```
 
-`doc` / `wiki` 链接会统一走官方推荐的只读命令：
+`doc` / `wiki` 链接会统一走官方推荐的只读命令，并显式使用当前用户身份与 JSON 信封以读取 revision / 正文 hash：
 
 ```bash
-lark-cli docs +fetch --api-version v2 --doc <Lark URL> --doc-format markdown
+lark-cli docs +fetch --api-version v2 --doc <Lark URL> --doc-format markdown --as user --format json
 ```
 
 如果 PRD 来源是 `apps/web/docs_tdd/**/inbox/*.md` 这类本地 Markdown，项目 `lark-sources.json` 登记为 `type: "markdown"` 即可；同步脚本会直接读取本地文件并写入 `inbox/lark-sync/`，不调用 `lark-cli`。
@@ -110,6 +110,13 @@ LARK_CLI_BIN=/path/to/lark-cli node apps/web/docs_tdd/prds/<PROJECT-ID>/agent/sc
 Lark CLI 导出的 Markdown 不是完整视觉还原稿。Agent 读取 PRD 时必须同时检查正文、表格、图片、白板 / 思维导图占位和删除线，不能把“CLI 已导出 Markdown”等同于“全部需求已读”。
 
 同步完成后先运行 `prd-intake.mjs <PROJECT-ID> --init --source <repo-relative-prd.md>`。逐项补齐 `agent/prd-source-manifest.json` 后，在 G2 前运行 `prd-intake.mjs <PROJECT-ID> --approve`；开发期由 `docs-tdd changed` 持续检查正文、表格、图片二进制和映射 fingerprint 漂移。
+
+### 8.0 远端 PRD 漂移检查
+
+- **Trigger**：已配置 Lark `doc` / `docs` / `wiki` 来源的项目执行 `prd-intake --stage`、`docs-tdd changed` 或任一项目 gate。
+- **Action**：同步器把远端正文做稳定规范化（换行统一、剔除每次 fetch 会变化的临时媒体下载 URL）后计算 SHA-256，并把 `contentHash`、document ID、revision 写入 metadata；`prd-intake --init` 将该快照登记到 manifest。每次 gate 都重新只读 fetch 远端正文，并比较当前 hash 与 intake baseline。revision 仅用于诊断，是否漂移以正文 hash 为准。
+- **Evidence**：`inbox/lark-sync/*.metadata.json`、`agent/prd-source-manifest.json#remoteSources` 与 gate 中的 `DOC-PRD-010` 结果。
+- **Failure**：远端 hash 不一致、baseline 缺失、网络/权限/CLI 失败均 fail-closed，阻塞 gate；必须重新同步、重新 intake、补齐 Feature / task 后再批准。不得继续信任旧快照，也不得豁免。
 
 ### 8.1 图片
 

@@ -7,6 +7,13 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-08-10（Lark PRD 远端内容漂移门禁）
+
+- **事故根因**：PR-02265 在 2026-08-07 首次同步后，PM 又更新了 Lark PRD；原 gate 只校验本地快照与 manifest，未重新读取远端，因此新增需求在本地功能清单与 task 中从未出现。
+- **远端 fail-closed gate**：新增 `DOC-PRD-010`。同步时记录规范化正文 SHA-256、document ID 与 revision；每次 PRD stage / 项目 gate 重新 fetch 远端并比较 hash。正文漂移、baseline 缺失、权限/网络失败均阻塞且不可豁免，要求重新 sync → intake → approve。
+- **同步产物修正**：Lark docs fetch 固定 `--as user --format json`，解析信封后只落正文；支持 `localizedTarget`，同步下载图片并生成仅引用本地 assets 的 extracted Markdown。
+- **指纹完整性**：批准 fingerprint 纳入 `remoteSources`，防远端 baseline metadata 被静默改写；补稳定媒体 URL 规范化、响应解析、远端 baseline 变化与转义图片 alt 自测。
+
 ## 2026-08-10（五入口同源审计与执行前防漂移）
 
 - AI 入口收敛为固定全集：Codex、Claude Code、Cursor、Lark-Codex、Lark-Claude；effective client matrix 缺项、多项或缺执行保障都会由 `VERIFY-RULE-003` 阻断，Lark runtime adapter 也进入 effective fingerprint。

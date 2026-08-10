@@ -9,6 +9,22 @@
     "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },
     "generatedAt": { "type": "string", "minLength": 1 },
     "approvedFingerprint": { "type": "string" },
+    "remoteSources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "url", "target", "contentHash", "revisionId", "syncedAt"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "url": { "type": "string", "minLength": 1 },
+          "target": { "type": "string", "minLength": 1 },
+          "contentHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "revisionId": { "type": "string" },
+          "syncedAt": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
     "sources": {
       "type": "array",
       "minItems": 1,

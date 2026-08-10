@@ -19,7 +19,7 @@ function lineNumber(text, index) {
 }
 
 function imageTarget(raw) {
-  const markdown = /^!\[[^\]]*\]\(\s*(?:<([^>]+)>|([^\s)]+))/i.exec(raw)
+  const markdown = /^!\[(?:\\.|[^\]])*\]\(\s*(?:<([^>]+)>|([^\s)]+))/i.exec(raw)
   if (markdown) return markdown[1] || markdown[2]
   return /\bsrc\s*=\s*["']([^"']+)["']/i.exec(raw)?.[1] || ''
 }
@@ -63,7 +63,7 @@ export function scanMarkdown(text, sourcePath, readAsset) {
     })
   }
 
-  for (const match of text.matchAll(/!\[[^\]]*\]\([^\n)]+\)|<img\b[^>]*>/gi)) add('image', match.index, match[0])
+  for (const match of text.matchAll(/!\[(?:\\.|[^\]])*\]\([^\n)]+\)|<img\b[^>]*>/gi)) add('image', match.index, match[0])
   for (const match of text.matchAll(/<(?:whiteboard|sheet|cite)\b[^>]*>(?:<\/(?:whiteboard|sheet|cite)>)?/gi)) add('embed', match.index, match[0])
 
   const lines = text.split('\n')
@@ -90,8 +90,11 @@ export function scanMarkdown(text, sourcePath, readAsset) {
   return found.sort((a, b) => a.line - b.line || a.type.localeCompare(b.type))
 }
 
-export function fingerprint(sources, items) {
+export function fingerprint(sources, items, remoteSources = []) {
   const payload = {
+    remoteSources: remoteSources.map(({ name, url, target, contentHash, revisionId }) => ({
+      name, url, target, contentHash, revisionId,
+    })),
     sources: sources.map(({ path, contentHash }) => ({ path, contentHash })),
     items: items.map(({ sourceId, locator, contentHash, assetPath, assetHash, assetStatus, status, classification, readMethod, summary, featureIds, disposition, evidence }) => ({
       sourceId, locator, contentHash, assetPath, assetHash, assetStatus, status, classification, readMethod, summary, featureIds, disposition, evidence,
@@ -145,7 +148,7 @@ export function inspectManifest({ manifest, projectId, stage, readSource, readAs
     add('DOC-PRD-006', unmapped.length === 0 && undecided.length === 0, `requirement inputs map to Feature IDs and decorative inputs record disposition${unmapped.length ? `; unmapped=${unmapped.map((item) => item.sourceId).join(',')}` : ''}${undecided.length ? `; no-disposition=${undecided.map((item) => item.sourceId).join(',')}` : ''}`)
     const untracked = manifest.items.filter((item) => item.classification === 'requirement' && (!taskText.includes(item.sourceId) || item.featureIds.some((id) => !taskText.includes(id))))
     add('DOC-PRD-007', untracked.length === 0, `requirement inputs and Feature IDs are traceable in frontend tasks${untracked.length ? `: ${untracked.map((item) => item.sourceId).join(',')}` : ''}`)
-    const currentFingerprint = fingerprint(currentSources, manifest.items)
+    const currentFingerprint = fingerprint(currentSources, manifest.items, manifest.remoteSources)
     add('DOC-PRD-009', manifest.approvedFingerprint === currentFingerprint, `G2-approved PRD fingerprint matches current intake${manifest.approvedFingerprint ? ` (expected=${manifest.approvedFingerprint}, current=${currentFingerprint})` : '; run prd-intake.mjs <PROJECT-ID> --approve after resolving intake'}`)
   }
   return checks
@@ -168,7 +171,8 @@ export function selfTest() {
     status: 'read', classification: index === 3 ? 'decorative' : 'requirement', readMethod: 'vision+structured-parse', summary: 'fixture requirement', featureIds: index === 3 ? [] : ['F01'], disposition: index === 3 ? 'decorative background' : '', evidence: 'evidence/prd-intake/README.md',
   }))
   const sources = [{ path: sourcePath, contentHash: hash(fixture) }]
-  const manifest = { version: 1, projectId: 'PR-00001', generatedAt: new Date().toISOString(), approvedFingerprint: fingerprint(sources, items), sources, items }
+  const remoteSources = [{ name: 'fixture', url: 'https://example.com/docx/fixture', target: 'prd.md', contentHash: hash(fixture), revisionId: '1' }]
+  const manifest = { version: 2, projectId: 'PR-00001', generatedAt: new Date().toISOString(), approvedFingerprint: fingerprint(sources, items, remoteSources), remoteSources, sources, items }
   const readSource = () => fixture
   const readAsset = (assetPath) => fixtureAssets.get(assetPath) ?? null
   assert(inspectManifest({ manifest, projectId: 'PR-00001', stage: 'G2', readSource, readAsset, inventoryText: 'F01', taskText: `F01 ${items.map((item) => item.sourceId).join(' ')}` }).every((check) => check.ok))
@@ -182,6 +186,12 @@ export function selfTest() {
   const changedAssets = new Map(fixtureAssets)
   changedAssets.set('apps/web/docs_tdd/common/engine/fixtures/prd-intake/approval-flow.png', Buffer.from('flow-v2'))
   assert(inspectManifest({ manifest, projectId: 'PR-00001', stage: 'G2', readSource, readAsset: (assetPath) => changedAssets.get(assetPath) ?? null, inventoryText: 'F01', taskText: `F01 ${items.map((item) => item.sourceId).join(' ')}` }).some((check) => check.ruleId === 'DOC-PRD-008' && !check.ok))
+  const changedRemote = structuredClone(manifest)
+  changedRemote.remoteSources[0].contentHash = hash('remote-v2')
+  assert.notEqual(
+    fingerprint(sources, items, manifest.remoteSources),
+    fingerprint(sources, items, changedRemote.remoteSources),
+  )
   console.log('prd-intake self-test passed (scan, omitted image, unresolved input, source drift, and binary image drift).')
 }
 

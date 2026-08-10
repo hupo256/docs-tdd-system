@@ -7,7 +7,8 @@
       "operation": "read",
       "name": "需求 PRD",
       "url": "https://qfglxo2m3dc.sg.larksuite.com/docx/P2xud4WYyoapp6xfjskl7UI3gKc",
-      "target": "prd-latest.md"
+      "target": "prd-latest.md",
+      "localizedTarget": "prd-latest.extracted.md"
     }
   ]
 }

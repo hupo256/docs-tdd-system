@@ -1,7 +1,7 @@
 # PR-02265 编码交接（Coding Handoff）
 
 > 用途：在**新 chat**接手 PR-02265 的实际编码（G4 已过，进入 coding→G5→G6）。新会话先读本文件 + `context-summary.md` + `product/02-technical-design.md`，再动手。
-> 生成时间：2026-08-07。分支/文档均已提交（docs 仓库 `dev` 分支，最新 commit `8321fcd`）。
+> 原始生成时间：2026-08-07；2026-08-10 因 Lark PRD revision 1009→1576 漂移而更新，并已按 F01~F13 重跑 G4。
 
 ## 0. 新 chat 如何恢复（照做）
 
@@ -16,7 +16,7 @@
 
 ## 1. 当前状态
 
-- 阶段链：G0✅ G1✅ G2✅ G3✅ **G4✅**（`docs-tdd gate` 均 PASS；G3/G4 各 waived=6 = MSW 豁免，正常）。
+- 阶段链：revision 1576 已重新 intake；2026-08-10 G2、G4 均重新 PASS。当前可按 F01~F13 编码。
 - 未写任何业务代码；worktree 干净。
 - 下一步：**按 02-technical-design §方案 分片编码**，先做第一片。
 
@@ -52,11 +52,25 @@
 
 **F07**：后端，前端不做。
 
+**⑥ F08~F10 — 外部做市商弹窗新增范围**
+- F08：`/externalMmAccount/add|update` 保存后费率即时生效；前端保存后立即刷新，G5 用下一笔匹配交易验证服务端实际生效。
+- F09/F10：`external_market_account_modal.vue` 的蓝框按合约/现货业务类型分别输出两条规则，逐字文案见 `product/04-frontend-tasks.md` T12/T13。
+
+**⑦ F11/F12 — 会员等级白名单提示**
+- 用户白名单：`apps/admin/legacy-admin/src/views/userManager/vip_level/components/userWhiteList.vue`（T14）。
+- 币对白名单：`apps/admin/legacy-admin/src/views/userManager/vip_level/components/coinWhiteList.vue`（T15）。
+- 两条主语不同，禁止共用错误文案。
+
+**⑧ F13 — 合约手续费折扣提示**
+- `apps/admin/legacy-admin/src/views/exchangeTradeConfig/feeAddressManager/fee_discount_edit.vue` 添加/编辑弹窗新增蓝框（T16）。
+
 ## 4. 关键决策 / 坑（务必遵守）
 
 - **正数化口径是跨 3 app 的副本**（React/Vue2×2 无法共享代码）：口径 `符号 + |金额|`、返佣不出负号，必须三处**各自补单测**保证一致（见 02 技术方案「单一事实源」表）。
 - **精度统一 6 位**（产品已确认）。
 - **F03 文案以 PRD 正文为准**，弹窗 mockup(PRD-IMG-003)「请输入数值」文案作废。
+- **F11/F13 也以相邻正文为准**：图片 OCR/alt 与正文存在差异，图片只决定样式和位置。
+- 固定文案清单必须以 revision 1576 的 T12~T16 为准；旧交接只含 F01~F07，不能继续直接编码。
 - 固定文案**逐字** PRD 原文 + 「值===原文」字面断言测试；apps/web 开发期只改 zh-CN。
 - Vue admin 非 TS/zod/React Query 体系，别套 apps/web 的 schema/mapper 规则；F05 React 侧才走那套（但本次复用现状请求链，不新增 hook/schema）。
 

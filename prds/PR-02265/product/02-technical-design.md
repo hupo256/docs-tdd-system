@@ -3,7 +3,7 @@
 
 # Technical Design — PR-02265 外部做市商合约账户支持配置负手续费率
 
-> 技术栈事实：`apps/web` = 前台 web（React/TS）；`apps/admin/legacy-admin` = 现货管理后台（Vue2 + Element UI）；`apps/futures-admin/legacy-admin` = 合约管理后台（Vue2）。本需求 F01~F04 + F06(后台) 在 Vue2 legacy-admin，F05 在 apps/web React。接口全部复用现状、仅放开负值；Mock 已豁免（见 03-api-contract §0.1）。
+> 技术栈事实：`apps/web` = 前台 web（React/TS）；`apps/admin/legacy-admin` = 现货管理后台（Vue2 + Element UI）；`apps/futures-admin/legacy-admin` = 合约管理后台（Vue2）。F01~F04、F06、F08~F12 位于现货后台，F13 位于现存手续费折扣页，F05 位于 apps/web。接口均复用现状；Mock 已豁免（见 03-api-contract §0.1）。
 
 ## 复用盘点（G4 前必填）
 
@@ -17,6 +17,7 @@
 | 展示组件(React) | `apps/web/.../FuturesOrders/FundsFlow/index.tsx`(:24 formatAmount)、`PositionHistory/Card.tsx`(:171 tradeFee)、`CashFlow/futures/FuturesCashFlow.tsx` | 现有手续费/流水展示位，改格式化为正数化 | 直接复用（改格式化调用） | — |
 | 展示逻辑(Vue后台) | `apps/admin/.../userManager/other_information/i_contract_capital_flow.vue`(:50-51,159 amountClass+side)、`apps/futures-admin/.../mixin/reportManager/*` | 现有后台流水/费用展示，改正数化 | 直接复用（改格式化） | — |
 | service/API | `apps/admin/legacy-admin/src/api/operateManager/marketAccount.js`（`/externalMmAccount/add|update|page`） | 接口已存在，payload 字段名 open/close Maker/Taker Fee 不变 | 直接复用（不改接口） | — |
+| 提示框(Vue) | `external_market_account_modal.vue` 已有 `.fee-effective-rule`；会员等级白名单在 `vip_level/components/userWhiteList.vue`、`coinWhiteList.vue`；手续费折扣在 `exchangeTradeConfig/feeAddressManager/fee_discount_edit.vue` | F09/F10 复用现有提示框；F11~F13 在对应弹窗增加同类轻提示块 | 直接复用现有弹窗和样式语义 | — |
 
 所有相关能力均复用现状实现，无新建绕过复用。做市账户模块无 zod schema / mapper / React Query（属 Vue 体系），故无该层复用项。
 
@@ -28,6 +29,9 @@
 |----------------------|--------------|----------|
 | 【现货管理后台】--【资产管理】--【做市账户工具】--【外部做市商账号】--【添加】 | F01/F02/F03 | `external_market_account_modal.vue` |
 | 【现货管理后台】--【资产管理】--【做市账户工具】--【做市账户管理】--【外部做市商】 | F04 | `market_maker_account.vue` |
+| 【现货管理后台】--【用户管理】--【会员等级】--【基础配置】--【用户白名单配置】添加、编辑 | F11 | `vip_level/components/userWhiteList.vue` |
+| 【现货管理后台】--【用户管理】--【会员等级】--【基础配置】--【币对白名单配置】添加、编辑 | F12 | `vip_level/components/coinWhiteList.vue` |
+| 【合约管理后台】--【手续费】--【手续费折扣】添加、编辑 | F13 | `exchangeTradeConfig/feeAddressManager/fee_discount_edit.vue` |
 
 ## 单一事实源与所有权（G4 前必填）
 
@@ -38,6 +42,7 @@
 | 合约手续费率值域/精度（`[-100,100]`、6 位） | `external_market_account_modal.vue` 的 `FEE_MIN/FEE_MAX/FEE_DECIMALS`(:281-283) + `isValidFuturesFeeValue`/`sanitizeFuturesFeeInput` | 该弹窗表单校验与 sanitize | 否（现货侧 `isValidSpotFeeValue` 为独立字段，非同一事实） | 无 |
 | 返佣「正数化」展示口径（取绝对值+符号，返佣不出负号） | 约定口径：`|金额|` + 方向符号；前端各 app 各自实现 | 前台 web(`formatNumber.ts`)、现货后台(`i_contract_capital_flow.vue`)、合约后台(reportManager mixins) | **是**（React/Vue2×2 三 app 无法共享代码） | 同步：口径写入本表 + 各 app 补正数化纯函数**单测**保证一致；owner=前端；验证=三处单测 + G5 联调对照 PRD 5.3 示例 |
 | 固定文案（提示/校验报错） | PRD 原文（见 03-api-contract §7） | Vue 弹窗 i18n/直文 | 否 | 逐字断言测试保证 === PRD 原文 |
+| 费率配置即时生效 | `/externalMmAccount/add|update` 保存成功后的服务端配置 | 合约交易取费率链路；前端仅提交并刷新，不引入延时缓存 | 后端事实 | G5 用保存后立即发起的下一笔匹配交易验证，不以 UI toast 代替生效证据 |
 
 ## 数据流与分层契约（请求型功能 G4 前必填）
 
@@ -48,6 +53,8 @@
 | F05 前台流水/成交/仓位手续费展示（React） | 复用现状 hook（不改数据获取） | 现状 key | 复用现状 service（`FundsFlow`/`PositionHistory` 现有请求） | 无 schema 改动（金额字段已存在，可为负） | 正数化格式化（`formatNumber.ts` + 本次抽正数化纯函数） | 现状 UI Model + `displayAmount` 派生 | React Query（现状） | 正数化纯函数单测 + 组件展示 |
 | F01~F04 做市账户配置/列表（Vue2 admin） | N/A（Vue2 非 React Query） | N/A | `marketAccount.js` axios（`/externalMmAccount/*`，复用） | N/A（Vue 无 zod，费率值前端校验） | N/A | Vue 组件 data | Vue 组件本地 state | 校验/格式化纯函数单测 |
 | F06 后台流水手续费展示（Vue2 admin） | N/A（Vue2） | N/A | 复用现状后台流水接口 | N/A | N/A（`amountClass`+side 展示派生） | Vue 组件 data | Vue 组件本地 state | 正数化逻辑单测（如可）+ G5 联调 |
+| F08 即时生效 | N/A（Vue2） | N/A | `/externalMmAccount/add|update` | 既有 payload 不变 | N/A | 保存成功后刷新现状列表 | 服务端配置 | G5 保存后立即成交验证 |
+| F09~F13 提示文案 | N/A | N/A | 无新增请求 | N/A | N/A | 静态 i18n 文案 | Vue 组件 | 字面量断言 + 弹窗视觉证据 |
 
 分层例外：Vue2 legacy-admin 不适用 React 分层契约，属既有技术栈事实，非本需求引入；F05 复用现状 React 请求链不新增 hook/schema。
 
@@ -85,5 +92,13 @@
 **F06（后台正数化）**：`i_contract_capital_flow.vue`(:50-51,159) 及 `futures-admin` reportManager mixins 的手续费金额展示，按同一正数化口径处理。
 
 **F07**：后端逻辑，前端不实现，G5 联调确认展示层不受影响。
+
+**F08（新增/编辑费率即时生效）**：继续复用 `/externalMmAccount/add|update`；前端保存成功后立即刷新列表，不增加 debounce、定时刷新或客户端缓存。真正生效时点属于后端配置读取链路，G5 必须用“保存成功后不等待，立即触发下一笔账号×币对匹配交易”验证。
+
+**F09/F10（外部做市商弹窗蓝框）**：把 `external_market_account_modal.vue` 现有单行 `externalFeeEffectiveRule` 改为按 `isFuturesBizType` / `isSpotBizType` 输出两条逐字文案；两业务类型的第二条来源表不同，不允许共用错误文案。
+
+**F11/F12（会员等级白名单）**：分别在 `userWhiteList.vue`、`coinWhiteList.vue` 的添加/编辑弹窗表单尾部、footer 前增加蓝色轻提示框。F11 主语为「账号若在」，F12 主语为「账号交易的币对若在」，不得互换。
+
+**F13（手续费折扣）**：在 `fee_discount_edit.vue` 添加/编辑弹窗表单尾部、footer 前增加蓝色轻提示框，逐字使用 PRD 相邻正文；图片 OCR/alt 只用于位置和样式，不覆盖正文。
 
 **测试策略**：MSW 已豁免；负值/边界靠**纯函数单测**（校验、sanitize、正数化）+ test 后端真实负费率数据联调（G5）。

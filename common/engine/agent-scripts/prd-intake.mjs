@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 
+import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
-import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
+import { validateSource } from './lib/lark-command.mjs'
+import { compareRemoteSnapshot, parseLarkDocumentPayload, remoteSnapshotFromMetadata } from './lib/lark-prd-drift.mjs'
+import { resolveDocsPath, resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 import { fingerprint, hash, inspectManifest, scanMarkdown, selfTest } from './lib/prd-manifest.mjs'
 
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot } = resolveRoots()
@@ -39,10 +42,98 @@ function readProjectAsset(assetPath) {
   return readFileSync(absolute)
 }
 
+function readJson(file) {
+  return existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : null
+}
+
+function larkConfig(projectDir) {
+  const config = readJson(join(projectDir, 'agent/lark-sources.json'))
+  return config?.sources?.length ? config : null
+}
+
+function remoteLarkSources(config) {
+  return (config?.sources || []).filter((source) => ['doc', 'docs', 'wiki'].includes(source.type) && /^https?:\/\//i.test(source.url || ''))
+}
+
+function snapshotsFromLastSync(projectDir) {
+  const config = larkConfig(projectDir)
+  if (!config) return []
+  const outputDir = resolveDocsPath(config.outputDir || `apps/web/docs_tdd/prds/${config.projectId}/inbox/lark-sync`, {
+    consumerRoot: repoRoot,
+  })
+  return remoteLarkSources(config).flatMap((source) => {
+    const metadata = readJson(join(outputDir, `${source.target}.metadata.json`))
+    const snapshot = remoteSnapshotFromMetadata({ source, metadata })
+    return snapshot ? [snapshot] : []
+  })
+}
+
+function inspectRemoteDrift(projectDir, manifest) {
+  const config = larkConfig(projectDir)
+  const sources = remoteLarkSources(config)
+  if (!sources.length) return []
+
+  const expectedByKey = new Map((manifest?.remoteSources || []).map((source) => [`${source.url}\n${source.target}`, source]))
+  return sources.map((source) => {
+    const expected = expectedByKey.get(`${source.url}\n${source.target}`)
+    if (!expected) {
+      return {
+        ruleId: 'DOC-PRD-010',
+        ok: false,
+        message: `remote PRD baseline missing for ${source.name || source.target}; run sync-lark-docs then prd-intake --init`,
+        severity: 'error',
+        category: 'documentation',
+      }
+    }
+
+    try {
+      const command = validateSource(source)
+      const fetched = spawnSync(command[0], command.slice(1), {
+        cwd: repoRoot,
+        encoding: 'utf8',
+        stdio: 'pipe',
+        timeout: Number(process.env.LARK_CLI_TIMEOUT_MS || 120000),
+        env: {
+          ...process.env,
+          LARKSUITE_CLI_NO_UPDATE_NOTIFIER: '1',
+          LARKSUITE_CLI_NO_SKILLS_NOTIFIER: '1',
+        },
+      })
+      if (fetched.error) throw fetched.error
+      if (fetched.status !== 0) throw new Error(fetched.stderr || fetched.stdout || `exit ${fetched.status}`)
+      const actual = parseLarkDocumentPayload(fetched.stdout)
+      const comparison = compareRemoteSnapshot(expected, actual)
+      return {
+        ruleId: 'DOC-PRD-010',
+        ok: comparison.ok,
+        message: comparison.ok
+          ? `remote PRD content hash matches intake baseline: ${source.name || source.target} (revision ${actual.revisionId || 'unknown'})`
+          : `remote PRD drift detected: ${source.name || source.target} (expected revision ${comparison.expectedRevisionId || 'unknown'}, current ${comparison.actualRevisionId || 'unknown'}); rerun sync and PRD intake`,
+        severity: 'error',
+        category: 'documentation',
+      }
+    } catch (error) {
+      return {
+        ruleId: 'DOC-PRD-010',
+        ok: false,
+        message: `cannot verify remote PRD drift for ${source.name || source.target}: ${error.message}`,
+        severity: 'error',
+        category: 'documentation',
+      }
+    }
+  })
+}
+
 function initManifest(projectId, sourcePaths) {
   const { projectDir, manifestFile } = projectPaths(projectId)
   const previous = existsSync(manifestFile) ? JSON.parse(readFileSync(manifestFile, 'utf8')) : null
   const previousByKey = new Map((previous?.items || []).map((item) => [`${item.locator}:${item.contentHash}`, item]))
+  const previousByContent = new Map()
+  for (const item of previous?.items || []) {
+    const key = `${item.type}:${item.contentHash}`
+    if (!previousByContent.has(key)) previousByContent.set(key, item)
+    else previousByContent.set(key, null)
+  }
   const prefixes = { image: 'IMG', table: 'TABLE', embed: 'EMBED' }
   const counters = Object.fromEntries(Object.entries(prefixes).map(([type, prefix]) => [
     type,
@@ -59,8 +150,9 @@ function initManifest(projectId, sourcePaths) {
     sources.push({ path: sourcePath, contentHash: hash(text) })
     for (const found of scanMarkdown(text, sourcePath, readProjectAsset)) {
       const old = previousByKey.get(`${found.locator}:${found.contentHash}`)
+        || previousByContent.get(`${found.type}:${found.contentHash}`)
       if (!old) counters[found.type] += 1
-      items.push(old || {
+      items.push(old ? { ...old, ...found } : {
         sourceId: `PRD-${prefixes[found.type]}-${String(counters[found.type]).padStart(3, '0')}`,
         ...found,
         status: 'unresolved',
@@ -73,7 +165,15 @@ function initManifest(projectId, sourcePaths) {
       })
     }
   }
-  const manifest = { version: 1, projectId, generatedAt: new Date().toISOString(), approvedFingerprint: '', sources, items }
+  const manifest = {
+    version: 2,
+    projectId,
+    generatedAt: new Date().toISOString(),
+    approvedFingerprint: '',
+    remoteSources: snapshotsFromLastSync(projectDir),
+    sources,
+    items,
+  }
   mkdirSync(dirname(manifestFile), { recursive: true })
   writeFileSync(manifestFile, `${JSON.stringify(manifest, null, 2)}\n`)
   return manifest
@@ -105,13 +205,14 @@ const checks = inspectManifest({
   inventoryText: existsSync(join(projectDir, 'product/00-feature-inventory.md')) ? readFileSync(join(projectDir, 'product/00-feature-inventory.md'), 'utf8') : '',
   taskText: existsSync(join(projectDir, 'product/04-frontend-tasks.md')) ? readFileSync(join(projectDir, 'product/04-frontend-tasks.md'), 'utf8') : '',
 })
+checks.push(...inspectRemoteDrift(projectDir, manifest))
 
 if (args.includes('--approve')) {
   const blocking = checks.filter((check) => !check.ok && check.ruleId !== 'DOC-PRD-009')
   if (blocking.length) throw new Error(`cannot approve PRD intake: ${blocking.map((check) => check.ruleId).join(', ')}`)
   const currentSources = manifest.sources.map((source) => ({ path: source.path, contentHash: hash(readProjectSource(source.path)) }))
   manifest.sources = currentSources
-  manifest.approvedFingerprint = fingerprint(currentSources, manifest.items)
+  manifest.approvedFingerprint = fingerprint(currentSources, manifest.items, manifest.remoteSources)
   manifest.generatedAt = new Date().toISOString()
   writeFileSync(manifestFile, `${JSON.stringify(manifest, null, 2)}\n`)
   console.log(`approved PRD intake fingerprint ${manifest.approvedFingerprint}`)

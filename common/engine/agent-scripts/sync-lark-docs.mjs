@@ -12,6 +12,7 @@ import {
   shellQuote,
   validateSource,
 } from './lib/lark-command.mjs'
+import { localizeLarkMediaReferences, parseLarkDocumentPayload } from './lib/lark-prd-drift.mjs'
 
 // 安全边界 validateSource 沿用从本文件导入（common/lark-bot/__tests__/lark-pure.test.mjs 依赖此路径）。
 export { validateSource } from './lib/lark-command.mjs'
@@ -126,10 +127,14 @@ command: ${JSON.stringify(command.join(' '))}
 const writeSourceOutput = async ({ source, targetPath, command, stdout, stderr, syncedAt }) => {
   await fs.mkdir(path.dirname(targetPath), { recursive: true })
 
+  const remoteDocument = command?.includes('+fetch') ? parseLarkDocumentPayload(stdout) : null
+  const output = remoteDocument?.content ?? stdout
+  const cleanMarkdown = (value) => String(value).replace(/[ \t]+$/gm, '').trimEnd()
+
   if (targetPath.endsWith('.md')) {
-    await fs.writeFile(targetPath, `${buildFrontMatter({ source, syncedAt, command })}${stdout.trimEnd()}\n`)
+    await fs.writeFile(targetPath, `${buildFrontMatter({ source, syncedAt, command })}${cleanMarkdown(output)}\n`)
   } else {
-    await fs.writeFile(targetPath, stdout)
+    await fs.writeFile(targetPath, output)
   }
 
   await fs.writeFile(`${targetPath}.metadata.json`, `${JSON.stringify({
@@ -141,7 +146,29 @@ const writeSourceOutput = async ({ source, targetPath, command, stdout, stderr, 
     command,
     stderr: stderr.trim() || null,
     target: path.relative(repoRoot, targetPath),
+    remoteContentHash: remoteDocument?.contentHash || null,
+    remoteDocumentId: remoteDocument?.documentId || null,
+    remoteRevisionId: remoteDocument?.revisionId || null,
+    identity: remoteDocument?.identity || null,
   }, null, 2)}\n`)
+
+  if (remoteDocument && source.localizedTarget) {
+    const outputDir = path.dirname(targetPath)
+    const { targetPath: localizedPath } = normalizeTargetPath({
+      outputDir,
+      target: source.localizedTarget,
+    })
+    const localized = localizeLarkMediaReferences(remoteDocument.content)
+    const assetDir = path.join(outputDir, 'assets')
+    await fs.mkdir(assetDir, { recursive: true })
+    for (const media of localized.media) {
+      const response = await fetch(media.url)
+      if (!response.ok) throw new Error(`failed to download PRD media ${media.fileName}: HTTP ${response.status}`)
+      await fs.writeFile(path.join(assetDir, media.fileName), Buffer.from(await response.arrayBuffer()))
+    }
+    const frontMatter = `---\nsourceName: ${JSON.stringify(`${source.name || source.target} (extracted, localized assets)`)}\nsourceType: ${JSON.stringify(source.type)}\nsourceUrl: ${JSON.stringify(source.url)}\nderivedFrom: ${JSON.stringify(source.target)}\nsyncedAt: ${JSON.stringify(syncedAt)}\nreadOnly: true\n---\n\n`
+    await fs.writeFile(localizedPath, `${frontMatter}${cleanMarkdown(localized.content)}\n`)
+  }
 }
 
 const readLocalMarkdown = async (source) => {

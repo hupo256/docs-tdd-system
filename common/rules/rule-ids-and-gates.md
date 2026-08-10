@@ -217,6 +217,7 @@ docs-tdd golden --keep          # 保留 PR-00000 供手工排查
 | `DOC-PRD-007` | G2+（pilot） | requirement source ID 与 Feature ID 可追溯到前端任务 | error（experimental） |
 | `DOC-PRD-008` | G0+（pilot） | PRD source 内容 hash 未相对 manifest 漂移 | error（experimental） |
 | `DOC-PRD-009` | G2+（pilot） | 已确认的 PRD intake fingerprint 与当前输入一致 | error（experimental） |
+| `DOC-PRD-010` | G0+（pilot） | 远端 Lark PRD 正文 hash 与 intake baseline 一致；无基线或远端不可读时 fail-closed | error（experimental） |
 | `DOC-STRUCT-001` | G0+ | 项目目录存在 | error |
 | `DOC-STRUCT-002` | G0+ | `README.md` 存在 | error |
 | `DOC-STRUCT-003` | G0+ | `product/00-feature-inventory.md` 存在 | error |

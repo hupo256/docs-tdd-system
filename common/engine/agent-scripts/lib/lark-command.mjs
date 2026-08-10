@@ -55,7 +55,7 @@ const buildDefaultCommand = (source) => {
   const service = ['doc', 'docs', 'wiki'].includes(source.type) ? 'docs' : source.type
   const operation = source.operation || 'read'
   if (service === 'docs' && operation === 'read') {
-    return [larkCliBin, 'docs', '+fetch', '--api-version', 'v2', '--doc', source.url, '--doc-format', 'markdown']
+    return [larkCliBin, 'docs', '+fetch', '--api-version', 'v2', '--doc', source.url, '--doc-format', 'markdown', '--as', 'user', '--format', 'json']
   }
   const urlFlag = operation === 'search' ? '--query' : '--url'
   return [larkCliBin, service, `+${operation}`, urlFlag, source.url, '--format', 'markdown']

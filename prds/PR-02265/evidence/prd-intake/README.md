@@ -1,43 +1,53 @@
 # PRD Intake Evidence — PR-02265
 
-> 逐项引用 `agent/prd-source-manifest.json` 的 `sourceId`，记录读取方式、提取结论与歧义。不复制 manifest 全文。规则：[lark-doc-sync.md §8](../../../../common/rules/lark-doc-sync.md) + [execution-evidence.md §6](../../../../common/rules/execution-evidence.md)。
+> 依据 [lark-doc-sync.md §8](../../../../common/rules/lark-doc-sync.md)。本次因远端漂移重新 intake，不沿用 revision 1009 的旧结论。
 
 ## 概况
 
 | 项 | 值 |
 |----|----|
-| PRD 源 | `inbox/lark-sync/prd-latest.md`（docx `P2xud4WYyoapp6xfjskl7UI3gKc` rev 1009） |
-| 富媒体总数 | 18（15 图片 + 3 embed） |
-| 已读取/分类 | 18 / 18 |
-| unresolved | 0 |
-| 本地化附件 | `inbox/lark-sync/assets/img-001.png` ~ `img-015.png`（assetHash 已入 manifest） |
+| Lark document | `P2xud4WYyoapp6xfjskl7UI3gKc` |
+| 远端 revision | `1576`（旧基线 `1009`） |
+| 规范化正文 SHA-256 | `1551f02728f41b60f28ecc276a1e29494b3028a023f1f5564d9871538750f31d` |
+| Intake source | `inbox/lark-sync/prd-latest.extracted.md` |
+| 富媒体总数 | 34（20 图片 + 2 Markdown 表格 + 1 sheet + 11 cite） |
+| 已读取 / unresolved | 34 / 0 |
+| 本地化附件 | `inbox/lark-sync/assets/img-001.png` ~ `img-020.png` |
 
 ## 读取方式
 
-- **图片**：`src` media token 走 `lark-cli api GET /open-apis/drive/v1/medias/{token}/download`；两张 markdown `![]()`（IMG-001、IMG-015）走 authcode stream URL `curl`。全部落地 `assets/`，用 vision 逐张读取。
-- **验收标准 sheet**（`PRD-EMBED-003`，`<sheet token=OoeSs7l5xhJy4Xtl40mliE0sgPf sheet-id=uwyfAZ>`）：`lark-cli sheets +cells-get --range A1:D10`，共 9 条验收项。
-- **cite**（`PRD-EMBED-001/002`）：变更记录作者署名（Lucky），markdown-parse，判定装饰性。
+- Lark 文档：`lark-cli docs +fetch --api-version v2 --as user --format json`；解析 JSON 信封中的 document content/revision。
+- 图片：同步器下载临时 media URL 到 `assets/img-001.png`~`img-020.png`，manifest 记录二进制 hash；本地 vision + 相邻正文交叉核对。
+- 验收 sheet：`PRD-EMBED-003`，读取 `OoeSs7l5xhJy4Xtl40mliE0sgPf / uwyfAZ / A1:D10`，仍为原 9 条验收项。
+- cite：`PRD-EMBED-004`~`014` 为变更人/评审人员署名，判为 decorative。
+- 空需求表：`PRD-TABLE-002` 为无内容占位，判为 decorative。
 
-> 前置：`lark-cli auth login`（user token）授予 `drive:file:download` + `sheets:spreadsheet:read`；bot 身份缺这两个 scope（本项目 intake 阻塞根因，已解除）。
+## revision 1576 新增/更新需求
 
-## 关键提取结论
+| Feature | Source | 提取结论 |
+|---------|--------|----------|
+| F08 | `PRD-IMG-019` + §5.1 正文 | 合约做市账户新增/编辑费率配置需要即时生效 |
+| F09 | `PRD-IMG-019` `PRD-IMG-020` | 合约蓝框改为两条：账号×币对生效规则 + 外部做市商表优先于手续费折扣表 |
+| F10 | `PRD-IMG-021` | 现货做市账户蓝框补充外部做市商表优先于会员等级--基础配置表 |
+| F11 | `PRD-IMG-034` + 相邻正文 | 用户白名单添加/编辑新增蓝框；主语为「账号若在」 |
+| F12 | `PRD-IMG-035` + 相邻正文 | 币对白名单添加/编辑新增蓝框；主语为「账号交易的币对若在」 |
+| F13 | `PRD-IMG-022` + 相邻正文 | 合约后台手续费折扣添加/编辑新增蓝框；外部做市商表费率优先 |
 
-- **F01/5.1**：4 个费率字段（开/平仓 × Maker/Taker）区间 `[0,100]`→`[-100,100]`，精度 6 位不变；现状截图(IMG-002)确认旧提示「请输入【0，100】之间的数字」。
-- **F02/5.1**：IMG-004 确认新增常驻提示「按对应订单类型分别收取，负值表示返佣费率(如-0.000001)」位于 4 费率框下方、蓝框「生效规则」上方。弹窗完整字段：维持保证金倍率系数、4 费率(%)、所属做市机构、描述(0/50)。
-- **F04/5.5**：IMG-015 查询列表「手续费率」列示例 0%/0.000001%/0.00000002%，需兼容负值。
-- **F05/F06/5.3**：IMG-005~014 为各端「手续费/资金流水」展示位截图（前台合约账户/合约交易，现货后台用户详情，合约后台仓位/成交/手续费/资产流水）；均为正数化展示触点，无隐藏字段（IMG-005、IMG-012 已开图确认，余下同类，未逐张开图）。
-- **验收 sheet**：见 [00-feature-inventory.md](../../product/00-feature-inventory.md) 验收标准对照表。
+## 原有需求图片映射
 
-## 歧义 / 待确认（同步至 [06-collaboration.md](../../product/06-collaboration.md)）
+- `PRD-IMG-016`~`018`：F01/F03，合约负费率输入与校验。
+- `PRD-IMG-019`：F02 常驻返佣提示，同时承载新增 F08/F09。
+- `PRD-IMG-023`~`026`：F05 前台 web 展示触点。
+- `PRD-IMG-027`~`032`：F06 后台展示触点。
+- `PRD-IMG-033`：F04 外部做市商列表负费率显示。
+- `PRD-TABLE-003`：F07 异常处理；`PRD-EMBED-003`：原 9 条核心验收标准。
 
-1. **F03 校验提示文案不一致**：正文「请输入【-100,100】之间的数字，精度支持6位」 vs 优化后 mockup(IMG-003)「请输入数值，精度支持6位」（无区间）。
-2. **精度位数**：验收 sheet 第 2 条写「超出 N 位〔待确认〕」，PRD 正文为 6 位——确认是否统一 6 位。
-3. **责任范围**：需求跨 现货后台/合约后台/前台(web·app·h5)/后端，需确认 `@fameex/web`(apps/web) 承担哪些 Feature。
+## 冲突处理
 
-## 可复核命令
+1. F03：优化后图片短文案与正文不一致，沿用已确认口径——以正文「请输入【-100,100】之间的数字，精度支持6位」为准。
+2. F11：图片/alt 疑似显示币对主语，但紧邻正文明确为「账号若在」；正文决定逐字文案，图片只决定位置/样式。
+3. F13：图片 OCR/alt 与紧邻正文不一致；正文决定逐字文案，图片只决定位置/样式。
 
-| 命令 | 目标 | 结果 |
-|------|------|------|
-| `lark-cli api GET /open-apis/drive/v1/medias/<token>/download` | 13 张 token 图片 | PASS（size_bytes 返回） |
-| `curl <authcode-stream-url>` | IMG-001/015 | PASS（http 200） |
-| `lark-cli sheets +cells-get --spreadsheet-token OoeSs7l5xhJy4Xtl40mliE0sgPf --sheet-id uwyfAZ --range A1:D10` | 验收 sheet | PASS（9 行） |
+## 漂移复核
+
+`DOC-PRD-010` 每次 gate 重新 fetch 远端并比较规范化正文 hash。hash 不同、baseline 缺失、网络或权限失败均阻塞，要求重新 sync → intake → approve。

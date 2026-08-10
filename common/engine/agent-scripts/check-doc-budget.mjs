@@ -51,6 +51,7 @@ const SELF_TEST_SCRIPTS = [
   ['lib/delivery-summary.mjs', '--self-test'],
   ['lib/gate-payload.mjs', '--self-test'],
   ['lib/golden-verdict.mjs', '--self-test'],
+  ['lib/lark-prd-drift.mjs', '--self-test'],
   ['lib/prd-manifest.mjs', '--self-test'],
   ['lib/project-index.mjs', '--self-test'],
   ['lib/project-scaffold.mjs', '--self-test'],

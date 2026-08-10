@@ -1,21 +1,21 @@
 {
-  "generatedAt": "2026-08-07T12:14:11.631Z",
+  "generatedAt": "2026-08-10T13:26:39.563Z",
   "tool": "run-project-gate.mjs",
   "projectId": "PR-02265",
   "gate": "G4",
   "ok": true,
   "summary": {
-    "total": 54,
+    "total": 55,
     "ok": 48,
-    "warn": 0,
+    "warn": 1,
     "waived": 6,
     "fail": 0
   },
   "groups": {
     "documentation": {
-      "total": 54,
+      "total": 55,
       "ok": 48,
-      "warn": 0,
+      "warn": 1,
       "waived": 6,
       "fail": 0
     },
@@ -31,7 +31,7 @@
     {
       "ruleId": "DOC-STRUCT-001",
       "ok": true,
-      "message": "project directory exists: apps/web/docs_tdd/prds/PR-02265",
+      "message": "project directory exists: apps/web/docs_tdd/PR-02265",
       "file": "../docs_tdd/prds/PR-02265",
       "severity": "error",
       "category": "documentation"
@@ -231,7 +231,15 @@
     {
       "ruleId": "DOC-PRD-009",
       "ok": true,
-      "message": "G2-approved PRD fingerprint matches current intake (expected=c23c557680e18058, current=c23c557680e18058)",
+      "message": "G2-approved PRD fingerprint matches current intake (expected=64998c88621d629f, current=64998c88621d629f)",
+      "file": "../docs_tdd/prds/PR-02265/agent/prd-source-manifest.json",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-PRD-010",
+      "ok": true,
+      "message": "remote PRD content hash matches intake baseline: 需求 PRD (revision 1576)",
       "file": "../docs_tdd/prds/PR-02265/agent/prd-source-manifest.json",
       "severity": "error",
       "category": "documentation"
@@ -431,15 +439,15 @@
     {
       "ruleId": "GIT-G4-002",
       "ok": true,
-      "message": "HEAD descends from current origin/online",
+      "message": "baseline valid but origin/online has advanced since branch point; consider syncing before merge",
       "file": "../docs_tdd/prds/PR-02265",
-      "severity": "error",
+      "severity": "warn",
       "category": "documentation"
     },
     {
       "ruleId": "DOC-BLOCK-001",
       "ok": true,
-      "message": "blockers.json 合法（0 条登记）",
+      "message": "blockers.json 合法（3 条登记）",
       "file": "../docs_tdd/prds/PR-02265/agent/blockers.json",
       "severity": "error",
       "category": "documentation"
@@ -454,8 +462,8 @@
     },
     {
       "ruleId": "DOC-BLOCK-003",
-      "ok": true,
-      "message": "无其他 open 登记",
+      "ok": false,
+      "message": "尚有 3 项 open 登记（未卡当前阶段）：BLK-1/blocker、BLK-2/blocker、BLK-3/blocker",
       "file": "../docs_tdd/prds/PR-02265/agent/blockers.json",
       "severity": "warn",
       "category": "documentation"
@@ -466,17 +474,17 @@
       "label": "verify-project-gate PR-02265 G4",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-08-07T12:14:11.499Z",
-      "finishedAt": "2026-08-07T12:14:11.631Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02265/2026-08-07T12-14-11-499Z-verify-project-gate-g4.log"
+      "startedAt": "2026-08-10T13:26:37.246Z",
+      "finishedAt": "2026-08-10T13:26:39.562Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02265/2026-08-10T13-26-37-246Z-verify-project-gate-g4.log"
     },
     {
       "label": "set-project-stage PR-02265 G4",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-08-07T12:14:11.863Z",
-      "finishedAt": "2026-08-07T12:14:11.998Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02265/2026-08-07T12-14-11-863Z-set-project-stage.log"
+      "startedAt": "2026-08-10T13:26:39.822Z",
+      "finishedAt": "2026-08-10T13:26:40.089Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02265/2026-08-10T13-26-39-822Z-set-project-stage.log"
     }
   ],
   "codeRules": {
@@ -494,7 +502,7 @@
     "baselineFile": null
   },
   "source": {
-    "gateCommand": "/Users/aven/.nvm/versions/node/v24.7.0/bin/node /Users/aven/github/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-02265 G4 --json",
+    "gateCommand": "/opt/homebrew/Cellar/node/26.3.1/bin/node /Users/aven/github/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-02265 G4 --json",
     "parseError": null,
     "codeRulesCommand": null,
     "codeRulesParseError": null,
@@ -502,18 +510,18 @@
     "buildQualityParseError": null
   },
   "fingerprint": {
-    "headSha": "445876e97f3d118dec3d594d3582538d2f30b52f",
-    "baseSha": "445876e97f3d118dec3d594d3582538d2f30b52f",
-    "dirtyHash": "9b252769af98149549a5db3746be497ab537d4570e851c2e5507b2b1dd5e35ee",
-    "dirtyFileCount": 1,
+    "headSha": "148a0cab8352e81b41a6f755faa212eb83ec2fde",
+    "baseSha": "3f1c383b023931cd425e17f8eaadbabc749e6d36",
+    "dirtyHash": "4820e755e83452e4f2d9b85085f79dbb2f2215942617e0bb32eb560b5e6defaa",
+    "dirtyFileCount": 0,
     "untrackedFileCount": 0,
     "rulesetVersion": "local-2026.07-msw-v1",
-    "ruleReleaseFingerprint": "a82db7bf74c321fbe4b33d06aab8d32806ea0bc96be371c31f2634830d52a12c",
-    "effectiveRulesFingerprint": "d999243ba97f5c97ecd12baf8e81dcc894be6fc7f3af2ab3ff703bc490f550b2"
+    "ruleReleaseFingerprint": "33fcec16dca4490b024566313f3faef34b15953f46fdf6ba6bd03e1bb349c69e",
+    "effectiveRulesFingerprint": "16d0917b410d4d8478afc7a905695acb66f031d873b1f5cc1aeb26c6aea893cc"
   },
   "cache": {
     "hit": false,
-    "fingerprint": "aee31af50b6ec348"
+    "fingerprint": "4d5a37e1340b9e4f"
   },
   "stageSync": {
     "attempted": true,

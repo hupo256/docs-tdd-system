@@ -96,6 +96,102 @@
         "effectiveRulesFingerprint": "d999243ba97f5c97ecd12baf8e81dcc894be6fc7f3af2ab3ff703bc490f550b2"
       },
       "evidence": "evidence/gate/2026-08-07-121411-g4/README.md"
+    },
+    {
+      "gate": "G2",
+      "ok": true,
+      "generatedAt": "2026-08-10T13:23:03.115Z",
+      "tool": "run-project-gate.mjs",
+      "summary": {
+        "total": 39,
+        "ok": 37,
+        "warn": 2,
+        "waived": 0,
+        "fail": 0
+      },
+      "fingerprint": {
+        "headSha": "148a0cab8352e81b41a6f755faa212eb83ec2fde",
+        "baseSha": "3f1c383b023931cd425e17f8eaadbabc749e6d36",
+        "dirtyHash": "4820e755e83452e4f2d9b85085f79dbb2f2215942617e0bb32eb560b5e6defaa",
+        "dirtyFileCount": 0,
+        "untrackedFileCount": 0,
+        "rulesetVersion": "local-2026.07-msw-v1",
+        "ruleReleaseFingerprint": "3d3d58558dadfd574862f5be70371bc52c603d1dbb47e41b2818132d0b7b73ca",
+        "effectiveRulesFingerprint": "2d673e376fec9d5414a1fc048af81364d9e2982191ec4830ce2e82cc585c46d2"
+      },
+      "evidence": "evidence/gate/2026-08-10-132303-g2/README.md"
+    },
+    {
+      "gate": "G4",
+      "ok": true,
+      "generatedAt": "2026-08-10T13:23:35.887Z",
+      "tool": "run-project-gate.mjs",
+      "summary": {
+        "total": 55,
+        "ok": 47,
+        "warn": 2,
+        "waived": 6,
+        "fail": 0
+      },
+      "fingerprint": {
+        "headSha": "148a0cab8352e81b41a6f755faa212eb83ec2fde",
+        "baseSha": "3f1c383b023931cd425e17f8eaadbabc749e6d36",
+        "dirtyHash": "4820e755e83452e4f2d9b85085f79dbb2f2215942617e0bb32eb560b5e6defaa",
+        "dirtyFileCount": 0,
+        "untrackedFileCount": 0,
+        "rulesetVersion": "local-2026.07-msw-v1",
+        "ruleReleaseFingerprint": "3d3d58558dadfd574862f5be70371bc52c603d1dbb47e41b2818132d0b7b73ca",
+        "effectiveRulesFingerprint": "2d673e376fec9d5414a1fc048af81364d9e2982191ec4830ce2e82cc585c46d2"
+      },
+      "evidence": "evidence/gate/2026-08-10-132335-g4/README.md"
+    },
+    {
+      "gate": "G4",
+      "ok": true,
+      "generatedAt": "2026-08-10T13:24:05.541Z",
+      "tool": "run-project-gate.mjs",
+      "summary": {
+        "total": 55,
+        "ok": 48,
+        "warn": 1,
+        "waived": 6,
+        "fail": 0
+      },
+      "fingerprint": {
+        "headSha": "148a0cab8352e81b41a6f755faa212eb83ec2fde",
+        "baseSha": "3f1c383b023931cd425e17f8eaadbabc749e6d36",
+        "dirtyHash": "4820e755e83452e4f2d9b85085f79dbb2f2215942617e0bb32eb560b5e6defaa",
+        "dirtyFileCount": 0,
+        "untrackedFileCount": 0,
+        "rulesetVersion": "local-2026.07-msw-v1",
+        "ruleReleaseFingerprint": "3d3d58558dadfd574862f5be70371bc52c603d1dbb47e41b2818132d0b7b73ca",
+        "effectiveRulesFingerprint": "2d673e376fec9d5414a1fc048af81364d9e2982191ec4830ce2e82cc585c46d2"
+      },
+      "evidence": "evidence/gate/2026-08-10-132405-g4/README.md"
+    },
+    {
+      "gate": "G4",
+      "ok": true,
+      "generatedAt": "2026-08-10T13:26:39.563Z",
+      "tool": "run-project-gate.mjs",
+      "summary": {
+        "total": 55,
+        "ok": 48,
+        "warn": 1,
+        "waived": 6,
+        "fail": 0
+      },
+      "fingerprint": {
+        "headSha": "148a0cab8352e81b41a6f755faa212eb83ec2fde",
+        "baseSha": "3f1c383b023931cd425e17f8eaadbabc749e6d36",
+        "dirtyHash": "4820e755e83452e4f2d9b85085f79dbb2f2215942617e0bb32eb560b5e6defaa",
+        "dirtyFileCount": 0,
+        "untrackedFileCount": 0,
+        "rulesetVersion": "local-2026.07-msw-v1",
+        "ruleReleaseFingerprint": "33fcec16dca4490b024566313f3faef34b15953f46fdf6ba6bd03e1bb349c69e",
+        "effectiveRulesFingerprint": "16d0917b410d4d8478afc7a905695acb66f031d873b1f5cc1aeb26c6aea893cc"
+      },
+      "evidence": "evidence/gate/2026-08-10-132639-g4/README.md"
     }
   ]
 }

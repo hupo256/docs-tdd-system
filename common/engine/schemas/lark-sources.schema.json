@@ -25,6 +25,7 @@
           "name": { "type": "string" },
           "url": { "type": "string" },
           "target": { "type": "string" },
+          "localizedTarget": { "type": "string" },
           "syncedAt": { "type": "string", "format": "date-time" },
           "revision": { "type": "string" }
         },

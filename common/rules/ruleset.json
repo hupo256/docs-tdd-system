@@ -48,6 +48,11 @@
       "blocking": true,
       "waivable": false
     },
+    "DOC-PRD-010": {
+      "maturity": "experimental",
+      "blocking": true,
+      "waivable": false
+    },
     "DOC-G3-IMPL-001": {
       "maturity": "experimental",
       "blocking": false,
