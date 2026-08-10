@@ -1,6 +1,6 @@
 # Hook Integration
 
-本文说明如何把 `docs_tdd` 机器 gate 接到本地 Agent。公共命令与规则判断不依赖 Agent；Claude/Codex 配置只做薄适配。
+本文说明如何把 `docs_tdd` 机器 gate 接到全部已登记 AI 入口。公共命令与规则判断不依赖具体 AI；各入口只做薄适配。
 
 ## 0. Agent-neutral 入口
 
@@ -12,7 +12,9 @@ node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs changed PR-01234
 node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs gate PR-01234 G3
 ```
 
-`capability` 声明 worktree、ruleset 和发布摘要；`doctor` 验证共享 L1、三端 adapter、Claude hook、本地隔离、effective release，并报告 tracked L2 冲突。其中 `L1-SINGLE-SOURCE`（两个 skill）与 `L1-TOPLEVEL-SINGLE-SOURCE`（codex/claude 顶层入口）用 `realpath` 证明三端读的是**字节级同一份 L1**（软链被换成分叉真实文件即 error，不靠子串匹配自欺）；cursor 是声明同一 L3 协议的薄 adapter。无 PostToolUse 能力时，Agent 在完成前必须运行 `changed`。
+`capability` 声明 worktree、当前客户端、ruleset 和发布摘要；`doctor` 验证共享 L1、五入口全集、direct/runtime adapter、Claude hook、本地隔离、effective release，并报告 tracked L2 冲突。其中 `L1-SINGLE-SOURCE`（两个 skill）与 `L1-TOPLEVEL-SINGLE-SOURCE`（Codex/Claude Code 顶层入口）用 `realpath` 证明它们读的是**字节级同一份 L1**：软链断开或被换成内容相同的分叉真实文件也会报错。Cursor 使用生成器产出的薄 adapter；Lark-Codex / Lark-Claude 共用纳入 effective fingerprint 的 runtime adapter。无 PostToolUse 能力时，Agent 在完成前必须运行 `changed`。
+
+固定入口全集为 `codex`、`claude`、`cursor`、`lark-codex`、`lark-claude`。`doctor` 对缺项、多项、缺 adapter、缺 enforcement 或缺 source fingerprint 一律以 `VERIFY-RULE-003` 阻断，避免新增入口后忘记接规则链。
 
 ## 1. Hook 入口
 
@@ -67,7 +69,7 @@ Claude Code 风格 PostToolUse hook 示例：
 
 本地路径按实际仓库位置替换。
 
-Codex 与 Cursor 当前没有纳入本系统信任边界的自动 PostToolUse hook，必须执行 `changed` fallback；三端阶段出口都必须执行 gate。
+Codex 与 Cursor 当前没有纳入本系统信任边界的自动 PostToolUse hook，必须执行 `changed` fallback；三个直接入口的阶段出口都必须执行 gate。Lark 两个入口由 Worker 在每次 AI 调用前执行 fresh/fail-closed 校验，并继续执行 Worker quality gate。
 
 ## 3. Smoke Test
 
@@ -98,4 +100,4 @@ node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs check <PROJECT-I
 node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs guard
 ```
 
-`guard` 串跑 `rule-release --check`（发布是否 fresh）、`golden-run`（gate 机器自身回归，发布 stale 时自动 `--skip-aggregator`）、`doctor`（三端加载/冲突/隔离）三检并聚合退出码：任一失败即 BLOCK。建议改完规则/脚本、或每次开工前跑一次；**不安装 launchd/cron 定时器**（个人本地，保持 personal-local，不写常驻定时任务）。
+`guard` 串跑 `rule-release --check`（发布是否 fresh）、`golden-run`（gate 机器自身回归，发布 stale 时自动 `--skip-aggregator`）、`doctor`（五入口覆盖/同源、adapter、冲突与隔离）三检并聚合退出码：任一失败即 BLOCK。建议改完规则/脚本、或每次开工前跑一次；**不安装 launchd/cron 定时器**（个人本地，保持 personal-local，不写常驻定时任务）。

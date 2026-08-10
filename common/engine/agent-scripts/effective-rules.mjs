@@ -3,10 +3,11 @@
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { existsSync, lstatSync, readdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs'
-import { homedir } from 'node:os'
+import { existsSync, lstatSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
+import { homedir, tmpdir } from 'node:os'
 import { dirname, join, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { createAgentClientMatrix, REQUIRED_AGENT_CLIENT_IDS, validateAgentClientMatrix } from './lib/agent-clients.mjs'
 import { createCursorAdapter } from './lib/agent-rule-adapters.mjs'
 import { resolveRoots } from './lib/roots.mjs'
 
@@ -32,13 +33,18 @@ const expectedCursorAdapter = createCursorAdapter({
 const sources = {
   l1: [join(g.aiRules, 'AGENT.md'), join(g.aiRules, 'skills/coding-quality/SKILL.md'), join(g.aiRules, 'skills/figma-read/SKILL.md')],
   adapters: [join(g.codex, 'AGENTS.md'), join(g.claude, 'CLAUDE.md'), g.cursorLocalGovernance, join(g.claude, 'settings.json')],
+  runtimeAdapters: [
+    join(docsSystemRoot, 'common/lark-bot/lib/lark-rule-context.mjs'),
+    join(docsSystemRoot, 'common/lark-bot/lib/lark-worker-prompts.mjs'),
+    join(docsSystemRoot, 'common/lark-bot/lib/lark-worker-run.mjs'),
+  ],
   skillEntries: [join(g.codex, 'skills/coding-quality'), join(g.claude, 'skills/coding-quality'), join(g.codex, 'skills/figma-read'), join(g.claude, 'skills/figma-read')],
 }
 
 function printHelp() {
   console.log(`usage: effective-rules.mjs <--check|--write|--doctor|--self-test> [--json]
 
-Publish and diagnose the effective local rules consumed by Codex, Claude, and Cursor.
+Publish and diagnose the effective local rules consumed by every registered AI entrypoint.
 
 Options:
   --allow-tracked-rule-changes  Allow an explicitly approved dirty tracked rule surface for this maintenance run.`)
@@ -56,6 +62,7 @@ function walkFiles(root) {
 }
 
 function label(file) {
+  if (file.startsWith(`${docsSystemRoot}/`)) return relative(docsSystemRoot, file).split(sep).join('/')
   if (file.startsWith(`${repoRoot}/`)) return relative(repoRoot, file).split(sep).join('/')
   if (file.startsWith(`${home}/`)) return `~/${relative(home, file).split(sep).join('/')}`
   return relative(repoRoot, file).split(sep).join('/')
@@ -105,27 +112,15 @@ function createClientMatrix(l3Fingerprint) {
     l3Fingerprint,
     conflictOverrides,
   }
-  const sourceFingerprint = createHash('sha256').update(JSON.stringify(canonicalSources)).digest('hex')
-  return {
-    codex: {
-      adapter: label(sources.adapters[0]),
-      postEdit: 'docs-tdd changed',
-      sourceFingerprint,
-      ...canonicalSources,
+  return createAgentClientMatrix({
+    canonicalSources,
+    adapterLabels: {
+      codex: label(sources.adapters[0]),
+      claude: label(sources.adapters[1]),
+      cursor: label(sources.adapters[2]),
+      lark: sources.runtimeAdapters.map(label).join(' + '),
     },
-    claude: {
-      adapter: label(sources.adapters[1]),
-      postEdit: 'PostToolUse + docs-tdd changed fallback',
-      sourceFingerprint,
-      ...canonicalSources,
-    },
-    cursor: {
-      adapter: label(sources.adapters[2]),
-      postEdit: 'docs-tdd changed',
-      sourceFingerprint,
-      ...canonicalSources,
-    },
-  }
+  })
 }
 
 function inspectL3Release() {
@@ -148,6 +143,12 @@ function inspectL3Release() {
 
 function cursorAdapterMatches() {
   return existsSync(g.cursorLocalGovernance) && readFileSync(g.cursorLocalGovernance, 'utf8') === expectedCursorAdapter
+}
+
+function pathsResolveToCanonical(entries, canonical) {
+  if (!existsSync(canonical)) return false
+  const target = realpathSync(canonical)
+  return entries.every((entry) => existsSync(entry) && realpathSync(entry) === target)
 }
 
 function declaresSWR(text) {
@@ -174,7 +175,7 @@ function resolveL2Conflicts(conflicts, overrides = conflictOverrides, canonicalL
 }
 
 function createSnapshot() {
-  const requiredFiles = [...sources.l1, ...sources.adapters, ...collectL2Files()]
+  const requiredFiles = [...sources.l1, ...sources.adapters, ...sources.runtimeAdapters, ...collectL2Files()]
   const missing = requiredFiles.filter((file) => !existsSync(file)).map(label)
   const files = {}
   for (const file of requiredFiles.filter(existsSync).sort((a, b) => label(a).localeCompare(label(b)))) {
@@ -279,13 +280,26 @@ function doctor() {
   const targetsExist = adapterTargets.every(existsSync)
   add('ADAPTER-TARGETS', targetsExist, 'error', targetsExist ? 'router and docs-tdd command targets exist' : `missing adapter target: ${adapterTargets.filter((file) => !existsSync(file)).join(', ')}`, config.docsMountPath)
   const matrix = createSnapshot().clientMatrix
+  const coverage = validateAgentClientMatrix(matrix)
   const matrixFingerprints = new Set(Object.values(matrix).map((client) => client.sourceFingerprint))
-  add('VERIFY-RULE-001', matrixFingerprints.size === 1, 'error', matrixFingerprints.size === 1 ? 'Codex, Claude, and Cursor resolve to one canonical L1/L2/L3 source set' : 'client rule source sets diverge', label(manifestFile))
+  add(
+    'VERIFY-RULE-003',
+    coverage.ok,
+    'error',
+    coverage.ok
+      ? `all registered AI entrypoints are covered: ${REQUIRED_AGENT_CLIENT_IDS.join(', ')}`
+      : `AI entrypoint coverage invalid; missing=${coverage.missing.join(',') || 'none'} extra=${coverage.extra.join(',') || 'none'} incomplete=${coverage.incomplete.join(',') || 'none'}`,
+    label(manifestFile),
+  )
+  add('VERIFY-RULE-001', matrixFingerprints.size === 1, 'error', matrixFingerprints.size === 1 ? 'all registered AI entrypoints resolve to one canonical L1/L2/L3 source set' : 'client rule source sets diverge', label(manifestFile))
+  for (const runtimeAdapter of sources.runtimeAdapters) {
+    add('RUNTIME-ADAPTER-EXISTS', existsSync(runtimeAdapter), 'error', `${label(runtimeAdapter)} ${existsSync(runtimeAdapter) ? 'exists' : 'is missing'}`, label(runtimeAdapter))
+  }
   for (const skill of ['coding-quality', 'figma-read']) {
     const codex = join(home, `.codex/skills/${skill}`)
     const claude = join(home, `.claude/skills/${skill}`)
     const canonical = join(home, `.ai-rules/skills/${skill}`)
-    const same = existsSync(codex) && existsSync(claude) && existsSync(canonical) && realpathSync(codex) === realpathSync(canonical) && realpathSync(claude) === realpathSync(canonical)
+    const same = pathsResolveToCanonical([codex, claude], canonical)
     add('L1-SINGLE-SOURCE', same, 'error', `${skill} ${same ? 'resolves to one shared source' : 'does not resolve to the shared source'}`, label(canonical))
   }
   // 顶层 L1 入口也必须同源：codex/claude 的规则入口须 realpath 到 canonical AGENT.md。
@@ -293,7 +307,7 @@ function doctor() {
   // ADAPTER-PROTOCOL 的子串匹配仍可能通过，而三端从此读到不同的 L1 craft。这条把「读同一套」焊死到字节级。
   const canonicalL1 = sources.l1[0]
   for (const adapter of [sources.adapters[0], sources.adapters[1]]) {
-    const same = existsSync(adapter) && existsSync(canonicalL1) && realpathSync(adapter) === realpathSync(canonicalL1)
+    const same = pathsResolveToCanonical([adapter], canonicalL1)
     add('L1-TOPLEVEL-SINGLE-SOURCE', same, 'error', `${label(adapter)} ${same ? 'resolves to the shared L1 source' : `does not resolve to shared L1 (${label(canonicalL1)}); replace with symlink via install-local-agent-rules.mjs`}`, label(adapter))
   }
   const settingsText = existsSync(sources.adapters[3]) ? readFileSync(sources.adapters[3], 'utf8') : ''
@@ -423,10 +437,26 @@ function selfTest() {
   assert.equal(stableSettingsInput(base), stableSettingsInput(permChanged))
   assert.notEqual(stableSettingsInput(base), stableSettingsInput(hooksChanged))
   assert.equal(createCursorAdapter({ sharedRoot: '/shared', repoRoot: '/repo' }).includes('/common/rules/rule-router.md'), true)
+  const matrix = createClientMatrix('l3')
+  assert.deepEqual(Object.keys(matrix), REQUIRED_AGENT_CLIENT_IDS)
+  assert.equal(validateAgentClientMatrix(matrix).ok, true)
+  assert.equal(new Set(Object.values(matrix).map((client) => client.sourceFingerprint)).size, 1)
   assert.equal(declaresSWR("import useSWR from 'swr'\nuseSWR('/api', fetcher)"), true)
   assert.equal(declaresSWR('Do not introduce SWR; use React Query.'), false)
   assert.deepEqual(resolveL2Conflicts(['legacy-swr.mdc'], [{ id: 'server-state', winner: 'React Query', loserFiles: ['legacy-swr.mdc'] }], 'Use React Query').unresolved, [])
   assert.deepEqual(resolveL2Conflicts(['unknown.mdc'], [], 'Use React Query').unresolved, ['unknown.mdc'])
+  const linkFixture = mkdtempSync(join(tmpdir(), 'effective-rules-links-'))
+  const canonical = join(linkFixture, 'canonical.md')
+  const linked = join(linkFixture, 'linked.md')
+  const divergent = join(linkFixture, 'divergent.md')
+  writeFileSync(canonical, 'canonical\n')
+  symlinkSync(canonical, linked)
+  writeFileSync(divergent, 'canonical\n')
+  assert.equal(pathsResolveToCanonical([linked], canonical), true)
+  assert.equal(pathsResolveToCanonical([divergent], canonical), false)
+  rmSync(linked)
+  assert.equal(pathsResolveToCanonical([linked], canonical), false)
+  rmSync(linkFixture, { recursive: true, force: true })
   console.log('effective-rules self-test passed.')
 }
 

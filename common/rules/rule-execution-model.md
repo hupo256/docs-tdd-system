@@ -23,12 +23,13 @@
 
 | 时点 | 执行动作 | 落实机制 |
 |------|----------|----------|
-| 会话启动/恢复 | 三端 adapter 先读 `rule-router.md`，再执行 `docs-tdd context <PROJECT-ID> <SCENARIO>` | 入口先验证 L3 与 effective 两层发布指纹，再由 `rule-index.json` 按场景生成 context pack；编码场景须先过 G2，并写带三层 fingerprint、G2 输入与 HEAD 的 24 小时 `rule-session.json`；编辑中的未发布规则不能被消费 |
+| 会话启动/恢复 | Codex、Claude Code、Cursor 的 adapter 先读 `rule-router.md`，再执行 `docs-tdd context <PROJECT-ID> <SCENARIO>` | 入口先验证 L3 与 effective 两层发布指纹，再由 `rule-index.json` 按场景生成 context pack；编码场景须先过 G2，并写带客户端、三层 fingerprint、G2 输入与 HEAD 的 24 小时 `rule-session.json` v2；编辑中的未发布规则或其他客户端的旧会话不能被消费 |
+| Lark 无人值守执行 | Lark-Codex / Lark-Claude 在每次启动 AI 前验证发布链，再按任务语义抽取规则章节 | L3/effective 任一 stale、任一路由文件或章节缺失都以 `VERIFY-RULE-004` 阻断；上下文同时绑定两层发布指纹，不能带不完整规则继续执行 |
 | 编码前 | 按变更类型加载 L1 全局规则/skill、L2 `.cursor/rules` 和 routed L3 专题 | G2/G4 文档、复用与所有权盘点把方案约束前置；不能只在 Review 时补读 |
 | 编辑后 | 有 PostToolUse 时按文件调度；无 hook 时执行 `docs-tdd changed <PROJECT-ID>` | 先校验编码 rule session，再由 `verify-code-rules` 扫本次新增/修改内容；这是快速反馈层，不代替阶段 gate |
 | 阶段出口 | 执行 `docs-tdd gate <PROJECT-ID> <Gx>`，G5+ 聚合代码扫描 | `error` 退出码阻断；G6/G8 用 `--write` 生成机器结果和 evidence，规则或工作树变化后旧证据失效 |
 | 判断型验收 | G6 `/code-review` + Browser/Playwright + 必要人工视觉/语义确认 | 处理静态规则无法可靠判断的复用、架构、业务语义和视觉手感；findings 必须逐项已修、豁免或阻塞 |
-| 规则维护 | 更新权威正文、适配器、场景路由、Rule ID/gate、自测和 CHANGELOG | 先发布 L3，再执行 `effective-rules.mjs --write` 发布 L1+adapter+L2+L3 组合指纹；`context/changed/gate` 只消费两者 fresh 的版本 |
+| 规则维护 | 更新权威正文、适配器、场景路由、Rule ID/gate、自测和 CHANGELOG | 先发布 L3，再执行 `effective-rules.mjs --write` 发布 L1+direct adapter+Lark runtime adapter+L2+L3 组合指纹；五个入口只消费两层都 fresh 的版本 |
 
 PostToolUse 是体验优化，不是最终信任边界。当前 Agent 若 `docs-tdd capability` 显示没有自动 hook，必须显式执行 `changed`；无论是否有 hook，阶段出口仍以 `run-project-gate --write` 的结果为准。`docs_tdd` 为 local-only 时，仓库 Husky/CI 也不能被描述为已提供这层保障。
 
@@ -57,9 +58,9 @@ PostToolUse 是体验优化，不是最终信任边界。当前 Agent 若 `docs-
 
 ## 5. 规则发布与消费
 
-规则源只有两种状态：编辑态和已发布态。维护者优先执行 `docs-tdd release <PROJECT-ID> --scenario <SCENARIO>`：依次 check/golden、发布 L3、发布 effective、doctor、完整 golden 和 context smoke，任一步失败恢复两份旧 manifest。底层仍分别由 `rule-release.mjs --write` 与 `effective-rules.mjs --write` 生成清单；effective 发布会直接验证当前 L3 内容 fresh、Cursor adapter 与生成器逐字一致、三端 source matrix 一致且 L2 无未解决冲突。个人覆盖只能来自 gitignored 的 config，必须声明 winner/loser 并进入 adapter、context 与 effective fingerprint；未登记冲突仍阻断。
+规则源只有两种状态：编辑态和已发布态。维护者优先执行 `docs-tdd release <PROJECT-ID> --scenario <SCENARIO>`：依次 check/golden、发布 L3、发布 effective、doctor、完整 golden 和 context smoke，任一步失败恢复两份旧 manifest。底层仍分别由 `rule-release.mjs --write` 与 `effective-rules.mjs --write` 生成清单；effective 发布会直接验证当前 L3 内容 fresh、Cursor adapter 与生成器逐字一致、五入口全集与 source matrix 一致、Lark runtime adapter 已纳入 fingerprint，且 L2 无未解决冲突。个人覆盖只能来自 gitignored 的 config，必须声明 winner/loser 并进入 adapter、context 与 effective fingerprint；未登记冲突仍阻断。
 
-`docs-tdd context/changed/gate` 与 `run-project-gate.mjs` 直达入口在执行前校验两层 freshness。任一清单缺失、损坏或输入漂移时退出 1；`check`、`capability`、`doctor` 仍可运行。context pack 与新 gate evidence 同时携带 L3 和 effective 指纹，从“声称读过某版本”升级为“能证明三端消费了哪组实际内容”。
+`docs-tdd context/changed/gate` 与 `run-project-gate.mjs` 直达入口在执行前校验两层 freshness。任一清单缺失、损坏或输入漂移时退出 1；`check`、`capability`、`doctor` 仍可运行。context pack、新 gate evidence 与 Lark task audit 同时携带 L3 和 effective 指纹，从“声称读过某版本”升级为“能证明五个入口消费了哪组实际内容”。
 
 ## 6. 新规则准入与复盘
 

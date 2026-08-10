@@ -28,9 +28,10 @@ function gitOutput(args, cwd) {
   return result.status === 0 ? result.stdout : ''
 }
 
-function currentState(id, worktree, release, effectiveRules) {
+function currentState(id, worktree, release, effectiveRules, client) {
   return {
     projectId: id,
+    client,
     ruleReleaseFingerprint: release.currentFingerprint,
     effectiveRulesFingerprint: effectiveRules.currentFingerprint,
     codeReadinessFingerprint: codeReadinessFingerprint(resolveProjectRoot(id)),
@@ -54,14 +55,13 @@ export function verifyG2Ready(id, worktree, scriptDir) {
 }
 
 /** Persist the coding context and source fingerprints as machine evidence. */
-export function writeRuleSession(id, worktree, release, effectiveRules, pack) {
+export function writeRuleSession(id, worktree, release, effectiveRules, pack, client) {
   const session = {
-    version: 1,
-    ...currentState(id, worktree, release, effectiveRules),
+    version: 2,
+    ...currentState(id, worktree, release, effectiveRules, client),
     scenario: pack.scenario,
     mode: pack.mode,
     contextFingerprint: pack.fingerprint,
-    client: process.env.DOCS_TDD_AGENT_CLIENT || (process.env.CLAUDE_PROJECT_DIR ? 'claude' : 'manual-agent-adapter'),
     generatedAt: new Date().toISOString(),
   }
   const file = join(resolveProjectRoot(id), 'agent/rule-session.json')
@@ -71,12 +71,12 @@ export function writeRuleSession(id, worktree, release, effectiveRules, pack) {
 }
 
 /** Block changed/G5+ when the agent did not load the current coding rules. */
-export function requireRuleSession(id, worktree, release, effectiveRules) {
+export function requireRuleSession(id, worktree, release, effectiveRules, client) {
   const file = join(resolveProjectRoot(id), 'agent/rule-session.json')
   const session = existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : null
   const result = validateRuleSession({
     session,
-    current: currentState(id, worktree, release, effectiveRules),
+    current: currentState(id, worktree, release, effectiveRules, client),
   })
   if (result.ok) return true
   console.error(`[VERIFY-RULE-002] coding rule session is missing or stale: ${result.errors.join('; ')}`)

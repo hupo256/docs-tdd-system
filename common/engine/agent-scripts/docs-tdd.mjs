@@ -9,6 +9,7 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { codeFingerprint, matchesGateFingerprint } from './lib/fingerprint.mjs'
 import { resolveProjectRoot, resolveRoots, rulesRoot } from './lib/roots.mjs'
+import { resolveRuleSessionClient } from './lib/rule-session.mjs'
 import { CODING_SCENARIOS, requireRuleSession, verifyG2Ready, writeRuleSession } from './lib/rule-session-runtime.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
@@ -17,7 +18,20 @@ const releaseScript = join(scriptDir, 'rule-release.mjs')
 const effectiveRulesScript = join(scriptDir, 'effective-rules.mjs')
 const cliArgs = process.argv.slice(2)
 const [command, projectId] = cliArgs
-const positional = cliArgs.slice(2).filter((arg) => !arg.startsWith('--'))
+const commandArgs = cliArgs.slice(2)
+const clientIndex = commandArgs.indexOf('--client')
+if (clientIndex >= 0 && !commandArgs[clientIndex + 1]) {
+  console.error('--client requires one of: codex, claude, cursor, manual')
+  process.exit(1)
+}
+let agentClient
+try {
+  agentClient = resolveRuleSessionClient({ requested: clientIndex >= 0 ? commandArgs[clientIndex + 1] : undefined })
+} catch (error) {
+  console.error(error.message)
+  process.exit(1)
+}
+const positional = commandArgs.filter((arg, index) => !arg.startsWith('--') && commandArgs[index - 1] !== '--client')
 const detail = positional[0]
 const fullContext = cliArgs.includes('--full')
 const noCache = cliArgs.includes('--no-cache')
@@ -464,6 +478,7 @@ function capability(id) {
   const effectiveRules = inspectEffectiveRules()
   const hook = process.env.CLAUDE_PROJECT_DIR ? 'claude-posttooluse' : 'manual-agent-adapter'
   console.log(`docs_tdd root: ${docsRoot}`)
+  console.log(`agent client: ${agentClient}`)
   console.log(`agent adapter: ${hook}`)
   console.log(`automatic post-edit hook: ${hook === 'claude-posttooluse' ? 'available' : 'unavailable'}`)
   console.log(`fallback: run docs-tdd changed ${id || '<PROJECT-ID>'} before completion`)
@@ -553,7 +568,8 @@ if (command === 'capability') {
 }
 
 if (command === 'doctor') {
-  process.exit(run([effectiveRulesScript, '--doctor', ...cliArgs.slice(2).filter((arg) => arg.startsWith('--'))]))
+  const doctorFlags = commandArgs.filter((arg) => ['--json', '--allow-tracked-rule-changes'].includes(arg))
+  process.exit(run([effectiveRulesScript, '--doctor', ...doctorFlags]))
 }
 
 if (command === 'release') {
@@ -585,7 +601,7 @@ if (command === 'guard') {
 }
 
 if (!new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(projectId || '')) {
-  console.error('usage: docs-tdd.mjs <kickoff|status|resume|next|capability|doctor|release|golden|guard|check|gate|context|changed|recommend> PR-01234 [G0-G8|scenario] [--compact|--full|--no-cache]')
+  console.error('usage: docs-tdd.mjs <kickoff|status|resume|next|capability|doctor|release|golden|guard|check|gate|context|changed|recommend> PR-01234 [G0-G8|scenario] [--compact|--full|--no-cache] [--client codex|claude|cursor|manual]')
   process.exit(1)
 }
 
@@ -604,11 +620,11 @@ else {
   const effectiveRules = requireFreshEffectiveRules()
   if (!effectiveRules) process.exit(1)
   if (command === 'gate') {
-    if (['G5', 'G6', 'G7', 'G8'].includes((detail || 'G3').toUpperCase()) && !requireRuleSession(projectId, worktree, release, effectiveRules)) process.exit(1)
+    if (['G5', 'G6', 'G7', 'G8'].includes((detail || 'G3').toUpperCase()) && !requireRuleSession(projectId, worktree, release, effectiveRules, agentClient)) process.exit(1)
     status = run([join(scriptDir, 'run-project-gate.mjs'), projectId, detail || 'G3', '--write', ...(noCache ? ['--no-cache'] : [])], worktree)
     if (status === 0) maybeBroadcastGate(projectId, (detail || 'G3').toUpperCase())
   } else if (command === 'changed') {
-    if (!requireRuleSession(projectId, worktree, release, effectiveRules)) process.exit(1)
+    if (!requireRuleSession(projectId, worktree, release, effectiveRules, agentClient)) process.exit(1)
     status = runChanged(projectId, worktree, effectiveRules.currentFingerprint)
   } else if (command === 'context') {
     try {
@@ -621,7 +637,7 @@ else {
       console.log(`context pack: ${pack.output}`)
       console.log(`context metrics: sources=${pack.refs.length}, sourceChars=${pack.sourceChars}, packChars=${pack.packChars}, cache=${pack.cacheHit ? 'hit' : 'miss'}, duration=${pack.durationMs}ms`)
       console.log(`routed rules: ${pack.refs.join(', ')}`)
-      if (CODING_SCENARIOS.has(scenario)) writeRuleSession(projectId, worktree, release, effectiveRules, pack)
+      if (CODING_SCENARIOS.has(scenario)) writeRuleSession(projectId, worktree, release, effectiveRules, pack, agentClient)
       printGateHeartbeat(projectId, resolvedWorktree)
     } catch (error) {
       console.error(error.message)

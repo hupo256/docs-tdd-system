@@ -1,6 +1,6 @@
 # docs_tdd — 可移植的 AI 前端开发规则与门禁系统
 
-一套**独立、可复用**的 AI 前端开发操作系统：用「先文档后代码 + G0-G8 门禁 + 机器可验证证据」约束 AI（Codex / Claude / Cursor）与人协作完成前端功能开发。与具体业务仓库解耦，可挂载到任意前端项目复用。
+一套**独立、可复用**的 AI 前端开发操作系统：用「先文档后代码 + G0-G8 门禁 + 机器可验证证据」约束 Codex、Claude Code、Cursor、Lark-Codex、Lark-Claude 与人协作完成前端功能开发。与具体业务仓库解耦，可挂载到任意前端项目复用。
 
 > 本仓库是从某前端工程中沉淀、抽离出的独立系统，经多轮真实项目迭代。作为个人知识库独立版本管理，不含任何业务机密以外的通用方法论。
 
@@ -36,6 +36,8 @@ docs-tdd release <PROJECT-ID> --scenario X # 原子发布 L3/effective + doctor/
 docs-tdd golden                            # 让门禁机器自己被回归测试
 docs-tdd guard                             # 机器层兜底：一条命令跑 golden + 发布 fresh 检查 + doctor
 ```
+
+统一审计入口是 `docs-tdd doctor`：它检查五个 AI 入口是否一个不少、没有未登记入口，是否引用同一组 L1/L2/L3 source fingerprint，以及软链、adapter、Lark runtime 和发布清单是否漂移。需要连门禁回归一起检查时运行 `docs-tdd guard`；任一项失败都不是 PASS。
 
 ## 首次接入一个项目
 
@@ -81,7 +83,7 @@ node apps/web/docs_tdd/common/engine/agent-scripts/lib/roots.mjs --self-test
 node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs doctor
 ```
 
-第一条最后显示 `roots: OK`，第二条检查规则适配、冲突、本地隔离和发布状态。失败时按输出修配置；日常使用不需要关注 `docsSystemRoot`、`consumerRoot`、`consumerWorktree` 这些内部变量。
+第一条最后显示 `roots: OK`，表示脚本已从当前目录找到三件事：规则系统放在哪里、哪个仓库在使用它、当前命令属于哪个 worktree。第二条检查五个 AI 入口、规则适配、冲突、本地隔离和发布状态。失败时按输出修配置；日常使用只需要维护 `docs-tdd.config.json` 和挂载软链，不需要理解内部变量或手工拼路径。
 
 后续由 `prepare-coding-worktree.mjs` 创建的功能 worktree 会复用同一套配置，并自动挂载这份文档系统。
 
@@ -101,7 +103,7 @@ AI 会先读 `common/rules/rule-router.md`，再执行 `docs-tdd kickoff PR-0123
 
 **3. G1 文档生成**：AI 基于启动器生成的模板填写 PRD 全量功能清单、scope、技术方案初稿、任务与协作记录；G1 有独立机器出口，不与 G0 共用空骨架判定。
 
-**4. 按场景加载规则**：`docs-tdd context PR-01234 <SCENARIO>` 生成 compact 规则包，只读命中场景的专题，不全读 `common/`。编码场景须先通过 G2，并签发绑定规则指纹、G2 输入与 HEAD 的 24 小时 rule session；`changed` 和 G5-G8 拒绝缺失或过期会话。常用场景：`g0_g2_scope` `write_api` `write_mapper` `write_query_hook` `write_ui` `write_figma` `write_msw` `g6_verify`（全表见 `rule-router.md §3`）。
+**4. 按场景加载规则**：`docs-tdd context PR-01234 <SCENARIO>` 生成 compact 规则包，只读命中场景的专题，不全读 `common/`。编码场景须先通过 G2，并签发绑定当前客户端、规则指纹、G2 输入与 HEAD 的 24 小时 rule session v2；`changed` 和 G5-G8 拒绝缺失、过期或由其他客户端签发的会话。Cursor adapter 会自动带 `--client cursor`；手动调用可显式传 `--client codex|claude|cursor|manual`。Lark 两个入口不复用这份会话，而是在每个任务启动 AI 前重新校验发布链和全部路由章节。常用场景：`g0_g2_scope` `write_api` `write_mapper` `write_query_hook` `write_ui` `write_figma` `write_msw` `g6_verify`（全表见 `rule-router.md §3`）。
 
 **5. G2 方案定稿**：对功能清单逐条确认「做 / 不做 / 延期」，写完 `product/02-technical-design.md`（含复用盘点、PRD 路径核验）后**才允许写业务代码**。
 

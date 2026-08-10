@@ -29,9 +29,9 @@ For FameEX tasks, read repository \`AGENTS.md\`, repository \`CLAUDE.md\`, the m
 
 Then use:
 
-- \`node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs context <PROJECT-ID> <SCENARIO>\`
-- \`node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs changed <PROJECT-ID>\` after edits
-- \`node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs gate <PROJECT-ID> <Gx>\` at stage exit
+- \`node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs context <PROJECT-ID> <SCENARIO> --client cursor\`
+- \`node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs changed <PROJECT-ID> --client cursor\` after edits
+- \`node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs gate <PROJECT-ID> <Gx> --client cursor\` at stage exit
 
 If context is blocked or reports stale/conflicting rules, do not edit business code. Cursor has no trusted local PostToolUse gate in this setup, so \`changed\` is mandatory fallback. Do not copy rule bodies into this adapter.
 `
@@ -45,9 +45,11 @@ function selfTest() {
   })
   assert.match(adapter, /\/repo\/apps\/web\/docs_tdd\/common\/rules\/rule-router\.md/)
   assert.match(adapter, /common\/engine\/agent-scripts\/docs-tdd\.mjs context/)
+  assert.match(adapter, /--client cursor/)
   assert.doesNotMatch(adapter, /docs_tdd\/common\/rule-router\.md/)
   assert.doesNotMatch(adapter, /docs_tdd\/common\/agent-scripts/)
   assert.match(adapter, /swr\.mdc.*React Query/)
+  assert.notEqual(`${adapter}\n# drift`, adapter)
   console.log('agent-rule-adapters self-test passed.')
 }
 

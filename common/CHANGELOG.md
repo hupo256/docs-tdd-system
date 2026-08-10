@@ -7,6 +7,13 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-08-10（五入口同源审计与执行前防漂移）
+
+- AI 入口收敛为固定全集：Codex、Claude Code、Cursor、Lark-Codex、Lark-Claude；effective client matrix 缺项、多项或缺执行保障都会由 `VERIFY-RULE-003` 阻断，Lark runtime adapter 也进入 effective fingerprint。
+- 交互式编码会话升级为 v2，绑定 `codex|claude|cursor|manual`、两层发布指纹、G2 输入、HEAD 与 24 小时有效期；Cursor adapter 显式传客户端，错客户端复用会话由 `VERIFY-RULE-002` 阻断。
+- Lark Worker 每次启动 AI 前校验 L3/effective 均 fresh，并把两层指纹写入规则上下文；任一路由文件或章节缺失都以 `VERIFY-RULE-004` fail-closed，不再只告警后继续。
+- `doctor` 增加入口全集审计与真实软链回归；补齐断链、分叉真实文件、入口矩阵和适配器漂移测试。生效范围仅本地规则系统与 Lark 执行链，不新增其他 AI 入口。
+
 ## 2026-08-09（Lark 测试反馈不再被 G2 / 非必要环境检查误阻断）
 
 - 真实事故：PR-01947 样式已改完，`git diff --check` 与 Biome 通过；随后本地端口权限导致 Playwright 页面验证无法启动，Codex 按旧契约返回 `failed/env`，群内收到错误的红色失败卡。

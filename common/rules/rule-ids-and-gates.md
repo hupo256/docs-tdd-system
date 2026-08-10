@@ -305,8 +305,10 @@ docs-tdd golden --keep          # 保留 PR-00000 供手工排查
 | `VERIFY-TEST-002` | G6+（`verify-build-quality.mjs`） | 改动的 `.ts` 逻辑文件导出函数须有对应单测 | warn |
 | `VERIFY-BUILD-001` | G6+（`run-project-gate.mjs`） | 机器事实层缺席守卫：未执行/输出不可解析/无理由跳过即 fail，有理由跳过降 warn | error/warn |
 | `VERIFY-PROD-BUILD-001` | G8（`verify-build-quality.mjs`） | 按配置实跑 production build | error |
-| `VERIFY-RULE-001` | 会话启动 / `doctor` | Codex、Claude、Cursor 的 L1/L2/L3 source matrix 指向同一 canonical source fingerprint | error |
-| `VERIFY-RULE-002` | `changed`、G5-G8 | 编码 rule session 存在，且规则发布、G2 输入、HEAD 与 24 小时有效期均未漂移 | error |
+| `VERIFY-RULE-001` | 会话启动 / `doctor` | Codex、Claude Code、Cursor、Lark-Codex、Lark-Claude 的 L1/L2/L3 source matrix 指向同一 canonical source fingerprint | error |
+| `VERIFY-RULE-002` | `changed`、G5-G8 | 编码 rule session v2 存在，且客户端、规则发布、G2 输入、HEAD 与 24 小时有效期均未漂移；一个客户端不能复用另一个客户端的会话 | error |
+| `VERIFY-RULE-003` | `doctor` | 固定入口全集完整且无多余项：五个入口均登记 adapter、enforcement 与 source fingerprint | error |
+| `VERIFY-RULE-004` | Lark 每次启动 AI 前 | L3/effective 两层发布均 fresh，且本次路由的每个规则文件与章节都存在；任一缺失即 fail-closed | error |
 | `DOC-BLOCK-001` | G0+（`lib/blockers.mjs`） | `agent/blockers.json` 结构合法：字段合规、id 唯一、resolved 带 resolution+resolvedAt；缺文件不发 check | error（不可豁免） |
 | `DOC-BLOCK-002` | G0+（`lib/blockers.mjs`） | 无 `open` 且 `blocksGate ≤ 当前 gate` 的阻塞/变更未解除 | error（可豁免） |
 | `DOC-BLOCK-003` | G0+（`lib/blockers.mjs`） | 其余 `open` 登记（尚不卡当前 gate）可见性提示 | warn |
