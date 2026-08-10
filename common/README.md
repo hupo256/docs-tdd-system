@@ -14,6 +14,7 @@
 5. [rule-inheritance.md](./rules/rule-inheritance.md)：规则如何从旧项目沉淀到公共区。
 6. [prd-feature-inventory.md](./rules/prd-feature-inventory.md)：**PRD 全量功能清单**（防 Figma 边界误裁 scope）。
 7. [workflow-gates.md](./rules/workflow-gates.md)：G0-G8 开发门禁（含 G3 MSW 前置、G5 字段对账、G6 自动验收）。
+   - [fast-track-incomplete-docs.md](./rules/fast-track-incomplete-docs.md)：**文档未齐快速通道**（API 待更新 + 低保真 UI/UX + Figma/API 后补时，G0→G4 快速走完、停靠 G5 `frontend-complete-pending-reconcile` 待对账）。
 8. [rule-ids-and-gates.md](./rules/rule-ids-and-gates.md)：规则 ID、阶段 gate、只扫新增/修改文件的静态检查。
    - [blocking-and-change-protocol.md](./rules/blocking-and-change-protocol.md)：阻塞与需求变更的机器可读单一源 `agent/blockers.json`（`DOC-BLOCK-*`，gate 能拦、交付摘要能派生）。
 9. [rule-execution-model.md](./rules/rule-execution-model.md)：规则从触发、加载、执行、证据到失败阻断的保障模型。

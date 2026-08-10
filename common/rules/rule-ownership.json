@@ -6,6 +6,7 @@
   },
   "topics": {
     "workflow-gates": { "source": "workflow-gates.md" },
+    "fast-track-incomplete-docs": { "source": "fast-track-incomplete-docs.md" },
     "project-structure": { "source": "project-doc-structure.md" },
     "prd-rich-media-read": { "source": "lark-doc-sync.md", "sections": "8" },
     "prd-feature-task-trace": { "source": "prd-feature-inventory.md", "sections": "3" },

@@ -24,6 +24,8 @@
 
 缺 PRD/Figma/API/QA、权限、账号、环境、测试数据或 scope 确认时，继续完成不依赖缺项的 G0/G1 动作，并把阻塞写入 `product/06-collaboration.md`。是否及如何通知只消费 [collaboration-and-notifications.md](./collaboration-and-notifications.md)，本文不维护通知时机副本。
 
+命中「API 已存在待更新 + UI/UX 低保真 + Figma/API 文档后补」时，按 [fast-track-incomplete-docs.md](./fast-track-incomplete-docs.md) 走快速通道：G0→G4 快速走完、停靠 G5 待对账，不在此复制其编排。
+
 PRD 图片、表格、白板、删除线或引用文档不可完整读取时，严格执行 [lark-doc-sync.md §8](./lark-doc-sync.md)；影响 scope 的 unresolved 项阻断 G2。
 
 ## 4. 启动完成判定

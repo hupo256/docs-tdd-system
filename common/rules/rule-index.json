@@ -12,6 +12,7 @@
       "new-project-kickoff.md",
       "project-doc-structure.md",
       "prd-feature-inventory.md",
+      "fast-track-incomplete-docs.md",
       {
         "file": "rule-inheritance.md",
         "sections": "0-3"
@@ -24,6 +25,7 @@
     ],
     "g0_g2_scope": [
       "prd-feature-inventory.md",
+      "fast-track-incomplete-docs.md",
       {
         "file": "lark-doc-sync.md",
         "sections": "8"
