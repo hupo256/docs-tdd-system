@@ -1,13 +1,13 @@
 {
   "version": 2,
-  "fingerprint": "ed8d0e4ef71bb41e0907d727f026cf5a2c0edd11e8361cc76e548b9f839d15f1",
-  "publishedAt": "2026-08-10T07:16:18.730Z",
-  "l3RuleReleaseFingerprint": "3fab51a612bc8338eb7a55eb3230eef69d381b623b520b7f23b67c183ef51ce6",
+  "fingerprint": "c2f7a111bf3d0dd02243be3cf08af7dc38ad5c13bfac46dfdb4c8b2cac6b2099",
+  "publishedAt": "2026-08-10T07:38:59.542Z",
+  "l3RuleReleaseFingerprint": "b15d2c1b52dd01798367af45a3179a8c6ce081f8db0577dc5bc8999c5d5e3b2e",
   "clientMatrix": {
     "codex": {
       "adapter": "~/.codex/AGENTS.md",
       "postEdit": "docs-tdd changed",
-      "sourceFingerprint": "1e4020605a72ccf15a70dd3b311c900135389019d97e5893b8d38113fec8593a",
+      "sourceFingerprint": "d18a3fd3b571d57d9998ef1c384ee9a9b5fe368cef766eb67660108c6f097ef5",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -95,7 +95,7 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "3fab51a612bc8338eb7a55eb3230eef69d381b623b520b7f23b67c183ef51ce6",
+      "l3Fingerprint": "b15d2c1b52dd01798367af45a3179a8c6ce081f8db0577dc5bc8999c5d5e3b2e",
       "conflictOverrides": [
         {
           "id": "fameex-server-state",
@@ -110,7 +110,7 @@
     "claude": {
       "adapter": "~/.claude/CLAUDE.md",
       "postEdit": "PostToolUse + docs-tdd changed fallback",
-      "sourceFingerprint": "1e4020605a72ccf15a70dd3b311c900135389019d97e5893b8d38113fec8593a",
+      "sourceFingerprint": "d18a3fd3b571d57d9998ef1c384ee9a9b5fe368cef766eb67660108c6f097ef5",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -198,7 +198,7 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "3fab51a612bc8338eb7a55eb3230eef69d381b623b520b7f23b67c183ef51ce6",
+      "l3Fingerprint": "b15d2c1b52dd01798367af45a3179a8c6ce081f8db0577dc5bc8999c5d5e3b2e",
       "conflictOverrides": [
         {
           "id": "fameex-server-state",
@@ -213,7 +213,7 @@
     "cursor": {
       "adapter": "~/.cursor/rules/fameex-local-governance.mdc",
       "postEdit": "docs-tdd changed",
-      "sourceFingerprint": "1e4020605a72ccf15a70dd3b311c900135389019d97e5893b8d38113fec8593a",
+      "sourceFingerprint": "d18a3fd3b571d57d9998ef1c384ee9a9b5fe368cef766eb67660108c6f097ef5",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -301,7 +301,7 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "3fab51a612bc8338eb7a55eb3230eef69d381b623b520b7f23b67c183ef51ce6",
+      "l3Fingerprint": "b15d2c1b52dd01798367af45a3179a8c6ce081f8db0577dc5bc8999c5d5e3b2e",
       "conflictOverrides": [
         {
           "id": "fameex-server-state",

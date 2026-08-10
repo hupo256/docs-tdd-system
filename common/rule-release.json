@@ -1,8 +1,8 @@
 {
   "version": 1,
   "rulesetVersion": "local-2026.07-msw-v1",
-  "fingerprint": "3fab51a612bc8338eb7a55eb3230eef69d381b623b520b7f23b67c183ef51ce6",
-  "publishedAt": "2026-08-10T07:16:18.640Z",
+  "fingerprint": "b15d2c1b52dd01798367af45a3179a8c6ce081f8db0577dc5bc8999c5d5e3b2e",
+  "publishedAt": "2026-08-10T07:38:59.455Z",
   "fileCount": 134,
   "files": {
     "common/CHANGELOG-archive.md": "3f6df9a2d04e917dc0ae67125c84a9209877de3196bd7952639040897e0077cc",
@@ -100,7 +100,7 @@
     "common/rules/component-reuse-and-visual-fidelity.md": "e92022188d135f3e5679403cbd77bb6f6fff53e8fba8eaaefbeac14d8d03278a",
     "common/rules/development-rules.md": "49e41452c76b1a3f4546596df96deec6ad2541e8b821a03f009bf6164ae43427",
     "common/rules/execution-evidence.md": "ef8f9b02cc7b10b650c9e8952017ee55187bf6ac7a5a9e162e6bc48538bd3245",
-    "common/rules/fast-track-incomplete-docs.md": "a9a053dfb0b965a066d194828127f1f89cf66368fb18a0139c6416250ecd88e6",
+    "common/rules/fast-track-incomplete-docs.md": "40b39916dd5cdf379c802d25be62d2aafbd06c707ff22edddf97f9373d0c1314",
     "common/rules/figma-mcp-read-workflow.md": "589e7d70bc706b711baa42ad5a3d7bd4f39fe1ff356861bd6bfc2b20c5842aec",
     "common/rules/git-branch-flow.md": "ed3e4f50a0427299f9d77f58a715fba955050c49130428dc42429b61746e92d8",
     "common/rules/hook-integration.md": "00ac1747bff0b097ffaa79f63eb77c49772bbc0d3d9edb8cef277db115eaefef",

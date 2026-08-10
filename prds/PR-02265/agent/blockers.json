@@ -1,1 +1,38 @@
-[]
+[
+  {
+    "id": "BLK-1",
+    "type": "blocker",
+    "gate": "G4",
+    "blocksGate": "G5",
+    "category": "backend",
+    "summary": "后端手续费率校验/存储是否已同步放开负值 [-100,100]（03-api-contract.md §8 #1）：若未同步，前端配置负值会被后端拒",
+    "owner": "backend",
+    "raisedAt": "2026-08-07",
+    "status": "open",
+    "evidence": ["product/03-api-contract.md#8-待确认--契约差异"]
+  },
+  {
+    "id": "BLK-2",
+    "type": "blocker",
+    "gate": "G4",
+    "blocksGate": "G5",
+    "category": "dependency",
+    "summary": "A4/A5 前台/后台资金流水接口真实 path 及金额/side 字段名待从现有代码确认（03-api-contract.md §8 #2）",
+    "owner": "前端(G4编码时确认)",
+    "raisedAt": "2026-08-07",
+    "status": "open",
+    "evidence": ["product/03-api-contract.md#8-待确认--契约差异"]
+  },
+  {
+    "id": "BLK-3",
+    "type": "blocker",
+    "gate": "G4",
+    "blocksGate": "G5",
+    "category": "backend",
+    "summary": "返佣与手续费是否共用同一流水类型的口径待后端确认（03-api-contract.md §8 #3）",
+    "owner": "backend",
+    "raisedAt": "2026-08-07",
+    "status": "open",
+    "evidence": ["product/03-api-contract.md#8-待确认--契约差异"]
+  }
+]

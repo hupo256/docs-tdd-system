@@ -19,7 +19,7 @@ larkEnabled: false
 
 | 字段 | 值 |
 |------|-----|
-| 当前阶段 | G0 资料接收 |
+| 当前阶段 | G4 文档已过，待进入编码（worktree 已建） |
 | 最新通过门禁 | G4 |
 | 公共规则 | 继承 ../../common/README.md |
 | PRD 来源 | https://qfglxo2m3dc.sg.larksuite.com/docx/P2xud4WYyoapp6xfjskl7UI3gKc |
