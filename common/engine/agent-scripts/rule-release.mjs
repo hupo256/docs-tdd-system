@@ -172,11 +172,17 @@ function publish() {
 
   const snapshot = createSnapshot()
   const ruleset = JSON.parse(readFileSync(join(commonDir, 'rules', 'ruleset.json'), 'utf8'))
+  // 指纹未变则保留旧 publishedAt：no-op 重发布不改内容、不制造 git churn（此前每次 --write 都刷新时间戳，
+  // 即便规则一字未动也产生一次 diff）。指纹是内容真值，只有它变了才代表真的发布了新一版。
+  const prior = existsSync(manifestFile) ? JSON.parse(readFileSync(manifestFile, 'utf8')) : null
+  const publishedAt = prior?.fingerprint === snapshot.fingerprint && prior?.publishedAt
+    ? prior.publishedAt
+    : new Date().toISOString()
   const manifest = {
     version: 1,
     rulesetVersion: ruleset.version,
     fingerprint: snapshot.fingerprint,
-    publishedAt: new Date().toISOString(),
+    publishedAt,
     fileCount: snapshot.fileCount,
     files: snapshot.files,
   }

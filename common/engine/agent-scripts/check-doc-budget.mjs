@@ -12,6 +12,7 @@ import { spawnSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { charCount, parseFrontmatter, validateSchema } from './lib/doc-budget-schema.mjs'
 
 const COMMON_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const DOCS_TDD_DIR = join(COMMON_DIR, '..')
@@ -49,6 +50,7 @@ const SELF_TEST_SCRIPTS = [
   ['lib/blockers.mjs', '--self-test'],
   ['lib/code-review.mjs', '--self-test'],
   ['lib/delivery-summary.mjs', '--self-test'],
+  ['lib/doc-budget-schema.mjs', '--self-test'],
   ['lib/gate-payload.mjs', '--self-test'],
   ['lib/golden-verdict.mjs', '--self-test'],
   ['lib/lark-prd-drift.mjs', '--self-test'],
@@ -187,90 +189,7 @@ const MACHINE_ROW_RE = /\|\s*(?:\*\*)?最新通过门禁(?:\*\*)?\s*\|\s*([^|]+)
 const SUMMARY_STAGE_RE = /\|\s*(?:\*\*)?当前阶段(?:\*\*)?\s*\|\s*(G[0-8])/
 const MACHINE_SUMMARY_MARKER = 'update-context-summary.mjs'
 
-/** 码点数，近似"字符数"直觉（Chinese/emoji 各计 1）。 */
-function charCount(text) {
-  return Array.from(text).length
-}
-
-// 解析 README 顶部 YAML frontmatter，只处理简单标量。
-function parseFrontmatter(text) {
-  const match = text.match(/^---\n([\s\S]*?)\n---\n?/)
-  if (!match) return null
-  const result = {}
-  for (const line of match[1].split('\n')) {
-    const colonIndex = line.indexOf(':')
-    if (colonIndex === -1) continue
-    const key = line.slice(0, colonIndex).trim()
-    let value = line.slice(colonIndex + 1).trim()
-    let quoted = false
-    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
-      value = value.slice(1, -1)
-      quoted = true
-    }
-    if (value === 'true') result[key] = true
-    else if (value === 'false') result[key] = false
-    else if (!quoted && /^\d+$/.test(value)) result[key] = Number(value)
-    else result[key] = value
-  }
-  return result
-}
-
-// 轻量 JSON Schema 校验（draft-07 子集）。不引入外部依赖，覆盖 docs_tdd 所需类型/必填/枚举/模式/数组/对象。
-function validateSchema(value, schema, path = '') {
-  const errors = []
-  if (schema.type === 'object') {
-    if (value === null || typeof value !== 'object' || Array.isArray(value)) {
-      errors.push(`${path || 'root'} 必须是 object`)
-      return errors
-    }
-    for (const key of schema.required || []) {
-      if (!(key in value)) errors.push(`${path || 'root'} 缺少必填字段 ${key}`)
-    }
-    for (const [key, propSchema] of Object.entries(schema.properties || {})) {
-      if (key in value) errors.push(...validateSchema(value[key], propSchema, `${path}.${key}`))
-    }
-    if (schema.additionalProperties === false) {
-      for (const key of Object.keys(value)) {
-        if (!schema.properties || !(key in schema.properties)) {
-          errors.push(`${path || 'root'} 包含未声明字段 ${key}`)
-        }
-      }
-    }
-  } else if (schema.type === 'array') {
-    if (!Array.isArray(value)) {
-      errors.push(`${path || 'root'} 必须是 array`)
-      return errors
-    }
-    for (let i = 0; i < value.length; i += 1) {
-      errors.push(...validateSchema(value[i], schema.items, `${path}[${i}]`))
-    }
-  } else if (schema.type === 'string') {
-    if (typeof value !== 'string') {
-      errors.push(`${path || 'root'} 必须是 string`)
-      return errors
-    }
-    if (schema.enum && !schema.enum.includes(value)) {
-      errors.push(`${path} 值 "${value}" 不在枚举 [${schema.enum.join(', ')}] 中`)
-    }
-    if (schema.pattern && !new RegExp(schema.pattern).test(value)) {
-      errors.push(`${path} 值 "${value}" 不匹配模式 ${schema.pattern}`)
-    }
-    if (schema.minLength && value.length < schema.minLength) {
-      errors.push(`${path} 长度必须 ≥ ${schema.minLength}`)
-    }
-  } else if (schema.type === 'integer') {
-    if (!Number.isInteger(value)) {
-      errors.push(`${path || 'root'} 必须是 integer`)
-      return errors
-    }
-    if (schema.minimum !== undefined && value < schema.minimum) {
-      errors.push(`${path} 必须 ≥ ${schema.minimum}`)
-    }
-  } else if (schema.type === 'boolean') {
-    if (typeof value !== 'boolean') errors.push(`${path || 'root'} 必须是 boolean`)
-  }
-  return errors
-}
+/** 码点数、frontmatter 解析、轻量 JSON Schema 校验：纯逻辑抽到 lib 并 --self-test 直测（见 SELF_TEST_SCRIPTS）。 */
 
 const errors = []
 const mdFiles = readdirSync(RULES_DIR).filter((n) => n.endsWith('.md'))

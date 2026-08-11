@@ -382,10 +382,15 @@ function publish() {
     console.error(`cannot publish effective rules; ${blockers.join('; ')}`)
     process.exit(1)
   }
+  // 指纹未变则保留旧 publishedAt：no-op 重发布不制造 git churn（同 rule-release.mjs）。
+  const prior = existsSync(manifestFile) ? JSON.parse(readFileSync(manifestFile, 'utf8')) : null
+  const publishedAt = prior?.fingerprint === snapshot.fingerprint && prior?.publishedAt
+    ? prior.publishedAt
+    : new Date().toISOString()
   const manifest = {
     version: 2,
     fingerprint: snapshot.fingerprint,
-    publishedAt: new Date().toISOString(),
+    publishedAt,
     l3RuleReleaseFingerprint: snapshot.l3RuleReleaseFingerprint,
     clientMatrix: snapshot.clientMatrix,
     fileCount: snapshot.fileCount,

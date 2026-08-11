@@ -43,6 +43,24 @@ export function assertFreshRuleChain({ check = runJsonCheck, cwd } = {}) {
   }
 }
 
+// 非抛错版：给 /lark/health 之类的探活/诊断用——只报告 { fresh, failures }，不阻断。
+// 带 TTL 缓存：health 可能被频繁探活，两次 spawnSync 子进程校验不该每请求都跑（默认 60s）。
+let ruleChainCache = null
+export function inspectRuleChain({ check = runJsonCheck, cwd, ttlMs = 60_000, now = Date.now } = {}) {
+  const at = now()
+  if (ruleChainCache && at - ruleChainCache.at < ttlMs) return ruleChainCache.value
+  try {
+    const fingerprints = assertFreshRuleChain({ check, cwd })
+    const value = { fresh: true, failures: [], ...fingerprints }
+    ruleChainCache = { at, value }
+    return value
+  } catch (error) {
+    const value = { fresh: false, failures: [String(error.message || error)] }
+    ruleChainCache = { at, value }
+    return value
+  }
+}
+
 function selfTest() {
   const freshCheck = (script) =>
     script === 'rule-release.mjs'
@@ -60,6 +78,13 @@ function selfTest() {
       }),
     /VERIFY-RULE-004.*stale rule chain/,
   )
+  // inspectRuleChain 永不抛：stale 时返回 { fresh:false, failures:[...] }。用递增 now 绕过 TTL 缓存。
+  let clock = 0
+  const tick = () => (clock += 100_000)
+  assert.equal(inspectRuleChain({ check: freshCheck, cwd: '/tmp', now: tick }).fresh, true)
+  const stale = inspectRuleChain({ check: () => ({ fresh: false, status: 'stale' }), cwd: '/tmp', now: tick })
+  assert.equal(stale.fresh, false)
+  assert.ok(stale.failures.length > 0)
   console.log('rule-chain-runtime self-test passed.')
 }
 

@@ -1,14 +1,14 @@
 {
   "version": 2,
-  "fingerprint": "34456086be74895310d634333fbcf56ab50de7d06a58e601891657d202cfd9d5",
-  "publishedAt": "2026-08-11T04:34:35.855Z",
-  "l3RuleReleaseFingerprint": "be910510be90f4ca8e0ce7a16a4e4988cb0d65b22820a0d1b2893a0c4ae2b299",
+  "fingerprint": "8451956d993289a4480b17480c58f24fba4f9408711a7ee7ee3fafb60074775d",
+  "publishedAt": "2026-08-11T09:36:05.248Z",
+  "l3RuleReleaseFingerprint": "2a9cc255e61dbf322cf6ed459fcb8002ebc93fc81f9b64fb9e4d0111386ba22c",
   "clientMatrix": {
     "codex": {
       "kind": "direct",
       "adapter": "~/.codex/AGENTS.md",
       "enforcement": "rule-session + docs-tdd changed/gate",
-      "sourceFingerprint": "99bb246fdb237e3cbc5d5776eaad385d710e3ec4f484381ee4a548aee25f49e7",
+      "sourceFingerprint": "b1b942e65fc576c50b3bb2b0c61ff0ecaacd3cb4679eb81e159a551405d60b39",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -96,7 +96,7 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "be910510be90f4ca8e0ce7a16a4e4988cb0d65b22820a0d1b2893a0c4ae2b299",
+      "l3Fingerprint": "2a9cc255e61dbf322cf6ed459fcb8002ebc93fc81f9b64fb9e4d0111386ba22c",
       "conflictOverrides": [
         {
           "id": "fameex-server-state",
@@ -112,7 +112,7 @@
       "kind": "direct",
       "adapter": "~/.claude/CLAUDE.md",
       "enforcement": "PostToolUse + rule-session + changed/gate",
-      "sourceFingerprint": "99bb246fdb237e3cbc5d5776eaad385d710e3ec4f484381ee4a548aee25f49e7",
+      "sourceFingerprint": "b1b942e65fc576c50b3bb2b0c61ff0ecaacd3cb4679eb81e159a551405d60b39",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -200,7 +200,7 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "be910510be90f4ca8e0ce7a16a4e4988cb0d65b22820a0d1b2893a0c4ae2b299",
+      "l3Fingerprint": "2a9cc255e61dbf322cf6ed459fcb8002ebc93fc81f9b64fb9e4d0111386ba22c",
       "conflictOverrides": [
         {
           "id": "fameex-server-state",
@@ -216,7 +216,7 @@
       "kind": "direct",
       "adapter": "~/.cursor/rules/fameex-local-governance.mdc",
       "enforcement": "rule-session + docs-tdd changed/gate",
-      "sourceFingerprint": "99bb246fdb237e3cbc5d5776eaad385d710e3ec4f484381ee4a548aee25f49e7",
+      "sourceFingerprint": "b1b942e65fc576c50b3bb2b0c61ff0ecaacd3cb4679eb81e159a551405d60b39",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -304,7 +304,7 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "be910510be90f4ca8e0ce7a16a4e4988cb0d65b22820a0d1b2893a0c4ae2b299",
+      "l3Fingerprint": "2a9cc255e61dbf322cf6ed459fcb8002ebc93fc81f9b64fb9e4d0111386ba22c",
       "conflictOverrides": [
         {
           "id": "fameex-server-state",
@@ -321,7 +321,7 @@
       "delegatesTo": "codex",
       "adapter": "common/lark-bot/lib/lark-rule-context.mjs + common/lark-bot/lib/lark-worker-prompts.mjs + common/lark-bot/lib/lark-worker-run.mjs",
       "enforcement": "fresh effective rules + focused context + worker quality gate",
-      "sourceFingerprint": "99bb246fdb237e3cbc5d5776eaad385d710e3ec4f484381ee4a548aee25f49e7",
+      "sourceFingerprint": "b1b942e65fc576c50b3bb2b0c61ff0ecaacd3cb4679eb81e159a551405d60b39",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -409,7 +409,7 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "be910510be90f4ca8e0ce7a16a4e4988cb0d65b22820a0d1b2893a0c4ae2b299",
+      "l3Fingerprint": "2a9cc255e61dbf322cf6ed459fcb8002ebc93fc81f9b64fb9e4d0111386ba22c",
       "conflictOverrides": [
         {
           "id": "fameex-server-state",
@@ -426,7 +426,7 @@
       "delegatesTo": "claude",
       "adapter": "common/lark-bot/lib/lark-rule-context.mjs + common/lark-bot/lib/lark-worker-prompts.mjs + common/lark-bot/lib/lark-worker-run.mjs",
       "enforcement": "fresh effective rules + focused context + worker quality gate",
-      "sourceFingerprint": "99bb246fdb237e3cbc5d5776eaad385d710e3ec4f484381ee4a548aee25f49e7",
+      "sourceFingerprint": "b1b942e65fc576c50b3bb2b0c61ff0ecaacd3cb4679eb81e159a551405d60b39",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -514,7 +514,7 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "be910510be90f4ca8e0ce7a16a4e4988cb0d65b22820a0d1b2893a0c4ae2b299",
+      "l3Fingerprint": "2a9cc255e61dbf322cf6ed459fcb8002ebc93fc81f9b64fb9e4d0111386ba22c",
       "conflictOverrides": [
         {
           "id": "fameex-server-state",
@@ -621,8 +621,8 @@
     "~/.cursor/rules/fameex-local-governance.mdc": "8e02a57ddc70633bd32a8d9a0c03902cf9db1cf4e7eac7a673636b8733844afb",
     "AGENTS.md": "392064b3caa6942371cdf5380c7c8b6e368e6ba36d5cae03753afc5d6001c480",
     "CLAUDE.md": "0ae6e4eb08c82210d63d4ad8634de80e5f6078b7989d12ea84dfb5eedd274453",
-    "common/lark-bot/lib/lark-rule-context.mjs": "34c78074b2c8fc036c5f725d8ce5f3288b959ed361b54fdd76f3b92d4958b512",
-    "common/lark-bot/lib/lark-worker-prompts.mjs": "de601db640b069edc0d67c2234443ffd6f884c4dae1cba364449af0eeab38bc1",
-    "common/lark-bot/lib/lark-worker-run.mjs": "acf8dd178fffe3188cab81280689b4a81400dfbd54cdef3414bbbedfb032ae78"
+    "common/lark-bot/lib/lark-rule-context.mjs": "1961c96d6f9ca31df1ec963d82eccc32aee75aba92de691128beb0a3e14a2a82",
+    "common/lark-bot/lib/lark-worker-prompts.mjs": "63ea4948fcb8305e4bc02662f80882171dbcacd39f23c89e6ff9f4d97aafcea9",
+    "common/lark-bot/lib/lark-worker-run.mjs": "82c6488df8cad8953bf541cb241f506b6b6af45a4ca51590f6904dd9816015b1"
   }
 }
