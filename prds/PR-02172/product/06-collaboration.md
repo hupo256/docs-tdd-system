@@ -15,7 +15,8 @@
 | D2 | Telegram 配置从「裸 bot_token」变为 **BotFather → Bot Settings > Web Login 注册 Allowed URLs → 获取 Client ID + Client Secret**。 | 更新 B5/C08 环境账号申请口径 |
 | D3 | `telegram-login.js` popup 依赖跨窗口通信：站点若发 `Cross-Origin-Opener-Policy: same-origin` 会掐断登录，必须改 `same-origin-allow-popups` 或移除。 | 新增前端/运维核对项 |
 | D4 | **Facebook `public_profile` 与 `email` 权限已不再需要 App Review**，所有 app 自动授予。 | **Q12 / B5「Meta email 审核」阻塞项撤销**，主流程无阻 |
-| D5 | Facebook 决定走**手动 code 模式**：popup 开 `/v26.0/dialog/oauth?response_type=code&scope=public_profile,email&state=…`，回调拿 `code` 由后端用 app secret 换 token（app secret 不进前端）。 | 明确 A2/Q08 结论 |
+| D5 | ~~Facebook 决定走**手动 code 模式**：popup 开 `/v26.0/dialog/oauth?response_type=code&scope=public_profile,email&state=…`，回调拿 `code` 由后端用 app secret 换 token（app secret 不进前端）。~~ **已被 D6 撤销（2026-08-11）**。 | 明确 A2/Q08 结论（已过期，见 D6） |
+| D6 | **2026-08-11 后端定案更正**：Facebook 改为与 App 端统一，走 **Facebook JS SDK**（`developers.facebook.com/documentation/facebook-login/web`）在前端直接 `FB.login()` 拿 `accessToken`，**不再走 D5 的 OAuth code + 回调页 + 后端换 token**。前端已移除 `FacebookCallback.tsx` 与 `/oauth/facebook/callback` 路由，新增 `FacebookLoginSdk` 组件（镜像 `GoogleLoginSdk`）。Telegram 仍为方案 A（`id_token` + 后端 JWKS 验签），不受影响。 | 撤销 D5/Q08/后端待办 2；前端凭证形态由 `code` 变为 `accessToken` |
 
 ## 后端接口对接说明（前端整理，待后端确认，2026-08-03）
 
@@ -29,7 +30,7 @@
 |----------|-----------------|----------|
 | Google / Apple | `id_token`（OIDC JWT） | 现有逻辑，JWKS 验签 |
 | **Telegram（新增）** | `id_token`（OIDC JWT，默认 RS256） | **新增**：JWKS 验签，同 Google/Apple 套路 |
-| **Facebook（新增）** | `authorization code`（**非** token） | **新增**：后端用 App Secret 换 token 后拉 profile |
+| **Facebook（新增）** | ~~`authorization code`（**非** token）~~ → **`accessToken`（SDK 直取，见 D6）** | **新增**：后端用 `accessToken` 查 Graph API `/me` 取 profile，不再需要 App Secret 换 token 这一步 |
 | HiChat | `grant_token`（URL 回流） | 现有 `getUserStatus` 逻辑 |
 
 ### 后端待办 1 — Telegram id_token JWKS 验签（新增）
@@ -38,11 +39,14 @@
 - 后端拉 Telegram JWKS 公钥验签，并校验：`iss = oauth.telegram.org`、`aud = bot_id`、`exp` 未过期。默认算法 RS256。
 - 需运维/后端提供：Telegram Bot 的 **Client ID**（BotFather → Bot Settings → Web Login 注册后获取，**不是裸 bot_token**），并注册各环境 origin 到 Allowed URLs（见 D2）。
 
-### 后端待办 2 — Facebook code 换 token（新增）
+### 后端待办 2 — Facebook accessToken 查 profile（2026-08-11 更正，见 D6）
 
-- 前端传来的是 **authorization code**，后端拿 code + **App Secret**（绝不下发前端）向 Meta token 端点换 `access_token`，再拉 profile / email。
+> 原「code 换 token」方案已撤销，以下为最新方案。
+
+- 前端 `FB.login()` 直接拿到 **accessToken**（非 code），后端收到后向 Graph API `graph.facebook.com/{version}/me?fields=id,name,email&access_token=...` 校验并取 profile，**不再需要 App Secret 换 token 这一步**。
 - `public_profile` / `email` 已无需 App Review、自动授予（见 D4）。
-- 需运维/后端提供：各环境 **Meta App ID + App Secret**；回调地址固定 `https://<域名>/oauth/facebook/callback`，须与前端发起时的 `redirect_uri` **完全一致**（协议/主机/端口/路径），否则 Meta 拒绝。
+- 需运维/后端提供：各环境 **Meta App ID**（App Secret 若仅用于服务端校验 token 有效性可选保留，具体看后端是否调用 `debug_token`）。
+- 不再需要固定回调地址 `/oauth/facebook/callback`（SDK 模式无重定向），该路由与 `FacebookCallback.tsx` 已从前端移除。
 
 ### 后端待办 3 — state / nonce 服务端下发（防 CSRF / 重放）
 

@@ -5,6 +5,7 @@ import { spawnSync } from 'node:child_process'
 import { dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
+import { decideNext } from './lib/project-decision.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, config } = resolveRoots()
@@ -41,27 +42,42 @@ function writeState(id, patch) {
   return next
 }
 
-export function inferState({ projectExists, gateResult, inventoryText = '', worktree = '' }) {
+export function inferState({ projectExists, gateResult, worktree = '' }) {
   if (!projectExists) return { status: 'ready', currentStage: 'G0', nextAction: 'scaffold_project' }
   if (gateResult?.gate === 'G8' && gateResult?.ok === true) return { status: 'complete', currentStage: 'G8', nextAction: 'none' }
-  if (/待 G2 确认|G2 确认人 & 日期 \|\s*(?:待确认)?\s*\|/.test(inventoryText)) {
-    return { status: 'waiting_approval', currentStage: 'G1', nextAction: 'complete_g0_g1_docs' }
+  if (gateResult?.gate) {
+    if (gateResult.ok === false) return { status: 'blocked', currentStage: gateResult.gate, nextAction: 'fix_gate_failures' }
+    return { status: 'active', currentStage: gateResult.gate, nextAction: 'run_next_gate' }
   }
   if (!worktree) return { status: 'active', currentStage: 'G2', nextAction: 'prepare_worktree' }
-  return { status: 'active', currentStage: gateResult?.gate || 'G4', nextAction: 'continue_current_stage' }
-}
-
-export function reconcileState(stored, inferred) {
-  const inferredComplete = inferred?.status === 'complete'
-  const storedActionableBlock = stored?.status === 'blocked'
-    && ['sync_prd', 'initialize_prd_intake'].includes(stored?.nextAction)
-  return storedActionableBlock && !inferredComplete
-    ? { ...inferred, ...stored }
-    : { ...(stored || {}), ...inferred }
+  return { status: 'active', currentStage: 'G4', nextAction: 'continue_current_stage' }
 }
 
 function print(state) {
   console.log(JSON.stringify(state, null, 2))
+}
+
+// README frontmatter 里的 worktree 标量（唯一从 markdown 读的字段，且是结构化的 key: value，
+// 不是叙述文本的模糊匹配）。阶段/阻塞一律来自机器写的 JSON，不再扫 feature-inventory 的叙述行。
+function readWorktree(projectDir) {
+  const readmePath = join(projectDir, 'README.md')
+  if (!existsSync(readmePath)) return ''
+  const readme = readFileSync(readmePath, 'utf8')
+  return readme.match(/^worktree:\s*(.*)$/m)?.[1]?.replace(/^['"]|['"]$/g, '').trim() || ''
+}
+
+// 决策所需的全部**结构化**真值：run-state.json（早期阶段编排真值）、gate-results.json（最新门禁结果，
+// 含 fail 明细）、gate-history.json（append-only 成功历史）、README frontmatter 的 worktree。零 markdown 推断。
+function loadDecisionInputs(id) {
+  const projectDir = resolveProjectRoot(id)
+  return {
+    projectId: id,
+    projectExists: existsSync(projectDir),
+    storedState: readJson(stateFile(id)),
+    gateResult: readJson(join(projectDir, 'agent/gate-results.json')),
+    gateHistory: readJson(join(projectDir, 'agent/gate-history.json')),
+    worktree: readWorktree(projectDir),
+  }
 }
 
 function syncAndInit(id) {
@@ -111,20 +127,15 @@ function kickoff() {
 }
 
 function status() {
-  const projectDir = resolveProjectRoot(projectId)
-  const stored = readJson(stateFile(projectId))
-  const readme = existsSync(join(projectDir, 'README.md')) ? readFileSync(join(projectDir, 'README.md'), 'utf8') : ''
-  const inventoryText = existsSync(join(projectDir, 'product/00-feature-inventory.md')) ? readFileSync(join(projectDir, 'product/00-feature-inventory.md'), 'utf8') : ''
-  const gateResult = readJson(join(projectDir, 'agent/gate-results.json'))
-  const worktree = readme.match(/^worktree:\s*(.*)$/m)?.[1]?.replace(/^['"]|['"]$/g, '').trim() || ''
-  const inferred = inferState({ projectExists: existsSync(projectDir), gateResult, inventoryText, worktree })
-  print({ ...reconcileState(stored, inferred), projectId, stateFile: relative(repoRoot, stateFile(projectId)) })
+  const inputs = loadDecisionInputs(projectId)
+  const decision = decideNext(inputs)
+  print({ ...decision, projectId, stateFile: relative(repoRoot, stateFile(projectId)) })
 }
 
 function resume() {
   const stored = readJson(stateFile(projectId))
-  if (!stored) throw new Error(`run-state 不存在；先运行 docs-tdd kickoff ${projectId} --prd <source>`)
-  if (['sync_prd', 'initialize_prd_intake'].includes(stored.nextAction)) {
+  // 早期阶段（PRD 同步 / intake 初始化）：resume 能真正推进——重跑同步+建档。
+  if (stored && ['sync_prd', 'initialize_prd_intake'].includes(stored.nextAction)) {
     const result = syncAndInit(projectId)
     const state = writeState(projectId, {
       status: result.ok ? 'waiting_approval' : 'blocked',
@@ -138,23 +149,36 @@ function resume() {
     print(state)
     return
   }
-  print({ ...stored, note: '下一步需要 Agent 完成语义工作；读取 context pack 后执行 nextAction，完成时更新 run-state。' })
+  // 其余所有阶段（含 G3–G8）：不再只对 G0/G1 有意义。从结构化真值算出下一步并给出可直接执行的命令；
+  // 门禁类下一步需要 Agent 先做语义工作（改代码/补文档）再重跑门禁，故只给命令，不代跑。
+  const inputs = loadDecisionInputs(projectId)
+  if (!inputs.projectExists) throw new Error(`项目不存在；先运行 docs-tdd kickoff ${projectId} --prd <source>`)
+  const decision = decideNext(inputs)
+  const note = decision.nextAction === 'none'
+    ? '项目已走到 G8 完成，无后续门禁。'
+    : decision.blockers.length
+      ? `先按下列 ${decision.blockers.length} 条阻塞修复，再执行：${decision.command}`
+      : `执行下一步：${decision.command}`
+  print({ ...decision, projectId, note, stateFile: relative(repoRoot, stateFile(projectId)) })
 }
 
 function selfTest() {
+  // 阶段/阻塞判定的完整用例在 lib/project-decision.mjs --self-test；这里只验编排层的结构化装配：
+  // inferState 只吃 JSON（不再有 markdown 分支），且 decideNext 能从最小结构化输入产出决策。
   const a = inferState({ projectExists: false })
-  const b = inferState({ projectExists: true, inventoryText: '| G2 确认人 & 日期 | 待确认 |' })
-  const c = inferState({ projectExists: true, gateResult: { gate: 'G8', ok: true } })
-  const blocked = reconcileState({ status: 'blocked', nextAction: 'sync_prd', blocker: 'permission denied' }, b)
-  const completed = reconcileState({ status: 'blocked', nextAction: 'sync_prd' }, c)
+  const blocked = inferState({ projectExists: true, gateResult: { gate: 'G5', ok: false } })
+  const advance = inferState({ projectExists: true, gateResult: { gate: 'G5', ok: true } })
+  const complete = inferState({ projectExists: true, gateResult: { gate: 'G8', ok: true } })
+  const decision = decideNext({ projectId: 'PR-00001', projectExists: true, gateResult: { gate: 'G5', ok: false, checks: [{ ruleId: 'DOC-G5-003', ok: false, severity: 'error', message: 'x' }] } })
   if (
     a.nextAction !== 'scaffold_project'
-    || b.status !== 'waiting_approval'
-    || c.status !== 'complete'
-    || blocked.status !== 'blocked'
-    || completed.status !== 'complete'
+    || blocked.nextAction !== 'fix_gate_failures'
+    || advance.nextAction !== 'run_next_gate'
+    || complete.status !== 'complete'
+    || decision.command !== 'docs-tdd gate PR-00001 G5'
+    || decision.blockers.length !== 1
   ) process.exit(1)
-  console.log('project-orchestrator self-test passed (5 cases)')
+  console.log('project-orchestrator self-test passed (structured inferState + decideNext wiring)')
 }
 
 if (args.includes('--self-test')) selfTest()

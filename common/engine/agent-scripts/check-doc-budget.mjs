@@ -49,12 +49,15 @@ const SELF_TEST_SCRIPTS = [
   ['lib/acceptance-results.mjs', '--self-test'],
   ['lib/blockers.mjs', '--self-test'],
   ['lib/code-review.mjs', '--self-test'],
+  ['lib/context-pack.mjs', '--self-test'],
   ['lib/delivery-summary.mjs', '--self-test'],
   ['lib/doc-budget-schema.mjs', '--self-test'],
+  ['lib/gate-heartbeat.mjs', '--self-test'],
   ['lib/gate-payload.mjs', '--self-test'],
   ['lib/golden-verdict.mjs', '--self-test'],
   ['lib/lark-prd-drift.mjs', '--self-test'],
   ['lib/prd-manifest.mjs', '--self-test'],
+  ['lib/project-decision.mjs', '--self-test'],
   ['lib/project-index.mjs', '--self-test'],
   ['lib/project-scaffold.mjs', '--self-test'],
   ['lib/rule-session.mjs', '--self-test'],
@@ -88,7 +91,9 @@ const RESIDENT_BUDGET = 5000 // 码点；改此值须同步 rule-router.md §4 �
 // 少数「引用型大文件」（rule ID 台账、架构专题、变更日志）grandfather 一个带余量的上限：允许随规则自然增长，但仍有界。
 const DOC_BUDGET_DEFAULT = { warn: 9000, fail: 13000 }
 const DOC_BUDGET_OVERRIDES = {
-  'rule-ids-and-gates.md': { warn: 25000, fail: 29000 }, // rule ID 台账，随规则条目增长
+  // rule-ids-and-gates.md 的 §5「完整 ID 台账」按预算计量时被排除（见 budgetedDocText）：它随规则条目单调增长、
+  // 却从不被 rule-index 路由进 context pack，增长对上下文零成本。这里的预算只约束会进上下文/被人读的 §1-4。
+  'rule-ids-and-gates.md': { warn: 20000, fail: 24000 },
   'architecture-and-state.md': { warn: 15000, fail: 17000 },
   'CHANGELOG.md': { warn: 15000, fail: 18000 }, // 轮转后保留近期条目；历史在 CHANGELOG-archive.md
 }
@@ -219,12 +224,22 @@ for (const r of residents) {
   }
 }
 
+// 按预算计量文档正文时的口径调整：rule-ids-and-gates.md 的 §5「完整 ID 台账」随规则条目单调增长，
+// 但 rule-index 的选择器只把 §1-2 / §3 路由进 context pack，§5 从不进任何上下文——它的增长对 context 体积
+// 零成本。预算的本意是约束 context pack 膨胀，故计量时截到 §5 之前。§5 与脚本 rule ID 的同步由校验 5 独立保证。
+// 若某天 §5 被路由进 context，必须撤掉此截断。
+function budgetedDocText(name, text) {
+  if (name !== LEDGER_FILE) return text
+  const ledgerHeading = text.match(/^##\s+5\.\s/m)
+  return ledgerHeading ? text.slice(0, ledgerHeading.index) : text
+}
+
 // 校验 2.5：per-file on-demand 预算。常驻文件已由校验 2 管；其余专题文档各有天花板，防无限膨胀。
 {
   const overCap = []
   for (const name of mdFiles) {
     if (BUDGET_EXEMPT.has(name) || residents.some((r) => r.name === name)) continue
-    const size = charCount(readFileSync(join(RULES_DIR, name), 'utf8'))
+    const size = charCount(budgetedDocText(name, readFileSync(join(RULES_DIR, name), 'utf8')))
     const budget = DOC_BUDGET_OVERRIDES[name] || DOC_BUDGET_DEFAULT
     if (size > budget.fail) {
       overCap.push(

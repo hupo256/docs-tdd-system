@@ -7,8 +7,17 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { codeFingerprint, matchesGateFingerprint } from './lib/fingerprint.mjs'
-import { resolveProjectRoot, resolveRoots, rulesRoot } from './lib/roots.mjs'
+import {
+  createContextPack,
+  expandScenarioRefs,
+  inspectEffectiveRules,
+  inspectRuleRelease,
+  requireFreshEffectiveRules,
+  requireFreshRuleRelease,
+  selectMarkdownSections,
+} from './lib/context-pack.mjs'
+import { heartbeatDecision, maybeBroadcastGate, printGateHeartbeat } from './lib/gate-heartbeat.mjs'
+import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 import { resolveRuleSessionClient } from './lib/rule-session.mjs'
 import { CODING_SCENARIOS, requireRuleSession, verifyG2Ready, writeRuleSession } from './lib/rule-session-runtime.mjs'
 
@@ -90,181 +99,6 @@ function readJson(file) {
 
 function readOptionalJson(file) {
   return existsSync(file) ? readJson(file) : null
-}
-
-function inspectRuleRelease() {
-  const result = spawnSync(process.execPath, [releaseScript, '--check', '--json'], { cwd: repoRoot, encoding: 'utf8' })
-  try {
-    return { ...JSON.parse(result.stdout), exitCode: result.status ?? 1 }
-  } catch (error) {
-    return {
-      fresh: false,
-      status: 'invalid',
-      parseError: error.message,
-      exitCode: result.status ?? 1,
-    }
-  }
-}
-
-function inspectEffectiveRules() {
-  const result = spawnSync(process.execPath, [effectiveRulesScript, '--check', '--json'], {
-    cwd: repoRoot,
-    encoding: 'utf8',
-  })
-  try {
-    return { ...JSON.parse(result.stdout), exitCode: result.status ?? 1 }
-  } catch (error) {
-    return {
-      fresh: false,
-      status: 'invalid',
-      parseError: error.message,
-      exitCode: result.status ?? 1,
-    }
-  }
-}
-
-// 重构期临时开关：DOCS_TDD_SKIP_RULE_FRESHNESS=1 跳过新鲜度硬闸（context/changed/gate 前置），
-// 稳定后不设此 env 即恢复严格模式。
-const skipRuleFreshness = process.env.DOCS_TDD_SKIP_RULE_FRESHNESS === '1'
-
-function requireFreshRuleRelease() {
-  if (skipRuleFreshness) {
-    console.error('[docs-tdd] ⚠ DOCS_TDD_SKIP_RULE_FRESHNESS=1：跳过 rule-release 新鲜度检查（重构期临时开关）')
-    return { fresh: true, skipped: true }
-  }
-  const release = inspectRuleRelease()
-  if (release.fresh) return release
-  console.error(`rule release is ${release.status || 'invalid'}; current=${release.currentFingerprint || 'unknown'} published=${release.publishedFingerprint || 'none'}`)
-  for (const key of ['added', 'changed', 'removed']) {
-    if (release.diff?.[key]?.length) console.error(`${key}: ${release.diff[key].join(', ')}`)
-  }
-  console.error('run docs-tdd check <PROJECT-ID>, then rule-release.mjs --write before context/changed/gate')
-  return null
-}
-
-function requireFreshEffectiveRules() {
-  if (skipRuleFreshness) {
-    console.error('[docs-tdd] ⚠ DOCS_TDD_SKIP_RULE_FRESHNESS=1：跳过 effective-rules 新鲜度检查（重构期临时开关）')
-    return { fresh: true, skipped: true }
-  }
-  const release = inspectEffectiveRules()
-  if (release.fresh) return release
-  console.error(`effective rules release is ${release.status || 'invalid'}; current=${release.currentFingerprint || 'unknown'} published=${release.publishedFingerprint || 'none'}`)
-  if (release.missing?.length) console.error(`missing: ${release.missing.join(', ')}`)
-  console.error('run effective-rules.mjs --doctor, fix errors, then effective-rules.mjs --write')
-  return null
-}
-
-function normalizeRuleRef(ref) {
-  if (typeof ref === 'string') return { file: ref, sections: '' }
-  if (ref && typeof ref.file === 'string') return { file: ref.file, sections: ref.sections || '' }
-  throw new Error(`invalid rule reference: ${JSON.stringify(ref)}`)
-}
-
-function expandScenarioRefs(index, scenario, stack = []) {
-  if (stack.includes(scenario)) throw new Error(`scenario cycle: ${[...stack, scenario].join(' -> ')}`)
-  const refs = index.scenarios?.[scenario]
-  if (!Array.isArray(refs) || refs.length === 0) {
-    const available = Object.keys(index.scenarios || {})
-      .sort()
-      .join(', ')
-    throw new Error(`unknown scenario: ${scenario}; available: ${available}`)
-  }
-  const expanded = refs.flatMap((ref) => {
-    if (ref && typeof ref.scenario === 'string') return expandScenarioRefs(index, ref.scenario, [...stack, scenario])
-    return [normalizeRuleRef(ref)]
-  })
-  const seen = new Set()
-  return expanded.filter((ref) => {
-    const key = `${ref.file}#${ref.sections}`
-    if (seen.has(key)) return false
-    seen.add(key)
-    return true
-  })
-}
-
-function selectMarkdownSections(text, selector) {
-  if (!selector) return text
-  const match = /^(\d+)(?:-(\d+))?$/.exec(selector)
-  if (!match) throw new Error(`invalid section selector: ${selector}`)
-  const min = Number(match[1])
-  const max = Number(match[2] || match[1])
-  if (max < min) throw new Error(`invalid section selector: ${selector}`)
-  const headings = [...text.matchAll(/^##\s+(\d+)(?:\.|\s)/gm)]
-  const start = headings.find((heading) => Number(heading[1]) === min)?.index
-  const end = headings.find((heading) => Number(heading[1]) > max)?.index
-  if (start === undefined) throw new Error(`section selector ${selector} did not match any heading`)
-  return text.slice(start, end ?? text.length)
-}
-
-function createContextPack(id, scenario, release, effectiveRules, mode = 'compact') {
-  const started = Date.now()
-  const index = readJson(join(docsRoot, 'common/rules/rule-index.json'))
-  const refs = expandScenarioRefs(index, scenario)
-
-  const summaryRef = {
-    file: `${id}/agent/context-summary.md`,
-    sections: '',
-    abs: join(resolveProjectRoot(id), 'agent/context-summary.md'),
-  }
-  const sources = [
-    summaryRef,
-    ...refs.map((normalized) => {
-      // 规则文档在 common/rules/；少数被场景引用的 common/ 层文件（如 CHANGELOG.md）回退到 common/。
-      const rulesPath = join(rulesRoot, normalized.file)
-      const inRules = existsSync(rulesPath)
-      return {
-        file: inRules ? `common/rules/${normalized.file}` : `common/${normalized.file}`,
-        abs: inRules ? rulesPath : join(docsRoot, 'common', normalized.file),
-        sections: mode === 'full' ? '' : normalized.sections,
-      }
-    }),
-  ]
-  const sections = sources.map((source) => {
-    const file = source.abs
-    if (!existsSync(file)) throw new Error(`context source does not exist: ${source.file}`)
-    const raw = readFileSync(file, 'utf8')
-    return {
-      label: `${source.file}${source.sections ? `#§${source.sections}` : ''}`,
-      text: selectMarkdownSections(raw, source.sections),
-    }
-  })
-  const ruleset = readJson(join(docsRoot, 'common/rules/ruleset.json'))
-  const payload = sections.map(({ label, text }) => `${label}\n${text}`).join('\n')
-  const fingerprint = createHash('sha256').update(`${effectiveRules.currentFingerprint}\n${scenario}\n${mode}\n${payload}`).digest('hex').slice(0, 12)
-  const cacheDir = join(tmpdir(), 'docs-tdd-context')
-  const output = join(cacheDir, `${id}-${scenario}-${mode}-${fingerprint}.md`)
-  const conflictOverrides = effectiveRules.clientMatrix?.codex?.conflictOverrides || []
-  const body = [
-    '<!-- GENERATED CONTEXT PACK: disposable cache; source of truth remains docs_tdd -->',
-    `# ${id} / ${scenario}`,
-    '',
-    `- ruleset: \`${ruleset.version}\``,
-    `- rule release: \`${release.currentFingerprint}\``,
-    `- effective rules: \`${effectiveRules.currentFingerprint}\``,
-    ...conflictOverrides.map((override) => `- L2 conflict override: \`${override.loserFiles.join(', ')}\` -> **${override.winner}** (\`${override.id}\`)`),
-    `- mode: \`${mode}\``,
-    `- fingerprint: \`${fingerprint}\``,
-    `- sources: ${sections.map(({ label }) => `\`${label}\``).join(', ')}`,
-    '',
-    ...sections.flatMap(({ label, text }) => [`## Source: ${label}`, '', text.trim(), '']),
-  ].join('\n')
-
-  mkdirSync(cacheDir, { recursive: true })
-  const cacheHit = existsSync(output)
-  if (!cacheHit) writeFileSync(output, `${body}\n`)
-  return {
-    scenario,
-    fingerprint,
-    output,
-    refs: sections.map(({ label }) => label),
-    sources,
-    mode,
-    cacheHit,
-    sourceChars: sections.reduce((total, item) => total + Array.from(item.text).length, 0),
-    packChars: Array.from(body).length + 1,
-    durationMs: Date.now() - started,
-  }
 }
 
 function gitOutput(args, cwd) {
@@ -385,86 +219,6 @@ function resolveProjectWorktree(id) {
     exists: existsSync(worktree),
     worktree: existsSync(worktree) ? worktree : repoRoot,
     requestedWorktree: worktree,
-  }
-}
-
-// Gate heartbeat: warn when the worktree code drifted from the last PASS, so the
-// agent doesn't trust a stale green. Diagnostic-only; never blocks. Worktree-level,
-// so any dirty change in the feature worktree flips it (feature worktrees are 1-per-PR).
-// Gate 心跳判定（纯函数，便于 self-test）：located/isGitRepo 缺失即跳过；无 gate 结果时，
-// 若 worktree 与 base 零差异（还没代码可 gate）也跳过，避免对 pre-coding 项目催跑 gate。
-function heartbeatDecision({ located, isGitRepo, noDivergence, gate, matches }) {
-  if (!located || !isGitRepo) return { level: 'skip' }
-  if (!gate)
-    return noDivergence
-      ? { level: 'skip' }
-      : {
-          level: 'warn',
-          message: '尚无 gate-results.json（从未跑过 gate）；交付前先跑 docs-tdd gate',
-        }
-  if (gate.ok !== true)
-    return {
-      level: 'warn',
-      message: `上次 ${gate.gate} 未通过（ok=false）；修复后重跑 docs-tdd gate ${gate.gate}`,
-    }
-  if (matches) return { level: 'ok', message: `${gate.gate} PASS 与当前代码一致` }
-  return {
-    level: 'warn',
-    message: `距上次 ${gate.gate} PASS 后 worktree 代码已变更（worktree 级，非文件级）；交付前先跑 docs-tdd changed/gate`,
-  }
-}
-
-function gateHeartbeat(id, resolvedWorktree) {
-  const located = resolvedWorktree.configured && resolvedWorktree.exists
-  if (!located) return { level: 'skip' } // pre-G4 / 未配置 worktree
-  const current = codeFingerprint(resolvedWorktree.worktree, config.baseRef || 'origin/online')
-  const noDivergence = current.headSha === current.baseSha && current.dirtyFileCount === 0 && current.untrackedFileCount === 0
-  const gate = readOptionalJson(join(resolveProjectRoot(id), 'agent/gate-results.json'))
-  return heartbeatDecision({
-    located,
-    isGitRepo: current.isGitRepo,
-    noDivergence,
-    gate,
-    matches: matchesGateFingerprint(current, gate?.fingerprint),
-  })
-}
-
-function printGateHeartbeat(id, resolvedWorktree) {
-  const beat = gateHeartbeat(id, resolvedWorktree)
-  if (beat.level === 'warn') console.warn(`⚠ gate 心跳：${beat.message}`)
-  else if (beat.level === 'ok') console.log(`✓ gate 心跳：${beat.message}`)
-}
-
-// 阶段推进自动播报：gate 通过（exit 0）后，仅当项目 notify 配置 notifyOnGate===true 才发「Gx 已完成」卡片。
-// 非阻塞——发送失败只 warn，绝不改 gate 退出码；指纹入幂等键，同代码状态重复跑 gate 不重复刷群。
-function maybeBroadcastGate(id, gate) {
-  const configPath = join(resolveProjectRoot(id), 'agent/scripts', `${id.toLowerCase()}.json`)
-  const notifyConfig = readOptionalJson(configPath)
-  if (!notifyConfig?.notifyOnGate) return
-
-  const wrapper = join(resolveProjectRoot(id), 'agent/scripts/notify-lark.mjs')
-  if (!existsSync(wrapper)) {
-    console.warn(`⚠ notifyOnGate 开启但缺 notify-lark 薄包装：${wrapper}`)
-    return
-  }
-
-  const gateResult = readOptionalJson(join(resolveProjectRoot(id), 'agent/gate-results.json'))
-  const baseSummary = typeof gateResult?.summary === 'string' && gateResult.summary.trim() ? gateResult.summary.trim() : `${gate} 机器校验通过`
-  // bug 轮询窗口提醒：进 G6/G7（自测/QA，bug 密集期）提醒开轮询，G8（交付）提醒收工。
-  // 这是系统内唯一能感知「进 QA」的信号（收不到 bug 机器人推送），故顺 gate 播报带出。
-  const pollHint = gate === 'G6' || gate === 'G7' ? '；建议 lark-bot poll-on 开始接 bug' : gate === 'G8' ? '；bug 处理完可 lark-bot poll-off 收工' : ''
-  const summary = `${baseSummary}${pollHint}`
-  const fpKey = createHash('sha1')
-    .update(JSON.stringify(gateResult?.fingerprint ?? gate))
-    .digest('hex')
-    .slice(0, 12)
-  const idempotencyKey = `${id}-${gate}-${fpKey}`
-
-  const result = spawnSync(process.execPath, [wrapper, gate, '已完成', summary, '--config', configPath, '--idempotency-key', idempotencyKey], { cwd: repoRoot, encoding: 'utf8' })
-  if (result.status === 0) {
-    console.log(`✓ 阶段播报已发：${id} ${gate} 已完成`)
-  } else {
-    console.warn(`⚠ 阶段播报失败（不影响 gate）：${(result.stderr || result.stdout || '').trim().slice(0, 200)}`)
   }
 }
 

@@ -88,3 +88,9 @@ Findings（详见 `product/06-collaboration.md` Findings 表）：
 - **R2 低**：`trialBalanceManualInvalidate.ts#downloadBlobByGet` 与 `userMassManage.ts#downloadExportFile` 逻辑重叠（差异仅 GET/POST）→ 可延后抽公共核心。
 
 占位 type code（114/34/manual_invalidate_trial）为已登记的待后端销账项，非评审缺陷。
+
+## 10. PRD 漂移核查（2026-08-11）
+
+用 `lark-cli docs +fetch --doc-format markdown` 直接拉取 Lark 源文档（`https://qfglxo2m3dc.sg.larksuite.com/docx/IpS2dJ4f1oPF4DxcKkKl5SFpgKc`）最新版本，与本地快照 `inbox/lark-sync/prd-latest.extracted.md` 逐行比对（去除图片签名 token 噪音后比对纯文本，257 行 vs 257 行）。
+
+结论：**正文无实质改动**。本期包含表（125-137 行）、落点A 描述（261-275 行）、F17-F23 各端流水枚举描述逐字一致；唯一差异是标题从「体验金手动失效功能」加了项目编号前缀变为「【PR-01930】体验金手动失效功能」（PM 归档标记，非需求变更），其余差异均为图片下载链接的签名 token 重签（同一张图每次拉取签名不同，非内容变化）。代码无需同步更新。

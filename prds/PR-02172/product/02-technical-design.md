@@ -14,8 +14,8 @@
 | TD03 | API 路线 | 优先复用 `/fe-ex-api/oauth/*` 通用接口与统一响应 schema；仅授权换 token 允许渠道专属接口 |
 | TD04 | Provider 枚举 | 前端使用 `ThirdType.Telegram = 'Telegram'`、`ThirdType.Facebook = 'Facebook'`；后端 `source` 保持一致 |
 | TD05 | 授权状态 | 继续使用 `0=未绑定`、`1=已绑定直登`、`2=强制关联`；异常状态使用明确错误码，不扩展模糊状态值 |
-| TD06 | Web 授权交互 | popup 优先；popup 不支持/被拦截时降级 redirect；统一进入本站 callback 路由。Telegram 用官方 `telegram-login.js`（新版 OIDC，`Telegram.Login.auth()` popup 返回 `id_token`）；Facebook 用手动 code 模式（`/vXX/dialog/oauth?response_type=code`，后端换 token） |
-| TD07 | OAuth 安全 | 前端携带 state/PKCE 所需信息；后端负责生成或校验 state/nonce、code/token 交换与防重放。Telegram `id_token`(RS256 JWT) 与 Facebook code 均由后端验签/换取，密钥与 app secret 不进前端 |
+| TD06 | Web 授权交互 | popup 优先；popup 不支持/被拦截时降级 redirect；统一进入本站 callback 路由。Telegram 用官方 `telegram-login.js`（新版 OIDC，`Telegram.Login.auth()` popup 返回 `id_token`）；~~Facebook 用手动 code 模式（`/vXX/dialog/oauth?response_type=code`，后端换 token）~~ **2026-08-11 更正：Facebook 改走 Facebook JS SDK，`FB.login()` 直接返回 `accessToken`，不再走 code+回调路由（见 06-collaboration D6）** |
+| TD07 | OAuth 安全 | 前端携带 state/PKCE 所需信息；后端负责生成或校验 state/nonce、code/token 交换与防重放。Telegram `id_token`(RS256 JWT) 由后端 JWKS 验签，密钥不进前端；~~Facebook code 均由后端验签/换取，app secret 不进前端~~ **2026-08-11 更正：Facebook 已无需 code 换 token，后端改用 accessToken 直查 Graph API `/me`** |
 | TD08 | API 未 ready | 使用项目默认 MSW 路线 B；组件/service/hook 不写 mock 分支 |
 | TD09 | 用户绑定模型 | 扩展统一 `authUsers` 数组，至少包含 `provider`、`bindStatus`、`maskedAccount`；不新增平铺的渠道状态字段 |
 | TD10 | 外部数据边界 | Telegram/Facebook SDK 数据以 `unknown` 进入 runtime schema，再映射为统一授权模型 |
