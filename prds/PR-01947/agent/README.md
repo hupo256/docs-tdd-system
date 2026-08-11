@@ -51,7 +51,7 @@ node apps/web/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-01
 
 ## Lark 能力
 
-- 群内 @bot / @所有人 / P2P 直发 → `direct` 触发：立即入队执行并发排队卡（视为显式指令，不做意图过滤）。已实现。
-- 群内 @负责人（`taskMentionOpenIds`，当前 = Aven.tong）→ `task_mention` 触发：静默收下 → AI 意图分类，仅 bug/需求入队自动解决，其余 `ignored`（群里不发卡、无噪声）。已实现。
-  - 端到端前提（非代码）：① Lark 应用需开通「接收群内全部消息」权限，否则只收得到 @bot 的消息；② bot 需已在该群（`allowedChatIds: "auto"` 靠 `isChatMember` 放行）。
-- 触发判定见 `common/lark-bot/lib/lark-message.mjs` 的 `resolveMessageTrigger`；意图分类分流见 `lib/lark-task-runner.mjs` + store `resolveIntake`。
+本项目是 lark-bot 子系统试点，已启用「群内 @ 应用转 task + 主动发群」。
+
+- 项目差异与运行状态（配置路径、白名单、bug 表字段、上线前置）见 [lark-integration.md](./lark-integration.md)。
+- 触发模型 / 意图分类 / 权限前提等**系统级通用行为**见 [lark-bot 子系统文档](../../../common/lark-bot/docs/README.md)，不在本项目 README 重复。

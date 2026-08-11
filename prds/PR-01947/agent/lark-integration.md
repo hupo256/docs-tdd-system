@@ -1,7 +1,7 @@
 # PR-01947 Lark 集成
 
 > 只记录 PR-01947 项目差异与运行状态。通用规则继承：
-> - 群内 @ 应用转任务：[../../../common/rules/lark-bot-gateway.md](../../../common/rules/lark-bot-gateway.md)
+> - 群内 @ 应用转任务：[../../../common/lark-bot/docs/README.md](../../../common/lark-bot/docs/README.md)
 > - 主动发群消息：[../../../common/rules/lark-active-notification.md](../../../common/rules/lark-active-notification.md)
 > - Lark 文档只读同步：[../../../common/rules/lark-doc-sync.md](../../../common/rules/lark-doc-sync.md)
 > - 协作边界：[../../../common/rules/collaboration-and-notifications.md](../../../common/rules/collaboration-and-notifications.md)
@@ -145,7 +145,7 @@ bug 多维表格是**全公司共享表**，Aven.tong 名下的 bug 横跨多个
 
 **路由实现**：`common/engine/agent-scripts/lark-worker.mjs` → `resolveWorkContext(workerConfig, task)`（已导出，可只读单测）+ `prepareTempWorktree` / `finalizeTempWorktree`。
 
-**并行调度（2026-08-06 加）**：worker 从单串行改成**按 worktree 并行**——调度键 = `resolveWorkContext(task).cwd`，同一 worktree 串行、不同 worktree 并行，并发上限 `LARK_WORKER_CONCURRENCY`（默认 3）。靠 store `claimById` + gateway `POST /lark/tasks/:id/claim` 原子按 id 领取。临时 worktree 建好后 `linkNodeModules` 软链主仓 node_modules（根+apps/*+packages/*）免 `pnpm install`；hotfix 任务 prompt 验证收窄到触达包/文件（不跑全仓 tsc）。详见 `common/rules/lark-bot-gateway.md` §14。
+**并行调度（2026-08-06 加）**：worker 从单串行改成**按 worktree 并行**——调度键 = `resolveWorkContext(task).cwd`，同一 worktree 串行、不同 worktree 并行，并发上限 `LARK_WORKER_CONCURRENCY`（默认 3）。靠 store `claimById` + gateway `POST /lark/tasks/:id/claim` 原子按 id 领取。临时 worktree 建好后 `linkNodeModules` 软链主仓 node_modules（根+apps/*+packages/*）免 `pnpm install`；hotfix 任务 prompt 验证收窄到触达包/文件（不跑全仓 tsc）。详见 [../../../common/lark-bot/docs/runtime-and-scheduling.md](../../../common/lark-bot/docs/runtime-and-scheduling.md) §3。
 
 ### 8.1 群 @ 任务也共用同一套跨项目路由
 

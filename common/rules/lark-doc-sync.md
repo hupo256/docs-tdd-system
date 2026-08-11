@@ -1,6 +1,6 @@
 # Lark 文档只读同步规则
 
-> 本文描述用 Lark 官方 `lark-cli` 读取 PRD / Wiki / Drive 资料，以及把本地 Markdown PRD 同步到 `docs_tdd` 的规则。群内 @ 应用任务链路见 [lark-bot-gateway.md](./lark-bot-gateway.md)。
+> 本文描述用 Lark 官方 `lark-cli` 读取 PRD / Wiki / Drive 资料，以及把本地 Markdown PRD 同步到 `docs_tdd` 的规则。群内 @ 应用任务链路见 [lark-bot 子系统文档](../lark-bot/docs/README.md)。
 
 ## 1. 目标
 

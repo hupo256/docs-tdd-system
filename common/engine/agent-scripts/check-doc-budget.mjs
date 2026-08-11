@@ -91,7 +91,6 @@ const DOC_BUDGET_OVERRIDES = {
   'rule-ids-and-gates.md': { warn: 25000, fail: 29000 }, // rule ID 台账，随规则条目增长
   'architecture-and-state.md': { warn: 15000, fail: 17000 },
   'CHANGELOG.md': { warn: 15000, fail: 18000 }, // 轮转后保留近期条目；历史在 CHANGELOG-archive.md
-  'lark-bot-gateway.md': { warn: 16000, fail: 18000 }, // AI 自动修 bug 常驻服务运维手册（网关/worker/bug 表/健壮性兜底全链路），按需查阅型大文件，不进常驻上下文
 }
 const BUDGET_EXEMPT = new Set(['CHANGELOG-archive.md']) // 纯历史归档，不进 context、不参与覆盖/预算
 // 门禁脚本体量预算（码点）：脚本天然比文档大，但仍需天花板，防单个 gate 脚本无限膨胀——它们恰是 AI 最难 review、
