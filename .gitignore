@@ -24,6 +24,9 @@ common/lark-bot/runtime/lark-tasks/
 **/agent/notification-log.md
 **/agent/rule-session.json
 
+# PRD remote-drift TTL cache — pure per-machine optimization, not a source artifact
+**/inbox/lark-sync/.drift-cache.json
+
 # installation-specific consumer binding (each checkout/company sets its own;
 # the committed docs-tdd.config.default.json holds the reusable defaults)
 docs-tdd.config.json
