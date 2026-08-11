@@ -3,6 +3,8 @@
  * 字段读取、bug 正文拼装、列式记录 zip 回对象。轮询器只保留 IO 与编排。
  */
 
+import { parseCommandType } from './lark-message.mjs'
+
 const ACTIVE_TASK_STATUSES = new Set(['received', 'queued', 'running', 'verifying', 'done_pending_writeback'])
 const WAITING_TASK_STATUSES = new Set(['blocked', 'waiting_confirmation'])
 export const QA_RETURN_REOPENABLE_STATUSES = new Set(['done', 'done_pending_writeback', 'failed', 'no_change_needed'])
@@ -68,6 +70,18 @@ export const readStatusText = (value) => {
 // 项目ID 列值形如 "PR-01947" / "PM-1469\n"（探针见过尾部换行），取文本并去空白
 export const readProjectId = ({ fields, bug }) => readStatusText(fields[bug.projectField || BUGTABLE_FIELD_DEFAULTS.projectField]).trim()
 
+// bug 表记录只按**显式前缀**（首行「状态：/status:」等）判命令类型，绝不做自然语言兜底：
+// 误把一条真 bug 推断成 status，会让它走只读沙箱 + 零改动 done + 回写完成值后离开待处理筛选，
+// 整条记录静默关闭且无人再看见（P0-1）。QA 验退始终按 fix 处理。缺陷正文里出现「状态」二字
+// 也不会命中——只有 QA/PM 在标题里显式写「状态：xxx」才当只读查询。
+export const readBugCommandType = ({ fields, bug }) => {
+  const status = readStatusText(fields[bug.statusField])
+  if (bug.rejectedValue && status === bug.rejectedValue) return 'fix'
+  const title = readStatusText(fields[bug.titleField || BUGTABLE_FIELD_DEFAULTS.titleField])
+  const desc = readStatusText(fields[bug.descField || BUGTABLE_FIELD_DEFAULTS.descField])
+  return parseCommandType([title, desc].filter(Boolean).join('\n'))
+}
+
 // 把记录正文拼成给 AI 的 task 文本
 export const buildBugText = ({ record, bug }) => {
   const fields = record.fields || {}
@@ -76,8 +90,12 @@ export const buildBugText = ({ record, bug }) => {
   const projectId = readProjectId({ fields, bug })
   const status = readStatusText(fields[bug.statusField])
   const isQaReturn = Boolean(bug.rejectedValue) && status === bug.rejectedValue
+  const commandType = readBugCommandType({ fields, bug })
   return [
-    `修复：Lark bug 表${isQaReturn ? '验退' : '待处理'}项 [${title}]`,
+    commandType === 'status'
+      ? `状态：${title}`
+      : `修复：Lark bug 表${isQaReturn ? '验退' : '待处理'}项 [${title}]`,
+    commandType === 'status' ? '来源：Lark bug 表只读查询项；只返回项目当前状态，不修改代码。' : null,
     isQaReturn
       ? 'QA 验退：上一轮修复已发布到 test，但实际表现仍不符合要求。先对照当前代码、上一轮改动和问题描述深入分析未解决的根因，再继续修复；不要原样重复上一轮方案。'
       : null,

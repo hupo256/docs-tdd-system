@@ -7,6 +7,7 @@ import { normalizeAiExecutor } from './lark-http.mjs'
 import {
   appendNotificationLog,
   markBugRecordInProgress,
+  markBugRecordWaiting,
   writeBackBugRecord,
 } from './lark-bugtable-writeback.mjs'
 import { buildResultCard, buildWaitingCard, formatDisplayTime, resolveOwnerMention } from './lark-cards.mjs'
@@ -56,6 +57,7 @@ export const handleStatusUpdate = async ({ config, store, id, status, result, ai
     if (task.parkedAt == null || previousStatus !== status) {
       task.parkedAt = new Date().toISOString()
       task.parkedRemindedRound = 0
+      task.waitRound = (task.waitRound || 0) + 1
     }
   } else {
     task.parkedAt = null
@@ -84,15 +86,18 @@ export const handleStatusUpdate = async ({ config, store, id, status, result, ai
     })
   }
   // 待确认 / 阻塞：单独一条橙色回执。责任人识别：AI 自报 owner 命中 config.ownerMap 则 @ 对应责任人，
-  // 否则回落 @ 提单人（task.operator）并注明未识别。bug 表任务通常无 operator，则不 @、仅发群。
+  // 否则回落 @ 提单人（task.operator）并注明未识别。bug 表任务的 operator 由 poller 置为受理人 myOpenId
+  // （bug.myOpenId || taskMentionOpenIds[0]），故一定有 operator 可回落 @，不会出现「无人可 @」。
   if (status === 'waiting_confirmation' || status === 'blocked') {
     const { mentionOpenId, ownerNote } = resolveOwnerMention({ owner: task.owner, ownerMap: config.ownerMap, operator: task.operator })
-    await sendChatMessage({
+    if (task.source === 'lark-bugtable') await markBugRecordWaiting({ config, task })
+    const receipt = await sendChatMessage({
       chatId: task.chatId,
       card: buildWaitingCard({ config, task, status, result, mentionOpenId, ownerNote }),
       logPrefix: `${status} receipt`,
       idempotencyKey: receiptKey,
     })
+    if (receipt.messageId) store.recordReceipt(task.id, { messageId: receipt.messageId, kind: status })
     appendNotificationLog({
       config,
       row: `| ${formatDisplayTime()} | Lark Job | 待确认 | ${task.summary}：${(result || '').slice(0, 60)} | real | waiting |`,

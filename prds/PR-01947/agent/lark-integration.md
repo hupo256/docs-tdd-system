@@ -76,7 +76,7 @@ node /Users/aven/github/docs_tdd/prds/PR-01947/agent/scripts/lark-bugtable-polle
 2. ✅ Lark 后台事件订阅 `im.message.receive_v1` 已开、应用已发布；“获取群组中所有消息”只读权限已授予，应用 scope API 显示 tenant `im:message:readonly` 的 `grant_status=1`。bitable 读写 scope（`base:field:read` / `base:record:read` / `base:record:update`）已审批。
 3. ✅ bug 表字段已确认（表名「EX项目bug统计表」）：
    - `assigneeField` = **负责RD**（表内**无**「负责人」字段，人员类字段为 解决人员/负责RD/测试人员）
-   - `statusField` = **处理状态**，`pendingValue` = **待处理**，`rejectedValue` = **验退**，`inProgressValue` = **修复中**，`doneValue` = **待推版**
+   - `statusField` = **处理状态**，`pendingValue` = **待处理**，`rejectedValue` = **验退**，`inProgressValue` = **修复中**，`doneValue` = **待推版**，`readOnlyDoneValue` = **已完成**，`waitingValue` = **暂缓处理**
    - `titleField` = 问题标题，`descField` = 问题描述（复现步骤）
 4. 进度卡片通道：本项目走 bot `im +messages-send`（`notifyTransport:'bot'`，复用已登录 bot 身份，无需 webhook secret）；若改用自定义机器人 webhook 再填 `webhookUrl`/`secret` 并去掉 `notifyTransport`。
 
@@ -141,7 +141,7 @@ bug 多维表格是**全公司共享表**，Aven.tong 名下的 bug 横跨多个
 - `/Users/aven/github/<项目ID>` **有 worktree** → 就在该 worktree 改。**进来时若已有未提交 WIP → 先把 WIP 单独提交一笔隔离**（`commitPreexistingWip`，message 标明"非本任务产生"），再跑 AI；任务**真 done** 后把本任务改动 `git add -A && commit --no-verify` 到**当前分支**（`finalizeExistingWorktree`，每任务一个独立 commit）。失败/阻塞不提交、无改动不提交、commit 失败保留改动在工作区。→ 你的 WIP 与 bot 改动**永远分成两个 commit**，不混。
 - **无 worktree** → **一次性临时 worktree**：`git worktree add` 到 `~/github/.lark-hotfix/<分支slug>`（基于 `origin/online` 建 `hotfix/<项目ID>-<id>` 分支），在里面改；**不碰主仓**（主仓脏/在别的分支都不受影响，天然无并发/顺序碰撞）。干完**自动本地提交到该分支、删临时目录**（分支保留待 review，不 push/不合并）；无改动则连空分支一起删。
 - 无 `project`（既没解析到、也无 `config.project`）→ 同样临时 worktree，分支 `hotfix/adhoc-<msgId前6>`。群 @ 任务的项目号解析见 §8.1。
-- 干完回写表格状态 `待处理/验退 → 修复中 → 待推版`。QA 在 test 验收不通过时改为「验退」，poller 会把同一记录作为新一轮重开，保留上一轮结果并继续原 hotfix 分支。
+- 代码任务回写 `待处理/验退 → 修复中 → 待推版`；状态查询回写 `待处理 → 修复中 → 已完成`；缺材料时回写 `暂缓处理`，责任人回复橙色卡片并 @应用（或发送 `继续任务 <taskId> ...`）后复用原任务/分支回到 `修复中`。QA 在 test 验收不通过时改为「验退」，poller 会把同一记录作为新一轮重开，保留上一轮结果并继续原 hotfix 分支。
 
 **路由实现**：`common/engine/agent-scripts/lark-worker.mjs` → `resolveWorkContext(workerConfig, task)`（已导出，可只读单测）+ `prepareTempWorktree` / `finalizeTempWorktree`。
 

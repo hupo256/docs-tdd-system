@@ -64,6 +64,8 @@ Bot Gateway 是独立服务，不放进 `apps/web` 运行时。它负责：
 - `QA / qa`：比对 QA 用例、执行回归。
 - `状态 / status`：只读状态并回群。
 
+显式前缀优先；没有前缀时，Gateway 只对同时包含“状态/进度/阶段”等主题与明确问句信号、且不含“修复/修改/更新/实现”等写操作动词的文本推断为 `status`。例如“这个项目现在的状态是？”是只读查询，“修复项目状态显示错误”仍是变更任务。bug 表必须在添加“修复：Lark bug 表…”包装前基于原始标题与描述判断，避免包装覆盖真实意图。
+
 不清晰的消息只回复需要补充的信息，不自动猜测执行。
 
 ## 4. Job 字段
@@ -149,7 +151,7 @@ Gateway / Worker 至少提取：
 - 需要安装依赖、push、commit、开 PR、部署、改 CI/CD。
 - 任务影响范围超出当前 `apps/web` 或当前 feature。
 
-进入上述任一场景时，Worker 必须把 task 状态置为 `waiting_confirmation`，并自动发送待确认 / 补信息通知。通知里要写清缺什么、影响哪个阶段、需要谁处理；能识别责任人时必须 @ 具体人，不能识别时 @ 项目负责人 / 群内负责人。**已落地实现**：AI 结构化结果（`lark-ai-result.schema.json`）status 支持 `waiting_confirmation`，并可带 `blockers`（逐条列缺什么）、`owner`（推断责任人 / 角色）；Worker 原样回写该状态（不跑规范闸、不提交改动）并把 `owner` 随状态回写带给 Gateway；Gateway `handleStatusUpdate` 对 `waiting_confirmation` / `blocked` 发**橙色独立回执卡**（区别于绿/红的完成/失败卡）。**责任人 @ 落地**（`resolveOwnerMention`）：AI 自报 `owner`（角色 / 关键词）命中项目配置 `config.ownerMap`（`角色/关键词 → open_id`，可选表）则 `<at>` 对应责任人；未命中则回落 `<at>` 触发人（`task.operator`）并注明「未在责任人表识别，暂 @ 提单人」；bug 表任务无触发人则仅发群（不硬失败）。**续任务闭环**（`store.resumeWithSupplement`）：用户对一条仍卡在 `waiting_confirmation` / `blocked` 的原任务回复补料时，Gateway 复用**原任务**（append 补料到 `task.text` + 合并新附件 + 复用同 `task.id` → `resolveWorkContext` 算出同一分支/worktree），置回 `queued` 续跑并 bump `epoch`，而非新建孤儿任务。**关键约束**：AI 遇缺材料严禁猜测生成文案 / 默认值硬做，也严禁误判成 `failed`；`failed` 只留给工具 / 环境 / 权限等技术性失败。
+进入上述任一场景时，Worker 必须把 task 状态置为 `waiting_confirmation`，并自动发送待确认 / 补信息通知。通知里要写清缺什么、影响哪个阶段、需要谁处理；能识别责任人时必须 @ 具体人，不能识别时 @ 项目负责人 / 群内负责人。**已落地实现**：AI 结构化结果（`lark-ai-result.schema.json`）status 支持 `waiting_confirmation`，并可带 `blockers`（逐条列缺什么）、`owner`（推断责任人 / 角色）；Worker 原样回写该状态（不跑规范闸、不提交改动）并把 `owner` 随状态回写带给 Gateway；Gateway `handleStatusUpdate` 对 `waiting_confirmation` / `blocked` 发**橙色独立回执卡**（区别于绿/红的完成/失败卡）。**责任人 @ 落地**（`resolveOwnerMention`）：AI 自报 `owner`（角色 / 关键词）命中项目配置 `config.ownerMap`（`角色/关键词 → open_id`，可选表）则 `<at>` 对应责任人；未命中则回落 `<at>` 触发人（`task.operator`）并注明「未在责任人表识别，暂 @ 提单人」；bug 表任务由 poller 把负责 RD 写入 `operator`，保证无法识别业务 owner 时仍有人接收。**续任务闭环**（`store.resumeWithSupplement`）：Gateway 保存待确认卡和催办卡的真实 Lark `message_id → task.id` 关联；用户回复卡片并 @应用时，或发送 `继续任务 <taskId> <补充内容>` 兜底指令时，复用**原任务**（append 补料 + 合并附件 + 保存本轮结论到 `waitingHistory` + 复用同一分支/worktree），置回 `queued` 并 bump `epoch`。回执关联持久化且只接受当前 epoch，重启不丢、旧轮次卡片也不能误续跑新一轮。**关键约束**：AI 遇缺材料严禁猜测生成文案 / 默认值硬做，也严禁误判成 `failed`；`failed` 只留给工具 / 环境 / 权限等技术性失败。
 
 ### 6.4 完成后汇报策略
 
@@ -277,7 +279,7 @@ Codex 两阶段均为 `ephemeral + approval never + 工具网络关闭`：先把
   - **/lark/health 观测增强**：补 `consumerDetail`（lastEventAt / 窗口抖动数 / alerted / backoff）、`oldestQueuedAgeMs`、`minLeaseRemainingMs`、`deadLetters`、`topRequeued`（各状态计数与卡住任务 id 之外）。
   - **本地 API 鉴权（可选）**：配置 `LARK_GATEWAY_SECRET` 后，所有写操作 POST 必须带 `x-lark-gateway-secret`（worker/poller 从同名环境变量读取）；`readBody` 有 1MB 上限。未配置则仅靠 127.0.0.1 绑定兜底。
   - **附件文件名 sanitize、状态白名单校验**：`imageKey` 拼本地路径前清路径分隔符；`/status` 只接受合法生命周期状态。
-  - **命令类型解析 + 只读分流**（`parseCommandType`）：Gateway 摄入时按任务首行前缀（`状态/status`、`文档/docs`、`修复/fix`、`自测/test`、`api`、`qa`）落 `task.commandType`。worker 对**只读命令**（`status`）走轻量分流：本地无 worktree 时不新建临时 worktree（省下 `git worktree add + origin/online` 拉取），直接在主仓只读回答、跳过 WIP 提交与代码提交闸；Codex 用 `read-only` 沙箱。
+  - **命令类型解析 + 只读分流**（`parseCommandType` / `inferCommandType`）：Gateway 摄入时优先按任务首行前缀（`状态/status`、`文档/docs`、`修复/fix`、`自测/test`、`api`、`qa`）落 `task.commandType`，再对无歧义自然语言状态问句做保守推断。worker 对 `status` 走严格只读分流：不新建临时 worktree、不运行写式文档同步、不跑会暂存或纠正代码的规范闸、不提交；Codex 用 `read-only` 沙箱。AI 正常返回结构化 `done` 且 `changedFiles=[]` 即发绿色“查询成功”卡，普通修复的“done + 零 diff 不可信”规则不变。
   - **完成警告与失败分流**（`lark-ai-result.schema.json` / `lark-task-runner.mjs`）：AI 内部结果支持 `done_with_warnings` + `warnings[]`；自动视觉验收默认关闭，只有任务明确要求但现有页面不可用等非阻塞场景才提醒。Worker 仍执行规范闸和 diff 可信度评估，通过后归一为 Gateway `done`。真实 `failed` 才用 `failureKind` 与 `nextStep`。
   - **续任务闭环 + owner @ 落地**：见 §6.2——补料复用原任务续跑（`resumeWithSupplement`）、`owner` 命中 `config.ownerMap` 则 @ 责任人（`resolveOwnerMention`）。
 - **规则上下文（多标签 + 缺章告警）**（`lib/lark-rule-context.mjs`）：`classifyLarkTask` 由「单一胜出」改**多标签叠加**（如 ui+api 同时命中就都产出 scenario，`refsFor` 按标签并集加载规则）；**有图片附件或 `fix` 命令强制并入 UI+STYLE 信号**（视觉/修复类常只写「字段 / 背景 / 不对」易被误判成纯 API 任务丢样式 token 规则）；`extractMarkdownSection` 抽到空段（源文档改了标题 → 规则被静默丢弃）时 `console.warn` + 记 `warnings`/audit，不静默 continue。
@@ -290,7 +292,7 @@ bug 表按 `项目ID` 跨项目路由，与群 @ 共用 `resolveWorkContext`：
 - 已有 worktree 时先隔离既存 WIP，done 后提交本次改动；失败/阻塞不提交，提交失败保留现场。
 - 无 worktree 时基于 `origin/online` 建 `hotfix/<项目ID|adhoc>-<id>`；仅 done 提交并清理，失败/阻塞有半成品则保留，无改动可删除。
 - 引用消息由 `messages-mget` 合并；`[Image: img_xxx]` / `![Image](img_xxx)` 占位会恢复、去重，并按实际项目下载。
-- 仅 bug 表来源的 done 任务回写表格；**回写成功才置 `done`**，回写失败置中间态 `done_pending_writeback`（poller 视作 in-flight，不入队、不 seen），Gateway 每 5min 重试回写直至一致——消除「群报完成 + 表格永卡待处理」。活动状态跳过，blocked/waiting_confirmation 等人工补料，failed 计入 `stuck-failed`；三者均不自动重跑。
+- 仅 bug 表来源的 done 任务回写表格；**回写成功才置 `done`**，回写失败置中间态 `done_pending_writeback`（poller 视作 in-flight，不入队、不 seen），Gateway 每 5min 重试回写直至一致——消除「群报完成 + 表格永卡待处理」。代码修复使用 `doneValue`（当前“待推版”）；只读查询使用 `readOnlyDoneValue`（当前“已完成”）；waiting/blocked 配置 `waitingValue` 时同步为该值（当前复用“暂缓处理”），补料续跑后再次进入“修复中”。活动状态跳过，failed 计入 `stuck-failed`，不自动重跑。
 - **QA 验退重开**：配置 `rejectedValue:"验退"` 后，poller 同时查询待处理与验退。验退是明确的人工作业信号，会忽略旧 `seen`，把同一 `record_id` 的 done/done_pending_writeback/failed/no_change_needed 作为新轮次重开；活动态和 waiting/blocked 仍去重。重开会保存上一轮结果到 `executionHistory`、递增 `qaReturnCount` 与 `epoch`、补发领取卡，并在 prompt 中要求先分析上一轮未解决根因。临时 hotfix 复用原分支 tip 继续提交，不从 `origin/online` 重置；审计文件按 epoch 分轮保留。
 - **failed 人工重触发闭环**：群 @ 任务可直接重新 @（新 messageId 天然是新任务）；bug 表任务 id=record_id 固定、POST 幂等会命中旧 failed，只能显式重置 —— `lark-bot failed` 列出待处理失败项，`lark-bot retry <id>` 把 failed/blocked 重置为 queued（`retryCount++`、补发「已重新入队」卡片），worker 下一轮重跑。**不做自动重试**（避免对修不动的 bug 无限烧钱）。
 - poller 由 `lark-bot poll-on/off` 控制，空闲 `LARK_BUGTABLE_IDLE_OFF_MS` 后自动停止；G6/G7 提醒开启，G8 提醒关闭。

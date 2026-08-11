@@ -19,20 +19,27 @@ import {
   buildBugText,
   classifyBugPollAction,
   classifyBugTaskStatus,
+  readBugCommandType,
   readStatusText,
 } from '../lib/lark-bugtable-parse.mjs'
 import { createTaskStore } from '../lib/lark-task-store.mjs'
 import { parkedReminderRound } from '../lib/lark-parked-reminder.mjs'
 import { rotateLogIfLarge } from '../lib/lark-log-rotate.mjs'
-import { buildResultCard } from '../lib/lark-cards.mjs'
+import { buildResultCard, buildWaitingCard } from '../lib/lark-cards.mjs'
+import { parseSentMessageId } from '../lib/lark-cli.mjs'
 import {
+  classifyCommandType,
+  inferCommandType,
   isForBot,
   isProjectId,
   isReadOnlyCommand,
+  isReadOnlyTask,
   isWhitelisted,
   matchProjectId,
   normalizeMessage,
   parseCommandType,
+  parseResumeDirective,
+  resolveCommandType,
   resolveMessageTrigger,
 } from '../lib/lark-message.mjs'
 import { allRuleRefs, buildFocusedRuleContext, classifyLarkTask, extractMarkdownSection } from '../lib/lark-rule-context.mjs'
@@ -40,6 +47,7 @@ import { assessDoneResult, crossCheckChangedFiles, detectChangeTier, splitViolat
 import { pruneStaleAudits } from '../lib/lark-worker-audit.mjs'
 import { classifyWorkerFailure } from '../lib/lark-worker-results.mjs'
 import { resolveWorkContext, safeProject } from '../lib/lark-work-context.mjs'
+import { resolveResumeTarget } from '../lib/lark-ingest.mjs'
 import { validateSource } from '../../engine/agent-scripts/sync-lark-docs.mjs'
 
 const BOT = 'ou_bot'
@@ -192,6 +200,19 @@ describe('bug table task status', () => {
     assert.match(text, /bug 表验退项/)
     assert.match(text, /深入分析未解决的根因/)
     assert.match(text, /不要原样重复上一轮方案/)
+  })
+
+  it('bug 表命令类型只认显式前缀，不做自然语言兜底；QA 验退始终按修复处理', () => {
+    const bug = { statusField: '处理状态', rejectedValue: '验退', titleField: '问题标题', descField: '问题描述' }
+    // 自然语言问法（无显式「状态：」前缀）不再当 status——否则真 bug 会被静默零改动关单（P0-1）。
+    const nl = { 处理状态: '待处理', 问题标题: '这个项目现在的状态是？', 问题描述: '' }
+    assert.equal(readBugCommandType({ fields: nl, bug }), null)
+    assert.match(buildBugText({ record: { record_id: 'rec-nl', fields: nl }, bug }), /^修复：Lark bug 表待处理项/)
+    // 只有标题里显式写「状态：」前缀才当只读查询。
+    const explicit = { 处理状态: '待处理', 问题标题: '状态：这个项目现在做到哪了', 问题描述: '' }
+    assert.equal(readBugCommandType({ fields: explicit, bug }), 'status')
+    assert.match(buildBugText({ record: { record_id: 'rec-status', fields: explicit }, bug }), /^状态：状态：这个项目现在做到哪了/)
+    assert.equal(readBugCommandType({ fields: { ...nl, 处理状态: '验退' }, bug }), 'fix')
   })
 })
 
@@ -382,6 +403,105 @@ describe('parseCommandType', () => {
     assert.equal(isReadOnlyCommand('fix'), false)
     assert.equal(isReadOnlyCommand(null), false)
   })
+
+  it('自然语言明确问状态时推断 status，带写操作或陈述句时不误判', () => {
+    assert.equal(inferCommandType('这个项目现在的状态是？'), 'status')
+    assert.equal(inferCommandType('看看 PR-01947 目前做到哪一步'), 'status')
+    assert.equal(inferCommandType('修复项目状态显示错误'), null)
+    assert.equal(inferCommandType('项目状态字段显示错误'), null)
+  })
+
+  it('缺陷信号一票否决：报障式描述绝不当只读查询', () => {
+    // 这些都含项目级主题词 + 查询提示，但带缺陷信号 → 必须判 null（此前「项目状态一直转圈」被误判成 status）。
+    assert.equal(inferCommandType('这个项目的状态一直转圈，是什么原因？'), null)
+    assert.equal(inferCommandType('看看项目状态怎么样，字段一直不显示'), null)
+    assert.equal(inferCommandType('项目进度页面白屏了是怎么回事'), null)
+  })
+
+  it('classifyCommandType 标注来源：显式前缀=explicit，自然语言兜底=inferred，兜不住=null', () => {
+    assert.deepEqual(classifyCommandType('状态：这个项目做到哪了'), { type: 'status', source: 'explicit' })
+    assert.deepEqual(classifyCommandType('这个项目现在的状态是？'), { type: 'status', source: 'inferred' })
+    assert.deepEqual(classifyCommandType('登录页按钮点不动'), { type: null, source: null })
+  })
+
+  it('resolveCommandType 是任务级 SSOT：无来源字段时按正文回推 explicit/inferred', () => {
+    // 已持久化命令类型 + 无 commandTypeSource：正文有显式前缀 → explicit
+    assert.deepEqual(resolveCommandType({ commandType: 'status', text: '状态：做到哪了' }), { type: 'status', source: 'explicit' })
+    // 已持久化 status 但正文无显式前缀（自然语言） → inferred
+    assert.deepEqual(resolveCommandType({ commandType: 'status', text: '这个项目现在的状态是？' }), { type: 'status', source: 'inferred' })
+    // 显式 commandTypeSource 优先于正文回推
+    assert.deepEqual(resolveCommandType({ commandType: 'status', commandTypeSource: 'inferred', text: '状态：做到哪了' }), { type: 'status', source: 'inferred' })
+    // 无持久化命令类型：直接按正文分类
+    assert.deepEqual(resolveCommandType({ text: '登录页按钮点不动' }), { type: null, source: null })
+  })
+
+  it('isReadOnlyTask 只在只读命令时为真', () => {
+    assert.equal(isReadOnlyTask({ commandType: 'status', text: '状态：x' }), true)
+    assert.equal(isReadOnlyTask({ commandType: 'fix', text: '修复：x' }), false)
+    assert.equal(isReadOnlyTask({ text: '登录页按钮点不动' }), false)
+  })
+
+  it('解析显式续跑指令并保留补料正文', () => {
+    assert.deepEqual(parseResumeDirective('继续任务 recABC_123 产品确认按方案 A'), {
+      taskId: 'recABC_123',
+      supplementText: '产品确认按方案 A',
+    })
+    assert.equal(parseResumeDirective('继续讨论这个问题'), null)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// resolveResumeTarget：续跑目标解析的边界（B3）——只在明确续跑意图时命中，root_id 需回执命中
+// ---------------------------------------------------------------------------
+describe('resolveResumeTarget', () => {
+  const parked = { id: 'w', status: 'waiting_confirmation' }
+  const done = { id: 'd', status: 'done' }
+  const makeStore = ({ byId = {}, byReceipt = {} } = {}) => ({
+    get: (id) => byId[id] || null,
+    findByReceiptMessageId: (id) => byReceipt[id] || null,
+  })
+
+  it('显式「继续任务 <id>」即使目标缺失也返回目标（交 handleResume 明确回话）', () => {
+    const store = makeStore()
+    assert.deepEqual(
+      resolveResumeTarget({ msg: {}, store, resumeDirective: { taskId: 'w', supplementText: 'x' } }),
+      { taskId: 'w', task: null, explicit: true },
+    )
+  })
+
+  it('回复机器人回执卡（reply_to 命中回执）→ 命中，不限状态', () => {
+    const store = makeStore({ byReceipt: { om_card: parked } })
+    assert.equal(resolveResumeTarget({ msg: { replyToDirect: 'om_card', replyTo: 'om_card' }, store }).task, parked)
+  })
+
+  it('回复原任务消息：仅当该任务仍待确认/阻塞才算续跑意图', () => {
+    assert.equal(
+      resolveResumeTarget({ msg: { replyToDirect: 'w', replyTo: 'w' }, store: makeStore({ byId: { w: parked } }) }).task,
+      parked,
+    )
+    // 回复一条已 done 的任务消息 → 视作线程内新请求，不劫持为续跑
+    assert.equal(resolveResumeTarget({ msg: { replyToDirect: 'd', replyTo: 'd' }, store: makeStore({ byId: { d: done } }) }), null)
+  })
+
+  it('仅有线程根 root_id（无 reply_to）：只在命中回执且仍待确认/阻塞时锚定，绝不 store.get 任意消息', () => {
+    // root_id 命中一条无关任务消息 → 不锚定（防误命中）
+    assert.equal(resolveResumeTarget({ msg: { replyTo: 'w' }, store: makeStore({ byId: { w: parked } }) }), null)
+    // root_id 命中待确认回执 → 锚定
+    assert.equal(resolveResumeTarget({ msg: { replyTo: 'root' }, store: makeStore({ byReceipt: { root: parked } }) }).task, parked)
+  })
+
+  it('无任何续跑信号 → null（普通新任务）', () => {
+    assert.equal(resolveResumeTarget({ msg: {}, store: makeStore() }), null)
+  })
+})
+
+describe('Lark 回执 message_id 解析', () => {
+  it('兼容常见 lark-cli 输出层级，非法输出返回 null', () => {
+    assert.equal(parseSentMessageId('{"data":{"message_id":"om_a"}}'), 'om_a')
+    assert.equal(parseSentMessageId('{"data":{"message":{"message_id":"om_b"}}}'), 'om_b')
+    assert.equal(parseSentMessageId('{"message_id":"om_c"}'), 'om_c')
+    assert.equal(parseSentMessageId('not-json'), null)
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -516,8 +636,21 @@ describe('buildResultCard（结果卡渲染分支行）', () => {
     assert.match(card, /分支/)
   })
   it('无 task.branch（只读任务）→ 卡片不含分支行', () => {
-    const card = buildResultCard({ config, task: { summary: 'x' }, status: 'done', result: '已完成。' })
+    const card = buildResultCard({ config, task: { summary: 'x', commandType: 'status' }, status: 'done', result: '查询完成。' })
     assert.ok(!/\*\*分支\*\*/.test(card))
+    assert.match(card, /查询成功/)
+  })
+
+  it('待确认卡展示任务 ID、轮次和两种续跑入口', () => {
+    const card = buildWaitingCard({
+      config,
+      task: { id: 'rec1234', summary: '缺接口口径', waitRound: 2 },
+      status: 'waiting_confirmation',
+      result: '需确认全部账户含义。',
+    })
+    assert.match(card, /rec1234/)
+    assert.match(card, /第 2 轮/)
+    assert.match(card, /继续任务 rec1234/)
   })
 })
 
@@ -673,7 +806,7 @@ describe('buildFocusedRuleContext（正常场景零 warnings，全路由章节�
     assert.notEqual(first.fingerprint, second.fingerprint)
   })
 
-  it('任一路由章节缺失都阻断，不允许带 warnings 继续执行', () => {
+  it('required（常驻硬规则）章节缺失 → fail-closed 阻断', () => {
     const dir = mkdtempSync(join(tmpdir(), 'lark-rule-context-'))
     const file = join(dir, 'rule.md')
     writeFileSync(file, '# Rule\n\n## Existing\n\ntext\n')
@@ -681,10 +814,31 @@ describe('buildFocusedRuleContext（正常场景零 warnings，全路由章节�
       assert.throws(
         () => buildFocusedRuleContext({
           taskText: '修复页面',
-          ruleRefs: [{ file, label: 'rule.md', heading: '## Missing' }],
+          ruleRefs: [{ file, label: 'rule.md', heading: '## Missing', required: true }],
         }),
-        /VERIFY-RULE-004.*规则上下文构建失败/,
+        /VERIFY-RULE-004.*规则上下文构建失败.*常驻硬规则/,
       )
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('辅助（非 required）章节缺失 → 降级 + 浮现 warnings，不阻断', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'lark-rule-context-'))
+    const file = join(dir, 'rule.md')
+    writeFileSync(file, '# Rule\n\n## Existing\n\ntext\n')
+    try {
+      // 一条 required 命中 + 一条 aux 缺失：不抛，aux 缺失以 warnings 浮现，required 章节仍进 sources。
+      const ctx = buildFocusedRuleContext({
+        taskText: '修复页面',
+        ruleRefs: [
+          { file, label: 'rule.md', heading: '## Existing', required: true },
+          { file, label: 'rule.md', heading: '## Missing' },
+        ],
+      })
+      assert.equal(ctx.sources.length, 1)
+      assert.equal(ctx.warnings.length, 1)
+      assert.match(ctx.warnings[0], /规则章节缺失.*Missing/)
     } finally {
       rmSync(dir, { recursive: true, force: true })
     }
@@ -816,8 +970,10 @@ describe('handleStatusUpdate 的 parkedAt 锚点', () => {
     await handleStatusUpdate({ config: parkedConfig, store, id: 't', status: 'blocked', result: 'x' })
     const first = store.get('t').parkedAt
     assert.ok(first, '进入 blocked 应打上 parkedAt')
+    assert.equal(store.get('t').waitRound, 1)
     await handleStatusUpdate({ config: parkedConfig, store, id: 't', status: 'blocked', result: 'x' })
     assert.equal(store.get('t').parkedAt, first, '同态重复回写不得重置挂起时长')
+    assert.equal(store.get('t').waitRound, 1, '同态幂等回写不得增加等待轮次')
     await handleStatusUpdate({ config: parkedConfig, store, id: 't', status: 'running' })
     assert.equal(store.get('t').parkedAt, null, '离开挂起态应清掉锚点')
   })

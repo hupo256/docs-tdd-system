@@ -6,6 +6,7 @@
  */
 
 import { aiStatusMeta } from './lark-status-meta.mjs'
+import { resolveCommandType, isReadOnlyCommand } from './lark-message.mjs'
 
 export const formatDisplayTime = (date = new Date()) => {
   const pad = (value) => String(value).padStart(2, '0')
@@ -15,6 +16,7 @@ export const formatDisplayTime = (date = new Date()) => {
 const RECEIPT_STYLES = {
   queued: { template: 'blue', icon: '🔄', statusText: '已收到，正在排队处理' },
   done: { template: 'green', icon: '✅', statusText: '已完成' },
+  query_done: { template: 'green', icon: '✅', statusText: '查询成功' },
   failed: { template: 'red', icon: '⛔', statusText: '处理失败' },
   // no_change：经核对本仓无对应改动（后台 API / 别的仓）。中性灰，既非成功也非失败，避免误读成「已修复」或「炸了」。
   no_change: { template: 'grey', icon: 'ℹ️', statusText: '无需改动（不属本仓）' },
@@ -50,6 +52,7 @@ export const buildCardContent = ({ config, kind, lines, project, projectTitle })
 }
 
 const taskLine = (task) => `**任务**：${(task.summary || task.text || '').slice(0, 200)}`
+const taskIdLine = (task) => `**任务 ID**：${task.id}`
 const executorLine = (task) => task.aiExecutor ? `**执行器**：${task.aiExecutor === 'codex' ? 'Codex' : 'Claude'}` : null
 // 改动落在哪个分支（去哪 review / push）。领取时即写入 task.branch，只读任务无分支则不显示。
 const branchLine = (task) => task.branch ? `**分支**：${task.branch}` : null
@@ -76,10 +79,16 @@ export const buildResultCard = ({ config, task, status, result }) => {
   // 结论首行（已完成，待发布 / 处理失败）跟「结果：」同一行显示，编号明细才换行。
   const [head, ...rest] = resultText.split('\n')
   const resultBlock = rest.length ? `**结果**：${head}\n${rest.join('\n')}` : `**结果**：${head}`
+  const { type: commandType, source: commandTypeSource } = resolveCommandType(task)
+  const readOnly = isReadOnlyCommand(commandType)
+  // 只读判定来自自然语言推断（非显式「状态：」前缀）时，明确提示可纠偏——避免把真 bug 静默当查询关掉（P0-1）。
+  const inferredReadOnlyNote = readOnly && commandTypeSource === 'inferred'
+    ? '**说明**：本条按只读查询处理（未改代码），如判断有误请回复本卡片并 @应用 重新执行。'
+    : null
   return buildCardContent({
     config,
-    kind: meta.cardKind,
-    lines: [taskLine(task), executorLine(task), branchLine(task), resultBlock].filter(Boolean),
+    kind: status === 'done' && readOnly ? 'query_done' : meta.cardKind,
+    lines: [taskLine(task), executorLine(task), branchLine(task), resultBlock, inferredReadOnlyNote].filter(Boolean),
     ...cardProjectOf(task, config),
   })
 }
@@ -113,12 +122,13 @@ export const buildWaitingCard = ({ config, task, status, result, mentionOpenId, 
   const [head, ...rest] = resultText.split('\n')
   const resultBlock = rest.length ? `**结果**：${head}\n${rest.join('\n')}` : `**结果**：${head}`
   const mentionLine = mentionOpenId
-    ? `<at id=${mentionOpenId}></at> 请协助确认 / 补充上述材料后重新 @ 应用继续${ownerNote ? `\n${ownerNote}` : ''}`
+    ? `<at id=${mentionOpenId}></at> 请协助确认 / 补充上述材料${ownerNote ? `\n${ownerNote}` : ''}`
     : null
+  const resumeLine = `**如何继续**：回复本卡片并 @应用；若关联失败，发送 \`继续任务 ${task.id} <补充内容>\``
   return buildCardContent({
     config,
     kind: status === 'blocked' ? 'blocked' : 'waiting',
-    lines: [mentionLine, taskLine(task), executorLine(task), resultBlock].filter(Boolean),
+    lines: [mentionLine, taskLine(task), taskIdLine(task), `**等待轮次**：第 ${task.waitRound || 1} 轮`, executorLine(task), resultBlock, resumeLine].filter(Boolean),
     ...cardProjectOf(task, config),
   })
 }
@@ -137,8 +147,10 @@ export const buildParkedReminderCard = ({ config, task, hours, round, mentionOpe
     lines: [
       mentionLine,
       taskLine(task),
+      taskIdLine(task),
       `**催办轮次**：第 ${round} 轮`,
       conclusion ? `**当时结论**：${conclusion}` : null,
+      `**如何继续**：回复本卡片并 @应用；若关联失败，发送 \`继续任务 ${task.id} <补充内容>\``,
     ].filter(Boolean),
     ...cardProjectOf(task, config),
   })

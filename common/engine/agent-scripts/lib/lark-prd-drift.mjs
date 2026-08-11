@@ -90,6 +90,19 @@ export function compareRemoteSnapshot(expected, actual) {
   }
 }
 
+// 「拉不到远端 → 无法核对漂移」不等于「确有漂移」。真漂移（内容 hash 不一致）永远 error 阻断门禁；
+// 但拉取失败（离线/超时/权限）时，基线还新鲜就只该告警、不该卡住整个 PRD intake。升级为阻断的两种情形：
+//   · 基线已超过 maxStaleDays 天没同步（久到不能再盲信「大概没变」）；
+//   · 已到高阶门禁（G5+，临近推版，必须确认远端与基线一致）。
+// syncedAt 缺失/不可解析视作无穷旧 → 升级阻断（没有基线年龄就不能盲信）。
+export function classifyDriftUnverified({ syncedAt, stage, now = Date.now(), maxStaleDays = 7 } = {}) {
+  const stageNum = Number(String(stage || '').replace(/[^0-9]/g, '')) || 0
+  const syncedMs = syncedAt ? Date.parse(syncedAt) : Number.NaN
+  const ageDays = Number.isNaN(syncedMs) ? Number.POSITIVE_INFINITY : (now - syncedMs) / 86400000
+  const escalate = ageDays > maxStaleDays || stageNum >= 5
+  return { ok: !escalate, severity: escalate ? 'error' : 'warning', ageDays, stageNum, escalate }
+}
+
 export function selfTest() {
   const first = '<p>新增规则</p><img src="stable-token" href="https://x.larksuite.com/space/api/box/stream/download/authcode/?code=first" />'
   const second = '<p>新增规则</p><img src="stable-token" href="https://x.larksuite.com/space/api/box/stream/download/authcode/?code=second" />'
@@ -115,6 +128,17 @@ export function selfTest() {
   const expected = { contentHash: parsed.contentHash, revisionId: '11' }
   assert.equal(compareRemoteSnapshot(expected, parsed).ok, true)
   assert.equal(compareRemoteSnapshot(expected, { ...parsed, contentHash: 'changed' }).ok, false)
+
+  // classifyDriftUnverified：新鲜基线 + 低阶门禁 → 只告警不阻断；基线过旧或 G5+ → 升级 error 阻断。
+  const now = Date.parse('2026-08-11T00:00:00Z')
+  const fresh = { syncedAt: '2026-08-09T00:00:00Z' } // 2 天前
+  assert.deepEqual(
+    { ok: classifyDriftUnverified({ ...fresh, stage: 'G2', now }).ok, severity: classifyDriftUnverified({ ...fresh, stage: 'G2', now }).severity },
+    { ok: true, severity: 'warning' },
+  )
+  assert.equal(classifyDriftUnverified({ ...fresh, stage: 'G5', now }).ok, false) // 高阶门禁升级
+  assert.equal(classifyDriftUnverified({ syncedAt: '2026-07-01T00:00:00Z', stage: 'G2', now }).ok, false) // 基线过旧升级
+  assert.equal(classifyDriftUnverified({ syncedAt: '', stage: 'G0', now }).escalate, true) // 无基线年龄 → 升级
   console.log('lark-prd-drift self-test passed (stable media URL normalization, payload parsing, and drift comparison).')
 }
 

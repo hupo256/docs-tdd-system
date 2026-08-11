@@ -4,7 +4,7 @@ import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
 import { validateSource } from './lib/lark-command.mjs'
-import { compareRemoteSnapshot, parseLarkDocumentPayload, remoteSnapshotFromMetadata } from './lib/lark-prd-drift.mjs'
+import { classifyDriftUnverified, compareRemoteSnapshot, parseLarkDocumentPayload, remoteSnapshotFromMetadata } from './lib/lark-prd-drift.mjs'
 import { resolveDocsPath, resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 import { fingerprint, hash, inspectManifest, scanMarkdown, selfTest } from './lib/prd-manifest.mjs'
 
@@ -68,19 +68,56 @@ function snapshotsFromLastSync(projectDir) {
   })
 }
 
-function inspectRemoteDrift(projectDir, manifest) {
+// 每源的漂移核对 TTL 缓存：门禁在一个阶段里常被反复运行，只要基线 revision 未变且上次核对结果仍在 TTL 内，
+// 就跳过再拉一次 lark-cli（拉取慢且偶发限流）。只缓存「与基线一致(ok)」的结果——检出漂移或拉取失败绝不缓存，
+// 以免把一次坏结果冻结整个 TTL。缓存文件落在项目 inbox/lark-sync 下，键为 url\ntarget。
+const driftCachePath = (projectDir) => join(projectDir, 'inbox/lark-sync/.drift-cache.json')
+const readDriftCache = (projectDir) => {
+  try {
+    return existsSync(driftCachePath(projectDir)) ? JSON.parse(readFileSync(driftCachePath(projectDir), 'utf8')) : {}
+  } catch {
+    return {}
+  }
+}
+const writeDriftCache = (projectDir, cache) => {
+  try {
+    mkdirSync(dirname(driftCachePath(projectDir)), { recursive: true })
+    writeFileSync(driftCachePath(projectDir), `${JSON.stringify(cache, null, 2)}\n`)
+  } catch {
+    // 缓存是纯优化，写不动（只读盘/权限）就跳过，绝不影响门禁判定
+  }
+}
+
+function inspectRemoteDrift(projectDir, manifest, stage) {
   const config = larkConfig(projectDir)
   const sources = remoteLarkSources(config)
   if (!sources.length) return []
 
+  const ttlMs = Number(process.env.DOC_PRD_DRIFT_TTL_MS || 5 * 60 * 1000)
+  const maxStaleDays = Number(process.env.DOC_PRD_DRIFT_MAX_STALE_DAYS || 7)
+  const cache = readDriftCache(projectDir)
+  const now = Date.now()
   const expectedByKey = new Map((manifest?.remoteSources || []).map((source) => [`${source.url}\n${source.target}`, source]))
-  return sources.map((source) => {
-    const expected = expectedByKey.get(`${source.url}\n${source.target}`)
+  const checks = sources.map((source) => {
+    const key = `${source.url}\n${source.target}`
+    const expected = expectedByKey.get(key)
     if (!expected) {
       return {
         ruleId: 'DOC-PRD-010',
         ok: false,
         message: `remote PRD baseline missing for ${source.name || source.target}; run sync-lark-docs then prd-intake --init`,
+        severity: 'error',
+        category: 'documentation',
+      }
+    }
+
+    // TTL 缓存命中（同 revision 且上次为 ok，且未过期）→ 跳过 lark-cli 再拉一次。
+    const cached = cache[key]
+    if (cached?.ok && cached.revisionId === String(expected.revisionId || '') && now - (cached.checkedAt || 0) < ttlMs) {
+      return {
+        ruleId: 'DOC-PRD-010',
+        ok: true,
+        message: `remote PRD content hash matches intake baseline (cached ${Math.round((now - cached.checkedAt) / 1000)}s ago): ${source.name || source.target} (revision ${cached.revisionId || 'unknown'})`,
         severity: 'error',
         category: 'documentation',
       }
@@ -103,6 +140,10 @@ function inspectRemoteDrift(projectDir, manifest) {
       if (fetched.status !== 0) throw new Error(fetched.stderr || fetched.stdout || `exit ${fetched.status}`)
       const actual = parseLarkDocumentPayload(fetched.stdout)
       const comparison = compareRemoteSnapshot(expected, actual)
+      // 只缓存 ok；检出漂移不缓存，以免下一轮误报「已修好」而放行。
+      cache[key] = comparison.ok
+        ? { ok: true, revisionId: String(expected.revisionId || ''), checkedAt: now }
+        : undefined
       return {
         ruleId: 'DOC-PRD-010',
         ok: comparison.ok,
@@ -113,15 +154,23 @@ function inspectRemoteDrift(projectDir, manifest) {
         category: 'documentation',
       }
     } catch (error) {
+      // 「拉不到远端」≠「确有漂移」：基线新鲜且非高阶门禁时只告警不阻断，避免离线/限流卡死整个 PRD intake。
+      const verdict = classifyDriftUnverified({ syncedAt: expected.syncedAt, stage, now, maxStaleDays })
+      const ageLabel = Number.isFinite(verdict.ageDays) ? `${verdict.ageDays.toFixed(1)}d` : 'unknown'
+      const reason = verdict.escalate
+        ? `cannot verify remote PRD drift (baseline stale ${ageLabel} or gate ${stage} ≥ G5 — blocking)`
+        : `cannot verify remote PRD drift (transient fetch failure; baseline age ${ageLabel} still within ${maxStaleDays}d — warning only)`
       return {
         ruleId: 'DOC-PRD-010',
-        ok: false,
-        message: `cannot verify remote PRD drift for ${source.name || source.target}: ${error.message}`,
-        severity: 'error',
+        ok: verdict.ok,
+        message: `${reason} for ${source.name || source.target}: ${error.message}`,
+        severity: verdict.severity,
         category: 'documentation',
       }
     }
   })
+  writeDriftCache(projectDir, cache)
+  return checks
 }
 
 function initManifest(projectId, sourcePaths) {
@@ -205,7 +254,7 @@ const checks = inspectManifest({
   inventoryText: existsSync(join(projectDir, 'product/00-feature-inventory.md')) ? readFileSync(join(projectDir, 'product/00-feature-inventory.md'), 'utf8') : '',
   taskText: existsSync(join(projectDir, 'product/04-frontend-tasks.md')) ? readFileSync(join(projectDir, 'product/04-frontend-tasks.md'), 'utf8') : '',
 })
-checks.push(...inspectRemoteDrift(projectDir, manifest))
+checks.push(...inspectRemoteDrift(projectDir, manifest, stage))
 
 if (args.includes('--approve')) {
   const blocking = checks.filter((check) => !check.ok && check.ruleId !== 'DOC-PRD-009')
