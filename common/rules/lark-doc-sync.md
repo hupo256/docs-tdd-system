@@ -114,9 +114,9 @@ Lark CLI 导出的 Markdown 不是完整视觉还原稿。Agent 读取 PRD 时�
 ### 8.0 远端 PRD 漂移检查
 
 - **Trigger**：已配置 Lark `doc` / `docs` / `wiki` 来源的项目执行 `prd-intake --stage`、`docs-tdd changed` 或任一项目 gate。
-- **Action**：同步器把远端正文做稳定规范化（换行统一、剔除每次 fetch 会变化的临时媒体下载 URL）后计算 SHA-256，并把 `contentHash`、document ID、revision 写入 metadata；`prd-intake --init` 将该快照登记到 manifest。每次 gate 都重新只读 fetch 远端正文，并比较当前 hash 与 intake baseline。revision 仅用于诊断，是否漂移以正文 hash 为准。
+- **Action**：同步器把远端正文做稳定规范化（换行统一、剔除每次 fetch 会变化的临时媒体下载 URL）后计算 SHA-256，并把 `contentHash`、document ID、revision、`syncedAt` 写入 metadata；`prd-intake --init` 将该快照登记到 manifest。每次 gate 都重新只读 fetch 远端正文，并比较当前 hash 与 intake baseline（同 revision 且上次一致的结果按 `DOC_PRD_DRIFT_TTL_MS`（默认 5min）TTL 缓存，减少重复 lark-cli 拉取；仅缓存"一致"结果，检出漂移或拉取失败绝不缓存）。revision 仅用于诊断，是否漂移以正文 hash 为准。
 - **Evidence**：`inbox/lark-sync/*.metadata.json`、`agent/prd-source-manifest.json#remoteSources` 与 gate 中的 `DOC-PRD-010` 结果。
-- **Failure**：远端 hash 不一致、baseline 缺失、网络/权限/CLI 失败均 fail-closed，阻塞 gate；必须重新同步、重新 intake、补齐 Feature / task 后再批准。不得继续信任旧快照，也不得豁免。
+- **Failure（分级）**：**真漂移**（远端 hash 与 baseline 不一致）与 **baseline 缺失**永远 `error` fail-closed，阻塞 gate——必须重新同步、重新 intake、补齐 Feature / task 后再批准，不得继续信任旧快照或豁免。**"拉不到远端"≠"确有漂移"**：网络 / 权限 / CLI 失败导致无法核对时，基线仍新鲜（`syncedAt` 距今 ≤ `DOC_PRD_DRIFT_MAX_STALE_DAYS`，默认 7 天）且门禁 < G5 时降为 `warning`（附基线年龄），不阻断整个 PRD intake；仅当基线过旧或已到 G5+（临近推版必须确认远端一致）才升级为 `error` 阻断。
 
 ### 8.1 图片
 

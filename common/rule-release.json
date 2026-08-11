@@ -1,8 +1,8 @@
 {
   "version": 1,
   "rulesetVersion": "local-2026.07-msw-v1",
-  "fingerprint": "4616e5c84ab428c6e5ee139f88d3012d210848292fbf260b83f55da34cce2f3b",
-  "publishedAt": "2026-08-11T10:34:38.271Z",
+  "fingerprint": "4cf6890ac49ad7a0c0cc4a5d13a9c6881ec5e919f396fa1ba5e1dae1094bc53e",
+  "publishedAt": "2026-08-11T11:11:54.120Z",
   "fileCount": 136,
   "files": {
     "common/CHANGELOG-archive.md": "3f6df9a2d04e917dc0ae67125c84a9209877de3196bd7952639040897e0077cc",
@@ -108,7 +108,7 @@
     "common/rules/git-branch-flow.md": "ed3e4f50a0427299f9d77f58a715fba955050c49130428dc42429b61746e92d8",
     "common/rules/hook-integration.md": "5f7b881ca63cd6b1c2ed67e161ce4dc40974a88838964aa83b42a8f04bf4be6d",
     "common/rules/lark-active-notification.md": "14ec62d962b336c14087b5e7165736c8f58940771f7f00e9f1d9d51b04c679c7",
-    "common/rules/lark-doc-sync.md": "196ec6611ad4527d64018b81312354c53d44c909769e56e394bfcde49c0978eb",
+    "common/rules/lark-doc-sync.md": "ae1b61e1959b07bd0dfb564c4659df87b90e8089d374f36bd27aa999449e98f2",
     "common/rules/mock-legacy-route-a.md": "04fdefbcc3d74092566f0532a4ceeef2cd31905e562d956aa3a2afc0acdcdd21",
     "common/rules/new-project-kickoff.md": "f8ff1f80a53414af1411c3c61ebced924952d3a1ac38a83be4a76c443b671d6f",
     "common/rules/prd-feature-inventory.md": "42dbeb2d9a30b89ff26901dceb0cac2b188460bbf50430984573afff337e1141",
@@ -116,7 +116,7 @@
     "common/rules/quality-checklist.md": "da1e3330996a7b7f14fea743c8e0a1e9efe330b25f88e715d55456ea2fc68f8d",
     "common/rules/react-component-props-types.md": "190b39f28333ad969e37011b92a7671a94fb5e79e2efdf863e414a4a538b3b66",
     "common/rules/rule-execution-model.md": "79a1bab18096df68eba475097bffb9886f70822a8e34498152df5a5355a43a42",
-    "common/rules/rule-ids-and-gates.md": "42744cdb905cb41d211045580f14376ad386ed64ce069b87128b7d13d850d4de",
+    "common/rules/rule-ids-and-gates.md": "b2d8d8a07a9f5036c45a801e1f484d6877a5d2d1422dfa0e9bebe903c7a6a89a",
     "common/rules/rule-index.json": "2ab13751a30bf30d471fc754e5f8d9e6cdfe96ba3ddcaae931c004f582adefab",
     "common/rules/rule-inheritance.md": "f3f29c45713151be36f9b68052b99efcdecad5b1ba0b6fd83fd2d74712cb47e2",
     "common/rules/rule-ownership.json": "229abfc199f40816d3f7e722792c72cf7bee8e7bc38844c5b000e7f0116572df",
