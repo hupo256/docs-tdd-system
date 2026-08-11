@@ -1,28 +1,34 @@
 #!/usr/bin/env node
 
+/**
+ * docs_tdd 统一 CLI 入口。本文件只做「参数解析 + 命令分发 + 前置闸」，不含业务逻辑；各命令的实质
+ * 都在同级脚本或 lib/ 里，随各自职责增长而不撑大这个路由：
+ *   · lib/context-pack          场景引用展开 / section 切片 / context pack 物化 / 发布新鲜度闸 / printContextPack
+ *   · lib/changed-detection     `changed`（指纹缓存 + 子检）与 `recommend`（改动文件 → 场景推荐）
+ *   · lib/project-status-report `capability` 体检报告 + worktree 解析
+ *   · lib/gate-heartbeat        gate 心跳提醒 + 通过后播报
+ *   · lib/rule-session*         编码 rule session v2 的写入与校验
+ *   · project-orchestrator.mjs  kickoff/status/resume/next（阶段编排）
+ *   · run-project-gate.mjs      gate 正式落证据；verify-* / golden-run / publish-* 各自的机器判定
+ *
+ * 逐字段 console.log 已收敛：状态报告在 project-status-report、context 指标在 context-pack（都经 lib/cli-report）。
+ */
+
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { createHash } from 'node:crypto'
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { dirname, join, resolve } from 'node:path'
+import { readFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import {
-  createContextPack,
-  expandScenarioRefs,
-  inspectEffectiveRules,
-  inspectRuleRelease,
-  requireFreshEffectiveRules,
-  requireFreshRuleRelease,
-  selectMarkdownSections,
-} from './lib/context-pack.mjs'
-import { heartbeatDecision, maybeBroadcastGate, printGateHeartbeat } from './lib/gate-heartbeat.mjs'
-import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
+import { createContextPack, expandScenarioRefs, printContextPack, requireFreshEffectiveRules, requireFreshRuleRelease } from './lib/context-pack.mjs'
+import { maybeBroadcastGate, printGateHeartbeat } from './lib/gate-heartbeat.mjs'
+import { runChanged, recommendScenarios } from './lib/changed-detection.mjs'
+import { capability, resolveProjectWorktree } from './lib/project-status-report.mjs'
+import { resolveRoots } from './lib/roots.mjs'
 import { resolveRuleSessionClient } from './lib/rule-session.mjs'
 import { CODING_SCENARIOS, requireRuleSession, verifyG2Ready, writeRuleSession } from './lib/rule-session-runtime.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
-const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, consumerWorktree, config } = resolveRoots()
+const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, config } = resolveRoots()
 const releaseScript = join(scriptDir, 'rule-release.mjs')
 const effectiveRulesScript = join(scriptDir, 'effective-rules.mjs')
 const cliArgs = process.argv.slice(2)
@@ -45,279 +51,29 @@ const detail = positional[0]
 const fullContext = cliArgs.includes('--full')
 const noCache = cliArgs.includes('--no-cache')
 
+// 子进程直通（stdio inherit）：分发到同级脚本时复用，退出码原样上抛。
 function run(args, cwd = repoRoot) {
   const result = spawnSync(process.execPath, args, { cwd, stdio: 'inherit' })
   return result.status ?? 1
 }
 
-function runCaptured(args, cwd = repoRoot) {
-  const started = Date.now()
-  const result = spawnSync(process.execPath, args, {
-    cwd,
-    encoding: 'utf8',
-    stdio: 'pipe',
-  })
-  return {
-    status: result.status ?? 1,
-    stdout: result.stdout || '',
-    stderr: result.stderr || '',
-    durationMs: Date.now() - started,
-  }
-}
-
-function safeLogLabel(value) {
-  return (
-    value
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '')
-      .slice(0, 64) || 'check'
-  )
-}
-
-function persistCapturedLog(id, label, result) {
-  const logDir = join(tmpdir(), 'docs-tdd-logs', id)
-  const stamp = new Date().toISOString().replace(/[:.]/g, '-')
-  const logFile = join(logDir, `${stamp}-${safeLogLabel(label)}.log`)
-  mkdirSync(logDir, { recursive: true })
-  writeFileSync(logFile, [`status: ${result.status}`, `durationMs: ${result.durationMs}`, '', '--- stdout ---', result.stdout.trim(), '', '--- stderr ---', result.stderr.trim(), ''].join('\n'))
-  return logFile
-}
-
-function conciseFailure(result, limit = 12) {
-  const lines = `${result.stderr}\n${result.stdout}`
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean)
-  const actionable = lines.filter((line) => /\b(?:fail|block|error|warn|action|required|missing|invalid)\b/i.test(line))
-  return (actionable.length ? actionable : lines).slice(0, limit)
-}
-
-function readJson(file) {
-  return JSON.parse(readFileSync(file, 'utf8'))
-}
-
-function readOptionalJson(file) {
-  return existsSync(file) ? readJson(file) : null
-}
-
-function gitOutput(args, cwd) {
-  const result = spawnSync('git', args, {
-    cwd,
-    encoding: 'utf8',
-    stdio: 'pipe',
-  })
-  return result.status === 0 ? result.stdout : ''
-}
-
-function changedFingerprint(id, worktree, effectiveFingerprint) {
-  const trackedDiff = gitOutput(['diff', '--binary', config.baseRef || 'origin/online'], worktree)
-  const untracked = gitOutput(['ls-files', '--others', '--exclude-standard'], worktree).trim().split('\n').filter(Boolean)
-  const untrackedPayload = untracked
-    .map((file) => {
-      const absolute = join(worktree, file)
-      return existsSync(absolute) ? `${file}\n${readFileSync(absolute)}` : file
-    })
-    .join('\n')
-  const prdFile = join(resolveProjectRoot(id), 'agent/prd-source-manifest.json')
-  const prdHash = existsSync(prdFile) ? createHash('sha256').update(readFileSync(prdFile)).digest('hex') : 'none'
-  const projectDir = resolveProjectRoot(id)
-  const projectDocs = ['product/00-feature-inventory.md', 'product/03-api-contract.md', 'product/04-frontend-tasks.md', 'product/06-collaboration.md', 'agent/project-manifest.json', 'agent/msw-manifest.json', 'agent/assumptions.json']
-    .map((file) => {
-      const absolute = join(projectDir, file)
-      return existsSync(absolute) ? `${file}\n${readFileSync(absolute)}` : `${file}\nmissing`
-    })
-    .join('\n')
-  return createHash('sha256').update(`changed-v2\n${id}\n${effectiveFingerprint}\n${prdHash}\n${projectDocs}\n${trackedDiff}\n${untrackedPayload}`).digest('hex').slice(0, 16)
-}
-
-function runChanged(id, worktree, effectiveFingerprint) {
-  const started = Date.now()
-  const fingerprint = changedFingerprint(id, worktree, effectiveFingerprint)
-  const cacheDir = join(tmpdir(), 'docs-tdd-check-cache')
-  const cacheFile = join(cacheDir, `${id}-changed-${fingerprint}.json`)
-  if (!noCache && existsSync(cacheFile)) {
-    const cached = readJson(cacheFile)
-    console.log(`changed: ${id} — PASS (cache=hit, checks=${cached.checks}, duration=${Date.now() - started}ms, fingerprint=${fingerprint})`)
-    return 0
-  }
-
-  const projectManifest = readOptionalJson(join(resolveProjectRoot(id), 'agent/project-manifest.json'))
-  const checks = [
-    {
-      label: 'code-rules',
-      args: [join(scriptDir, 'verify-code-rules.mjs'), '--project', id],
-    },
-  ]
-  if (projectManifest?.pilot?.msw)
-    checks.push({
-      label: 'msw-manifest',
-      args: [join(scriptDir, 'verify-msw-manifest.mjs'), id],
-    })
-  if (projectManifest?.pilot?.prdIntake)
-    checks.push({
-      label: 'prd-intake',
-      args: [join(scriptDir, 'prd-intake.mjs'), id, '--stage', 'G2'],
-    })
-
-  let status = 0
-  for (const check of checks) {
-    const result = runCaptured(check.args, worktree)
-    const logFile = persistCapturedLog(id, check.label, result)
-    if (result.status === 0) console.log(`PASS ${check.label} (${result.durationMs}ms)`)
-    else {
-      status ||= result.status
-      console.error(`FAIL ${check.label} (${result.durationMs}ms)`)
-      for (const line of conciseFailure(result)) console.error(`  ${line}`)
-      console.error(`  full log: ${logFile}`)
-    }
-  }
-  const durationMs = Date.now() - started
-  console.log(`changed: ${id} — ${status === 0 ? 'PASS' : 'BLOCK'} (cache=miss, checks=${checks.length}, duration=${durationMs}ms, fingerprint=${fingerprint})`)
-  if (status === 0 && !noCache) {
-    mkdirSync(cacheDir, { recursive: true })
-    writeFileSync(cacheFile, `${JSON.stringify({ id, fingerprint, checks: checks.length, durationMs })}\n`)
-  }
-  return status
-}
-
-function recommendScenarios(worktree) {
-  const files = new Set(
-    [
-      ...gitOutput(['diff', '--name-only', config.baseRef || 'origin/online'], worktree)
-        .trim()
-        .split('\n'),
-      ...gitOutput(['ls-files', '--others', '--exclude-standard'], worktree).trim().split('\n'),
-    ].filter(Boolean),
-  )
-  const recommendations = []
-  const add = (scenario, reason) => {
-    if (!recommendations.some((item) => item.scenario === scenario)) recommendations.push({ scenario, reason })
-  }
-  for (const file of files) {
-    if (/(?:map[A-Z][^/]*|mapper)\.(?:ts|tsx)$/i.test(file)) add('write_mapper', file)
-    if (/(?:mocks?\/handlers|fixtures?|msw)/i.test(file)) add('write_msw', file)
-    if (/(?:use[A-Z][^/]*Query|query)\.(?:ts|tsx)$/i.test(file)) add('write_query_hook', file)
-    if (/\.(?:tsx|css|scss|less)$/.test(file)) add('write_ui', file)
-    if (/figma|07-figma-spec/i.test(file)) add('write_figma', file)
-  }
-  console.log(recommendations.length ? recommendations.map((item) => `${item.scenario}: ${item.reason}`).join('\n') : 'no scenario recommendation; choose explicitly')
-}
-
-function resolveProjectWorktree(id) {
-  const projectDir = id ? resolveProjectRoot(id) : ''
-  const readmeFile = projectDir ? join(projectDir, 'README.md') : ''
-  const readme = readmeFile && existsSync(readmeFile) ? readFileSync(readmeFile, 'utf8') : ''
-  const configured = readme
-    .match(/^worktree:\s*(.*)$/m)?.[1]
-    ?.replace(/^['"]|['"]$/g, '')
-    .trim()
-  const cwdWorktree = consumerWorktree && consumerWorktree !== docsRoot ? consumerWorktree : ''
-  const worktree = configured ? resolve(projectDir, configured) : cwdWorktree || repoRoot
-  return {
-    configured: Boolean(configured),
-    exists: existsSync(worktree),
-    worktree: existsSync(worktree) ? worktree : repoRoot,
-    requestedWorktree: worktree,
-  }
-}
-
-function capability(id) {
-  const projectDir = id ? resolveProjectRoot(id) : ''
-  const manifestFile = projectDir ? join(projectDir, 'agent/project-manifest.json') : ''
-  const manifest = manifestFile && existsSync(manifestFile) ? readJson(manifestFile) : null
-  const resolvedWorktree = resolveProjectWorktree(id)
-  const ruleset = readJson(join(docsRoot, 'common/rules/ruleset.json'))
-  const release = inspectRuleRelease()
-  const effectiveRules = inspectEffectiveRules()
-  const hook = process.env.CLAUDE_PROJECT_DIR ? 'claude-posttooluse' : 'manual-agent-adapter'
-  console.log(`docs_tdd root: ${docsRoot}`)
-  console.log(`agent client: ${agentClient}`)
-  console.log(`agent adapter: ${hook}`)
-  console.log(`automatic post-edit hook: ${hook === 'claude-posttooluse' ? 'available' : 'unavailable'}`)
-  console.log(`fallback: run docs-tdd changed ${id || '<PROJECT-ID>'} before completion`)
-  console.log(`ruleset: ${manifest?.rulesetVersion || ruleset.version} (${ruleset.maturity})`)
-  console.log(`rule release: ${release.status || 'invalid'} (${(release.currentFingerprint || 'unknown').slice(0, 12)})`)
-  console.log(`effective rules: ${effectiveRules.status || 'invalid'} (${(effectiveRules.currentFingerprint || 'unknown').slice(0, 12)})`)
-  console.log(`project worktree: ${resolvedWorktree.worktree}`)
-  if (!resolvedWorktree.exists) console.warn(`warning: configured worktree does not exist: ${resolvedWorktree.requestedWorktree}; falling back to ${repoRoot}`)
-  else if (!resolvedWorktree.configured && id) console.warn(`warning: project worktree is not configured; falling back to ${repoRoot}`)
-  if (!release.fresh) console.warn('warning: context/changed/gate are blocked until the current rules are published')
-  if (!effectiveRules.fresh) console.warn('warning: context/changed/gate are blocked until effective rules are published')
-}
+const readJson = (file) => JSON.parse(readFileSync(file, 'utf8'))
 
 if (process.argv.includes('--self-test')) {
+  // 纯判定（section 切片 / scenario 展开 / gate 心跳）已随抽出的 lib 各自 --self-test，此处不重复；
+  // 本文件的自测只守它作为**分发器**的独有关切：resolveRoots + readJson 能对真实规则数据接上、且
+  // 关键索引结构（ruleset 版本/成熟度、rule-index 场景表）不为空。逻辑覆盖见各 lib 的 --self-test。
   const ruleset = readJson(join(docsRoot, 'common/rules/ruleset.json'))
   if (!ruleset.version || !ruleset.maturity) process.exit(1)
   const index = readJson(join(docsRoot, 'common/rules/rule-index.json'))
   if (!Array.isArray(index.scenarios?.write_mapper) || index.scenarios.write_mapper.length === 0) process.exit(1)
-  const markdown = ['# Test', '', '## 1. One', 'one', '', '## 2 Two', 'two', '', '## 3. Three', 'three'].join('\n')
-  assert.equal(selectMarkdownSections(markdown, '2'), ['## 2 Two', 'two', '', ''].join('\n'))
-  assert.equal(selectMarkdownSections(markdown, '1-2'), ['## 1. One', 'one', '', '## 2 Two', 'two', '', ''].join('\n'))
-  assert.throws(() => selectMarkdownSections(markdown, '2-1'), /invalid section selector/)
-  assert.throws(() => selectMarkdownSections(markdown, 'x'), /invalid section selector/)
-  assert.throws(() => selectMarkdownSections(markdown, '4'), /did not match any heading/)
   assert(expandScenarioRefs(index, 'g6_verify').some((ref) => ref.file === 'quality-checklist.md'))
-  const release = inspectRuleRelease()
-  assert.equal(typeof release.currentFingerprint, 'string')
-  const effectiveRules = inspectEffectiveRules()
-  assert.equal(typeof effectiveRules.currentFingerprint, 'string')
-  // gate 心跳判定
-  assert.equal(heartbeatDecision({ located: false }).level, 'skip')
-  assert.equal(heartbeatDecision({ located: true, isGitRepo: false }).level, 'skip')
-  assert.equal(
-    heartbeatDecision({
-      located: true,
-      isGitRepo: true,
-      noDivergence: true,
-      gate: null,
-    }).level,
-    'skip',
-  ) // 无代码可 gate → 不催
-  assert.equal(
-    heartbeatDecision({
-      located: true,
-      isGitRepo: true,
-      noDivergence: false,
-      gate: null,
-    }).level,
-    'warn',
-  ) // 有改动却从未跑 → 催
-  assert.equal(
-    heartbeatDecision({
-      located: true,
-      isGitRepo: true,
-      noDivergence: false,
-      gate: { ok: false, gate: 'G5' },
-    }).level,
-    'warn',
-  )
-  assert.equal(
-    heartbeatDecision({
-      located: true,
-      isGitRepo: true,
-      noDivergence: false,
-      gate: { ok: true, gate: 'G5' },
-      matches: true,
-    }).level,
-    'ok',
-  )
-  assert.equal(
-    heartbeatDecision({
-      located: true,
-      isGitRepo: true,
-      noDivergence: false,
-      gate: { ok: true, gate: 'G5' },
-      matches: false,
-    }).level,
-    'warn',
-  )
   console.log('docs-tdd self-test passed.')
   process.exit(0)
 }
 
 if (command === 'capability') {
-  capability(projectId)
+  capability(projectId, { agentClient })
   process.exit(0)
 }
 
@@ -363,7 +119,7 @@ if (['kickoff', 'status', 'resume', 'next'].includes(command)) {
   process.exit(run([join(scriptDir, 'project-orchestrator.mjs'), command, projectId, ...cliArgs.slice(2)]))
 }
 
-capability(projectId)
+capability(projectId, { agentClient })
 const resolvedWorktree = resolveProjectWorktree(projectId)
 const { worktree } = resolvedWorktree
 let status = 0
@@ -379,18 +135,13 @@ else {
     if (status === 0) maybeBroadcastGate(projectId, (detail || 'G3').toUpperCase())
   } else if (command === 'changed') {
     if (!requireRuleSession(projectId, worktree, release, effectiveRules, agentClient)) process.exit(1)
-    status = runChanged(projectId, worktree, effectiveRules.currentFingerprint)
+    status = runChanged(projectId, worktree, effectiveRules.currentFingerprint, { noCache })
   } else if (command === 'context') {
     try {
       const scenario = detail || 'g0_g2_scope'
       if (CODING_SCENARIOS.has(scenario) && !verifyG2Ready(projectId, worktree, scriptDir)) process.exit(1)
       const pack = createContextPack(projectId, scenario, release, effectiveRules, fullContext ? 'full' : 'compact')
-      console.log(`scenario: ${scenario}`)
-      console.log(`context mode: ${pack.mode}`)
-      console.log(`context fingerprint: ${pack.fingerprint}`)
-      console.log(`context pack: ${pack.output}`)
-      console.log(`context metrics: sources=${pack.refs.length}, sourceChars=${pack.sourceChars}, packChars=${pack.packChars}, cache=${pack.cacheHit ? 'hit' : 'miss'}, duration=${pack.durationMs}ms`)
-      console.log(`routed rules: ${pack.refs.join(', ')}`)
+      printContextPack(scenario, pack)
       if (CODING_SCENARIOS.has(scenario)) writeRuleSession(projectId, worktree, release, effectiveRules, pack, agentClient)
       printGateHeartbeat(projectId, resolvedWorktree)
     } catch (error) {

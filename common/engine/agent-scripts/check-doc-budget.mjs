@@ -48,6 +48,7 @@ const SELF_TEST_SCRIPTS = [
   ['lib/agent-rule-adapters.mjs', '--self-test'],
   ['lib/acceptance-results.mjs', '--self-test'],
   ['lib/blockers.mjs', '--self-test'],
+  ['lib/changed-detection.mjs', '--self-test'],
   ['lib/code-review.mjs', '--self-test'],
   ['lib/context-pack.mjs', '--self-test'],
   ['lib/delivery-summary.mjs', '--self-test'],
@@ -91,9 +92,9 @@ const RESIDENT_BUDGET = 5000 // 码点；改此值须同步 rule-router.md §4 �
 // 少数「引用型大文件」（rule ID 台账、架构专题、变更日志）grandfather 一个带余量的上限：允许随规则自然增长，但仍有界。
 const DOC_BUDGET_DEFAULT = { warn: 9000, fail: 13000 }
 const DOC_BUDGET_OVERRIDES = {
-  // rule-ids-and-gates.md 的 §5「完整 ID 台账」按预算计量时被排除（见 budgetedDocText）：它随规则条目单调增长、
-  // 却从不被 rule-index 路由进 context pack，增长对上下文零成本。这里的预算只约束会进上下文/被人读的 §1-4。
-  'rule-ids-and-gates.md': { warn: 20000, fail: 24000 },
+  // §5 完整 ID 台账已拆到 rule-id-ledger.md（单调增长、从不路由进 context），本文只剩 §1-4（会进上下文/被人读）。
+  'rule-ids-and-gates.md': { warn: 18000, fail: 20000 },
+  'rule-id-ledger.md': { warn: 20000, fail: 24000 }, // 阶段 gate ID 台账：随规则条目单调增长的纯查表，grandfather 带余量上限
   'architecture-and-state.md': { warn: 15000, fail: 17000 },
   'CHANGELOG.md': { warn: 15000, fail: 18000 }, // 轮转后保留近期条目；历史在 CHANGELOG-archive.md
 }
@@ -127,6 +128,8 @@ const SELF_TEST_EXEMPT = new Set([
   'lib/gate-cache.mjs', // gate 指纹/缓存/历史 IO，被 golden-run 聚合器烟测端到端覆盖
   'lib/run-log.mjs', // 子进程执行 + 日志 IO，被 golden-run 聚合器烟测端到端覆盖
   'lib/rule-session-runtime.mjs',
+  'lib/cli-report.mjs', // CLI 报告打印小工具（只 console.log/warn，无导出纯逻辑）；行为由 capability/context 冒烟 + golden 覆盖
+  'lib/project-status-report.mjs', // capability 体检报告 + worktree 解析（报告/IO 型）；由 docs-tdd capability 冒烟 + golden 覆盖
   'lib/lark-command.mjs', // Lark 只读同步命令构造/校验；validateSource 由 common/lark-bot/__tests__/lark-pure.test.mjs 经 sync-lark-docs re-export 覆盖
 ])
 const ROUTER_FILE = 'rule-router.md'
@@ -134,7 +137,8 @@ const README_FILE = 'README.md'
 const RULE_INDEX_FILE = 'rule-index.json'
 const RULE_OWNERSHIP_FILE = 'rule-ownership.json'
 const DEFAULT_CONFIG_FILE = join(DOCS_TDD_DIR, 'docs-tdd.config.default.json')
-const LEDGER_FILE = 'rule-ids-and-gates.md' // rule ID 台账（脚本里的 ID 必须登记于此）
+const LEDGER_FILE = 'rule-ids-and-gates.md' // rule ID 台账（脚本里的 ID 必须登记于此或其拆分文件）
+const LEDGER_EXTENSION_FILE = 'rule-id-ledger.md' // 从 §5 拆出的阶段 gate 类 ID 台账（纯查表，不进 context）
 const REQUIRED_TEMPLATES = [
   '01-scope-and-phases-template.md',
   '02-technical-design-template.md',
@@ -151,7 +155,7 @@ const REQUIRED_TEMPLATES = [
   'project-readme-frontmatter-template.md',
   'real-fixture-reconcile-test-template.ts',
 ]
-const COVERAGE_EXEMPT = new Set([README_FILE, ROUTER_FILE, 'CHANGELOG-archive.md']) // 索引/常驻本身不需被自己收录；归档纯历史不进索引
+const COVERAGE_EXEMPT = new Set([README_FILE, ROUTER_FILE, 'CHANGELOG-archive.md', 'rule-id-ledger.md']) // 索引/常驻本身不需被自己收录；归档纯历史、ID 台账纯查表都不进 context 索引
 const SCRIPT_REF_RE = /(?:common\/agent-scripts\/|agent-scripts\/)([A-Za-z0-9_.-]+\.mjs)/g
 const TEMPLATE_REF_RE = /(?:templates\/|\.\.\/templates\/)([A-Za-z0-9_.-]+\.(?:md|ts))/g
 const FORBIDDEN_DUPLICATE_BLOCKS = {
@@ -224,22 +228,14 @@ for (const r of residents) {
   }
 }
 
-// 按预算计量文档正文时的口径调整：rule-ids-and-gates.md 的 §5「完整 ID 台账」随规则条目单调增长，
-// 但 rule-index 的选择器只把 §1-2 / §3 路由进 context pack，§5 从不进任何上下文——它的增长对 context 体积
-// 零成本。预算的本意是约束 context pack 膨胀，故计量时截到 §5 之前。§5 与脚本 rule ID 的同步由校验 5 独立保证。
-// 若某天 §5 被路由进 context，必须撤掉此截断。
-function budgetedDocText(name, text) {
-  if (name !== LEDGER_FILE) return text
-  const ledgerHeading = text.match(/^##\s+5\.\s/m)
-  return ledgerHeading ? text.slice(0, ledgerHeading.index) : text
-}
-
 // 校验 2.5：per-file on-demand 预算。常驻文件已由校验 2 管；其余专题文档各有天花板，防无限膨胀。
+// 计量口径即整篇正文——单调增长的 ID 台账已物理拆到独立文件 rule-id-ledger.md（各有自己的 override），
+// 不再靠「截掉 §5 再计量」这类障眼法（拆出去才真正减了本文行数）。
 {
   const overCap = []
   for (const name of mdFiles) {
     if (BUDGET_EXEMPT.has(name) || residents.some((r) => r.name === name)) continue
-    const size = charCount(budgetedDocText(name, readFileSync(join(RULES_DIR, name), 'utf8')))
+    const size = charCount(readFileSync(join(RULES_DIR, name), 'utf8'))
     const budget = DOC_BUDGET_OVERRIDES[name] || DOC_BUDGET_DEFAULT
     if (size > budget.fail) {
       overCap.push(
@@ -435,13 +431,17 @@ if (indexOrphans.length) {
   }
 }
 
-// 校验 5：脚本里实装的每个 rule ID 必须登记进 rule-ids-and-gates.md 台账。
+// 校验 5：脚本里实装的每个 rule ID 必须登记进台账。
 // 防「脚本改了 ID、台账没跟」的脱节（此前 DOC-STRUCT-*/DOC-G0-* 等在台账 0 命中）。
+// 台账跨两文件：rule-ids-and-gates.md（§3 CODE-*、§3.5 VERIFY-*、§4 DOC-WAIVER-*）+ rule-id-ledger.md（阶段 gate 类）。
 const ledgerPath = join(RULES_DIR, LEDGER_FILE)
+const ledgerExtensionPath = join(RULES_DIR, LEDGER_EXTENSION_FILE)
 if (!existsSync(ledgerPath)) {
   errors.push(`❌ 缺少 ${LEDGER_FILE}（rule ID 台账）。`)
+} else if (!existsSync(ledgerExtensionPath)) {
+  errors.push(`❌ 缺少 ${LEDGER_EXTENSION_FILE}（rule ID 台账拆分文件）。`)
 } else {
-  const ledgerText = readFileSync(ledgerPath, 'utf8')
+  const ledgerText = `${readFileSync(ledgerPath, 'utf8')}\n${readFileSync(ledgerExtensionPath, 'utf8')}`
   const idRe = /'((?:CODE|DOC|GIT|VERIFY)-[A-Z0-9]+-\d+)'/g
   const scriptIds = new Set()
   // 顶层脚本 + lib/ 子模块都要扫：阻塞语义等纯规则实装在 lib/blockers.mjs，rule ID 台账不能漏掉它。
@@ -462,10 +462,10 @@ if (!existsSync(ledgerPath)) {
   const unregistered = [...scriptIds].filter((id) => !ledgerText.includes(id)).sort()
   if (unregistered.length) {
     errors.push(
-      `❌ 以下 rule ID 在脚本里实装但未登记进 ${LEDGER_FILE}（脱节，Review/通知无法引用）：\n   ${unregistered.join('\n   ')}` + `\n   请在 ${LEDGER_FILE} §3/§4/§5 补台账行。`,
+      `❌ 以下 rule ID 在脚本里实装但未登记进台账（脱节，Review/通知无法引用）：\n   ${unregistered.join('\n   ')}` + `\n   请在 ${LEDGER_FILE} §3/§3.5/§4 或 ${LEDGER_EXTENSION_FILE} 补台账行。`,
     )
   } else {
-    console.log(`✅ rule ID 台账：${scriptIds.size} 个脚本 ID 全部登记于 ${LEDGER_FILE}。`)
+    console.log(`✅ rule ID 台账：${scriptIds.size} 个脚本 ID 全部登记于 ${LEDGER_FILE} + ${LEDGER_EXTENSION_FILE}。`)
   }
 }
 

@@ -16,6 +16,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { resolveProjectRoot, resolveRoots, rulesRoot } from './roots.mjs'
+import { printReport } from './cli-report.mjs'
 
 const scriptsDir = join(dirname(fileURLToPath(import.meta.url)), '..')
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot } = resolveRoots()
@@ -151,6 +152,19 @@ function inspectRelease(script) {
 
 export const inspectRuleRelease = () => inspectRelease(releaseScript)
 export const inspectEffectiveRules = () => inspectRelease(effectiveRulesScript)
+
+// 打印 context pack 的一屏摘要（场景 / 模式 / 指纹 / 落盘路径 / 指标 / 路由到的规则）。
+// 原本是 docs-tdd.mjs 里 6 行逐字段 console.log，收敛成 报告行表，经 cli-report 打印。
+export function printContextPack(scenario, pack) {
+  printReport([
+    ['scenario', scenario],
+    ['context mode', pack.mode],
+    ['context fingerprint', pack.fingerprint],
+    ['context pack', pack.output],
+    ['context metrics', `sources=${pack.refs.length}, sourceChars=${pack.sourceChars}, packChars=${pack.packChars}, cache=${pack.cacheHit ? 'hit' : 'miss'}, duration=${pack.durationMs}ms`],
+    ['routed rules', pack.refs.join(', ')],
+  ])
+}
 
 export function requireFreshRuleRelease() {
   if (skipRuleFreshness) {
