@@ -1,8 +1,8 @@
 {
   "version": 1,
   "rulesetVersion": "local-2026.07-msw-v1",
-  "fingerprint": "0a6f9e7cc68f0778ce02814e18e385a95ee025989a64e69bd75f626e9e1e3f9a",
-  "publishedAt": "2026-08-11T16:50:57.610Z",
+  "fingerprint": "1b32d4c3809f9aefa6c6acd2e15a0f5b5c316c864b6ee1a42ad20f38b5416cd3",
+  "publishedAt": "2026-08-11T17:44:54.784Z",
   "fileCount": 143,
   "files": {
     "common/CHANGELOG-archive.md": "3f6df9a2d04e917dc0ae67125c84a9209877de3196bd7952639040897e0077cc",
@@ -53,7 +53,7 @@
     "common/engine/agent-scripts/run-project-gate.mjs": "d52553b840607ab6d92ca31e36300ba3deaf9b0d606d5a6a5057f45ed226c1d7",
     "common/engine/agent-scripts/schema-fixture-reconcile.mjs": "fd634e0b006ce3ef7fefd5f8f4624f5f7d045aff1602642b24d84e8cdf1d3066",
     "common/engine/agent-scripts/set-project-stage.mjs": "f81804933da44dfb14fc867e1372f5ffb944941769fb436a25dc9a8dbf0f0610",
-    "common/engine/agent-scripts/start-new-project.mjs": "a81d254874b422d70a01b7b9989902d6b5fbf5273cd2ebc711c6d5c3da2e9041",
+    "common/engine/agent-scripts/start-new-project.mjs": "c16ae88e9315aad722d7e8adc131981764971d923964c84062cf6658cdfbcfc6",
     "common/engine/agent-scripts/sync-lark-docs.mjs": "0566b1c2981e0aa5253440c7e2cc5aaa0cdd824c07c6f5a4719c5c16b9c3164c",
     "common/engine/agent-scripts/update-context-summary.mjs": "7bb882f0b1b23e49d518a5fcc0291da5561b027f782ebdb63048fca2fd8469b7",
     "common/engine/agent-scripts/update-project-index.mjs": "864ffccf86f17cd2fbc477b86ac80a6d801eb60a3f4767b1c4bb79e926816087",

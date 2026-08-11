@@ -217,7 +217,7 @@ await writeFileIfMissing(path.join(projectDir, 'agent/lark-integration.md'), `# 
 
 await writeFileIfMissing(path.join(projectDir, 'agent/notification-log.md'), `# ${projectId} 通知记录\n\n| 时间 | 门禁 | 状态 | 摘要 | 方式 | 结果 |\n|------|------|------|------|------|------|\n`);
 
-await writeFileIfMissing(path.join(projectDir, 'agent/lark-sources.json'), json({
+await writeFileIfMissing(path.join(projectDir, 'agent/lark-sources.json'), JSON.stringify({
   projectId,
   outputDir: larkOutputDir,
   sources: [
@@ -227,9 +227,10 @@ await writeFileIfMissing(path.join(projectDir, 'agent/lark-sources.json'), json(
       name: '需求 PRD',
       url: prd,
       target: 'prd-latest.md',
+      localizedTarget: 'prd-latest.extracted.md',
     },
   ],
-}));
+}, null, 2));
 
 await writeFileIfMissing(path.join(projectDir, 'agent/scripts/sync-lark-docs.mjs'), `#!/usr/bin/env node\n\nimport { runSyncLarkDocs } from '#common/engine/agent-scripts/sync-lark-docs.mjs'\n\nrunSyncLarkDocs({\n  defaultConfigPath: '${docsMountPath}/prds/${projectId}/agent/lark-sources.json',\n}).catch((error) => {\n  console.error(error.message)\n  process.exit(1)\n})\n`);
 

@@ -1,0 +1,14 @@
+{
+  "projectId": "PR-02273",
+  "createdAt": "2026-08-11",
+  "rulesetVersion": "local-2026.07-msw-v1",
+  "templateVersion": 2,
+  "pilot": {
+    "msw": true,
+    "prdIntake": true
+  },
+  "gatePolicy": {
+    "legacyRules": "blocking",
+    "currentTouchedRules": "blocking"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "sourceName": "需求 PRD",
+  "sourceType": "doc",
+  "sourceUrl": "https://qfglxo2m3dc.sg.larksuite.com/docx/OrRpd3exfoM2nKxD9uRlUZalgZ6",
+  "syncedAt": "2026-08-11T17:30:43.590Z",
+  "readOnly": true,
+  "command": [
+    "lark-cli",
+    "docs",
+    "+fetch",
+    "--api-version",
+    "v2",
+    "--doc",
+    "https://qfglxo2m3dc.sg.larksuite.com/docx/OrRpd3exfoM2nKxD9uRlUZalgZ6",
+    "--doc-format",
+    "markdown",
+    "--as",
+    "user",
+    "--format",
+    "json"
+  ],
+  "stderr": null,
+  "target": "../docs_tdd/prds/PR-02273/inbox/lark-sync/prd-latest.md",
+  "remoteContentHash": "735182c631e8832bba14ccacaf83fe5341136077497f7d4b04c81f31d2915eb3",
+  "remoteDocumentId": "OrRpd3exfoM2nKxD9uRlUZalgZ6",
+  "remoteRevisionId": "2273",
+  "identity": "user"
+}

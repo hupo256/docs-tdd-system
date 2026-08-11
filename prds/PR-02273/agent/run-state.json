@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "projectId": "PR-02273",
+  "attempts": [
+    {
+      "at": "2026-08-11T17:05:41.186Z",
+      "action": "sync_and_init",
+      "ok": false
+    },
+    {
+      "at": "2026-08-11T17:06:19.341Z",
+      "action": "resume_sync_and_init",
+      "ok": true
+    }
+  ],
+  "status": "waiting_approval",
+  "currentStage": "G1",
+  "lastAction": "initialize_prd_intake",
+  "nextAction": "complete_g0_g1_docs",
+  "source": "https://qfglxo2m3dc.sg.larksuite.com/docx/OrRpd3exfoM2nKxD9uRlUZalgZ6",
+  "updatedAt": "2026-08-11T17:06:19.342Z",
+  "blocker": "",
+  "syncedSource": "apps/web/docs_tdd/prds/PR-02273/inbox/lark-sync/prd-latest.md"
+}
