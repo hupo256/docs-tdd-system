@@ -17,6 +17,7 @@ common/lark-bot/runtime/*.local.json
 
 # Lark bot runtime state — queued group tasks & downloaded group attachments may hold group content
 common/lark-bot/runtime/lark-tasks/
+common/lark-bot/runtime/lark-bugtable-state.json
 **/agent/lark-tasks/
 **/agent/lark-attachments/
 **/agent/lark-audits/
