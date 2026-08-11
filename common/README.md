@@ -36,7 +36,7 @@
 24. [browser-e2e-mcp.md](./rules/browser-e2e-mcp.md)：Browser / Playwright MCP 自测（禁止项目内安装 Playwright）。
 25. [collaboration-and-notifications.md](./rules/collaboration-and-notifications.md)：协作通知总入口和安全边界。
 26. [lark-active-notification.md](./rules/lark-active-notification.md)：自定义机器人主动发群消息（G0-G8）规则。
-27. [lark-bot-gateway.md](./rules/lark-bot-gateway.md)：群内 @ 应用触发任务的完整链路（Bot Gateway / Worker）。
+27. [lark-bot 子系统文档](./lark-bot/docs/README.md)：群内 @ 应用触发任务的完整链路（Bot Gateway / Worker / bug 表 / 调度）运维手册；不是编码规则，不参与规则指纹。
 28. [lark-doc-sync.md](./rules/lark-doc-sync.md)：Lark CLI 只读同步 PRD / Wiki / Drive / Markdown 到 `docs_tdd` 的规则。
 29. [project-doc-structure.md](./rules/project-doc-structure.md)：项目文档目录规范。
 30. [CHANGELOG.md](./CHANGELOG.md)：公共规则、gate 脚本和模板的框架变更日志。

@@ -7,6 +7,13 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-08-11（lark-bot 运维手册归位 lark-bot 子树 + 主题拆分 + 脱离规则指纹）
+
+- **根因**：`common/rules/lark-bot-gateway.md` 本质是 bot 服务运维手册（网关 HTTP 契约 / worker / bug 表 / 长连接 / 调度），却被误分类进 rules 层——既是唯一超 doc-budget 告警线（17449 字符，靠 `DOC_BUDGET_OVERRIDES` 压着）的文件，又被卷进规则指纹链（改一行运维文档就触发 golden-run 重发布）。
+- **归位 + 拆分**：删除该文件，迁入 `common/lark-bot/docs/`，按主题拆为 `README.md`（索引）+ `gateway-and-worker.md`（管道接线）+ `task-boundaries-and-reply.md`（AI 执行边界/完成回复格式）+ `runtime-and-scheduling.md`（长连接/bug 表/并行调度），各文件远低于默认预算线。去重：卡片格式/圆角 token 不复述，保留指针到 `lark-active-notification.md`、`ui-style-token-rules.md`。
+- **脱离规则体制**：新路径落在 lark-bot 子树 → 被 `rule-release.isLarkPlumbing` 排除出指纹、不在 `check-doc-budget` 的 `RULES_DIR` 扫描范围，故删除对应 `DOC_BUDGET_OVERRIDES` 条目。权衡：失去规则层 budget 上限与「必须被 index 收录」保证，用 `docs/README.md` 索引 + `common/README.md` 子系统指针弥补导航——刻意为之，运维手册不受编码规则体制约束。
+- **生效边界**：唯一影响行为的改动是 `lark-worker-prompts.mjs` 注入 worker 的文档由整本手册收窄到 `task-boundaries-and-reply.md`（减少 token 噪声，只留执行边界）。其余为链接/注释重定向（`collaboration-and-notifications.md`、`lark-active-notification.md`、`lark-doc-sync.md`、`rule-inheritance.md`、`rule-index.json`、3 个项目 `lark-integration.md`、`common/README.md`、两处代码注释），及收敛 PR-01947 README 误放的系统级触发描述为指针。
+
 ## 2026-08-10（群内 @负责人代理触发自动任务）
 
 - Gateway 支持本机 `taskMentionOpenIds`：群消息仅 @Aven、未 @bot 时先持久化为 `received`，普通群聊在成员查询、附件下载和 AI 调用之前本地过滤。

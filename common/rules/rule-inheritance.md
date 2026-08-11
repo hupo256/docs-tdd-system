@@ -131,7 +131,7 @@ L3 写规则时默认使用“触发 → 动作 → 证据 → 失败处理”�
 | G0-G8 门禁 | `common/rules/workflow-gates.md` | 项目当前状态和特殊门禁说明 |
 | 文档结构 | `common/rules/project-doc-structure.md` | 当前项目实际文件和状态 |
 | 功能清单 | `common/rules/prd-feature-inventory.md`、`templates/feature-inventory-template.md` | `product/00-feature-inventory.md` 的项目功能事实 |
-| Agent 流程 | `common/rules/collaboration-and-notifications.md`、`common/rules/lark-bot-gateway.md` | 项目恢复顺序、启用状态、配置路径 |
+| Agent 流程 | `common/rules/collaboration-and-notifications.md`、`common/lark-bot/docs/README.md` | 项目恢复顺序、启用状态、配置路径 |
 | 工程规则 | `common/rules/development-rules.md` 专题入口 + `rule-ownership.json` 指向的唯一正文 | 项目特殊约束、模块边界、例外说明 |
 | 质量检查 | `common/rules/quality-checklist.md` | 当前项目执行记录和跳过原因 |
 | 通知记录 | `templates/notification-log-template.md` | 当前项目实际发送记录 |

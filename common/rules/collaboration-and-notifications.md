@@ -1,6 +1,6 @@
 # 协作、门禁与通知公共规则
 
-> AI 主用:协作/门禁/通知的策略层。配置/签名/卡片模板细节在 [lark-active-notification.md](./lark-active-notification.md)、[lark-bot-gateway.md](./lark-bot-gateway.md)。安全边界「禁止同步」清单为硬性,勿删项。
+> AI 主用:协作/门禁/通知的策略层。配置/签名/卡片模板细节在 [lark-active-notification.md](./lark-active-notification.md);群内 @ 应用触发任务的运维手册在 [lark-bot 子系统文档](../lark-bot/docs/README.md)。安全边界「禁止同步」清单为硬性,勿删项。
 
 ## 1. G0-G8 是协作边界
 
@@ -18,7 +18,7 @@ Lark 主动发群 + 群内 @ 应用自动建 task 都是协作增强,非需求�
 - 主动发群:G0-G8 完成/阻塞/需补信息时自动把项目状态同步到群,减少人工转述。
 - 群内 @ 应用自动建 task:把群里 bug/UI 调整/QA/自测请求转成可追踪 task,Worker 自动执行或进待确认,完成后自动回群。
 
-默认:不配置也能正常开发;不启用时项目文档记「本期不接入 Lark 主动通知/@ 自动任务,阶段结果由人工同步」。启用主动通知继承 [lark-active-notification.md](./lark-active-notification.md);启用群内 @ 转 task 继承 [lark-bot-gateway.md](./lark-bot-gateway.md)。
+默认:不配置也能正常开发;不启用时项目文档记「本期不接入 Lark 主动通知/@ 自动任务,阶段结果由人工同步」。启用主动通知继承 [lark-active-notification.md](./lark-active-notification.md);启用群内 @ 转 task 继承 [lark-bot 子系统文档](../lark-bot/docs/README.md)。
 
 **允许同步**:G0-G8 阶段状态;缺资料/待确认/阻塞;自测/QA/交付摘要;本地文档路径和已确认公开链接。
 
@@ -122,9 +122,9 @@ Agent/Worker 在任意阶段遇需人工确认、需补资料、缺登录账号/
 
 **Webhook 只能用于主动发阶段通知;响应群内 @ 必须用 Lark 应用机器人 + 事件订阅 + Bot Gateway。**
 
-完整链路、Bot Gateway 要求、Job 字段、Worker 执行规则、自动/需确认边界、回复策略见 [lark-bot-gateway.md](./lark-bot-gateway.md)。
+完整链路、Bot Gateway 要求、Job 字段、Worker 执行规则、自动/需确认边界、回复策略见 [lark-bot 子系统文档](../lark-bot/docs/README.md)。
 
-需群内 @ 触发任务的项目,必须在 `<PROJECT-ID>/agent/` 下建事件订阅、Bot Gateway 白名单、任务队列、Worker 处理边界的说明,并继承 `lark-bot-gateway.md`。未启用时项目文档只记「不接入 @ 自动任务,本期群反馈由人工整理为开发任务」。
+需群内 @ 触发任务的项目,必须在 `<PROJECT-ID>/agent/` 下建事件订阅、Bot Gateway 白名单、任务队列、Worker 处理边界的说明,并继承 [lark-bot 子系统文档](../lark-bot/docs/README.md)。未启用时项目文档只记「不接入 @ 自动任务,本期群反馈由人工整理为开发任务」。
 
 ## 7. 已发送通知记录
 
@@ -132,7 +132,7 @@ Agent/Worker 在任意阶段遇需人工确认、需补资料、缺登录账号/
 
 ## 8. 消息格式
 
-主动通知卡片字段、字段顺序(`当前阶段`→`下一阶段`→`说明`→`note 时间`)与时间行格式见 [lark-active-notification.md](./lark-active-notification.md) §5、§7;群内 @ 应用任务完成格式见 [lark-bot-gateway.md](./lark-bot-gateway.md) §6.4。
+主动通知卡片字段、字段顺序(`当前阶段`→`下一阶段`→`说明`→`note 时间`)与时间行格式见 [lark-active-notification.md](./lark-active-notification.md) §5、§7;群内 @ 应用任务完成格式见 [lark-bot 子系统文档 · task-boundaries-and-reply](../lark-bot/docs/task-boundaries-and-reply.md) §4。
 
 原则:同一条消息只放结论摘要,不发长日志;验证命令、任务 ID、diff 摘要、内部状态写入项目文档或任务记录,不放普通完成消息。
 

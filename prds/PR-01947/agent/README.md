@@ -51,5 +51,7 @@ node apps/web/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-01
 
 ## Lark 能力
 
-- 主动发群消息：未启用
-- 群内 @ 应用转 task：未启用
+本项目是 lark-bot 子系统试点，已启用「群内 @ 应用转 task + 主动发群」。
+
+- 项目差异与运行状态（配置路径、白名单、bug 表字段、上线前置）见 [lark-integration.md](./lark-integration.md)。
+- 触发模型 / 意图分类 / 权限前提等**系统级通用行为**见 [lark-bot 子系统文档](../../../common/lark-bot/docs/README.md)，不在本项目 README 重复。

@@ -1,7 +1,7 @@
 # Lark 主动通知规则
 
 > 本文描述 G0-G8 阶段进度、阻塞和补信息的主动发群消息规则。  
-> 群内 @ 应用触发任务的完整链路见 [lark-bot-gateway.md](./lark-bot-gateway.md)。
+> 群内 @ 应用触发任务的完整链路见 [lark-bot 子系统文档](../lark-bot/docs/README.md)。
 
 ## 1. 职责边界
 
@@ -11,7 +11,7 @@
 |------|------|--------------|
 | 自定义机器人 webhook | 主动发送 G0-G8 阶段进度、阻塞、补信息、交付摘要（默认通道） | 是 |
 | bot `im +messages-send` | 同上，改用已登录 bot 身份直发卡片（`notifyTransport:'bot'`，无需 webhook secret；见 §11） | 是 |
-| Lark 应用事件订阅 | 群内 @ 应用后生成 task，进入 Bot Gateway / Worker | 否，见 `lark-bot-gateway.md` |
+| Lark 应用事件订阅 | 群内 @ 应用后生成 task，进入 Bot Gateway / Worker | 否，见 `../lark-bot/docs/` |
 
 Webhook / bot 通道只能发消息；不能冒充群内 @ 应用接收链路。
 
@@ -236,6 +236,6 @@ runNotifyLark({
 - **非阻塞**：播报失败只 warn，绝不改 gate 退出码。
 - **幂等防刷群**：幂等键 = `<PID>-<Gx>-<sha1(gate 指纹)[:12]>`，走 `--idempotency-key` 服务端去重；同代码状态重复跑同一 gate 不重复发。
 - **通道**：复用 §11.1 的 `notifyTransport`。
-- **实现坑**：`docs-tdd.mjs` 里 spawn 的是**项目薄包装** `notify-lark.mjs`，不能直调 common 脚本（软链主守卫恒 false，见 `lark-bot-gateway.md`）。
+- **实现坑**：`docs-tdd.mjs` 里 spawn 的是**项目薄包装** `notify-lark.mjs`，不能直调 common 脚本（软链主守卫恒 false，见 [lark-bot 子系统文档 · runtime-and-scheduling](../lark-bot/docs/runtime-and-scheduling.md) §1）。
 
 命令行入口（bot 通道加了）：`--idempotency-key <key>`（仅 `notifyTransport:'bot'` 生效）。`docs-tdd.mjs`/`notify-lark.mjs` 是按需 CLI，改完即生效，无需重启常驻。
