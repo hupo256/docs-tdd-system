@@ -1,7 +1,7 @@
 ---
 projectId: PR-02273
 status: active
-stage: G2
+stage: G3
 branch: "feature/PR-02273"
 worktree: "/Users/aven/github/PR-02273"
 port: "4102"
@@ -20,7 +20,7 @@ larkEnabled: false
 | 字段 | 值 |
 |------|-----|
 | 当前阶段 | G0 资料接收 |
-| 最新通过门禁 | G2 |
+| 最新通过门禁 | G3 |
 | 公共规则 | 继承 ../../common/README.md |
 | PRD 来源 | https://qfglxo2m3dc.sg.larksuite.com/docx/OrRpd3exfoM2nKxD9uRlUZalgZ6 |
 | visualFidelity | standard |
