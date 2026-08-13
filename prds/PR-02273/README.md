@@ -2,9 +2,9 @@
 projectId: PR-02273
 status: active
 stage: G2
-branch: feature/PR-02273
-worktree: ""
-port: ""
+branch: "feature/PR-02273"
+worktree: "/Users/aven/github/PR-02273"
+port: "4102"
 visualFidelity: standard
 prdSource: https://qfglxo2m3dc.sg.larksuite.com/docx/OrRpd3exfoM2nKxD9uRlUZalgZ6
 figmaNode: ""

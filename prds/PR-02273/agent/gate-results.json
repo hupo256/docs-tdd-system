@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-11T17:47:28.490Z",
+  "generatedAt": "2026-08-13T12:35:10.116Z",
   "tool": "run-project-gate.mjs",
   "projectId": "PR-02273",
   "gate": "G2",
@@ -231,7 +231,7 @@
     {
       "ruleId": "DOC-PRD-009",
       "ok": true,
-      "message": "G2-approved PRD fingerprint matches current intake (expected=cc92198935616c8e, current=cc92198935616c8e)",
+      "message": "G2-approved PRD fingerprint matches current intake (expected=e6eeaef4a44ed260, current=e6eeaef4a44ed260)",
       "file": "../docs_tdd/prds/PR-02273/agent/prd-source-manifest.json",
       "severity": "error",
       "category": "documentation"
@@ -239,7 +239,7 @@
     {
       "ruleId": "DOC-PRD-010",
       "ok": true,
-      "message": "remote PRD content hash matches intake baseline (cached 227s ago): 需求 PRD (revision 2273)",
+      "message": "remote PRD content hash matches intake baseline (cached 6s ago): 需求 PRD (revision 2547)",
       "file": "../docs_tdd/prds/PR-02273/agent/prd-source-manifest.json",
       "severity": "error",
       "category": "documentation"
@@ -346,17 +346,17 @@
       "label": "verify-project-gate PR-02273 G2",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-08-11T17:47:28.391Z",
-      "finishedAt": "2026-08-11T17:47:28.490Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02273/2026-08-11T17-47-28-391Z-verify-project-gate-g2.log"
+      "startedAt": "2026-08-13T12:35:10.013Z",
+      "finishedAt": "2026-08-13T12:35:10.115Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02273/2026-08-13T12-35-10-013Z-verify-project-gate-g2.log"
     },
     {
       "label": "set-project-stage PR-02273 G2",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-08-11T17:47:28.727Z",
-      "finishedAt": "2026-08-11T17:47:28.847Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02273/2026-08-11T17-47-28-727Z-set-project-stage.log"
+      "startedAt": "2026-08-13T12:35:10.343Z",
+      "finishedAt": "2026-08-13T12:35:10.478Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02273/2026-08-13T12-35-10-343Z-set-project-stage.log"
     }
   ],
   "codeRules": {
@@ -382,9 +382,9 @@
     "buildQualityParseError": null
   },
   "fingerprint": {
-    "headSha": "3930ea01c87ab9121391a561681957f0c1975e9a",
+    "headSha": "89b133bd97731ded391a0cb3ceefa24eb3fe7c02",
     "baseSha": "89b133bd97731ded391a0cb3ceefa24eb3fe7c02",
-    "dirtyHash": "8cb8ae331d1b8ec426ddc3459113d39889d9ea4669e19dad6ddcebe99f80a707",
+    "dirtyHash": "ee91fec5beef70258d3f4e44aecf6ef1a5b8611e240a82b4d77c17fe7172f806",
     "dirtyFileCount": 0,
     "untrackedFileCount": 0,
     "rulesetVersion": "local-2026.07-msw-v1",
@@ -393,7 +393,7 @@
   },
   "cache": {
     "hit": false,
-    "fingerprint": "b4df4b344c6351b6"
+    "fingerprint": "d6b178785e85d830"
   },
   "stageSync": {
     "attempted": true,

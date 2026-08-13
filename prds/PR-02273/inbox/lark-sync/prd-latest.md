@@ -2,7 +2,7 @@
 sourceName: "需求 PRD"
 sourceType: "doc"
 sourceUrl: "https://qfglxo2m3dc.sg.larksuite.com/docx/OrRpd3exfoM2nKxD9uRlUZalgZ6"
-syncedAt: "2026-08-11T17:30:43.590Z"
+syncedAt: "2026-08-13T12:19:11.329Z"
 readOnly: true
 command: "lark-cli docs +fetch --api-version v2 --doc https://qfglxo2m3dc.sg.larksuite.com/docx/OrRpd3exfoM2nKxD9uRlUZalgZ6 --doc-format markdown --as user --format json"
 ---
@@ -51,8 +51,8 @@ command: "lark-cli docs +fetch --api-version v2 --doc https://qfglxo2m3dc.sg.lar
 
 | 评审**时间** | 参与人员 | **结论** |
 |-|-|-|
-|  |  |  |
-|  |  |  |
+| 2026-08-12 | Iris | 评审，通过  <br/>https://qfglxo2m3dc.sg.larksuite.com/minutes/obsgdykjiq7h1nq9pj69311y?from=from_copylink |
+| 2026-08-13 | Iris |  |
 |  |  |  |
 
 # 文档说明
@@ -143,14 +143,15 @@ command: "lark-cli docs +fetch --api-version v2 --doc https://qfglxo2m3dc.sg.lar
 - 预估强平价，**剔除增强体验金后的有效保证金/权益**计算；仅用现有预估强平公式中的用户自有资金相关项
 - 实际爆仓价，同样**不纳入增强体验金余额**；仅用现有实际强平公式中的用户自有资金相关项
 - 保证金率，"增强体验金"不计入总保证金；
-- 维持保证金率，"增强体验金"不计入总保证金；
+- ~~维持保证金率，"增强体验金"不计入总保证金；~~
 
-<table><colgroup><col/><col/><col/><col/></colgroup><tbody><tr><td></td><td><b>编号</b></td><td><b>流程</b></td><td><b>说明</b></td></tr><tr><td>目前的公式</td><td>1</td><td>计算保证金率</td><td><ol><li seq="1"><b>#保证金率#</b><b>=仓位总保证金 / </b><b><del>∑全部币对仓位的标记价值</del></b><b>    </b><b>当前仓位的标记价值</b></li></ol><br/>（一般保证金率是指 维持保证金/总保证金，我们的需要用户自己去和维持保证金率+taker平仓费率对比）<ol><li>#仓位总保证金#=现金余额+体验金可用+∑全仓未实现盈亏-∑其他仓位最低维持保证金占用</li><li>#仓位最低维持保证金占用#=张数*单张数量*最低风险限额等级对应的 MMR</li><li>#仓位标记价值#=张数*单张数量*标记价格</li><li>#全仓账户权益#=现金余额+体验金可用+∑全仓未实现盈亏</li><li>#仓位实际保证金#=#现金余额#=总入金-总出金+资金费用+所有已实现盈亏+手续费-∑逐仓订单占用保证金-∑逐仓仓位占用保证金-∑全仓委托占用保证</li><li>#可用余额#=现金余额-∑全仓仓位占用保证+Min（0，未实现盈亏）</li></ol><br/>   （全仓的盈利无法拿来开仓）</td></tr><tr><td>改造后的公式</td><td>1</td><td>计算保证金率</td><td><ol><li seq="1"><b>#保证金率#</b><b>=仓位总保证金 / </b><b><del>∑全部币对仓位的标记价值</del></b><b>    </b><b>当前仓位的标记价值</b></li></ol><br/>（一般保证金率是指 维持保证金/总保证金，我们的需要用户自己去和维持保证金率+taker平仓费率对比）<ol><li>#仓位总保证金#=现金余额<del>+体验金余额</del>+∑全仓未实现盈亏-∑其他仓位最低维持保证金占用</li><li>#仓位最低维持保证金占用#=张数*单张数量*最低风险限额等级对应的 MMR</li><li>#仓位标记价值#=张数*单张数量*标记价格</li><li>#全仓账户权益#=现金余额+体验金可用+∑全仓未实现盈亏</li><li>#仓位实际保证金#=#现金余额#=总入金-总出金+资金费用+所有已实现盈亏+手续费-∑逐仓订单占用保证金-∑逐仓仓位占用保证金-∑全仓委托占用保证</li><li>#可用余额#=现金余额-∑全仓仓位占用保证+Min（0，未实现盈亏）</li></ol><br/>   （全仓的盈利无法拿来开仓）</td></tr><tr><td>目前的公式</td><td></td><td>双向持仓-全仓（开仓）<br/><b>预估强平价</b></td><td><b>#预估强平价#</b><b>  = [ (现金余额 + 体验金可用 + ∑全仓未实现盈亏-预计开仓手续费) - (标记价格 × 多仓数量 - 标记价格 × 空仓数量) - 订单方向 × 预估成交价 × 订单数量 - ∑其他合约全仓仓位最低维持保证金占用 ] / [ (维持保证金率 + 平仓Taker费率) × (同向仓位数量 + 订单数量) - (多仓数量 - 空仓数量 + 订单方向 × 订单数量) ]</b><ul><li>#现金余额#=总入金-总出金+资金费用+所有已实现盈亏+手续费-∑逐仓订单占用保证金-∑逐仓仓位占用保证金-∑全仓委托占用保证</li><li>∑全仓未实现盈亏为当前全仓账户的总未实现盈亏</li><li>多仓数量 / 空仓数量为当前 合约的持仓的数量，若无仓位则取 0</li><li>#预计开仓手续费#=订单数量*预计成交价*Taker 费率</li><li>#仓位最低维持保证金占用#=张数*面值*最低风险限额等级对应的 MMR</li><li>MMR 取第一档的维持保证金率</li></ul><br/><em>推导思路：</em><br/><em>通过现有公式 仓位总保证金 / ∑新仓位的标记价值 = 维持保证金率+当前交易对平仓Taker 费率  时触发强平，推导获得</em><br/><em>#∑新仓位的标记价值# =（同向仓位数量+订单数量）*预估强平价</em><br/><em>#仓位总保证金#=现金余额+体验金可用+∑新全仓未实现盈亏-∑其余合约全仓仓位最低维持保证金占用</em><br/><em>#∑新全仓未实现盈亏# = ∑全仓未实现盈亏+（预估强平价-标记价格）*  多仓数量+（标记价格-预估强平价）*  空仓数量+订单方向*（预估强平价-预估成交价）*订单数量</em><br/><cite doc-id="QadTw1Kj0iMwcwkiKiIlOFCfgxg" file-type="wiki" title="PR-01319 合约开仓页面增加“预估强平价”" type="doc"></cite></td></tr><tr><td>目前的公式</td><td></td><td>单向持仓-全仓（开仓）<br/><b>预估强平价</b></td><td><b>#预估强平价#</b><b>  = [ (现金余额 + 体验金可用 + ∑全仓未实现盈亏-预计开仓手续费) - (标记价格 × 多仓数量 - 标记价格 × 空仓数量) - 订单方向 × 预估成交价 × 订单数量 - ∑其他合约全仓仓位最低维持保证金占用 ] / [ (维持保证金率 + 平仓Taker费率) × (同向仓位数量 + 订单数量) - (多仓数量 - 空仓数量 + 订单方向 × 订单数量) ]</b><ul><li>#现金余额#=总入金-总出金+资金费用+所有已实现盈亏+手续费-∑逐仓订单占用保证金-∑逐仓仓位占用保证金-∑全仓委托占用保证</li><li>∑全仓未实现盈亏为当前全仓账户的总未实现盈亏</li><li>多仓数量 / 空仓数量为当前 合约的持仓的数量，若无仓位则取 0</li><li>#预计开仓手续费#=订单数量*预计成交价*Taker 费率</li><li>#仓位最低维持保证金占用#=张数*面值*最低风险限额等级对应的 MMR</li><li>MMR 取第一档的维持保证金率</li></ul><br/><em>推导思路：</em><br/><em>通过现有公式 仓位总保证金 / ∑新仓位的标记价值 = 维持保证金率+当前交易对平仓Taker 费率  时触发强平，推导获得</em><br/><em>#∑新仓位的标记价值# =（同向仓位数量+订单数量）*预估强平价</em><br/><em>#仓位总保证金#=现金余额+体验金可用+∑新全仓未实现盈亏-∑其余合约全仓仓位最低维持保证金占用</em><br/><em>#∑新全仓未实现盈亏# = ∑全仓未实现盈亏+（预估强平价-标记价格）*  多仓数量+（标记价格-预估强平价）*  空仓数量+订单方向*（预估强平价-预估成交价）*订单数量</em><br/><cite doc-id="QadTw1Kj0iMwcwkiKiIlOFCfgxg" file-type="wiki" title="PR-01319 合约开仓页面增加“预估强平价”" type="doc"></cite></td></tr><tr><td>改造后的公式</td><td></td><td>双向持仓-全仓（开仓）<br/><b>预估强平价</b></td><td><b>#预估强平价#</b><b>  = [ (现金余额</b><b><del> + 体验金余额 </del></b><b>+ ∑全仓未实现盈亏-预计开仓手续费) - (标记价格 × 多仓数量 - 标记价格 × 空仓数量) - 订单方向 × 预估成交价 × 订单数量 - ∑其他合约全仓仓位最低维持保证金占用 ] / [ (维持保证金率 + 平仓Taker费率) × (同向仓位数量 + 订单数量) - (多仓数量 - 空仓数量 + 订单方向 × 订单数量) ]</b><ul><li>#现金余额#=总入金-总出金+资金费用+所有已实现盈亏+手续费-∑逐仓订单占用保证金-∑逐仓仓位占用保证金-∑全仓委托占用保证</li><li>∑全仓未实现盈亏为当前全仓账户的总未实现盈亏</li><li>多仓数量 / 空仓数量为当前 合约的持仓的数量，若无仓位则取 0</li><li>#预计开仓手续费#=订单数量*预计成交价*Taker 费率</li><li>#仓位最低维持保证金占用#=张数*面值*最低风险限额等级对应的 MMR</li><li>MMR 取第一档的维持保证金率</li></ul><br/><em>推导思路：</em><br/><em>通过现有公式 仓位总保证金 / ∑新仓位的标记价值 = 维持保证金率+当前交易对平仓Taker 费率  时触发强平，推导获得</em><br/><em>#∑新仓位的标记价值# =（同向仓位数量+订单数量）*预估强平价</em><br/><em>#仓位总保证金#=现金余额+体验金可用+∑新全仓未实现盈亏-∑其余合约全仓仓位最低维持保证金占用</em><br/><em>#∑新全仓未实现盈亏# = ∑全仓未实现盈亏+（预估强平价-标记价格）*  多仓数量+（标记价格-预估强平价）*  空仓数量+订单方向*（预估强平价-预估成交价）*订单数量</em></td></tr><tr><td>改造后的公式</td><td></td><td>单向持仓-全仓（开仓）<br/><b>预估强平价</b></td><td><b>#预估强平价#</b><b>  = [ (现金余额 </b><b><del>+ 体验金余额 </del></b><b>+ ∑全仓未实现盈亏-预计开仓手续费) - (标记价格 × 多仓数量 - 标记价格 × 空仓数量) - 订单方向 × 预估成交价 × 订单数量 - ∑其他合约全仓仓位最低维持保证金占用 ] / [ (维持保证金率 + 平仓Taker费率) × (同向仓位数量 + 订单数量) - (多仓数量 - 空仓数量 + 订单方向 × 订单数量) ]</b><ul><li>#现金余额#=总入金-总出金+资金费用+所有已实现盈亏+手续费-∑逐仓订单占用保证金-∑逐仓仓位占用保证金-∑全仓委托占用保证</li><li>∑全仓未实现盈亏为当前全仓账户的总未实现盈亏</li><li>多仓数量 / 空仓数量为当前 合约的持仓的数量，若无仓位则取 0</li><li>#预计开仓手续费#=订单数量*预计成交价*Taker 费率</li><li>#仓位最低维持保证金占用#=张数*面值*最低风险限额等级对应的 MMR</li><li>MMR 取第一档的维持保证金率</li></ul></td></tr><tr><td></td><td></td><td></td><td></td></tr><tr><td></td><td></td><td></td><td></td></tr></tbody></table>
+<table><colgroup><col/><col/><col/></colgroup><tbody><tr><td><b>计算项</b></td><td><b>当前公式</b></td><td><b>改造后公式</b></td></tr><tr><td><b>全仓仓位总保证金</b></td><td>现金余额＋增强体验金余额＋∑全仓未实现盈亏－∑其他仓位最低维持保证金占用</td><td>现金余额<del>＋增强体验金余额</del>＋∑全仓未实现盈亏－∑其他仓位最低维持保证金占用</td></tr><tr><td><b>页面展示保证金率</b></td><td>全仓维持保证金金额 ÷（现金余额＋增强体验金余额＋∑全仓未实现盈亏－∑其他仓位最低维持保证金占用－∑预计平仓手续费）</td><td>全仓维持保证金金额 ÷（现金余额<del>＋增强体验金余额</del>＋∑全仓未实现盈亏－∑其他仓位最低维持保证金占用－∑预计平仓手续费）</td></tr><tr><td><b>实际强平保证金率</b></td><td>（现金余额＋增强体验金余额＋∑全仓未实现盈亏－∑其他仓位最低维持保证金占用）÷∑全部全仓仓位标记价值</td><td>（现金余额<del>＋增强体验金余额</del>＋∑全仓未实现盈亏－∑其他仓位最低维持保证金占用）÷∑全部全仓仓位标记价值</td></tr><tr><td><b>实际强平条件</b></td><td>（现金余额＋增强体验金余额＋∑全仓未实现盈亏－∑其他仓位最低维持保证金占用）÷∑全部全仓仓位标记价值 ≤ 当前风险限额档位维持保证金率＋当前交易对平仓Taker费率</td><td>（现金余额<del>＋增强体验金余额</del>＋∑全仓未实现盈亏－∑其他仓位最低维持保证金占用）÷∑全部全仓仓位标记价值 ≤ 当前风险限额档位维持保证金率＋当前交易对平仓Taker费率</td></tr><tr><td><b>全仓单向预估强平价</b></td><td>（现金余额＋增强体验金余额－预计开仓手续费＋∑全仓未实现盈亏－标记价格×（当前多仓数量－当前空仓数量）－订单方向×预计成交价×订单数量－∑其他合约全仓仓位最低维持保证金占用）÷〔（当前档位维持保证金率＋当前交易对平仓Taker费率）×开仓后净仓位数量－（当前多仓数量－当前空仓数量＋订单方向×订单数量）〕</td><td>（现金余额<del>＋增强体验金余额</del>－预计开仓手续费＋∑全仓未实现盈亏－标记价格×（当前多仓数量－当前空仓数量）－订单方向×预计成交价×订单数量－∑其他合约全仓仓位最低维持保证金占用）÷〔（当前档位维持保证金率＋当前交易对平仓Taker费率）×开仓后净仓位数量－（当前多仓数量－当前空仓数量＋订单方向×订单数量）〕</td></tr><tr><td><b>实际爆仓价判断</b></td><td>当某一标记价格首次满足：（现金余额＋增强体验金余额＋该标记价格下的∑全仓未实现盈亏－该标记价格下的∑其他仓位最低维持保证金占用）÷该标记价格下的∑全部全仓仓位标记价值 ≤ 当前风险限额档位维持保证金率＋当前交易对平仓Taker费率，触发强平</td><td>当某一标记价格首次满足：（现金余额<del>＋增强体验金余额</del>＋该标记价格下的∑全仓未实现盈亏－该标记价格下的∑其他仓位最低维持保证金占用）÷该标记价格下的∑全部全仓仓位标记价值 ≤ 当前风险限额档位维持保证金率＋当前交易对平仓Taker费率，触发强平</td></tr><tr><td colspan="3">注： 改造后需<b>确保用的现金余额</b><b>，</b><b>不是</b><b>页面前端展示的那个</b><b>钱包余额</b><b>的值， 钱包余额里包含了体验金</b><br/>开仓及爆仓检验需测一下，这个检验里也需要把体验金去掉</td></tr></tbody></table>
 
--
--
+### 附目前的公式
 
-**补充公式**
+<cite doc-id="QadTw1Kj0iMwcwkiKiIlOFCfgxg" file-type="wiki" title="PR-01319 合约开仓页面增加“预估强平价”" type="doc"></cite>
+
+<cite doc-id="ISnCwrLdqiSDllkfpUSlW4S8gOc" file-type="wiki" title="FA当前强平流程和问题整理" type="doc"></cite>
 
 ## 生命周期与状态
 
@@ -191,17 +192,11 @@ command: "lark-cli docs +fetch --api-version v2 --doc https://qfglxo2m3dc.sg.lar
 
 
 
-## 极端场景（）：
+## 极端场景：
 
 配资50% 开100倍， 1% 就爆了，合约保证金小于维持保证金
 
-
-
-
-
-客商保护：1、开进去就爆 会拦截；2刚好开进去，波动一点就爆，
-
-
+客商保护：1、开进去就爆 会拦截； **测试验证该场景， 体验金也要去掉**
 
 ### **不回收的场景：**
 
@@ -211,11 +206,11 @@ command: "lark-cli docs +fetch --api-version v2 --doc https://qfglxo2m3dc.sg.lar
 
 ## 福利中心—增强体验金卡片
 
-<table><colgroup><col/><col/><col/><col/></colgroup><tbody><tr><td>区域</td><td>字段/交互</td><td>展示规则</td><td>原型</td></tr><tr><td>主按钮</td><td>领取/ 去使用 /  已失效</td><td>不变， 去掉“已使用（使用完）”状态</td><td rowspan="2"><img name="image.png" href="https://internal-api-drive-stream-sg.larksuite.com/space/api/box/stream/download/authcode/?code=ZmMzM2E3ZjRlZWVlMTY3YTJjYTJhN2QwMzJiMDU2OGJfOWVkYTk1MzI1ODcxNmUwMGNiNTU2MWE2MDZkNTRiN2ZfSUQ6NzY3MjM5NzM0NjQ3ODU3NTMyN18xNzg2NDY3ODY0OjE3ODY0NzE0NjRfVjM" mime="image/png" scale="1.000000" src="UKUlbwzzYoQzFmxrKbblimy9gGd"/></td></tr><tr><td>提示说明</td><td>可与自有资金一起作为合约保证金使用，盈利可全部提取。</td><td>详情弹窗展示完整</td></tr></tbody></table>
+<table><colgroup><col/><col/><col/><col/></colgroup><tbody><tr><td>区域</td><td>字段/交互</td><td>展示规则</td><td>原型</td></tr><tr><td>主按钮</td><td>领取/ 去使用 /  已失效</td><td>不变， 去掉“已使用（使用完）”状态</td><td rowspan="2"><img name="image.png" alt="The image shows the &#34;Contract Enhanced Experience Points&#34; interface. It displays a balance of 0/60 USDT, an expiration date of 2026-07-15, and a status of &#34;已失效&#34; (Expired). A red-highlighted text states &#34;优先自有资金抵扣，可与自有资金共同充当合约保证金，也可用于抵扣交易亏损、开平仓手续费和资金费用&#34; (Prioritize own funds offset, can be used as collateral for contracts together with own funds, also can be used to offset transaction losses, opening and closing positions fees and funding fees). Another red-highlighted text below reads &#34;优先自有资金抵扣，可与自有资金共同充当合约...&#34; (Prioritize own funds offset, can be used as collateral for contracts...)." href="https://internal-api-drive-stream-sg.larksuite.com/space/api/box/stream/download/authcode/?code=ZDI3ZmU0NjAwZDI3NDRmMmZmM2I3ZmQzZTU4NGNkYjJfYWQ5MjkzNTUxMTI5MWQ3MWE0ODA3NTY3ZGYzNmZkNmNfSUQ6NzY3MjM5NzM0NjQ3ODU3NTMyN18xNzg2NjIzNDQzOjE3ODY2MjcwNDNfVjM" mime="image/png" scale="1.000000" src="UKUlbwzzYoQzFmxrKbblimy9gGd"/></td></tr><tr><td>提示说明</td><td>可与自有资金一起作为合约保证金使用，盈利可全部提取。</td><td>详情弹窗展示完整</td></tr></tbody></table>
 
 ## 福利中心—合约增强体验金领取弹窗
 
-<table><colgroup><col/><col/><col/></colgroup><tbody><tr><td>字段</td><td>规则</td><td>原型</td></tr><tr><td>文案说明</td><td>可与自有资金一起作为合约保证金使用，盈利可全部提取。</td><td><img name="image.png" href="https://internal-api-drive-stream-sg.larksuite.com/space/api/box/stream/download/authcode/?code=MjM3ODMzMDk4ZTg1ZTkxZjM3MjBkODQ5Y2M2NWMxM2ZfOGY1ODA4NjY4Yzc3MTE1ZWNjNTQyOGFmNzQ0NWNkZDJfSUQ6NzY3MjM5Nzg3NDAzODA2NjkxMF8xNzg2NDY3ODY0OjE3ODY0NzE0NjRfVjM" mime="image/png" scale="1.000000" src="SHIrbS7fnoKFhMxlWbBlPUzpgAf"/></td></tr><tr><td>抵扣比例</td><td>改为配资比例</td><td></td></tr><tr><td>使用方式</td><td>删除，不展示</td><td></td></tr></tbody></table>
+<table><colgroup><col/><col/><col/></colgroup><tbody><tr><td>字段</td><td>规则</td><td>原型</td></tr><tr><td>文案说明</td><td>可与自有资金一起作为合约保证金使用，盈利可全部提取。</td><td><img name="image.png" alt="The image shows the &#34;Contract Enhanced Experience Points&#34; (CEP) redemption pop-up window in the Welfare Center. It lists the redemption conditions: opened contract account, face value greater than the effective experience points, no experience points pending settlement, etc. The experience points amount is 210 USDT, applicable to XAGUSDT and BTCUSDT, with a 50% offset ratio and one-time use. The key content highlighted in red states that it can be used to offset transaction losses, margin call fees, and trading fees, and can be used together with own funds as contract margin." href="https://internal-api-drive-stream-sg.larksuite.com/space/api/box/stream/download/authcode/?code=ZjBkZTU0ZDk1OWI5OTBmODJlNjFiYjZkNDJiOWUwN2FfODBhZGEwMTkzN2JlYTdjYTRhMDI5Mjg0OTNkMTYzN2ZfSUQ6NzY3MjM5Nzg3NDAzODA2NjkxMF8xNzg2NjIzNDQzOjE3ODY2MjcwNDNfVjM" mime="image/png" scale="1.000000" src="SHIrbS7fnoKFhMxlWbBlPUzpgAf"/></td></tr><tr><td>抵扣比例</td><td>改为配资比例</td><td></td></tr><tr><td>使用方式</td><td>删除，不展示</td><td></td></tr></tbody></table>
 
 
 
@@ -223,11 +218,11 @@ command: "lark-cli docs +fetch --api-version v2 --doc https://qfglxo2m3dc.sg.lar
 
 与按比例抵扣体验金区分 ，按比例抵扣体验金详情页不变， 仅增强体验金详情页改造
 
-<table><colgroup><col/><col/><col/></colgroup><tbody><tr><td>字段</td><td>规则</td><td>原型</td></tr><tr><td>体验金名称</td><td>新增卡券类型【增强体验金】</td><td></td></tr><tr><td>已领取</td><td>已激活改为已领取</td><td rowspan="7">    <img name="image.png" href="https://internal-api-drive-stream-sg.larksuite.com/space/api/box/stream/download/authcode/?code=OTc4NTg2OGJkZWI1MmM4Y2U3NmQyOTc3ZjFiM2JmYzRfOTRiOGVjMWJmZDQyMDk5OWFhZWRhMGZhZTVlZTVmZDFfSUQ6NzY3MjQwMzkwODMzMjkxNjQ1MF8xNzg2NDY3ODY0OjE3ODY0NzE0NjRfVjM" mime="image/png" scale="1.000000" src="FG2dbPNptotM9KxAY2Nlg6d6gbh"/></td></tr><tr><td>可用体验金</td><td>由 体验金余额 改为 可用体验金<br/>=总额-使用中体验金</td></tr><tr><td>使用中体验金</td><td>已使用体验金改为 “使用中体验金”，<br/>由抵扣消耗的体验金改为：开仓交易委托冻结和仓位占用的增强体验金<br/>问题是：已使用 与 普通合约体验金的逻辑不一致</td></tr><tr><td>文案说明</td><td>可与自有资金一起作为合约保证金使用，盈利可全部提取。</td></tr><tr><td>使用规则</td><td>删除，不展示</td></tr><tr><td>配资比例</td><td>抵扣比例 改为 配资比例</td></tr><tr><td>按钮</td><td>隐藏查看使用详情按钮</td></tr></tbody></table>
+<table><colgroup><col/><col/><col/></colgroup><tbody><tr><td>字段</td><td>规则</td><td>原型</td></tr><tr><td>体验金名称</td><td>新增卡券类型【增强体验金】</td><td></td></tr><tr><td>已领取</td><td>已激活改为已领取</td><td rowspan="7">    <img name="image.png" alt="The image shows the details of the enhanced experience fund. It displays &#34;增强体验金 210.00 USDT&#34; at the top, with a note that it can be used as a margin with own funds and profits can be fully withdrawn. The &#34;可用体验金&#34; (Available Experience Fund) is 210.00, and &#34;使用中体验金&#34; (Used Experience Fund) is 0.00. It lists &#34;适用交易币对&#34; (Applicable Trading Pairs) as BTCUSDT, XAGUSD, &#34;配资比例&#34; (Margin Ratio) as 50%, and &#34;失效时间&#34; (Expiration Time) as 2026-08-13 19:37:08." href="https://internal-api-drive-stream-sg.larksuite.com/space/api/box/stream/download/authcode/?code=ZjRhOGVhOGZhZjJkYTViNDU3NjJkODE1N2ZmMWVjNDhfN2M1NDQ5ZDVkZTEwMDE0NDViYmI1MDBlZjdkMDQ2YzNfSUQ6NzY3MjQwMzkwODMzMjkxNjQ1MF8xNzg2NjIzNDQzOjE3ODY2MjcwNDNfVjM" mime="image/png" scale="1.000000" src="FG2dbPNptotM9KxAY2Nlg6d6gbh"/></td></tr><tr><td>可用体验金</td><td>由 体验金余额 改为 可用体验金<br/>=总额-使用中体验金</td></tr><tr><td>使用中体验金</td><td>已使用体验金改为 “使用中体验金”，<br/>由抵扣消耗的体验金改为：开仓交易委托冻结和仓位占用的增强体验金<br/>问题是：已使用 与 普通合约体验金的逻辑不一致</td></tr><tr><td>文案说明</td><td>可与自有资金一起作为合约保证金使用，盈利可全部提取。</td></tr><tr><td>使用规则</td><td>删除，不展示</td></tr><tr><td>配资比例</td><td>抵扣比例 改为 配资比例</td></tr><tr><td>按钮</td><td>隐藏查看使用详情按钮</td></tr></tbody></table>
 
 ## 体验金领取记录
 
-<table><colgroup><col/><col/><col/></colgroup><thead><tr><th>字段</th><th>规则</th><th>原型</th></tr></thead><tbody><tr><td>使用规则</td><td>合约增强体验金，使用规则展示“--”</td><td><img name="image.png" href="https://internal-api-drive-stream-sg.larksuite.com/space/api/box/stream/download/authcode/?code=YjI3ZmYxNWY5MDM4YmYwNWNkOWUwNzg0ZDcyOGM1MjJfZTU3OWEwYWIzMTc3MTk4ZWFhOWIwZTJiNzI0ZDQwMDRfSUQ6NzY3MjQwMTE1NTg1ODY0ODgwMl8xNzg2NDY3ODY0OjE3ODY0NzE0NjRfVjM" mime="image/png" scale="1.000000" src="HrmebBYjnof1yFxSbmul1TsTgwh"/></td></tr></tbody></table>
+<table><colgroup><col/><col/><col/></colgroup><thead><tr><th>字段</th><th>规则</th><th>原型</th></tr></thead><tbody><tr><td>使用规则</td><td>合约增强体验金，使用规则展示“--”</td><td><img name="image.png" alt="The image shows the &#34;Experience Gold Withdrawal Record&#34; page of the FameEX platform. It lists multiple records of experience gold withdrawals, including columns such as &#34;Order ID&#34;, &#34;Experience Gold Amount&#34;, &#34;Withdrawal Method&#34;, &#34;Withdrawal Status&#34;, &#34;Withdrawal Time&#34;, and &#34;Experience Gold Balance&#34;. Each record details the specific amount of experience gold withdrawn, the method of withdrawal, the status (e.g., &#34;Once-Off Use&#34; or &#34;Reused&#34;), the time of withdrawal, and the remaining experience gold balance. The records are presented in a tabular format with clear and organized information." href="https://internal-api-drive-stream-sg.larksuite.com/space/api/box/stream/download/authcode/?code=N2UxYmE2OWUzNGEwM2FjMjRmODJiMWNiMGM4OGU2YTRfYjY4NDAzMDM2YzYwMGQzODJmYzUyYTNmNTNlMjQxZjZfSUQ6NzY3MjQwMTE1NTg1ODY0ODgwMl8xNzg2NjIzNDQzOjE3ODY2MjcwNDNfVjM" mime="image/png" scale="1.000000" src="HrmebBYjnof1yFxSbmul1TsTgwh"/></td></tr></tbody></table>
 
 
 
@@ -237,10 +232,11 @@ command: "lark-cli docs +fetch --api-version v2 --doc https://qfglxo2m3dc.sg.lar
 
 <grid>
 <column width-ratio="0.500000">
-![](https://internal-api-drive-stream-sg.larksuite.com/space/api/box/stream/download/authcode/?code=YTA1Mzc3NjUzNGM5MzhiNjYxMDc1ZDA5OWUwYjdhZGZfODAwMGRmOTk2NTBlZDVlYTJhMzJmOWQ2NzU5N2ZjZjVfSUQ6NzY3MjcxNTAyODcyNTc2MzgwOF8xNzg2NDY3ODY0OjE3ODY0NzE0NjRfVjM)
+![The image shows a configuration application interface. There is a red arrow pointing to the "不抵扣类类型" (non-deductible type) option under the "体验金类型" (Experience Gold Type) dropdown menu, which is currently set to "自有资金优先" (Self-Funding Priority). Other visible fields include "活动名称" (Activity Name), "体验金数量" (Experience Gold Quantity), "币种选择" (Currency Selection), and "抵扣比例" (Discount Ratio).](https://internal-api-drive-stream-sg.larksuite.com/space/api/box/stream/download/authcode/?code=ZGZmZjlkNWYxNWFhY2M3MGJlNTA5YTBjMmNlY2UxMzhfYjU3MzQ5M2E2OWZiZGZjYzg5ZTY4NzU0ZDNhZGI5N2NfSUQ6NzY3MjcxNTAyODcyNTc2MzgwOF8xNzg2NjIzNDQzOjE3ODY2MjcwNDNfVjM)
 </column>
 <column width-ratio="0.500000">
-![](https://internal-api-drive-stream-sg.larksuite.com/space/api/box/stream/download/authcode/?code=MTVjMTM2NWVmMDYyYjZhZGZiYzc2YjhjM2IwNmExYWVfMjU1NmQxMThjYTBmMmY5NDBiOTczYTQ3MDQ1OTViNDJfSUQ6NzY3MjcxNDgxMjQyMTM2MTM4Ml8xNzg2NDY3ODY0OjE3ODY0NzE0NjRfVjM)
+![The image shows a configuration application interface. Key elements include a "抵扣比例" (offset ratio) input field, a "是否需要实名认证" (real-name authentication required) dropdown set to "是" (yes), an "有效期" (expiration) input field, an "申请说明" (application description) text box, a "体验金类型" (experience gold type) dropdown set to "合约" (contract), a "合约类型" (contract type) dropdown set to "U本位" (U position), an "适用币对" (applicable trading pairs) dropdown, a "使用规则" (usage rules) dropdown set to "一次性使用" (one-time use), a "最短持仓时长" (minimum holding time) input field, and a "支持收益类型" (supported income type) dropdown set to "利润收益" (profit income). There are "取消" (cancel) and "确认申请" (confirm application) buttons at the bottom.](https://internal-api-drive-stream-sg.larksuite.com/space/api/box/stream/download/authcode/?code=ZjRmYjA2OTFlY2NkMTdlNzMyZmNkZDdhODk5Yjk1OTlfMjUzNGRmOTdiMzAyMmM1YTczMTQ2ZTgyYzE2MTliNTFfSUQ6NzY3MjcxNDgxMjQyMTM2MTM4Ml8xNzg2NjIzNDQzOjE3ODY2MjcwNDNfVjM)
+![](https://internal-api-drive-stream-sg.larksuite.com/space/api/box/stream/download/authcode/?code=NjU3ODM0ZWU5ZjFmZjkxNWJjNDRkZDJlMjJhM2ExZTFfMmUwYzM0MjJlZTE5YjM3YWZjNWJiZWNlYzU3ZDM1NDVfSUQ6NzY3MzQ4MTEyMTE5NTE2NzQ2MV8xNzg2NjIzNDQzOjE3ODY2MjcwNDNfVjM)
 </column>
 </grid>
 
@@ -248,23 +244,25 @@ command: "lark-cli docs +fetch --api-version v2 --doc https://qfglxo2m3dc.sg.lar
 
 - 体验金类型： 自有资金优先，改为 “不抵扣类型”，
 - 配资比例：选择“不抵扣类型”时， 抵扣比例 展示为“配资比例”， 逻辑不变， 还是激活门槛的比例和 体验金与真金混合配资开仓的比例
+- 风险提示文案：红色字体，静态文案，当选择不可口类型的增强体验金时，在配资比例字段下方展示：
+
+  - ⚠️ 风险提示：配资比例高于自有真金，易触发开仓拦截或开仓即爆仓，易产生客诉，请谨慎配置比例。
 - 使用规则：选择“不抵扣类型”时，隐藏使用规则
 
 ## 卡券领取记录
 
-![](https://internal-api-drive-stream-sg.larksuite.com/space/api/box/stream/download/authcode/?code=N2IyMzY3NjkyZGQ5ODgyYWM1YWRkNTk0M2EwNGMwZjdfNzVhMzRhMDdjZWJkNzZiM2ZiZDVkOWZiZTRkNGY1NWRfSUQ6NzY3MjcwNTE3MjQ5MDU1NTEwMV8xNzg2NDY3ODY0OjE3ODY0NzE0NjRfVjM)
+![The image shows a card voucher record interface. It has columns including UID, activity name, card code, card type, card status, original status, source, card name, source, currency, amount/ratio, used amount, remaining amount, due unused amount, usage times, status, original status, and issue time. There are search and reset buttons, and a "Export to csv" option. Below, there are three voucher records: one from "合约质押金" (margin) with USDT 50, another from "合约质押金300USDT" (margin) with USDT 300, and a third from "合约质押金" (margin) with USDT 50. The used amount column is highlighted in blue.](https://internal-api-drive-stream-sg.larksuite.com/space/api/box/stream/download/authcode/?code=MzUwYjJiOTBlNGMwNWNhYWNkYjNhM2YwNjYwMjBkYmZfMDMwNjllMTY2ZWRlZWNlZmQxZWY0N2U3ZWE3NzhmODZfSUQ6NzY3MjcwNTE3MjQ5MDU1NTEwMV8xNzg2NjIzNDQzOjE3ODY2MjcwNDNfVjM)
 
 增强体验金：
 
 - ~~已使用金额 = 当前正处于委托冻结或仓位占用中的增强体验金金额，会随撤单、开仓和平仓实时变化。~~
+- 已使用金额 =0 。未产生实际消耗
 - ~~剩余金额= 总-已使用金额~~
 - 到期未使用金额= 体验金总额 ~~- 历史最大的开仓占用金额~~
 
 ## 卡券使用记录
 
-
-
-![](https://internal-api-drive-stream-sg.larksuite.com/space/api/box/stream/download/authcode/?code=YWZmNTAxZmNjMzEzMWI5ZGMyY2RkN2IyODA5OTExOTZfNmUyNDhiZWU2NmY1YmE2ZTZiMWFjOWJjNDUzYjI2OTJfSUQ6NzY3MjcwNzIxMjg0NTg3OTAwN18xNzg2NDY3ODY0OjE3ODY0NzE0NjRfVjM)
+![The image shows a card usage record interface in a system. It has a search bar with fields like UID, activity name, card code, etc., and a "Search" button. Below, there's a table with columns: Time, Card ID, Activity Name, Card Code, Card Name, Card Type, Business Type, Usage Scenario, Currency, Amount, and User Yield. The "Amount" column is highlighted in red, showing specific values such as 0.002, 0.0248, 0.0174, 0.00002. This relates to the context about card usage records where the amount is the effective historical maximum position occupied during the card's validity period.](https://internal-api-drive-stream-sg.larksuite.com/space/api/box/stream/download/authcode/?code=ODZkY2FlMzdlYmVjMzQ2YzQwMzQ1NjEyNjRlM2EzYTZfMGQ1YzFjNDJlY2VhMTdhZWMwOWFlYWYwMDFlY2YwZDlfSUQ6NzY3MjcwNzIxMjg0NTg3OTAwN18xNzg2NjIzNDQzOjE3ODY2MjcwNDNfVjM)
 
  ~~金额= 卡券有效期内历史最大仓位占用金额~~
 

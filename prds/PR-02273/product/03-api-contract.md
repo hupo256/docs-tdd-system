@@ -169,6 +169,7 @@ Mock 是临时脚手架，真实接口就绪 + §5 对账通过后**立即删光
 
 | 文案 ID | 页面/组件 | 来源 | Owner | zh-CN key | 默认中文（逐字原文） | 动态变量 | 展示条件 | 状态 |
 |---------|-----------|------|-------|-----------|----------|----------|----------|------|
+| `copy.admin.rebateRatioRisk` | apps/admin 卡券管理·配置申请（配资比例字段下方） | 群补充 2026-08-13 PM Iris.ex | PM Iris | `<admin-ns>:coupon.rebateRatioRisk` | `⚠️ 风险提示：配资比例高于自有真金，易触发开仓拦截或开仓即爆仓，易产生客诉，请谨慎配置比例。` | 无 | 仅当体验金类型=「不可抵扣类型」增强体验金时展示；红字静态；后台不做强制拦截 | 待确认（截图 mockup 作「请合理配置比例」，以 PM 群消息「请谨慎配置比例」为准，见 06 §待确认） |
 | `copy.foo.title` | `FooHeader` | PRD §x / Figma node | PM / Design | `<namespace>:foo.title` | `待填` | 无 | 始终展示 | 待确认 / 已确认 / 已落地 |
 | `copy.foo.amountTip` | `FooCard` | API `rewardDescription` / PRD §x | Backend / PM | `<namespace>:foo.amountTip` | `待填 {{amount}} {{coin}}` | `amount: string`；`coin: string` | `rewardDescription` 为空则不渲染 | 待确认 / 已确认 / 已落地 |
 
