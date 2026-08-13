@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-08-13T12:43:27.283Z",
+  "generatedAt": "2026-08-13T13:45:06.595Z",
   "tool": "run-project-gate.mjs",
   "projectId": "PR-02273",
-  "gate": "G4",
+  "gate": "G5",
   "ok": false,
   "summary": {
-    "total": 61,
-    "ok": 58,
+    "total": 72,
+    "ok": 70,
     "warn": 0,
     "waived": 0,
-    "fail": 3
+    "fail": 2
   },
   "groups": {
     "documentation": {
-      "total": 55,
-      "ok": 52,
+      "total": 66,
+      "ok": 64,
       "warn": 0,
       "waived": 0,
-      "fail": 3
+      "fail": 2
     },
     "implementation": {
       "total": 6,
@@ -239,7 +239,7 @@
     {
       "ruleId": "DOC-PRD-010",
       "ok": true,
-      "message": "remote PRD content hash matches intake baseline (cached 37s ago): 需求 PRD (revision 2547)",
+      "message": "remote PRD content hash matches intake baseline (cached 2s ago): 需求 PRD (revision 2547)",
       "file": "../docs_tdd/prds/PR-02273/agent/prd-source-manifest.json",
       "severity": "error",
       "category": "documentation"
@@ -422,8 +422,8 @@
     },
     {
       "ruleId": "DOC-G4-001",
-      "ok": false,
-      "message": "technical design reuse inventory has no blocking placeholders: 待填写, 待检查",
+      "ok": true,
+      "message": "technical design reuse inventory has no blocking placeholders",
       "file": "../docs_tdd/prds/PR-02273/product/02-technical-design.md",
       "severity": "error",
       "category": "documentation"
@@ -454,7 +454,7 @@
     },
     {
       "ruleId": "DOC-G4-005",
-      "ok": false,
+      "ok": true,
       "message": "single-source ownership inventory has no unresolved placeholders",
       "file": "../docs_tdd/prds/PR-02273/product/02-technical-design.md",
       "severity": "error",
@@ -470,26 +470,114 @@
     },
     {
       "ruleId": "DOC-G4-007",
-      "ok": false,
+      "ok": true,
       "message": "data-flow and layer contract inventory has no unresolved placeholders",
       "file": "../docs_tdd/prds/PR-02273/product/02-technical-design.md",
       "severity": "error",
       "category": "documentation"
     },
     {
-      "ruleId": "GIT-G4-001",
+      "ruleId": "DOC-G5-001",
       "ok": true,
-      "message": "current branch is feature/PR-02273 (feature/* tolerated); got feature/PR-02273",
-      "file": "../docs_tdd/prds/PR-02273",
+      "message": "API contract records field reconciliation",
+      "file": "../docs_tdd/prds/PR-02273/product/03-api-contract.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G5-002",
+      "ok": true,
+      "message": "API contract records mock status/removal result",
+      "file": "../docs_tdd/prds/PR-02273/product/03-api-contract.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G5-003",
+      "ok": true,
+      "message": "API contract records copy contract table",
+      "file": "../docs_tdd/prds/PR-02273/product/03-api-contract.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G5-004",
+      "ok": true,
+      "message": "completed tasks contain no unresolved contract assumptions",
+      "file": "../docs_tdd/prds/PR-02273/product/04-frontend-tasks.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "CODE-MSW-004",
+      "ok": true,
+      "message": "new feature mock route is MSW route B or explicitly documented",
+      "file": "../docs_tdd/prds/PR-02273/product/03-api-contract.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "CODE-MSW-001",
+      "ok": true,
+      "message": "MSW route B records contract/schema verification",
+      "file": "../docs_tdd/prds/PR-02273/product/03-api-contract.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "CODE-MSW-003",
+      "ok": true,
+      "message": "MSW route B records handler removal/disable or test-only disposition before G6 handoff",
+      "file": "../docs_tdd/prds/PR-02273/product/03-api-contract.md",
       "severity": "warn",
       "category": "documentation"
     },
     {
-      "ruleId": "GIT-G4-002",
+      "ruleId": "VERIFY-G5-001",
       "ok": true,
-      "message": "HEAD descends from current origin/online",
+      "message": "agent/stage-status.json records the G5 integration disposition",
+      "file": "../docs_tdd/prds/PR-02273/agent/stage-status.json",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "VERIFY-G5-002",
+      "ok": false,
+      "message": "G5 status is completed or not-applicable (got pending)",
+      "file": "../docs_tdd/prds/PR-02273/agent/stage-status.json",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "VERIFY-G5-003",
+      "ok": false,
+      "message": "G5 completion has existing evidence paths, or not-applicable has a concrete reason",
+      "file": "../docs_tdd/prds/PR-02273/agent/stage-status.json",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "CODE-MOCK-002",
+      "ok": true,
+      "message": "mock residue grep is empty in responsibility modules",
       "file": "../docs_tdd/prds/PR-02273",
       "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "CODE-MSW-002",
+      "ok": true,
+      "message": "MSW route B leaves no business mock switch residue in responsibility modules",
+      "file": "../docs_tdd/prds/PR-02273",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "CODE-ASSUMED-001",
+      "ok": true,
+      "message": "no `// ASSUMED:` residue in responsibility modules",
+      "file": "../docs_tdd/prds/PR-02273",
+      "severity": "warn",
       "category": "documentation"
     },
     {
@@ -503,7 +591,7 @@
     {
       "ruleId": "DOC-BLOCK-002",
       "ok": true,
-      "message": "无到达当前阶段(G4)仍未解除的阻塞",
+      "message": "无到达当前阶段(G5)仍未解除的阻塞",
       "file": "../docs_tdd/prds/PR-02273/agent/blockers.json",
       "severity": "error",
       "category": "documentation"
@@ -519,24 +607,32 @@
   ],
   "commands": [
     {
-      "label": "verify-project-gate PR-02273 G4",
+      "label": "verify-project-gate PR-02273 G5",
       "status": 1,
       "ok": false,
-      "startedAt": "2026-08-13T12:43:27.117Z",
-      "finishedAt": "2026-08-13T12:43:27.282Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02273/2026-08-13T12-43-27-117Z-verify-project-gate-g4.log"
+      "startedAt": "2026-08-13T13:45:05.764Z",
+      "finishedAt": "2026-08-13T13:45:06.055Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02273/2026-08-13T13-45-05-764Z-verify-project-gate-g5.log"
+    },
+    {
+      "label": "verify-code-rules --project PR-02273",
+      "status": 0,
+      "ok": true,
+      "startedAt": "2026-08-13T13:45:06.056Z",
+      "finishedAt": "2026-08-13T13:45:06.595Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02273/2026-08-13T13-45-06-056Z-verify-code-rules.log"
     },
     {
       "label": "update-project-index --write",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-08-13T12:43:27.509Z",
-      "finishedAt": "2026-08-13T12:43:27.573Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02273/2026-08-13T12-43-27-509Z-update-project-index.log"
+      "startedAt": "2026-08-13T13:45:06.836Z",
+      "finishedAt": "2026-08-13T13:45:06.904Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02273/2026-08-13T13-45-06-836Z-update-project-index.log"
     }
   ],
   "codeRules": {
-    "required": false,
+    "required": true,
     "skipped": false,
     "reason": "",
     "ok": true
@@ -550,9 +646,9 @@
     "baselineFile": null
   },
   "source": {
-    "gateCommand": "/Users/aven/.nvm/versions/node/v24.7.0/bin/node /Users/aven/github/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-02273 G4 --json",
+    "gateCommand": "/Users/aven/.nvm/versions/node/v24.7.0/bin/node /Users/aven/github/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-02273 G5 --json",
     "parseError": null,
-    "codeRulesCommand": null,
+    "codeRulesCommand": "/Users/aven/.nvm/versions/node/v24.7.0/bin/node /Users/aven/github/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --project PR-02273 --json",
     "codeRulesParseError": null,
     "buildQualityCommand": null,
     "buildQualityParseError": null
@@ -564,12 +660,12 @@
     "dirtyFileCount": 0,
     "untrackedFileCount": 0,
     "rulesetVersion": "local-2026.07-msw-v1",
-    "ruleReleaseFingerprint": "1b32d4c3809f9aefa6c6acd2e15a0f5b5c316c864b6ee1a42ad20f38b5416cd3",
-    "effectiveRulesFingerprint": "dedc508de42c91a5209dcda7e39461cb533fbf7d860f390fa385ca599c290890"
+    "ruleReleaseFingerprint": "323a3efbef248c213badcf00593b2cba721cd4595012814702e89ae36c45a2f6",
+    "effectiveRulesFingerprint": "880094f646f3b229d986d82806ce068bcecf01095b2e62bec9285c8ba9a39c2d"
   },
   "cache": {
     "hit": false,
-    "fingerprint": "4b92bc8605db632e"
+    "fingerprint": "03ebe21fb2404ced"
   },
   "stageSync": {
     "attempted": false,

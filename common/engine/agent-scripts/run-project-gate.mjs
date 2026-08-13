@@ -11,6 +11,7 @@ import { appendGateHistory, createFingerprint, gateCacheFingerprint } from './li
 import { formatEvidenceRunId, renderEvidence, summarizeCommand } from './lib/gate-evidence.mjs'
 import { buildQualityGuardCheck, derivePayloadOk, parseJsonOutput, selfTest, shouldUseGateCache, summarizeChecks, syncCommandSummary } from './lib/gate-payload.mjs'
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
+import { resolveRuleSessionClient } from './lib/rule-session.mjs'
 import { requireRuleSession } from './lib/rule-session-runtime.mjs'
 import { persistRunLog as persistRunLogRaw, printFailureSummary, run } from './lib/run-log.mjs'
 import { loadLedger, recordFindings, saveLedger } from './warn-ledger.mjs'
@@ -125,7 +126,7 @@ if (!existsSync(projectDir)) fail(`project directory does not exist: ${relative(
 if (codeRuleGates.includes(gate)) {
   const release = JSON.parse(readFileSync(join(docsRoot, 'common/rule-release.json'), 'utf8'))
   const effectiveRules = JSON.parse(readFileSync(join(docsRoot, 'common/effective-rules.json'), 'utf8'))
-  if (!requireRuleSession(projectId, callerCwd, { currentFingerprint: release.fingerprint }, { currentFingerprint: effectiveRules.fingerprint })) {
+  if (!requireRuleSession(projectId, callerCwd, { currentFingerprint: release.fingerprint }, { currentFingerprint: effectiveRules.fingerprint }, resolveRuleSessionClient())) {
     fail(`rerun docs-tdd context ${projectId} <coding-scenario>`)
   }
 }

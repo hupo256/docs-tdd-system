@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "ruleId": "CODE-MSW-004",
+    "file": "apps/web",
+    "reason": "fameex-web 无任何 MSW 基建（无 msw 依赖、无 src/mocks/、无 browser.ts/useMockWorker）。为单需求引入 MSW 需改全局 Providers.tsx，属 change-scope-boundary §2.1「触碰全局契约文件一律阻塞」，且违反复用优先/不为单次使用引入抽象。替代隔离方案采用仓库原生约定：schema/mapper 第一天按真实契约写 + Vitest 契约测试覆盖 normal/empty/error/unauthorized/edge（范例 services/api/marketing/contractCarnival/schemas.test.ts），运行期 mock 仅 dev-only /api/mock getMockUrl+isMock（现网默认停用），业务代码不出现 mock 分支，结构上无残留（CODE-MOCK-002/CODE-MSW-002 保持零残留断言）。owner 到期条件=后端接口 ready。",
+    "owner": "aven（负责人）",
+    "expiresAt": "2026-10-31"
+  }
+]
