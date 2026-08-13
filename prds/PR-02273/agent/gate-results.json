@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-08-13T12:42:51.086Z",
+  "generatedAt": "2026-08-13T12:43:27.283Z",
   "tool": "run-project-gate.mjs",
   "projectId": "PR-02273",
-  "gate": "G3",
-  "ok": true,
+  "gate": "G4",
+  "ok": false,
   "summary": {
-    "total": 52,
-    "ok": 52,
+    "total": 61,
+    "ok": 58,
     "warn": 0,
     "waived": 0,
-    "fail": 0
+    "fail": 3
   },
   "groups": {
     "documentation": {
-      "total": 46,
-      "ok": 46,
+      "total": 55,
+      "ok": 52,
       "warn": 0,
       "waived": 0,
-      "fail": 0
+      "fail": 3
     },
     "implementation": {
       "total": 6,
@@ -239,7 +239,7 @@
     {
       "ruleId": "DOC-PRD-010",
       "ok": true,
-      "message": "remote PRD content hash matches intake baseline: 需求 PRD (revision 2547)",
+      "message": "remote PRD content hash matches intake baseline (cached 37s ago): 需求 PRD (revision 2547)",
       "file": "../docs_tdd/prds/PR-02273/agent/prd-source-manifest.json",
       "severity": "error",
       "category": "documentation"
@@ -421,6 +421,78 @@
       "category": "implementation"
     },
     {
+      "ruleId": "DOC-G4-001",
+      "ok": false,
+      "message": "technical design reuse inventory has no blocking placeholders: 待填写, 待检查",
+      "file": "../docs_tdd/prds/PR-02273/product/02-technical-design.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G4-002",
+      "ok": true,
+      "message": "technical design contains reuse inventory",
+      "file": "../docs_tdd/prds/PR-02273/product/02-technical-design.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G4-003",
+      "ok": true,
+      "message": "technical design does not contain skipped-reuse wording",
+      "file": "../docs_tdd/prds/PR-02273/product/02-technical-design.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G4-004",
+      "ok": true,
+      "message": "technical design template v2 contains single-source ownership inventory",
+      "file": "../docs_tdd/prds/PR-02273/product/02-technical-design.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G4-005",
+      "ok": false,
+      "message": "single-source ownership inventory has no unresolved placeholders",
+      "file": "../docs_tdd/prds/PR-02273/product/02-technical-design.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G4-006",
+      "ok": true,
+      "message": "technical design template v3 contains data-flow and layer contract inventory",
+      "file": "../docs_tdd/prds/PR-02273/product/02-technical-design.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G4-007",
+      "ok": false,
+      "message": "data-flow and layer contract inventory has no unresolved placeholders",
+      "file": "../docs_tdd/prds/PR-02273/product/02-technical-design.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "GIT-G4-001",
+      "ok": true,
+      "message": "current branch is feature/PR-02273 (feature/* tolerated); got feature/PR-02273",
+      "file": "../docs_tdd/prds/PR-02273",
+      "severity": "warn",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "GIT-G4-002",
+      "ok": true,
+      "message": "HEAD descends from current origin/online",
+      "file": "../docs_tdd/prds/PR-02273",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
       "ruleId": "DOC-BLOCK-001",
       "ok": true,
       "message": "blockers.json 合法（0 条登记）",
@@ -431,7 +503,7 @@
     {
       "ruleId": "DOC-BLOCK-002",
       "ok": true,
-      "message": "无到达当前阶段(G3)仍未解除的阻塞",
+      "message": "无到达当前阶段(G4)仍未解除的阻塞",
       "file": "../docs_tdd/prds/PR-02273/agent/blockers.json",
       "severity": "error",
       "category": "documentation"
@@ -447,20 +519,20 @@
   ],
   "commands": [
     {
-      "label": "verify-project-gate PR-02273 G3",
-      "status": 0,
-      "ok": true,
-      "startedAt": "2026-08-13T12:42:50.246Z",
-      "finishedAt": "2026-08-13T12:42:51.085Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02273/2026-08-13T12-42-50-246Z-verify-project-gate-g3.log"
+      "label": "verify-project-gate PR-02273 G4",
+      "status": 1,
+      "ok": false,
+      "startedAt": "2026-08-13T12:43:27.117Z",
+      "finishedAt": "2026-08-13T12:43:27.282Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02273/2026-08-13T12-43-27-117Z-verify-project-gate-g4.log"
     },
     {
-      "label": "set-project-stage PR-02273 G3",
+      "label": "update-project-index --write",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-08-13T12:42:51.321Z",
-      "finishedAt": "2026-08-13T12:42:51.452Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02273/2026-08-13T12-42-51-321Z-set-project-stage.log"
+      "startedAt": "2026-08-13T12:43:27.509Z",
+      "finishedAt": "2026-08-13T12:43:27.573Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02273/2026-08-13T12-43-27-509Z-update-project-index.log"
     }
   ],
   "codeRules": {
@@ -478,7 +550,7 @@
     "baselineFile": null
   },
   "source": {
-    "gateCommand": "/Users/aven/.nvm/versions/node/v24.7.0/bin/node /Users/aven/github/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-02273 G3 --json",
+    "gateCommand": "/Users/aven/.nvm/versions/node/v24.7.0/bin/node /Users/aven/github/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-02273 G4 --json",
     "parseError": null,
     "codeRulesCommand": null,
     "codeRulesParseError": null,
@@ -497,10 +569,10 @@
   },
   "cache": {
     "hit": false,
-    "fingerprint": "6fe805c43de22d63"
+    "fingerprint": "4b92bc8605db632e"
   },
   "stageSync": {
-    "attempted": true,
-    "ok": true
+    "attempted": false,
+    "ok": false
   }
 }
