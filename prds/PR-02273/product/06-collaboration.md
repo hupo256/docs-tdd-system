@@ -24,6 +24,7 @@
 | 2026-08-11 | **C 端「使用规则展示 --」列位**：PRD 文字写"使用规则"，img-004 列头为「可用杠杆范围」显示 --，以现网实际列名为准 | F05 字段定位 | Agent（G4 盘点） | 待 G4 |
 | 2026-08-11 | **API 字段/枚举清单**：可用体验金/使用中体验金/配资比例/状态枚举/到期未使用金额，MSW mock 需先定契约 | G3 | 后端/负责人 | 待 G3 |
 | 2026-08-13 | **风险提示文案逐字冲突**：PM 群消息作「请**谨慎**配置比例」，截图 mockup 作「请**合理**配置比例」。当前以 PM 群消息为准（谨慎）落 `copy.admin.rebateRatioRisk`；实现前请 PM 二次确认字面 | F09 文案 | PM Iris | 待 PM 确认 |
+| 2026-08-13 | **F07 强平价 bonus 剔除增强体验金的口径**：G5 编码确认——F08 保证金率已剔除增强体验金（`calcCrossMarginRate` 移除 `.plus(enhancedTrialNum)`，数据源 `trialFeeRecordList` 已拆分，纯函数单测锁定）。但 F07 强平价 `bonus` 现取 `useEffectiveTrialAmount().availableTrialBalance`（普通+增强合并，「已抵扣仓位占用」净值）。剔除增强需改 hook 传入普通值，候选=后端 `normalTrialBalance` 或 `availableTrialBalance - enhancedTrialBalance`；但 `normalTrialBalance`/`enhancedTrialBalance` 是否与 `availableTrialBalance` 同为「已抵扣占用」净口径未确认。**按 change-scope §2.1「改既有实盘计算不能自证无回归即阻塞」，本期不落 hook bonus 来源改动**，仅落基础无关的 liq.formulas 纯函数单测；待后端确认字段口径后一并对账 | F07 强平价 hook（useEstimatedLiqPrice/usePositionLiqPrice）bonus 来源 | 合约后端 / 负责人 | 待后端确认字段口径 |
 
 ## 假设（未确认前不写业务代码）
 

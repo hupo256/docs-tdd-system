@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "fingerprint": "880094f646f3b229d986d82806ce068bcecf01095b2e62bec9285c8ba9a39c2d",
-  "publishedAt": "2026-08-13T13:44:46.565Z",
+  "fingerprint": "c648c1372b30d92ce99659236a1ca5929e72822c2f09c9cbd9589e9fe9e2522d",
+  "publishedAt": "2026-08-13T14:49:17.465Z",
   "l3RuleReleaseFingerprint": "323a3efbef248c213badcf00593b2cba721cd4595012814702e89ae36c45a2f6",
   "clientMatrix": {
     "codex": {
@@ -556,7 +556,7 @@
     ".cursor/rules/client-passive-event-listeners.mdc": "6b43af3a0be0b5cdf9a566073231e813c25d281d52e5677b1e93385396d9394e",
     ".cursor/rules/client-swr-dedup.mdc": "cbf41117d290ca8b722272e95ab97b304846de6c0e4e2f0d1c2eba6213ba0a36",
     ".cursor/rules/definition-of-done.mdc": "0e00a0cd980ed88963a61d6e787b9d824e49dfca18cb5afd06d3ecf67d5f069d",
-    ".cursor/rules/frontend-harness.mdc": "add4ea2ed820007f2afee68e8d72979333d01a5c1c73e394505f96793dc951ca",
+    ".cursor/rules/frontend-harness.mdc": "7743a7347638e7c11c9deafdf7c19cd0f8b753ce0045c1c5dd6eaffbfda965ae",
     ".cursor/rules/js-batch-dom-css.mdc": "070c9f7f317737d250054cf2f968e66377922c7540320cb754b4e35f1dacb3a7",
     ".cursor/rules/js-cache-function-results.mdc": "8699bc5a56c41ef621268013a22caca2c25e49c45c3e9d638b3bc8c0a7c44b95",
     ".cursor/rules/js-cache-property-access.mdc": "246aea1625350af13ad38315743b65fb7d8976cb23c2334d6a6c4f5cc9067c18",

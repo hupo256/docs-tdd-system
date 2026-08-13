@@ -3,9 +3,13 @@
   "stages": {
     "G5": {
       "status": "pending",
-      "reason": "待完成真实 API 联调，或确认本项目无 API 联调范围。",
-      "evidence": [],
-      "updatedAt": "2026-08-11"
+      "reason": "G5 部分交付（增强体验金保证金模式）。【已落码+单测】F08 保证金率剔除增强体验金：calcCrossMarginRate 移除 .plus(enhancedTrialNum)（数据源 trialFeeRecordList 已拆分），marginRate.test.ts 8 例 + liq.formulas.test.ts 10 例纯函数单测全绿，tsc/biome 改动文件零报错；F09 admin 配资比例风险提示：rebateRatioRisk 逐字文案落 zh-CN + SearchForm 条件红字 UI + rebateRatioRisk.copy.test.ts 逐字断言。【阻塞待后端/PM】F07 强平价 bonus 剔除增强体验金：现取 availableTrialBalance（普通+增强合并），改 hook 传普通值需确认 normalTrialBalance/availableTrialBalance 的 net/gross 口径，按 change-scope §2.1 改既有实盘计算不能自证无回归即阻塞，待后端确认字段口径（见 06-collaboration §待办）；F09 「不可抵扣类型」trialMode 枚举值 ASSUMED=3 待后端销账；F01/F09 文案「谨慎 vs 合理」待 PM 二次确认。【本会话未实现】F01 C端文案（需 PRD 逐字原文）、F02-F06 C端卡片/弹窗/记录/金额口径、F10-F13 admin 记录/存量兼容。真实 API/契约到位后继续对账并补齐。",
+      "evidence": [
+        "../../PR-02273/apps/web/src/apps/Futures/utils/marginRate.test.ts",
+        "../../PR-02273/apps/web/src/apps/Futures/utils/liq/liq.formulas.test.ts",
+        "../../PR-02273/apps/admin/src/apps/TrialBalanceCreateOrder/rebateRatioRisk.copy.test.ts"
+      ],
+      "updatedAt": "2026-08-13"
     },
     "G7": {
       "status": "pending",

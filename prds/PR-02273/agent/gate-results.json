@@ -1,21 +1,21 @@
 {
-  "generatedAt": "2026-08-13T13:45:06.595Z",
+  "generatedAt": "2026-08-13T14:49:20.836Z",
   "tool": "run-project-gate.mjs",
   "projectId": "PR-02273",
   "gate": "G5",
   "ok": false,
   "summary": {
     "total": 72,
-    "ok": 70,
-    "warn": 0,
+    "ok": 69,
+    "warn": 1,
     "waived": 0,
     "fail": 2
   },
   "groups": {
     "documentation": {
       "total": 66,
-      "ok": 64,
-      "warn": 0,
+      "ok": 63,
+      "warn": 1,
       "waived": 0,
       "fail": 2
     },
@@ -574,8 +574,8 @@
     },
     {
       "ruleId": "CODE-ASSUMED-001",
-      "ok": true,
-      "message": "no `// ASSUMED:` residue in responsibility modules",
+      "ok": false,
+      "message": "`// ASSUMED:` residue (reconcile & clear per §8.0.2):\napps/admin/src/apps/TrialBalanceCreateOrder/components/SearchForm.tsx:44:  // ASSUMED: 「不可抵扣类型」增强体验金的 trialMode 枚举值待后端确认——现网 TrialMode 仅",
       "file": "../docs_tdd/prds/PR-02273",
       "severity": "warn",
       "category": "documentation"
@@ -610,25 +610,25 @@
       "label": "verify-project-gate PR-02273 G5",
       "status": 1,
       "ok": false,
-      "startedAt": "2026-08-13T13:45:05.764Z",
-      "finishedAt": "2026-08-13T13:45:06.055Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02273/2026-08-13T13-45-05-764Z-verify-project-gate-g5.log"
+      "startedAt": "2026-08-13T14:49:19.882Z",
+      "finishedAt": "2026-08-13T14:49:20.164Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02273/2026-08-13T14-49-19-882Z-verify-project-gate-g5.log"
     },
     {
       "label": "verify-code-rules --project PR-02273",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-08-13T13:45:06.056Z",
-      "finishedAt": "2026-08-13T13:45:06.595Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02273/2026-08-13T13-45-06-056Z-verify-code-rules.log"
+      "startedAt": "2026-08-13T14:49:20.165Z",
+      "finishedAt": "2026-08-13T14:49:20.836Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02273/2026-08-13T14-49-20-165Z-verify-code-rules.log"
     },
     {
       "label": "update-project-index --write",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-08-13T13:45:06.836Z",
-      "finishedAt": "2026-08-13T13:45:06.904Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02273/2026-08-13T13-45-06-836Z-update-project-index.log"
+      "startedAt": "2026-08-13T14:49:21.077Z",
+      "finishedAt": "2026-08-13T14:49:21.139Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02273/2026-08-13T14-49-21-077Z-update-project-index.log"
     }
   ],
   "codeRules": {
@@ -655,17 +655,17 @@
   },
   "fingerprint": {
     "headSha": "89b133bd97731ded391a0cb3ceefa24eb3fe7c02",
-    "baseSha": "89b133bd97731ded391a0cb3ceefa24eb3fe7c02",
-    "dirtyHash": "ee91fec5beef70258d3f4e44aecf6ef1a5b8611e240a82b4d77c17fe7172f806",
-    "dirtyFileCount": 0,
-    "untrackedFileCount": 0,
+    "baseSha": "d6d911aec05d78652d701ceaa7d8c986c364bed6",
+    "dirtyHash": "450547ac3fadaf99b0c953a815f4f6b19f6c8f37bf681c6e55c5868fe31eb5d0",
+    "dirtyFileCount": 6,
+    "untrackedFileCount": 3,
     "rulesetVersion": "local-2026.07-msw-v1",
     "ruleReleaseFingerprint": "323a3efbef248c213badcf00593b2cba721cd4595012814702e89ae36c45a2f6",
-    "effectiveRulesFingerprint": "880094f646f3b229d986d82806ce068bcecf01095b2e62bec9285c8ba9a39c2d"
+    "effectiveRulesFingerprint": "c648c1372b30d92ce99659236a1ca5929e72822c2f09c9cbd9589e9fe9e2522d"
   },
   "cache": {
     "hit": false,
-    "fingerprint": "03ebe21fb2404ced"
+    "fingerprint": "08fe6be835ef5e17"
   },
   "stageSync": {
     "attempted": false,
