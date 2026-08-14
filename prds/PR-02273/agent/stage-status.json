@@ -3,12 +3,13 @@
   "stages": {
     "G5": {
       "status": "pending",
-      "reason": "G5 部分交付（增强体验金保证金模式）。【已落码+单测】F08 保证金率剔除增强体验金（calcCrossMarginRate 移除 .plus(enhancedTrialNum)，marginRate.test.ts 8 例 + liq.formulas.test.ts 10 例全绿）；F09 admin 配资比例风险提示（rebateRatioRisk 逐字文案 + SearchForm 条件红字 + copy 断言，ASSUMED trialMode=3 门控）；F04 详情弹窗增强专版（提示说明/配资比例/可用·使用中体验金/已领取/隐藏使用规则+查看使用详情，enhancedTrialCopy.test.ts 5 例）；F03 领取弹窗提示说明文案对齐 PRD（enhancedTrialTip + 断言）。tsc/biome 改动文件零报错。【已核实无需改】F05 领取记录：现网 leverageRange「可用杠杆范围」列已对增强(trialMode≠'1')展示 '--'。【阻塞待后端/PM】F07 强平价 bonus 剔除增强（待后端确认 normalTrialBalance net/gross 口径，change-scope §2.1 阻塞）；F09 不可抵扣枚举 ASSUMED=3 待后端；F09/F01 文案谨慎vs合理待 PM。【需独立重构后再落】F02 卡片去「已使用完」(RewardCard 441 行)、F03 抵扣比例→配资比例 label+隐藏使用方式行(ActivateCouponModal 441 行)——均 >300 触发 CODE-FILE-001，需先拆分子组件。【本会话未做】F06 金额口径、F10-F13 admin 记录/存量兼容。真实 API/契约到位后继续对账补齐。",
+      "reason": "G5 部分交付（增强体验金保证金模式）。【已落码+单测】F08 保证金率剔除增强体验金（marginRate.test.ts 8 + liq.formulas.test.ts 10）；F09 admin 配资比例风险提示（逐字文案+条件红字+断言，ASSUMED trialMode=3 门控）；F04 详情弹窗增强专版（enhancedTrialCopy.test.ts 5）；F03 领取弹窗（按可复用重构 useActivateCouponModal+parts+瘦视图，落提示说明/配资比例/隐藏使用方式，2 断言）；F02 卡片（按可复用重构 rewardCardModel+rewardCardCopy+瘦身，落增强 Used→已失效，4 例）。tsc/biome 改动文件零报错。【已核实无需前端改】F05 领取记录 leverageRange 列已对增强展示 '--'；F10 到期未使用金额 expiredAmount 为后端字段直显（口径改在后端）。【阻塞待后端/PM】F07 强平价 bonus 剔除增强（待后端确认 normalTrialBalance net/gross 口径，change-scope §2.1 阻塞）；F09 不可抵扣枚举 ASSUMED=3 待后端；F09/F01 文案谨慎vs合理待 PM。【后端主导/前端待对账】F06 金额口径（可用体验金=总额-使用中，依赖后端委托冻结/开仓占用字段）；F11 增强无使用记录；F13 存量兼容（停增量不动存量，前端容忍旧态）。真实 API/契约到位后继续对账补齐。",
       "evidence": [
         "../../PR-02273/apps/web/src/apps/Futures/utils/marginRate.test.ts",
         "../../PR-02273/apps/web/src/apps/Futures/utils/liq/liq.formulas.test.ts",
         "../../PR-02273/apps/web/src/apps/Assets/components/BonusDetailMan/enhancedTrialCopy.test.ts",
         "../../PR-02273/apps/web/src/apps/MyRewards/enhancedTrialTip.copy.test.ts",
+        "../../PR-02273/apps/web/src/apps/MyRewards/components/rewardCardCopy.test.ts",
         "../../PR-02273/apps/admin/src/apps/TrialBalanceCreateOrder/rebateRatioRisk.copy.test.ts"
       ],
       "updatedAt": "2026-08-14"
