@@ -10,19 +10,19 @@
 | ID | 功能 ID | 需求依据 | 任务 | 状态 | 验收证据 |
 |----|---------|----------|------|------|----------|
 | T00 | F01 | `PRD-TABLE-004` `PRD-TABLE-005` | G0/G1 完成 PRD intake、9 张原型已读、manifest 全 resolved、G2 scope 定稿 | 完成 | `agent/prd-source-manifest.json` + `00-feature-inventory.md` |
-| T01 | F01 | `PRD-TABLE-004` §名词解释 | 文案口径统一：i18n 增强体验金保证金模式文案（「可与自有资金一起作为合约保证金使用，盈利可全部提取」） | 待办 | 待 |
-| T02 | F02 | `PRD-IMG-017` | 福利中心卡片：状态收敛去「已使用完」，按钮 领取/去使用/已失效，提示文案 | 待办 | 待 |
-| T03 | F01 | G3 API 未 ready 时补齐 MSW handler / 契约测试 / dev-only worker 注册 | 落 MSW 路线 B：`src/mocks/handlers/<feature>.ts` 覆盖 normal/empty/error/unauthorized/edge + 真实 schema 契约测试 + `useMockWorker()` 仅 dev 注册 | 待办 | G3 gate + `03-api-contract.md` §6.1 |
-| T04 | F03 | `PRD-IMG-018` | 领取弹窗：抵扣比例→配资比例、删「使用方式」、文案改 | 待办 | 待 |
-| T05 | F04 | `PRD-IMG-019` | 详情弹窗增强体验金专版：可用/使用中体验金、配资比例、失效时间、删使用规则、隐藏查看使用详情按钮 | 待办 | 待 |
-| T06 | F05 | `PRD-IMG-020` | C 端领取记录：增强体验金使用规则列展示 --（列名待核） | 待办 | 待 |
-| T07 | F06 | 正文 §体验金总额/§可用 | 金额口径展示：总额=可用+使用中；使用中=委托冻结+开仓占用 | 待办 | 待 |
-| T08 | F07 | 正文预估强平价公式 / `PRD-EMBED-009` | 开仓页预估强平价剔除体验金余额（后端下发对齐展示；G4 核对 PR-01319 现网） | 待办 | 待 |
-| T09 | F08 | 正文保证金率公式（rev2 §8.4） | 持仓保证金率/维持保证金率/强平价展示剔除体验金（rev2 措辞：不计入维持保证金能力，展示口径不变） | 待办 | 待 |
-| T10 | F09 | `PRD-IMG-021` `PRD-IMG-022` `PRD-IMG-023` / 群补充 2026-08-13 | 现货后台体验金申请：不抵扣类型、配资比例、隐藏使用规则（apps/admin）；**新增配资比例风险提示**（红字静态文案，选不可抵扣类型时配资比例字段下方展示，后台不强制拦截；文案 `copy.admin.rebateRatioRisk`） | 待办 | 待 |
-| T11 | F10 | `PRD-IMG-024` | 现货后台卡券领取记录：到期未使用金额口径 | 待办 | 待 |
-| T12 | F11 | `PRD-IMG-025` | 现货后台卡券使用记录：增强体验金无使用记录 | 待办 | 待 |
-| T13 | F13 | `PRD-EMBED-006` | 存量兼容展示层：容忍存量状态/「已使用完」旧态、灰度开关 | 待办 | 待 |
+| T01 | F01 | `PRD-TABLE-004` §名词解释 | 文案口径统一：i18n 增强体验金保证金模式文案（「可与自有资金一起作为合约保证金使用，盈利可全部提取」） | ✅ 完成 | `bonus:enhanced-margin-tip` + `rewards:activateCouponModal.enhancedTrialTip`（逐字断言 enhancedTrialCopy/enhancedTrialTip.copy.test） |
+| T02 | F02 | `PRD-IMG-017` | 福利中心卡片：状态收敛去「已使用完」，按钮 领取/去使用/已失效，提示文案 | ✅ 完成 | commit fbc19d00cd（RewardCard 拆 model+copy，增强 Used→已失效；rewardCardCopy.test 4 例） |
+| T03 | F01 | 不采用 MSW（仓库无 MSW 基建） | ~~落 MSW 路线 B~~ 改走仓库原生 schema-first + Vitest 契约测试；已登记豁免 | ✅ 豁免 | `agent/rule-waivers.json` `CODE-MSW-004`；契约测试范式=schema.parse + copy 断言 |
+| T04 | F03 | `PRD-IMG-018` | 领取弹窗：抵扣比例→配资比例、删「使用方式」、文案改 | ✅ 完成 | commit b3f02c03d0 + 0eb8c6c37c（拆 hook+parts；detailMarginRatio/enhancedTrialTip 断言） |
+| T05 | F04 | `PRD-IMG-019` | 详情弹窗增强体验金专版：可用/使用中体验金、配资比例、失效时间、删使用规则、隐藏查看使用详情按钮 | ✅ 完成 | commit fc784fc74c（DetailTable+index 分支；enhancedTrialCopy.test 5 例） |
+| T06 | F05 | `PRD-IMG-020` | C 端领取记录：增强体验金使用规则列展示 --（列名待核） | ✅ 完成（核实无需改） | 现网 `leverageRange`「可用杠杆范围」列已对增强(trialMode≠'1')展示 `--`（useTrialFeeClaimRecordColumns.tsx） |
+| T07 | F06 | 正文 §体验金总额/§可用 | 金额口径展示：总额=可用+使用中；使用中=委托冻结+开仓占用 | ⏳ 待后端对账 | 金额为后端字段（availableTrialBalance 等）；可用=总额-使用中口径依赖后端委托冻结/开仓占用，待真实接口对账 |
+| T08 | F07 | 正文预估强平价公式 / `PRD-EMBED-009` | 开仓页预估强平价剔除增强体验金（G4 修正：前端本地计算） | 🚧 阻塞待后端 | 现取合并值 availableTrialBalance；改 hook 传普通值需确认 normalTrialBalance net/gross 口径（change-scope §2.1 阻塞，见 06）；liq.formulas.test 10 例已锁公式 |
+| T09 | F08 | 正文保证金率公式（rev2 §8.4） | 持仓保证金率/维持保证金率/强平价展示剔除增强体验金 | ✅ 完成 | commit 286fcedad8（marginRate 移除 .plus(enhancedTrialNum)；marginRate.test 8 例） |
+| T10 | F09 | `PRD-IMG-021` `PRD-IMG-022` `PRD-IMG-023` / 群补充 2026-08-13 | 现货后台体验金申请：不抵扣类型、配资比例、隐藏使用规则（apps/admin）；配资比例风险提示（红字静态，`copy.admin.rebateRatioRisk`） | 🟡 部分完成 | commit 286fcedad8（rebateRatioRisk 逐字文案+条件红字 UI+copy 断言）；⏳「不可抵扣类型」trialMode 枚举 ASSUMED=3、文案谨慎vs合理待后端/PM |
+| T11 | F10 | `PRD-IMG-024` | 现货后台卡券领取记录：到期未使用金额口径 | ✅ 完成（核实无需改） | `expiredAmount` 为后端字段直显（CouponDistributionRecords useColumns），口径改在后端 |
+| T12 | F11 | `PRD-IMG-025` | 现货后台卡券使用记录：增强体验金无使用记录 | ⏳ 待后端对账 | 使用记录由后端返回，增强体验金无记录为后端过滤口径，待真实接口核对 |
+| T13 | F13 | `PRD-EMBED-006` | 存量兼容展示层：容忍存量状态/「已使用完」旧态、灰度开关 | ⏳ 待后端 | 后端「停增量、不动存量、只切开关」；前端仅容忍旧态，待后端上线策略确认 |
 | T14 | F02,F04,F06,F07,F08 | `PRD-TABLE-006` `PRD-TABLE-007` | 按核心验收用例逐项自测勾选 | 阻塞(G6) | `evidence/` |
 | T15 | F14 | 正文 §结算/§状态机/§回收/§强平 | 后端引擎（不做，本仓外）——仅对接 API 字段/状态 | 不做 | — |
 
