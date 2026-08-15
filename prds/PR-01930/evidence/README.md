@@ -68,10 +68,34 @@ Biome：本仓库未配置 Biome，回退为 `verify-code-rules.mjs` globalScan 
 ## 8. 待后端销账（阻塞 G5）
 
 > 2026-08-01 流程审计更正：以下事项会阻塞 G5，完成真实 API 对账前不得进入 G6/G7/G8；“不阻塞前端交付”的旧结论作废。
+> 2026-08-15 更新：后端交付后台核心 4 接口（YAPI 231/770），核心闭环已对账落码（见 §11），下列为**剩余**未销账项。
 
-- 各端占位 type code：admin `114/34`、futures-admin `manual_invalidate_trial`、web `114`
-- 卡券「系统回收」走 `description` vs 新 `recordType` 未定
-- 落点A（数据概览-支出折合-来源明细）已定位页面：「用户管理-用户管理」用户详情页「合约账户」分组「历史收入/支出折合(USDT)」下的「来源」展开区块（用户 2026-07-29 截图确认），依赖 PR-02015（未上线），上线后补【系统回收】类型
+已销账（2026-08-15，见 §11）：
+- ✅ 后台核心 4 接口（A1 列表/导出、A2 汇总、A6 文件解析、A3 执行）路径/方法/DTO/schema 全部按真实契约对齐。
+- ✅ 批量两阶段重构为真实流程（fileData → uploadFlag 汇总 → manualInvalidUploadRows 执行），旧 batchId 语义作废。
+- ✅ requestId 幂等字段按契约移除。
+
+剩余未销账（仍阻塞 G5）：
+- ⚠ **A1 列表缺 `uid` / `positionOccupied`**：PRD 要求「UID」「仓位占用」两列，6028 未返回，现恒显 `--`。需后端补字段（禁用 account 顶替 uid）。
+- ⚠ **批量 `uploadFlag=1` 关联口径**：A2 汇总在文件链路下如何取数（服务端读已上传文件 vs 前端回传去重 uid/configNumber）待后端确认；当前实现走后者。
+- ⚠ **A3 幂等口径**：契约无 requestId，需后端确认服务端幂等/防重放机制。
+- ⚠ **模板下载接口**：批量弹窗「下载模板」路径仍占位，未在本批 4 接口交付。
+- ⚠ **F17-F23 各端资金流水枚举码**：admin `114/34`、futures-admin `manual_invalidate_trial`、web `114` 仍为占位；本批接口（含体验金流水 2815）均未暴露「手动失效」业务类型码。PR-02015 legacy-admin dictionary 候选真值 `103/48` 仅供参考，PR-02015 未上线。
+- 卡券「系统回收」走 `description` vs 新 `recordType` 未定。
+- 落点A（数据概览-支出折合-来源明细）依赖 PR-02015（未上线），上线后补【系统回收】类型。
+
+## 11. 后端核心 4 接口对账落码（2026-08-15）
+
+后端交付 YAPI project 231 / catid 770 的 4 个后台核心接口，已按真实契约完成占位→真实对账，改动文件 tsc 三端 0 error、admin 契约/规则/枚举 31 例测试全绿。
+
+| YAPI | 用途 | 真实路径 | 落码要点 |
+|------|------|----------|----------|
+| 6028 | 失效记录列表/导出 | GET `manualInvalidRecord` | 列字段重命名 configNumber/trialMode/operationTime；isExport=1 导出；trialMode 1→体验金 2→增强体验金 |
+| 6031 | 待失效汇总（手输/单） | GET `manualInvalidSummary` | 汇总字段重命名 affectedUserCount/affectedTotalAmount/availableTrialFee/positionOccupiedAmount；GET query 传参 |
+| 6034 | 文件上传解析 | POST `manualInvalidSummary` | 返回 fileData 行，替代旧 batchPreview+batchId |
+| 6037 | 执行失效 | POST `manualInvalid` | 手输 uid/configNumber 逗号串，批量 manualInvalidUploadRows[]；无 requestId |
+
+改动文件：`types/trialBalanceManualInvalidate.ts`、`services/api/trialBalanceManualInvalidate.ts`、`apps/TrialBalanceManualInvalidate/{index.tsx, components/*, utils/{useColumns,useSearchFields,useItems,manualInvalidateRules}.ts(x), utils/contractFixtures.ts, utils/manualInvalidateContract.test.ts, utils/manualInvalidateRules.test.ts}`、`mocks/handlers/trialBalanceManualInvalidate.ts`。差异明细见 `product/03-api-contract.md`「与旧占位契约的差异」+「真实契约缺口」。
 
 ## 9. /review 代码评审（2026-07-29 实跑）
 

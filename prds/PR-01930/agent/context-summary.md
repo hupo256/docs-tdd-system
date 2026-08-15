@@ -21,7 +21,7 @@
 
 ## Pending / Blockers
 
-- 无机器可识别待确认项；交付前复核协作清单。
+- 后端核心 4 接口已对账落码（2026-08-15，evidence §11）。剩余阻塞 G5 项（evidence §8）：A1 缺 uid/positionOccupied 字段、批量 uploadFlag 关联口径、A3 幂等口径、模板下载接口、F17-F23 流水枚举码（114/34/manual_invalidate_trial）、卡券系统回收 recordType、落点A（依赖 PR-02015）。
 
 ## Latest Gate Results
 
@@ -31,4 +31,5 @@
 
 ## Next Action
 
-- [ ] 执行下一阶段 gate；阶段或契约变化后重生成本摘要。
+- [ ] 后端联调核心 4 接口（关闭 MSW 走真实路径）+ 推动补齐 §8 剩余缺口字段/接口。
+- [ ] 缺口销账后重跑 G5→G6 gate；阶段或契约变化后重生成本摘要。

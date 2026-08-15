@@ -10,17 +10,41 @@
 | Mock 策略 | MSW 路线 B，`src/mocks/handlers/*`；本地 admin dev 通过 `NEXT_PUBLIC_ENABLE_MSW=true` 启 worker；dev:test/pre/prod 不注册 |
 | 业务开关 | 无 `USE_MOCK` 分支；service 只请求真实占位路径，MSW 在网络层拦截 |
 
-## 接口占位（A1-A6b，真实路径待后端对账）
+# API Contract — PR-01930 体验金手动失效功能（重做）
 
-| 编号 | 用途 | 方法 | 占位路径 | 备注 |
-|------|------|------|----------|------|
-| A1 | 手动失效列表 | GET | `/operate-api/trialFee/manualInvalidate/list` | searchFetchV2；筛选 uid/configCode/时间区间 |
-| A2 | 预校验（汇总影响） | POST | `/operate-api/trialFee/manualInvalidate/preview` | 返回影响用户数/总额/可用/委托冻结/仓位占用 |
-| A3 | 执行失效 | POST | `/operate-api/trialFee/manualInvalidate/execute` | 携带 requestId 幂等 |
-| A4 | 导出 | GET | `/operate-api/trialFee/manualInvalidate/export` | blob 下载 |
-| A5 | 下载模板 | GET | `/operate-api/trialFee/manualInvalidate/template` | blob |
-| A6a | 批量预校验 | POST | `/operate-api/trialFee/manualInvalidate/batchPreview` | multipart 上传文件；后端解析+预校验，返回影响汇总（同 A2）+ batchId；不执行 |
-| A6b | 批量执行 | POST | `/operate-api/trialFee/manualInvalidate/batchExecute` | 携带 batchId + requestId 幂等；执行已预校验批次失效 |
+> 2026-08-15 更新：后端已交付 4 个后台核心接口（YAPI project 231，catid 770），本文已按真实契约对账落码。**MSW 路线 B 仍为唯一 mock 策略**（`src/mocks/handlers`）dev-only；真实接口 ready 后清空 handler 即切真实路径，业务代码 0 改动。
+
+## 环境策略
+
+| 项 | 值 |
+|----|-----|
+| 网关 | 现货后台体验金核心走 `getUrl('/operate-api/trialFee/...')` + `futuresAdminHeaders`（与现有 `services/api/trialBalance.ts` list/create 口径一致；YAPI 路径省略 `/operate-api` 网关前缀，落码时补上）|
+| Mock 策略 | MSW 路线 B，`src/mocks/handlers/*`；本地 admin dev 通过 `NEXT_PUBLIC_ENABLE_MSW=true` 启 worker；dev:test/pre/prod 不注册 |
+| 业务开关 | 无 `USE_MOCK` 分支；service 只请求真实路径，MSW 在网络层拦截 |
+
+## 接口契约（真实，YAPI project 231 / catid 770）
+
+| 编号 | 用途 | 方法 | 真实路径 | YAPI id | 关键字段 |
+|------|------|------|----------|---------|----------|
+| A1 | 失效记录列表 / 导出 | GET | `/operate-api/trialFee/manualInvalidRecord` | 6028 | query: pageNum/pageSize/configNumber/uid/beginDate/endDate/isExport(0查询 1导出)；rows: id/account/configNumber/trialFeeName/activityName/trialMode(1普通2加强)/endTime/quantity/invalidQuantity/remark/operator/operationTime |
+| A2 | 待失效汇总（手输/单） | GET | `/operate-api/trialFee/manualInvalidSummary` | 6031 | query: uid/configNumber(逗号分隔)/remark/uploadFlag(1=文件链路)；data: affectedUserCount/affectedTotalAmount/availableTrialFee/frozenAmount/positionOccupiedAmount |
+| A6 | 文件上传解析 | POST | `/operate-api/trialFee/manualInvalidSummary` | 6034 | form: file；data.fileData[]: {uid, configNumber, remark} |
+| A3 | 执行失效 | POST | `/operate-api/trialFee/manualInvalid` | 6037 | body: uid/configNumber(逗号串)/remark/manualInvalidUploadRows[]{uid,configNumber,remark}；data:{} |
+
+### 与旧占位契约的差异（已对账修正）
+
+- **路径**：`manualInvalidate/list|preview|execute|batchPreview|batchExecute` → `manualInvalidRecord`(GET) / `manualInvalidSummary`(GET手输·POST文件) / `manualInvalid`(POST执行)。
+- **预校验方法**：POST → GET（A2 汇总改为 query 传参）。
+- **批量两阶段重构**：旧「A6a 上传返回 batchId → A6b 携 batchId 执行」**不成立**；真实流程 = POST summary(file) 解析出 `fileData` 行 → GET summary(uploadFlag=1) 取汇总 → A3 携 `manualInvalidUploadRows` 执行。**已无 batchId。**
+- **requestId 幂等移除**：真实 A3 契约无 `requestId` 字段，已删；幂等改由后端保证 + 前端「确认失效」按钮 loading 期禁点兜双击。⚠ 待后端确认服务端幂等口径。
+- **字段重命名**：`configCode→configNumber`、`type→trialMode`、`operateTime→operationTime`、`affectedUsers→affectedUserCount`、`totalAmount→affectedTotalAmount`、`availableAmount→availableTrialFee`、`positionAmount→positionOccupiedAmount`；预校验/执行入参 `couponCodes→configNumbers`。
+
+### ⚠ 真实契约缺口（待后端补，见 evidence §8）
+
+- **A1 列表行缺 `uid` 与 `positionOccupied`**：PRD 列表要求「UID」「仓位占用」两列，6028 未返回。现两列恒显 `--`，schema 保留 optional，禁用 account 顶替 uid；后端补字段后自动点亮。
+- **批量汇总关联口径**：A2 `uploadFlag=1` 与文件上传的关联机制未明确。当前实现 = 前端从 `fileData` 去重出 uid/configNumber 传给 GET summary(uploadFlag=1)。待后端确认是否服务端按已上传文件计算。
+- **模板下载接口未交付**：批量弹窗「下载模板」路径 `manualInvalidate/template` 仍为占位，不在本批 4 接口内。
+- **F17-F23 各端资金流水枚举码未交付**：admin `114/34`、futures-admin `manual_invalidate_trial`、web `114` 仍为占位；本批接口（含体验金流水 2815）均未暴露「手动失效」业务类型码。
 
 ## 文案契约表（固定中文，逐字 copy PRD，禁意译）
 
@@ -43,13 +67,13 @@
 
 | # | 前置 | 落地 |
 |---|------|------|
-| 1 | handler 覆盖 normal / empty / error / unauthorized / edge 场景 | A1 list 支持 `scenario` 参数切 normal/empty/unauthorized；A2 preview edge（金额边界）；A6a batchPreview error（文件校验失败） |
-| 2 | 契约测试：MSW fixture 用真实 `schema.safeParse` 校验，防 mock 与 schema 漂移 | `*.contract.test.ts` 对 A1/A2/A6a 响应跑 schema.parse |
-| 3 | dev-only worker 注册：`src/mocks/browser.ts` + `useMockWorker`，仅 dev（`NODE_ENV==development && NEXT_PUBLIC_ENABLE_MSW==true`） | 生产 build 短路，worker 懒加载不入包 |
-| 4 | 真实接口 ready 后删/停 handler 即切真实路径，业务代码 0 改动 | service 请求真实占位路径不变，关闭 flag 即回真实接口 |
+| 1 | handler 覆盖 normal / empty / error / unauthorized 场景 | A1 record 支持 `scenario` 切 normal/empty/unauthorized + `isExport=1` 返回 csv；A2 summary；A6 文件解析返回 fileData |
+| 2 | 契约测试：MSW fixture 用真实 `schema.safeParse` 校验，防 mock 与 schema 漂移 | `manualInvalidateContract.test.ts` 对 A1 行 / A2 汇总 / A6 fileData 跑 schema.parse，并锁死缺口字段不存在 |
+| 3 | dev-only worker 注册：`src/mocks/browser.ts` + `useMockWorker`，仅 dev | 生产 build 短路，worker 懒加载不入包 |
+| 4 | 真实接口 ready 后删/停 handler 即切真实路径，业务代码 0 改动 | service 请求真实路径不变，关闭 flag 即回真实接口 |
 
-## 等待真实 API 对账清单
+## 等待真实 API 对账清单（剩余）
 
-- A1-A6b 路径/方法/DTO/schema/错误码：真实接口 ready 后逐字段替换 + 补真实 fixture 对账测试。
-- 批量两阶段（A6a 预校验 / A6b 执行）：对账 batchId 语义与有效期、A6a 返回的影响汇总字段、A6b 幂等口径；文件内容校验（uids/couponCode/remark 缺失/超限/重复/格式错误）的错误码与文案。
-- phone/email 脱敏口径、失效数量动态累计字段、仓位占用快照字段：以后端返回为准。
+- 上文「⚠ 真实契约缺口」四项：UID/仓位占用字段、批量 uploadFlag 关联口径、模板下载接口、F17-F23 流水枚举码。
+- A3 执行的错误码/文案（无匹配跳过、部分失败）、A2 汇总在文件链路下的确切取数口径：以后端联调为准。
+- phone/email 脱敏口径、失效数量动态累计（invalidQuantity）、trialMode 值域：以后端返回为准。
