@@ -7,10 +7,22 @@ import { createHash } from 'node:crypto'
 
 const TEMPORARY_MEDIA_URL_RE = /https?:\/\/[^\s"')>]+\/space\/api\/box\/stream\/download\/authcode\/\?code=[^\s"')>]+/gi
 
-export function canonicalizeLarkDocumentContent(content) {
+// 剥离「同一 PRD 内容、不同 fetch」之间必然波动的媒体元数据：临时下载令牌（每次 fetch 轮换）、
+// markdown 图片描述与 HTML alt 文案（AI/OCR 生成，同图每次措辞不同、非确定性）。
+// 真实文字/结构/表格/资产字节不受影响，指纹仍能检出真变更。
+export function stripVolatileMediaMetadata(content) {
   return String(content || '')
-    .replace(/\r\n?/g, '\n')
     .replace(TEMPORARY_MEDIA_URL_RE, '<lark-temporary-media-url>')
+    .replace(/!\[(?:\\.|[^\]])*\]/g, '![]')
+    .replace(/(<img\b[^>]*?)\s+alt\s*=\s*("[^"]*"|'[^']*')([^>]*>)/gi, '$1$3')
+}
+
+export function canonicalizeLarkDocumentContent(content) {
+  return stripVolatileMediaMetadata(String(content || '').replace(/\r\n?/g, '\n'))
+    // sync-lark-docs 落盘时用同一 regex 剔除行尾空白（见 sync-lark-docs.mjs cleanMarkdown）；
+    // 就地重算 remoteSources 指纹要读本地已落盘副本而不重新 fetch，必须同口径剔除，
+    // 否则本地副本与直连 fetch 的原始 document.content 因行尾空白就必然不等。
+    .replace(/[ \t]+$/gm, '')
     .trim()
 }
 
@@ -108,6 +120,22 @@ export function selfTest() {
   const second = '<p>新增规则</p><img src="stable-token" href="https://x.larksuite.com/space/api/box/stream/download/authcode/?code=second" />'
   assert.equal(hashCanonicalLarkContent(first), hashCanonicalLarkContent(second))
   assert.notEqual(hashCanonicalLarkContent(first), hashCanonicalLarkContent(first.replace('新增规则', '更新规则')))
+
+  // 易变媒体元数据（markdown 图片描述 / HTML alt 文案）每次 fetch 措辞不同但非确定性 → 不应参与指纹。
+  const mdAltA = '<p>正文</p>\n![截图：登录页错误提示 A](assets/img-001.png)'
+  const mdAltB = '<p>正文</p>\n![截图：登录页错误提示 B，措辞不同](assets/img-001.png)'
+  assert.equal(hashCanonicalLarkContent(mdAltA), hashCanonicalLarkContent(mdAltB))
+
+  const htmlAltA = '<p>正文</p><img src="assets/img-001.png" alt="AI 生成描述 A">'
+  const htmlAltB = '<p>正文</p><img src="assets/img-001.png" alt="AI 生成描述 B，措辞不同">'
+  assert.equal(hashCanonicalLarkContent(htmlAltA), hashCanonicalLarkContent(htmlAltB))
+
+  // 真实文字改动（非 alt/描述）仍必须检出。
+  assert.notEqual(hashCanonicalLarkContent(mdAltA), hashCanonicalLarkContent(mdAltA.replace('正文', '更新后的正文')))
+
+  // 行尾空白（sync-lark-docs 落盘时会剔除，直连 fetch 的原始内容不会）不应参与指纹，
+  // 否则「读本地已落盘副本重算」与「直连 fetch」永远不等。
+  assert.equal(hashCanonicalLarkContent('第一行  \n第二行'), hashCanonicalLarkContent('第一行\n第二行'))
 
   const localized = localizeLarkMediaReferences(`![a](https://x/one.png)\n<img href="https://x/two.png" src="token"/>`)
   assert.deepEqual(localized.media.map((item) => item.fileName), ['img-001.png', 'img-002.png'])

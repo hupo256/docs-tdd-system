@@ -1,8 +1,8 @@
 {
   "version": 1,
   "rulesetVersion": "local-2026.07-msw-v1",
-  "fingerprint": "323a3efbef248c213badcf00593b2cba721cd4595012814702e89ae36c45a2f6",
-  "publishedAt": "2026-08-13T13:43:06.080Z",
+  "fingerprint": "bcb8008808dfffa46657545ce1e179ef8e525adb94bcd9a934514100c04fad2e",
+  "publishedAt": "2026-08-15T02:29:54.799Z",
   "fileCount": 143,
   "files": {
     "common/CHANGELOG-archive.md": "3f6df9a2d04e917dc0ae67125c84a9209877de3196bd7952639040897e0077cc",
@@ -32,7 +32,7 @@
     "common/engine/agent-scripts/lib/gate-payload.mjs": "30eed7924ec62736593ebf1105557ec81368c40029ce80b71d13706c063dc75d",
     "common/engine/agent-scripts/lib/golden-cases.mjs": "e0d36433d3c5237d8a769e2e87892328f6cbb545d905d47a9705f78b12749f22",
     "common/engine/agent-scripts/lib/golden-verdict.mjs": "1ec4aba853a27885febe5965f74496c70c9ee934dddfc827640d315e8419a3a7",
-    "common/engine/agent-scripts/lib/prd-manifest.mjs": "5bb981b89eae049950057d402cf1a055fb551c45a7a77d817e136ee3912d0055",
+    "common/engine/agent-scripts/lib/prd-manifest.mjs": "56c608d5665900f0b041a90593bc2a951df8a7a38d4a8e36025f8ecca8ebd588",
     "common/engine/agent-scripts/lib/project-decision.mjs": "61f1b6ca155f8fb644f939acb79c4170bb010f43a83d8c92063475e8ba693d36",
     "common/engine/agent-scripts/lib/project-index.mjs": "f6ecff4e702b8c1d91b3dc11d6819ec7ea4e0ac32acc0f686f336bb2e4035b70",
     "common/engine/agent-scripts/lib/project-scaffold.mjs": "a22c7e2768ddb675dbf5a552baf334ed8e9969f0d3a7ab8d2badf854bbbf5d28",
@@ -44,7 +44,7 @@
     "common/engine/agent-scripts/lib/run-log.mjs": "273193b8d82cc281fd51361397bfad73e7d94e9f884e20032115be78db69d868",
     "common/engine/agent-scripts/log-exec.mjs": "38b6313566e8ab86492c16a62f7a1caef5b4320e0d8d6d55a3497b60a39b9ae9",
     "common/engine/agent-scripts/notify-lark.mjs": "92779715a20864b7ca468ba084534957b5b4c378ab969849baa827d40f6f9e13",
-    "common/engine/agent-scripts/prd-intake.mjs": "8c9f06d20d90a63daaeedb2511c05afdc9ec66ee76fcf15a4c762c177dd07980",
+    "common/engine/agent-scripts/prd-intake.mjs": "e8c51a8c9d76c447708af0321624461661a01ef4e56683e32c3d62f7db50b0b4",
     "common/engine/agent-scripts/prepare-coding-worktree.mjs": "4627db391f0814b865084e4f7d28a266ccaf23296b2c1ebe1f043feb8a4b4b06",
     "common/engine/agent-scripts/project-orchestrator.mjs": "4b5160c26ae3a02e5e098826aa78ebcc810d21b0c748d01d6e52e2b69d17053a",
     "common/engine/agent-scripts/publish-rule-chain.mjs": "fb552bd28980febe86872db686aacf97557d8b54e3ef299c9fad796a36d83207",

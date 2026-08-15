@@ -4,9 +4,9 @@ import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
 import { validateSource } from './lib/lark-command.mjs'
-import { classifyDriftUnverified, compareRemoteSnapshot, parseLarkDocumentPayload, remoteSnapshotFromMetadata } from './lib/lark-prd-drift.mjs'
+import { classifyDriftUnverified, compareRemoteSnapshot, hashCanonicalLarkContent, parseLarkDocumentPayload, remoteSnapshotFromMetadata } from './lib/lark-prd-drift.mjs'
 import { resolveDocsPath, resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
-import { fingerprint, hash, inspectManifest, scanMarkdown, selfTest } from './lib/prd-manifest.mjs'
+import { fingerprint, inspectManifest, scanMarkdown, selfTest, sourceContentHash } from './lib/prd-manifest.mjs'
 
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot } = resolveRoots()
 const args = process.argv.slice(2)
@@ -196,7 +196,7 @@ function initManifest(projectId, sourcePaths) {
   for (const sourcePath of sourcePaths) {
     const text = readProjectSource(sourcePath)
     if (text === null) throw new Error(`PRD source must exist inside docs_tdd: ${sourcePath}`)
-    sources.push({ path: sourcePath, contentHash: hash(text) })
+    sources.push({ path: sourcePath, contentHash: sourceContentHash(text) })
     for (const found of scanMarkdown(text, sourcePath, readProjectAsset)) {
       const old = previousByKey.get(`${found.locator}:${found.contentHash}`)
         || previousByContent.get(`${found.type}:${found.contentHash}`)
@@ -228,9 +228,126 @@ function initManifest(projectId, sourcePaths) {
   return manifest
 }
 
+// sync-lark-docs 写盘时在文档正文前加一段 yaml 前言（sourceName/syncedAt/...），前言不属于远端文档内容，
+// 重算 remoteSources[].contentHash 前必须剥掉，才能与 fetch 时 hashCanonicalLarkContent(document.content) 同口径。
+function stripFrontMatter(text) {
+  return String(text || '').replace(/^---\n[\s\S]*?\n---\n+/, '')
+}
+
+function remoteSourceOutputDir(projectDir) {
+  const config = larkConfig(projectDir)
+  if (!config) return null
+  return resolveDocsPath(config.outputDir || `apps/web/docs_tdd/prds/${config.projectId}/inbox/lark-sync`, {
+    consumerRoot: repoRoot,
+  })
+}
+
+// 就地重算：不重扫远端（不触发 lark-cli / inbox churn），只用已同步的本地原文重算指纹，
+// 让「仅易变媒体元数据变化」的历史 manifest 迁移到新哈希公式而不 churn sourceId / 人工分类。
+function remigrateManifest(projectId) {
+  const { projectDir, manifestFile } = projectPaths(projectId)
+  const existing = existsSync(manifestFile) ? JSON.parse(readFileSync(manifestFile, 'utf8')) : null
+  if (!existing) throw new Error(`no existing manifest to remigrate: ${relative(repoRoot, manifestFile)}`)
+
+  const prefixes = { image: 'IMG', table: 'TABLE', embed: 'EMBED' }
+  const counters = Object.fromEntries(Object.entries(prefixes).map(([type, prefix]) => [
+    type,
+    Math.max(0, ...(existing.items || [])
+      .map((item) => item.sourceId.match(new RegExp(`^PRD-${prefix}-(\\d+)$`))?.[1])
+      .filter(Boolean)
+      .map(Number)),
+  ]))
+
+  const oldByLocator = new Map((existing.items || []).map((item) => [item.locator, item]))
+  // 部分历史 manifest 生成于「同行同类型附加序号」特性之前，locator 缺 ":序号" 后缀（如 "...#L34:embed"
+  // 而非 "...#L34:embed:1"）。仅当该 legacy key 在旧/新两侧都恰好唯一时才降级匹配，避免多图挤一行时误配；
+  // 否则宁可判定为新增/丢弃，也不要在存在歧义时瞎猜。
+  const legacyKeyOf = (locator) => locator.replace(/:\d+$/, '')
+  const oldLegacyCounts = new Map()
+  for (const item of existing.items || []) {
+    const key = legacyKeyOf(item.locator)
+    oldLegacyCounts.set(key, (oldLegacyCounts.get(key) || 0) + 1)
+  }
+  const oldByLegacyKey = new Map()
+  for (const item of existing.items || []) {
+    const key = legacyKeyOf(item.locator)
+    if (oldLegacyCounts.get(key) === 1) oldByLegacyKey.set(key, item)
+  }
+  const matchedOldLocators = new Set()
+  const sources = []
+  const items = []
+  let carried = 0
+  let added = 0
+
+  for (const source of existing.sources || []) {
+    const text = readProjectSource(source.path)
+    if (text === null) throw new Error(`PRD source must exist inside docs_tdd: ${source.path}`)
+    sources.push({ path: source.path, contentHash: sourceContentHash(text) })
+    const found = scanMarkdown(text, source.path, readProjectAsset)
+    const newLegacyCounts = new Map()
+    for (const item of found) {
+      const key = legacyKeyOf(item.locator)
+      newLegacyCounts.set(key, (newLegacyCounts.get(key) || 0) + 1)
+    }
+    for (const item of found) {
+      let old = oldByLocator.get(item.locator)
+      if (!old) {
+        const key = legacyKeyOf(item.locator)
+        const candidate = oldByLegacyKey.get(key)
+        if (candidate && !matchedOldLocators.has(candidate.locator) && newLegacyCounts.get(key) === 1) old = candidate
+      }
+      if (old) {
+        matchedOldLocators.add(old.locator)
+        carried += 1
+        items.push({ ...old, ...item })
+      } else {
+        added += 1
+        counters[item.type] += 1
+        items.push({
+          sourceId: `PRD-${prefixes[item.type]}-${String(counters[item.type]).padStart(3, '0')}`,
+          ...item,
+          status: 'unresolved',
+          classification: 'unresolved',
+          readMethod: '',
+          summary: '',
+          featureIds: [],
+          disposition: '',
+          evidence: '',
+        })
+      }
+    }
+  }
+
+  const dropped = (existing.items || []).filter((item) => !matchedOldLocators.has(item.locator))
+
+  const outputDir = remoteSourceOutputDir(projectDir)
+  const remoteSources = (existing.remoteSources || []).map((remote) => {
+    if (!outputDir) return remote
+    const localPath = join(outputDir, remote.target)
+    if (!existsSync(localPath)) return remote
+    const text = readFileSync(localPath, 'utf8')
+    return { ...remote, contentHash: hashCanonicalLarkContent(stripFrontMatter(text)) }
+  })
+
+  const manifest = {
+    ...existing,
+    generatedAt: new Date().toISOString(),
+    remoteSources,
+    sources,
+    items,
+  }
+  manifest.approvedFingerprint = existing.approvedFingerprint
+    ? fingerprint(sources, items, remoteSources)
+    : existing.approvedFingerprint
+
+  mkdirSync(dirname(manifestFile), { recursive: true })
+  writeFileSync(manifestFile, `${JSON.stringify(manifest, null, 2)}\n`)
+  return { manifest, summary: { carried, added, dropped: dropped.length, droppedIds: dropped.map((item) => item.sourceId) } }
+}
+
 const projectId = args[0]
 if (!/^PR-\d{5}$/.test(projectId || '')) {
-  console.error('usage: prd-intake.mjs PR-01234 [--init --source <docs_tdd/*.md> ... | --stage G0|G2 | --approve] [--json]')
+  console.error('usage: prd-intake.mjs PR-01234 [--init --source <docs_tdd/*.md> ... | --remigrate | --stage G0|G2 | --approve] [--json]')
   process.exit(1)
 }
 
@@ -240,6 +357,15 @@ if (args.includes('--init')) {
   if (!sourcePaths.length) throw new Error('--init requires at least one --source path relative to repository root')
   const manifest = initManifest(projectId, sourcePaths)
   console.log(`wrote ${relative(repoRoot, manifestFile)} (${manifest.items.length} rich-media item(s)); resolve every item before G2`)
+  process.exit(0)
+}
+
+if (args.includes('--remigrate')) {
+  const { summary } = remigrateManifest(projectId)
+  const droppedLabel = summary.droppedIds.length ? ` (${summary.droppedIds.join(',')})` : ''
+  const message = `remigrated ${relative(repoRoot, manifestFile)}: carried=${summary.carried} new=${summary.added} dropped=${summary.dropped}${droppedLabel}`
+  if (args.includes('--json')) console.log(JSON.stringify({ ok: true, projectId, ...summary }, null, 2))
+  else console.log(message)
   process.exit(0)
 }
 
@@ -259,7 +385,7 @@ checks.push(...inspectRemoteDrift(projectDir, manifest, stage))
 if (args.includes('--approve')) {
   const blocking = checks.filter((check) => !check.ok && check.ruleId !== 'DOC-PRD-009')
   if (blocking.length) throw new Error(`cannot approve PRD intake: ${blocking.map((check) => check.ruleId).join(', ')}`)
-  const currentSources = manifest.sources.map((source) => ({ path: source.path, contentHash: hash(readProjectSource(source.path)) }))
+  const currentSources = manifest.sources.map((source) => ({ path: source.path, contentHash: sourceContentHash(readProjectSource(source.path)) }))
   manifest.sources = currentSources
   manifest.approvedFingerprint = fingerprint(currentSources, manifest.items, manifest.remoteSources)
   manifest.generatedAt = new Date().toISOString()

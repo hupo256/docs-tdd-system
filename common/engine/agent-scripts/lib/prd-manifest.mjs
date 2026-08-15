@@ -7,11 +7,19 @@ import { readFileSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
 import assert from 'node:assert/strict'
 import { resolveRoots } from './roots.mjs'
+import { stripVolatileMediaMetadata } from './lark-prd-drift.mjs'
 
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot } = resolveRoots()
 
 export function hash(text) {
   return createHash('sha256').update(text).digest('hex')
+}
+
+// 源文件（sync-lark-docs 产出的 .md/.extracted.md）哈希：剥离每次同步都变的 syncedAt 前言行
+// 与易变媒体元数据（authcode/alt 描述），使「同一 PRD 内容、不同 fetch」得稳定指纹。
+export function sourceContentHash(text) {
+  const withoutSyncedAt = String(text || '').replace(/^syncedAt:.*\n/m, '')
+  return hash(stripVolatileMediaMetadata(withoutSyncedAt))
 }
 
 function lineNumber(text, index) {
@@ -58,7 +66,7 @@ export function scanMarkdown(text, sourcePath, readAsset) {
       sourcePath,
       line,
       locator: `${sourcePath}#L${line}:${type}:${ordinal}`,
-      contentHash: hash(`${raw}\n${asset.assetHash}`),
+      contentHash: hash(`${stripVolatileMediaMetadata(raw)}\n${asset.assetHash}`),
       ...asset,
     })
   }
@@ -116,7 +124,7 @@ export function inspectManifest({ manifest, projectId, stage, readSource, readAs
     const exists = text !== null
     add('DOC-PRD-002', exists, `PRD source exists: ${source.path}`)
     if (!exists) continue
-    const contentHash = hash(text)
+    const contentHash = sourceContentHash(text)
     currentSources.push({ path: source.path, contentHash })
     add('DOC-PRD-008', source.contentHash === contentHash, `PRD source hash has not drifted: ${source.path}`)
     discovered.push(...scanMarkdown(text, source.path, readAsset))
@@ -170,8 +178,8 @@ export function selfTest() {
     ...item,
     status: 'read', classification: index === 3 ? 'decorative' : 'requirement', readMethod: 'vision+structured-parse', summary: 'fixture requirement', featureIds: index === 3 ? [] : ['F01'], disposition: index === 3 ? 'decorative background' : '', evidence: 'evidence/prd-intake/README.md',
   }))
-  const sources = [{ path: sourcePath, contentHash: hash(fixture) }]
-  const remoteSources = [{ name: 'fixture', url: 'https://example.com/docx/fixture', target: 'prd.md', contentHash: hash(fixture), revisionId: '1' }]
+  const sources = [{ path: sourcePath, contentHash: sourceContentHash(fixture) }]
+  const remoteSources = [{ name: 'fixture', url: 'https://example.com/docx/fixture', target: 'prd.md', contentHash: sourceContentHash(fixture), revisionId: '1' }]
   const manifest = { version: 2, projectId: 'PR-00001', generatedAt: new Date().toISOString(), approvedFingerprint: fingerprint(sources, items, remoteSources), remoteSources, sources, items }
   const readSource = () => fixture
   const readAsset = (assetPath) => fixtureAssets.get(assetPath) ?? null
@@ -192,7 +200,18 @@ export function selfTest() {
     fingerprint(sources, items, manifest.remoteSources),
     fingerprint(sources, items, changedRemote.remoteSources),
   )
-  console.log('prd-intake self-test passed (scan, omitted image, unresolved input, source drift, and binary image drift).')
+
+  // 稳定性：仅图片描述（alt/markdown 图注）或 syncedAt 前言变化 → item/source hash 不变；真实文字变 → 变。
+  const altOnly = fixture.replace('![审批状态流程]', '![审批状态流程（AI 重新生成的描述）]')
+  assert.equal(sourceContentHash(altOnly), sourceContentHash(fixture))
+  const altOnlyItems = scanMarkdown(altOnly, sourcePath, readAsset)
+  assert.equal(altOnlyItems[0].contentHash, found[0].contentHash)
+  const syncedAtOnly = `syncedAt: "2026-08-13T00:00:00.000Z"\n${fixture}`
+  assert.equal(sourceContentHash(syncedAtOnly), sourceContentHash(`syncedAt: "2026-08-14T00:00:00.000Z"\n${fixture}`))
+  const realChange = fixture.replace('正文只描述入口', '正文改写了入口描述')
+  assert.notEqual(sourceContentHash(realChange), sourceContentHash(fixture))
+
+  console.log('prd-intake self-test passed (scan, omitted image, unresolved input, source drift, binary image drift, and volatile-metadata stability).')
 }
 
 if (process.argv[1] && process.argv[1].endsWith('prd-manifest.mjs') && process.argv.includes('--self-test')) {

@@ -1,14 +1,14 @@
 {
   "version": 2,
   "projectId": "PR-02273",
-  "generatedAt": "2026-08-13T12:35:04.911Z",
-  "approvedFingerprint": "e6eeaef4a44ed260",
+  "generatedAt": "2026-08-15T02:30:30.495Z",
+  "approvedFingerprint": "67a7784e23f44a50",
   "remoteSources": [
     {
       "name": "需求 PRD",
       "url": "https://qfglxo2m3dc.sg.larksuite.com/docx/OrRpd3exfoM2nKxD9uRlUZalgZ6",
       "target": "prd-latest.md",
-      "contentHash": "77558fcd5f017039ed89917b199949b82e3c2599987fb2aed27680ebe9cad5a2",
+      "contentHash": "55c8485730facad5bcb09347182ba9c94ff39dc47212834e3d5605ee8a8c785c",
       "revisionId": "2547",
       "syncedAt": "2026-08-13T12:19:11.329Z"
     }
@@ -16,7 +16,7 @@
   "sources": [
     {
       "path": "apps/web/docs_tdd/prds/PR-02273/inbox/lark-sync/prd-latest.extracted.md",
-      "contentHash": "036f0d169a0d93739b770879c7631aab17689e475c28ed25bb922ce82bea3697"
+      "contentHash": "78cdc335d7139b60a290e9ba576edeb1c1d332d42deac232dbce62da0d345a37"
     }
   ],
   "items": [
@@ -210,7 +210,7 @@
       "sourcePath": "apps/web/docs_tdd/prds/PR-02273/inbox/lark-sync/prd-latest.extracted.md",
       "line": 209,
       "locator": "apps/web/docs_tdd/prds/PR-02273/inbox/lark-sync/prd-latest.extracted.md#L209:image:1",
-      "contentHash": "e9fafa45b8db6049ef2c13b5d9fc76acd2833ef66e227fa9a49e199686c63671",
+      "contentHash": "112582b6569ba677fc6ce69e203195be73748c3fc07784289d09e5c874a4d0ac",
       "assetPath": "apps/web/docs_tdd/prds/PR-02273/inbox/lark-sync/assets/img-001.png",
       "assetHash": "f93375f940758c185cdd8d66723c74fc4a5f74109e866861ca0aa6b3ce353d22",
       "assetStatus": "local",
@@ -230,7 +230,7 @@
       "sourcePath": "apps/web/docs_tdd/prds/PR-02273/inbox/lark-sync/prd-latest.extracted.md",
       "line": 213,
       "locator": "apps/web/docs_tdd/prds/PR-02273/inbox/lark-sync/prd-latest.extracted.md#L213:image:1",
-      "contentHash": "dc303b5eee35805c5ee5bb0002f8b60eb0e192bd7e53f336a5d197b6b903850b",
+      "contentHash": "fef956330230cc7662b3a28571b98c2a9924a2a5755617ddaebdd1ef0c00d1e5",
       "assetPath": "apps/web/docs_tdd/prds/PR-02273/inbox/lark-sync/assets/img-002.png",
       "assetHash": "51d32789706706db8e09cbae5f10f6c234078785ccae0ffc6983bea3b2a7e5cb",
       "assetStatus": "local",
@@ -250,7 +250,7 @@
       "sourcePath": "apps/web/docs_tdd/prds/PR-02273/inbox/lark-sync/prd-latest.extracted.md",
       "line": 221,
       "locator": "apps/web/docs_tdd/prds/PR-02273/inbox/lark-sync/prd-latest.extracted.md#L221:image:1",
-      "contentHash": "0fcdb66ea65118671e6aea94f6b5ca401612fdd11c2c135045ff2e9e1c9f7774",
+      "contentHash": "c4ff7dbd615e0cd3b2c9c9f69ba89084a244418f54a8b847531cf5d6579fae21",
       "assetPath": "apps/web/docs_tdd/prds/PR-02273/inbox/lark-sync/assets/img-003.png",
       "assetHash": "128d44ea426382b518e2d0aa3e9a4eb7bd6c1a9c8fce94a738e337bae5c5af7d",
       "assetStatus": "local",
@@ -270,7 +270,7 @@
       "sourcePath": "apps/web/docs_tdd/prds/PR-02273/inbox/lark-sync/prd-latest.extracted.md",
       "line": 225,
       "locator": "apps/web/docs_tdd/prds/PR-02273/inbox/lark-sync/prd-latest.extracted.md#L225:image:1",
-      "contentHash": "722774dde36b526983d6249272ec098728af2158942d4942d972a22c968cad84",
+      "contentHash": "09da852a6ccdd9ba5df7126346e529c1321acb32ba77560fbc43fa8f30700910",
       "assetPath": "apps/web/docs_tdd/prds/PR-02273/inbox/lark-sync/assets/img-004.png",
       "assetHash": "ea941a412aab6eebc224fb2aa2b5163359f00d50a60169df44071a68bb1bb449",
       "assetStatus": "local",
@@ -290,7 +290,7 @@
       "sourcePath": "apps/web/docs_tdd/prds/PR-02273/inbox/lark-sync/prd-latest.extracted.md",
       "line": 235,
       "locator": "apps/web/docs_tdd/prds/PR-02273/inbox/lark-sync/prd-latest.extracted.md#L235:image:1",
-      "contentHash": "1950f84d3f9f1a7d61b4e382765df887ec999bc2478a9aef8a0cf4b14c934b41",
+      "contentHash": "03c206e95a8c4fc77fcf613541b0b0827c09a44106bd4c6a7c784374d52ff27f",
       "assetPath": "apps/web/docs_tdd/prds/PR-02273/inbox/lark-sync/assets/img-005.png",
       "assetHash": "2512e55fa37acc4c1c95b0eff85ad204ee6dcd8ecf723bffafd1afb88c38704a",
       "assetStatus": "local",
@@ -310,7 +310,7 @@
       "sourcePath": "apps/web/docs_tdd/prds/PR-02273/inbox/lark-sync/prd-latest.extracted.md",
       "line": 238,
       "locator": "apps/web/docs_tdd/prds/PR-02273/inbox/lark-sync/prd-latest.extracted.md#L238:image:1",
-      "contentHash": "6c1e05e429434e13a5a35fa7253dcfb945b92d1e79bd38ac704ba293ecc3552e",
+      "contentHash": "9c57b3f548eb7ccd8cc7a6b2a02f784e0322d81126a0da57fe6cd4e70fb555fa",
       "assetPath": "apps/web/docs_tdd/prds/PR-02273/inbox/lark-sync/assets/img-006.png",
       "assetHash": "45449ed0b2ad03b27e8961c6567886f8f80d5f6eb4e58be62c29321954e0e0a3",
       "assetStatus": "local",
@@ -350,7 +350,7 @@
       "sourcePath": "apps/web/docs_tdd/prds/PR-02273/inbox/lark-sync/prd-latest.extracted.md",
       "line": 254,
       "locator": "apps/web/docs_tdd/prds/PR-02273/inbox/lark-sync/prd-latest.extracted.md#L254:image:1",
-      "contentHash": "6ebb4912ce6db72d168414ebf7d18c41b3abec72eb402061c45c2f6483b9da1c",
+      "contentHash": "0a0645e1cf809b4c49c1cfaf6bc7f844aec1331ea915c5fbe6905fe98d78f60f",
       "assetPath": "apps/web/docs_tdd/prds/PR-02273/inbox/lark-sync/assets/img-008.png",
       "assetHash": "792375a0bb27efbc9cd32639312232fddb090bfa6a614f671cff24e975d70c06",
       "assetStatus": "local",
@@ -370,7 +370,7 @@
       "sourcePath": "apps/web/docs_tdd/prds/PR-02273/inbox/lark-sync/prd-latest.extracted.md",
       "line": 265,
       "locator": "apps/web/docs_tdd/prds/PR-02273/inbox/lark-sync/prd-latest.extracted.md#L265:image:1",
-      "contentHash": "db556fc8e3d8206c93ef5e6fee1d76851ac7a98eaa5de9bf74fda8090e264106",
+      "contentHash": "450e9a508dc849ee9f9e70b71257ffe597244193179566c9197d81c9c328b119",
       "assetPath": "apps/web/docs_tdd/prds/PR-02273/inbox/lark-sync/assets/img-009.png",
       "assetHash": "24bda14fe12a404b476e08f0af43ecdb031167e51e99c5d73e8ced1e14622abf",
       "assetStatus": "local",
