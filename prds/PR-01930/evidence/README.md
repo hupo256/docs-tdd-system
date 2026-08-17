@@ -68,20 +68,22 @@ Biome：本仓库未配置 Biome，回退为 `verify-code-rules.mjs` globalScan 
 ## 8. 待后端销账（阻塞 G5）
 
 > 2026-08-01 流程审计更正：以下事项会阻塞 G5，完成真实 API 对账前不得进入 G6/G7/G8；“不阻塞前端交付”的旧结论作废。
-> 2026-08-15 更新：后端交付后台核心 4 接口（YAPI 231/770），核心闭环已对账落码（见 §11），下列为**剩余**未销账项。
+> 2026-08-15 更新：后端交付后台核心 4 接口（YAPI 231/770），核心闭环已对账落码（见 §11）。
+> 2026-08-15 二次更新：后端就 6 项对接单逐条回复（见 `evidence/backend-handoff-remaining-gaps.md`「后端回复与前端处置」），§1-4 已销账落码，仅 §5-6 待合约/数仓确认。
 
-已销账（2026-08-15，见 §11）：
-- ✅ 后台核心 4 接口（A1 列表/导出、A2 汇总、A6 文件解析、A3 执行）路径/方法/DTO/schema 全部按真实契约对齐。
+已销账（2026-08-15）：
+- ✅ 后台核心 4 接口（A1 列表/导出、A2 汇总、A6 文件解析、A3 执行）路径/方法/DTO/schema 全部按真实契约对齐（见 §11）。
 - ✅ 批量两阶段重构为真实流程（fileData → uploadFlag 汇总 → manualInvalidUploadRows 执行），旧 batchId 语义作废。
-- ✅ requestId 幂等字段按契约移除。
+- ✅ requestId 幂等字段按契约移除；后端确认无需前端幂等键（同批多次请求只失效一次），维持按钮 loading 兜双击。
+- ✅ **uid**：后端确认文档漏写已补充，保留为列表正常字段。
+- ✅ **仓位占用列**：后端确认列表不再需要该字段，已下线列/schema/fixture/契约测试（二次确认弹窗的汇总「仓位占用金额」positionOccupiedAmount 属 A2 汇总，保留）。
+- ✅ **批量 `uploadFlag=1` 取数**：后端确认按已上传文件自行计算，前端 `toCommaQuery` 在 uploadFlag=1 时不再回传 uid/configNumber。
+- ✅ **模板下载**：后端确认无独立接口，表头与上传文件一致 + 一行样板数据；前端本地生成 CSV（`uid,configNumber,remark` + 样板行），移除占位 handler。
+- ✅ **补充细节**：后端已过滤无匹配数据（不返回错误提示，部分失败报系统异常）、账号已脱敏、trialMode(1/2) 与 invalidQuantity 动态累计口径与前端一致，均无需改动。
 
-剩余未销账（仍阻塞 G5）：
-- ⚠ **A1 列表缺 `uid` / `positionOccupied`**：PRD 要求「UID」「仓位占用」两列，6028 未返回，现恒显 `--`。需后端补字段（禁用 account 顶替 uid）。
-- ⚠ **批量 `uploadFlag=1` 关联口径**：A2 汇总在文件链路下如何取数（服务端读已上传文件 vs 前端回传去重 uid/configNumber）待后端确认；当前实现走后者。
-- ⚠ **A3 幂等口径**：契约无 requestId，需后端确认服务端幂等/防重放机制。
-- ⚠ **模板下载接口**：批量弹窗「下载模板」路径仍占位，未在本批 4 接口交付。
-- ⚠ **F17-F23 各端资金流水枚举码**：admin `114/34`、futures-admin `manual_invalidate_trial`、web `114` 仍为占位；本批接口（含体验金流水 2815）均未暴露「手动失效」业务类型码。PR-02015 legacy-admin dictionary 候选真值 `103/48` 仅供参考，PR-02015 未上线。
-- 卡券「系统回收」走 `description` vs 新 `recordType` 未定。
+剩余未销账（仍阻塞 G5，待合约/数仓）：
+- ⚠ **F17-F23 各端资金流水枚举码**：admin `114/34`、futures-admin `manual_invalidate_trial`、web `114` 仍为占位；后端回复需合约、数仓解答，占位维持。PR-02015 legacy-admin dictionary 候选真值 `103/48` 仅供参考，PR-02015 未上线。
+- ⚠ 卡券「系统回收」走 `description` vs 新 `recordType`：后端回复需与合约确认，维持现状（`description` 识别）。
 - 落点A（数据概览-支出折合-来源明细）依赖 PR-02015（未上线），上线后补【系统回收】类型。
 
 ## 11. 后端核心 4 接口对账落码（2026-08-15）

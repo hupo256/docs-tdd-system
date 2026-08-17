@@ -41,10 +41,14 @@
 
 ### ⚠ 真实契约缺口（待后端补，见 evidence §8）
 
-- **A1 列表行缺 `uid` 与 `positionOccupied`**：PRD 列表要求「UID」「仓位占用」两列，6028 未返回。现两列恒显 `--`，schema 保留 optional，禁用 account 顶替 uid；后端补字段后自动点亮。
-- **批量汇总关联口径**：A2 `uploadFlag=1` 与文件上传的关联机制未明确。当前实现 = 前端从 `fileData` 去重出 uid/configNumber 传给 GET summary(uploadFlag=1)。待后端确认是否服务端按已上传文件计算。
-- **模板下载接口未交付**：批量弹窗「下载模板」路径 `manualInvalidate/template` 仍为占位，不在本批 4 接口内。
-- **F17-F23 各端资金流水枚举码未交付**：admin `114/34`、futures-admin `manual_invalidate_trial`、web `114` 仍为占位；本批接口（含体验金流水 2815）均未暴露「手动失效」业务类型码。
+### 契约缺口销账（2026-08-15 后端逐条回复，见 evidence backend-handoff）
+
+- ✅ **uid**：文档漏写已补充，保留为列表正常字段。
+- ✅ **仓位占用列**：后端确认列表不再需要，已下线该列/schema/fixture/契约测试（A2 汇总的「仓位占用金额」positionOccupiedAmount 保留）。
+- ✅ **批量汇总关联口径**：`uploadFlag=1` 后端按已上传文件自算，前端不再回传 uid/configNumber。
+- ✅ **模板下载**：无独立接口，前端本地生成 CSV（表头 `uid,configNumber,remark` + 一行样板数据）。
+- ⚠ **F17-F23 各端资金流水枚举码未交付**：admin `114/34`、futures-admin `manual_invalidate_trial`、web `114` 仍为占位；后端回复需合约、数仓解答，占位维持。
+- ⚠ **卡券「系统回收」识别字段**：`description` vs 新 `recordType` 待与合约确认，维持 `description` 识别。
 
 ## 文案契约表（固定中文，逐字 copy PRD，禁意译）
 
