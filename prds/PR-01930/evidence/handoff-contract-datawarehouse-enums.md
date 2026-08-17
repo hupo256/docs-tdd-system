@@ -20,11 +20,21 @@ TRIAL_SYSTEM_CLAWBACK(114, "系统失效", "scene.trial.system.clawback")
   - ⚠ 注意 `103「手动过期」`是既存的**另一种类型**（admin 列表原就有 103），非本 PR，勿混。
 - ⚠ **仍未销账**：`order_type`（字符串）与 `businessType`（数字）是另一套编码，Rullin 的 trial-scene 数字枚举不直接落这两个字段——见下方剩余项。
 
+## Rullin 二次回复与前端处置（2026-08-17）
+
+Rullin 补充：
+
+> 合约资金流水要么用 scene，要么用 ext_scene。
+> 返回给前端的字段里有一个 isTrial 字段，如果为 1，则是体验金流水，如果为 2，则是增强体验金流水。
+
+- 🔄 **F18/F20 识别机制修正**：合约资金流水（F18 合约账户资金流水 / F20 合约后台资产流水，以及已落的 F21/F22 C 端）**靠 `scene`/`ext_scene` 数字字段识别**（即 trial-scene 数字码 114），**不是 `order_type` 字符串**。→ 之前 futures-admin `order.ts` 加的 `MANUAL_INVALIDATE_TRIAL = 'manual_invalidate_trial'`（挂在 `orderType` 字符串枚举）方向错了，应改为读 `scene`/`ext_scene`。**暂不落码**：Rullin 说「要么 scene 要么 ext_scene」未给死具体字段，属 money-adjacent 不猜，待追问确认（见剩余项 1a）。
+- ✅ **`isTrial` 字段**：1=体验金流水，2=增强体验金流水（与 trialMode 1/2 口径一致），用于区分普通/增强体验金。
+
 ## 剩余仍需确认
 
-### 1a. 合约账户资金流水 / 合约后台资产流水的 `order_type` 值（F18 / F20）
+### 1a. 合约资金流水（F18 / F20）用 `scene` 还是 `ext_scene` 承载体验金系统回收码？
 
-这两处流水按 `order_type` **字符串**编码（如 `create_position`），非 trial-scene 数字码。请给出体验金系统回收事件在该字段的字符串值（当前占位 `manual_invalidate_trial`）。
+Rullin 已确认合约资金流水靠 `scene`/`ext_scene` 数字字段识别（trial-scene 114），但未给死是哪个字段。请明确：体验金系统回收（114）落在 `scene` 还是 `ext_scene`？两者何时用哪个？（前端将据此把 F18/F20 从错误的 `order_type='manual_invalidate_trial'` 字符串识别改为读该数字字段 === 114）
 
 ### 1b. 财务审计资金流水的 `businessType` 值（F19）
 
