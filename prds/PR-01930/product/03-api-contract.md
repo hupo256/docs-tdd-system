@@ -47,7 +47,7 @@
 - ✅ **仓位占用列**：后端确认列表不再需要，已下线该列/schema/fixture/契约测试（A2 汇总的「仓位占用金额」positionOccupiedAmount 保留）。
 - ✅ **批量汇总关联口径**：`uploadFlag=1` 后端按已上传文件自算，前端不再回传 uid/configNumber。
 - ✅ **模板下载**：无独立接口，前端本地生成 CSV（表头 `uid,configNumber,remark` + 一行样板数据）。
-- ⚠ **F17-F23 各端资金流水枚举码未交付**：admin `114/34`、futures-admin `manual_invalidate_trial`、web `114` 仍为占位；后端回复需合约、数仓解答，占位维持。
+- 🟡 **F17-F23 资金流水枚举码（部分销账）**：Rullin 提供 trialFee scene 枚举，**114=系统失效(TRIAL_SYSTEM_CLAWBACK)** 即本 PR 事件真码，已落 F17 体验金流水明细 + F21/F22 C 端合约资金流水/交易记录；103「手动过期」系既存不同类型。仍待：F18/F20 `order_type`（字符串占位 `manual_invalidate_trial`）、F19 `businessType`（数字占位 `34`）属另一套编码，见 evidence handoff §1a/1b。
 - ⚠ **卡券「系统回收」识别字段**：`description` vs 新 `recordType` 待与合约确认，维持 `description` 识别。
 
 ## 文案契约表（固定中文，逐字 copy PRD，禁意译）

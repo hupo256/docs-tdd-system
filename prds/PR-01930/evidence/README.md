@@ -82,7 +82,7 @@ Biome：本仓库未配置 Biome，回退为 `verify-code-rules.mjs` globalScan 
 - ✅ **补充细节**：后端已过滤无匹配数据（不返回错误提示，部分失败报系统异常）、账号已脱敏、trialMode(1/2) 与 invalidQuantity 动态累计口径与前端一致，均无需改动。
 
 剩余未销账（仍阻塞 G5，待合约/数仓）：
-- ⚠ **F17-F23 各端资金流水枚举码**：admin `114/34`、futures-admin `manual_invalidate_trial`、web `114` 仍为占位；后端回复需合约、数仓解答，占位维持。PR-02015 legacy-admin dictionary 候选真值 `103/48` 仅供参考，PR-02015 未上线。
+- 🟡 **F17-F23 资金流水枚举码（部分销账）**：Rullin 提供 trialFee scene 枚举，**114 = TRIAL_SYSTEM_CLAWBACK 系统失效** 即本 PR 事件真码，已落码 F17（体验金流水明细）+ F21/F22（C 端合约资金流水/交易记录）；注意 103「手动过期」是既存不同类型非本 PR。**仍未销账**：F18 合约账户资金流水 / F20 合约后台资产流水的 `order_type`（字符串，占位 `manual_invalidate_trial`）、F19 财务审计 `businessType`（数字，占位 `34`）——属另一套编码，Rullin 数字枚举不覆盖，见 `evidence/handoff-contract-datawarehouse-enums.md` §1a/1b。
 - ⚠ 卡券「系统回收」走 `description` vs 新 `recordType`：后端回复需与合约确认，维持现状（`description` 识别）。
 - 落点A（数据概览-支出折合-来源明细）依赖 PR-02015（未上线），上线后补【系统回收】类型。
 
