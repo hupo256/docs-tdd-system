@@ -1,0 +1,9 @@
+{
+  "projectId": "PR-02306",
+  "mode": "local",
+  "branch": "feature/PR-02306",
+  "headSha": "",
+  "pullRequestUrl": "",
+  "evidence": [],
+  "note": "G8 前更新为 pushed / merged / released；gate 会用 Git 实际状态复核。"
+}

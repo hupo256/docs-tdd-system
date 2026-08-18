@@ -1,0 +1,36 @@
+{
+  "projectId": "PR-02306",
+  "head": "2a3ccb305f8c479b2468239c919f7c234fdb932f",
+  "items": [
+    {
+      "id": "AC-1",
+      "featureId": "F01",
+      "scenario": "扩展密码允许特殊字符：新增 ^ _ + [ ] { } 逐符号放行，合并集 @$!%*#?&-.=(),/^_+[]{}；字母/数字/特殊三者必填、长度 8-20 边界正确，非法字符（空格/CJK/尖括号/引号）被拒",
+      "method": "vitest",
+      "status": "passed",
+      "evidence": [
+        "evidence/acceptance/g6/README.md"
+      ]
+    },
+    {
+      "id": "AC-2",
+      "featureId": "F02",
+      "scenario": "密码规则展示文案同步完整特殊符号列表：passwordRule.special 由单一源 PASSWORD_SPECIAL_CHARS 插值，渲染为「至少1个特殊符号（@$!%*#?&-.=(),/^_+[]{}）」，与实际校验字符集一致；本地仅改 zh-CN",
+      "method": "manual",
+      "status": "passed",
+      "evidence": [
+        "evidence/acceptance/g6/README.md"
+      ]
+    },
+    {
+      "id": "AC-3",
+      "featureId": "F03",
+      "scenario": "所有密码场景走同一校验源：注册/找回/设置/修改密码用 passwordPattern，登录用 passwordAllowedCharPattern，随机临时密码复用 PASSWORD_SPECIAL_CHARS；全仓无残留字符列表副本，登录过滤器保留新符号",
+      "method": "vitest",
+      "status": "passed",
+      "evidence": [
+        "evidence/acceptance/g6/README.md"
+      ]
+    }
+  ]
+}

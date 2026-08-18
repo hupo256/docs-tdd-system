@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "projectId": "PR-02306",
+  "attempts": [
+    {
+      "at": "2026-08-18T01:21:53.610Z",
+      "action": "sync_and_init",
+      "ok": true
+    }
+  ],
+  "status": "waiting_approval",
+  "currentStage": "G1",
+  "lastAction": "initialize_prd_intake",
+  "nextAction": "complete_g0_g1_docs",
+  "source": "https://qfglxo2m3dc.sg.larksuite.com/wiki/KCyhwSvN7idfRCkTbI9lhZUNgbd",
+  "updatedAt": "2026-08-18T01:21:53.610Z",
+  "blocker": "",
+  "syncedSource": "apps/web/docs_tdd/prds/PR-02306/inbox/lark-sync/prd-latest.md"
+}

@@ -1,0 +1,62 @@
+{
+  "version": 2,
+  "projectId": "PR-02306",
+  "generatedAt": "2026-08-18T01:37:41.678Z",
+  "approvedFingerprint": "bd24450a07fc77af",
+  "remoteSources": [
+    {
+      "name": "需求 PRD",
+      "url": "https://qfglxo2m3dc.sg.larksuite.com/wiki/KCyhwSvN7idfRCkTbI9lhZUNgbd",
+      "target": "prd-latest.md",
+      "contentHash": "7bb40416a74ac426ebaeed629d892f1ce42f4ee317d58f8c01104ad761400f97",
+      "revisionId": "298",
+      "syncedAt": "2026-08-18T01:21:52.419Z"
+    }
+  ],
+  "sources": [
+    {
+      "path": "apps/web/docs_tdd/prds/PR-02306/inbox/lark-sync/prd-latest.extracted.md",
+      "contentHash": "5d118e83a509311a5db45551547c5325862ff88e726fc75a5f2e954616c14063"
+    }
+  ],
+  "items": [
+    {
+      "sourceId": "PRD-IMG-001",
+      "type": "image",
+      "sourcePath": "apps/web/docs_tdd/prds/PR-02306/inbox/lark-sync/prd-latest.extracted.md",
+      "line": 20,
+      "locator": "apps/web/docs_tdd/prds/PR-02306/inbox/lark-sync/prd-latest.extracted.md#L20:image:1",
+      "contentHash": "f01ec4e805ae219cc12d7a83ed846b02c6e695123b8a6ae2a9a96f9e30a71477",
+      "assetPath": "apps/web/docs_tdd/prds/PR-02306/inbox/lark-sync/assets/img-001.png",
+      "assetHash": "fb34e899ec47308346d9e7d098a1e7ea985c2d56dbcf84787e0901d30b5cbbf1",
+      "assetStatus": "local",
+      "status": "read",
+      "classification": "decorative",
+      "readMethod": "vision",
+      "summary": "竞品「平台规则对比」表：Binance/OKX/Bybit/Bitget/Coinbase/KuCoin 密码长度、必须包含、特殊字符、官网核验结论对比（背景调研）",
+      "featureIds": [],
+      "disposition": "背景调研，仅论证保留「数字+英文+特殊字符」规则，不落地",
+      "evidence": "evidence/prd-intake/README.md"
+    },
+    {
+      "sourceId": "PRD-IMG-002",
+      "type": "image",
+      "sourcePath": "apps/web/docs_tdd/prds/PR-02306/inbox/lark-sync/prd-latest.extracted.md",
+      "line": 43,
+      "locator": "apps/web/docs_tdd/prds/PR-02306/inbox/lark-sync/prd-latest.extracted.md#L43:image:1",
+      "contentHash": "8c2c0c5f14db8d4b64a693f3930ea42501b856d6028da3d09f7ccd76368db21b",
+      "assetPath": "apps/web/docs_tdd/prds/PR-02306/inbox/lark-sync/assets/img-002.png",
+      "assetHash": "197d2b07bb01ddad3b91a55d281c326abfb46ec02e4c67efc7a9908e32c9cb5d",
+      "assetStatus": "local",
+      "status": "read",
+      "classification": "requirement",
+      "readMethod": "vision",
+      "summary": "「设置您的密码」低保真截图：示例 asd_12345678 + 三行规则清单（8-20字符/至少1个英文字母/至少1个特殊符号，未枚举字符）",
+      "featureIds": [
+        "F02"
+      ],
+      "disposition": "",
+      "evidence": "evidence/prd-intake/README.md"
+    }
+  ]
+}

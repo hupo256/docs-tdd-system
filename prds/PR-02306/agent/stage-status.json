@@ -1,0 +1,24 @@
+{
+  "projectId": "PR-02306",
+  "stages": {
+    "G5": {
+      "status": "not-applicable",
+      "reason": "本需求纯前端密码校验规则修改，无任何 API / 数据请求（PRD 明确前端可闭环、不需要后端）；无 mock 需拆除、无真实接口联调范围。G3 已就 DOC-G3-006/007 登记 MSW N/A 豁免。",
+      "evidence": [
+        "prds/PR-02306/agent/rule-waivers.json",
+        "prds/PR-02306/product/02-technical-design.md",
+        "prds/PR-02306/product/06-collaboration.md"
+      ],
+      "updatedAt": "2026-08-18"
+    },
+    "G7": {
+      "status": "skipped",
+      "reason": "本需求为纯前端密码校验规则小改动，负责人未提供独立 QA 用例。验收已由 G6 acceptance-results 覆盖：Vitest（regex.test.ts 12 passed，逐符号含新增 ^_+[]{}、字母/数字/特殊必填、长度边界、登录过滤保留新符号）+ 各密码场景一致性 grep（5 消费者全指向单一源，无残留副本）+ 文案单一源插值核对。无 QA 用例待执行，故跳过。",
+      "evidence": [
+        "prds/PR-02306/agent/acceptance-results.json",
+        "prds/PR-02306/evidence/acceptance/g6/README.md"
+      ],
+      "updatedAt": "2026-08-18"
+    }
+  }
+}

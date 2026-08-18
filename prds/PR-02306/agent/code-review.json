@@ -1,0 +1,42 @@
+{
+  "projectId": "PR-02306",
+  "reviewedAt": "2026-08-18",
+  "reviewer": "aven",
+  "head": "2a3ccb305f8c479b2468239c919f7c234fdb932f",
+  "findings": [
+    {
+      "id": "CR-1",
+      "category": "other",
+      "severity": "medium",
+      "summary": "constants/regex.ts:24 chainAddressDisallowedCharPattern 的 /gu flag 触发 TS1501（target 低于 ES2015 的仓库级历史问题），因本次改动 regex.ts 被文件级归因命中 VERIFY-TYPE-001",
+      "disposition": "waived",
+      "resolution": "既有代码，非本 PR 引入：本次仅在其上方新增密码单一源常量。改动外 tsc delta=0（270≤基线270，VERIFY-TYPE-002 PASS）。已在 agent/rule-waivers.json 登记 VERIFY-TYPE-001 豁免（rule.waivable=true 已核实，owner 用户，至 2026-09-18）。全仓多处同类 /gu（CopyTrading/helper.ts、sanitizeName.ts），属 tsconfig target 统一议题，超本需求范围。",
+      "evidence": [
+        "apps/web/src/constants/regex.ts",
+        "agent/rule-waivers.json"
+      ]
+    },
+    {
+      "id": "CR-2",
+      "category": "correctness",
+      "severity": "low",
+      "summary": "Register/common/const.ts generateRegisterTempPassword 的首字符用 TEMP_CHARS[random*52] 取样，但 TEMP_CHARS 共 56 位、索引 48-51 为数字，理论上首位可能取到数字（约 7.7% 概率）而非保证字母",
+      "disposition": "waived",
+      "resolution": "既有代码，非本 PR 引入（本次仅将 TEMP_SPECIALS 改为复用单一源 PASSWORD_SPECIAL_CHARS）。实际由 rest(12 位 TEMP_CHARS 随机) 兜底，临时密码几乎必含字母，且仅用于分步注册的一次性提交、随后被正式密码覆盖，无用户可见回归。属既有随机取样索引议题，记录供后续单独处理，本 PR 不扩范围。",
+      "evidence": [
+        "apps/web/src/apps/Register/common/const.ts"
+      ]
+    },
+    {
+      "id": "CR-3",
+      "category": "simplification",
+      "severity": "low",
+      "summary": "constants/regex.ts:16 passwordPattern 带 'i' flag，而字符类已含 [A-Za-z]，'i' 对当前模式无行为影响（冗余）",
+      "disposition": "not-applicable",
+      "resolution": "",
+      "evidence": [
+        "apps/web/src/constants/regex.ts"
+      ]
+    }
+  ]
+}

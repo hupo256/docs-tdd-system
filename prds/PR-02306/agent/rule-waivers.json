@@ -1,0 +1,20 @@
+[
+  {
+    "ruleId": "DOC-G3-006",
+    "reason": "纯前端密码校验规则修改，无任何 API / 数据请求（PRD 明确前端可闭环、不需要后端；00-feature-inventory §数据流 与 02-technical-design 数据流表均记为 N/A）。MSW 路线 B 针对数据请求型功能，本需求不适用，故 G3 前端 MSW fallback 任务 N/A。",
+    "owner": "用户（负责人）",
+    "expiresAt": "2026-09-18"
+  },
+  {
+    "ruleId": "DOC-G3-007",
+    "reason": "同上：本需求无 API/数据请求，MSW 路线 B 落地清单 N/A；协作文档记录该 N/A 决策而非 MSW 落地清单。",
+    "owner": "用户（负责人）",
+    "expiresAt": "2026-09-18"
+  },
+  {
+    "ruleId": "VERIFY-TYPE-001",
+    "reason": "regex.ts:24 TS1501（chainAddressDisallowedCharPattern 的 /gu flag）为既有代码历史问题，非本 PR 引入；本次仅在其上方新增密码校验单一源常量。改动外 tsc delta=0（270≤基线270，VERIFY-TYPE-002 PASS）。文件级归因使既有错误被算入改动文件。全仓多处同类 /gu（CopyTrading/helper.ts、sanitizeName.ts），属 tsconfig target 统一议题，超本需求范围（用户 2026-08-18 确认走 waiver）。",
+    "owner": "用户（负责人）",
+    "expiresAt": "2026-09-18"
+  }
+]

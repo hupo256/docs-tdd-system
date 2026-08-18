@@ -1,6 +1,6 @@
 {
   "tool": "warn-ledger.mjs",
-  "updatedAt": "2026-08-03T18:39:24.294Z",
+  "updatedAt": "2026-08-18T06:47:05.898Z",
   "rules": {
     "CODE-ARCH-003": {
       "projects": {
@@ -9,6 +9,13 @@
           "lastSeen": "2026-08-03",
           "lastFingerprint": "b8794616798d9c54b2baeb15fb33e13d3472d081",
           "count": 18,
+          "verdict": "unreviewed"
+        },
+        "PR-02306": {
+          "firstSeen": "2026-08-18",
+          "lastSeen": "2026-08-18",
+          "lastFingerprint": "2a3ccb305f8c479b2468239c919f7c234fdb932f",
+          "count": 1,
           "verdict": "unreviewed"
         }
       }

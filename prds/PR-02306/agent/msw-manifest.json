@@ -1,0 +1,20 @@
+{
+  "projectId": "PR-02306",
+  "route": "msw",
+  "lifecycle": "planned",
+  "sourceRoot": "",
+  "assets": {
+    "handler": "",
+    "fixture": "",
+    "contractTest": "",
+    "registration": "apps/web/src/mocks/browser.ts",
+    "workerHook": "apps/web/src/mocks/useMockWorker.ts",
+    "provider": "apps/web/src/app/[lang]/Providers.tsx",
+    "handlerExport": ""
+  },
+  "endpoints": [],
+  "retirement": {
+    "retiredAt": "",
+    "reconciliationEvidence": ""
+  }
+}

@@ -1,0 +1,149 @@
+{
+  "projectId": "PR-02306",
+  "runs": [
+    {
+      "gate": "G2",
+      "ok": true,
+      "generatedAt": "2026-08-18T01:37:42.869Z",
+      "tool": "run-project-gate.mjs",
+      "summary": {
+        "total": 39,
+        "ok": 39,
+        "warn": 0,
+        "waived": 0,
+        "fail": 0
+      },
+      "fingerprint": {
+        "headSha": "7fd5b4a4e8a727fc515ff5808afc2a8b7f6bf36d",
+        "baseSha": "70d871e7af8e490f2774509f4b5c880167ea0692",
+        "dirtyHash": "e0bb08d4745c0feab56aaec9c0135d764d6afc4946cc82e261d34cc87417643b",
+        "dirtyFileCount": 0,
+        "untrackedFileCount": 0,
+        "rulesetVersion": "local-2026.07-msw-v1",
+        "ruleReleaseFingerprint": "bcb8008808dfffa46657545ce1e179ef8e525adb94bcd9a934514100c04fad2e",
+        "effectiveRulesFingerprint": "1ab7ef454c377138578b00925cb6fa3b46f9bcd2166d56dd80f437af595d41e2"
+      },
+      "evidence": "evidence/gate/2026-08-18-013742-g2/README.md"
+    },
+    {
+      "gate": "G3",
+      "ok": true,
+      "generatedAt": "2026-08-18T01:54:24.030Z",
+      "tool": "run-project-gate.mjs",
+      "summary": {
+        "total": 52,
+        "ok": 51,
+        "warn": 0,
+        "waived": 1,
+        "fail": 0
+      },
+      "fingerprint": {
+        "headSha": "7fd5b4a4e8a727fc515ff5808afc2a8b7f6bf36d",
+        "baseSha": "70d871e7af8e490f2774509f4b5c880167ea0692",
+        "dirtyHash": "29cf21e3c35f935b5ba12210df16f0ee7e87ccbc29da0a81b5652e2a5920872a",
+        "dirtyFileCount": 5,
+        "untrackedFileCount": 0,
+        "rulesetVersion": "local-2026.07-msw-v1",
+        "ruleReleaseFingerprint": "bcb8008808dfffa46657545ce1e179ef8e525adb94bcd9a934514100c04fad2e",
+        "effectiveRulesFingerprint": "1ab7ef454c377138578b00925cb6fa3b46f9bcd2166d56dd80f437af595d41e2"
+      },
+      "evidence": "evidence/gate/2026-08-18-015424-g3/README.md"
+    },
+    {
+      "gate": "G4",
+      "ok": true,
+      "generatedAt": "2026-08-18T02:06:46.535Z",
+      "tool": "run-project-gate.mjs",
+      "summary": {
+        "total": 61,
+        "ok": 60,
+        "warn": 0,
+        "waived": 1,
+        "fail": 0
+      },
+      "fingerprint": {
+        "headSha": "7fd5b4a4e8a727fc515ff5808afc2a8b7f6bf36d",
+        "baseSha": "70d871e7af8e490f2774509f4b5c880167ea0692",
+        "dirtyHash": "29cf21e3c35f935b5ba12210df16f0ee7e87ccbc29da0a81b5652e2a5920872a",
+        "dirtyFileCount": 5,
+        "untrackedFileCount": 0,
+        "rulesetVersion": "local-2026.07-msw-v1",
+        "ruleReleaseFingerprint": "bcb8008808dfffa46657545ce1e179ef8e525adb94bcd9a934514100c04fad2e",
+        "effectiveRulesFingerprint": "1ab7ef454c377138578b00925cb6fa3b46f9bcd2166d56dd80f437af595d41e2"
+      },
+      "evidence": "evidence/gate/2026-08-18-020646-g4/README.md"
+    },
+    {
+      "gate": "G5",
+      "ok": true,
+      "generatedAt": "2026-08-18T02:08:27.704Z",
+      "tool": "run-project-gate.mjs",
+      "summary": {
+        "total": 70,
+        "ok": 68,
+        "warn": 1,
+        "waived": 1,
+        "fail": 0
+      },
+      "fingerprint": {
+        "headSha": "7fd5b4a4e8a727fc515ff5808afc2a8b7f6bf36d",
+        "baseSha": "70d871e7af8e490f2774509f4b5c880167ea0692",
+        "dirtyHash": "29cf21e3c35f935b5ba12210df16f0ee7e87ccbc29da0a81b5652e2a5920872a",
+        "dirtyFileCount": 5,
+        "untrackedFileCount": 0,
+        "rulesetVersion": "local-2026.07-msw-v1",
+        "ruleReleaseFingerprint": "bcb8008808dfffa46657545ce1e179ef8e525adb94bcd9a934514100c04fad2e",
+        "effectiveRulesFingerprint": "1ab7ef454c377138578b00925cb6fa3b46f9bcd2166d56dd80f437af595d41e2"
+      },
+      "evidence": "evidence/gate/2026-08-18-020827-g5/README.md"
+    },
+    {
+      "gate": "G6",
+      "ok": true,
+      "generatedAt": "2026-08-18T06:40:30.414Z",
+      "tool": "run-project-gate.mjs",
+      "summary": {
+        "total": 89,
+        "ok": 86,
+        "warn": 1,
+        "waived": 2,
+        "fail": 0
+      },
+      "fingerprint": {
+        "headSha": "27a6e22052bf607b4670868b1c2f2619699cbcd7",
+        "baseSha": "70d871e7af8e490f2774509f4b5c880167ea0692",
+        "dirtyHash": "863227f4f89f2468f2725c66ccd5884fcd6f38d95a29da332365642883c2db2c",
+        "dirtyFileCount": 1,
+        "untrackedFileCount": 0,
+        "rulesetVersion": "local-2026.07-msw-v1",
+        "ruleReleaseFingerprint": "bcb8008808dfffa46657545ce1e179ef8e525adb94bcd9a934514100c04fad2e",
+        "effectiveRulesFingerprint": "1ab7ef454c377138578b00925cb6fa3b46f9bcd2166d56dd80f437af595d41e2"
+      },
+      "evidence": "evidence/gate/2026-08-18-064030-g6/README.md"
+    },
+    {
+      "gate": "G7",
+      "ok": true,
+      "generatedAt": "2026-08-18T06:47:05.898Z",
+      "tool": "run-project-gate.mjs",
+      "summary": {
+        "total": 93,
+        "ok": 90,
+        "warn": 1,
+        "waived": 2,
+        "fail": 0
+      },
+      "fingerprint": {
+        "headSha": "2a3ccb305f8c479b2468239c919f7c234fdb932f",
+        "baseSha": "70d871e7af8e490f2774509f4b5c880167ea0692",
+        "dirtyHash": "ea050ac5c82fc97254d0cee353f7cdad56f3b28769adfed2ea793c2b59fe957b",
+        "dirtyFileCount": 0,
+        "untrackedFileCount": 0,
+        "rulesetVersion": "local-2026.07-msw-v1",
+        "ruleReleaseFingerprint": "bcb8008808dfffa46657545ce1e179ef8e525adb94bcd9a934514100c04fad2e",
+        "effectiveRulesFingerprint": "1ab7ef454c377138578b00925cb6fa3b46f9bcd2166d56dd80f437af595d41e2"
+      },
+      "evidence": "evidence/gate/2026-08-18-064705-g7/README.md"
+    }
+  ]
+}
