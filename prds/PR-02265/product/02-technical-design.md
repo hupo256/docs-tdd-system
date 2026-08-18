@@ -89,7 +89,7 @@
 
 **F05（前台 web 正数化）**：`FundsFlow`(:24 `formatAmount`)、`PositionHistory/Card.tsx`(:171)、`CashFlow` 的开/平仓手续费展示，改为对返佣（负金额）取绝对值+正号展示；抽公共正数化纯函数放 `formatNumber.ts`。
 
-**F06（后台正数化）**：`i_contract_capital_flow.vue`(:50-51,159) 及 `futures-admin` reportManager mixins 的手续费金额展示，按同一正数化口径处理。
+**F06（后台正数化）**：`i_contract_capital_flow.vue`(:50-51,159)、`futures-admin` reportManager mixins（`userFeeInfoList.js` 贡献手续费、`positionHistoryTableColumn.vue`/`positionInPosTableColumn.vue` 仓位已平仓/持仓中）及 `flowerDetail.vue`/`flowerDetail.js`（合约管理后台--资产--流水查询，开仓/平仓手续费；2026-08-18 QA 用例交叉核对补录，此前遗漏）的手续费金额展示，按同一正数化口径处理。
 
 **F07**：后端逻辑，前端不实现，G5 联调确认展示层不受影响。
 

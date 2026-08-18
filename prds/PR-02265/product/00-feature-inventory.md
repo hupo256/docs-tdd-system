@@ -63,6 +63,17 @@
 | F11 用户白名单文案 | 主语为「账号若在…」 | `PRD-IMG-034` alt/图中疑似出现「账号交易的币对若在…」 | 以相邻加粗正文逐字实现；图仅决定样式与位置 |
 | F13 手续费折扣文案 | 「该账号若在…以外部做市商表为准」 | `PRD-IMG-022` OCR/alt 描述与正文不一致 | 以相邻加粗正文逐字实现；图仅决定样式与位置 |
 
+## QA 测试用例交叉核对（2026-08-18）
+
+> 来源：QA 脑图（Lark mindnote，标题「PR-02265 外部做市商新增负手续费率 测试用例」，node_token `MHTSwuLT7iiOR9khte8lVCORgyb`）。`mindnote:node:read` scope 未获企业审批，改由用户导出 `.mm` 文件读取。
+
+| 用例项 | 与本仓 PRD/范围结论的关系 | 结论 & 确认人 & 日期 |
+|--------|--------------------------|----------------------|
+| taker 配置 -111% → 用例写「无法配置，区间为0-100」 | F01/F03 口径为 `[-100,100]`；实测 `isValidFeeValue(-111)` 确实校验失败，行为符合预期，只是 QA 用例文案数字笔误（应为 -100~100） | 非冲突，不改代码；已告知 QA 更正用例文案 |
+| 合约管理后台--数据查询--成交记录：真金手续费 需正数化 | 「真金手续费 / netInflow 统计口径」已在 `engineering/backend-api-handoff.md` #9、`engineering/frontend-followup-checklist.md`「不做」区确认本期不做、留后续 PR | 维持 defer，本期该用例判定为不适用；用户 2026-08-18 确认按现状执行 |
+| F07 返佣计算/异常、爆仓价格与预估强平价按负费率计算、四种下单类型按做市商费率收费 | 均为后端计费/联调逻辑，前端仅展示，已在 F07 裁剪记录中裁剪 | 非前端范围，转交后端 + QA 联调覆盖 |
+| 合约管理后台--资产--流水查询（`flowerDetail.vue`，路由 `flowerQuery`）：开仓/平仓手续费需正数化 | 原 F06/`02-technical-design.md` 落地范围只列了 `i_contract_capital_flow.vue` 与 futures-admin `reportManager` mixins，漏了这个触点，做市商配置负费率时会显示负数 | **实现缺口，已修复**：新增 `apps/futures-admin/legacy-admin/src/utils/flowerFlowFee.js` 纯函数 + 单测，接入 `flowerDetail.js`/`.vue`；详见 `04-frontend-tasks.md` T07 |
+
 ## PRD 未完全可读内容
 
 无。20 张图片、2 个 Markdown 表格、验收 sheet 与 11 个 cite 均已本地化/读取并登记于 `agent/prd-source-manifest.json`；unresolved 为 0。

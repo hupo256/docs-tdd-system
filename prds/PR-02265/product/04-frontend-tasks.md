@@ -16,7 +16,7 @@
 | T04 | F03 | `PRD-IMG-017` `PRD-IMG-018` | 校验失败逐字显示「请输入【-100,100】之间的数字，精度支持6位」；不采用图片中的短文案 | 待办 | 字面量断言 + G6 |
 | T05 | F04 | `PRD-IMG-033` | 外部做市商列表「手续费率」列兼容负费率显示 | 待办 | G6 |
 | T06 | F05 | `PRD-IMG-023` `PRD-IMG-024` `PRD-IMG-025` `PRD-IMG-026` | 前台 web 合约账户/交易资金流水、历史成交、仓位历史手续费正数化展示；app/h5 不在本仓 | 待办 | 单测 + G6 |
-| T07 | F06 | `PRD-IMG-027` `PRD-IMG-028` `PRD-IMG-029` `PRD-IMG-030` `PRD-IMG-031` `PRD-IMG-032` | 现货后台用户合约流水及合约后台 5 个触点手续费正数化展示 | 待办 | 单测 + G6 |
+| T07 | F06 | `PRD-IMG-027` `PRD-IMG-028` `PRD-IMG-029` `PRD-IMG-030` `PRD-IMG-031` `PRD-IMG-032` | 现货后台用户合约流水及合约后台 5 个触点手续费正数化展示；含 2026-08-18 QA 用例交叉核对补上的 `flowerDetail.vue`（合约管理后台--资产--流水查询）触点 | 已完成（原 5 触点 + 补漏 1 项） | `feeAmount.test.ts`/`positivizeAmount.spec.js`（两端）/`flowerFlowFee.spec.js` 全绿 + G6 |
 | T08 | F01 F03 F04 F05 F06 | `PRD-EMBED-003` | 对照验收 sheet 9 条逐项自测 | 待办 | `agent/acceptance-results.json` |
 | T09 | F07 | `PRD-TABLE-003` | 返佣计算/入账/异常为后端逻辑；G5 仅确认展示层不受影响 | 待办（后端） | G5 联调 |
 | T10 | F01~F13 | scope revision 1576 | 对新增范围重新执行 G4 复用盘点与代码定位；不得沿用 revision 1009 的旧 G4 结论直接编码 | 已完成 | 2026-08-10 G4 PASS |
