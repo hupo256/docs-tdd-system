@@ -1,9 +1,12 @@
 {
   "projectId": "PR-02306",
-  "mode": "local",
+  "mode": "pushed",
   "branch": "feature/PR-02306",
-  "headSha": "",
+  "headSha": "2a3ccb305f8c479b2468239c919f7c234fdb932f",
   "pullRequestUrl": "",
-  "evidence": [],
-  "note": "G8 前更新为 pushed / merged / released；gate 会用 Git 实际状态复核。"
+  "evidence": [
+    "origin/feature/PR-02306 @ 2a3ccb305f8c479b2468239c919f7c234fdb932f（本地 HEAD 与远端一致，worktree clean）",
+    "prds/PR-02306/evidence/acceptance/g6/README.md"
+  ],
+  "note": "纯前端密码规则修改，已推送至 origin/feature/PR-02306；未合并 online，待负责人发起 MR。"
 }

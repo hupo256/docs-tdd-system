@@ -1,6 +1,6 @@
 {
   "tool": "warn-ledger.mjs",
-  "updatedAt": "2026-08-18T06:47:05.898Z",
+  "updatedAt": "2026-08-18T06:49:28.027Z",
   "rules": {
     "CODE-ARCH-003": {
       "projects": {
