@@ -1,22 +1,22 @@
 {
-  "generatedAt": "2026-08-18T14:32:06.239Z",
+  "generatedAt": "2026-08-19T07:00:04.210Z",
   "tool": "run-project-gate.mjs",
   "projectId": "PR-02172",
   "gate": "G8",
   "ok": true,
   "summary": {
-    "total": 87,
+    "total": 89,
     "ok": 84,
     "warn": 3,
-    "waived": 0,
+    "waived": 2,
     "fail": 0
   },
   "groups": {
     "documentation": {
       "total": 74,
-      "ok": 72,
+      "ok": 70,
       "warn": 2,
-      "waived": 0,
+      "waived": 2,
       "fail": 0
     },
     "implementation": {
@@ -239,7 +239,7 @@
     {
       "ruleId": "DOC-PRD-010",
       "ok": true,
-      "message": "remote PRD content hash matches intake baseline (cached 25s ago): 需求 PRD (revision 1393)",
+      "message": "remote PRD content hash matches intake baseline (cached 35s ago): 需求 PRD (revision 1393)",
       "file": "../docs_tdd/prds/PR-02172/agent/prd-source-manifest.json",
       "severity": "error",
       "category": "documentation"
@@ -558,18 +558,18 @@
     },
     {
       "ruleId": "CODE-MOCK-002",
-      "ok": true,
-      "message": "mock residue grep is empty in responsibility modules",
+      "ok": false,
+      "message": "mock residue found:\napps/admin/legacy-admin/src/views/userManager/other_information/a_third_party_bind_history.vue:2:     当前接口未就绪，service 层临时 mock（见 memberManager.js @mock-only），真实字段以 6025 response 为准。 -->\napps/admin/legacy-admin/src/api/userManager/memberManager.js:352:  // @mock-only 6025 接口后端未就绪，临时返回 mock 数据；接口 ready 后删除下方 mock 分支即恢复真实请求。\napps/admin/legacy-admin/src/api/userManager/memberManager.js:355:    const USE_MOCK_6025 = true; // @mock-only 删除本行与下方 if 块即恢复真实请求\napps/admin/legacy-admin/src/api/userManager/memberManager.js:356:    if (USE_MOCK_6025) { [waived: F13 第三方账号绑定关联历史依赖后端接口 6025 /platformAccountOperation/pageList，后端 2026-08-19 反馈接口未就绪。按 docs_tdd Mock 策略在 legacy-admin(Vue2) service 层（memberManager.js platform_account_operation_page_list）做隔离 mock，@mock-only + USE_MOCK_6025 标记，组件/mapper 不写 mock 分支。真实接口 ready 后删除 mock 分支恢复 axios，并按 6025 response 对账列 prop（G5 reconcile）。属临时脚手架，非业务逻辑常驻 mock。 · owner=用户（负责人） · until 2026-09-19]",
       "file": "../docs_tdd/prds/PR-02172",
-      "severity": "error",
+      "severity": "waived",
       "category": "documentation"
     },
     {
       "ruleId": "CODE-MSW-002",
-      "ok": true,
-      "message": "MSW route B leaves no business mock switch residue in responsibility modules",
+      "ok": false,
+      "message": "MSW route B business mock residue found:\napps/admin/legacy-admin/src/views/userManager/other_information/a_third_party_bind_history.vue:2:     当前接口未就绪，service 层临时 mock（见 memberManager.js @mock-only），真实字段以 6025 response 为准。 -->\napps/admin/legacy-admin/src/api/userManager/memberManager.js:352:  // @mock-only 6025 接口后端未就绪，临时返回 mock 数据；接口 ready 后删除下方 mock 分支即恢复真实请求。\napps/admin/legacy-admin/src/api/userManager/memberManager.js:355:    const USE_MOCK_6025 = true; // @mock-only 删除本行与下方 if 块即恢复真实请求\napps/admin/legacy-admin/src/api/userManager/memberManager.js:356:    if (USE_MOCK_6025) { [waived: 同 CODE-MOCK-002：F13 落 legacy-admin(Vue2)，该栈无 MSW 基建，不适用 MSW 路线 B；采用 service 层隔离 mock 顶替未就绪的 6025 接口，@mock-only 标记、单点可删。MSW 路线 B 决策针对 apps/web(React)，本条残留来自 Vue2 admin 临时 mock，非 MSW handler 残留。真实接口 ready 后一并拆除。 · owner=用户（负责人） · until 2026-09-19]",
       "file": "../docs_tdd/prds/PR-02172",
-      "severity": "error",
+      "severity": "waived",
       "category": "documentation"
     },
     {
@@ -672,20 +672,53 @@
       "ruleId": "VERIFY-BIOME-001",
       "ok": true,
       "severity": "error",
-      "message": "biome check 通过：实检 14 / 候选 15 个文件",
+      "message": "biome check 通过：实检 14 / 候选 17 个文件",
       "file": "",
       "category": "build-quality",
       "evidence": {
-        "command": "pnpm exec biome check --no-errors-on-unmatched apps/web/src/app/[lang]/(with-header)/layout.tsx apps/web/src/apps/Login/InputAccount.tsx apps/web/src/components/FacebookLoginSdk/index.tsx apps/web/src/components/FacebookLoginSdk/stores.ts apps/web/src/components/TelegramLoginSdk/index.tsx apps/web/src/components/TelegramLoginSdk/stores.ts apps/web/src/components/ThirdPartyLogin/DevThirdLoginDemo.tsx apps/web/src/components/ThirdPartyLogin/HomeThirdLogin.tsx apps/web/src/components/ThirdPartyLogin/common/providerAdapters.ts apps/web/src/components/ThirdPartyLogin/common/thirdConfig.ts apps/web/src/components/ThirdPartyLogin/common/thirdTypes.ts apps/web/src/components/ThirdPartyLogin/hooks/useThirdAuth.ts apps/web/src/components/ThirdPartyLogin/index.tsx apps/web/src/components/ThirdPartyLogin/store.ts apps/web/src/i18n/locales/zh-CN/thirdLogin.json",
+        "command": "pnpm exec biome check --no-errors-on-unmatched apps/web/src/app/[lang]/(with-header)/layout.tsx apps/web/src/apps/Login/InputAccount.tsx apps/web/src/components/FacebookLoginSdk/index.tsx apps/web/src/components/FacebookLoginSdk/stores.ts apps/web/src/components/TelegramLoginSdk/index.tsx apps/web/src/components/TelegramLoginSdk/stores.ts apps/web/src/components/ThirdPartyLogin/DevThirdLoginDemo.tsx apps/web/src/components/ThirdPartyLogin/HomeThirdLogin.tsx apps/web/src/components/ThirdPartyLogin/common/providerAdapters.ts apps/web/src/components/ThirdPartyLogin/common/thirdConfig.ts apps/web/src/components/ThirdPartyLogin/common/thirdTypes.ts apps/web/src/components/ThirdPartyLogin/hooks/useThirdAuth.ts apps/web/src/components/ThirdPartyLogin/index.tsx apps/web/src/components/ThirdPartyLogin/store.ts apps/web/src/i18n/locales/zh-CN/thirdLogin.json apps/admin/legacy-admin/src/api/userManager/memberManager.js apps/admin/legacy-admin/src/mixin/dictionary/index.js",
         "cwd": ".",
         "status": 0,
-        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-18T14-31-58-345Z-biome-check.log",
+        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-19T06-59-55-584Z-biome-check.log",
         "counts": {
-          "candidates": 15,
+          "candidates": 17,
           "checked": 14,
           "errors": 0,
           "warnings": 0,
           "diagnostics": []
+        }
+      }
+    },
+    {
+      "ruleId": "VERIFY-TYPE-001",
+      "ok": true,
+      "severity": "error",
+      "message": "apps/admin 改动文件类型检查通过（全仓 157 处存量报错不阻断）",
+      "file": "apps/admin",
+      "category": "build-quality",
+      "evidence": {
+        "command": "pnpm exec tsc --project ./tsconfig.json --noEmit --pretty false",
+        "cwd": "apps/admin",
+        "status": 1,
+        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-19T06-59-56-246Z-tsc-apps-admin.log",
+        "counts": {
+          "total": 157,
+          "inChangedFiles": 0
+        }
+      }
+    },
+    {
+      "ruleId": "VERIFY-TYPE-002",
+      "ok": true,
+      "severity": "warn",
+      "message": "apps/admin 存量 tsc 报错未增加（改动外 157 ≤ 基线 157）",
+      "file": "apps/admin",
+      "category": "build-quality",
+      "evidence": {
+        "counts": {
+          "total": 157,
+          "outsideChanged": 157,
+          "baseline": 157
         }
       }
     },
@@ -700,7 +733,7 @@
         "command": "pnpm exec tsc --project ./tsconfig.json --noEmit --pretty false",
         "cwd": "apps/web",
         "status": 1,
-        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-18T14-31-59-029Z-tsc-apps-web.log",
+        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-19T06-59-59-722Z-tsc-apps-web.log",
         "counts": {
           "total": 181,
           "inChangedFiles": 0
@@ -759,7 +792,7 @@
         "command": "pnpm --filter @fameex/web build",
         "cwd": ".",
         "status": 0,
-        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-18T14-32-05-698Z-production-build.log",
+        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-19T07-00-03-808Z-production-build.log",
         "counts": null
       }
     },
@@ -769,8 +802,8 @@
       "file": "common/engine/agent-scripts/verify-build-quality.mjs",
       "ok": true,
       "severity": "error",
-      "message": "G8 机器事实层已实跑：6 条 biome/tsc/vitest 结论",
-      "evidence": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-18T14-31-58-031Z-verify-build-quality.log"
+      "message": "G8 机器事实层已实跑：8 条 biome/tsc/vitest 结论",
+      "evidence": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-19T06-59-55-373Z-verify-build-quality.log"
     }
   ],
   "commands": [
@@ -778,41 +811,41 @@
       "label": "verify-project-gate PR-02172 G8",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-08-18T14:31:55.944Z",
-      "finishedAt": "2026-08-18T14:31:56.178Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-18T14-31-55-944Z-verify-project-gate-g8.log"
+      "startedAt": "2026-08-19T06:59:53.522Z",
+      "finishedAt": "2026-08-19T06:59:53.753Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-19T06-59-53-522Z-verify-project-gate-g8.log"
     },
     {
       "label": "verify-code-rules --project PR-02172",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-08-18T14:31:56.179Z",
-      "finishedAt": "2026-08-18T14:31:58.031Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-18T14-31-56-179Z-verify-code-rules.log"
+      "startedAt": "2026-08-19T06:59:53.753Z",
+      "finishedAt": "2026-08-19T06:59:55.373Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-19T06-59-53-753Z-verify-code-rules.log"
     },
     {
       "label": "verify-build-quality --project PR-02172",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-08-18T14:31:58.031Z",
-      "finishedAt": "2026-08-18T14:32:06.238Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-18T14-31-58-031Z-verify-build-quality.log"
+      "startedAt": "2026-08-19T06:59:55.373Z",
+      "finishedAt": "2026-08-19T07:00:04.209Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-19T06-59-55-373Z-verify-build-quality.log"
     },
     {
       "label": "set-project-stage PR-02172 G8",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-08-18T14:32:06.845Z",
-      "finishedAt": "2026-08-18T14:32:07.048Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-18T14-32-06-845Z-set-project-stage.log"
+      "startedAt": "2026-08-19T07:00:04.706Z",
+      "finishedAt": "2026-08-19T07:00:04.895Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-19T07-00-04-706Z-set-project-stage.log"
     },
     {
       "label": "render-delivery-summary --project PR-02172 --write",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-08-18T14:32:07.048Z",
-      "finishedAt": "2026-08-18T14:32:07.392Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-18T14-32-07-048Z-render-delivery-summary.log"
+      "startedAt": "2026-08-19T07:00:04.896Z",
+      "finishedAt": "2026-08-19T07:00:05.170Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-19T07-00-04-896Z-render-delivery-summary.log"
     }
   ],
   "codeRules": {
@@ -826,7 +859,7 @@
     "skipped": false,
     "reason": "",
     "ok": true,
-    "checkCount": 6,
+    "checkCount": 8,
     "baselineFile": "../docs_tdd/prds/PR-02172/agent/tsc-baseline.json"
   },
   "source": {
@@ -839,17 +872,17 @@
   },
   "fingerprint": {
     "headSha": "58911777a84bd5735ed975d0d8c99121c2218922",
-    "baseSha": "31747a6cb125e50c58d6bdc147bb08405eebbd79",
-    "dirtyHash": "ee91fec5beef70258d3f4e44aecf6ef1a5b8611e240a82b4d77c17fe7172f806",
-    "dirtyFileCount": 0,
-    "untrackedFileCount": 0,
+    "baseSha": "483c092a50505bc558fd1b7deef0f64729edebd7",
+    "dirtyHash": "8d0ed72244983d73adf4549eaf0de360073ae804890054bfbe76aff1dd9c9ff8",
+    "dirtyFileCount": 5,
+    "untrackedFileCount": 1,
     "rulesetVersion": "local-2026.07-msw-v1",
     "ruleReleaseFingerprint": "bcb8008808dfffa46657545ce1e179ef8e525adb94bcd9a934514100c04fad2e",
     "effectiveRulesFingerprint": "1ab7ef454c377138578b00925cb6fa3b46f9bcd2166d56dd80f437af595d41e2"
   },
   "cache": {
     "hit": false,
-    "fingerprint": "dc899b49800a5d55"
+    "fingerprint": "659bb65d8ffa96b5"
   },
   "stageSync": {
     "attempted": true,

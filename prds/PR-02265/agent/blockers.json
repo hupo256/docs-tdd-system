@@ -34,7 +34,7 @@
     "raisedAt": "2026-08-07",
     "status": "resolved",
     "resolvedAt": "2026-08-19",
-    "resolution": "Aven/Milo 2026-08-19 决议：后端本次未改流水接口、维持 pre 逻辑，不新增 typeCode/枚举 key，前端沿用 type 字段（请求数字编码 开仓=6/平仓=7；响应按 type 文案字符串识别手续费行）。详见 engineering/backend-api-handoff.md「6b 决议」",
+    "resolution": "Aven 2026-08-19 最终决议：后端本次未改 get_transaction_list 流水接口、维持 pre 逻辑（请求 type 数字编码 开仓=6/平仓=7），且反馈该接口正数化前端不用处理。前端将 FundsFlow + FuturesCashFlow 关于该接口的正数化逻辑整段回退到 origin/online（删除 feeAmount.ts/cashFlowAmount.ts 及其单测），原实现保留在备份分支 backup/PR-02265-txlist-positivization。F05 前台正数化本期仅保留 PositionHistory（不同接口）。详见 engineering/backend-api-handoff.md「6b 决议」",
     "evidence": ["product/03-api-contract.md#8-待确认--契约差异", "engineering/backend-api-handoff.md#6b-决议"]
   }
 ]

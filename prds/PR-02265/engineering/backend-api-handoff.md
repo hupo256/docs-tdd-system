@@ -100,6 +100,12 @@
 遗留取舍（明确接受）：
 - C 端合约订单流水 `isFeeFlowType` 靠 `type` 文案字符串识别（`'开仓手续费'/'Open Commission'/...`），理论上与语言绑定；本期以 pre 逻辑为准、后端不提供类型码，**该多语言风险本期知情接受**，如后续多语种漏判再单独起 PR。
 
+**最终追加决议（2026-08-19，Aven）：get_transaction_list 正数化前端整段回退 online。**
+- 后端进一步反馈：**该接口的正数化前端不用处理**。据此前端将 `FundsFlow` 与 `FuturesCashFlow` 关于 `get_transaction_list` 的正数化逻辑**全部回退到 `origin/online`**：删除 `FundsFlow/feeAmount.ts`、`CashFlow/futures/cashFlowAmount.ts` 及其单测，`index.tsx`/`FuturesCashFlow.tsx`/`TransactionFilter.tsx`/`services/api/margin.ts` 均对齐 online。
+- 原正数化实现完整保留在**备份分支 `backup/PR-02265-txlist-positivization`**（HEAD `94bd45ac87`）。
+- 因不再靠 `type` 文案匹配，上一条「多语言漏判风险」随回退一并消失。
+- **F05 前台正数化本期仅保留 `PositionHistory/Card.tsx`（`tradeFee`/`open_close_fee`，走仓位历史接口，非 get_transaction_list），`formatNumber.ts` 的 `toPositiveAmount` 仍被其使用、勿删。**
+
 | 业务含义 | 数字编码（请求/pre 现状） |
 |---|---|
 | 开仓手续费 | `6` |
@@ -111,5 +117,6 @@
 
 - 后台配置值域/校验单一源：`apps/admin/legacy-admin/src/views/operateManager/marketMakerAccount/feeInput.js`（`FEE_MIN=-100` `FEE_MAX=100` `FEE_DECIMALS=6`）
 - 后台提交报文：`external_market_account_modal.vue` `buildPayload()`
-- C 端合约订单流水正数化：`apps/web/src/apps/Futures/components/FuturesOrders/FundsFlow/feeAmount.ts`（`isFeeFlowType` 按 `type` 文案字符串匹配；2026-08-19 决议不改类型码，见 6b 决议）
-- C 端资产流水正数化：`apps/web/src/apps/CashFlow/futures/cashFlowAmount.ts`（类型码 6/7）
+- C 端合约订单流水正数化：~~`FundsFlow/feeAmount.ts`~~ **已回退 online 删除**（见 6b 最终追加决议），原实现存备份分支 `backup/PR-02265-txlist-positivization`
+- C 端资产流水正数化：~~`CashFlow/futures/cashFlowAmount.ts`~~ **已回退 online 删除**（见 6b 最终追加决议），原实现存备份分支
+- C 端仍保留的正数化：`apps/web/src/apps/Futures/components/FuturesOrders/PositionHistory/Card.tsx`（`tradeFee`/`open_close_fee`）+ `apps/web/src/utils/formatNumber.ts` `toPositiveAmount`

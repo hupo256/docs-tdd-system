@@ -1,6 +1,6 @@
 {
   "projectId": "PR-02306",
-  "head": "2a3ccb305f8c479b2468239c919f7c234fdb932f",
+  "head": "e431b78e38bdc0dcfa5d4095071a2a01c78f17dd",
   "items": [
     {
       "id": "AC-1",
@@ -15,8 +15,8 @@
     {
       "id": "AC-2",
       "featureId": "F02",
-      "scenario": "密码规则展示文案同步完整特殊符号列表：passwordRule.special 由单一源 PASSWORD_SPECIAL_CHARS 插值，渲染为「至少1个特殊符号（@$!%*#?&-.=(),/^_+[]{}）」，与实际校验字符集一致；本地仅改 zh-CN",
-      "method": "manual",
+      "scenario": "密码规则展示文案改为四行清单（长度/字母/数字/特殊符号）：新增「至少1个数字」独立行；passwordRule.special 由单一源 PASSWORD_SPECIAL_CHARS 插值为「至少1个特殊符号（@$!%*#?&-.=(),/^_+[]{}）」，与实际校验字符集一致；抽取共享组件 PasswordRuleChecklist，逐项实时 通过/未通过 图标随输入变化（组件单测覆盖：空/全通过/仅字母/长度不足/新增符号放行）；本地仅改 zh-CN",
+      "method": "vitest",
       "status": "passed",
       "evidence": [
         "evidence/acceptance/g6/README.md"
@@ -27,6 +27,26 @@
       "featureId": "F03",
       "scenario": "所有密码场景走同一校验源：注册/找回/设置/修改密码用 passwordPattern，登录用 passwordAllowedCharPattern，随机临时密码复用 PASSWORD_SPECIAL_CHARS；全仓无残留字符列表副本，登录过滤器保留新符号",
       "method": "vitest",
+      "status": "passed",
+      "evidence": [
+        "evidence/acceptance/g6/README.md"
+      ]
+    },
+    {
+      "id": "AC-4",
+      "featureId": "F04",
+      "scenario": "重置密码页（找回密码流程 ResetForm authPassed 阶段）「设置新密码」下方，将原单行文案 resetPassword:passwordRequirement 替换为四行 PasswordRuleChecklist，实时校验与注册页一致",
+      "method": "manual",
+      "status": "passed",
+      "evidence": [
+        "evidence/acceptance/g6/README.md"
+      ]
+    },
+    {
+      "id": "AC-5",
+      "featureId": "F05",
+      "scenario": "修改登录密码页 UpdatePassword「设置新密码」输入框下方新增四行 PasswordRuleChecklist；同源兄弟页 SetLoginPassword（三方登录设置登录密码）一并对齐，两页清单与注册页一致；验证已有密码字段仅 required、不套设置强规则",
+      "method": "manual",
       "status": "passed",
       "evidence": [
         "evidence/acceptance/g6/README.md"

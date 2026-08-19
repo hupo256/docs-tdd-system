@@ -1,7 +1,13 @@
 [
   {
     "ruleId": "CODE-MOCK-002",
-    "reason": "F13 第三方账号绑定关联历史依赖后端接口 6025 /platformAccountOperation/pageList，后端 2026-08-19 反馈接口未就绪。按 docs_tdd Mock 策略在 service 层（memberManager.js platform_account_operation_page_list）做隔离 mock，@mock-only + USE_MOCK_6025 标记，组件/mapper 不写 mock 分支。真实接口 ready 后删除 mock 分支恢复 axios，并按 6025 response 对账列 prop（G5 reconcile）。属临时脚手架，非业务逻辑常驻 mock。",
+    "reason": "F13 第三方账号绑定关联历史依赖后端接口 6025 /platformAccountOperation/pageList，后端 2026-08-19 反馈接口未就绪。按 docs_tdd Mock 策略在 legacy-admin(Vue2) service 层（memberManager.js platform_account_operation_page_list）做隔离 mock，@mock-only + USE_MOCK_6025 标记，组件/mapper 不写 mock 分支。真实接口 ready 后删除 mock 分支恢复 axios，并按 6025 response 对账列 prop（G5 reconcile）。属临时脚手架，非业务逻辑常驻 mock。",
+    "owner": "用户（负责人）",
+    "expiresAt": "2026-09-19"
+  },
+  {
+    "ruleId": "CODE-MSW-002",
+    "reason": "同 CODE-MOCK-002：F13 落 legacy-admin(Vue2)，该栈无 MSW 基建，不适用 MSW 路线 B；采用 service 层隔离 mock 顶替未就绪的 6025 接口，@mock-only 标记、单点可删。MSW 路线 B 决策针对 apps/web(React)，本条残留来自 Vue2 admin 临时 mock，非 MSW handler 残留。真实接口 ready 后一并拆除。",
     "owner": "用户（负责人）",
     "expiresAt": "2026-09-19"
   }

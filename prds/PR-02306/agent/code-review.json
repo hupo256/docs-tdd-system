@@ -1,8 +1,8 @@
 {
   "projectId": "PR-02306",
-  "reviewedAt": "2026-08-18",
+  "reviewedAt": "2026-08-19",
   "reviewer": "aven",
-  "head": "2a3ccb305f8c479b2468239c919f7c234fdb932f",
+  "head": "e431b78e38bdc0dcfa5d4095071a2a01c78f17dd",
   "findings": [
     {
       "id": "CR-1",
@@ -36,6 +36,21 @@
       "resolution": "",
       "evidence": [
         "apps/web/src/constants/regex.ts"
+      ]
+    },
+    {
+      "id": "CR-4",
+      "category": "other",
+      "severity": "low",
+      "summary": "rev354 扩展 scope（F02 四行文案 + 抽取 PasswordRuleChecklist 共享组件 + F04 重置密码页 + F05 修改登录密码页/SetLoginPassword 兄弟页）复审结论",
+      "disposition": "not-applicable",
+      "resolution": "共享组件 PasswordRuleChecklist 用命名 Props、语义 token（text-sem-g/r、text-cc-1、text-3，无硬编码 hex）、i18n 字面 key 内联，四项校验直连单一源 regex.ts；5 个展示位（注册/重置/修改/设置登录/SetLoginPassword）复用同一组件，DRY 达标。组件 DOM 契约单测 5 passed。验证字段（UpdatePassword 原登录密码、BindGoogle 登录密码）仅 required、不套设置强规则，规避存量老密码锁定风险（已确认）。无新增阻塞发现。",
+      "evidence": [
+        "apps/web/src/components/PasswordRuleChecklist.tsx",
+        "apps/web/src/components/PasswordRuleChecklist.test.ts",
+        "apps/web/src/apps/ResetPassword/ResetForm.tsx",
+        "apps/web/src/apps/UpdatePassword/index.tsx",
+        "apps/web/src/apps/SetLoginPassword/index.tsx"
       ]
     }
   ]

@@ -15,7 +15,7 @@
 | T06 | F04、F05 | 表单与验证 | 明确补填字段、条款、查重、密码、验证码、Google 验证与忘记密码回跳 | 待评审 | API/UI 契约 |
 | T07 | F06 | 第三方平台准备 | 技术评审确认 Bot/App、域名白名单、Meta Review、client ID/secret 的环境 owner 与日期 | 待评审（C08） | 配置清单 |
 | T08 | F09、F11、F12 | 个人中心 | 确认 `authUsers` 返回结构、绑定状态、解绑清理与外部撤销授权同步 | 待评审 | API/UI 契约 |
-| T09 | F10、F13 | 后台与日志 | 本项目实现；先定位 legacy admin / `apps/admin` 复用点，再沿用现有列表/详情/筛选/导出/权限/脱敏/历史规则 | 待 G2 | 后台复用盘点 + API/UI 契约 |
+| T09 | F10、F13 | 后台与日志 | 落 legacy-admin(Vue2,hash 路由)：F10 用户列表筛选枚举加 TG/FB（列/详情/导出后端字符串驱动，`oauthProviders||'--'`）；F13 用户详情→安全信息→新增子 tab「第三方账号绑定关联历史」（接口 6025 未就绪，service 层隔离 mock @mock-only，待 reconcile） | F10 完成；F13 落码待 6025 对账 | `member_manager.vue`、`a_security_info_main.vue`、`a_third_party_bind_history.vue`、`dictionary/index.js`、`memberManager.js`；rule-waivers.json CODE-MOCK-002 |
 | T10 | F12 | 异常场景 | 建立可测试的错误状态矩阵与 MSW 场景 | 待评审 | `03-api-contract.md`、MSW manifest |
 | T11 | F14 | 埋点 | 确认 PostHog 事件名、触发时机、属性枚举、登录前 user_status 口径与 A/B 实验方案 | 待评审 | 埋点契约 |
 | T12 | F01-F15 | `PRD-EMBED-005` + G2 | 补白板、回填会议结论，标记做/不做/延期，补责任模块并执行 intake approve / G2 gate | 待办 | G2 gate |

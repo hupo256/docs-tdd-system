@@ -1,22 +1,22 @@
 {
   "version": 2,
   "projectId": "PR-02306",
-  "generatedAt": "2026-08-18T01:37:41.678Z",
-  "approvedFingerprint": "bd24450a07fc77af",
+  "generatedAt": "2026-08-19T04:34:09.291Z",
+  "approvedFingerprint": "9eefd5dbb3b07dfb",
   "remoteSources": [
     {
       "name": "需求 PRD",
       "url": "https://qfglxo2m3dc.sg.larksuite.com/wiki/KCyhwSvN7idfRCkTbI9lhZUNgbd",
       "target": "prd-latest.md",
-      "contentHash": "7bb40416a74ac426ebaeed629d892f1ce42f4ee317d58f8c01104ad761400f97",
-      "revisionId": "298",
-      "syncedAt": "2026-08-18T01:21:52.419Z"
+      "contentHash": "ee113dddb69fd2402527ad252babb7b25d3039c2387533170a1202c042f6406e",
+      "revisionId": "354",
+      "syncedAt": "2026-08-19T00:32:31.561Z"
     }
   ],
   "sources": [
     {
       "path": "apps/web/docs_tdd/prds/PR-02306/inbox/lark-sync/prd-latest.extracted.md",
-      "contentHash": "5d118e83a509311a5db45551547c5325862ff88e726fc75a5f2e954616c14063"
+      "contentHash": "bd18ad27ddb02a554b965f4e9898c6412d9907f8c09fa8b0ff05840b35bf0065"
     }
   ],
   "items": [
@@ -39,11 +39,11 @@
       "evidence": "evidence/prd-intake/README.md"
     },
     {
-      "sourceId": "PRD-IMG-002",
+      "sourceId": "PRD-IMG-003",
       "type": "image",
       "sourcePath": "apps/web/docs_tdd/prds/PR-02306/inbox/lark-sync/prd-latest.extracted.md",
-      "line": 43,
-      "locator": "apps/web/docs_tdd/prds/PR-02306/inbox/lark-sync/prd-latest.extracted.md#L43:image:1",
+      "line": 44,
+      "locator": "apps/web/docs_tdd/prds/PR-02306/inbox/lark-sync/prd-latest.extracted.md#L44:image:1",
       "contentHash": "8c2c0c5f14db8d4b64a693f3930ea42501b856d6028da3d09f7ccd76368db21b",
       "assetPath": "apps/web/docs_tdd/prds/PR-02306/inbox/lark-sync/assets/img-002.png",
       "assetHash": "197d2b07bb01ddad3b91a55d281c326abfb46ec02e4c67efc7a9908e32c9cb5d",
@@ -51,9 +51,49 @@
       "status": "read",
       "classification": "requirement",
       "readMethod": "vision",
-      "summary": "「设置您的密码」低保真截图：示例 asd_12345678 + 三行规则清单（8-20字符/至少1个英文字母/至少1个特殊符号，未枚举字符）",
+      "summary": "「设置您的密码」文案低保真截图：密码框示例 asd_12345678，下方四行绿勾规则（8-20字符/英文字母/数字/特殊符号）",
       "featureIds": [
         "F02"
+      ],
+      "disposition": "",
+      "evidence": "evidence/prd-intake/README.md"
+    },
+    {
+      "sourceId": "PRD-IMG-004",
+      "type": "image",
+      "sourcePath": "apps/web/docs_tdd/prds/PR-02306/inbox/lark-sync/prd-latest.extracted.md",
+      "line": 50,
+      "locator": "apps/web/docs_tdd/prds/PR-02306/inbox/lark-sync/prd-latest.extracted.md#L50:image:1",
+      "contentHash": "9f379553ddbe8d94c44ff8b7a537476afcc359a444df504f9fbbb35e30bb5282",
+      "assetPath": "apps/web/docs_tdd/prds/PR-02306/inbox/lark-sync/assets/img-003.png",
+      "assetHash": "fd24cf49cf0fcd7c5cbe1dfea0f53f0d2b3c2f205784aa8ba9fe437581d9804c",
+      "assetStatus": "local",
+      "status": "read",
+      "classification": "requirement",
+      "readMethod": "vision",
+      "summary": "「重置密码」页红框标注现状单行文案「8-20位数字和字符+字母组合」，待替换为四行规则清单",
+      "featureIds": [
+        "F04"
+      ],
+      "disposition": "",
+      "evidence": "evidence/prd-intake/README.md"
+    },
+    {
+      "sourceId": "PRD-IMG-005",
+      "type": "image",
+      "sourcePath": "apps/web/docs_tdd/prds/PR-02306/inbox/lark-sync/prd-latest.extracted.md",
+      "line": 54,
+      "locator": "apps/web/docs_tdd/prds/PR-02306/inbox/lark-sync/prd-latest.extracted.md#L54:image:1",
+      "contentHash": "b831dfa114c77dc645e13b02ec5f0bfaf00d3787f829b74e866819894489aa24",
+      "assetPath": "apps/web/docs_tdd/prds/PR-02306/inbox/lark-sync/assets/img-004.png",
+      "assetHash": "62683e4b627481de5ffb44914c11291d4c6b1c7f5504dc707f2255b2e442d083",
+      "assetStatus": "local",
+      "status": "read",
+      "classification": "requirement",
+      "readMethod": "vision",
+      "summary": "「修改登录密码」页红箭头指向「设置新密码」下方，需在新密码框下新增四行规则清单",
+      "featureIds": [
+        "F05"
       ],
       "disposition": "",
       "evidence": "evidence/prd-intake/README.md"

@@ -87,7 +87,8 @@
 
 **F04（列表负值显示）**：`market_maker_account.vue` `formatExternalFee`(:1563) 兼容负值（当前 `value ? \`${value}%\` : "--"` 已支持负值字符串，确认负号正常拼接与列宽/换行）。
 
-**F05（前台 web 正数化）**：`FundsFlow`(:24 `formatAmount`)、`PositionHistory/Card.tsx`(:171)、`CashFlow` 的开/平仓手续费展示，改为对返佣（负金额）取绝对值+正号展示；抽公共正数化纯函数放 `formatNumber.ts`。
+**F05（前台 web 正数化）**：`PositionHistory/Card.tsx`(:171) 的历史成交手续费（`tradeFee`/`open_close_fee`）改为对返佣（负金额）取绝对值+正号展示；抽公共正数化纯函数放 `formatNumber.ts`（`toPositiveAmount`）。
+> 2026-08-19 范围调整：`FundsFlow`（合约订单资金流水）与 `FuturesCashFlow`（资产资金流水）均消费 `/fe-co-api/record/get_transaction_list`，后台反馈该接口前端不处理正数化，二者已回退到 `origin/online`（删除 `feeAmount.ts`/`cashFlowAmount.ts`），原实现保留在备份分支 `backup/PR-02265-txlist-positivization`。F05 前台正数化本期仅保留 PositionHistory 一处。
 
 **F06（后台正数化）**：`i_contract_capital_flow.vue`(:50-51,159)、`futures-admin` reportManager mixins（`userFeeInfoList.js` 贡献手续费、`positionHistoryTableColumn.vue`/`positionInPosTableColumn.vue` 仓位已平仓/持仓中）及 `flowerDetail.vue`/`flowerDetail.js`（合约管理后台--资产--流水查询，开仓/平仓手续费；2026-08-18 QA 用例交叉核对补录，此前遗漏）的手续费金额展示，按同一正数化口径处理。
 
