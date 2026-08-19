@@ -1,8 +1,18 @@
 {
-  "version": 1,
+  "version": 2,
   "projectId": "PR-02172",
-  "generatedAt": "2026-08-15T02:30:30.350Z",
-  "approvedFingerprint": "",
+  "generatedAt": "2026-08-18T13:36:18.788Z",
+  "approvedFingerprint": "0c19603c4c6ead04",
+  "remoteSources": [
+    {
+      "name": "需求 PRD",
+      "url": "https://qfglxo2m3dc.sg.larksuite.com/docx/Zj7Dd8cdIorON3xmYSdlI94qg1c",
+      "target": "prd-latest.md",
+      "contentHash": "f19697eb994ced01e52eb859ad732cf244747a3b22f4605dc6bff277e46be5a6",
+      "revisionId": "1393",
+      "syncedAt": "2026-08-18T11:24:47.298Z"
+    }
+  ],
   "sources": [
     {
       "path": "apps/web/docs_tdd/prds/PR-02172/inbox/prd-content.md",
@@ -722,10 +732,10 @@
       "assetPath": "",
       "assetHash": "",
       "assetStatus": "not-applicable",
-      "status": "unresolved",
-      "classification": "unresolved",
-      "readMethod": "lark-whiteboard-query+media-download",
-      "summary": "登录/注册整体流程白板；因缺少 board:whiteboard:node:read 无法读取，需补授权或导出。",
+      "status": "read",
+      "classification": "requirement",
+      "readMethod": "lark-whiteboard-query (board/v1 nodes API, user identity)",
+      "summary": "登录/注册/首页第三方登录整体流程白板：OAuth 授权后按 authStatus 三态分发（1 直登 / 2 强制关联 / 0 选择注册或关联），含账号存在-注销-冻结校验、滑块/验证码安全校验、注册建号绑三方、同邮箱强制关联、个人中心提示设置密码。见 evidence/prd-intake/whiteboard-PRD-EMBED-005.md。",
       "featureIds": [
         "F01",
         "F02",
@@ -733,8 +743,8 @@
         "F04",
         "F05"
       ],
-      "disposition": "blocks G2",
-      "evidence": "evidence/prd-intake/README.md"
+      "disposition": "",
+      "evidence": "evidence/prd-intake/whiteboard-PRD-EMBED-005.md"
     },
     {
       "sourceId": "PRD-TABLE-001",
@@ -990,6 +1000,5 @@
       "disposition": "",
       "evidence": "evidence/prd-intake/README.md"
     }
-  ],
-  "remoteSources": []
+  ]
 }

@@ -9,7 +9,7 @@
 | 第一轮 | F01-F13 后台核心闭环 | 页面/弹窗/批量上传/二次确认 | `apps/admin/src/apps/TrialBalanceManualInvalidate/**` |
 | 第一轮 | MSW 路线 B 占位 | list/add/batch handler | `apps/admin/src/mocks/**` |
 | 第二轮 | F17-F19 现货后台流水枚举 | 体验金流水明细/合约账户资金流水/财务审计 | `apps/admin/src/constants/trialBalance.ts`, `services/api/order.ts`, `services/api/financeAudit.ts`, `UsersAssetsWalletTrading/utils/**`, `FinanceAuditAssetsFlow/utils/useColumns.tsx` |
-| 第二轮 | F20 合约后台流水枚举 | 资产-流水查询 | `apps/futures-admin/src/types/order.ts`, `UsersAssetsWallet/utils/{useUserOrderTypeOptions,useTableColumns}` |
+| 第二轮 | ~~F20 合约后台流水枚举~~ | ~~资产-流水查询~~ | **移出范围（2026-08-18 PRD 7.1.8 整段划删）**：`apps/futures-admin/**` 三文件已 `git checkout origin/online` 还原 + 删契约测试 |
 | 第二轮 | F21-F22 C端 web 流水枚举 | 合约资金流水/交易记录资金流水 | `apps/web/src/apps/CashFlow/futures/FuturesCashFlow.tsx`, `apps/Futures/components/FuturesOrders/FundsFlow/components/TransactionFilter.tsx`, `i18n/locales/zh-CN/assets.json` |
 | 第二轮 | F23 C端 web 卡券记录 | 零前端改动，仅补契约测试锁 schema | `apps/web/src/apps/Orders/CouponRecord/couponRecordEnum.contract.test.ts` |
 
@@ -20,7 +20,7 @@
 | admin | `manualInvalidateContract.test.ts` | ✅ 3/3 |
 | admin | `manualInvalidateRules.test.ts` | ✅ 18/18 |
 | admin | `manualInvalidateEnum.contract.test.ts` | ✅ 8/8 |
-| futures-admin | `userOrderTypeEnum.contract.test.ts` | ✅ 4/4 |
+| futures-admin | ~~`userOrderTypeEnum.contract.test.ts`~~ | ✂ 已删（F20 移出范围） |
 | web | `futuresCashFlowEnum.contract.test.ts` | ✅ 3/3 |
 | web | `couponRecordEnum.contract.test.ts` | ✅ 4/4 |
 
@@ -82,8 +82,11 @@ Biome：本仓库未配置 Biome，回退为 `verify-code-rules.mjs` globalScan 
 - ✅ **补充细节**：后端已过滤无匹配数据（不返回错误提示，部分失败报系统异常）、账号已脱敏、trialMode(1/2) 与 invalidQuantity 动态累计口径与前端一致，均无需改动。
 
 剩余未销账（仍阻塞 G5，待合约/数仓）：
-- 🟡 **F17-F23 资金流水枚举码（部分销账）**：Rullin 提供 trialFee scene 枚举，**114 = TRIAL_SYSTEM_CLAWBACK 系统失效** 即本 PR 事件真码，已落码 F17（体验金流水明细）+ F21/F22（C 端合约资金流水/交易记录）；注意 103「手动过期」是既存不同类型非本 PR。**仍未销账**：F18 合约账户资金流水 / F20 合约后台资产流水的 `order_type`（字符串，占位 `manual_invalidate_trial`）、F19 财务审计 `businessType`（数字，占位 `34`）——属另一套编码，Rullin 数字枚举不覆盖，见 `evidence/handoff-contract-datawarehouse-enums.md` §1a/1b。
-- ⚠ 卡券「系统回收」走 `description` vs 新 `recordType`：后端回复需与合约确认，维持现状（`description` 识别）。
+- ✅ **F17 / F21 / F22 已销账**：Rullin 确认 114=TRIAL_SYSTEM_CLAWBACK 系统失效即本 PR 事件真码；C 端（`get_transaction_list`）直接使用服务端返回的 `type` 字段识别，前端 key `'114'` 与之一致。103「手动过期」系既存不同类型非本 PR。
+- ✅ **F23 卡券记录「系统回收」已销账**：kingstar 确认继续用 `description` 识别、不新增 `recordType`；前端「说明」列直出 `record.description`，零改动达标。
+- 🟡 **F18 合约后台资金流水（admin，仍阻塞）**：Rullin 说合约资金流水靠 `scene`/`ext_scene` 数字字段识别（trial-scene 114），**不是现有的 `order_type` 字符串**；但未点死是 `scene` 还是 `ext_scene`。前端现有 `manual_invalidate_trial`（挂 order_type）字段口径错误，待 Rullin 明确字段后改为读该数字 === 114（money-adjacent 不猜）。见 `handoff-contract-datawarehouse-enums.md` §1a。
+- ✂ **F20 合约后台 资产-流水查询（futures-admin）已移出范围**：2026-08-18 PRD 7.1.8「资产-流水查询」整段划删（删除线=不做）。三源文件 `git checkout origin/online` 还原、契约测试删除，无残留。**不再阻塞。**
+- 🟡 **F19 财务审计 `businessType`（仍阻塞）**：数仓 @Peanut 未给具体数字值，占位 `34` 未销账。见 `handoff-contract-datawarehouse-enums.md` §1b。
 - 落点A（数据概览-支出折合-来源明细）依赖 PR-02015（未上线），上线后补【系统回收】类型。
 
 ## 11. 后端核心 4 接口对账落码（2026-08-15）

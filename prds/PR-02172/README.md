@@ -1,7 +1,7 @@
 ---
 projectId: PR-02172
 status: active
-stage: G0
+stage: G8
 branch: feature/PR-02172
 worktree: /Users/aven/github/PR-02172
 port: ""
@@ -20,7 +20,7 @@ larkEnabled: false
 | 字段 | 值 |
 |------|-----|
 | 当前阶段 | G0/G1：C01-C18 已确认，范围为 Web + Admin；等待剩余资料/契约（未进 G2） |
-| 最新通过门禁 | |
+| 最新通过门禁 | G8 |
 | 公共规则 | 继承 ../../common/README.md |
 | PRD 来源 | https://qfglxo2m3dc.sg.larksuite.com/docx/Zj7Dd8cdIorON3xmYSdlI94qg1c |
 | visualFidelity | standard（待读取 Figma 后确认） |

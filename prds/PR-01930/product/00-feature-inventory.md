@@ -54,7 +54,7 @@
 | PRD 条目 | 裁剪结论 | 确认人 | 日期 | 对验收标准影响 |
 |---------|---------|--------|------|---------------|
 | F14-F16 状态矩阵/幂等/权限点 | 前端可感知部分随核心链路带；后端逻辑本轮不涉前端落点 | 用户 | 2026-07-20 | 核心链路不受影响 |
-| ~~F17-F22 后台联动流水/统计枚举~~ | **第二轮已落地**（见下「第二轮」表）：admin 体验金明细/合约账户资金流水/财务审计资金流水 + futures-admin 资产流水查询 | 用户 | 2026-07-21 | 已实现 |
+| ~~F17-F22 后台联动流水/统计枚举~~ | **第二轮已落地**（见下「第二轮」表）：admin 体验金明细/合约账户资金流水/财务审计资金流水（~~+ futures-admin 资产流水查询~~ = F20 已随 2026-08-18 PRD 划删移出范围） | 用户 | 2026-07-21 | 已实现 |
 | ~~F23-F24 C端 web~~ | **第二轮已落地**：web 合约账户资金流水×2拷贝 + 卡券记录（只做 web，app 不碰） | 用户 | 2026-07-21 | 已实现 |
 | 落点A 数据概览-支出折合-来源明细统计 | **前置已就绪（2026-08-07）**：PR-02015 已合入当前分支，来源明细基建落在 `apps/admin/legacy-admin/src/views/userManager/other_information/data_overview/index.vue`（来源标签走 `src/mixin/dictionary/index.js` 的 `contractBusinessTypeList` code→label 映射）。补法=向 `contractBusinessTypeList` 加一条 label「体验金手动失效」。**卡点**：该条 businessType code 未知占位，塞猜值有撞码错标真实资金数据风险，故用户拍板**等后端 code 到位再补一行**（2026-08-07） | 用户 | 2026-08-07 | 不影响本期其余落点 |
 | C 端 app | 延期（只做 web，app 为独立 RN 仓库） | 用户 | 2026-07-21 | 本轮不做 |
@@ -63,21 +63,21 @@
 
 > 范围经用户确认 = PRD「本期包含」剩余全量（除落点A）/ 只做 web / MSW 占位路线 B。
 > 文案口径（用户拍板）：后台记「手动失效（体验金）」；C 端**卡券记录「说明」列**记「系统回收」，**C 端合约资金流水类型**记「系统回收（体验金）」（PRD 本期包含表逐字，2026-08-07 修正，原先笼统写「系统回收」漏了限定词）；图中「系统失效」统一按对应场景处理。
-> ⚠️ 各端新增流水 type code 为**占位值**（admin trialFundFlow=114 / financeAudit businessType=34 / TradingOrderType=manual_invalidate_trial / futures-admin UserOrderTypeCode=manual_invalidate_trial / web fund flow=114），真实 code 待后端销账，ready 后改常量对账。
+> ⚠️ 各端新增流水 type code 为**占位值**（admin trialFundFlow=114 / financeAudit businessType=34 / TradingOrderType=manual_invalidate_trial / web fund flow=114），真实 code 待后端销账，ready 后改常量对账。（~~futures-admin UserOrderTypeCode=manual_invalidate_trial~~ 随 F20 移出范围已回退。）
 
 | ID | 端 | PRD 本期包含 | 文件 | 枚举形态 | 状态 | 契约测试 |
 |----|----|-------------|------|---------|------|---------|
 | F17 | admin | 体验金流水明细 新增【手动失效】 | `constants/trialBalance.ts` `trialFundFlowTypes` +1行 | 常量数组+派生Record+resolver | ☑ | `manualInvalidateEnum.contract.test.ts` |
 | F18 | admin | 合约账户-资金流水 新增【手动失效（体验金）】 | `services/api/order.ts` enum + `UsersAssetsWalletTrading/utils/{useUserOrderTypeOptions,useTableColumns}` | TS enum + 内联简体硬编码 | ☑ | 同上 |
 | F19 | admin | 财务审计-资金流水 新增【手动失效（体验金）】+筛选【体验金系统回收】 | `services/api/financeAudit.ts` `contractBusinessTypes`+导出占位常量 + `FinanceAuditAssetsFlow/utils/useColumns.tsx` 列渲染硬编码兜底 | 常量数组 + 列渲染硬编码（不走 i18n） | ☑ | 同上 |
-| F20 | futures-admin | 合约后台 资产-流水查询 新增类型+筛选 | `types/order.ts` enum + `UsersAssetsWallet/utils/{useUserOrderTypeOptions,useTableColumns}` | TS enum + 内联简体硬编码（去 t()） | ☑ | `userOrderTypeEnum.contract.test.ts` |
+| ~~F20~~ | ~~futures-admin~~ | **移出范围（2026-08-18 PRD 7.1.8「资产-流水查询」整段划删，不做）** | ~~`types/order.ts` enum + `UsersAssetsWallet/utils/{useUserOrderTypeOptions,useTableColumns}`~~ | — | ✂ 已回退（3 源文件 `git checkout origin/online` 还原 + 删除 `userOrderTypeEnum.contract.test.ts`） | — |
 | F21 | web | 资产-合约账户-资金流水 新增【系统回收（体验金）】 | `apps/CashFlow/futures/FuturesCashFlow.tsx` `typeItems` +1项 + `i18n/zh-CN/assets.json` `FuturesCashFlow.trial114` | 常量`{key,label}[]` + i18n | ☑ | `futuresCashFlowEnum.contract.test.ts` |
 | F22 | web | 合约交易-交易记录-资金流水 新增【系统回收（体验金）】 | `apps/Futures/components/FuturesOrders/FundsFlow/components/TransactionFilter.tsx` `typeList` +1项（第二份拷贝，共用 assets json） | 同上 | ☑ | 同上 |
 | F23 | web | 福利中心-卡券记录 类型=过期/说明=系统回收 | 「说明」列已直出 `record.description`、类型列已含 EXPIRE | **前端零改动**（后端 description 返回「系统回收」即达标） | ☑ 仅契约测试 | `couponRecordEnum.contract.test.ts` |
 
 ### 第二轮验证结论
 
-- 契约测试全绿：admin `manualInvalidateEnum.contract.test.ts` 8 · futures-admin `userOrderTypeEnum.contract.test.ts` 4 · web 7（futuresCashFlow 3 + couponRecord 4）。
+- 契约测试全绿：admin `manualInvalidateEnum.contract.test.ts` 8 · web 7（futuresCashFlow 3 + couponRecord 4）。（futures-admin `userOrderTypeEnum.contract.test.ts` 随 F20 移出范围已删除。）
 - 断言覆盖：新类型存在性 + 文案字面（`值===原文`，禁意译，后台简体）+ 占位 code + 后台不落 i18n key（撤回校验）+ 两份 web 拷贝同步 + 卡券零改动路径不破坏。
 - tsc：三端改动文件均干净（仓库既有 type 错误与本 PR 无关）。
 - MSW handler：本轮 8 落点均为纯前端枚举/展示注入（下拉选项 + label 映射），不新增 API 调用（列表仍走既有接口，新类型只是数据里多一个 type 值），故无需新增 handler；契约测试已锁 schema/文案。**MSW 为本项目唯一 mock 策略**。

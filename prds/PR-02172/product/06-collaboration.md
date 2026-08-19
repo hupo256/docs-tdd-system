@@ -278,9 +278,23 @@
 
 ## Code Review
 
-| 时间 | 命令 | findings | 处理结论 | 证据 |
-|------|------|----------|----------|------|
-| 待 G6 | `/code-review` | 待执行 | 待处理 | `evidence/` |
+2026-08-18 对本 PR 改动（15 个文件，`ThirdPartyLogin/**` + `TelegramLoginSdk`/`FacebookLoginSdk` + `services/api/thirdLogin.ts` + `apps/Login/InputAccount.tsx`）执行 code-review + 机器码规则（`verify-code-rules.mjs`）+ 改动文件 `tsc`。
+
+机器检查结果：`tsc` 改动文件 0 error（基线既存债非本 PR）；`verify-code-rules` 无 error，4 条 warn。findings 与处理结论如下（全部已处理，无悬空项）：
+
+| ID | 位置 | finding | 处理结论 |
+|----|------|---------|----------|
+| CR1 | `services/api/thirdLogin.ts:11` | `useAuthLogin` 请求体 typed `any` | 不适用/豁免：与 `authRegister`/`joinAddAccount` 一致的既有模式，本 PR 未新增契约破坏；后续可统一为 `AuthRegType`，不阻断本次 |
+| CR2 | `providerAdapters.ts:50`、`useThirdAuth.ts:48`（CODE-ARCH-002） | 新增 6 / 3 个 `if` 分支 | 不适用：均为流程控制（三态分发、demo 降级、SDK 缺失兜底），非状态/文案/class 映射；规则明示流程控制可保留 |
+| CR3 | `apps/Login/InputAccount.tsx:16`（CODE-ARCH-003） | 组件 import `@/services/api/login` | 豁免：既有模式、非本 PR 引入 |
+| CR4 | `ThirdPartyLogin/index.tsx:1`（CODE-FILE-001） | 文件 312 行（>300） | 不归因本次：既存债（base 313，本次 −1 行）；已抽出 `useThirdAuth`/`providerAdapters` 减负 |
+| CR5 | `providerAdapters.ts:43` `randomToken()` | 前端生成 state/nonce | 已登记：注释与技术设计 TD07 已说明为 dev 兜底，生产由后端签发下发；不阻断 |
+
+结论：findings 全部已修 / 豁免 / 不适用，0 项遗留（全部当场闭环）。真实接口契约已对账（见下「后端契约对账」），无 `// ASSUMED:` 残留。
+
+## 后端契约对账（2026-08-18，YAPI 2776 及同类接口）
+
+关闭本文档「六、待后端回 Q2」：`POST /fe-ex-api/oauth/authLogin` 及 `authRegister`/`newRegisterCheck`/`checkAccount`/`joinAddAccount`/`internalJoinAuth` 请求体最终定为 `{ source, idToken }`，**无独立 `code` 字段**；`source` 枚举新增 `Telegram`/`Facebook`，Facebook 把 `accessToken` 赋给 `idToken`。前端 `useThirdAuth` 现有实现与之逐字一致，响应 `authStatus(0/1/2)`/`token`/`email`/`mobile` 均为前端已消费字段。
 
 ## 验证证据索引
 

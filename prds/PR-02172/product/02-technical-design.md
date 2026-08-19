@@ -76,6 +76,23 @@ interface ThirdAuthorizationResult {
 - popup/redirect callback、SDK 原始字段和渠道换 token 逻辑不得散落在业务 JSX。
 - 现有 `thirdLogin.ts` 中相关裸 `any` 在触达时收敛为命名 Params 和 runtime schema，不扩大改动范围。
 
+## 数据流与分层契约（请求型功能 G4 前必填）
+
+> 调用链 `Component → Hook → Service`；数据链 `response → schema → mapper → UI Model`。无请求的纯 UI 填 N/A 并说明。
+
+| Feature / Component | Hook | API Service | Response Schema / DTO | Mapper | UI Model | State Owner | Test |
+|---------------------|------|-------------|-----------------------|--------|----------|-------------|------|
+| F01/F03 授权登录（`ThirdPartyLogin`、`HomeThirdLogin`） | `useThirdAuth` → `useAuthLogin`（RQ mutation） | `POST /fe-ex-api/oauth/authLogin`（`{source, idToken}`） | `UserDataSchema`（`store.ts`：source/token/authStatus/email/mobile） | `pickToken`/`resolveStatusCode` resolver（token 与 authStatus 归一） | `UserDataType` | 授权态 Zustand `useThirdLoginStore`；server 态 RQ mutation | `pickToken`/`resolveStatusCode` 纯函数单测 |
+| F02 渠道字段差异（TG 无邮箱 / FB 邮箱可选） | `useThirdAuth` | 同 authLogin | `UserDataSchema` 的 `email?/mobile?` 可空 | `handleAuthResult` 按 `email\|\|mobile` 派生补填账号 | `UserDataType` | `useThirdLoginStore` | 三态分发单测（0/1/2） |
+| F04 注册新账户（`RegByThird`/`CreateByThird`） | `useAuthRegister`/`useRegisterCheck` | `POST /oauth/authRegister`、`/oauth/newRegisterCheck` | 复用 authLogin 响应契约 | 复用 resolver | `UserDataType` | `useThirdLoginStore` | 契约测试 + MSW 场景 |
+| F05 关联已有账户（`UniteByThird`） | `useJoinAddAccount`/`useJoinAddAcc` | `POST /oauth/joinAddAccount`、`/oauth/internalJoinAuth` | 复用响应契约 | 复用 resolver | `UserDataType` | `useThirdLoginStore` | 契约测试 + MSW 场景 |
+| F06 渠道接入配置 | N/A（静态配置） | N/A | N/A | `thirdConfig.ts` 分环境 lookup（Google/Apple/TG/FB client id） | 配置常量 | 模块常量（`isTest` 分支） | 配置解析无需单测 |
+| 三方凭证归一（TG=id_token / FB=accessToken） | `authorizeThird`（`providerAdapters.ts`） | N/A（SDK 直取，非请求） | 外部 SDK 数据先经 `ThirdCredential` 归一（`unknown` 收敛） | `authorizeTelegram`/`authorizeFacebook` → `ThirdCredential`（FB accessToken 赋给 idToken） | `ThirdCredential` | 无（一次性凭证） | adapter 归一单测 |
+| F09 个人中心账户绑定（`User/SafeSetting`） | 复用现状 `authUsers` 展示 | 复用现状用户资料接口 | 复用现状 schema | 复用现状 mapper | 现状用户资料 UI Model | 现状 | 绑定/解绑状态展示 |
+| F14 埋点（`click_tg_login`/`click_fb_login`） | `capture()` 埋点 | PostHog 上报（非业务请求） | N/A | 事件属性映射（端/来源页/user_status） | N/A | PostHog | 事件触发断言 |
+
+分层例外：F10/F13 管理后台落 `apps/admin`（Vue2 legacy-admin），不适用 React 分层契约，属既有技术栈事实；F06 与埋点为静态配置/上报，无 schema/mapper 改动。
+
 ## 状态与错误处理
 
 | 输入 | 统一语义 | 前端动作 |

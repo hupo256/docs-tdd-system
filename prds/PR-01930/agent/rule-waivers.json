@@ -1,0 +1,14 @@
+[
+  {
+    "ruleId": "CODE-MOCK-002",
+    "reason": "MSW 路线 B 退役显式延后到后续 PR（见 evidence/followup-deferred-to-next-pr.md D3）。残留仅 apps/admin/src/mocks/fixtures/menus.ts 等 dev-only fixture（NEXT_PUBLIC_ENABLE_MSW 才注册，prod build 短路），待 dev 验证真实核心接口 + 体验金管理菜单节点服务端就位后删除。",
+    "owner": "aven",
+    "expiresAt": "2026-09-30"
+  },
+  {
+    "ruleId": "CODE-MSW-002",
+    "reason": "同 CODE-MOCK-002：MSW 路线 B 退役延后，dev-only 不入 prod 包。见 evidence/followup-deferred-to-next-pr.md D3。",
+    "owner": "aven",
+    "expiresAt": "2026-09-30"
+  }
+]

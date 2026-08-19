@@ -1,4 +1,173 @@
 {
   "projectId": "PR-02172",
-  "runs": []
+  "runs": [
+    {
+      "gate": "G2",
+      "ok": true,
+      "generatedAt": "2026-08-18T13:36:38.576Z",
+      "tool": "run-project-gate.mjs",
+      "summary": {
+        "total": 36,
+        "ok": 36,
+        "warn": 0,
+        "waived": 0,
+        "fail": 0
+      },
+      "fingerprint": {
+        "headSha": "58911777a84bd5735ed975d0d8c99121c2218922",
+        "baseSha": "70d871e7af8e490f2774509f4b5c880167ea0692",
+        "dirtyHash": "ee91fec5beef70258d3f4e44aecf6ef1a5b8611e240a82b4d77c17fe7172f806",
+        "dirtyFileCount": 0,
+        "untrackedFileCount": 0,
+        "rulesetVersion": "local-2026.07-msw-v1",
+        "ruleReleaseFingerprint": "bcb8008808dfffa46657545ce1e179ef8e525adb94bcd9a934514100c04fad2e",
+        "effectiveRulesFingerprint": "1ab7ef454c377138578b00925cb6fa3b46f9bcd2166d56dd80f437af595d41e2"
+      },
+      "evidence": "evidence/gate/2026-08-18-133638-g2/README.md"
+    },
+    {
+      "gate": "G3",
+      "ok": true,
+      "generatedAt": "2026-08-18T13:41:12.568Z",
+      "tool": "run-project-gate.mjs",
+      "summary": {
+        "total": 49,
+        "ok": 48,
+        "warn": 1,
+        "waived": 0,
+        "fail": 0
+      },
+      "fingerprint": {
+        "headSha": "58911777a84bd5735ed975d0d8c99121c2218922",
+        "baseSha": "70d871e7af8e490f2774509f4b5c880167ea0692",
+        "dirtyHash": "ee91fec5beef70258d3f4e44aecf6ef1a5b8611e240a82b4d77c17fe7172f806",
+        "dirtyFileCount": 0,
+        "untrackedFileCount": 0,
+        "rulesetVersion": "local-2026.07-msw-v1",
+        "ruleReleaseFingerprint": "bcb8008808dfffa46657545ce1e179ef8e525adb94bcd9a934514100c04fad2e",
+        "effectiveRulesFingerprint": "1ab7ef454c377138578b00925cb6fa3b46f9bcd2166d56dd80f437af595d41e2"
+      },
+      "evidence": "evidence/gate/2026-08-18-134112-g3/README.md"
+    },
+    {
+      "gate": "G4",
+      "ok": true,
+      "generatedAt": "2026-08-18T13:41:14.353Z",
+      "tool": "run-project-gate.mjs",
+      "summary": {
+        "total": 58,
+        "ok": 57,
+        "warn": 1,
+        "waived": 0,
+        "fail": 0
+      },
+      "fingerprint": {
+        "headSha": "58911777a84bd5735ed975d0d8c99121c2218922",
+        "baseSha": "70d871e7af8e490f2774509f4b5c880167ea0692",
+        "dirtyHash": "ee91fec5beef70258d3f4e44aecf6ef1a5b8611e240a82b4d77c17fe7172f806",
+        "dirtyFileCount": 0,
+        "untrackedFileCount": 0,
+        "rulesetVersion": "local-2026.07-msw-v1",
+        "ruleReleaseFingerprint": "bcb8008808dfffa46657545ce1e179ef8e525adb94bcd9a934514100c04fad2e",
+        "effectiveRulesFingerprint": "1ab7ef454c377138578b00925cb6fa3b46f9bcd2166d56dd80f437af595d41e2"
+      },
+      "evidence": "evidence/gate/2026-08-18-134114-g4/README.md"
+    },
+    {
+      "gate": "G5",
+      "ok": true,
+      "generatedAt": "2026-08-18T14:31:34.371Z",
+      "tool": "run-project-gate.mjs",
+      "summary": {
+        "total": 70,
+        "ok": 68,
+        "warn": 2,
+        "waived": 0,
+        "fail": 0
+      },
+      "fingerprint": {
+        "headSha": "58911777a84bd5735ed975d0d8c99121c2218922",
+        "baseSha": "31747a6cb125e50c58d6bdc147bb08405eebbd79",
+        "dirtyHash": "ee91fec5beef70258d3f4e44aecf6ef1a5b8611e240a82b4d77c17fe7172f806",
+        "dirtyFileCount": 0,
+        "untrackedFileCount": 0,
+        "rulesetVersion": "local-2026.07-msw-v1",
+        "ruleReleaseFingerprint": "bcb8008808dfffa46657545ce1e179ef8e525adb94bcd9a934514100c04fad2e",
+        "effectiveRulesFingerprint": "1ab7ef454c377138578b00925cb6fa3b46f9bcd2166d56dd80f437af595d41e2"
+      },
+      "evidence": "evidence/gate/2026-08-18-143134-g5/README.md"
+    },
+    {
+      "gate": "G6",
+      "ok": true,
+      "generatedAt": "2026-08-18T14:31:44.104Z",
+      "tool": "run-project-gate.mjs",
+      "summary": {
+        "total": 81,
+        "ok": 78,
+        "warn": 3,
+        "waived": 0,
+        "fail": 0
+      },
+      "fingerprint": {
+        "headSha": "58911777a84bd5735ed975d0d8c99121c2218922",
+        "baseSha": "31747a6cb125e50c58d6bdc147bb08405eebbd79",
+        "dirtyHash": "ee91fec5beef70258d3f4e44aecf6ef1a5b8611e240a82b4d77c17fe7172f806",
+        "dirtyFileCount": 0,
+        "untrackedFileCount": 0,
+        "rulesetVersion": "local-2026.07-msw-v1",
+        "ruleReleaseFingerprint": "bcb8008808dfffa46657545ce1e179ef8e525adb94bcd9a934514100c04fad2e",
+        "effectiveRulesFingerprint": "1ab7ef454c377138578b00925cb6fa3b46f9bcd2166d56dd80f437af595d41e2"
+      },
+      "evidence": "evidence/gate/2026-08-18-143144-g6/README.md"
+    },
+    {
+      "gate": "G7",
+      "ok": true,
+      "generatedAt": "2026-08-18T14:31:53.727Z",
+      "tool": "run-project-gate.mjs",
+      "summary": {
+        "total": 85,
+        "ok": 82,
+        "warn": 3,
+        "waived": 0,
+        "fail": 0
+      },
+      "fingerprint": {
+        "headSha": "58911777a84bd5735ed975d0d8c99121c2218922",
+        "baseSha": "31747a6cb125e50c58d6bdc147bb08405eebbd79",
+        "dirtyHash": "ee91fec5beef70258d3f4e44aecf6ef1a5b8611e240a82b4d77c17fe7172f806",
+        "dirtyFileCount": 0,
+        "untrackedFileCount": 0,
+        "rulesetVersion": "local-2026.07-msw-v1",
+        "ruleReleaseFingerprint": "bcb8008808dfffa46657545ce1e179ef8e525adb94bcd9a934514100c04fad2e",
+        "effectiveRulesFingerprint": "1ab7ef454c377138578b00925cb6fa3b46f9bcd2166d56dd80f437af595d41e2"
+      },
+      "evidence": "evidence/gate/2026-08-18-143153-g7/README.md"
+    },
+    {
+      "gate": "G8",
+      "ok": true,
+      "generatedAt": "2026-08-18T14:32:06.239Z",
+      "tool": "run-project-gate.mjs",
+      "summary": {
+        "total": 87,
+        "ok": 84,
+        "warn": 3,
+        "waived": 0,
+        "fail": 0
+      },
+      "fingerprint": {
+        "headSha": "58911777a84bd5735ed975d0d8c99121c2218922",
+        "baseSha": "31747a6cb125e50c58d6bdc147bb08405eebbd79",
+        "dirtyHash": "ee91fec5beef70258d3f4e44aecf6ef1a5b8611e240a82b4d77c17fe7172f806",
+        "dirtyFileCount": 0,
+        "untrackedFileCount": 0,
+        "rulesetVersion": "local-2026.07-msw-v1",
+        "ruleReleaseFingerprint": "bcb8008808dfffa46657545ce1e179ef8e525adb94bcd9a934514100c04fad2e",
+        "effectiveRulesFingerprint": "1ab7ef454c377138578b00925cb6fa3b46f9bcd2166d56dd80f437af595d41e2"
+      },
+      "evidence": "evidence/gate/2026-08-18-143206-g8/README.md"
+    }
+  ]
 }

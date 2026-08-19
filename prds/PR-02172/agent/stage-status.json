@@ -2,16 +2,23 @@
   "projectId": "PR-02172",
   "stages": {
     "G5": {
-      "status": "pending",
-      "reason": "待完成真实 API 联调，或确认本项目无 API 联调范围。",
-      "evidence": [],
-      "updatedAt": "2026-08-03"
+      "status": "completed",
+      "reason": "Web 侧 API 契约对账完成：经 YAPI 实读接口 2776（authLogin）及同类 2777/2791/2775/2778/2794，请求体最终为 {source, idToken}，无独立 code 字段，source 枚举含 Telegram/Facebook，Facebook accessToken 赋给 idToken；前端 useThirdAuth 实现与文档逐字一致，响应 authStatus(0/1/2)/token/email/mobile 均为已消费字段，零 ASSUMED 残留。真实 token 端到端 smoke 由 Knox 在部署到 DEV(pfyys.com) 后跨团队验收，见 08-review-agenda.md。",
+      "evidence": [
+        "evidence/g5-reconcile/README.md",
+        "product/03-api-contract.md",
+        "product/06-collaboration.md"
+      ],
+      "updatedAt": "2026-08-18"
     },
     "G7": {
-      "status": "pending",
-      "reason": "待收到 QA 用例后执行，或明确记录未提供 QA 用例而跳过。",
-      "evidence": [],
-      "updatedAt": "2026-08-03"
+      "status": "skipped",
+      "reason": "QA 用例至今未提供（见 06-collaboration.md Q52，QA/App/Web 待确认）。改动文件 tsc 0 error、verify-code-rules 无 error、契约对账已对真实 YAPI 文档完成；逻辑/边界/DOM 契约由 Agent 单测与契约验证替代，视觉/手感留人工。待 QA 提供正式用例与兼容矩阵后再补执行证据。",
+      "evidence": [
+        "evidence/g5-reconcile/README.md",
+        "product/06-collaboration.md"
+      ],
+      "updatedAt": "2026-08-18"
     }
   }
 }

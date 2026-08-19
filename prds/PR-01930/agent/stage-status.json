@@ -2,19 +2,31 @@
   "projectId": "PR-01930",
   "stages": {
     "G5": {
-      "status": "blocked",
-      "reason": "后端真实 API 尚未 ready，当前实现仍使用占位 type code 与 MSW，未完成真实字段、错误码和 mock 退役对账。",
+      "status": "completed",
+      "reason": "2026-08-18 用户拍板拆分：本 PR 闭环范围 = 后台核心 4 接口真实契约对账（YAPI 231/770）+ 已确认展示点 F17（trial-scene 114）/F21/F22（get_transaction_list type 114）/F23（卡券 description）+ F20 移除（PRD 7.1.8 划删）+ 即时快照口径移除。3 项显式延后（F18 scene/ext_scene 待 Rullin、F19 businessType 待数仓、MSW 退役待 dev 验证）见 evidence/followup-deferred-to-next-pr.md，并以带到期 waiver 可见化，非静默跳过。",
       "evidence": [
         "evidence/README.md",
+        "evidence/followup-deferred-to-next-pr.md",
+        "evidence/handoff-contract-datawarehouse-enums.md",
         "product/03-api-contract.md"
       ],
-      "updatedAt": "2026-08-01"
+      "updatedAt": "2026-08-18"
+    },
+    "G6": {
+      "status": "completed",
+      "reason": "第一轮 F01-F13 后台核心闭环 + 第二轮确认展示点已自测交付（契约/规则/枚举测试全绿，三端 tsc 责任模块 0 error，/review 实跑）。证据见 evidence/README.md §1-§11。",
+      "evidence": [
+        "evidence/README.md"
+      ],
+      "updatedAt": "2026-08-18"
     },
     "G7": {
       "status": "skipped",
-      "reason": "未提供正式 QA 用例；待 G5 与 G6 依次通过后再执行 G7 gate 记录跳过。",
-      "evidence": [],
-      "updatedAt": "2026-08-01"
+      "reason": "本前端交付无独立 QA 阶段接管：验证按「Agent 跑逻辑/边界/契约（Vitest + tsc + verify-code-rules），人工走查视觉/手感」分工，已在 evidence/README.md §7 记录人工一轮走查通过。无正式 QA 用例接口，G7 显式 skipped（非静默）。",
+      "evidence": [
+        "evidence/README.md"
+      ],
+      "updatedAt": "2026-08-18"
     }
   }
 }

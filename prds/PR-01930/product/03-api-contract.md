@@ -13,6 +13,8 @@
 # API Contract — PR-01930 体验金手动失效功能（重做）
 
 > 2026-08-15 更新：后端已交付 4 个后台核心接口（YAPI project 231，catid 770），本文已按真实契约对账落码。**MSW 路线 B 仍为唯一 mock 策略**（`src/mocks/handlers`）dev-only；真实接口 ready 后清空 handler 即切真实路径，业务代码 0 改动。
+>
+> 2026-08-18 PRD 同步（rev 4123→4165）：唯一实质变更 = 入口位置/命名——旧「福利中心-卡券记录-新增页面 + 手动失效入口按钮」划删，改为「福利中心-**卡券管理**，位置在**手续费返现卡下方**，命名**体验金手动失效管理**」。前端落点本已一致（route `/card-manage/manual-invalidate`、sider 叶子紧跟手续费返利卡之后、MSW menu handler 注入到卡券管理分组），**功能代码 0 改动**，仅校准 siderItems 注释。
 
 ## 环境策略
 
@@ -47,8 +49,10 @@
 - ✅ **仓位占用列**：后端确认列表不再需要，已下线该列/schema/fixture/契约测试（A2 汇总的「仓位占用金额」positionOccupiedAmount 保留）。
 - ✅ **批量汇总关联口径**：`uploadFlag=1` 后端按已上传文件自算，前端不再回传 uid/configNumber。
 - ✅ **模板下载**：无独立接口，前端本地生成 CSV（表头 `uid,configNumber,remark` + 一行样板数据）。
-- 🟡 **F17-F23 资金流水枚举码（部分销账）**：Rullin 提供 trialFee scene 枚举，**114=系统失效(TRIAL_SYSTEM_CLAWBACK)** 即本 PR 事件真码，已落 F17 体验金流水明细 + F21/F22 C 端合约资金流水/交易记录；103「手动过期」系既存不同类型。仍待：F18/F20 `order_type`（字符串占位 `manual_invalidate_trial`）、F19 `businessType`（数字占位 `34`）属另一套编码，见 evidence handoff §1a/1b。
-- ⚠ **卡券「系统回收」识别字段**：`description` vs 新 `recordType` 待与合约确认，维持 `description` 识别。
+- 🟡 **F17-F19 资金流水枚举码（部分销账）**：Rullin 提供 trialFee scene 枚举，**114=系统失效(TRIAL_SYSTEM_CLAWBACK)** 即本 PR 事件真码，已落 F17 体验金流水明细；C 端（`get_transaction_list`）直接使用返回的 `type`，F21/F22 key `'114'` 与之一致（已销账）；103「手动过期」系既存不同类型。**仍阻塞**：F18 admin 合约账户资金流水——Rullin 说走 `scene`/`ext_scene` 数字字段（非 `order_type` 字符串）但未点死字段；F19 财务审计 `businessType`（数字占位 `34`）数仓未给值。见 evidence handoff §1a/1b。
+- ✂ **F20 合约后台 资产-流水查询（futures-admin）移出范围**：2026-08-18 PRD 7.1.8 整段划删，前端已回退，不再统计入缺口。
+- ✂ **「即时失效金额（固定快照）」统计口径移除**：2026-08-18 PRD「核心计算规则」将该固定快照口径划删，仅保留「实时累计失效金额」（invalidQuantity 动态累计）。前端本就只展示最终累计额、未单独实现快照字段，**无代码改动**。
+- ✅ **卡券「系统回收」识别字段**：kingstar 确认继续用 `description`、不新增 `recordType`；前端「说明」列直出 `record.description`，零改动达标。
 
 ## 文案契约表（固定中文，逐字 copy PRD，禁意译）
 
@@ -71,7 +75,7 @@
 
 | # | 前置 | 落地 |
 |---|------|------|
-| 1 | handler 覆盖 normal / empty / error / unauthorized 场景 | A1 record 支持 `scenario` 切 normal/empty/unauthorized + `isExport=1` 返回 csv；A2 summary；A6 文件解析返回 fileData |
+| 1 | handler 覆盖 normal / empty / error / unauthorized / edge 场景 | A1 record 支持 `scenario` 切 normal/empty/unauthorized（`unauthorized`→10403 即 error 分支）+ `isExport=1` 返回 csv；A2 summary；A6 文件解析返回 fileData；edge（10MB 文件边界 / 笛卡尔积 10000 上限 / UID 超 100）由前端校验 + `manualInvalidateRules.test.ts` 锁死，A3 部分失败按后端「系统异常」error 口径 |
 | 2 | 契约测试：MSW fixture 用真实 `schema.safeParse` 校验，防 mock 与 schema 漂移 | `manualInvalidateContract.test.ts` 对 A1 行 / A2 汇总 / A6 fileData 跑 schema.parse，并锁死缺口字段不存在 |
 | 3 | dev-only worker 注册：`src/mocks/browser.ts` + `useMockWorker`，仅 dev | 生产 build 短路，worker 懒加载不入包 |
 | 4 | 真实接口 ready 后删/停 handler 即切真实路径，业务代码 0 改动 | service 请求真实路径不变，关闭 flag 即回真实接口 |

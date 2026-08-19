@@ -1,6 +1,6 @@
 {
   "tool": "warn-ledger.mjs",
-  "updatedAt": "2026-08-18T06:49:28.027Z",
+  "updatedAt": "2026-08-18T23:27:06.232Z",
   "rules": {
     "CODE-ARCH-003": {
       "projects": {
@@ -17,6 +17,20 @@
           "lastFingerprint": "2a3ccb305f8c479b2468239c919f7c234fdb932f",
           "count": 1,
           "verdict": "unreviewed"
+        },
+        "PR-01930": {
+          "firstSeen": "2026-08-18",
+          "lastSeen": "2026-08-18",
+          "lastFingerprint": "eda28507257612d0ba6fe4720c3a5a136d434084",
+          "count": 2,
+          "verdict": "unreviewed"
+        },
+        "PR-02172": {
+          "firstSeen": "2026-08-18",
+          "lastSeen": "2026-08-18",
+          "lastFingerprint": "58911777a84bd5735ed975d0d8c99121c2218922",
+          "count": 1,
+          "verdict": "unreviewed"
         }
       }
     },
@@ -28,6 +42,13 @@
           "lastFingerprint": "b8794616798d9c54b2baeb15fb33e13d3472d081",
           "count": 3,
           "verdict": "unreviewed"
+        },
+        "PR-01930": {
+          "firstSeen": "2026-08-18",
+          "lastSeen": "2026-08-18",
+          "lastFingerprint": "eda28507257612d0ba6fe4720c3a5a136d434084",
+          "count": 1,
+          "verdict": "unreviewed"
         }
       }
     },
@@ -38,6 +59,20 @@
           "lastSeen": "2026-08-03",
           "lastFingerprint": "b8794616798d9c54b2baeb15fb33e13d3472d081",
           "count": 6,
+          "verdict": "unreviewed"
+        },
+        "PR-01930": {
+          "firstSeen": "2026-08-18",
+          "lastSeen": "2026-08-18",
+          "lastFingerprint": "eda28507257612d0ba6fe4720c3a5a136d434084",
+          "count": 5,
+          "verdict": "unreviewed"
+        },
+        "PR-02172": {
+          "firstSeen": "2026-08-18",
+          "lastSeen": "2026-08-18",
+          "lastFingerprint": "58911777a84bd5735ed975d0d8c99121c2218922",
+          "count": 2,
           "verdict": "unreviewed"
         }
       }
