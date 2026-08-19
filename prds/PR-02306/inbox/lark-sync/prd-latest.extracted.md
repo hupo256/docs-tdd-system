@@ -3,7 +3,7 @@ sourceName: "需求 PRD (extracted, localized assets)"
 sourceType: "wiki"
 sourceUrl: "https://qfglxo2m3dc.sg.larksuite.com/wiki/KCyhwSvN7idfRCkTbI9lhZUNgbd"
 derivedFrom: "prd-latest.md"
-syncedAt: "2026-08-18T01:21:52.419Z"
+syncedAt: "2026-08-19T00:32:31.561Z"
 readOnly: true
 ---
 
@@ -38,9 +38,22 @@ readOnly: true
 
    - 密码包含8-20个字符
    - 至少1个英文字母
+   - 至少1个数字
    - 至少1个特殊符号（@\$!%\*#?&-.=(),/^\_+[]{}）
 
-![](assets/img-002.png)
+![The image shows a password setting interface. At the top, there is a prompt "设置您的密码" (Set Your Password). Below, a password input box contains "asd_12345678". Under the input box, there are three green checkmarks indicating the password meets the rules: "密码包含8-20个字符" (Password contains 8-20 characters), "至少1个英文字母" (At least 1 English letter), and "至少1个特殊符号" (At least 1 special symbol). At the bottom, there is a purple "完成注册" (Complete Registration) button.](assets/img-002.png)
+
+1. 以下两个场景都需要增加密码规则文案：
+
+- 重置密码
+
+![The image shows the "Reset Password" interface with a dark background. There is a warning at the top stating "After resetting the login password, the account is prohibited from withdrawing for 24 hours, please operate carefully." Below, there is a "Set New Password" input field, and the password rule "8 - 20位数字和字符+字母组合" (8 - 20 digits, characters, and letters) is highlighted in red. There is also a "Confirm New Password" input field and a "Reset Password" button at the bottom. This image is related to the context of modifying password rules in the registration/login flow.](assets/img-003.png)
+
+- 修改登录密码
+
+![The image shows a "修改登录密码" (Modify Login Password) interface with a dark background. There are three input fields, and a red arrow points to the second input field. Below the input fields, there are two buttons labeled "获取验证码" (Get Verification Code) on both sides. At the bottom, there is a purple "提交" (Submit) button. This image is related to the context about modifying login passwords, which is one of the current password-related scenarios that need to have password rule text added below the "设置新密码" (Set New Password) section.](assets/img-004.png)
+
+加在设置新密码下面
 
 1. 当前用到密码的场景都需要排查到，各端（web、app、后端）规则是否一致。若不一致需要修改一致。
 

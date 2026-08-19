@@ -15,7 +15,7 @@
 | Figma 主画板 | 本期无 Figma 交付；按 PRD 原型低保真开发（负责人 2026-08-18 确认） |
 | 清单维护人 | Agent |
 | G2 确认人 & 日期 | Aven 于 2026-08-18 依 PRD §5.1 本期范围确认进入 G2（Admin/App 落点见各行确认列） |
-| 责任模块目录 | Web：`apps/web/src/components/ThirdPartyLogin/**`、`apps/web/src/services/api/thirdLogin.ts`、`apps/web/src/services/api/user.ts`、`apps/web/src/apps/Login/**`、`apps/web/src/apps/Register/**`、`apps/web/src/apps/User/**`；Admin：沿用现有后台用户管理/日志规则，具体目录待 G2 前复用盘点；App 由 PM 拆单 |
+| 责任模块目录 | Web：`apps/web/src/components/ThirdPartyLogin/**`、`apps/web/src/services/api/thirdLogin.ts`、`apps/web/src/services/api/user.ts`、`apps/web/src/apps/Login/**`、`apps/web/src/apps/Register/**`、`apps/web/src/apps/User/**`；Admin（F10/F13，hash 路由落 legacy-admin/Vue2）：`apps/admin/legacy-admin/src/views/userManager/member_manager.vue`、`apps/admin/legacy-admin/src/views/userManager/other_information/a_security_info_main.vue`、`apps/admin/legacy-admin/src/views/userManager/other_information/a_third_party_bind_history.vue`、`apps/admin/legacy-admin/src/mixin/dictionary/index.js`、`apps/admin/legacy-admin/src/api/userManager/memberManager.js`；App 侧不做 |
 | visualFidelity | `low`（本期无 Figma，按 PRD 原型低保真开发） |
 
 ## 现有实现与复用基线

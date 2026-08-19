@@ -32,7 +32,9 @@
     "summary": "返佣与手续费是否共用同一流水类型的口径待后端确认（03-api-contract.md §8 #3）",
     "owner": "backend",
     "raisedAt": "2026-08-07",
-    "status": "open",
-    "evidence": ["product/03-api-contract.md#8-待确认--契约差异"]
+    "status": "resolved",
+    "resolvedAt": "2026-08-19",
+    "resolution": "Aven/Milo 2026-08-19 决议：后端本次未改流水接口、维持 pre 逻辑，不新增 typeCode/枚举 key，前端沿用 type 字段（请求数字编码 开仓=6/平仓=7；响应按 type 文案字符串识别手续费行）。详见 engineering/backend-api-handoff.md「6b 决议」",
+    "evidence": ["product/03-api-contract.md#8-待确认--契约差异", "engineering/backend-api-handoff.md#6b-决议"]
   }
 ]

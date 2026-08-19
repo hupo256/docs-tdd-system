@@ -1,14 +1,14 @@
 # PR-02265 做市商负费率｜后端回填后 前端改动 Checklist
 
-> 前置：本清单对应 [`backend-api-handoff.md`](./backend-api-handoff.md) 各确认项。后端每回一项，勾掉对应改动。未回填前**不要**动 `isFeeFlowType`，避免二次返工。
+> 前置：本清单对应 [`backend-api-handoff.md`](./backend-api-handoff.md) 各确认项。后端每回一项，勾掉对应改动。
 
-## A. 强阻塞项落地（对接清单 6b）
+## A. 强阻塞项落地（对接清单 6b）—— 2026-08-19 已关闭，不做 typeCode
 
-- [ ] 后端给出手续费类型码后，`FundsFlow/feeAmount.ts` 的 `isFeeFlowType` 从**文案字符串匹配**改为**类型码匹配**
-  - 现状：`FEE_FLOW_TYPES = Set(['Open Commission','开仓手续费','Close Commission','平仓手续费'])`
-  - 目标：`FEE_FLOW_CODES = Set([<open>, <close>])`，入参改用 `item.typeCode`
-  - 同步更新 `feeAmount.test.ts`（补类型码断言，删文案字符串用例）
-  - `FundsFlow/index.tsx` 调用处 `isFeeFlowType(item.type)` → `isFeeFlowType(item.typeCode)`
+- [x] **决议（Aven/Milo 2026-08-19）：不引入 typeCode / 枚举 key，`type` 字段够用，以 pre 逻辑为准。**
+  - 请求侧：`get_transaction_list` 的 `type` 保持**数字编码**（开仓=`6`、平仓=`7`），与 pre 一致；test 环境曾发枚举 key `"FUTURES_OPEN_FEE"` 致后端（收数字）报错，那是错误构建，非本分支
+  - 响应侧：`FundsFlow/feeAmount.ts` 的 `isFeeFlowType` 维持按 `type` 文案字符串匹配（`FEE_FLOW_TYPES`）；曾引入的 `typeCode` 已于 `d3f1a3c35a` 移除
+  - 多语言漏判风险本期知情接受（后端不提供类型码、以 pre 为准），如后续多语种出问题再单独起 PR
+  - 详见 `backend-api-handoff.md`「6b 决议」
 
 ## B. 值格式 / 值域（对接清单 2、3）
 

@@ -56,7 +56,7 @@
 | # | 需后端确认 |
 |---|---|
 | 6a | `amount` 为带符号原始值（返佣负数） |
-| 6b | **提供稳定的数字/枚举类型码**替代现有文案字符串识别（详见「唯一强阻塞项」） |
+| 6b | ~~提供稳定的数字/枚举类型码替代文案字符串识别~~ **已关闭（2026-08-19，Aven/Milo）：后端本次未改、维持 pre 逻辑，不新增 typeCode，前端沿用 `type` 字段识别。详见下方「6b 决议」** |
 
 **期望返回示例**
 ```json
@@ -88,18 +88,22 @@
 
 ---
 
-## ⭐ 唯一强阻塞项：第 6b 点
+## ⭐ 6b 决议（2026-08-19 关闭，原「唯一强阻塞项」）
 
-合约订单流水现在靠 `type` 的**文案字符串**（`'Open Commission'` / `'开仓手续费'` / `'Close Commission'` / `'平仓手续费'`）判断是否手续费行——**与语言绑定，多语言下会漏判正数化**。
+**结论：不引入 typeCode / 枚举 key，`type` 字段够用，以 pre 环境逻辑为准。** 确认人 Aven / Milo，2026-08-19。
 
-**请提供一个稳定类型码**（像资产流水那样），并给出手续费类型对应的码值：
+背景与经过：
+- QA 在 test 环境发现 `get_transaction_list` 请求体 `type` 传的是枚举 key（`"FUTURES_OPEN_FEE"`），后端接收数字类型 → 报错；pre 环境请求 `type` 传数字（开仓手续费=`6`），正常。
+- 团队核对：后端本次未改此接口，维持数字契约。故请求 `type` 应保持**数字编码**（与 pre 一致），test 上出错的是发枚举 key 的那个构建。
+- 相应地，前端也**不新增 `typeCode` 响应字段**：曾在 commit `7fd0c224c2` 引入 `typeCode`(6/7) 做手续费行识别，已在 `d3f1a3c35a` 移除，回退为按 `type` 文案字符串匹配（`FEE_FLOW_TYPES`）。
 
-| 业务含义 | 期望类型码 |
+遗留取舍（明确接受）：
+- C 端合约订单流水 `isFeeFlowType` 靠 `type` 文案字符串识别（`'开仓手续费'/'Open Commission'/...`），理论上与语言绑定；本期以 pre 逻辑为准、后端不提供类型码，**该多语言风险本期知情接受**，如后续多语种漏判再单独起 PR。
+
+| 业务含义 | 数字编码（请求/pre 现状） |
 |---|---|
-| 开仓手续费 | ？ |
-| 平仓手续费 | ？ |
-
-其余为确认题，此项确定后前端改用码判断。
+| 开仓手续费 | `6` |
+| 平仓手续费 | `7` |
 
 ---
 
@@ -107,5 +111,5 @@
 
 - 后台配置值域/校验单一源：`apps/admin/legacy-admin/src/views/operateManager/marketMakerAccount/feeInput.js`（`FEE_MIN=-100` `FEE_MAX=100` `FEE_DECIMALS=6`）
 - 后台提交报文：`external_market_account_modal.vue` `buildPayload()`
-- C 端合约订单流水正数化：`apps/web/src/apps/Futures/components/FuturesOrders/FundsFlow/feeAmount.ts`（`isFeeFlowType` 文案字符串匹配 ← 待改类型码）
+- C 端合约订单流水正数化：`apps/web/src/apps/Futures/components/FuturesOrders/FundsFlow/feeAmount.ts`（`isFeeFlowType` 按 `type` 文案字符串匹配；2026-08-19 决议不改类型码，见 6b 决议）
 - C 端资产流水正数化：`apps/web/src/apps/CashFlow/futures/cashFlowAmount.ts`（类型码 6/7）

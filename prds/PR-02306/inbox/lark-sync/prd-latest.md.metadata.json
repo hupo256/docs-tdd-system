@@ -2,7 +2,7 @@
   "sourceName": "需求 PRD",
   "sourceType": "wiki",
   "sourceUrl": "https://qfglxo2m3dc.sg.larksuite.com/wiki/KCyhwSvN7idfRCkTbI9lhZUNgbd",
-  "syncedAt": "2026-08-18T01:21:52.419Z",
+  "syncedAt": "2026-08-19T00:32:31.561Z",
   "readOnly": true,
   "command": [
     "lark-cli",
@@ -21,8 +21,8 @@
   ],
   "stderr": null,
   "target": "../docs_tdd/prds/PR-02306/inbox/lark-sync/prd-latest.md",
-  "remoteContentHash": "7bb40416a74ac426ebaeed629d892f1ce42f4ee317d58f8c01104ad761400f97",
+  "remoteContentHash": "ee113dddb69fd2402527ad252babb7b25d3039c2387533170a1202c042f6406e",
   "remoteDocumentId": "VV1NdfthRoco3JxX82JlWYSEgGd",
-  "remoteRevisionId": "298",
+  "remoteRevisionId": "354",
   "identity": "user"
 }

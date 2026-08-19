@@ -1,1 +1,8 @@
-[]
+[
+  {
+    "ruleId": "CODE-MOCK-002",
+    "reason": "F13 第三方账号绑定关联历史依赖后端接口 6025 /platformAccountOperation/pageList，后端 2026-08-19 反馈接口未就绪。按 docs_tdd Mock 策略在 service 层（memberManager.js platform_account_operation_page_list）做隔离 mock，@mock-only + USE_MOCK_6025 标记，组件/mapper 不写 mock 分支。真实接口 ready 后删除 mock 分支恢复 axios，并按 6025 response 对账列 prop（G5 reconcile）。属临时脚手架，非业务逻辑常驻 mock。",
+    "owner": "用户（负责人）",
+    "expiresAt": "2026-09-19"
+  }
+]
