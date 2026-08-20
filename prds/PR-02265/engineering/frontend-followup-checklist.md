@@ -39,3 +39,21 @@
 ## 不做（defer，勿顺手加）
 
 - 真金手续费 / netInflow 统计口径 —— 后续 PR；2026-08-18 QA 测试用例（合约管理后台--数据查询--成交记录）交叉核对时提出异议，已与用户确认维持 defer，本期该条用例判定不适用
+
+## F. 后端字段正负语义最终确认（2026-08-20，覆盖 A/D 节部分历史记录）
+
+后端确认三个接口的手续费/流水字段最终语义，前端已同步：
+
+- `POST /order/his_trade_list`、`POST /order/his_trade_list_v2`：`data.tradeHisList[].fee`。正常手续费为负数，返佣为正数。**规则＝正数补 `+`，负数原样展示（自带 `-`），禁止取反/`abs()`/固定拼接符号。**
+  - 落地：`apps/web/src/apps/Orders/Futures/FuturesHistoryTransactionOrder/helper.ts`、`apps/web/src/apps/Futures/components/FuturesOrders/TransactionRecords/index.tsx`（4 处 `item.fee` 展示）改用新增的 `formatSignedFee`（`formatNumber.ts`）。仓库内未接入 v1 `his_trade_list`（只有 v2 有前端消费方），规则记录以备后续接入。
+- `POST /position/history_position_list`：`data.positionList[].tradeFee`。同上规则（正+/负原样）。
+  - Web 落地：`PositionHistory/Card.tsx` 的 `open_close_fee` 改用 `formatSignedFee`（此前 2026-08-19 已先改成展示原始值，本次补上正数 `+` 号）。
+  - 合约后台（futures-admin legacy-admin）落地：**已符合，无需改动**——`positionHistory.js`/`positionInPos.js` 的 `fixD(tradeFee, 8)` 只做精度截断+保留原始负号（不加 `+`），渲染层 `v-rate-display`（`valueDisplay.vue`）默认 `showPositiveSign: true` 会给正数补 `+`，组合后已符合新规则。
+- `POST /record/get_transaction_list`：`data.transList[].amount`。**后端已返回带符号字符串，前端直接展示，不做二次符号处理。**
+  - `FundsFlow/index.tsx`（合约账户资金流水）：本已是 `BigNumber(amount).toFixed(8, ROUND_DOWN)` 直接对带符号值截断，符号由 BigNumber 原生保留，**符合，未改**。
+  - `CashFlow/futures/FuturesCashFlow.tsx`（合约交易资金流水）：**不符合，已修复**——原实现手动 `startsWith('-')` 判断符号、`Math.abs()` 剥离、再按符号选 `formatNumberDown`/`formatNumberUp` 重新拼接前缀，属于二次处理。改为对 `item.amount` 直接 `BigNumber(...).toFixed(precision, ROUND_DOWN)` 保留原生符号，颜色改用 `BigNumber(...).isNegative()` 判定（不再依赖拼接后的字符串前缀）。
+
+新增/调整的纯函数：`formatNumber.ts` 新增 `formatSignedFee(num, decimal)` — 复用 `formatNumberDown` 截断精度，仅在数值 `> 0` 时补 `+`，负数/0 不处理。已配 4 组单测（负数原样/正数补号/零不补号），随 `toPositiveAmount` 一起放在 `formatNumber.test.ts`。
+
+`toPositiveAmount` 现状：2026-08-19 起 `PositionHistory/Card.tsx` 已不再调用它（按 Aven 指示改回展示原始值），目前 `apps/web` 内无生产调用方，函数与单测暂保留未删（futures-admin/admin 侧的 `positivizeAmount` 仍在用于贡献手续费等其它触点，未受本次影响）。
+
