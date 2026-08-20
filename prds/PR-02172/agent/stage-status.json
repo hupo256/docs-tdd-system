@@ -3,7 +3,7 @@
   "stages": {
     "G5": {
       "status": "completed",
-      "reason": "Web 侧 API 契约对账完成：经 YAPI 实读接口 2776（authLogin）及同类 2777/2791/2775/2778/2794，请求体最终为 {source, idToken}，无独立 code 字段，source 枚举含 Telegram/Facebook，Facebook accessToken 赋给 idToken；前端 useThirdAuth 实现与文档逐字一致，响应 authStatus(0/1/2)/token/email/mobile 均为已消费字段，零 ASSUMED 残留。真实 token 端到端 smoke 由 Knox 在部署到 DEV(pfyys.com) 后跨团队验收，见 08-review-agenda.md。【F13 例外·待对账】管理后台第三方绑定/解绑历史依赖接口 6025 /platformAccountOperation/pageList，后端 2026-08-19 反馈未就绪，已在 legacy-admin service 层做隔离 mock（@mock-only，见 rule-waivers.json CODE-MOCK-002）；6025 ready 后须删除 mock 并按真实 response 对账列 prop，此项 reconcile 仍 pending。",
+      "reason": "Web 侧 API 契约对账完成：经 YAPI 实读接口 2776（authLogin）及同类 2777/2791/2775/2778/2794，请求体最终为 {source, idToken}，无独立 code 字段，source 枚举含 Telegram/Facebook，Facebook accessToken 赋给 idToken；前端 useThirdAuth 实现与文档逐字一致，响应 authStatus(0/1/2)/token/email/mobile 均为已消费字段，零 ASSUMED 残留。真实 token 端到端 smoke 由 Knox 在部署到 DEV(pfyys.com) 后跨团队验收，见 08-review-agenda.md。【F13·6025 已接真实接口】管理后台第三方绑定/解绑历史接口 6025 /platformAccountOperation/pageList 已上线并接入：service 层 platform_account_operation_page_list 直连 axios（无 mock），请求 {uid,pageNum,pageSize}，组件列按真实响应字段 operationType(1关联/2解绑)/platformCode/account/createTime 映射（见 evidence/g5-reconcile/README.md 6025 章节）。临时 mock 已全部清除，rule-waivers.json 清空，无 mock 残留。",
       "evidence": [
         "evidence/g5-reconcile/README.md",
         "product/03-api-contract.md",

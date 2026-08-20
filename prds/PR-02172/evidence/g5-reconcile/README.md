@@ -46,3 +46,28 @@
 ## 尚待（部署时跨团队）
 
 真实 token 端到端联调（Knox 拿 token 走全流程）需前端部署到 DEV 域 `https://www.pfyys.com`（localhost 不在 TG/FB 白名单）。该步为部署时的后端/联合验收，属跨团队动作，见 `08-review-agenda.md`。
+
+## F13 接口 6025 契约对账（/platformAccountOperation/pageList）
+
+后端 2026-08-19 提供 6025 正式契约并已上线，legacy-admin service 层 `platform_account_operation_page_list` 直连真实 axios（`POST /platformAccountOperation/pageList`），**临时 mock 已全部清除**，组件列按真实响应字段映射。
+
+请求体：`{ uid（必填，integer）, pageNum（默认 1）, pageSize（默认 40） }`。
+
+响应 `data`：`{ count: integer, list: object[] }`，`list[]` 字段与前端消费点：
+
+| 6025 字段 | 类型 | 说明 | 前端列 / 处理 | 对账 |
+|-----------|------|------|--------------|------|
+| `id` | integer | 记录主键 | 未展示 | ✅ |
+| `uid` | integer | 用户 UID | 未展示（请求入参回显） | ✅ |
+| `operationType` | integer | 1-关联 / 2-解绑 | 「操作」列 `operationTypeText` 查表（1→关联,2→解绑，缺省 `--`） | ✅ |
+| `platformCode` | string | 三方平台码（TG/APPLE 等） | 「平台」列 `platformText` 查表映射展示名，未收录码原样展示，缺失 `--` | ✅ |
+| `countryCode` | string(可空) | 手机号区号 | 未单独展示（账号已含脱敏值） | ✅ |
+| `account` | string | 平台账户，后端已脱敏 | 「账号」列 `formatter` 缺失 `--` | ✅ |
+| `createTime` | string | 创建/操作时间 | 「时间」列，后端已格式化字符串直显，缺失 `--` | ✅ |
+| `updateTime` | string(可空) | 更新时间 | 未展示 | ✅ |
+
+响应码：`code` string，`"0"` 表示成功。
+
+字段层对账已闭环，无 ASSUMED 残留、无 mock 残留。
+
+

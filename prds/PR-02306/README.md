@@ -3,12 +3,12 @@ projectId: PR-02306
 status: active
 stage: G8
 branch: feature/PR-02306
-worktree: ""
+worktree: /Users/aven/github/PR-02306
 port: ""
 visualFidelity: standard
 prdSource: https://qfglxo2m3dc.sg.larksuite.com/wiki/KCyhwSvN7idfRCkTbI9lhZUNgbd
 figmaNode: ""
-larkEnabled: false
+larkEnabled: true
 ---
 
 # PR-02306 注册登录密码规则修改
