@@ -7,7 +7,7 @@ worktree: /Users/aven/github/PR-02172
 port: ""
 visualFidelity: standard
 prdSource: https://qfglxo2m3dc.sg.larksuite.com/docx/Zj7Dd8cdIorON3xmYSdlI94qg1c
-figmaNode: "9137:2"
+figmaNode: "19782:4920"
 larkEnabled: false
 ---
 
@@ -19,11 +19,11 @@ larkEnabled: false
 
 | 字段 | 值 |
 |------|-----|
-| 当前阶段 | G0/G1：C01-C18 已确认，范围为 Web + Admin；等待剩余资料/契约（未进 G2） |
+| 当前阶段 | G8；2026-08-21 正式 Figma 到位，Web 三个入口正在同步 UI |
 | 最新通过门禁 | G8 |
 | 公共规则 | 继承 ../../common/README.md |
 | PRD 来源 | https://qfglxo2m3dc.sg.larksuite.com/docx/Zj7Dd8cdIorON3xmYSdlI94qg1c |
-| visualFidelity | standard（待读取 Figma 后确认） |
+| visualFidelity | standard（已确认；12px 圆角 / 15px blur 使用最近 preset） |
 
 ## 文档地图
 
@@ -43,11 +43,12 @@ larkEnabled: false
 
 - [x] 12 项技术方向全部按建议确认（2026-08-03）
 - [x] 当前负责人确认 C01-C18 建议方案（2026-08-03）
+- [x] 登录/注册、账户绑定、首页 Figma 原子规格已读取并回填（2026-08-21）
 - [ ] 评审确认 C08 环境账号/审核 owner 与完成日期
 - [ ] 确认 Admin 在 legacy admin / `apps/admin` 的复用落点
 - [ ] 补白板读取权限或导出流程图
 - [ ] G2 scope 确认人和日期
-- [ ] Figma / API / QA 资料是否补充
+- [ ] QA 账号、兼容矩阵与人工视觉验收资料是否补充
 - [ ] API 未 ready 时是否按 MSW 路线 B 落地 handler / 契约测试 / dev-only worker
 - [ ] Lark 主动通知是否启用
 - [ ] 群内 @ 应用转 task 是否启用

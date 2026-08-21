@@ -3,7 +3,7 @@
 
 # Technical Design — PR-02172 【登录注册】增加第三方（tg、facebook）
 
-> 2026-08-03 已确认本页技术方向及 C01-C18 建议方案。范围为 Web + Admin，App 拆单；剩余 UI、API、owner 和验收资料待评审，G2 前不写业务代码。
+> 2026-08-03 已确认技术方向，2026-08-18 完成主要 Web/Admin 交付，2026-08-21 按正式 Figma 同步三方登录 UI。UI 修改只触达展示层，授权、三态状态机、API 与安全验证逻辑保持不变。
 
 ## 已确认技术决策
 
@@ -20,15 +20,15 @@
 | TD09 | 用户绑定模型 | 扩展统一 `authUsers` 数组，至少包含 `provider`、`bindStatus`、`maskedAccount`；不新增平铺的渠道状态字段 |
 | TD10 | 外部数据边界 | Telegram/Facebook SDK 数据以 `unknown` 进入 runtime schema，再映射为统一授权模型 |
 | TD11 | 解绑责任 | Web 只刷新用户资料并清理本地临时授权状态；数据库、token、缓存由后端原子清理；Bot 订阅不在本期范围 |
-| TD12 | 阶段纪律 | PM/技术评审结论未回填前只维护文档，不开编码 worktree、不写业务代码 |
+| TD12 | Figma UI 同步边界 | 登录/注册改 3+2 按钮，首页同步五渠道与 QR 点击区，账户绑定只改红框；不得借 UI 调整改写授权/API 逻辑 |
 
 ## 复用盘点
 
 | 类型 | 已检查位置 / 名称 | 结论 | 采用方式 |
 |------|-------------------|------|----------|
-| 入口组件 | `components/ThirdPartyLogin/index.tsx`、`HomeThirdLogin.tsx` | 已覆盖登录/注册/首页授权入口与通用后续流程 | 扩展 provider adapter 和静态配置 |
+| 入口组件 | `components/ThirdPartyLogin/index.tsx`、`HomeThirdLogin.tsx` | 已覆盖登录/注册/首页授权入口与通用后续流程 | 保留 controller；抽 `ProviderLoginButtons` / `ProviderIcon` 承担 Figma 展示 |
 | 流程弹窗 | `LoginOperateModal/*` | 已覆盖选择注册/关联、补填、关联已有账户 | 复用现有状态机，按统一 UI model 消费 |
-| 个人中心 | `ThirdBindModal`、`ThirdBindItem`、`ThirdVerifyModal` | 已覆盖绑定、解绑和二次验证 | 扩展 `authUsers` provider 项 |
+| 个人中心 | `ThirdBindModal`、`ThirdBindItem`、`ThirdVerifyModal` | 已覆盖绑定、解绑和二次验证 | 仅调整品牌图标、操作按钮 token 与 Modal 圆角，逻辑复用 |
 | API | `services/api/thirdLogin.ts` | 通用 OAuth 接口已存在；HiChat 有专属接口 | 通用接口优先；渠道换 token 通过 adapter 隔离 |
 | 状态 | `ThirdPartyLogin/store.ts` | Zustand 只保存当前授权流程 UI 状态 | 保留本地 UI 状态；用户绑定数据继续归 React Query |
 | 用户资料 | `services/api/user.ts` 的 `authUsers` | 已是多 provider 集合形态 | 扩展 item schema，不新增 provider 专属平铺字段 |
@@ -111,7 +111,7 @@ interface ThirdAuthorizationResult {
 
 ## 仍待 PM / 后端确认
 
-- 首页具体入口、入口顺序、按钮形态与固定文案。
-- Telegram/Facebook SDK/OAuth 产品方案已按官方最新文档确认（TG=OIDC `telegram-login.js`；FB=手动 code 模式，`email` 无需 Meta 审核）；仍待各环境 Bot/App 账号 readiness 与 owner。
+- 首页入口已确认为现有 Banner `HomeThirdLogin`；顺序、按钮形态与固定文案以 2026-08-21 Figma 为准，不再待确认。
+- Telegram/Facebook SDK/OAuth 产品方案已确认（TG=OIDC `telegram-login.js`；FB=Facebook JS SDK `accessToken`）；仍待生产账号 readiness 与 owner。
 - 注册/关联/解绑业务规则、后台交付、埋点和验收口径。
 - API 字段、错误码、callback 参数和 YApi 文档。

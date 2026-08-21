@@ -3,7 +3,19 @@
 
 # Collaboration — PR-02172 【登录注册】增加第三方（tg、facebook）
 
-> PRD 尚未召开技术评审会。2026-08-03 当前负责人已确认 C01-C18 的建议方案；仍缺 owner、资料或精确契约的项目保留到会议确认。G2 前不写业务代码。
+> 2026-08-03 当前负责人确认 C01-C18；主要 Web/Admin 功能已进入 G8。2026-08-21 正式 Figma 到位，本轮只同步 UI 与相关文档，授权流程、交互和 API 复用既有实现。
+
+## Figma UI 同步结论（2026-08-21）
+
+| 模块 | 正式节点 | 结论 | 明确不变 |
+|------|----------|------|----------|
+| 登录 / 注册 | `19782:4920` | 固定 3+2：Google / HiChat / Apple；Telegram / Facebook；40px 高、`CC-3`、12px 设计圆角 | Google One Tap、各 provider 授权、埋点、0/1/2 三态 |
+| 账户绑定 | `19936:2518` | 只改用户截图红框：TG/FB 行品牌图标与五行右侧关联按钮；弹窗恢复共享 16px 圆角 | 行文案、账号状态、绑定/解绑分发、安全验证、接口 |
+| 首页 | `19800:10744`（原子 `19800:11142`） | 沿用 Banner `HomeThirdLogin`；顺序 Google / Apple / HiChat / TG / FB；各 40×40，QR 40×40 | 下载浮层、跳转、授权流程与首页其他布局 |
+
+- 12px 圆角按项目 `visualFidelity: standard` 映射为 `rounded-m`（8px）；15px blur 映射 `backdrop-blur-lg`（16px），不修改全局 preset。
+- Telegram/Facebook 使用仓库 `packages/figma-icon` 的品牌双色 SVG 源，不再使用单色字体图标。
+- 详细原子节点、token 链与响应式规则见 `07-figma-spec.md`。
 
 ## 官方文档核对更正（2026-08-03，curl 直取官方最新文档）
 
@@ -116,10 +128,10 @@
 
 | ID | 结论 | 状态 |
 |----|------|------|
-| C01 | 登录、注册、首页和个人中心沿用现有第三方登录/绑定入口，仅扩展 Telegram/Facebook | 已确认；具体视觉仍以 Figma 为准 |
+| C01 | 登录、注册、首页和个人中心沿用现有第三方登录/绑定入口，仅扩展 Telegram/Facebook | 已确认；视觉以 2026-08-21 正式 Figma 为准 |
 | C02 | 本项目交付 Web + Admin；App 另行拆单 | 已确认 |
 | C03 | PRD §5.2.8 整段置灰删除：TG Bot 订阅、消息推送及解绑取消订阅全部不开发、不联调、不验收 | 已确认；截图复核 |
-| C04 | Figma `9137:2` 未读取前不定稿 UI | 已确认原则；待设计资料 |
+| C04 | 正式 Figma 读取后再定稿 UI | 已完成：三个主节点及原子控件已读取，见 `07-figma-spec.md` |
 | C05 | Telegram 优先官方 Login Widget/OIDC 能力，popup 为主、redirect 降级 | 已确认方向；待后端/安全契约 |
 | C06 | Facebook 使用官方 OAuth/JS SDK 能力，popup 为主、redirect 降级 | 已确认方向；待后端/安全契约 |
 | C07 | 两个平台使用统一 callback 结果模型；参数和临时 token 有效期由后端提供 | 已确认方向；待 API 契约 |
@@ -139,7 +151,7 @@
 
 | # | 剩余待确认 | 期望输出 | 状态 |
 |---|-------------|----------|------|
-| PM01 | Figma 是否定稿并覆盖 Web/H5、明暗主题和全部状态 | 可读取设计稿 | 待设计/PM |
+| PM01 | Figma 是否定稿并覆盖 Web/H5、明暗主题和全部状态 | 可读取设计稿 | 主流程 Web 稿已到位；H5 无独立原子稿，按现有响应式验收 |
 | PM02 | App 四种发行包是否同期交付 | App 工单、owner、排期 | 待 PM 拆单 |
 | PM03 | Admin 具体落在 legacy admin、`apps/admin` 或两者 | 本项目责任目录与复用落点 | 待技术评审盘点 |
 | PM04 | Telegram/Facebook 环境账号、Meta Review 和上线 readiness | 各环境账号 owner、完成日期 | 待会上确认 owner（C08） |
@@ -156,11 +168,11 @@
 
 | ID | 问题 | 为什么必须确认 | 建议参会 owner | 状态 |
 |----|------|----------------|----------------|------|
-| Q01 | “登录/注册/首页”中的首页具体是哪一个入口？是现有 `HomeThirdLogin` Banner 图标，还是首页登录弹窗/其他位置？ | 决定页面范围和 UI 形态 | 产品、设计、Web | 已确认沿用现有入口；视觉待 Figma |
+| Q01 | “登录/注册/首页”中的首页具体是哪一个入口？是现有 `HomeThirdLogin` Banner 图标，还是首页登录弹窗/其他位置？ | 决定页面范围和 UI 形态 | 产品、设计、Web | 已确认沿用现有 Banner `HomeThirdLogin`，视觉节点 `19800:10744` |
 | Q02 | PRD §5.3 的 iOS/Android 四种包是否与 Web 同期交付？由哪个团队/工单/仓库负责？ | 当前仓库无法交付 App SDK | 产品、App、项目负责人 | 技术结论：本仓不做；待 PM 拆单 |
 | Q03 | 管理后台需求落在 legacy admin、`apps/admin`，还是两个系统都要改？ | 当前 `apps/admin` 未定位到截图对应的完整用户管理页面 | 产品、后台前端、后端 | 本项目做 Admin；具体落点待复用盘点 |
 | Q05 | 竞品 35 张截图仅作流程参考，还是其中某套交互要作为 FameEX 设计基线？ | 不能用竞品图替代正式设计稿 | 产品、设计 | 已确认为流程参考，不作视觉基线 |
-| Q06 | Figma node `9137:2` 是否已定稿，是否覆盖 Web/H5/暗色/亮色及所有弹窗状态？ | 决定 visualFidelity 和 UI 验收 | 设计、产品 | 待确认 |
+| Q06 | Figma 是否覆盖 Web/H5/暗色/亮色及所有弹窗状态？ | 决定 visualFidelity 和 UI 验收 | 设计、产品 | Web 三个主节点已读取；颜色使用明暗主题 token，H5 沿用现有响应式 |
 
 ### B. OAuth / SDK / 配置
 
@@ -208,8 +220,8 @@
 
 | ID | 问题 | 为什么必须确认 | 建议参会 owner | 状态 |
 |----|------|----------------|----------------|------|
-| Q34 | 登录/注册入口排序是 Google、Apple、HiChat、Telegram、Facebook，还是按地区/端动态配置？ | 当前 UI 是固定枚举顺序 | 产品、设计 | 待确认 |
-| Q35 | Telegram/Facebook 使用品牌图标按钮还是“继续使用 xxx”整行按钮？首页和弹窗是否同形态？ | Figma 尚未读取，竞品形态不一致 | 设计、产品 | 待确认 |
+| Q34 | 登录/注册入口排序是 Google、Apple、HiChat、Telegram、Facebook，还是按地区/端动态配置？ | 当前 UI 是固定枚举顺序 | 产品、设计 | 已确认：登录/注册第一行 Google/HiChat/Apple，第二行 Telegram/Facebook；首页 Google/Apple/HiChat/Telegram/Facebook |
+| Q35 | Telegram/Facebook 使用品牌图标按钮还是“继续使用 xxx”整行按钮？首页和弹窗是否同形态？ | 各入口容器形态不同 | 设计、产品 | 已确认：登录/注册为带文字整宽按钮；首页为 40×40 图标按钮；绑定为行内品牌图标 + 右侧操作按钮 |
 | Q36 | popup 打开后的 loading、用户取消、窗口关闭、超时和重复点击如何表现？ | 需完整可测试状态 | 产品、设计、Web | 待确认 |
 | Q37 | Facebook 同邮箱强制关联弹窗展示完整邮箱还是脱敏邮箱？是否允许切换“注册新账户”？ | 涉及隐私与安全 | 产品、安全 | 待确认 |
 | Q38 | 个人中心是否展示 Telegram username/手机号、Facebook email/name？缺失时统一显示 `--` 还是不展示？ | PRD只定义后台日志缺失值 | 产品、设计 | 已确认展示渠道/状态/脱敏账号，必需缺失值为 `--` |
@@ -246,7 +258,7 @@
 | Q54 | 5.5 明确「沿用」参考文档《PM-1227/M-0370 新增第三方登录及嗨聊邀请关系》的关联流程、验证码优先级、后台字段、注销解绑规则，但该文档未纳入本项目资料清单。是否先获取并契约化其可执行细节？ | 大量业务规则直接依赖该文档；不核对将凭空实现 | 产品、后端、Web | 待确认（资料阻塞，见下表） |
 | Q55 | TG/FB 新注册是否需要绑定邀请码/邀请关系？参考文档标题含「嗨聊邀请关系」，但本 PRD 正文对新注册的邀请关系只字未提 | 邀请关系影响注册接口入参与业务分成，漏做代价高 | 产品、后端 | 沿用现有注册邀请关系，不新增独立规则；待参考文档核对 |
 | Q56 | 5.2.6 关联已有账户 4 个分支的固定文案需逐字确认：①绑定成功 ②「该账户已关联 Telegram/Facebook，请先解除关联」③「该账户已注销，无法关联」④「用户不存在」 | 现有 Q09/Q30 只覆盖冻结/注销/受限错误码，未覆盖关联流程这组文案 | 产品、Web | 待确认 |
-| Q57 | 个人中心新增 TG/FB 绑定项 PRD-IMG-036 呈现为「绑定Telegram登录」整行按钮，而现有 Google/Apple/HiChat（PRD-IMG-037）为「未绑定 + Bind 小按钮」。两种形态是否统一？以哪个为准？ | 同一弹窗新旧项形态不一致，Q35 只覆盖登录页入口 | 设计、产品 | 沿用现有绑定项形态；Figma 定稿后复核 |
+| Q57 | 个人中心新增 TG/FB 绑定项 PRD-IMG-036 呈现为「绑定Telegram登录」整行按钮，而现有 Google/Apple/HiChat（PRD-IMG-037）为「未绑定 + Bind 小按钮」。两种形态是否统一？以哪个为准？ | 同一弹窗新旧项形态不一致 | 设计、产品 | 已由 Figma `19936:2518` 确认统一为五行“渠道信息 + 右侧关联/解除按钮” |
 
 ### PRD 内部矛盾（提请评审当场澄清）
 
@@ -261,7 +273,7 @@
 | 时间 | 问题 | 影响 | 责任人 | 状态 |
 |------|------|------|--------|------|
 | 2026-08-03 | PRD 白板缺 `board:whiteboard:node:read` 权限，无法读取原始流程节点或缩略图 | 核心流程可能漏分支，阻断 G2 | 文档 owner / Lark 应用管理员 | 待补授权或导出 |
-| 2026-08-03 | Figma 尚未读取，UI 设计稿 Web/App 字段在 PRD 中为空 | 视觉/交互不可定稿 | 设计、产品 | 待补 |
+| 2026-08-21 | Figma 正式 Web 稿已读取；未提供独立 H5 原子稿 | H5 需沿用现有响应式做 390px 验收 | Web / QA | Web 规格关闭；H5 进入验收项 |
 | 2026-08-03 | API/YApi 未提供 | 无法定 schema、状态码、错误态和 Mock | 后端 | 待补 |
 | 2026-08-03 | QA 用例、账号、兼容矩阵未提供 | 无法形成完整验收计划 | QA | 待补 |
 | 2026-08-03 | Telegram Bot / Meta App 各环境账号与审核状态未知 | 可能阻塞开发与联调（**Meta email 审核已非阻塞，见 D4**；TG 需注册 Web Login Allowed URLs + Client ID/Secret，见 D2） | 产品、运维、后端 | 待确认账号 owner |
@@ -274,7 +286,7 @@
 - `PRD-IMG-001`～`035` 为竞品参考；`036`～`040` 为本期个人中心、后台和日志直接素材。
 - Web 已存在 `ThirdPartyLogin` 通用流程、HiChat 专属流程、个人中心绑定/解绑和安全验证。
 - 现有 `ThirdType` 仅含 Google、Apple、HiChat；服务层仍有若干宽泛 `any`，新增渠道时应以 schema/明确 Params 收敛，不继续扩散。
-- 本轮没有修改任何业务代码。
+- 2026-08-21 UI 同步只修改 `ThirdPartyLogin` 展示组件、品牌静态资源和 `ThirdBindModal` 样式覆盖；未修改授权、API、store 或业务状态机。
 
 ## Code Review
 
@@ -304,6 +316,10 @@
 | 本地下载 + `file` | 40 张 PRD 图片 | PASS | 全部为有效 PNG，共约 11.2 MB |
 | `lark-cli whiteboard +query` | `PRD-EMBED-005` | BLOCK | 缺 `board:whiteboard:node:read` |
 | `lark-cli docs +fetch` | PR-01268 现货后台章节 | PASS | 已读取脱敏场景参考 |
+| `pnpm vitest --run .../ProviderLoginButtons.test.ts` | 登录/注册 3+2 顺序、品牌资源、disabled 点击 | PASS | 2 tests |
+| `verify-build-quality --files <本轮 6 个 TS/TSX>` | Biome / 改动文件 tsc / 相关 Vitest | PASS | 改动文件 0 type error；全仓存量错误不归因本轮 |
+| 本地 Browser | 登录 light/dark、注册 dark、首页五渠道 + QR | PASS | 布局、顺序、品牌图标与点击区正常；绑定弹窗需已登录态，代码分支按原子规格核对 |
+| `docs-tdd.mjs gate PR-02172 G8` | 最终阶段门禁 | PASS | 2026-08-21 执行退出码 0 |
 
 ## 可转发交接清单（后端/运维，2026-08-04 官方文档核实版）
 

@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-08-19T10:46:32.534Z",
+  "generatedAt": "2026-08-21T13:01:06.350Z",
   "tool": "run-project-gate.mjs",
   "projectId": "PR-02172",
   "gate": "G8",
-  "ok": true,
+  "ok": false,
   "summary": {
     "total": 89,
-    "ok": 87,
-    "warn": 2,
+    "ok": 83,
+    "warn": 5,
     "waived": 0,
-    "fail": 0
+    "fail": 1
   },
   "groups": {
     "documentation": {
@@ -239,7 +239,7 @@
     {
       "ruleId": "DOC-PRD-010",
       "ok": true,
-      "message": "remote PRD content hash matches intake baseline (cached 45s ago): 需求 PRD (revision 1393)",
+      "message": "remote PRD content hash matches intake baseline (cached 91s ago): 需求 PRD (revision 1393)",
       "file": "../docs_tdd/prds/PR-02172/agent/prd-source-manifest.json",
       "severity": "error",
       "category": "documentation"
@@ -583,7 +583,7 @@
     {
       "ruleId": "CODE-SCOPE-001",
       "ok": false,
-      "message": "changed files outside 责任模块目录 (confirm not out-of-scope, §1.1):\napps/web/src/app/[lang]/(with-header)/layout.tsx\napps/web/src/components/FacebookLoginSdk/index.tsx\napps/web/src/components/FacebookLoginSdk/stores.ts\napps/web/src/components/TelegramLoginSdk/index.tsx\napps/web/src/components/TelegramLoginSdk/stores.ts\napps/web/src/services/api/user.test.ts",
+      "message": "changed files outside 责任模块目录 (confirm not out-of-scope, §1.1):\napps/web/src/app/[lang]/(with-header)/layout.tsx\napps/web/src/app/oauth/apple/callback/page.tsx\napps/web/src/components/FacebookLoginSdk/index.tsx\napps/web/src/components/FacebookLoginSdk/stores.ts\napps/web/src/components/TelegramLoginSdk/index.tsx\napps/web/src/components/TelegramLoginSdk/stores.ts\napps/web/src/services/api/user.test.ts",
       "file": "../docs_tdd/prds/PR-02172",
       "severity": "warn",
       "category": "documentation"
@@ -672,20 +672,22 @@
       "ruleId": "VERIFY-BIOME-001",
       "ok": true,
       "severity": "error",
-      "message": "biome check 通过：实检 15 / 候选 18 个文件",
+      "message": "biome check 通过：实检 222 / 候选 309 个文件",
       "file": "",
       "category": "build-quality",
       "evidence": {
-        "command": "pnpm exec biome check --no-errors-on-unmatched apps/admin/legacy-admin/src/api/userManager/memberManager.js apps/admin/legacy-admin/src/mixin/dictionary/index.js apps/web/src/app/[lang]/(with-header)/layout.tsx apps/web/src/apps/Login/InputAccount.tsx apps/web/src/components/FacebookLoginSdk/index.tsx apps/web/src/components/FacebookLoginSdk/stores.ts apps/web/src/components/TelegramLoginSdk/index.tsx apps/web/src/components/TelegramLoginSdk/stores.ts apps/web/src/components/ThirdPartyLogin/DevThirdLoginDemo.tsx apps/web/src/components/ThirdPartyLogin/HomeThirdLogin.tsx apps/web/src/components/ThirdPartyLogin/common/providerAdapters.ts apps/web/src/components/ThirdPartyLogin/common/thirdConfig.ts apps/web/src/components/ThirdPartyLogin/common/thirdTypes.ts apps/web/src/components/ThirdPartyLogin/hooks/useThirdAuth.ts apps/web/src/components/ThirdPartyLogin/index.tsx apps/web/src/components/ThirdPartyLogin/store.ts apps/web/src/i18n/locales/zh-CN/thirdLogin.json apps/web/src/services/api/user.test.ts",
+        "command": "pnpm exec biome check --no-errors-on-unmatched apps/admin/legacy-admin/src/api/userManager/memberManager.js apps/admin/legacy-admin/src/mixin/dictionary/index.js apps/web-next/package.json apps/web-next/setupVitest.ts apps/web-next/src/apps/Futures/components/OrderPanel/LeverageSetting.tsx apps/web-next/src/apps/Futures/components/OrderPanel/Modals/BonusSelectModal.tsx apps/web-next/src/apps/Futures/utils/util.ts apps/web-next/src/apps/Home/components/AppDownloadMan/DownloadQrTooltip.tsx apps/web-next/src/apps/Home/components/AppDownloadMan/ImgCard.tsx apps/web-next/src/apps/Home/components/AppDownloadMan/PhonesAnimation.tsx apps/web-next/src/apps/Home/components/AppDownloadMan/index.tsx apps/web-next/src/apps/Home/components/FafaAndAnniversaryBanner/AccountInfo.tsx apps/web-next/src/apps/Home/components/FafaAndAnniversaryBanner/AccountReg.tsx apps/web-next/src/apps/Home/components/FafaAndAnniversaryBanner/BalanceInfo.tsx apps/web-next/src/apps/Home/components/FafaAndAnniversaryBanner/BannerHeadline.tsx apps/web-next/src/apps/Home/components/FafaAndAnniversaryBanner/HomeSocialLinks.tsx apps/web-next/src/apps/Home/components/FafaAndAnniversaryBanner/index.tsx apps/web-next/src/apps/Home/components/FafaAndAnniversaryBanner/test/AccountInfo.test.tsx apps/web-next/src/apps/Home/components/FafaAndAnniversaryBanner/test/FafaAndAnniversaryBanner.test.tsx apps/web-next/src/apps/Home/components/FeatureHighlights/index.tsx apps/web-next/src/apps/Home/components/FeaturedSwiper/index.tsx apps/web-next/src/apps/Home/components/FeaturedSwiper/langKey.ts apps/web-next/src/apps/Home/components/Notices/index.tsx apps/web-next/src/apps/Home/components/PopularCryptos/FuturesRow.tsx apps/web-next/src/apps/Home/components/PopularCryptos/FuturesRows.tsx apps/web-next/src/apps/Home/components/PopularCryptos/HotCryptos.tsx apps/web-next/src/apps/Home/components/PopularCryptos/MarketSparkline.tsx apps/web-next/src/apps/Home/components/PopularCryptos/MarketTable.tsx apps/web-next/src/apps/Home/components/PopularCryptos/PairCell.tsx apps/web-next/src/apps/Home/components/PopularCryptos/PriceCells.tsx apps/web-next/src/apps/Home/components/PopularCryptos/SpotRows.tsx apps/web-next/src/apps/Home/components/PopularCryptos/TradeButtonCell.tsx apps/web-next/src/apps/Home/components/PopularCryptos/index.tsx apps/web-next/src/apps/Home/components/PopularCryptos/layout.ts apps/web-next/src/apps/Home/components/PopularCryptos/marketPrice.ts apps/web-next/src/apps/Home/components/PopularCryptos/marketRows.ts apps/web-next/src/apps/Home/components/PopularCryptos/test/marketPrice.test.ts apps/web-next/src/apps/Home/components/PopularCryptos/test/marketRows.test.ts apps/web-next/src/apps/Home/components/TradeTypeSwiper/AnimatedNumber.tsx apps/web-next/src/apps/Home/components/TradeTypeSwiper/CarouselDots.tsx apps/web-next/src/apps/Home/components/TradeTypeSwiper/CopyTradeQueue/CopyTradeMan.tsx apps/web-next/src/apps/Home/components/TradeTypeSwiper/CopyTradeQueue/ProfitSparkline.tsx apps/web-next/src/apps/Home/components/TradeTypeSwiper/CopyTradeQueue/index.tsx apps/web-next/src/apps/Home/components/TradeTypeSwiper/CopyTradeQueue/useBouncingMarquee.ts apps/web-next/src/apps/Home/components/TradeTypeSwiper/TradeItem.tsx apps/web-next/src/apps/Home/components/TradeTypeSwiper/index.tsx apps/web-next/src/apps/Home/components/TradeTypeSwiper/test/AnimatedNumber.test.tsx apps/web-next/src/apps/Home/components/TradeTypeSwiper/test/CopyTradeQueue.test.tsx apps/web-next/src/apps/Home/components/TradeTypeSwiper/test/ProfitSparkline.test.tsx apps/web-next/src/apps/Home/components/TradeTypeSwiper/test/TradeTypeSwiper.test.tsx apps/web-next/src/apps/Home/components/TradeTypeSwiper/tradeData.ts apps/web-next/src/apps/Home/shared/classes.ts apps/web-next/src/apps/Home/shared/roseInfo.ts apps/web-next/src/apps/Home/shared/sparkline.ts apps/web-next/src/apps/Home/shared/test/roseInfo.test.ts apps/web-next/src/apps/Home/shared/test/sparkline.test.ts apps/web-next/src/apps/shared/components/main-footer/footerData.ts apps/web-next/src/apps/shared/components/main-header/MainNavigation.tsx apps/web-next/src/apps/shared/components/main-header/account/HeaderAccount.tsx apps/web-next/src/apps/shared/components/main-header/components/MenuLabel.tsx apps/web-next/src/apps/shared/components/main-header/test/MainNavigation.test.tsx apps/web-next/src/apps/shared/components/main-header/test/useHeaderTransparency.test.ts apps/web-next/src/apps/shared/components/main-header/useHeaderTransparency.ts apps/web-next/src/apps/shared/components/mainFooter.tsx apps/web-next/src/apps/shared/components/mainHeader.tsx apps/web-next/src/apps/shared/runtime/LiveLayer.ts apps/web-next/src/apps/shared/runtime/ServerLiveLayer.ts apps/web-next/src/components/AccountInput/CountryList.tsx apps/web-next/src/components/AccountInput/CountryModal.tsx apps/web-next/src/components/AccountInput/index.tsx apps/web-next/src/components/CodeVerifyDialog/CodeInput.tsx apps/web-next/src/components/CodeVerifyDialog/index.tsx apps/web-next/src/components/CodeVerifyDialog/store.ts apps/web-next/src/components/Empty.tsx apps/web-next/src/components/FlagIcon.tsx apps/web-next/src/components/Modal.tsx apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/CreateByThird.tsx apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/HiChatSucModal.tsx apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/RegByThird.tsx apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/SelThirdType.tsx apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/TermsAgreement.tsx apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/UniteByThird.tsx apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/index.tsx apps/web-next/src/components/ThirdPartyLogin/common/thirdTypes.ts apps/web-next/src/components/ThirdPartyLogin/store.ts apps/web-next/src/components/Tooltip.tsx apps/web-next/src/components/TradeOrderPanel/ABTestTradeBtns/AbFirstTradeHint.tsx apps/web-next/src/components/TradeOrderPanel/ABTestTradeBtns/RegisterRewardAnimateIcon.tsx apps/web-next/src/components/VerifyMan/index.tsx apps/web-next/src/components/VerifyMan/store.ts apps/web-next/src/components/ui/input/style.ts apps/web-next/src/components/ui/popover/SmartPopover.tsx apps/web-next/src/components/ui/popover/test/SmartPopover.test.tsx apps/web-next/src/constants/country/en-AU.json apps/web-next/src/constants/country/en-US.json apps/web-next/src/constants/country/es-ES.json apps/web-next/src/constants/country/ko-KR.json apps/web-next/src/constants/country/pt-BR.json apps/web-next/src/constants/country/ru-RU.json apps/web-next/src/constants/country/tr-TR.json apps/web-next/src/constants/country/vi-VN.json apps/web-next/src/constants/country/zh-CN.json apps/web-next/src/constants/country/zh-TW.json apps/web-next/src/constants/pathnames.ts apps/web-next/src/i18n/core/localeUrl.ts apps/web-next/src/i18n/core/namespaces.ts apps/web-next/src/i18n/core/test/localeUrl.test.ts apps/web-next/src/i18n/core/test/namespaces.test.ts apps/web-next/src/i18n/i18next.d.ts apps/web-next/src/i18n/resources/en-AU/accountInput.json apps/web-next/src/i18n/resources/en-AU/codeVerify.json apps/web-next/src/i18n/resources/en-AU/footer.json apps/web-next/src/i18n/resources/en-AU/home.json apps/web-next/src/i18n/resources/en-AU/resetPassword.json apps/web-next/src/i18n/resources/en-AU/tdk.json apps/web-next/src/i18n/resources/en-AU/thirdLogin.json apps/web-next/src/i18n/resources/en-US/accountInput.json apps/web-next/src/i18n/resources/en-US/codeVerify.json apps/web-next/src/i18n/resources/en-US/footer.json apps/web-next/src/i18n/resources/en-US/home.json apps/web-next/src/i18n/resources/en-US/resetPassword.json apps/web-next/src/i18n/resources/en-US/tdk.json apps/web-next/src/i18n/resources/en-US/thirdLogin.json apps/web-next/src/i18n/resources/es-ES/accountInput.json apps/web-next/src/i18n/resources/es-ES/codeVerify.json apps/web-next/src/i18n/resources/es-ES/footer.json apps/web-next/src/i18n/resources/es-ES/home.json apps/web-next/src/i18n/resources/es-ES/resetPassword.json apps/web-next/src/i18n/resources/es-ES/tdk.json apps/web-next/src/i18n/resources/es-ES/thirdLogin.json apps/web-next/src/i18n/resources/ko-KR/accountInput.json apps/web-next/src/i18n/resources/ko-KR/codeVerify.json apps/web-next/src/i18n/resources/ko-KR/footer.json apps/web-next/src/i18n/resources/ko-KR/home.json apps/web-next/src/i18n/resources/ko-KR/resetPassword.json apps/web-next/src/i18n/resources/ko-KR/tdk.json apps/web-next/src/i18n/resources/ko-KR/thirdLogin.json apps/web-next/src/i18n/resources/pt-BR/accountInput.json apps/web-next/src/i18n/resources/pt-BR/codeVerify.json apps/web-next/src/i18n/resources/pt-BR/footer.json apps/web-next/src/i18n/resources/pt-BR/home.json apps/web-next/src/i18n/resources/pt-BR/resetPassword.json apps/web-next/src/i18n/resources/pt-BR/tdk.json apps/web-next/src/i18n/resources/pt-BR/thirdLogin.json apps/web-next/src/i18n/resources/ru-RU/accountInput.json apps/web-next/src/i18n/resources/ru-RU/codeVerify.json apps/web-next/src/i18n/resources/ru-RU/footer.json apps/web-next/src/i18n/resources/ru-RU/home.json apps/web-next/src/i18n/resources/ru-RU/resetPassword.json apps/web-next/src/i18n/resources/ru-RU/tdk.json apps/web-next/src/i18n/resources/ru-RU/thirdLogin.json apps/web-next/src/i18n/resources/tr-TR/accountInput.json apps/web-next/src/i18n/resources/tr-TR/codeVerify.json apps/web-next/src/i18n/resources/tr-TR/footer.json apps/web-next/src/i18n/resources/tr-TR/home.json apps/web-next/src/i18n/resources/tr-TR/resetPassword.json apps/web-next/src/i18n/resources/tr-TR/tdk.json apps/web-next/src/i18n/resources/tr-TR/thirdLogin.json apps/web-next/src/i18n/resources/vi-VN/accountInput.json apps/web-next/src/i18n/resources/vi-VN/codeVerify.json apps/web-next/src/i18n/resources/vi-VN/footer.json apps/web-next/src/i18n/resources/vi-VN/home.json apps/web-next/src/i18n/resources/vi-VN/resetPassword.json apps/web-next/src/i18n/resources/vi-VN/tdk.json apps/web-next/src/i18n/resources/vi-VN/thirdLogin.json apps/web-next/src/i18n/resources/zh-CN/accountInput.json apps/web-next/src/i18n/resources/zh-CN/codeVerify.json apps/web-next/src/i18n/resources/zh-CN/footer.json apps/web-next/src/i18n/resources/zh-CN/home.json apps/web-next/src/i18n/resources/zh-CN/resetPassword.json apps/web-next/src/i18n/resources/zh-CN/tdk.json apps/web-next/src/i18n/resources/zh-CN/thirdLogin.json apps/web-next/src/i18n/resources/zh-TW/accountInput.json apps/web-next/src/i18n/resources/zh-TW/codeVerify.json apps/web-next/src/i18n/resources/zh-TW/footer.json apps/web-next/src/i18n/resources/zh-TW/home.json apps/web-next/src/i18n/resources/zh-TW/resetPassword.json apps/web-next/src/i18n/resources/zh-TW/tdk.json apps/web-next/src/i18n/resources/zh-TW/thirdLogin.json apps/web-next/src/platform/browser/AppLink.tsx apps/web-next/src/platform/browser/browserLifecycle.ts apps/web-next/src/platform/browser/test/AppLink.test.tsx apps/web-next/src/platform/browser/test/browserLifecycle.test.ts apps/web-next/src/platform/browser/test/useIsInViewport.test.tsx apps/web-next/src/platform/browser/useIsHydrated.ts apps/web-next/src/platform/browser/useIsInViewport.ts apps/web-next/src/platform/captcha/geetestModalOverlay.ts apps/web-next/src/platform/captcha/geetestTypes.ts apps/web-next/src/platform/captcha/index.ts apps/web-next/src/platform/captcha/reactAriaKeepVisible.d.ts apps/web-next/src/platform/captcha/test/geetestModalOverlay.test.ts apps/web-next/src/platform/captcha/useCaptcha.tsx apps/web-next/src/platform/components/ui/img/FxImg.tsx apps/web-next/src/platform/components/ui/img/index.ts apps/web-next/src/platform/components/ui/img/test/FxImg.test.tsx apps/web-next/src/platform/domain/cms/CmsHttpApi.ts apps/web-next/src/platform/domain/cms/endpoints/getAnnouncementsListEndpoint.ts apps/web-next/src/platform/domain/shared/ApiResponseEnvelope.ts apps/web-next/src/platform/domain/spot/SpotHttpApi.ts apps/web-next/src/platform/domain/spot/endpoints/getSpotSymbolListTickerEndpoint.ts apps/web-next/src/platform/domain/spot/endpoints/getSpotTicker24Endpoint.ts apps/web-next/src/platform/domain/web/WebHttpApi.ts apps/web-next/src/platform/domain/web/endpoints/authLoginEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/authRegisterEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/checkAccountEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/confirmLoginEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/getAppDownloadEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/getCopyTradingUserTypeEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/getCountryCodeEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/getEmailValidCodeEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/getGeetestV3ParamsEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/getHichatUserStatusEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/getIndexV5Endpoint.ts apps/web-next/src/platform/domain/web/endpoints/getIndexV7Endpoint.ts apps/web-next/src/platform/domain/web/endpoints/getSmsValidCodeEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/getTopLeaderEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/hichatBindExistingAccountEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/hichatRegisterAndBindEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/joinAddAccountEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/newRegisterCheckEndpoint.ts apps/web-next/src/platform/domain/web/schema/oauthCommonSchemas.ts apps/web-next/src/platform/sign-key/encryptPassword.ts apps/web-next/src/platform/sign-key/encryptPasswordWithKey.ts apps/web-next/src/platform/sign-key/index.ts apps/web-next/src/platform/sign-key/test/encryptPassword.test.ts apps/web-next/src/platform/third-party-sdk/appleSdk.ts apps/web-next/src/platform/third-party-sdk/googleSdk.ts apps/web-next/src/platform/third-party-sdk/test/thirdConfig.test.ts apps/web-next/src/platform/third-party-sdk/thirdConfig.ts apps/web-next/src/platform/third-party-sdk/types.d.ts apps/web-next/src/platform/third-party-sdk/useExternalScript.ts apps/web-next/src/routeTree.gen.ts apps/web-next/src/routerContext.ts apps/web-next/src/routes/(main)/index.tsx apps/web-next/src/routes/(main)/route.tsx apps/web-next/src/routes/oauth/apple/callback.tsx apps/web-next/src/services/api/SpotApiClient.ts apps/web-next/src/services/api/cms/CmsApiClient.ts apps/web-next/src/services/api/cms/cmsBaseUrl.ts apps/web-next/src/services/api/cms/strapiLocale.ts apps/web-next/src/services/api/envelope/test/ApiResponseEnvelope.test.ts apps/web-next/src/services/hooks/auth/authLoginMutation.ts apps/web-next/src/services/hooks/auth/authRegisterMutation.ts apps/web-next/src/services/hooks/auth/checkAccountMutation.ts apps/web-next/src/services/hooks/auth/confirmLoginMutation.ts apps/web-next/src/services/hooks/auth/hichatBindExistingAccountMutation.ts apps/web-next/src/services/hooks/auth/hichatRegisterAndBindMutation.ts apps/web-next/src/services/hooks/auth/hichatUserStatusQuery.ts apps/web-next/src/services/hooks/auth/joinAddAccountMutation.ts apps/web-next/src/services/hooks/auth/newRegisterCheckMutation.ts apps/web-next/src/services/hooks/auth/useWriteAuthSession.ts apps/web-next/src/services/hooks/captcha/geetestV3ParamsQuery.ts apps/web-next/src/services/hooks/cms/announcementsListQuery.ts apps/web-next/src/services/hooks/common/appDownloadQuery.ts apps/web-next/src/services/hooks/common/countryCodeQuery.ts apps/web-next/src/services/hooks/common/emailValidCodeMutation.ts apps/web-next/src/services/hooks/common/indexV5Query.ts apps/web-next/src/services/hooks/common/indexV7Query.ts apps/web-next/src/services/hooks/common/publicCoinConfig.ts apps/web-next/src/services/hooks/common/smsValidCodeMutation.ts apps/web-next/src/services/hooks/common/test/indexV7Query.test.ts apps/web-next/src/services/hooks/copyTrading/copyTradingUserTypeQuery.ts apps/web-next/src/services/hooks/copyTrading/topLeaderQuery.ts apps/web-next/src/services/hooks/spot/spotOnlineSymbolListQuery.ts apps/web-next/src/services/hooks/spot/spotSymbolListTickerQuery.ts apps/web-next/src/services/hooks/spot/spotTicker24Query.ts apps/web-next/src/services/hooks/spot/spotTickerLiveLookup.ts apps/web-next/src/services/hooks/spot/test/spotOnlineSymbolListQuery.test.ts apps/web-next/src/services/ws/futures/hooks/marketKlineTrendAtomFamily.ts apps/web-next/src/services/ws/futures/hooks/test/marketKlineTrend.test.ts apps/web-next/src/services/ws/futures/index.ts apps/web-next/src/services/ws/spot-public/SpotPublicProtocolCatalog.ts apps/web-next/src/services/ws/spot-public/SpotPublicWSClientService.ts apps/web-next/src/services/ws/spot-public/index.ts apps/web-next/src/services/ws/spot-public/ticker/SpotTickerProtocol.ts apps/web-next/src/services/ws/spot-public/ticker/spotTickerAtom.ts apps/web-next/src/services/ws/spot-public/ticker/spotTickerSnapshot.ts apps/web-next/src/services/ws/spot-public/ticker/test/SpotTickerProtocol.test.ts apps/web-next/src/services/ws/spot-public/ticker/test/spotTickerSnapshot.test.ts apps/web-next/src/utils/hooks/useCountdown.ts apps/web-next/src/utils/hooks/useGetCountryCode.ts apps/web-next/src/utils/hooks/useSmsErrorBar.ts apps/web-next/src/utils/phonePatterns.ts apps/web-next/tsconfig.json apps/web-next/vite.config.ts apps/web-next/vitest.config.ts apps/web/src/app/[lang]/(with-header)/layout.tsx apps/web/src/app/oauth/apple/callback/page.tsx apps/web/src/components/FacebookLoginSdk/index.tsx apps/web/src/components/FacebookLoginSdk/stores.ts apps/web/src/components/TelegramLoginSdk/index.tsx apps/web/src/components/TelegramLoginSdk/stores.ts apps/web/src/components/ThirdPartyLogin/HomeThirdLogin.tsx apps/web/src/components/ThirdPartyLogin/common/providerAdapters.ts apps/web/src/components/ThirdPartyLogin/common/thirdConfig.test.ts apps/web/src/components/ThirdPartyLogin/common/thirdConfig.ts apps/web/src/components/ThirdPartyLogin/common/thirdTypes.ts apps/web/src/components/ThirdPartyLogin/hooks/useThirdAuth.ts apps/web/src/components/ThirdPartyLogin/index.tsx apps/web/src/components/ThirdPartyLogin/store.ts apps/web/src/i18n/locales/zh-CN/thirdLogin.json apps/web/src/services/api/user.test.ts packages/figma-icon/config/figma-preserve-color.js packages/figma-icon/output/icon.json packages/figma-icon/output/preserve-color-icon-list.json apps/web/src/apps/User/components/SafeSetting/components/ThirdBindModal.tsx apps/web/src/components/ThirdPartyLogin/ProviderIcon.tsx apps/web/src/components/ThirdPartyLogin/ProviderLoginButtons.test.ts apps/web/src/components/ThirdPartyLogin/ProviderLoginButtons.tsx",
         "cwd": ".",
         "status": 0,
-        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-19T10-46-20-427Z-biome-check.log",
+        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-21T13-00-33-696Z-biome-check.log",
         "counts": {
-          "candidates": 18,
-          "checked": 15,
+          "candidates": 309,
+          "checked": 222,
           "errors": 0,
-          "warnings": 0,
-          "diagnostics": []
+          "warnings": 1,
+          "diagnostics": [
+            "apps/web-next/src/components/AccountInput/CountryList.tsx:5 lint/correctness/noUnusedImports"
+          ]
         }
       }
     },
@@ -693,31 +695,31 @@
       "ruleId": "VERIFY-TYPE-001",
       "ok": true,
       "severity": "error",
-      "message": "apps/admin 改动文件类型检查通过（全仓 157 处存量报错不阻断）",
+      "message": "apps/admin 改动文件类型检查通过（全仓 172 处存量报错不阻断）",
       "file": "apps/admin",
       "category": "build-quality",
       "evidence": {
         "command": "pnpm exec tsc --project ./tsconfig.json --noEmit --pretty false",
         "cwd": "apps/admin",
-        "status": 1,
-        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-19T10-46-21-051Z-tsc-apps-admin.log",
+        "status": 2,
+        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-21T13-00-34-403Z-tsc-apps-admin.log",
         "counts": {
-          "total": 157,
+          "total": 172,
           "inChangedFiles": 0
         }
       }
     },
     {
       "ruleId": "VERIFY-TYPE-002",
-      "ok": true,
+      "ok": false,
       "severity": "warn",
-      "message": "apps/admin 存量 tsc 报错未增加（改动外 157 ≤ 基线 157）",
+      "message": "改动文件之外的 tsc 报错 172 > 基线 157，疑似共享类型改动涟漪",
       "file": "apps/admin",
       "category": "build-quality",
       "evidence": {
         "counts": {
-          "total": 157,
-          "outsideChanged": 157,
+          "total": 172,
+          "outsideChanged": 172,
           "baseline": 157
         }
       }
@@ -726,63 +728,63 @@
       "ruleId": "VERIFY-TYPE-001",
       "ok": true,
       "severity": "error",
-      "message": "apps/web 改动文件类型检查通过（全仓 181 处存量报错不阻断）",
+      "message": "apps/web 改动文件类型检查通过（全仓 351 处存量报错不阻断）",
       "file": "apps/web",
       "category": "build-quality",
       "evidence": {
         "command": "pnpm exec tsc --project ./tsconfig.json --noEmit --pretty false",
         "cwd": "apps/web",
         "status": 1,
-        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-19T10-46-25-136Z-tsc-apps-web.log",
+        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-21T13-00-55-163Z-tsc-apps-web.log",
         "counts": {
-          "total": 181,
+          "total": 351,
           "inChangedFiles": 0
         }
       }
     },
     {
       "ruleId": "VERIFY-TYPE-002",
-      "ok": true,
+      "ok": false,
       "severity": "warn",
-      "message": "apps/web 存量 tsc 报错未增加（改动外 181 ≤ 基线 181）",
+      "message": "改动文件之外的 tsc 报错 351 > 基线 181，疑似共享类型改动涟漪",
       "file": "apps/web",
       "category": "build-quality",
       "evidence": {
         "counts": {
-          "total": 181,
-          "outsideChanged": 181,
+          "total": 351,
+          "outsideChanged": 351,
           "baseline": 181
         }
       }
     },
     {
       "ruleId": "VERIFY-TEST-001",
-      "ok": true,
+      "ok": false,
       "severity": "error",
-      "message": "vitest 通过：1 个相关测试文件（1 passed (1)）",
+      "message": "vitest 未通过（vitest 退出码非 0）；详见 /var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-21T13-00-59-889Z-vitest-related.log",
       "file": "",
       "category": "build-quality",
       "evidence": {
-        "command": "pnpm exec vitest run apps/web/src/services/api/user.test.ts",
+        "command": "pnpm exec vitest run apps/web-next/src/apps/Home/components/FafaAndAnniversaryBanner/test/AccountInfo.test.tsx apps/web-next/src/apps/Home/components/FafaAndAnniversaryBanner/test/FafaAndAnniversaryBanner.test.tsx apps/web-next/src/apps/Home/components/PopularCryptos/test/marketPrice.test.ts apps/web-next/src/apps/Home/components/PopularCryptos/test/marketRows.test.ts apps/web-next/src/apps/Home/components/TradeTypeSwiper/test/AnimatedNumber.test.tsx apps/web-next/src/apps/Home/components/TradeTypeSwiper/test/CopyTradeQueue.test.tsx apps/web-next/src/apps/Home/components/TradeTypeSwiper/test/ProfitSparkline.test.tsx apps/web-next/src/apps/Home/components/TradeTypeSwiper/test/TradeTypeSwiper.test.tsx apps/web-next/src/apps/Home/shared/test/roseInfo.test.ts apps/web-next/src/apps/Home/shared/test/sparkline.test.ts apps/web-next/src/apps/shared/components/main-header/test/MainNavigation.test.tsx apps/web-next/src/apps/shared/components/main-header/test/useHeaderTransparency.test.ts apps/web-next/src/components/ui/popover/test/SmartPopover.test.tsx apps/web-next/src/i18n/core/test/localeUrl.test.ts apps/web-next/src/i18n/core/test/namespaces.test.ts apps/web-next/src/platform/browser/test/AppLink.test.tsx apps/web-next/src/platform/browser/test/browserLifecycle.test.ts apps/web-next/src/platform/browser/test/useIsInViewport.test.tsx apps/web-next/src/platform/captcha/test/geetestModalOverlay.test.ts apps/web-next/src/platform/components/ui/img/test/FxImg.test.tsx apps/web-next/src/platform/sign-key/test/encryptPassword.test.ts apps/web-next/src/platform/third-party-sdk/test/thirdConfig.test.ts apps/web-next/src/services/api/envelope/test/ApiResponseEnvelope.test.ts apps/web-next/src/services/hooks/common/test/indexV7Query.test.ts apps/web-next/src/services/hooks/spot/test/spotOnlineSymbolListQuery.test.ts apps/web-next/src/services/ws/futures/hooks/test/marketKlineTrend.test.ts apps/web-next/src/services/ws/spot-public/ticker/test/SpotTickerProtocol.test.ts apps/web-next/src/services/ws/spot-public/ticker/test/spotTickerSnapshot.test.ts apps/web/src/components/ThirdPartyLogin/ProviderLoginButtons.test.ts apps/web/src/components/ThirdPartyLogin/common/thirdConfig.test.ts apps/web/src/services/api/user.test.ts",
         "cwd": ".",
-        "status": 0,
-        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-19T10-46-29-796Z-vitest-related.log",
+        "status": 1,
+        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-21T13-00-59-889Z-vitest-related.log",
         "counts": {
-          "selected": 1,
-          "summary": "1 passed (1)"
+          "selected": 31,
+          "summary": "7 failed | 13 passed (20)"
         }
       }
     },
     {
       "ruleId": "VERIFY-TEST-002",
-      "ok": true,
+      "ok": false,
       "severity": "warn",
-      "message": "改动的逻辑文件均有相关单测",
-      "file": "",
+      "message": "以下逻辑文件导出了函数但无同名/同目录 __tests__ 单测：apps/web-next/src/apps/Futures/utils/util.ts, apps/web-next/src/utils/hooks/useCountdown.ts, apps/web-next/src/utils/hooks/useGetCountryCode.ts, apps/web-next/src/utils/hooks/useSmsErrorBar.ts, apps/web-next/src/utils/phonePatterns.ts",
+      "file": "apps/web-next/src/apps/Futures/utils/util.ts",
       "category": "build-quality",
       "evidence": {
         "counts": {
-          "missing": 0
+          "missing": 5
         }
       }
     },
@@ -797,7 +799,7 @@
         "command": "pnpm --filter @fameex/web build",
         "cwd": ".",
         "status": 0,
-        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-19T10-46-31-952Z-production-build.log",
+        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-21T13-01-05-880Z-production-build.log",
         "counts": null
       }
     },
@@ -808,7 +810,7 @@
       "ok": true,
       "severity": "error",
       "message": "G8 机器事实层已实跑：8 条 biome/tsc/vitest 结论",
-      "evidence": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-19T10-46-20-220Z-verify-build-quality.log"
+      "evidence": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-21T13-00-33-389Z-verify-build-quality.log"
     }
   ],
   "commands": [
@@ -816,54 +818,54 @@
       "label": "verify-project-gate PR-02172 G8",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-08-19T10:46:18.380Z",
-      "finishedAt": "2026-08-19T10:46:18.624Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-19T10-46-18-380Z-verify-project-gate-g8.log"
+      "startedAt": "2026-08-21T13:00:11.361Z",
+      "finishedAt": "2026-08-21T13:00:11.649Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-21T13-00-11-361Z-verify-project-gate-g8.log"
     },
     {
       "label": "verify-code-rules --project PR-02172",
-      "status": 0,
-      "ok": true,
-      "startedAt": "2026-08-19T10:46:18.625Z",
-      "finishedAt": "2026-08-19T10:46:20.220Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-19T10-46-18-625Z-verify-code-rules.log"
+      "status": 1,
+      "ok": false,
+      "startedAt": "2026-08-21T13:00:11.650Z",
+      "finishedAt": "2026-08-21T13:00:33.389Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-21T13-00-11-650Z-verify-code-rules.log"
     },
     {
       "label": "verify-build-quality --project PR-02172",
-      "status": 0,
-      "ok": true,
-      "startedAt": "2026-08-19T10:46:20.220Z",
-      "finishedAt": "2026-08-19T10:46:32.533Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-19T10-46-20-220Z-verify-build-quality.log"
+      "status": 1,
+      "ok": false,
+      "startedAt": "2026-08-21T13:00:33.389Z",
+      "finishedAt": "2026-08-21T13:01:06.346Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-21T13-00-33-389Z-verify-build-quality.log"
     },
     {
-      "label": "set-project-stage PR-02172 G8",
+      "label": "update-project-index --write",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-08-19T10:46:33.099Z",
-      "finishedAt": "2026-08-19T10:46:33.270Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-19T10-46-33-099Z-set-project-stage.log"
+      "startedAt": "2026-08-21T13:01:07.280Z",
+      "finishedAt": "2026-08-21T13:01:07.414Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-21T13-01-07-280Z-update-project-index.log"
     },
     {
       "label": "render-delivery-summary --project PR-02172 --write",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-08-19T10:46:33.271Z",
-      "finishedAt": "2026-08-19T10:46:33.554Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-19T10-46-33-271Z-render-delivery-summary.log"
+      "startedAt": "2026-08-21T13:01:07.415Z",
+      "finishedAt": "2026-08-21T13:01:07.952Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02172/2026-08-21T13-01-07-415Z-render-delivery-summary.log"
     }
   ],
   "codeRules": {
     "required": true,
     "skipped": false,
     "reason": "",
-    "ok": true
+    "ok": false
   },
   "buildQuality": {
     "required": true,
     "skipped": false,
     "reason": "",
-    "ok": true,
+    "ok": false,
     "checkCount": 8,
     "baselineFile": "../docs_tdd/prds/PR-02172/agent/tsc-baseline.json"
   },
@@ -876,22 +878,22 @@
     "buildQualityParseError": null
   },
   "fingerprint": {
-    "headSha": "9887259e48b6c66887ca9d0d017c3d03dec6e268",
-    "baseSha": "483c092a50505bc558fd1b7deef0f64729edebd7",
-    "dirtyHash": "af7469b78dce3d5f3004e3b5930c3c53a001f44350da04a72868141a886a56b8",
-    "dirtyFileCount": 2,
-    "untrackedFileCount": 0,
+    "headSha": "0236bb907574d17d95505ffc52a3ef9945911e3f",
+    "baseSha": "3c34558f9637a39ef1df7f000682052d453187d2",
+    "dirtyHash": "82a4cd02afc1931cc953da280105cdbce956cb4ce62e4c9368d4619ae046fd1a",
+    "dirtyFileCount": 8,
+    "untrackedFileCount": 5,
     "rulesetVersion": "local-2026.07-msw-v1",
     "ruleReleaseFingerprint": "bcb8008808dfffa46657545ce1e179ef8e525adb94bcd9a934514100c04fad2e",
-    "effectiveRulesFingerprint": "1ab7ef454c377138578b00925cb6fa3b46f9bcd2166d56dd80f437af595d41e2"
+    "effectiveRulesFingerprint": "bc95e94ff33866aff4813e1aba1175a069d87cf2572f0516bdb3dac7f73f3639"
   },
   "cache": {
     "hit": false,
-    "fingerprint": "d58d7494aaec9870"
+    "fingerprint": "d93a617906e325cb"
   },
   "stageSync": {
-    "attempted": true,
-    "ok": true
+    "attempted": false,
+    "ok": false
   },
   "deliverySummary": {
     "attempted": true,
