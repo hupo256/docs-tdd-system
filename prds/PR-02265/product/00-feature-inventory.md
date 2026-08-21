@@ -13,19 +13,19 @@
 | Figma 主画板 | 无（PRD 原型/UI 地址均为 `/`，仅后台 mockup 截图） |
 | 清单维护人 | Agent |
 | G2 确认人 & 日期 | 项目负责人 / 2026-08-07；远端新增范围由用户确认补齐 / 2026-08-10 |
-| 责任模块目录 | `fameex-web` monorepo 前端：现货管理后台 + 合约管理后台 + 前台 web；app/h5 与后端 F07 不在本仓 |
+| 责任模块目录 | `apps/admin/legacy-admin/src/views/operateManager/marketMakerAccount`, `apps/admin/legacy-admin/src/views/userManager/other_information`, `apps/admin/legacy-admin/src/views/userManager/vip_level`, `apps/admin/legacy-admin/src/utils`, `apps/futures-admin/legacy-admin/src/components`, `apps/futures-admin/legacy-admin/src/mixin/reportManager`, `apps/futures-admin/legacy-admin/src/mixin/userData`, `apps/futures-admin/legacy-admin/src/utils`, `apps/futures-admin/legacy-admin/src/viewsTemplate/futuresExchange/components`, `apps/futures-admin/legacy-admin/src/viewsTemplate/userData`, `apps/web/src/apps/Futures/components/FuturesOrders`, `apps/web/src/apps/Orders/Futures/FuturesHistoryTransactionOrder`, `apps/web/src/apps/CashFlow/futures`, `apps/web/src/services/api`, `apps/web/src/utils` |
 | visualFidelity | standard |
 
 ## 功能清单
 
 | ID | PRD 来源锚点 | PRD 章节 | 功能简述 | 页面 / 路由 | 本期 | 确认 | Task |
 |----|--------------|---------|---------|------------|------|------|------|
-| F01 | `PRD-IMG-016` `PRD-IMG-017` `PRD-IMG-018` | 5.1 | 合约做市账户 4 个手续费率字段支持负值；范围 `[-100,100]`、精度 6 位、非法/非空校验、编辑回显 | 现货后台→资产管理→做市账户工具→外部做市商账号→添加/编辑 | 做 | 2026-08-07 | T01 |
+| F01 | `PRD-IMG-016` `PRD-IMG-017` `PRD-IMG-018` | 5.1 | 外部做市商账号手续费率字段支持负值（**合约做市账户 4 个字段 + 现货做市账户 Taker/Maker 2 个字段均支持**，现货依据 §5.1 img-006 与合约同口径）；范围 `[-100,100]`、精度 6 位、非法/非空校验、编辑回显 | 现货后台→资产管理→做市账户工具→外部做市商账号→添加/编辑 | 做 | 2026-08-07；现货负值口径 2026-08-21 复核确认 | T01 |
 | F02 | `PRD-IMG-019` | 5.1 | 4 个费率输入框下方常驻提示：「按对应订单类型分别收取，负值表示返佣费率(如-0.000001)」 | 同 F01 | 做 | 2026-08-07 | T02 |
 | F03 | `PRD-IMG-017` `PRD-IMG-018` | 5.1 | 校验失败文案统一为「请输入【-100,100】之间的数字，精度支持6位」；以正文为准 | 同 F01 | 做 | 2026-08-07 | T04 |
 | F04 | `PRD-IMG-033` | 5.5 | 外部做市商查询列表「手续费率」列兼容负费率显示 | 现货后台→做市账户管理→外部做市商 | 做 | 2026-08-07 | T05 |
-| F05 | `PRD-IMG-023`~`PRD-IMG-026` | 5.3 | 前台 web 手续费正数化展示；`FundsFlow`/`FuturesCashFlow`（走 `get_transaction_list`）2026-08-19 后台反馈前端不处理、已回退 online（原实现存备份分支 `backup/PR-02265-txlist-positivization`），本期仅保留 `PositionHistory` 一处 | 前台 web；app/h5 不在本仓 | 做（缩范围至 PositionHistory） | 2026-08-19 | T06 |
-| F06 | `PRD-IMG-027`~`PRD-IMG-032` | 5.3 | 现货后台和合约后台各手续费展示触点按正数化口径展示 | 现货后台 + 合约后台 | 做 | 2026-08-07 | T07 |
+| F05 | `PRD-IMG-023`~`PRD-IMG-026` | 5.3 | 前台 web 手续费按最终接口符号契约展示：`his_trade_list_v2.fee`、`history_position_list.tradeFee` 正常手续费为负、返佣为正，正数补 `+`、负数原样；`get_transaction_list.amount` 直接保留后端符号，不做 `abs()`/取反 | 前台 web；app/h5 不在本仓 | 做 | 2026-08-20 | T06 |
+| F06 | `PRD-IMG-027`~`PRD-IMG-032` | 5.3 | 后台手续费按对应接口口径展示：`history_position_list.tradeFee` 保留后端符号并由渲染层为正数补 `+`；其余 PRD 正数化触点继续显示绝对值 | 现货后台 + 合约后台 | 做 | 2026-08-20 | T07 |
 | F07 | `PRD-TABLE-003` | 5.2/5.4/5.6 | 负费率返佣计算、入账及异常处理；后端逻辑，前端不实现 | 后端 | 不做 | 2026-08-07 | T09 |
 | F08 | `PRD-IMG-019` + 正文 | 5.1 | 【手续费率配置】新增、编辑后需要即时生效 | F01 合约做市账户弹窗 | 做 | 用户 2026-08-10 | T11 |
 | F09 | `PRD-IMG-019` `PRD-IMG-020` | 5.1 | 合约做市账户蓝框显示两条说明：账号×币对生效规则；同时配置外部做市商表与手续费折扣表时，以外部做市商表费率为准 | F01 合约做市账户弹窗 | 做 | 用户 2026-08-10 | T12 |
@@ -39,7 +39,7 @@
 | 验收项 | 对应 ID | 状态 |
 |--------|---------|------|
 | 负值配置、6 位精度、非法输入、编辑回显 | F01, F03, F04 | ☐ |
-| 前台 / 后台正数化展示 | F05, F06 | ☐ |
+| 前台 / 后台手续费按各接口最终符号契约展示 | F05, F06 | ☐ |
 | 返佣计算、入账、对账及异常处理 | F07（后端） | ☐ |
 | 合约费率新增/编辑保存后即时生效 | F08 | ☐ |
 | 合约做市账户蓝框逐字显示两条规则 | F09 | ☐ |
