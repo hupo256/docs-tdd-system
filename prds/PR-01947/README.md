@@ -30,7 +30,7 @@ larkEnabled: false
 ## 现状判断
 
 - **环境边界**：功能代码已多次合入 `dev/test` 并用于联调、提测，所以使用体验上容易被记成“已经上线”；但 Git 生产事实是 `pre/online` 均未包含该功能，当前不能标记 closed/G8。
-- 开发链路为 **dev 直连真实 API**，MSW 试点已按计划拆除（`98038c66d1 chore: remove PR-01947 mock handlers`），对应 `03-api-contract.md` §8.8 的“真实接口到位后”状态；`src/mocks/browser.ts` 保留空 `setupWorker()`，`before_follow` 不再被 MSW 拦截。
+- 开发链路为 **dev 直连真实 API**，MSW 试点已按计划完整拆除；worker、Provider 启动点、service worker 文件与 `msw` 依赖均已移除，`before_follow` 不再被 MSW 拦截。
 - **F15 已落**：复制全部仓位取值改为选中币对带单仓位数，已接真实接口 `services/api/copyTrading/follow/lead-position-count.ts`（`8a71fde629`），`SettingForm.tsx` 消费。
 - 若后续要恢复 mock-first：先补 `src/mocks/handlers/<feature>.ts` + 契约测试，再把 handler 注册回 `browser.ts`，最后确认 `Providers.tsx` 的 dev-only 启动仍有效；只加一个假数据文件不算闭环。
 

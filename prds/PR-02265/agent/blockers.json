@@ -8,8 +8,10 @@
     "summary": "后端手续费率校验/存储是否已同步放开负值 [-100,100]（03-api-contract.md §8 #1）：若未同步，前端配置负值会被后端拒",
     "owner": "backend",
     "raisedAt": "2026-08-07",
-    "status": "open",
-    "evidence": ["product/03-api-contract.md#8-待确认--契约差异"]
+    "status": "resolved",
+    "resolvedAt": "2026-08-21",
+    "resolution": "用户明确确认 G5 联调已经通过，据此关闭后端负费率值域部署阻塞；未提供可归档接口响应或交易明细。",
+    "evidence": ["product/03-api-contract.md#8-待确认--契约差异", "evidence/g5-user-confirmation/README.md"]
   },
   {
     "id": "BLK-2",
@@ -20,8 +22,10 @@
     "summary": "A4/A5 前台/后台资金流水接口真实 path 及金额/side 字段名待从现有代码确认（03-api-contract.md §8 #2）",
     "owner": "前端(G4编码时确认)",
     "raisedAt": "2026-08-07",
-    "status": "open",
-    "evidence": ["product/03-api-contract.md#8-待确认--契约差异"]
+    "status": "resolved",
+    "resolvedAt": "2026-08-20",
+    "resolution": "前端现有 service/组件与后端最终口径已对账：his_trade_list_v2.fee、history_position_list.tradeFee 为正常手续费负/返佣正；get_transaction_list.amount 直接遵循后端符号。",
+    "evidence": ["product/03-api-contract.md#5-字段对账表", "engineering/frontend-followup-checklist.md#f-后端字段正负语义最终确认2026-08-20覆盖-ad-节部分历史记录"]
   },
   {
     "id": "BLK-3",

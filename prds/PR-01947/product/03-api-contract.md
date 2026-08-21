@@ -171,12 +171,12 @@ export enum CopyPositionMode {
 ## 8. Mock 拆除清单（§8.4 路线 B = 零拆除税）
 
 > 路线 B 下 mock **从不进生产代码路径**，§8.0.3 拆除三道闸对本功能自然失效——无 flag、无 `@mock-only`、无 `__mock__/` 工厂需拆。
-> **2026-07-15 更新**：后端已部署 dev，PR-01947 正式进入真实 API 联调。`copyTradingFollowHandlers` 与对应契约测试已删除，`src/mocks/browser.ts` 保留空 `setupWorker()`，当前 dev 不再拦截 `before_follow`。
+> **当前状态**：后端已部署 dev，PR-01947 已切换真实 API。`copyTradingFollowHandlers`、契约测试、worker、Provider 启动点、service worker 文件与 `msw` 依赖均已删除，当前 dev 不再拦截 `before_follow`。
 
 | 拆除动作  | 操作                                                                      | 触发（G5 对账通过）                        | 状态                  |
 | --------- | ------------------------------------------------------------------------- | ------------------------------------------ | --------------------- |
 | 关 mock   | 删 `copyTradingFollowHandlers` 里对应 handler（或清空 `browser.ts` 列表） | before_follow 真实接口 ready + §6 对账销账 | ✅ 2026-07-15 已删除  |
-| 停 worker | 删 `Providers.tsx` 的 `useMockWorker()` 调用                              | 全部 handler 拆除后                        | 可选                  |
+| 停 worker | 删 `Providers.tsx` 的 `useMockWorker()` 调用及 worker 相关文件/依赖       | 全部 handler 拆除后                        | ✅ 已删除             |
 | 契约哨兵  | `copyTradingFollow.contract.test.ts` 随 handler 一并删                    | mock 拆除时                                | ✅ 2026-07-15 已删除  |
 
 ## 9. 后台导出契约（F19-F21，futures-admin/legacy-admin，Vue2）

@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-08-10T13:26:39.563Z",
+  "generatedAt": "2026-08-21T05:29:02.643Z",
   "tool": "run-project-gate.mjs",
   "projectId": "PR-02265",
-  "gate": "G4",
-  "ok": true,
+  "gate": "G6",
+  "ok": false,
   "summary": {
-    "total": 55,
-    "ok": 48,
+    "total": 88,
+    "ok": 77,
     "warn": 1,
-    "waived": 6,
-    "fail": 0
+    "waived": 7,
+    "fail": 3
   },
   "groups": {
     "documentation": {
-      "total": 55,
-      "ok": 48,
+      "total": 80,
+      "ok": 70,
       "warn": 1,
-      "waived": 6,
-      "fail": 0
+      "waived": 7,
+      "fail": 2
     },
     "implementation": {
       "total": 0,
@@ -231,7 +231,7 @@
     {
       "ruleId": "DOC-PRD-009",
       "ok": true,
-      "message": "G2-approved PRD fingerprint matches current intake (expected=64998c88621d629f, current=64998c88621d629f)",
+      "message": "G2-approved PRD fingerprint matches current intake (expected=bc6db181e0e1d130, current=bc6db181e0e1d130)",
       "file": "../docs_tdd/prds/PR-02265/agent/prd-source-manifest.json",
       "severity": "error",
       "category": "documentation"
@@ -239,7 +239,7 @@
     {
       "ruleId": "DOC-PRD-010",
       "ok": true,
-      "message": "remote PRD content hash matches intake baseline: 需求 PRD (revision 1576)",
+      "message": "remote PRD content hash matches intake baseline (cached 5s ago): 需求 PRD (revision 1576)",
       "file": "../docs_tdd/prds/PR-02265/agent/prd-source-manifest.json",
       "severity": "error",
       "category": "documentation"
@@ -429,18 +429,218 @@
       "category": "documentation"
     },
     {
-      "ruleId": "GIT-G4-001",
+      "ruleId": "DOC-G5-001",
       "ok": true,
-      "message": "current branch is feature/PR-02265 (feature/* tolerated); got feature/PR-02265",
+      "message": "API contract records field reconciliation",
+      "file": "../docs_tdd/prds/PR-02265/product/03-api-contract.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G5-002",
+      "ok": true,
+      "message": "API contract records mock status/removal result",
+      "file": "../docs_tdd/prds/PR-02265/product/03-api-contract.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G5-003",
+      "ok": true,
+      "message": "API contract records copy contract table",
+      "file": "../docs_tdd/prds/PR-02265/product/03-api-contract.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-G5-004",
+      "ok": true,
+      "message": "completed tasks contain no unresolved contract assumptions",
+      "file": "../docs_tdd/prds/PR-02265/product/04-frontend-tasks.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "CODE-MSW-004",
+      "ok": true,
+      "message": "new feature mock route is MSW route B or explicitly documented",
+      "file": "../docs_tdd/prds/PR-02265/product/03-api-contract.md",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "CODE-MSW-001",
+      "ok": false,
+      "message": "MSW route B records contract/schema verification [waived: 同 DOC-G3-001：项目只复用既有真实接口且明确不采用 MSW，因此不存在 handler schema 契约测试 · owner=项目负责人 · until 2026-12-31]",
+      "file": "../docs_tdd/prds/PR-02265/product/03-api-contract.md",
+      "severity": "waived",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "CODE-MSW-003",
+      "ok": false,
+      "message": "MSW route B records handler removal/disable or test-only disposition before G6 handoff",
+      "file": "../docs_tdd/prds/PR-02265/product/03-api-contract.md",
+      "severity": "warn",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "VERIFY-G5-001",
+      "ok": true,
+      "message": "agent/stage-status.json records the G5 integration disposition",
+      "file": "../docs_tdd/prds/PR-02265/agent/stage-status.json",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "VERIFY-G5-002",
+      "ok": true,
+      "message": "G5 status is completed or not-applicable (got completed)",
+      "file": "../docs_tdd/prds/PR-02265/agent/stage-status.json",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "VERIFY-G5-003",
+      "ok": true,
+      "message": "G5 completion has existing evidence paths, or not-applicable has a concrete reason",
+      "file": "../docs_tdd/prds/PR-02265/agent/stage-status.json",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "CODE-MOCK-002",
+      "ok": true,
+      "message": "mock residue grep is empty in responsibility modules",
+      "file": "../docs_tdd/prds/PR-02265",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "CODE-MSW-002",
+      "ok": true,
+      "message": "MSW route B leaves no business mock switch residue in responsibility modules",
+      "file": "../docs_tdd/prds/PR-02265",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "CODE-ASSUMED-001",
+      "ok": true,
+      "message": "no `// ASSUMED:` residue in responsibility modules",
       "file": "../docs_tdd/prds/PR-02265",
       "severity": "warn",
       "category": "documentation"
     },
     {
-      "ruleId": "GIT-G4-002",
+      "ruleId": "CODE-SCOPE-001",
       "ok": true,
-      "message": "baseline valid but origin/online has advanced since branch point; consider syncing before merge",
+      "message": "all changed source files fall inside 责任模块目录",
       "file": "../docs_tdd/prds/PR-02265",
+      "severity": "warn",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "VERIFY-STAGE-001",
+      "ok": true,
+      "message": "G6 requires a persisted successful G5 run in agent/gate-history.json",
+      "file": "../docs_tdd/prds/PR-02265/agent/gate-history.json",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "VERIFY-G6-001",
+      "ok": true,
+      "message": "at least one evidence README exists under project evidence/",
+      "file": "../docs_tdd/prds/PR-02265/evidence",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-CR-001",
+      "ok": true,
+      "message": "code-review.json 合法（5 条 findings）",
+      "file": "../docs_tdd/prds/PR-02265/agent/code-review.json",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-CR-002",
+      "ok": true,
+      "message": "code-review findings 全部有处理结论（5 条）",
+      "file": "../docs_tdd/prds/PR-02265/agent/code-review.json",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-CR-003",
+      "ok": true,
+      "message": "code-review 覆盖当前 HEAD（或未记录 head，不判定）",
+      "file": "../docs_tdd/prds/PR-02265/agent/code-review.json",
+      "severity": "warn",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-AC-001",
+      "ok": true,
+      "message": "acceptance-results.json 合法（13 条）",
+      "file": "../docs_tdd/prds/PR-02265/agent/acceptance-results.json",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-AC-002",
+      "ok": false,
+      "message": "本期功能没有 passed 验收：F04",
+      "file": "../docs_tdd/prds/PR-02265/agent/acceptance-results.json",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-AC-003",
+      "ok": false,
+      "message": "验收仍有 failed/blocked：AC-4, AC-13",
+      "file": "../docs_tdd/prds/PR-02265/agent/acceptance-results.json",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-AC-004",
+      "ok": true,
+      "message": "所有通过项均有 evidence",
+      "file": "../docs_tdd/prds/PR-02265/agent/acceptance-results.json",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-AC-005",
+      "ok": true,
+      "message": "所有通过项均有真实存在的 evidence 文件锚点",
+      "file": "../docs_tdd/prds/PR-02265/agent/acceptance-results.json",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-AC-006",
+      "ok": true,
+      "message": "acceptance-results 覆盖当前 HEAD（或未提供 currentSha，不判定）",
+      "file": "../docs_tdd/prds/PR-02265/agent/acceptance-results.json",
+      "severity": "warn",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "VERIFY-G6-003",
+      "ok": true,
+      "message": "verification evidence records command target/result, including Biome or documented fallback",
+      "file": "../docs_tdd/prds/PR-02265/evidence",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "VERIFY-G6-004",
+      "ok": true,
+      "message": "evidence directory contains no binary/temporary files (only text reports)",
+      "file": "../docs_tdd/prds/PR-02265/evidence",
       "severity": "warn",
       "category": "documentation"
     },
@@ -455,76 +655,217 @@
     {
       "ruleId": "DOC-BLOCK-002",
       "ok": true,
-      "message": "无到达当前阶段(G4)仍未解除的阻塞",
+      "message": "无到达当前阶段(G6)仍未解除的阻塞",
       "file": "../docs_tdd/prds/PR-02265/agent/blockers.json",
       "severity": "error",
       "category": "documentation"
     },
     {
       "ruleId": "DOC-BLOCK-003",
-      "ok": false,
-      "message": "尚有 3 项 open 登记（未卡当前阶段）：BLK-1/blocker、BLK-2/blocker、BLK-3/blocker",
+      "ok": true,
+      "message": "无其他 open 登记",
       "file": "../docs_tdd/prds/PR-02265/agent/blockers.json",
       "severity": "warn",
       "category": "documentation"
+    },
+    {
+      "ruleId": "VERIFY-BIOME-001",
+      "ok": true,
+      "severity": "error",
+      "message": "biome check 通过：实检 6 / 候选 19 个文件",
+      "file": "",
+      "category": "build-quality",
+      "evidence": {
+        "command": "pnpm exec biome check --no-errors-on-unmatched apps/admin/legacy-admin/src/locale/zh_CN.json apps/admin/legacy-admin/src/utils/positivizeAmount.js apps/admin/legacy-admin/src/utils/positivizeAmount.spec.js apps/admin/legacy-admin/src/views/operateManager/marketMakerAccount/__tests__/feeInput.spec.js apps/admin/legacy-admin/src/views/operateManager/marketMakerAccount/feeInput.js apps/futures-admin/legacy-admin/src/locale/zh_CN.js apps/futures-admin/legacy-admin/src/mixin/reportManager/userFeeInfoList.js apps/futures-admin/legacy-admin/src/mixin/userData/flowerDetail.js apps/futures-admin/legacy-admin/src/utils/flowerFlowFee.js apps/futures-admin/legacy-admin/src/utils/flowerFlowFee.spec.js apps/futures-admin/legacy-admin/src/utils/positivizeAmount.js apps/futures-admin/legacy-admin/src/utils/positivizeAmount.spec.js apps/futures-admin/legacy-admin/src/viewsTemplate/futuresExchange/components/futuresFeeDiscountModal.test.js apps/web/src/apps/CashFlow/futures/FuturesCashFlow.tsx apps/web/src/apps/Futures/components/FuturesOrders/PositionHistory/Card.tsx apps/web/src/apps/Futures/components/FuturesOrders/TransactionRecords/index.tsx apps/web/src/apps/Orders/Futures/FuturesHistoryTransactionOrder/helper.ts apps/web/src/utils/formatNumber.test.ts apps/web/src/utils/formatNumber.ts",
+        "cwd": ".",
+        "status": 0,
+        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02265/2026-08-21T05-28-28-845Z-biome-check.log",
+        "counts": {
+          "candidates": 19,
+          "checked": 6,
+          "errors": 0,
+          "warnings": 0,
+          "diagnostics": []
+        }
+      }
+    },
+    {
+      "ruleId": "VERIFY-TYPE-001",
+      "ok": true,
+      "severity": "error",
+      "message": "apps/admin 改动文件类型检查通过（全仓 162 处存量报错不阻断）",
+      "file": "apps/admin",
+      "category": "build-quality",
+      "evidence": {
+        "command": "pnpm exec tsc --project ./tsconfig.json --noEmit --pretty false",
+        "cwd": "apps/admin",
+        "status": 2,
+        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02265/2026-08-21T05-28-29-472Z-tsc-apps-admin.log",
+        "counts": {
+          "total": 162,
+          "inChangedFiles": 0
+        }
+      }
+    },
+    {
+      "ruleId": "VERIFY-TYPE-002",
+      "ok": true,
+      "severity": "warn",
+      "message": "apps/admin tsc 存量基线首次记录：162 处（本次不做涟漪判定）",
+      "file": "apps/admin",
+      "category": "build-quality",
+      "evidence": {
+        "counts": {
+          "total": 162,
+          "baseline": 162
+        }
+      }
+    },
+    {
+      "ruleId": "VERIFY-TYPE-001",
+      "ok": false,
+      "severity": "error",
+      "message": "apps/web 本次改动文件存在 1 处类型错误：apps/web/src/apps/Orders/Futures/FuturesHistoryTransactionOrder/helper.ts:8 TS2339",
+      "file": "apps/web/src/apps/Orders/Futures/FuturesHistoryTransactionOrder/helper.ts",
+      "category": "build-quality",
+      "evidence": {
+        "command": "pnpm exec tsc --project ./tsconfig.json --noEmit --pretty false",
+        "cwd": "apps/web",
+        "status": 2,
+        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02265/2026-08-21T05-28-42-609Z-tsc-apps-web.log",
+        "counts": {
+          "total": 197,
+          "inChangedFiles": 1
+        }
+      }
+    },
+    {
+      "ruleId": "VERIFY-TYPE-002",
+      "ok": true,
+      "severity": "warn",
+      "message": "apps/web tsc 存量基线首次记录：196 处（本次不做涟漪判定）",
+      "file": "apps/web",
+      "category": "build-quality",
+      "evidence": {
+        "counts": {
+          "total": 197,
+          "baseline": 196
+        }
+      }
+    },
+    {
+      "ruleId": "VERIFY-TEST-001",
+      "ok": true,
+      "severity": "error",
+      "message": "vitest 通过：6 个相关测试文件（6 passed (6)）",
+      "file": "",
+      "category": "build-quality",
+      "evidence": {
+        "command": "pnpm exec vitest run apps/admin/legacy-admin/src/utils/positivizeAmount.spec.js apps/admin/legacy-admin/src/views/operateManager/marketMakerAccount/__tests__/feeInput.spec.js apps/futures-admin/legacy-admin/src/utils/flowerFlowFee.spec.js apps/futures-admin/legacy-admin/src/utils/positivizeAmount.spec.js apps/futures-admin/legacy-admin/src/viewsTemplate/futuresExchange/components/futuresFeeDiscountModal.test.js apps/web/src/utils/formatNumber.test.ts",
+        "cwd": ".",
+        "status": 0,
+        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02265/2026-08-21T05-29-00-311Z-vitest-related.log",
+        "counts": {
+          "selected": 6,
+          "summary": "6 passed (6)"
+        }
+      }
+    },
+    {
+      "ruleId": "VERIFY-TEST-002",
+      "ok": true,
+      "severity": "error",
+      "message": "改动的逻辑文件均有相关单测",
+      "file": "",
+      "category": "build-quality",
+      "evidence": {
+        "counts": {
+          "missing": 0
+        }
+      }
+    },
+    {
+      "ruleId": "VERIFY-BUILD-001",
+      "category": "build-quality",
+      "file": "common/engine/agent-scripts/verify-build-quality.mjs",
+      "ok": true,
+      "severity": "error",
+      "message": "G6 机器事实层已实跑：7 条 biome/tsc/vitest 结论",
+      "evidence": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02265/2026-08-21T05-28-28-573Z-verify-build-quality.log"
     }
   ],
   "commands": [
     {
-      "label": "verify-project-gate PR-02265 G4",
-      "status": 0,
-      "ok": true,
-      "startedAt": "2026-08-10T13:26:37.246Z",
-      "finishedAt": "2026-08-10T13:26:39.562Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02265/2026-08-10T13-26-37-246Z-verify-project-gate-g4.log"
+      "label": "verify-project-gate PR-02265 G6",
+      "status": 1,
+      "ok": false,
+      "startedAt": "2026-08-21T05:28:26.873Z",
+      "finishedAt": "2026-08-21T05:28:27.055Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02265/2026-08-21T05-28-26-873Z-verify-project-gate-g6.log"
     },
     {
-      "label": "set-project-stage PR-02265 G4",
+      "label": "verify-code-rules --project PR-02265",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-08-10T13:26:39.822Z",
-      "finishedAt": "2026-08-10T13:26:40.089Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02265/2026-08-10T13-26-39-822Z-set-project-stage.log"
+      "startedAt": "2026-08-21T05:28:27.055Z",
+      "finishedAt": "2026-08-21T05:28:28.573Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02265/2026-08-21T05-28-27-055Z-verify-code-rules.log"
+    },
+    {
+      "label": "verify-build-quality --project PR-02265",
+      "status": 1,
+      "ok": false,
+      "startedAt": "2026-08-21T05:28:28.573Z",
+      "finishedAt": "2026-08-21T05:29:02.643Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02265/2026-08-21T05-28-28-573Z-verify-build-quality.log"
+    },
+    {
+      "label": "update-project-index --write",
+      "status": 0,
+      "ok": true,
+      "startedAt": "2026-08-21T05:29:03.019Z",
+      "finishedAt": "2026-08-21T05:29:03.092Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02265/2026-08-21T05-29-03-019Z-update-project-index.log"
     }
   ],
   "codeRules": {
-    "required": false,
+    "required": true,
     "skipped": false,
     "reason": "",
     "ok": true
   },
   "buildQuality": {
-    "required": false,
+    "required": true,
     "skipped": false,
     "reason": "",
-    "ok": true,
-    "checkCount": 0,
-    "baselineFile": null
+    "ok": false,
+    "checkCount": 7,
+    "baselineFile": "../docs_tdd/prds/PR-02265/agent/tsc-baseline.json"
   },
   "source": {
-    "gateCommand": "/opt/homebrew/Cellar/node/26.3.1/bin/node /Users/aven/github/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-02265 G4 --json",
+    "gateCommand": "/Users/aven/.nvm/versions/node/v24.7.0/bin/node /Users/aven/github/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-02265 G6 --json",
     "parseError": null,
-    "codeRulesCommand": null,
+    "codeRulesCommand": "/Users/aven/.nvm/versions/node/v24.7.0/bin/node /Users/aven/github/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --project PR-02265 --json",
     "codeRulesParseError": null,
-    "buildQualityCommand": null,
+    "buildQualityCommand": "/Users/aven/.nvm/versions/node/v24.7.0/bin/node /Users/aven/github/docs_tdd/common/engine/agent-scripts/verify-build-quality.mjs --project PR-02265 --json",
     "buildQualityParseError": null
   },
   "fingerprint": {
-    "headSha": "148a0cab8352e81b41a6f755faa212eb83ec2fde",
-    "baseSha": "3f1c383b023931cd425e17f8eaadbabc749e6d36",
-    "dirtyHash": "4820e755e83452e4f2d9b85085f79dbb2f2215942617e0bb32eb560b5e6defaa",
+    "headSha": "3a9f9a313f44a2286fcb613b42fb3e7488468823",
+    "baseSha": "7ee9dc5c1d6b0a9a0ac9028f83ba8237da9d2be7",
+    "dirtyHash": "289edc82d55ce48cdaec1c1fd40f2948e479e313bafcd08d2ca5e81c00c7d6e3",
     "dirtyFileCount": 0,
     "untrackedFileCount": 0,
     "rulesetVersion": "local-2026.07-msw-v1",
-    "ruleReleaseFingerprint": "33fcec16dca4490b024566313f3faef34b15953f46fdf6ba6bd03e1bb349c69e",
-    "effectiveRulesFingerprint": "16d0917b410d4d8478afc7a905695acb66f031d873b1f5cc1aeb26c6aea893cc"
+    "ruleReleaseFingerprint": "bcb8008808dfffa46657545ce1e179ef8e525adb94bcd9a934514100c04fad2e",
+    "effectiveRulesFingerprint": "bc95e94ff33866aff4813e1aba1175a069d87cf2572f0516bdb3dac7f73f3639"
   },
   "cache": {
     "hit": false,
-    "fingerprint": "4d5a37e1340b9e4f"
+    "fingerprint": "178a046d6b04fa29"
   },
   "stageSync": {
-    "attempted": true,
-    "ok": true
+    "attempted": false,
+    "ok": false
   }
 }

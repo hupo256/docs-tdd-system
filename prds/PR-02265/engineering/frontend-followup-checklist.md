@@ -10,7 +10,7 @@
   - 删除 `FundsFlow/feeAmount.ts`(+test)、`CashFlow/futures/cashFlowAmount.ts`(+test)；`index.tsx`/`FuturesCashFlow.tsx`/`TransactionFilter.tsx`/`services/api/margin.ts` 对齐 online
   - 原实现存备份分支 `backup/PR-02265-txlist-positivization`（HEAD `94bd45ac87`）
   - 不再靠 `type` 文案匹配，多语言漏判风险随回退消失
-  - **F05 前台正数化本期仅保留 `PositionHistory/Card.tsx`（非 get_transaction_list），`formatNumber.ts` `toPositiveAmount` 仍在使用**
+  - **F05 最终按接口符号契约展示：`fee`/`tradeFee` 用 `formatSignedFee`，`get_transaction_list.amount` 直接保留后端符号；`toPositiveAmount` 已无生产调用并删除**
   - 详见 `backend-api-handoff.md`「6b 决议」及其「最终追加决议」
 
 ## B. 值格式 / 值域（对接清单 2、3）
@@ -27,12 +27,12 @@
 ## D. 流水 amount 带符号校验（对接清单 6a、7）—— get_transaction_list 已回退，前端不做
 
 - [x] ~~合约订单流水正数化~~、~~资产资金流水 tab6/7 正数化~~ 均随 A 节最终决议回退 online，前端不再处理该接口正数化
-- [ ] （仅保留）合约仓位历史 `PositionHistory/Card.tsx`：真实数据确认 `tradeFee` 返佣行正数化 + 判色
+- [x] 合约历史成交/仓位 `fee`/`tradeFee`：正常手续费负、返佣正，正数补 `+`、负数原样；`get_transaction_list.amount` 直接保留后端符号（2026-08-20 后端最终确认）
 
 ## E. 收尾 / 销账
 
 - [ ] 移除所有 ASSUMED 占位（若展示层曾用占位字段，逐行对真实字段销账）
-- [ ] 全链路联调后跑 G5，更新 `agent/acceptance-results.json` 与 `blockers.json`（关掉 6b 阻塞）
+- [x] 全链路联调完成；用户于 2026-08-21 明确确认 G5 已通过，已更新 `stage-status.json` 与 `blockers.json`（未提供账号、交易 ID 或截图，不补造证据）
 - [ ] `pnpm test` 相关单测全绿（`feeInput.spec.js` / `positivizeAmount.spec.js` / `flowerFlowFee.spec.js`；注：`feeAmount.test.ts`/`cashFlowAmount.test.ts` 已随 get_transaction_list 回退删除）
 - [ ] 改动文件 `tsc` 零新增报错（`cd apps/web && pnpm exec tsc`，只看本 PR 改动文件）
 
@@ -53,7 +53,4 @@
   - `FundsFlow/index.tsx`（合约账户资金流水）：本已是 `BigNumber(amount).toFixed(8, ROUND_DOWN)` 直接对带符号值截断，符号由 BigNumber 原生保留，**符合，未改**。
   - `CashFlow/futures/FuturesCashFlow.tsx`（合约交易资金流水）：**不符合，已修复**——原实现手动 `startsWith('-')` 判断符号、`Math.abs()` 剥离、再按符号选 `formatNumberDown`/`formatNumberUp` 重新拼接前缀，属于二次处理。改为对 `item.amount` 直接 `BigNumber(...).toFixed(precision, ROUND_DOWN)` 保留原生符号，颜色改用 `BigNumber(...).isNegative()` 判定（不再依赖拼接后的字符串前缀）。
 
-新增/调整的纯函数：`formatNumber.ts` 新增 `formatSignedFee(num, decimal)` — 复用 `formatNumberDown` 截断精度，仅在数值 `> 0` 时补 `+`，负数/0 不处理。已配 4 组单测（负数原样/正数补号/零不补号），随 `toPositiveAmount` 一起放在 `formatNumber.test.ts`。
-
-`toPositiveAmount` 现状：2026-08-19 起 `PositionHistory/Card.tsx` 已不再调用它（按 Aven 指示改回展示原始值），目前 `apps/web` 内无生产调用方，函数与单测暂保留未删（futures-admin/admin 侧的 `positivizeAmount` 仍在用于贡献手续费等其它触点，未受本次影响）。
-
+新增/调整的纯函数：`formatNumber.ts` 新增 `formatSignedFee(num, decimal)` — 复用 `formatNumberDown` 截断精度，仅在数值 `> 0` 时补 `+`，负数/0 不处理。`formatNumber.test.ts` 覆盖负数原样、正数补号和零不补号；已无生产调用的 `toPositiveAmount` 及其测试删除。futures-admin/admin 侧的 `positivizeAmount` 仍用于后台 PRD 正数化触点，不受本次删除影响。

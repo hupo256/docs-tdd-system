@@ -193,6 +193,7 @@ Mock 是临时脚手架，真实接口就绪 + §5 对账通过后**立即删光
 
 | 文案 ID | 页面/组件 | 来源 | Owner | zh-CN key | 默认中文（逐字原文） | 动态变量 | 展示条件 | 状态 |
 |---------|-----------|------|-------|-----------|----------|----------|----------|------|
+| `thirdLogin.serviceUnavailable` | 登录/注册/首页/个人中心第三方入口 | PRD / `06-collaboration.md` Q39 | PM / Web | `thirdLogin:serviceUnavailable` | `第三方服务暂时不可用，请稍后重试` | 无 | SDK 未加载、popup 被拦截或第三方授权失败 | 已确认 / 已落地 |
 | `copy.foo.title` | `FooHeader` | PRD §x / Figma node | PM / Design | `<namespace>:foo.title` | `待填` | 无 | 始终展示 | 待确认 / 已确认 / 已落地 |
 | `copy.foo.amountTip` | `FooCard` | API `rewardDescription` / PRD §x | Backend / PM | `<namespace>:foo.amountTip` | `待填 {{amount}} {{coin}}` | `amount: string`；`coin: string` | `rewardDescription` 为空则不渲染 | 待确认 / 已确认 / 已落地 |
 

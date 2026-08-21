@@ -2,10 +2,12 @@
   "projectId": "PR-02265",
   "stages": {
     "G5": {
-      "status": "pending",
-      "reason": "待完成真实 API 联调，或确认本项目无 API 联调范围。",
-      "evidence": [],
-      "updatedAt": "2026-08-07"
+      "status": "completed",
+      "reason": "用户于 2026-08-21 明确确认 G5 联调已经通过；未提供可归档的账号、交易 ID、接口响应或截图，不补造联调明细。",
+      "evidence": [
+        "evidence/g5-user-confirmation/README.md"
+      ],
+      "updatedAt": "2026-08-21"
     },
     "G7": {
       "status": "pending",

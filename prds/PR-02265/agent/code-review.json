@@ -1,16 +1,62 @@
 {
   "projectId": "PR-02265",
-  "reviewedAt": "2026-08-07",
-  "reviewer": "pending",
-  "head": "0000000000000000000000000000000000000000",
+  "reviewedAt": "2026-08-21",
+  "reviewer": "Codex",
+  "head": "c1145cf26f608bf3f7f29263cf27437c0a227228",
   "findings": [
     {
       "id": "CR-1",
-      "category": "other",
+      "category": "correctness",
       "severity": "high",
-      "summary": "G6 code review 尚未执行",
-      "disposition": "open",
-      "evidence": []
+      "summary": "F09 生效规则文案未逐字匹配 PRD",
+      "disposition": "fixed",
+      "resolution": "将 externalFeeEffectiveRule 修正为 PRD 原文，并加入逐字断言。",
+      "evidence": ["evidence/acceptance/g6/README.md"]
+    },
+    {
+      "id": "CR-2",
+      "category": "correctness",
+      "severity": "medium",
+      "summary": "F13 提示框位于表单顶部而非最后字段之后",
+      "disposition": "fixed",
+      "resolution": "将提示移动到状态字段之后、modal footer 之前，并增加源码 DOM 顺序断言。",
+      "evidence": ["evidence/acceptance/g6/README.md"]
+    },
+    {
+      "id": "CR-3",
+      "category": "test-coverage",
+      "severity": "medium",
+      "summary": "F09-F13 固定文案缺少逐字契约测试",
+      "disposition": "fixed",
+      "resolution": "补齐 F09-F12 数据集断言与 F13 独立文案断言。",
+      "evidence": ["evidence/acceptance/g6/README.md"]
+    },
+    {
+      "id": "CR-4",
+      "category": "simplification",
+      "severity": "low",
+      "summary": "toPositiveAmount 已无生产调用且与最终接口符号语义冲突",
+      "disposition": "fixed",
+      "resolution": "删除函数、孤儿测试及后台工具中的过期交叉引用注释。",
+      "evidence": ["evidence/acceptance/g6/README.md"]
+    },
+    {
+      "id": "CR-5",
+      "category": "other",
+      "severity": "medium",
+      "summary": "功能分支落后 origin/online 且 formatNumber.test.ts 存在 add/add 冲突",
+      "disposition": "fixed",
+      "resolution": "正向合并最新 origin/online；冲突中同时保留 formatFoldDecimal 与 formatSignedFee 测试。",
+      "evidence": ["evidence/acceptance/g6/README.md"]
+    },
+    {
+      "id": "CR-6",
+      "category": "type-safety",
+      "severity": "medium",
+      "summary": "HistoryTradeOrderList 允许为空，直接索引 tradeHisList 导致改动文件出现 TS2339",
+      "disposition": "fixed",
+      "resolution": "先以 NonNullable 收窄列表响应，再从 tradeHisList 推导单条历史成交类型；全量 Web typecheck 中该文件已无错误。",
+      "evidence": ["evidence/acceptance/g6/README.md"]
     }
   ]
 }

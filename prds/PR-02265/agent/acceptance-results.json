@@ -1,5 +1,19 @@
 {
   "projectId": "PR-02265",
-  "head": "0000000000000000000000000000000000000000",
-  "items": []
+  "head": "c1145cf26f608bf3f7f29263cf27437c0a227228",
+  "items": [
+    { "id": "AC-1", "featureId": "F01", "scenario": "合约 4 个费率字段允许负值，范围 [-100,100]、精度 6 位及非法输入校验", "method": "vitest", "status": "passed", "evidence": ["evidence/acceptance/g6/README.md"] },
+    { "id": "AC-2", "featureId": "F02", "scenario": "合约费率常驻提示逐字等于 PRD", "method": "vitest", "status": "passed", "evidence": ["evidence/acceptance/g6/README.md"] },
+    { "id": "AC-3", "featureId": "F03", "scenario": "校验失败文案逐字等于 PRD", "method": "vitest", "status": "passed", "evidence": ["evidence/acceptance/g6/README.md"] },
+    { "id": "AC-4", "featureId": "F04", "scenario": "列表负费率显示需在真实页面确认负号、百分号与空值表现", "method": "manual-visual", "status": "blocked", "reason": "等待用户按人工走查清单执行", "evidence": ["evidence/manual-walkthrough/README.md"] },
+    { "id": "AC-5", "featureId": "F05", "scenario": "Web fee/tradeFee 正数补+、负数原样，get_transaction_list.amount 保留后端符号", "method": "vitest", "status": "passed", "evidence": ["evidence/acceptance/g6/README.md"] },
+    { "id": "AC-6", "featureId": "F06", "scenario": "两个后台的正数化纯函数与手续费流水类型分流", "method": "vitest", "status": "passed", "evidence": ["evidence/acceptance/g6/README.md"] },
+    { "id": "AC-7", "featureId": "F08", "scenario": "新增/编辑负费率保存后即时生效", "method": "manual", "status": "passed", "evidence": ["evidence/g5-user-confirmation/README.md"] },
+    { "id": "AC-8", "featureId": "F09", "scenario": "合约做市账户蓝框两条文案逐字正确", "method": "vitest", "status": "passed", "evidence": ["evidence/acceptance/g6/README.md"] },
+    { "id": "AC-9", "featureId": "F10", "scenario": "现货做市账户优先级文案逐字正确", "method": "vitest", "status": "passed", "evidence": ["evidence/acceptance/g6/README.md"] },
+    { "id": "AC-10", "featureId": "F11", "scenario": "用户白名单优先级文案逐字正确", "method": "vitest", "status": "passed", "evidence": ["evidence/acceptance/g6/README.md"] },
+    { "id": "AC-11", "featureId": "F12", "scenario": "币对白名单优先级文案逐字正确", "method": "vitest", "status": "passed", "evidence": ["evidence/acceptance/g6/README.md"] },
+    { "id": "AC-12", "featureId": "F13", "scenario": "手续费折扣提示逐字正确且位于最后字段和 footer 之间", "method": "vitest", "status": "passed", "evidence": ["evidence/acceptance/g6/README.md"] },
+    { "id": "AC-13", "featureId": "F01", "scenario": "F01-F06、F09-F13 的真实页面视觉、交互、权限及数据显示走查", "method": "manual-visual", "status": "blocked", "reason": "等待用户执行人工走查清单并回填结果", "evidence": ["evidence/manual-walkthrough/README.md"] }
+  ]
 }

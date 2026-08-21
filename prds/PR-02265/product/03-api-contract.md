@@ -30,7 +30,7 @@
 |----|------|
 | Mock 框架 | 不采用（MSW 路线 B / 遗留路线 A 均不用） |
 | 负值数据来源 | test 后端配置负费率账户，产生负费率成交，验证配置/查询/展示全链路 |
-| 后端「放开负值」就绪风险 | 若后端校验/存储未同步放开负值，前端配置负值会被后端拒；G5 联调前需后端确认（见 §8 待确认 #1） |
+| 后端「放开负值」就绪风险 | 用户于 2026-08-21 确认 G5 联调通过；本会话未取得可归档账号、交易 ID 或截图 |
 | 前端自测 | Vue 组件校验/格式化用单测（纯函数）覆盖负值边界；React 侧格式化纯函数单测 |
 
 ## 1. 接口清单（均为现有接口，复用现状逻辑）
@@ -38,12 +38,12 @@
 | ID | Method | Path | 用途 | 技术栈 | 状态 |
 |----|--------|------|------|--------|------|
 | A1 | GET | `/externalMmAccount/page` | F04 外部做市商列表「手续费率」列（含负值） | Vue 现货后台 | 已存在复用 |
-| A2 | POST | `/externalMmAccount/add` | F01 添加并保存 4 个手续费率；F08 保存后即时生效 | Vue 现货后台 | 已存在复用；生效时点待 G5 实证 |
-| A3 | POST | `/externalMmAccount/update` | F01 编辑回显/保存负值；F08 保存后即时生效 | Vue 现货后台 | 已存在复用；生效时点待 G5 实证 |
-| A4 | GET | `<现有>` 前台合约账户/交易 资金流水·历史成交·仓位历史 | F05 手续费/返佣展示（正数化） | apps/web React | 已存在复用 · path 待补 |
-| A5 | GET | `<现有>` 现货后台用户详情合约流水 + 合约后台 仓位/成交/费用报表 | F06 手续费展示（正数化） | Vue 现货/合约后台 | 已存在复用 · path 待补 |
+| A2 | POST | `/externalMmAccount/add` | F01 添加并保存 4 个手续费率；F08 保存后即时生效 | Vue 现货后台 | 已存在复用；G5 已由用户确认通过 |
+| A3 | POST | `/externalMmAccount/update` | F01 编辑回显/保存负值；F08 保存后即时生效 | Vue 现货后台 | 已存在复用；G5 已由用户确认通过 |
+| A4 | POST | `/order/his_trade_list_v2`、`/position/history_position_list`、`/record/get_transaction_list` | F05 前台手续费/返佣按接口符号契约展示 | apps/web React | 已存在复用；2026-08-20 字段语义已确认 |
+| A5 | GET/POST | `<现有后台接口>` | F06 后台手续费按对应接口口径展示 | Vue 现货/合约后台 | 已存在复用；`history_position_list.tradeFee` 已对账 |
 
-> A2/A3 path 来自现有 `apps/admin/legacy-admin/src/api/operateManager/marketAccount.js`；A4/A5 前台/后台流水接口 path G4 编码时从现有代码确认。
+> A2/A3 path 来自现有 `apps/admin/legacy-admin/src/api/operateManager/marketAccount.js`；A4 path 与字段已从现有 service/组件及 2026-08-20 后端最终口径确认。A5 其余存量报表接口不改 DTO，仅调整展示。
 
 ## 2. 通用约定
 
@@ -51,7 +51,7 @@
 |----|---------|
 | 成功响应 | `code: "0"`、`data: object \| array \| null` |
 | 数值口径 | 手续费率为字符串百分比，**值域放开为 `[-100,100]`**，精度 6 位；负值表示返佣费率 |
-| 流水金额 | 可为负（返佣入账）；展示层正数化取绝对值+符号 |
+| 手续费/流水符号 | `his_trade_list_v2.fee`、`history_position_list.tradeFee`：正常手续费负、返佣正，正数补 `+`、负数原样；`get_transaction_list.amount`：直接遵循后端符号，不做 `abs()`/取反 |
 
 ## 3. 核心 DTO（契约原文）
 
@@ -65,14 +65,15 @@
   recommendedMarginMultiplier                                 // 维持保证金倍率系数（提交名）
 }
 
-// 资金流水/成交项（A4/A5）——费率/费用字段可为负（返佣），展示层正数化
-// 前台 web: amount(带符号) + side/bizType；后台 Vue: amount + side(1收/其他支)
+// 前台历史成交/仓位历史：fee、tradeFee 为正常手续费负数、返佣正数
+// get_transaction_list：amount 为后端带符号值，前端只按精度格式化，不改变符号
+// 后台 Vue 其余 PRD 正数化触点：复用现有 amount + side/type 展示派生
 ```
 
 ## 4. UI 领域模型
 
-- **Vue admin（F01~F04/F06）**：无 TS/mapper，费率值/展示直接在 `.vue` 组件处理。
-- **React 前台（F05）**：金额展示派生正数化：`displayAmount = 符号 + Math.abs(amount)`，返佣不出负号；复用 `apps/web/src/utils/formatNumber.ts`。
+- **Vue admin（F01~F04/F06）**：无 TS/mapper；`history_position_list.tradeFee` 保留后端符号并由 `valueDisplay` 为正数补 `+`，其余 PRD 正数化触点使用各后台既有纯函数。
+- **React 前台（F05）**：`fee`/`tradeFee` 使用 `formatSignedFee`（正数补 `+`、负数原样）；`get_transaction_list.amount` 仅按精度格式化并保留后端符号。
 
 ## 5. 字段对账表
 
@@ -82,12 +83,13 @@
 
 | UI 字段 | 取值 | 契约字段 | 映射类型 | 备注 |
 |---------|------|---------|---------|------|
-| `displayAmount` | 正数化(`amount`) | `amount` | 同名转换 | 返佣（负）取绝对值 + 正号，不出负号 |
-| `feeText` | 格式化(`tradeFee`) | `tradeFee` | 同名转换 | 仓位历史开平手续费 |
+| `feeText` | `formatSignedFee(fee)` | `his_trade_list_v2.tradeHisList[].fee` | 同名格式化 | 正常手续费负、返佣正；正数补 `+`、负数原样 |
+| `tradeFeeText` | `formatSignedFee(tradeFee)` | `history_position_list.positionList[].tradeFee` | 同名格式化 | 与 `fee` 使用相同符号语义 |
+| `amountText` | 按精度直接格式化 `amount` | `get_transaction_list.transList[].amount` | 同名格式化 | 保留后端符号，不做 `abs()`、取反或重新拼符号 |
 
 **G5 联调收尾自检**：
-- [ ] 真实字段名（前台流水 amount/tradeFee、后台 side 口径）从现有代码/后端确认。
-- [ ] 无两个 UI 字段兜底同一 `dto.xxx`。
+- [x] `fee`、`tradeFee`、`amount` 字段名与符号语义已从现有代码及 2026-08-20 后端最终口径确认。
+- [x] 无两个语义不同的 UI 字段兜底同一 `dto.xxx`。
 
 ## 6. Mock 场景矩阵
 
@@ -123,10 +125,10 @@
 
 | # | 接口 / 字段 | 现状 | 期望 | 待谁确认 | 状态 |
 |---|------------|------|------|---------|------|
-| 1 | 手续费率字段值域（**后端**） | 后端校验/存储是否限正 | 后端同步放开负值 `[-100,100]`，否则前端配负值被拒 | 后端 | 待确认 |
-| 2 | A4/A5 前台/后台流水接口 path + 金额/side 字段真实名 | 分散在现有代码 | G4 编码时从现有 service/组件确认 | 前端（G4） | 待补 |
-| 3 | 返佣与手续费共用流水类型 | 共用「开仓/平仓手续费」类型 | 展示层按金额正负正数化，不新增类型 | 后端确认口径 | 待确认 |
-| 4 | A2/A3 即时生效 | PRD revision 1576 新增要求 | 保存成功后的下一笔匹配交易直接使用新费率，不等待缓存过期 | 后端 + QA | 待 G5 实证 |
+| 1 | 手续费率字段值域（**后端**） | 后端校验/存储是否限正 | 后端同步放开负值 `[-100,100]`，否则前端配负值被拒 | 后端 | 已解决：用户确认 G5 联调通过（2026-08-21） |
+| 2 | A4/A5 前台/后台流水接口 path + 金额/side 字段真实名 | 分散在现有代码 | 从现有 service/组件与后端最终口径确认 | 前端（G4/G5） | 已解决（2026-08-20） |
+| 3 | 三类接口的手续费/流水符号语义 | 历史文档曾统一描述为 `abs()` 正数化 | `fee`/`tradeFee` 正常手续费负、返佣正；`amount` 直接遵循后端符号 | 后端 + 前端 | 已解决（2026-08-20） |
+| 4 | A2/A3 即时生效 | PRD revision 1576 新增要求 | 保存成功后的下一笔匹配交易直接使用新费率，不等待缓存过期 | 后端 + QA | 已解决：用户确认 G5 联调通过（2026-08-21） |
 
 同步登记到 `06-collaboration.md`；G5 前必须清零或标注延期。
 
@@ -136,3 +138,5 @@
 |------|--------------|------|-------------|
 | 2026-08-07 | 复用现状接口 | 手续费率字段值域 `[0,100]`→`[-100,100]`；流水金额可为负(返佣)展示正数化 | Vue：改 `FEE_MIN`、futures 校验/sanitize 放开负号、列表格式化；React：正数化格式化复用 |
 | 2026-08-10 | PRD revision 1576 | A2/A3 新增“费率配置即时生效”要求；F09~F13 仅新增 UI 文案，无新接口 | G5 验证实际生效时点；补齐 5 组逐字文案断言 |
+| 2026-08-20 | 后端最终符号口径 | `his_trade_list_v2.fee`、`history_position_list.tradeFee` 正常手续费负、返佣正；`get_transaction_list.amount` 直接遵循后端符号 | Web 使用 `formatSignedFee` 处理前两者；资金流水仅按精度格式化，删除统一 `abs()` 假设 |
+| 2026-08-21 | G5 用户确认 | 用户明确确认 G5 联调已通过；未提供可归档的账号、交易 ID 或截图 | 仅登记用户确认，不补造联调明细 |

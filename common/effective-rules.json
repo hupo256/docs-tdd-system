@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "fingerprint": "b95cbfafe1ba920c478792420c99ab481f6625ecd221408a577de7c8ce9be751",
-  "publishedAt": "2026-08-19T07:55:49.760Z",
+  "fingerprint": "bc95e94ff33866aff4813e1aba1175a069d87cf2572f0516bdb3dac7f73f3639",
+  "publishedAt": "2026-08-21T05:12:24.372Z",
   "l3RuleReleaseFingerprint": "bcb8008808dfffa46657545ce1e179ef8e525adb94bcd9a934514100c04fad2e",
   "clientMatrix": {
     "codex": {
@@ -623,6 +623,6 @@
     "CLAUDE.md": "0ae6e4eb08c82210d63d4ad8634de80e5f6078b7989d12ea84dfb5eedd274453",
     "common/lark-bot/lib/lark-rule-context.mjs": "1961c96d6f9ca31df1ec963d82eccc32aee75aba92de691128beb0a3e14a2a82",
     "common/lark-bot/lib/lark-worker-prompts.mjs": "043c1b34effb5df43212310a020a6912410bddb5b1e6dc258e7b80e9a8b71add",
-    "common/lark-bot/lib/lark-worker-run.mjs": "aaaa0766e465cc358f001d5963f1f72538690ec5bd62e9b4b54ae1942af7f7fc"
+    "common/lark-bot/lib/lark-worker-run.mjs": "02a78348eb62a44653a9742784f0a4aa4e7c97087f4b7be95d4dadd446912f2b"
   }
 }

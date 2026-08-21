@@ -46,7 +46,7 @@
 
 **③ F04 — 列表负值显示**：`market_maker_account.vue` `formatExternalFee`(:1563)，确认负号拼接/列宽正常。
 
-**④ F05 — 前台 web 正数化**（React）：`apps/web/src/utils/formatNumber.ts`（抽正数化纯函数）+ `apps/web/src/apps/Futures/components/FuturesOrders/FundsFlow/index.tsx`(:24 formatAmount)、`PositionHistory/Card.tsx`(:171 tradeFee)、`CashFlow/futures/FuturesCashFlow.tsx`。返佣（负金额）取绝对值+正号，不出负号。复用 `UpOrDownText`。
+**④ F05 — 前台 web 符号展示**（React）：`his_trade_list_v2.fee`、`history_position_list.tradeFee` 正常手续费负、返佣正，统一用 `formatSignedFee`（正数补 `+`、负数原样）；`get_transaction_list.amount` 直接保留后端符号，不做 `abs()`/取反。
 
 **⑤ F06 — 后台正数化**：`apps/admin/.../userManager/other_information/i_contract_capital_flow.vue`(:50-51,159 amountClass+side) + `apps/futures-admin/.../mixin/reportManager/*`。同一正数化口径。
 
@@ -62,11 +62,11 @@
 - 两条主语不同，禁止共用错误文案。
 
 **⑧ F13 — 合约手续费折扣提示**
-- `apps/admin/legacy-admin/src/views/exchangeTradeConfig/feeAddressManager/fee_discount_edit.vue` 添加/编辑弹窗新增蓝框（T16）。
+- `apps/futures-admin/legacy-admin/src/viewsTemplate/futuresExchange/components/futuresFeeDiscountModal.vue` 添加/编辑弹窗表单末尾新增蓝框（T16）。
 
 ## 4. 关键决策 / 坑（务必遵守）
 
-- **正数化口径是跨 3 app 的副本**（React/Vue2×2 无法共享代码）：口径 `符号 + |金额|`、返佣不出负号，必须三处**各自补单测**保证一致（见 02 技术方案「单一事实源」表）。
+- **符号口径按接口区分**：Web `fee`/`tradeFee` 走 signed fee，`get_transaction_list.amount` 保留后端符号；两个 Vue 后台的 PRD 正数化触点保留 `positivizeAmount`，不得再统一套 `abs()`。
 - **精度统一 6 位**（产品已确认）。
 - **F03 文案以 PRD 正文为准**，弹窗 mockup(PRD-IMG-003)「请输入数值」文案作废。
 - **F11/F13 也以相邻正文为准**：图片 OCR/alt 与正文存在差异，图片只决定样式和位置。
@@ -86,19 +86,11 @@ node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs gate PR-02265 G6
 - G6 会实跑 biome/tsc/vitest，findings 必须清零或登记 waiver。
 - Lark 素材需重拉时：`lark-cli auth login`（user token，drive/sheets scope），图片走 `drive/v1/medias/{token}/download`。
 
-## 6. 待确认（新 chat 需向负责人/后端拿）
+## 6. 联调状态
 
-1. **test 后端环境信息**（负责人说「有」，本会话未录入）——用于 G5 联调验证负费率账户配置→成交→返佣展示全链路。**新 chat 第一件事问负责人要**，按下方模板填入本节：
-   ```
-   环境地址(现货后台):
-   环境地址(前台web):
-   登录账号/权限:
-   已配置的负费率做市账户(现货UID/合约UID):
-   触发负费率成交的方式:
-   后端"放开负值"是否已部署: 是/否
-   ```
-2. **后端「放开负值」是否已部署**（否则前端配负值会被后端拒）。见 03-api-contract §8 #1。
-3. A4/A5 前台/后台流水接口真实 path + 金额/side 字段名（编码时从现有代码确认）。
+- 用户于 2026-08-21 明确确认 G5 联调已经通过。
+- 本会话未取得可归档的环境地址、账号、交易 ID 或截图，因此只登记用户确认，不补造联调明细。
+- 2026-08-20 后端最终字段语义已写入 `product/03-api-contract.md` 与 `engineering/frontend-followup-checklist.md`。
 
 ## 7. 环境坑（已知）
 

@@ -49,13 +49,13 @@
 
 ## 三、C 端流水展示接口（两处，分别确认）
 
-> 共同前提：`amount` 必须是**带符号原始值**（返佣为负），**后端不要预先正数化**，前端自行取绝对值 + 判色。
+> 2026-08-20 最终口径：`get_transaction_list.amount` 直接遵循后端返回符号，前端仅按精度格式化；不得 `abs()`、取反或重新拼接符号。不要再由前端假设“返佣必为负”。
 
 ### 3.1 合约订单-资金流水（FundsFlow）— ⚠️ 重点
 
 | # | 需后端确认 |
 |---|---|
-| 6a | `amount` 为带符号原始值（返佣负数） |
+| 6a | `amount` 为后端带符号字符串；前端直接展示其符号，不推断手续费/返佣方向 |
 | 6b | ~~提供稳定的数字/枚举类型码替代文案字符串识别~~ **已关闭（2026-08-19，Aven/Milo）：后端本次未改、维持 pre 逻辑，不新增 typeCode，前端沿用 `type` 字段识别。详见下方「6b 决议」** |
 
 **期望返回示例**
@@ -72,7 +72,7 @@
 
 | # | 需后端确认 |
 |---|---|
-| 7 | 类型码不变：开仓手续费=`6`、平仓手续费=`7`；`amount` 带符号、`precision` 字段照旧返回 |
+| 7 | 类型码不变：开仓手续费=`6`、平仓手续费=`7`；`amount` 符号由后端决定、`precision` 字段照旧返回 |
 
 ## 四、口径确认
 
@@ -104,7 +104,7 @@
 - 后端进一步反馈：**该接口的正数化前端不用处理**。据此前端将 `FundsFlow` 与 `FuturesCashFlow` 关于 `get_transaction_list` 的正数化逻辑**全部回退到 `origin/online`**：删除 `FundsFlow/feeAmount.ts`、`CashFlow/futures/cashFlowAmount.ts` 及其单测，`index.tsx`/`FuturesCashFlow.tsx`/`TransactionFilter.tsx`/`services/api/margin.ts` 均对齐 online。
 - 原正数化实现完整保留在**备份分支 `backup/PR-02265-txlist-positivization`**（HEAD `94bd45ac87`）。
 - 因不再靠 `type` 文案匹配，上一条「多语言漏判风险」随回退一并消失。
-- **F05 前台正数化本期仅保留 `PositionHistory/Card.tsx`（`tradeFee`/`open_close_fee`，走仓位历史接口，非 get_transaction_list），`formatNumber.ts` 的 `toPositiveAmount` 仍被其使用、勿删。**
+- **F05 最终改为按接口符号契约展示：`PositionHistory/Card.tsx` 使用 `formatSignedFee`，`toPositiveAmount` 已无生产调用并删除。**
 
 | 业务含义 | 数字编码（请求/pre 现状） |
 |---|---|
@@ -119,4 +119,4 @@
 - 后台提交报文：`external_market_account_modal.vue` `buildPayload()`
 - C 端合约订单流水正数化：~~`FundsFlow/feeAmount.ts`~~ **已回退 online 删除**（见 6b 最终追加决议），原实现存备份分支 `backup/PR-02265-txlist-positivization`
 - C 端资产流水正数化：~~`CashFlow/futures/cashFlowAmount.ts`~~ **已回退 online 删除**（见 6b 最终追加决议），原实现存备份分支
-- C 端仍保留的正数化：`apps/web/src/apps/Futures/components/FuturesOrders/PositionHistory/Card.tsx`（`tradeFee`/`open_close_fee`）+ `apps/web/src/utils/formatNumber.ts` `toPositiveAmount`
+- C 端历史成交/仓位手续费：`FuturesHistoryTransactionOrder/helper.ts`、`TransactionRecords/index.tsx`、`PositionHistory/Card.tsx` 统一使用 `apps/web/src/utils/formatNumber.ts` 的 `formatSignedFee`

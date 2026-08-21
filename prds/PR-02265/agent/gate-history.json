@@ -192,6 +192,30 @@
         "effectiveRulesFingerprint": "16d0917b410d4d8478afc7a905695acb66f031d873b1f5cc1aeb26c6aea893cc"
       },
       "evidence": "evidence/gate/2026-08-10-132639-g4/README.md"
+    },
+    {
+      "gate": "G5",
+      "ok": true,
+      "generatedAt": "2026-08-21T05:23:42.102Z",
+      "tool": "run-project-gate.mjs",
+      "summary": {
+        "total": 67,
+        "ok": 59,
+        "warn": 1,
+        "waived": 7,
+        "fail": 0
+      },
+      "fingerprint": {
+        "headSha": "0c5e50b1d52f6d53f1bc3271398b405efb97a5db",
+        "baseSha": "7ee9dc5c1d6b0a9a0ac9028f83ba8237da9d2be7",
+        "dirtyHash": "0735798a1c63fb5729b2040cc04ae46577c545e7f8a0faca0de08dd42b8d2dc4",
+        "dirtyFileCount": 6,
+        "untrackedFileCount": 1,
+        "rulesetVersion": "local-2026.07-msw-v1",
+        "ruleReleaseFingerprint": "bcb8008808dfffa46657545ce1e179ef8e525adb94bcd9a934514100c04fad2e",
+        "effectiveRulesFingerprint": "bc95e94ff33866aff4813e1aba1175a069d87cf2572f0516bdb3dac7f73f3639"
+      },
+      "evidence": "evidence/gate/2026-08-21-052342-g5/README.md"
     }
   ]
 }
