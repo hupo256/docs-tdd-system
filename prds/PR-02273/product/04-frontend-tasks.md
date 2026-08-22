@@ -19,7 +19,7 @@
 | T07 | F06 | 正文 §体验金总额/§可用 | 金额口径展示：总额=可用+使用中；使用中=委托冻结+开仓占用 | ⏳ 待后端对账 | 金额为后端字段（availableTrialBalance 等）；可用=总额-使用中口径依赖后端委托冻结/开仓占用，待真实接口对账 |
 | T08 | F07 | 正文预估强平价公式 / `PRD-EMBED-009` | 开仓页预估强平价剔除增强体验金（G4 修正：前端本地计算） | 🚧 阻塞待后端 | 现取合并值 availableTrialBalance；改 hook 传普通值需确认 normalTrialBalance net/gross 口径（change-scope §2.1 阻塞，见 06）；liq.formulas.test 10 例已锁公式 |
 | T09 | F08 | 正文保证金率公式（rev2 §8.4） | 持仓保证金率/维持保证金率/强平价展示剔除增强体验金 | ✅ 完成 | commit 286fcedad8（marginRate 移除 .plus(enhancedTrialNum)；marginRate.test 8 例） |
-| T10 | F09 | `PRD-IMG-021` `PRD-IMG-022` `PRD-IMG-023` / 群补充 2026-08-13 | 现货后台体验金申请：不抵扣类型、配资比例、隐藏使用规则（apps/admin）；配资比例风险提示（红字静态，`copy.admin.rebateRatioRisk`） | 🟡 部分完成 | commit 286fcedad8（rebateRatioRisk 逐字文案+条件红字 UI+copy 断言）；⏳「不可抵扣类型」trialMode 枚举 ASSUMED=3、文案谨慎vs合理待后端/PM |
+| T10 | F09 | `PRD-IMG-021` `PRD-IMG-022` `PRD-IMG-023` / 群补充 2026-08-13 | 现货后台体验金申请：不抵扣类型、配资比例、隐藏使用规则（apps/admin）；配资比例风险提示（红字静态，`copy.admin.rebateRatioRisk`） | 🟡 部分完成 | commit 286fcedad8（rebateRatioRisk 逐字文案+条件红字 UI+copy 断言）；文案「谨慎」已 PM 二次确认（2026-08-22）；⏳「不可抵扣类型」trialMode 枚举 ASSUMED=3 待后端 |
 | T11 | F10 | `PRD-IMG-024` | 现货后台卡券领取记录：到期未使用金额口径 | ✅ 完成（核实无需改） | `expiredAmount` 为后端字段直显（CouponDistributionRecords useColumns），口径改在后端 |
 | T12 | F11 | `PRD-IMG-025` | 现货后台卡券使用记录：增强体验金无使用记录 | ⏳ 待后端对账 | 使用记录由后端返回，增强体验金无记录为后端过滤口径，待真实接口核对 |
 | T13 | F13 | `PRD-EMBED-006` | 存量兼容展示层：容忍存量状态/「已使用完」旧态、灰度开关 | ⏳ 待后端 | 后端「停增量、不动存量、只切开关」；前端仅容忍旧态，待后端上线策略确认 |

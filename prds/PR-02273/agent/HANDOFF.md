@@ -53,7 +53,7 @@ G0–G4 PASS。**G5 编码进行中，纯前端能落的需求已全部落码 + 
 
 ### 3.3 F09 admin「不可抵扣类型」枚举 + 文案
 - `SearchForm.tsx` 已有 `ENHANCED_NON_DEDUCTIBLE_TRIAL_MODE = 3`（`// ASSUMED:`），**未纳入 `trialModeSelectOptions`**（不可选/不可提交）。后端确认真实枚举值后：改常量、纳入选项、销 ASSUMED。
-- 文案「谨慎 vs 合理」：现以 PM 群「谨慎」落 `rebateRatioRisk`，待 PM 二次确认。
+- 文案「谨慎 vs 合理」：已落 `rebateRatioRisk`=「请谨慎配置比例」并经 PM 2026-08-22 二次确认，**已销**。
 
 ## 4. 本轮重构结构（为后期扩展/复用，续作请沿用分层）
 
@@ -103,6 +103,6 @@ node common/engine/agent-scripts/docs-tdd.mjs changed PR-02273
 
 1. 等 PRD 稳定 → 若有更新，重跑 lark-sync + intake，diff 核对 F01–F13 是否受影响。
 2. 后端接口/字段/枚举 ready 后：F07（bonus 口径）、F06（金额口径）、F09（枚举）、F11、F13 逐条对账落码 + 补单测；销 `06 §待办` 与 `04` 里的 ⏳/🚧 项。
-3. F09 文案「谨慎/合理」找 PM Iris 二次确认。
+3. ~~F09 文案「谨慎/合理」找 PM Iris 二次确认。~~ ✅ 已确认（2026-08-22）以「请谨慎配置比例」为准，已销。
 4. G5 stage-status 具备条件后由 `pending` → `frontend-complete-pending-reconcile`（前端完成待对账，见 stage-status.schema），最终 `completed`。
 5. G6：`/code-review` + 机器验收（verify-build-quality 真跑 biome/tsc/vitest）+ 人工 UI 走查（普通体验金回归 + 增强专版）。
