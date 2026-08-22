@@ -169,7 +169,7 @@ Mock 是临时脚手架，真实接口就绪 + §5 对账通过后**立即删光
 
 | 文案 ID | 页面/组件 | 来源 | Owner | zh-CN key | 默认中文（逐字原文） | 动态变量 | 展示条件 | 状态 |
 |---------|-----------|------|-------|-----------|----------|----------|----------|------|
-| `copy.admin.rebateRatioRisk` | apps/admin 卡券管理·配置申请（配资比例字段下方） | 群补充 2026-08-13 PM Iris.ex | PM Iris | `trialBalance:rebateRatioRisk`（平铺 key，与 admin trialBalance.json 现有约定一致；原记 `coupon.rebateRatioRisk`，G5 编码按文件全平铺约定改平铺） | `⚠️ 风险提示：配资比例高于自有真金，易触发开仓拦截或开仓即爆仓，易产生客诉，请谨慎配置比例。` | 无 | 仅当体验金类型=「不可抵扣类型」增强体验金时展示；红字静态；后台不做强制拦截。**G5 编码：文案已落 zh-CN；展示条件门控在 ASSUMED trialMode=3（不可抵扣增强，未纳入可选项），待后端枚举确认销账** | 待确认（截图 mockup 作「请合理配置比例」，以 PM 群消息「请谨慎配置比例」为准，见 06 §待确认） |
+| `copy.admin.rebateRatioRisk` | apps/admin 卡券管理·配置申请（配资比例字段下方） | 群补充 2026-08-13 PM Iris.ex | PM Iris | `trialBalance:rebateRatioRisk`（平铺 key，与 admin trialBalance.json 现有约定一致；原记 `coupon.rebateRatioRisk`，G5 编码按文件全平铺约定改平铺） | `⚠️ 风险提示：配资比例高于自有真金，易触发开仓拦截或开仓即爆仓，易产生客诉，请谨慎配置比例。` | 无 | 仅当体验金类型=「不可抵扣类型」增强体验金时展示；红字静态；后台不做强制拦截。**G5 编码：文案已落 zh-CN；展示条件门控在 ASSUMED trialMode=3（不可抵扣增强，未纳入可选项），待后端枚举确认销账** | 已确认（PM Iris 2026-08-22 正式确认以「请谨慎配置比例」为准；截图 mockup 旧作「请合理配置比例」作废，见 06 §待确认） |
 | `copy.rewards.enhancedMarginTip` | apps/web MyRewards 领取弹窗 ActivateCouponModal 提示说明 + Assets BonusDetailMan 详情弹窗文案说明 | PRD prd-latest.md L209/213/221 | PM | `rewards:...`（namespace rewards，具体 key 按现有结构 G5 编码定稿） | `可与自有资金一起作为合约保证金使用，盈利可全部提取。` | 无 | 增强体验金（isEnhancedTrialBalanceRecord）时展示 | 已确认（PRD 原文，逐字） |
 | `copy.rewards.marginRatioLabel` | apps/web 领取弹窗/详情弹窗「抵扣比例」字段（增强体验金） | PRD prd-latest.md L213/221/246 | PM | `rewards:...`（同上，G5 编码定稿） | `配资比例` | 无 | 增强体验金时「抵扣比例」label 改为「配资比例」，逻辑不变 | 已确认（PRD 原文，逐字） |
 

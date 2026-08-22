@@ -3,7 +3,7 @@
   "stages": {
     "G5": {
       "status": "pending",
-      "reason": "G5 部分交付（增强体验金保证金模式）。【已落码+单测】F08 保证金率剔除增强体验金（marginRate.test.ts 8 + liq.formulas.test.ts 10）；F09 admin 配资比例风险提示（逐字文案+条件红字+断言，ASSUMED trialMode=3 门控）；F04 详情弹窗增强专版（enhancedTrialCopy.test.ts 5）；F03 领取弹窗（按可复用重构 useActivateCouponModal+parts+瘦视图，落提示说明/配资比例/隐藏使用方式，2 断言）；F02 卡片（按可复用重构 rewardCardModel+rewardCardCopy+瘦身，落增强 Used→已失效，4 例）。tsc/biome 改动文件零报错。【已核实无需前端改】F05 领取记录 leverageRange 列已对增强展示 '--'；F10 到期未使用金额 expiredAmount 为后端字段直显（口径改在后端）。F09/F01 文案「谨慎」已 PM 2026-08-22 正式确认销账。【阻塞待后端】F07 强平价 bonus 剔除增强（待后端确认 normalTrialBalance net/gross 口径，change-scope §2.1 阻塞）；F09 不可抵扣枚举 ASSUMED=3 待后端。【后端主导/前端待对账】F06 金额口径（可用体验金=总额-使用中，依赖后端委托冻结/开仓占用字段）；F11 增强无使用记录；F13 存量兼容（停增量不动存量，前端容忍旧态）。真实 API/契约到位后继续对账补齐。",
+      "reason": "G5 部分交付（增强体验金保证金模式）。【已落码+单测】F08 保证金率剔除增强体验金（marginRate.test.ts 8 + liq.formulas.test.ts 10）；F09 admin 配资比例风险提示（逐字文案+条件红字+断言，ASSUMED trialMode=3 门控）；F04 详情弹窗增强专版（enhancedTrialCopy.test.ts 5）；F03 领取弹窗（按可复用重构 useActivateCouponModal+parts+瘦视图，落提示说明/配资比例/隐藏使用方式，2 断言）；F02 卡片（按可复用重构 rewardCardModel+rewardCardCopy+瘦身，落增强 Used→已失效，4 例）。tsc/biome 改动文件零报错。【已核实无需前端改】F05 领取记录 leverageRange 列已对增强展示 '--'；F10 卡券领取记录三项口径（已使用金额=0 / 剩余金额口径删除 / 到期未使用金额=体验金总额，「-历史最大开仓占用」单项删除线=公式更新非整行删）均后端字段直显；F11 增强无使用记录（旧「金额=历史最大仓位占用」定义删除）后端过滤。F10/F11 PRD 删除线口径 2026-08-22 用户确认销账，前端零代码改动。F09/F01 文案「谨慎」已 PM 2026-08-22 正式确认销账。【阻塞待后端】F07 强平价 bonus 剔除增强（待后端确认 normalTrialBalance net/gross 口径，change-scope §2.1 阻塞）；F09 不可抵扣枚举 ASSUMED=3 待后端。【后端主导/前端待对账】F06 金额口径（可用体验金=总额-使用中，依赖后端委托冻结/开仓占用字段）；F11 增强无使用记录；F13 存量兼容（停增量不动存量，前端容忍旧态）。真实 API/契约到位后继续对账补齐。",
       "evidence": [
         "../../PR-02273/apps/web/src/apps/Futures/utils/marginRate.test.ts",
         "../../PR-02273/apps/web/src/apps/Futures/utils/liq/liq.formulas.test.ts",
