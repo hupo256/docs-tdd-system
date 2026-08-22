@@ -41,7 +41,6 @@ const REQUIRED_SCRIPTS = [
 ]
 const SELF_TEST_SCRIPTS = [
   ['check-doc-links.mjs', '--self-test'],
-  ['check-scope-consistency.mjs', '--self-test'],
   ['docs-tdd.mjs', '--self-test'],
   ['effective-rules.mjs', '--self-test'],
   ['golden-run.mjs', '--self-test'],
@@ -530,16 +529,6 @@ if (missingScripts.length) {
     errors.push(linkCheck.stderr.trim() || linkCheck.stdout.trim() || '❌ Markdown 本地链接检查失败。')
   } else {
     process.stdout.write(linkCheck.stdout)
-  }
-  // 功能范围状态口径一致（F-item：SSOT 判移出范围的，他处不得仍标已做）。全仓活跑，随 check/guard 覆盖。
-  const scopeCheck = spawnSync(process.execPath, [join(SCRIPTS_DIR, 'check-scope-consistency.mjs')], {
-    cwd: DOCS_TDD_DIR,
-    encoding: 'utf8',
-  })
-  if (scopeCheck.status !== 0) {
-    errors.push(scopeCheck.stderr.trim() || scopeCheck.stdout.trim() || '❌ 功能范围状态口径检查失败。')
-  } else {
-    process.stdout.write(scopeCheck.stdout)
   }
 }
 

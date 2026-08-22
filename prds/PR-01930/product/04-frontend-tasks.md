@@ -1,23 +1,22 @@
 # Frontend Tasks — PR-01930 体验金手动失效功能（重做）
 
-> **状态 SSOT**：各 F-item 的「做/移出范围/延后」以 `00-feature-inventory.md` 为单一真相源；本表与之冲突时以 SSOT 为准（`check-scope-consistency.mjs` 拦截「SSOT 已划删、他处仍标已做」的漂移）。
+> **范围裁决以 `00-feature-inventory.md` 为准**；本表只列在范围内 F-id 的任务与执行进度，被划删/延后项（如 F18/F20）不在此列，其裁剪记录见 `00` 的 Scope 裁剪记录。
 
 ## 第二轮任务清单（F17-F23 流水枚举注入 · 已落码 + 契约测试全绿）
 
 | ID | 功能 ID | 落点 | 改动 | 状态 | 验收证据 |
 |----|---------|------|------|------|----------|
 | T09 | F17 | 现货后台 体验金流水明细 | `constants/trialBalance.ts` 数组 +「手动失效（体验金）」code 114（自动联动下拉+map+resolver） | ✅ 已落 | `manualInvalidateEnum.contract.test.ts` |
-| T10 | F18 | 现货后台 合约账户资金流水 | `services/api/order.ts` enum + `UsersAssetsWalletTrading/utils/{useUserOrderTypeOptions,useTableColumns}`（**简体硬编码**，含无跳转分支） | ✅ 已落 | 同上 |
-| T11 | F19 | 现货后台 财务审计 | `services/api/financeAudit.ts` `contractBusinessTypes` +34 + 导出占位常量；`FinanceAuditAssetsFlow/utils/useColumns.tsx` 列渲染对 value=34 **简体硬编码**兜底（不再依赖 `businessType-34` i18n key） | ✅ 已落 | 同上 |
-| ~~T12~~ | ~~F20~~ | 合约后台 7.1.8 资产-流水查询 | ~~`types/order.ts` enum + `UsersAssetsWallet/utils/{useUserOrderTypeOptions,useTableColumns}`~~ | ✂ 移出范围 | 2026-08-18 PRD 7.1.8 整段划删；3 源文件 `git checkout origin/online` 回退 + 删 `userOrderTypeEnum.contract.test.ts`；2026-08-22 Rullin 话题内再确认不做（`/fe-coadmin-api/transaction_list`） |
+| T11 | F19 | 现货后台 财务审计-资金流水 新增【系统回收（体验金）】+筛选【体验金系统回收】（PRD 7.1.7） | `constants/financeAuditBusinessType.ts`（内容单一源+纯resolver，businessType=34）+ `services/api/financeAudit.ts` `contractBusinessTypes` 新增筛选项 + `FinanceAuditAssetsFlow/utils/useColumns.tsx` 列渲染走 resolver（不依赖 i18n key） | ✅ 已落（businessType=34 数仓 2026-08-22 确认） | `financeAuditBusinessType.contract.test.ts`（8例锁字面） |
 | T13 | F21-F22 | C 端 web 合约资金流水/交易记录 | `FuturesCashFlow.tsx` + `TransactionFilter.tsx` 两份拷贝同步 `trial114`=「系统回收」 | ✅ 已落 | `futuresCashFlowEnum.contract.test.ts` |
 | T14 | F23 | C 端 web 卡券记录 | 零前端改动（说明列已直出 `description`），仅补契约测试锁 schema | ✅ 已落 | `couponRecordEnum.contract.test.ts` |
 
-### 第二轮待后端销账
+### 第二轮 code 销账进展（更新 2026-08-22）
 
-- 各端真实 type code（现全用占位：admin trialFundFlow=114、financeAudit businessType=34、TradingOrderType=`manual_invalidate_trial`、web fund flow=114）。（futures-admin `UserOrderTypeCode` 随 F20 移出范围已回退，不再销账。）
+- admin trialFundFlow=114（Rullin 确认）、web fund flow=114（确认）、**financeAudit businessType=34（数仓 2026-08-22 确认，已落码）** 均已销账。
 - 卡券「系统回收」走 `description` 直出 vs 新 recordType。
 - 落点A「支出折合-来源明细」统计页在 admin 代码库找不到，待后端给 route/截图或确认属别 app。
+- F18/F20 随 PRD 划删移出范围、前端零改动/已回退，不再销账；裁剪记录见 `00-feature-inventory.md`。
 
 > i18n 口径（用户 / 2026-07-21）：admin / futures-admin 后台文案一律**简体硬编码进组件**，不走 `.json`、不补 i18n key；国际化只在 `apps/web` 做（本地只写 zh-CN）。故后台侧无「其他语种文案交别团队」项。
 

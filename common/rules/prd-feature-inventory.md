@@ -52,7 +52,7 @@ G2 未完成前不写业务代码（同 [workflow-gates.md](./workflow-gates.md)
 ### 3.3 步骤 C — G2 定稿（写业务代码前,必须完成）
 
 1. 与负责人确认（或据已明确 PRD/评审结论）每条标**做/不做/延期**。
-2. 更新 `00-feature-inventory.md`:「本期」列全落定;裁剪项写「Scope 裁剪记录」并同步 `06-collaboration.md`;填「G2 确认人 & 日期」（未回复标「待确认」,**此时仍禁写业务代码**）。
+2. 更新 `00-feature-inventory.md`:「本期」列全落定;裁剪项写「Scope 裁剪记录」并同步 `06-collaboration.md`，**并从 `01`/`04` 移除该项的裁决/任务行，不在他处复述**;填「G2 确认人 & 日期」（未回复标「待确认」,**此时仍禁写业务代码**）。
 3. 每条「做」在 `04-frontend-tasks.md` 至少一条对应任务（无则补）。**任务备注须链到该字段的权威展示约束（05-ui「展示规则」列）或直接写明约束,不能只链 Figma——Figma 规格常缺长度/截断/空态等边界（PR-01685 任务 E3 只链 07-figma §4.1,致 32/60 字符省略号规则对开发不可见而漏做）。**
 4. 每个 requirement sourceId 必须同时出现在 Feature Inventory 与 Task；运行 `prd-intake.mjs <PROJECT-ID> --approve` 固化当前源文件、素材和映射 fingerprint。
 5. **门禁**:仅当 G2 确认人 & 日期已填、无「待 G2 确认」、无 unresolved sourceId 且 fingerprint 未漂移 → 方可进 G4。
@@ -107,10 +107,12 @@ G2 未完成前不写业务代码（同 [workflow-gates.md](./workflow-gates.md)
 
 ## 5. 与现有文档的关系
 
+**范围裁决唯一真相源**：`00-feature-inventory.md` 的功能清单「本期」列 + Scope 裁剪记录，是全仓「做/不做/延期」的 SSOT。其它文档**不得复述裁决**——同一决定复述多处、靠人手同步，漏一处即漂移（PR-01930 F20 划删只改了 00/03、01/04 仍写「已做」，过时文档喂给状态报告误判活项）。
+
 | 文档 | 关系 |
 |------|------|
-| `01-scope-and-phases.md` | 摘要本期范围;清单是明细 |
-| `04-frontend-tasks.md` | 每条「做」至少一条任务 |
+| `01-scope-and-phases.md` | 只写本期范围**摘要** + 阶段计划;**不设 per-F「本期结论」列、不设「不做/延期」表**（明细/裁剪见 00） |
+| `04-frontend-tasks.md` | 每条「做」至少一条任务;**只列在范围内 F-id**，划删/延后项从本表移除、记录归 00 Scope 裁剪记录 |
 | `06-collaboration.md` | 记 Figma vs PRD 差异、裁剪结论 |
 | `05-ui-and-interaction.md` | 按**页面/路由**分节,不只写落地页 |
 
