@@ -40,8 +40,9 @@
           },
           "category": {
             "type": "string",
-            "enum": ["documentation", "implementation"]
-          }
+            "enum": ["documentation", "implementation", "build-quality"]
+          },
+          "evidence": { "type": ["object", "string"] }
         },
         "additionalProperties": false
       }
@@ -168,6 +169,16 @@
       "properties": {
         "hit": { "type": "boolean" },
         "fingerprint": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "deliverySummary": {
+      "type": "object",
+      "required": ["attempted", "ok"],
+      "properties": {
+        "attempted": { "type": "boolean" },
+        "ok": { "type": "boolean" },
+        "file": { "type": ["string", "null"] }
       },
       "additionalProperties": false
     }

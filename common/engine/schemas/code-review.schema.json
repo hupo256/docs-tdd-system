@@ -18,7 +18,7 @@
         "required": ["id", "category", "severity", "summary", "disposition"],
         "properties": {
           "id": { "type": "string", "pattern": "^CR-\\d+$" },
-          "category": { "type": "string", "enum": ["correctness", "reuse", "simplification", "efficiency", "security", "test-coverage", "other"] },
+          "category": { "type": "string", "enum": ["correctness", "reuse", "simplification", "efficiency", "security", "test-coverage", "type-safety", "other"] },
           "severity": { "type": "string", "enum": ["high", "medium", "low"] },
           "file": { "type": "string" },
           "line": { "type": "integer", "minimum": 0 },

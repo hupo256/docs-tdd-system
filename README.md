@@ -99,11 +99,11 @@ node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs doctor
 ```
 AI 会先读 `common/rules/rule-router.md`，再执行 `docs-tdd kickoff PR-01234 --prd <source>`。命令幂等创建项目、同步 PRD、初始化 intake 并写 `agent/run-state.json`；中断后用 `status/next/resume` 恢复。
 
-**2. G0 资料接收**：把 PRD / Figma / API 资料放进 `prds/PR-01234/inbox/`。含图片、表格、嵌入对象时先完成 `prd_intake`（`docs-tdd context PR-01234 prd_intake`），逐项读取分类，读不了即阻断，不猜。
+**2. G0 资料接收**：把 PRD / Figma / API 资料放进 `prds/PR-01234/inbox/`。含图片、表格、嵌入对象时先完成 `prd_intake`（`docs-tdd context PR-01234 prd_intake`），逐项读取分类，读不了即阻断，不猜。PRD 指纹会剥离每次同步变化的 `syncedAt`、临时媒体下载 URL 和图片 alt 描述，避免同一内容反复误报漂移；旧 manifest 可用 `prd-intake.mjs PR-01234 --remigrate` 就地迁移，不重新拉远端、不丢人工分类。
 
-**3. G1 文档生成**：AI 基于启动器生成的模板填写 PRD 全量功能清单、scope、技术方案初稿、任务与协作记录；G1 有独立机器出口，不与 G0 共用空骨架判定。
+**3. G1 文档生成**：AI 基于启动器生成的模板填写 PRD 全量功能清单、scope、技术方案初稿、任务与协作记录；G1 有独立机器出口，不与 G0 共用空骨架判定。`product/00-feature-inventory.md` 是「做 / 不做 / 延期」和 Scope 裁剪记录的唯一真相源，`01-scope-and-phases.md` 只写摘要，`04-frontend-tasks.md` 只保留本期做项，避免多份范围结论漂移。
 
-**4. 按场景加载规则**：`docs-tdd context PR-01234 <SCENARIO>` 生成 compact 规则包，只读命中场景的专题，不全读 `common/`。编码场景须先通过 G2，并签发绑定当前客户端、规则指纹、G2 输入与 HEAD 的 24 小时 rule session v2；`changed` 和 G5-G8 拒绝缺失、过期或由其他客户端签发的会话。Cursor adapter 会自动带 `--client cursor`；手动调用可显式传 `--client codex|claude|cursor|manual`。Lark 两个入口不复用这份会话，而是在每个任务启动 AI 前重新校验发布链和全部路由章节。常用场景：`g0_g2_scope` `write_api` `write_mapper` `write_query_hook` `write_ui` `write_figma` `write_msw` `g6_verify`（全表见 `rule-router.md §3`）。
+**4. 按场景加载规则**：`docs-tdd context PR-01234 <SCENARIO>` 生成 compact 规则包，只读命中场景的专题，不全读 `common/`。编码场景须先通过 G2，并签发绑定当前客户端、规则指纹、G2 输入与 HEAD 的 24 小时 rule session v2；`changed` 和 G5-G8 拒绝缺失、过期或由其他客户端签发的会话。Cursor adapter 会自动带 `--client cursor`；手动调用可显式传 `--client codex|claude|cursor|manual`。Lark 两个入口不复用这份会话，而是在每个任务启动 AI 前读取当前规则章节并检查发布链；发布链 stale 会在 health / 日志告警，但不再把修 bug 任务整体挡下，必需常驻规则缺失仍 fail-closed。常用场景：`g0_g2_scope` `write_api` `write_mapper` `write_query_hook` `write_ui` `write_figma` `write_msw` `g6_verify`（全表见 `rule-router.md §3`）。
 
 **5. G2 方案定稿**：对功能清单逐条确认「做 / 不做 / 延期」，写完 `product/02-technical-design.md`（含复用盘点、PRD 路径核验）后**才允许写业务代码**。
 
@@ -146,7 +146,7 @@ node <mount>/common/engine/agent-scripts/decommission-worktree.mjs PR-01234
 | --- | --- |
 | [common/rules/](./common/rules/) | 跨项目复用的规则与场景路由 |
 | [common/engine/](./common/engine/) | CLI、门禁脚本、schema 与 golden 夹具 |
-| [common/lark-bot/](./common/lark-bot/) | 可选的消息接入与任务执行服务 |
+| [common/lark-bot/](./common/lark-bot/) | 可选的消息接入与任务执行服务：合并话题上下文/图片、注入项目 scope、预取 Figma 规格、按项目路由 bug 回执并自动清理附件 |
 | [prds/](./prds/) | 各项目的文档、状态与证据 |
 | [common/rules/rule-router.md](./common/rules/rule-router.md) | **开工常驻入口**（渐进披露路由） |
 | [common/README.md](./common/README.md) | 公共规则专题的人工全索引 |

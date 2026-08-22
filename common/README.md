@@ -12,7 +12,7 @@
 4. [rule-index.json](./rules/rule-index.json)：机器可读场景路由索引。
    - [rule-ownership.json](./rules/rule-ownership.json)：专题唯一正文所有权表；Router、Gate、模板只消费，不复制正文。
 5. [rule-inheritance.md](./rules/rule-inheritance.md)：规则如何从旧项目沉淀到公共区。
-6. [prd-feature-inventory.md](./rules/prd-feature-inventory.md)：**PRD 全量功能清单**（防 Figma 边界误裁 scope）。
+6. [prd-feature-inventory.md](./rules/prd-feature-inventory.md)：**PRD 全量功能清单与范围 SSOT**（「做 / 不做 / 延期」只在 `00-feature-inventory.md` 裁决，防 Figma 边界误裁和多文档漂移）。
 7. [workflow-gates.md](./rules/workflow-gates.md)：G0-G8 开发门禁（含 G3 MSW 前置、G5 字段对账、G6 自动验收）。
    - [fast-track-incomplete-docs.md](./rules/fast-track-incomplete-docs.md)：**文档未齐快速通道**（API 待更新 + 低保真 UI/UX + Figma/API 后补时，G0→G4 快速走完、停靠 G5 `frontend-complete-pending-reconcile` 待对账）。
 8. [rule-ids-and-gates.md](./rules/rule-ids-and-gates.md)：规则 ID、阶段 gate、只扫新增/修改文件的静态检查。
@@ -36,8 +36,8 @@
 24. [browser-e2e-mcp.md](./rules/browser-e2e-mcp.md)：Browser / Playwright MCP 自测（禁止项目内安装 Playwright）。
 25. [collaboration-and-notifications.md](./rules/collaboration-and-notifications.md)：协作通知总入口和安全边界。
 26. [lark-active-notification.md](./rules/lark-active-notification.md)：自定义机器人主动发群消息（G0-G8）规则。
-27. [lark-bot 子系统文档](./lark-bot/docs/README.md)：群内 @ 应用触发任务的完整链路（Bot Gateway / Worker / bug 表 / 调度）运维手册；不是编码规则，不参与规则指纹。
-28. [lark-doc-sync.md](./rules/lark-doc-sync.md)：Lark CLI 只读同步 PRD / Wiki / Drive / Markdown 到 `docs_tdd` 的规则。
+27. [lark-bot 子系统文档](./lark-bot/docs/README.md)：群内 @ 应用触发任务的完整链路（线程文字/图片上下文、项目 scope 注入、Figma 规格预取、bug 表跨项目回执、附件保留期与并行调度）运维手册；不是编码规则，不参与规则指纹。
+28. [lark-doc-sync.md](./rules/lark-doc-sync.md)：Lark CLI 只读同步 PRD / Wiki / Drive / Markdown 到 `docs_tdd` 的规则；PRD intake 使用剥离易变媒体元数据的稳定指纹，历史 manifest 可就地 `--remigrate`。
 29. [project-doc-structure.md](./rules/project-doc-structure.md)：项目文档目录规范。
 30. [CHANGELOG.md](./CHANGELOG.md)：公共规则、gate 脚本和模板的框架变更日志。
 
@@ -77,7 +77,7 @@
 | 字段对账（schema vs fixture） | `node apps/web/docs_tdd/common/engine/agent-scripts/schema-fixture-reconcile.mjs` |
 | 新建项目文档骨架 | `node apps/web/docs_tdd/common/engine/agent-scripts/start-new-project.mjs PR-01234 --prd <Lark URL 或本地 md>` |
 | 只读同步 Lark 资料 | `node apps/web/docs_tdd/common/engine/agent-scripts/sync-lark-docs.mjs --config apps/web/docs_tdd/prds/PR-01234/agent/lark-sources.json` |
-| PRD 图片/表格/嵌入盘点与漂移检查 | `node apps/web/docs_tdd/common/engine/agent-scripts/prd-intake.mjs PR-01234 --init --source <repo-relative-prd.md>` |
+| PRD 图片/表格/嵌入盘点与漂移检查 | `node apps/web/docs_tdd/common/engine/agent-scripts/prd-intake.mjs PR-01234 --init --source <repo-relative-prd.md>`；旧 manifest 按稳定指纹公式就地迁移用 `--remigrate` |
 | 生成项目恢复摘要 | `node apps/web/docs_tdd/common/engine/agent-scripts/update-context-summary.mjs PR-01234 --stage G6 --write` |
 | 静态代码规则扫描 | `node apps/web/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --project PR-01234` |
 

@@ -10,6 +10,7 @@
       "type": "object",
       "properties": {
         "G5": { "$ref": "#/definitions/g5Status" },
+        "G6": { "$ref": "#/definitions/g6Status" },
         "G7": { "$ref": "#/definitions/g7Status" }
       },
       "additionalProperties": false
@@ -33,6 +34,12 @@
       ]
     },
     "g7Status": {
+      "allOf": [
+        { "$ref": "#/definitions/baseStatus" },
+        { "properties": { "status": { "type": "string", "enum": ["pending", "blocked", "completed", "skipped"] } }, "required": ["status"] }
+      ]
+    },
+    "g6Status": {
       "allOf": [
         { "$ref": "#/definitions/baseStatus" },
         { "properties": { "status": { "type": "string", "enum": ["pending", "blocked", "completed", "skipped"] } }, "required": ["status"] }

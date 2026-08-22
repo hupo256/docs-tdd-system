@@ -1,20 +1,20 @@
 {
   "tool": "warn-ledger.mjs",
-  "updatedAt": "2026-08-22T00:10:33.099Z",
+  "updatedAt": "2026-08-22T10:56:48.181Z",
   "rules": {
     "CODE-ARCH-003": {
       "projects": {
         "PR-02074": {
           "firstSeen": "2026-08-03",
-          "lastSeen": "2026-08-03",
-          "lastFingerprint": "b8794616798d9c54b2baeb15fb33e13d3472d081",
+          "lastSeen": "2026-08-22",
+          "lastFingerprint": "266583d9509fd7dee32117ef5dac54b73d6a71d9",
           "count": 18,
           "verdict": "unreviewed"
         },
         "PR-02306": {
           "firstSeen": "2026-08-18",
-          "lastSeen": "2026-08-19",
-          "lastFingerprint": "e431b78e38bdc0dcfa5d4095071a2a01c78f17dd",
+          "lastSeen": "2026-08-22",
+          "lastFingerprint": "8dd7eea8f4267d3f4f93f7bf8a673a14d516750f",
           "count": 5,
           "verdict": "unreviewed"
         },
@@ -45,8 +45,8 @@
       "projects": {
         "PR-02074": {
           "firstSeen": "2026-08-03",
-          "lastSeen": "2026-08-03",
-          "lastFingerprint": "b8794616798d9c54b2baeb15fb33e13d3472d081",
+          "lastSeen": "2026-08-22",
+          "lastFingerprint": "266583d9509fd7dee32117ef5dac54b73d6a71d9",
           "count": 3,
           "verdict": "unreviewed"
         },
@@ -70,9 +70,9 @@
       "projects": {
         "PR-02074": {
           "firstSeen": "2026-08-03",
-          "lastSeen": "2026-08-03",
-          "lastFingerprint": "b8794616798d9c54b2baeb15fb33e13d3472d081",
-          "count": 6,
+          "lastSeen": "2026-08-22",
+          "lastFingerprint": "266583d9509fd7dee32117ef5dac54b73d6a71d9",
+          "count": 8,
           "verdict": "unreviewed"
         },
         "PR-01930": {
