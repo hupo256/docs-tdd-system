@@ -33,21 +33,17 @@ kingstar 补充：
 - ✅ **F21/F22 C 端资金流水**：Rullin 确认 C 端（`get_transaction_list`）**直接使用服务端返回的 `type`** 字段做识别；前端现有 key `'114'` 正是按 type 映射「系统回收（体验金）」，与之一致，**确认销账**。
 - ✅ **F23 卡券记录「系统回收」**：kingstar 确认**继续用 `description` 识别、不新增 `recordType`**；前端现有「说明」列直出 `record.description`（后端返回「系统回收」文案），**零改动达标，确认销账**。
 - ✅ **`isTrial` 字段**：1=体验金流水，2=增强体验金流水（与 trialMode 1/2 口径一致），用于区分普通/增强体验金。
-- 🔄 **F18 合约后台资金流水（admin 用户管理-合约账户-资金流水，仍阻塞）**：Rullin 说合约资金流水靠 `scene`/`ext_scene` 数字字段识别（即 trial-scene 114），**不是 `order_type` 字符串**。→ 现有 admin `TradingOrderType.manualInvalidateTrial`（`'manual_invalidate_trial'`）挂在错误字段。**暂不落码**（money-adjacent 不猜）：待 Rullin 点死是 `scene` 还是 `ext_scene`，再把这处从 order_type 字符串识别改为读该数字字段 === 114。
+- ✂ **F18 合约后台资金流水（admin 用户管理-合约账户-资金流水）已移出范围**：2026-08-22 确认 PRD「用户管理-合约账户-资金流水」段整段划删（删除线=不做），与 F20 同批移出本 PR 范围。既有占位 `TradingOrderType.manualInvalidateTrial='manual_invalidate_trial'` 不接入、不回补，本 PR 对该处零改动。→ 原「待 Rullin 点死 `scene` vs `ext_scene`」对接项**作废，不再是阻塞项**（下方 §1a 已失效）。
 - ✂ **F20 合约后台 资产-流水查询（futures-admin）已移出范围**：2026-08-18 PRD 7.1.8「资产-流水查询」整段划删（删除线=不做）。前端已回退（`types/order.ts` / `useUserOrderTypeOptions.ts` / `useTableColumns.tsx` 三文件 `git checkout origin/online` 还原 + 删除契约测试）。**不再是阻塞项**。
-- ⚠ **F19 财务审计 `businessType`（数字）**：数仓 @Peanut 仍未给具体数字值，占位 `34` 未销账，仍阻塞。
+- ✅ **F19 财务审计 `businessType`（数字）已就绪**：数仓 2026-08-22 确认「体验金系统回收」`businessType=34`。已落码销账（`constants/financeAuditBusinessType.ts` 内容单一源 + `services/api/financeAudit.ts` 筛选项 + `useColumns.tsx` 列展示，8 个契约测试锁字面）。下方 §1b 已失效。
 
-## 剩余仍需确认（截至 2026-08-18，仅剩 2 项）
+## 剩余仍需确认
 
-### 1a. 合约后台资金流水（F18 admin）用 `scene` 还是 `ext_scene` 承载 114？
+> 更新（2026-08-22）：原 §1a（F18 scene/ext_scene）与 §1b（F19 businessType）均已闭合——F18 PRD 划删作废、F19 数仓给出 34 已落码。本节两项对接单**均已失效存档**，无剩余阻塞项。
 
-Rullin 已确认合约资金流水靠 `scene`/`ext_scene` 数字字段识别（trial-scene 114），但未点死是哪个字段、两者何时用哪个。请明确后，前端将 F18 从错误的 `order_type='manual_invalidate_trial'` 字符串识别改为读该数字字段 === 114。
+### ~~1a. 合约后台资金流水（F18 admin）用 `scene` 还是 `ext_scene` 承载 114？~~（作废）
 
-> 注：原 F20（futures-admin 资产-流水查询）已于 2026-08-18 PRD 7.1.8 整段划删移出范围，本项仅剩 F18（admin 合约账户资金流水）。
-
-### 1b. 财务审计资金流水的 `businessType` 值（F19）—— 数仓 @Peanut
-
-财务审计合约账户流水按 `businessType` **数字**编码。请给出体验金系统回收事件的 `businessType` 真实数字值（当前占位 `34`）。
+已作废：F18 对应 PRD 段整段划删，前端不再接入该处，字段归属无需再确认。
 
 ## 1. 「手动失效（体验金）」+「系统回收（体验金）」的资金流水业务类型码
 

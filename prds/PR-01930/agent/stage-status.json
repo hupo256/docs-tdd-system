@@ -3,14 +3,15 @@
   "stages": {
     "G5": {
       "status": "completed",
-      "reason": "2026-08-18 用户拍板拆分：本 PR 闭环范围 = 后台核心 4 接口真实契约对账（YAPI 231/770）+ 已确认展示点 F17（trial-scene 114）/F21/F22（get_transaction_list type 114）/F23（卡券 description）+ F20 移除（PRD 7.1.8 划删）+ 即时快照口径移除。3 项显式延后（F18 scene/ext_scene 待 Rullin、F19 businessType 待数仓、MSW 退役待 dev 验证）见 evidence/followup-deferred-to-next-pr.md，并以带到期 waiver 可见化，非静默跳过。",
+      "reason": "2026-08-18 用户拍板拆分：本 PR 闭环范围 = 后台核心 4 接口真实契约对账（YAPI 231/770）+ 已确认展示点 F17（trial-scene 114）/F21/F22（get_transaction_list type 114）/F23（卡券 description）+ F20 移除（PRD 7.1.8 划删）+ 即时快照口径移除。更新 2026-08-22：F18（合约账户资金流水）经确认 PRD 段整段划删移出范围（零改动、非延后）；F19（财务审计 businessType=34）数仓 2026-08-22 确认已落码销账（constants/financeAuditBusinessType.ts + 8 例契约测试）。当前仅剩 MSW 退役待 dev 验证一项显式延后，见 evidence/followup-deferred-to-next-pr.md，以带到期 waiver 可见化，非静默跳过。",
+      "updatedAt": "2026-08-22",
       "evidence": [
         "evidence/README.md",
         "evidence/followup-deferred-to-next-pr.md",
         "evidence/handoff-contract-datawarehouse-enums.md",
         "product/03-api-contract.md"
       ],
-      "updatedAt": "2026-08-18"
+      "reconciledAt": "2026-08-18"
     },
     "G6": {
       "status": "completed",

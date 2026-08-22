@@ -7,7 +7,7 @@
 | 项 | 值 |
 |----|-----|
 | 网关 | 现货后台体验金核心走 `getUrl('/operate-api/trialFee/...')` + `futuresAdminHeaders`（与现有 `services/api/trialBalance.ts` list/create 口径一致；非合约网关） |
-| Mock 策略 | MSW 路线 B，`src/mocks/handlers/*`；本地 admin dev 通过 `NEXT_PUBLIC_ENABLE_MSW=true` 启 worker；dev:test/pre/prod 不注册 |
+| Mock 策略 | MSW 路线 B，`src/mocks/handlers/*`；本地 admin dev 自动启 worker（对齐 PR-01947，仅 `NODE_ENV === 'development'` 注册，无 `NEXT_PUBLIC_ENABLE_MSW` 开关）；dev:test/pre/prod 不注册 |
 | 业务开关 | 无 `USE_MOCK` 分支；service 只请求真实占位路径，MSW 在网络层拦截 |
 
 # API Contract — PR-01930 体验金手动失效功能（重做）
@@ -21,17 +21,20 @@
 | 项 | 值 |
 |----|-----|
 | 网关 | 现货后台体验金核心走 `getUrl('/operate-api/trialFee/...')` + `futuresAdminHeaders`（与现有 `services/api/trialBalance.ts` list/create 口径一致；YAPI 路径省略 `/operate-api` 网关前缀，落码时补上）|
-| Mock 策略 | MSW 路线 B，`src/mocks/handlers/*`；本地 admin dev 通过 `NEXT_PUBLIC_ENABLE_MSW=true` 启 worker；dev:test/pre/prod 不注册 |
+| Mock 策略 | MSW 路线 B，`src/mocks/handlers/*`；本地 admin dev 自动启 worker（对齐 PR-01947，无 `NEXT_PUBLIC_ENABLE_MSW` 开关）；dev:test/pre/prod 不注册 |
 | 业务开关 | 无 `USE_MOCK` 分支；service 只请求真实路径，MSW 在网络层拦截 |
 
 ## 接口契约（真实，YAPI project 231 / catid 770）
 
-| 编号 | 用途 | 方法 | 真实路径 | YAPI id | 关键字段 |
-|------|------|------|----------|---------|----------|
-| A1 | 失效记录列表 / 导出 | GET | `/operate-api/trialFee/manualInvalidRecord` | 6028 | query: pageNum/pageSize/configNumber/uid/beginDate/endDate/isExport(0查询 1导出)；rows: id/account/configNumber/trialFeeName/activityName/trialMode(1普通2加强)/endTime/quantity/invalidQuantity/remark/operator/operationTime |
-| A2 | 待失效汇总（手输/单） | GET | `/operate-api/trialFee/manualInvalidSummary` | 6031 | query: uid/configNumber(逗号分隔)/remark/uploadFlag(1=文件链路)；data: affectedUserCount/affectedTotalAmount/availableTrialFee/frozenAmount/positionOccupiedAmount |
-| A6 | 文件上传解析 | POST | `/operate-api/trialFee/manualInvalidSummary` | 6034 | form: file；data.fileData[]: {uid, configNumber, remark} |
-| A3 | 执行失效 | POST | `/operate-api/trialFee/manualInvalid` | 6037 | body: uid/configNumber(逗号串)/remark/manualInvalidUploadRows[]{uid,configNumber,remark}；data:{} |
+> **2026-08-21 D3 退役（§8.4.2 逐接口拆）**：A1/A2/A6/A3 四接口已部署 dev，`trialBalanceManualInvalidate.ts` handler + `contractFixtures.ts` + `manualInvalidateContract.test.ts` 已删除，`browser.ts` 只余 `menuHandlers`。真实 schema（`types/trialBalanceManualInvalidate.ts`）与 F17 枚举测试（`manualInvalidateEnum.contract.test.ts`）保留。menu handler 保留（服务端菜单树未下发「体验金手动失效管理」叶子）。
+
+| 编号 | 用途 | 方法 | 真实路径 | YAPI id | 状态 | 关键字段 |
+|------|------|------|----------|---------|------|----------|
+| A1 | 失效记录列表 / 导出 | GET | `/operate-api/trialFee/manualInvalidRecord` | 6028 | 已切真实 | query: pageNum/pageSize/configNumber/uid/beginDate/endDate/isExport(0查询 1导出)；rows: id/account/configNumber/trialFeeName/activityName/trialMode(1普通2加强)/endTime/quantity/invalidQuantity/remark/operator/operationTime |
+| A2 | 待失效汇总（手输/单） | GET | `/operate-api/trialFee/manualInvalidSummary` | 6031 | 已切真实 | query: uid/configNumber(逗号分隔)/remark/uploadFlag(1=文件链路)；data: affectedUserCount/affectedTotalAmount/availableTrialFee/frozenAmount/positionOccupiedAmount |
+| A6 | 文件上传解析 | POST | `/operate-api/trialFee/manualInvalidSummary` | 6034 | 已切真实 | form: file；data.fileData[]: {uid, configNumber, remark} |
+| A3 | 执行失效 | POST | `/operate-api/trialFee/manualInvalid` | 6037 | 已切真实 | body: uid/configNumber(逗号串)/remark/manualInvalidUploadRows[]{uid,configNumber,remark}；data:{} |
+| menu | 菜单叶子注入（体验金手动失效管理） | — | MSW `menu.ts` handler | — | blocked（服务端菜单树未下发该节点，暂留 mock） | 注入 福利中心>卡券管理>体验金手动失效管理 |
 
 ### 与旧占位契约的差异（已对账修正）
 
@@ -49,7 +52,7 @@
 - ✅ **仓位占用列**：后端确认列表不再需要，已下线该列/schema/fixture/契约测试（A2 汇总的「仓位占用金额」positionOccupiedAmount 保留）。
 - ✅ **批量汇总关联口径**：`uploadFlag=1` 后端按已上传文件自算，前端不再回传 uid/configNumber。
 - ✅ **模板下载**：无独立接口，前端本地生成 CSV（表头 `uid,configNumber,remark` + 一行样板数据）。
-- 🟡 **F17-F19 资金流水枚举码（部分销账）**：Rullin 提供 trialFee scene 枚举，**114=系统失效(TRIAL_SYSTEM_CLAWBACK)** 即本 PR 事件真码，已落 F17 体验金流水明细；C 端（`get_transaction_list`）直接使用返回的 `type`，F21/F22 key `'114'` 与之一致（已销账）；103「手动过期」系既存不同类型。**仍阻塞**：F18 admin 合约账户资金流水——Rullin 说走 `scene`/`ext_scene` 数字字段（非 `order_type` 字符串）但未点死字段；F19 财务审计 `businessType`（数字占位 `34`）数仓未给值。见 evidence handoff §1a/1b。
+- ✅ **F17-F19 资金流水枚举码（已销账）**：Rullin 提供 trialFee scene 枚举，**114=系统失效(TRIAL_SYSTEM_CLAWBACK)** 即本 PR 事件真码，已落 F17 体验金流水明细；C 端（`get_transaction_list`）直接使用返回的 `type`，F21/F22 key `'114'` 与之一致（已销账）；103「手动过期」系既存不同类型。**F18 admin 合约账户资金流水** 经 2026-08-22 确认 PRD 段整段划删，移出范围、前端零改动（原 scene/ext_scene 对接项作废）。**F19 财务审计 `businessType`** 数仓 2026-08-22 确认 = `34`，已落码销账（`constants/financeAuditBusinessType.ts` + `financeAudit.ts` + `useColumns.tsx`，8 契约测试锁字面）。见 evidence handoff §1b、followup §已回补/§已划删。
 - ✂ **F20 合约后台 资产-流水查询（futures-admin）移出范围**：2026-08-18 PRD 7.1.8 整段划删，前端已回退，不再统计入缺口。
 - ✂ **「即时失效金额（固定快照）」统计口径移除**：2026-08-18 PRD「核心计算规则」将该固定快照口径划删，仅保留「实时累计失效金额」（invalidQuantity 动态累计）。前端本就只展示最终累计额、未单独实现快照字段，**无代码改动**。
 - ✅ **卡券「系统回收」识别字段**：kingstar 确认继续用 `description`、不新增 `recordType`；前端「说明」列直出 `record.description`，零改动达标。
@@ -76,9 +79,9 @@
 | # | 前置 | 落地 |
 |---|------|------|
 | 1 | handler 覆盖 normal / empty / error / unauthorized / edge 场景 | A1 record 支持 `scenario` 切 normal/empty/unauthorized（`unauthorized`→10403 即 error 分支）+ `isExport=1` 返回 csv；A2 summary；A6 文件解析返回 fileData；edge（10MB 文件边界 / 笛卡尔积 10000 上限 / UID 超 100）由前端校验 + `manualInvalidateRules.test.ts` 锁死，A3 部分失败按后端「系统异常」error 口径 |
-| 2 | 契约测试：MSW fixture 用真实 `schema.safeParse` 校验，防 mock 与 schema 漂移 | `manualInvalidateContract.test.ts` 对 A1 行 / A2 汇总 / A6 fileData 跑 schema.parse，并锁死缺口字段不存在 |
+| 2 | 契约测试：MSW fixture 用真实 `schema.safeParse` 校验，防 mock 与 schema 漂移 | ~~`manualInvalidateContract.test.ts`~~ **2026-08-21 随 handler 删除（§8.4.2.5）**；后续以真实脱敏样本补 `*.apiContract.test.ts`（待 dev 冒烟拿到脱敏响应，TODO） |
 | 3 | dev-only worker 注册：`src/mocks/browser.ts` + `useMockWorker`，仅 dev | 生产 build 短路，worker 懒加载不入包 |
-| 4 | 真实接口 ready 后删/停 handler 即切真实路径，业务代码 0 改动 | service 请求真实路径不变，关闭 flag 即回真实接口 |
+| 4 | 真实接口 ready 后删/停 handler 即切真实路径，业务代码 0 改动 | **2026-08-21 已执行**：4 接口 handler + fixture 删除，service 请求真实路径不变，无 flag（对齐 PR-01947 先例，删 handler 即切真实） |
 
 ## 等待真实 API 对账清单（剩余）
 

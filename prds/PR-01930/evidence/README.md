@@ -81,12 +81,12 @@ Biome：本仓库未配置 Biome，回退为 `verify-code-rules.mjs` globalScan 
 - ✅ **模板下载**：后端确认无独立接口，表头与上传文件一致 + 一行样板数据；前端本地生成 CSV（`uid,configNumber,remark` + 样板行），移除占位 handler。
 - ✅ **补充细节**：后端已过滤无匹配数据（不返回错误提示，部分失败报系统异常）、账号已脱敏、trialMode(1/2) 与 invalidQuantity 动态累计口径与前端一致，均无需改动。
 
-剩余未销账（仍阻塞 G5，待合约/数仓）：
+销账进展（更新 2026-08-22：F18/F20 PRD 划删移出范围、F19 数仓给 34 已落码，展示点无剩余阻塞；仅 D3 MSW 退役延后）：
 - ✅ **F17 / F21 / F22 已销账**：Rullin 确认 114=TRIAL_SYSTEM_CLAWBACK 系统失效即本 PR 事件真码；C 端（`get_transaction_list`）直接使用服务端返回的 `type` 字段识别，前端 key `'114'` 与之一致。103「手动过期」系既存不同类型非本 PR。
 - ✅ **F23 卡券记录「系统回收」已销账**：kingstar 确认继续用 `description` 识别、不新增 `recordType`；前端「说明」列直出 `record.description`，零改动达标。
-- 🟡 **F18 合约后台资金流水（admin，仍阻塞）**：Rullin 说合约资金流水靠 `scene`/`ext_scene` 数字字段识别（trial-scene 114），**不是现有的 `order_type` 字符串**；但未点死是 `scene` 还是 `ext_scene`。前端现有 `manual_invalidate_trial`（挂 order_type）字段口径错误，待 Rullin 明确字段后改为读该数字 === 114（money-adjacent 不猜）。见 `handoff-contract-datawarehouse-enums.md` §1a。
+- ✂ **F18 合约后台资金流水（admin）已移出范围**：2026-08-22 确认 PRD「用户管理-合约账户-资金流水」段整段划删（删除线=不做），与 F20 同批移出本 PR。既有占位 `manual_invalidate_trial`（挂 order_type）不接入、不回补，前端零改动。原「scene vs ext_scene」对接项作废，**不再阻塞**。见 `handoff-contract-datawarehouse-enums.md` §1a（已作废）。
 - ✂ **F20 合约后台 资产-流水查询（futures-admin）已移出范围**：2026-08-18 PRD 7.1.8「资产-流水查询」整段划删（删除线=不做）。三源文件 `git checkout origin/online` 还原、契约测试删除，无残留。**不再阻塞。**
-- 🟡 **F19 财务审计 `businessType`（仍阻塞）**：数仓 @Peanut 未给具体数字值，占位 `34` 未销账。见 `handoff-contract-datawarehouse-enums.md` §1b。
+- ✅ **F19 财务审计 `businessType`（已销账）**：数仓 2026-08-22 确认「体验金系统回收」`businessType=34`。已落码（`constants/financeAuditBusinessType.ts` + `services/api/financeAudit.ts` + `useColumns.tsx`，8 个契约测试锁字面「体验金系统回收」/「系统回收（体验金）」）。
 - 落点A（数据概览-支出折合-来源明细）依赖 PR-02015（未上线），上线后补【系统回收】类型。
 
 ## 11. 后端核心 4 接口对账落码（2026-08-15）

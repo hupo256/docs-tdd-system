@@ -14,7 +14,7 @@
 
 ## MSW 路线 B 决策记录
 
-新功能 mock 强制走 **MSW 路线 B**（`src/mocks/handlers`），dev-only 注册，production service 零 mock 分支。真实接口 ready 后关闭 `NEXT_PUBLIC_ENABLE_MSW` 即切真实路径。若主仓 admin 无 MSW 基建则新建 dev-only 基建（browser/handlers/fixtures/useMockWorker + public worker）。
+新功能 mock 强制走 **MSW 路线 B**（`src/mocks/handlers`），dev-only 注册（仅 `NODE_ENV==='development'`，无 `NEXT_PUBLIC` 开关，对齐 PR-01947 先例），production service 零 mock 分支。真实接口 ready 后删/清 handler 即切真实路径，业务代码 0 改动。若主仓 admin 无 MSW 基建则新建 dev-only 基建（browser/handlers/fixtures/useMockWorker + public worker）。
 
 ## 改动边界 / 影响面（不得超界）
 

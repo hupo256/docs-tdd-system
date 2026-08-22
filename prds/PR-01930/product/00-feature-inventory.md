@@ -54,7 +54,7 @@
 | PRD 条目 | 裁剪结论 | 确认人 | 日期 | 对验收标准影响 |
 |---------|---------|--------|------|---------------|
 | F14-F16 状态矩阵/幂等/权限点 | 前端可感知部分随核心链路带；后端逻辑本轮不涉前端落点 | 用户 | 2026-07-20 | 核心链路不受影响 |
-| ~~F17-F22 后台联动流水/统计枚举~~ | **第二轮已落地**（见下「第二轮」表）：admin 体验金明细/合约账户资金流水/财务审计资金流水（~~+ futures-admin 资产流水查询~~ = F20 已随 2026-08-18 PRD 划删移出范围） | 用户 | 2026-07-21 | 已实现 |
+| ~~F17-F22 后台联动流水/统计枚举~~ | **第二轮已落地**（见下「第二轮」表）：admin 体验金明细(F17)/财务审计资金流水(F19，businessType=34)（~~+ 合约账户资金流水 F18~~ 与 ~~futures-admin 资产流水查询 F20~~ 均随 PRD 划删移出范围） | 用户 | 2026-07-21 | 已实现 |
 | ~~F23-F24 C端 web~~ | **第二轮已落地**：web 合约账户资金流水×2拷贝 + 卡券记录（只做 web，app 不碰） | 用户 | 2026-07-21 | 已实现 |
 | 落点A 数据概览-支出折合-来源明细统计 | **前置已就绪（2026-08-07）**：PR-02015 已合入当前分支，来源明细基建落在 `apps/admin/legacy-admin/src/views/userManager/other_information/data_overview/index.vue`（来源标签走 `src/mixin/dictionary/index.js` 的 `contractBusinessTypeList` code→label 映射）。补法=向 `contractBusinessTypeList` 加一条 label「体验金手动失效」。**卡点**：该条 businessType code 未知占位，塞猜值有撞码错标真实资金数据风险，故用户拍板**等后端 code 到位再补一行**（2026-08-07） | 用户 | 2026-08-07 | 不影响本期其余落点 |
 | C 端 app | 延期（只做 web，app 为独立 RN 仓库） | 用户 | 2026-07-21 | 本轮不做 |
@@ -63,13 +63,13 @@
 
 > 范围经用户确认 = PRD「本期包含」剩余全量（除落点A）/ 只做 web / MSW 占位路线 B。
 > 文案口径（用户拍板）：后台记「手动失效（体验金）」；C 端**卡券记录「说明」列**记「系统回收」，**C 端合约资金流水类型**记「系统回收（体验金）」（PRD 本期包含表逐字，2026-08-07 修正，原先笼统写「系统回收」漏了限定词）；图中「系统失效」统一按对应场景处理。
-> ⚠️ 各端新增流水 type code 为**占位值**（admin trialFundFlow=114 / financeAudit businessType=34 / TradingOrderType=manual_invalidate_trial / web fund flow=114），真实 code 待后端销账，ready 后改常量对账。（~~futures-admin UserOrderTypeCode=manual_invalidate_trial~~ 随 F20 移出范围已回退。）
+> ⚠️ 各端新增流水 type code（更新 2026-08-22）：admin trialFundFlow=114（Rullin 确认）/ **financeAudit businessType=34（数仓 2026-08-22 确认，已落码销账）** / web fund flow=114（确认）。~~TradingOrderType=manual_invalidate_trial (F18)~~ 与 ~~futures-admin UserOrderTypeCode (F20)~~ 均随 PRD 划删移出范围，前端零改动/已回退。
 
 | ID | 端 | PRD 本期包含 | 文件 | 枚举形态 | 状态 | 契约测试 |
 |----|----|-------------|------|---------|------|---------|
 | F17 | admin | 体验金流水明细 新增【手动失效】 | `constants/trialBalance.ts` `trialFundFlowTypes` +1行 | 常量数组+派生Record+resolver | ☑ | `manualInvalidateEnum.contract.test.ts` |
-| F18 | admin | 合约账户-资金流水 新增【手动失效（体验金）】 | `services/api/order.ts` enum + `UsersAssetsWalletTrading/utils/{useUserOrderTypeOptions,useTableColumns}` | TS enum + 内联简体硬编码 | ☑ | 同上 |
-| F19 | admin | 财务审计-资金流水 新增【手动失效（体验金）】+筛选【体验金系统回收】 | `services/api/financeAudit.ts` `contractBusinessTypes`+导出占位常量 + `FinanceAuditAssetsFlow/utils/useColumns.tsx` 列渲染硬编码兜底 | 常量数组 + 列渲染硬编码（不走 i18n） | ☑ | 同上 |
+| ~~F18~~ | ~~admin~~ | ~~合约账户-资金流水~~ | — | — | ✂ PRD 段划删，移出范围，零改动 | — |
+| F19 | admin | 财务审计-资金流水 新增【系统回收（体验金）】+筛选【体验金系统回收】（PRD 7.1.7） | `constants/financeAuditBusinessType.ts`（内容单一源+纯resolver）+ `services/api/financeAudit.ts` `contractBusinessTypes` 新增筛选项 + `FinanceAuditAssetsFlow/utils/useColumns.tsx` 列渲染走 resolver | 常量单一源 + 列渲染硬编码兜底（不走 i18n）| ☑ businessType=34 已落码 | `financeAuditBusinessType.contract.test.ts`（8例锁字面）|
 | ~~F20~~ | ~~futures-admin~~ | **移出范围（2026-08-18 PRD 7.1.8「资产-流水查询」整段划删，不做）** | ~~`types/order.ts` enum + `UsersAssetsWallet/utils/{useUserOrderTypeOptions,useTableColumns}`~~ | — | ✂ 已回退（3 源文件 `git checkout origin/online` 还原 + 删除 `userOrderTypeEnum.contract.test.ts`） | — |
 | F21 | web | 资产-合约账户-资金流水 新增【系统回收（体验金）】 | `apps/CashFlow/futures/FuturesCashFlow.tsx` `typeItems` +1项 + `i18n/zh-CN/assets.json` `FuturesCashFlow.trial114` | 常量`{key,label}[]` + i18n | ☑ | `futuresCashFlowEnum.contract.test.ts` |
 | F22 | web | 合约交易-交易记录-资金流水 新增【系统回收（体验金）】 | `apps/Futures/components/FuturesOrders/FundsFlow/components/TransactionFilter.tsx` `typeList` +1项（第二份拷贝，共用 assets json） | 同上 | ☑ | 同上 |
