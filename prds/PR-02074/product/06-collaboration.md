@@ -12,6 +12,8 @@
 
 ## B. 需后端明确（阻塞联调，非阻塞 G2 文档）
 
+> **G5 决策（aven，2026-08-22）**：等后端接口 ready 再对账，本期不走 fast-track（不改 G5 为 `frontend-complete-pending-reconcile`/`not-applicable`）。前端阶段0-4 已落码，MSW 路线 B 继续挂载至接口 ready；B1-B7 逐项在接口 ready 后一次性对账+销 mock。
+
 | # | 事项 | 影响功能 |
 |---|------|---------|
 | B1 | 分类树接口（四大类各自二/三级分类，含固定"全部"/"进行中"）| F07,F10,F13,F18 |
