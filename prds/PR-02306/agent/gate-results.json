@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-08-22T10:53:15.077Z",
+  "generatedAt": "2026-08-22T11:29:53.917Z",
   "tool": "run-project-gate.mjs",
   "projectId": "PR-02306",
   "gate": "G8",
-  "ok": false,
+  "ok": true,
   "summary": {
     "total": 99,
-    "ok": 93,
+    "ok": 94,
     "warn": 4,
     "waived": 1,
-    "fail": 1
+    "fail": 0
   },
   "groups": {
     "documentation": {
       "total": 86,
-      "ok": 81,
+      "ok": 82,
       "warn": 3,
       "waived": 1,
-      "fail": 1
+      "fail": 0
     },
     "implementation": {
       "total": 6,
@@ -239,7 +239,7 @@
     {
       "ruleId": "DOC-PRD-010",
       "ok": true,
-      "message": "remote PRD content hash matches intake baseline (cached 103s ago): 需求 PRD (revision 354)",
+      "message": "remote PRD content hash matches intake baseline (cached 14s ago): 需求 PRD (revision 354)",
       "file": "../docs_tdd/prds/PR-02306/agent/prd-source-manifest.json",
       "severity": "error",
       "category": "documentation"
@@ -734,8 +734,8 @@
     },
     {
       "ruleId": "VERIFY-G8-004",
-      "ok": false,
-      "message": "origin/feature/PR-02306、当前 HEAD 与 delivery-status.headSha 不一致或不存在",
+      "ok": true,
+      "message": "origin/feature/PR-02306、当前 HEAD 与 delivery-status.headSha 一致",
       "file": "../docs_tdd/prds/PR-02306/agent/delivery-status.json",
       "severity": "error",
       "category": "documentation"
@@ -775,7 +775,7 @@
         "command": "pnpm exec biome check --no-errors-on-unmatched apps/web/src/apps/BindGoogle/components/Form/index.tsx apps/web/src/apps/Register/RegisterV2/CreatePassword.tsx apps/web/src/apps/Register/common/const.ts apps/web/src/apps/ResetPassword/ResetForm.tsx apps/web/src/apps/SetLoginPassword/index.tsx apps/web/src/apps/UpdatePassword/index.tsx apps/web/src/components/PasswordRuleChecklist.test.ts apps/web/src/components/PasswordRuleChecklist.tsx apps/web/src/constants/regex.test.ts apps/web/src/constants/regex.ts apps/web/src/i18n/locales/zh-CN/register.json packages/config/package.json packages/ui/package.json",
         "cwd": ".",
         "status": 0,
-        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02306/2026-08-22T10-53-08-369Z-biome-check.log",
+        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02306/2026-08-22T11-29-45-384Z-biome-check.log",
         "counts": {
           "candidates": 13,
           "checked": 10,
@@ -796,7 +796,7 @@
         "command": "pnpm exec tsc --project ./tsconfig.json --noEmit --pretty false",
         "cwd": "apps/web",
         "status": 1,
-        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02306/2026-08-22T10-53-08-896Z-tsc-apps-web.log",
+        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02306/2026-08-22T11-29-46-100Z-tsc-apps-web.log",
         "counts": {
           "total": 356,
           "inChangedFiles": 0
@@ -829,7 +829,7 @@
         "command": "pnpm exec vitest run apps/web/src/components/PasswordRuleChecklist.test.ts apps/web/src/constants/regex.test.ts",
         "cwd": ".",
         "status": 0,
-        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02306/2026-08-22T10-53-13-024Z-vitest-related.log",
+        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02306/2026-08-22T11-29-51-180Z-vitest-related.log",
         "counts": {
           "selected": 2,
           "summary": "2 passed (2)"
@@ -860,7 +860,7 @@
         "command": "pnpm --filter @fameex/web build",
         "cwd": ".",
         "status": 0,
-        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02306/2026-08-22T10-53-14-696Z-production-build.log",
+        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02306/2026-08-22T11-29-53-401Z-production-build.log",
         "counts": null
       }
     },
@@ -871,49 +871,49 @@
       "ok": true,
       "severity": "error",
       "message": "G8 机器事实层已实跑：6 条 biome/tsc/vitest 结论",
-      "evidence": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02306/2026-08-22T10-53-08-143Z-verify-build-quality.log"
+      "evidence": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02306/2026-08-22T11-29-45-103Z-verify-build-quality.log"
     }
   ],
   "commands": [
     {
       "label": "verify-project-gate PR-02306 G8",
-      "status": 1,
-      "ok": false,
-      "startedAt": "2026-08-22T10:53:06.779Z",
-      "finishedAt": "2026-08-22T10:53:07.105Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02306/2026-08-22T10-53-06-779Z-verify-project-gate-g8.log"
+      "status": 0,
+      "ok": true,
+      "startedAt": "2026-08-22T11:29:43.448Z",
+      "finishedAt": "2026-08-22T11:29:43.904Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02306/2026-08-22T11-29-43-448Z-verify-project-gate-g8.log"
     },
     {
       "label": "verify-code-rules --project PR-02306",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-08-22T10:53:07.106Z",
-      "finishedAt": "2026-08-22T10:53:08.142Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02306/2026-08-22T10-53-07-106Z-verify-code-rules.log"
+      "startedAt": "2026-08-22T11:29:43.904Z",
+      "finishedAt": "2026-08-22T11:29:45.103Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02306/2026-08-22T11-29-43-904Z-verify-code-rules.log"
     },
     {
       "label": "verify-build-quality --project PR-02306",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-08-22T10:53:08.143Z",
-      "finishedAt": "2026-08-22T10:53:15.076Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02306/2026-08-22T10-53-08-143Z-verify-build-quality.log"
+      "startedAt": "2026-08-22T11:29:45.103Z",
+      "finishedAt": "2026-08-22T11:29:53.916Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02306/2026-08-22T11-29-45-103Z-verify-build-quality.log"
     },
     {
-      "label": "update-project-index --write",
+      "label": "set-project-stage PR-02306 G8",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-08-22T10:53:15.441Z",
-      "finishedAt": "2026-08-22T10:53:15.508Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02306/2026-08-22T10-53-15-441Z-update-project-index.log"
+      "startedAt": "2026-08-22T11:29:54.332Z",
+      "finishedAt": "2026-08-22T11:29:54.595Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02306/2026-08-22T11-29-54-332Z-set-project-stage.log"
     },
     {
       "label": "render-delivery-summary --project PR-02306 --write",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-08-22T10:53:15.509Z",
-      "finishedAt": "2026-08-22T10:53:15.780Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02306/2026-08-22T10-53-15-509Z-render-delivery-summary.log"
+      "startedAt": "2026-08-22T11:29:54.595Z",
+      "finishedAt": "2026-08-22T11:29:54.922Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02306/2026-08-22T11-29-54-595Z-render-delivery-summary.log"
     }
   ],
   "codeRules": {
@@ -931,11 +931,11 @@
     "baselineFile": "../docs_tdd/prds/PR-02306/agent/tsc-baseline.json"
   },
   "source": {
-    "gateCommand": "/Users/aven/.nvm/versions/node/v24.7.0/bin/node /Users/aven/github/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-02306 G8 --json",
+    "gateCommand": "/opt/homebrew/Cellar/node/26.3.1/bin/node /Users/aven/github/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-02306 G8 --json",
     "parseError": null,
-    "codeRulesCommand": "/Users/aven/.nvm/versions/node/v24.7.0/bin/node /Users/aven/github/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --project PR-02306 --json",
+    "codeRulesCommand": "/opt/homebrew/Cellar/node/26.3.1/bin/node /Users/aven/github/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --project PR-02306 --json",
     "codeRulesParseError": null,
-    "buildQualityCommand": "/Users/aven/.nvm/versions/node/v24.7.0/bin/node /Users/aven/github/docs_tdd/common/engine/agent-scripts/verify-build-quality.mjs --project PR-02306 --json --production-build",
+    "buildQualityCommand": "/opt/homebrew/Cellar/node/26.3.1/bin/node /Users/aven/github/docs_tdd/common/engine/agent-scripts/verify-build-quality.mjs --project PR-02306 --json --production-build",
     "buildQualityParseError": null
   },
   "fingerprint": {
@@ -950,11 +950,11 @@
   },
   "cache": {
     "hit": false,
-    "fingerprint": "1fd5c5363ca6886e"
+    "fingerprint": "41dd497b08a3258e"
   },
   "stageSync": {
-    "attempted": false,
-    "ok": false
+    "attempted": true,
+    "ok": true
   },
   "deliverySummary": {
     "attempted": true,

@@ -2,11 +2,11 @@
   "projectId": "PR-02306",
   "mode": "pushed",
   "branch": "feature/PR-02306",
-  "headSha": "2a3ccb305f8c479b2468239c919f7c234fdb932f",
+  "headSha": "8dd7eea8f4267d3f4f93f7bf8a673a14d516750f",
   "pullRequestUrl": "",
   "evidence": [
-    "origin/feature/PR-02306 @ 2a3ccb305f8c479b2468239c919f7c234fdb932f（本地 HEAD 与远端一致，worktree clean）",
+    "origin/feature/PR-02306 @ 8dd7eea8f4267d3f4f93f7bf8a673a14d516750f（本地 HEAD 与远端一致，worktree clean）",
     "prds/PR-02306/evidence/acceptance/g6/README.md"
   ],
-  "note": "纯前端密码规则修改，已推送至 origin/feature/PR-02306；未合并 online，待负责人发起 MR。"
+  "note": "密码规则修改及后续 @heroui/react 依赖固定提交均已推送至 origin/feature/PR-02306；未合并 online，待负责人发起 MR。"
 }

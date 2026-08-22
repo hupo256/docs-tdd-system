@@ -1,7 +1,7 @@
 ---
 projectId: PR-02306
 status: active
-stage: G7
+stage: G8
 branch: feature/PR-02306
 worktree: /Users/aven/github/PR-02306
 port: ""
@@ -19,8 +19,8 @@ larkEnabled: true
 
 | 字段 | 值 |
 |------|-----|
-| 当前阶段 | G0 资料接收 |
-| 最新通过门禁 | G7 |
+| 当前阶段 | G8 已通过 |
+| 最新通过门禁 | G8 |
 | 公共规则 | 继承 ../../common/README.md |
 | PRD 来源 | https://qfglxo2m3dc.sg.larksuite.com/wiki/KCyhwSvN7idfRCkTbI9lhZUNgbd |
 | visualFidelity | standard |
