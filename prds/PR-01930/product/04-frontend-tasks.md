@@ -1,5 +1,7 @@
 # Frontend Tasks — PR-01930 体验金手动失效功能（重做）
 
+> **状态 SSOT**：各 F-item 的「做/移出范围/延后」以 `00-feature-inventory.md` 为单一真相源；本表与之冲突时以 SSOT 为准（`check-scope-consistency.mjs` 拦截「SSOT 已划删、他处仍标已做」的漂移）。
+
 ## 第二轮任务清单（F17-F23 流水枚举注入 · 已落码 + 契约测试全绿）
 
 | ID | 功能 ID | 落点 | 改动 | 状态 | 验收证据 |
@@ -7,13 +9,13 @@
 | T09 | F17 | 现货后台 体验金流水明细 | `constants/trialBalance.ts` 数组 +「手动失效（体验金）」code 114（自动联动下拉+map+resolver） | ✅ 已落 | `manualInvalidateEnum.contract.test.ts` |
 | T10 | F18 | 现货后台 合约账户资金流水 | `services/api/order.ts` enum + `UsersAssetsWalletTrading/utils/{useUserOrderTypeOptions,useTableColumns}`（**简体硬编码**，含无跳转分支） | ✅ 已落 | 同上 |
 | T11 | F19 | 现货后台 财务审计 | `services/api/financeAudit.ts` `contractBusinessTypes` +34 + 导出占位常量；`FinanceAuditAssetsFlow/utils/useColumns.tsx` 列渲染对 value=34 **简体硬编码**兜底（不再依赖 `businessType-34` i18n key） | ✅ 已落 | 同上 |
-| T12 | F20 | 合约后台 7.1.8 资产-流水查询 | `types/order.ts` enum + `UsersAssetsWallet/utils/{useUserOrderTypeOptions,useTableColumns}` **简体硬编码**（去 `t()`，不入 order namespace） | ✅ 已落 | `userOrderTypeEnum.contract.test.ts` |
+| ~~T12~~ | ~~F20~~ | 合约后台 7.1.8 资产-流水查询 | ~~`types/order.ts` enum + `UsersAssetsWallet/utils/{useUserOrderTypeOptions,useTableColumns}`~~ | ✂ 移出范围 | 2026-08-18 PRD 7.1.8 整段划删；3 源文件 `git checkout origin/online` 回退 + 删 `userOrderTypeEnum.contract.test.ts`；2026-08-22 Rullin 话题内再确认不做（`/fe-coadmin-api/transaction_list`） |
 | T13 | F21-F22 | C 端 web 合约资金流水/交易记录 | `FuturesCashFlow.tsx` + `TransactionFilter.tsx` 两份拷贝同步 `trial114`=「系统回收」 | ✅ 已落 | `futuresCashFlowEnum.contract.test.ts` |
 | T14 | F23 | C 端 web 卡券记录 | 零前端改动（说明列已直出 `description`），仅补契约测试锁 schema | ✅ 已落 | `couponRecordEnum.contract.test.ts` |
 
 ### 第二轮待后端销账
 
-- 各端真实 type code（现全用占位：admin trialFundFlow=114、financeAudit businessType=34、TradingOrderType/UserOrderTypeCode=`manual_invalidate_trial`、web fund flow=114）。
+- 各端真实 type code（现全用占位：admin trialFundFlow=114、financeAudit businessType=34、TradingOrderType=`manual_invalidate_trial`、web fund flow=114）。（futures-admin `UserOrderTypeCode` 随 F20 移出范围已回退，不再销账。）
 - 卡券「系统回收」走 `description` 直出 vs 新 recordType。
 - 落点A「支出折合-来源明细」统计页在 admin 代码库找不到，待后端给 route/截图或确认属别 app。
 
