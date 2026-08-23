@@ -20,7 +20,9 @@
           "status": { "type": "string", "enum": ["passed", "failed", "blocked", "not-applicable"] },
           "evidence": { "type": "array", "items": { "type": "string", "minLength": 1 } },
           "reason": { "type": "string" },
-          "owner": { "type": "string" }
+          "owner": { "type": "string" },
+          "confirmedBy": { "type": "string", "minLength": 1, "description": "人工确认签名：manual/manual-visual/browser 的 passed 项须由人签（DOC-CONFIRM-003）。" },
+          "confirmedAt": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" }
         },
         "additionalProperties": false
       }

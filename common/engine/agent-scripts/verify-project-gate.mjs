@@ -7,6 +7,7 @@ import { spawnSync } from 'node:child_process'
 import { blockerChecks } from './lib/blockers.mjs'
 import { assumptionChecks } from './lib/assumption-ledger.mjs'
 import { codeReviewChecks } from './lib/code-review.mjs'
+import { acceptanceConfirmationCheck, codeReviewConfirmationCheck, stageConfirmationCheck } from './lib/confirmation.mjs'
 import { acceptanceChecks } from './lib/acceptance-results.mjs'
 import { allowedG5Statuses, g5DispositionEvidenceOk, partialPrerequisiteCheck, partialRunNoteCheck, resolvePartialRun, splitPendingReconcile } from './lib/gate-partial.mjs'
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
@@ -274,6 +275,11 @@ function findBinaryEvidenceFiles(evidenceDir) {
 
 function add(ruleId, ok, message, file = projectDir, severity = 'error', category = 'documentation') {
   checks.push({ ruleId, ok, message, file: rel(file), severity, category })
+}
+
+// lib 产出的 check 统一接入 add()；null = 该 lib 判定本次不适用（不发 check）。
+function addFrom(check, file) {
+  if (check) add(check.ruleId, check.ok, check.message, file, check.severity, check.category)
 }
 
 function requiredFile(ruleId, pathFromProject) {
@@ -649,6 +655,8 @@ function validateG5() {
   if (status?.status === 'frontend-complete-pending-reconcile') {
     add('VERIFY-G5-004', evidencePathsExist(status?.evidence) && Boolean(status?.reason), '前端完成待对账：须有前端 evidence 路径与待对账原因；此态不放行完整 G6，只能走 G6-partial', join(projectDir, 'agent/stage-status.json'), partial ? 'error' : 'warn')
   }
+  // DOC-CONFIRM-001（warn）：G5 的人工处置态须留签名——README 人机分界说 G5+ 以人工确认为锚点。
+  addFrom(stageConfirmationCheck({ stage: 'G5', status }), join(projectDir, 'agent/stage-status.json'))
 
   // 责任模块目录可填在 00-feature-inventory.md（scope 事实）或 agent/context-summary.md（恢复上下文），
   // 两处任一命中即可，避免脚手架把字段放在 context-summary 而 gate 只读 inventory 导致恒空。
@@ -736,6 +744,7 @@ function validateG6() {
       for (const check of codeReviewChecks({ report, currentSha, expectedProjectId: projectId, file: rel(codeReviewFile) })) {
         add(check.ruleId, check.ok, check.message, codeReviewFile, check.severity, check.category)
       }
+      addFrom(codeReviewConfirmationCheck({ report }), codeReviewFile)
     }
   } else if ((projectManifest?.templateVersion || 0) >= 2) {
     add('DOC-CR-001', false, 'template v2+ 必须存在 agent/code-review.json', codeReviewFile)
@@ -759,6 +768,7 @@ function validateG6() {
       for (const check of acceptanceChecks({ report, doingFeatureIds, expectedProjectId: projectId, currentSha, evidenceExists: (p) => existsSync(join(projectDir, p)), file: rel(acceptanceFile), partial })) {
         add(check.ruleId, check.ok, check.message, acceptanceFile, check.severity, check.category)
       }
+      addFrom(acceptanceConfirmationCheck({ report }), acceptanceFile)
     }
   } else if ((projectManifest?.templateVersion || 0) >= 2) {
     add('DOC-AC-001', false, 'template v2+ 必须存在 agent/acceptance-results.json', acceptanceFile)
@@ -783,6 +793,7 @@ function validateG7() {
     ? Boolean(status?.reason)
     : status?.status === 'completed' && evidencePathsExist(status?.evidence)
   add('VERIFY-G7-003', g7EvidenceOk, 'G7 completion has existing evidence paths, or skipped has a concrete reason', join(projectDir, 'agent/stage-status.json'))
+  addFrom(stageConfirmationCheck({ stage: 'G7', status }), join(projectDir, 'agent/stage-status.json'))
 }
 
 function validateG8() {

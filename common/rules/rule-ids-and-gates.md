@@ -48,7 +48,7 @@ node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs gate PR-01234 G8
 
 ### 2.1 严重度与时点检查
 
-- 检查分 `error`（阻断,`ok=false` 让 gate 退出码非 0）与 `warn`（不阻断,只提示）。可选字段未填、可选章节缺失、无法扫描等用 `warn`,避免「未填可选项」卡交付。当前 `warn` 项:`DOC-G0-004`（PRD 未完全可读章节）、`CODE-MOCK-001`（责任模块目录未填时）、`CODE-MOCK-002`（`rg` 不可用时）、`CODE-MSW-003`（MSW handler 处置记录,不同项目阶段可能先转测试再删除）、`CODE-NAMING-001`（mapper 改名无跨来源/派生结构化理由,渐进 warn-first）、`CODE-MOCK-003`（真实接口后假默认兜底,渐进 warn-first）、`CODE-ARCH-003`（分层反向依赖的 changed-file import 候选,渐进 warn-first + G6 裁决）、`CODE-ASSUMED-001`（责任模块残留 `// ASSUMED:`,「接口是否 ready」靠人判故 warn）、`CODE-SCOPE-001`（改动越出责任模块目录,跨模块重构可能合法故 warn + 重点 check）、`CODE-COPY-001`（apps 下硬编码中文展示文案,存量多故 warn-first,催走 i18n+§7 契约表）、`VERIFY-TYPE-002`（存量 tsc 涟漪,改共享类型可能合法故 warn）、`VERIFY-TEST-002`（逻辑文件缺单测,「值不值得测」靠人判故 warn）。
+- 检查分 `error`（阻断,`ok=false` 让 gate 退出码非 0）与 `warn`（不阻断,只提示）。可选字段未填、可选章节缺失、无法扫描等用 `warn`,避免「未填可选项」卡交付。当前 `warn` 项:`DOC-G0-004`（PRD 未完全可读章节）、`CODE-MOCK-001`（责任模块目录未填时）、`CODE-MOCK-002`（`rg` 不可用时）、`CODE-MSW-003`（MSW handler 处置记录,不同项目阶段可能先转测试再删除）、`CODE-NAMING-001`（mapper 改名无跨来源/派生结构化理由,渐进 warn-first）、`CODE-MOCK-003`（真实接口后假默认兜底,渐进 warn-first）、`CODE-ARCH-003`（分层反向依赖的 changed-file import 候选,渐进 warn-first + G6 裁决）、`CODE-ASSUMED-001`（责任模块残留 `// ASSUMED:`,「接口是否 ready」靠人判故 warn）、`CODE-SCOPE-001`（改动越出责任模块目录,跨模块重构可能合法故 warn + 重点 check）、`CODE-COPY-001`（apps 下硬编码中文展示文案,存量多故 warn-first,催走 i18n+§7 契约表）、`VERIFY-TYPE-002`（存量 tsc 涟漪,改共享类型可能合法故 warn）、`VERIFY-TEST-002`（逻辑文件缺单测,「值不值得测」靠人判故 warn）、`DOC-CONFIRM-001..004`（人工确认签名缺失,warn-first 见 §3.7）。
 - **warn → error 晋级判据（防「永久 warn」）**:渐进 warn-first 的规则不是永远 warn。满足全部即提 error:① 连续 **2 个真实 PR** 命中该规则且**零误报**（误报=规则报了但人工判定不该报,如 §3 提到的 lang-locale 类、流程控制类 if）;② 命中项都能给出明确修法（非「无法处理」）。达标后把脚本里该 finding 的 `'warn'` 改 `'error'`、更新本节列表、在 PR 里记一句「CODE-XXX warn-first 达标,提 error」。**未达标不提**——误报会 error 卡正常交付,比漏报更伤信任。
 - **晋级台账（机器记录，取代手填表）**:判据 ① 靠人脑记不住也无法复核,且手填表长期为空(见 CHANGELOG 2026-08-03)。改为机器台账 `common/warn-ledger.json`,由 `warn-ledger.mjs` 维护:
   - **自动记录**:`docs-tdd gate --write`(G5+)命中可晋级 warn 规则时,自动按 `(ruleId, PR)` 入账(一 PR 一格,verdict 默认 `unreviewed`),无论 gate PASS/BLOCK。
@@ -166,6 +166,7 @@ node apps/web/docs_tdd/common/engine/agent-scripts/verify-build-quality.mjs --pr
 - `agent/code-review.json` 是 G6 review 真值源；模板 v2 起缺文件即阻断，旧项目才允许回退 `06-collaboration.md` 散文判定。`DOC-CR-001/002/003` 分别验证结构（含必填 `head`）、未处理 finding、HEAD 新鲜度。
 - `agent/acceptance-results.json` 把本期 Feature 映射到具体场景、验证方式、结果和 evidence。`DOC-AC-001/002/003/004/005/006` 分别验证结构（含必填 `head`）、Feature 覆盖、无 failed/blocked、PASS 有 evidence、PASS 的 evidence 有真实存在的文件锚点、验收覆盖当前 HEAD。
 - 两者都由 `verify-project-gate.mjs` 直接消费；不能只在 evidence README 写“已 review/已自测”。
+- **人工确认签名**（`DOC-CONFIRM-001..004`，`lib/confirmation.mjs`，均 warn-first）：README 人机分界说 G5-G8 以人工确认为锚点，但此前三份判断层文件里连写签名的字段都没有——机器无法区分「人看过」与「AI 声称人看过」。现在 `stage-status.json`（G5/G7 的人工处置态）、`acceptance-results.json`（`manual`/`manual-visual`/`browser` 的 passed 项）、`code-review.json` 都可写 `confirmedBy` + `confirmedAt`（`YYYY-MM-DD`），缺签名逐条 warn。`reviewer` 不能兼任签收（它记谁做的 review，通常就是 Agent 自己）；**AI 客户端名与 `TBD`/`N/A` 等占位符不算人工确认**（`classifySignature`），只按独立词匹配以免误伤真人名。晋级路径与 `VERIFY-TEST-002` 同型（新模板 error / 旧项目 warn）：签名字段进模板骨架、且有一个真实项目 G5→G7 全签过一遍后转 error，存量项目走 waiver。
 
 
 ## 3.8 Golden run（回归 gate 机器自己）

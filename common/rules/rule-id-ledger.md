@@ -124,6 +124,10 @@
 | `DOC-CR-001` | G6+（`lib/code-review.mjs`） | `agent/code-review.json` 结构合法：字段合规（含必填 `head`）、finding id 唯一、fixed 带 resolution；缺文件不发 check | error |
 | `DOC-CR-002` | G6+（`lib/code-review.mjs`） | code-review 无未处理 finding（open 项须当场修或 waive/标 N/A） | error |
 | `DOC-CR-003` | G6+（`lib/code-review.mjs`） | `code-review.json.head` 覆盖当前 HEAD（head 现为必填，缺 currentSha 不判定），防 review 过时 | warn |
+| `DOC-CONFIRM-001` | G5+（`lib/confirmation.mjs`） | G5 的人工处置态（`completed`/`not-applicable`/`frontend-complete-pending-reconcile`）带 `confirmedBy` + `confirmedAt`；AI 客户端名与占位符不算人工确认 | warn（warn-first，下一轮转 error） |
+| `DOC-CONFIRM-002` | G7+（`lib/confirmation.mjs`） | G7 的人工处置态（`completed`/`skipped`）带 `confirmedBy` + `confirmedAt` | warn（warn-first，下一轮转 error） |
+| `DOC-CONFIRM-003` | G6+（`lib/confirmation.mjs`） | `method ∈ {manual, manual-visual, browser}` 的 `passed` 验收项逐条带 `confirmedBy` + `confirmedAt`（这三种没有机器退出码兜底） | warn（warn-first，下一轮转 error） |
+| `DOC-CONFIRM-004` | G6+（`lib/confirmation.mjs`） | `code-review.json` 带人工签收 `confirmedBy` + `confirmedAt`（`reviewer` 记谁做的 review，通常是 Agent 自己，不能兼任签收） | warn（warn-first，下一轮转 error） |
 | `VERIFY-G8-001` | G8 | `agent/delivery-status.json` 的 project/mode/branch/headSha/evidence 结构合法；模板 v2 起必须存在 | error |
 | `VERIFY-G8-002` | G8 | 交付模式不是 local，而是 pushed/merged/released | error |
 | `VERIFY-G8-003` | G8 | 实际 Git 工作树干净 | error |

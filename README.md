@@ -129,7 +129,7 @@ docs-tdd gate PR-01234 G8      # production build + Git 可交付状态 + 交付
 ```
 `docs-tdd doctor` 随时自检适配/冲突/发布状态；缓存仅复用同输入 PASS，强制实跑加 `--no-cache`。
 
-> **人机分界（自动化边界要如实）**：G0–G4（需求→文档→方案→MSW 编码）高度自动；G5–G8 是**人机协同**——gate 机器实跑 biome/tsc/vitest/build 与结构化验收/字段对账，但**真实接口联调、视觉还原（Figma 并排 ≥95%）、交互手感、响应式、QA 用例执行以人工确认为锚点**（分工见 [common/rules/verification-division-of-labor.md](./common/rules/verification-division-of-labor.md)：Agent 固化能回归的逻辑/边界/数据/DOM 契约，人工过一眼能判的像素/手感/响应式）。判断层的 `acceptance-results.json`/`code-review.json` 由 Agent 产出、gate 校验其结构与证据锚点真实性，但语义正确性仍需人工/Review 兜底（执行强度分级见 [common/rules/rule-execution-model.md §3](./common/rules/rule-execution-model.md)）。
+> **人机分界（自动化边界要如实）**：G0–G4（需求→文档→方案→MSW 编码）高度自动；G5–G8 是**人机协同**——gate 机器实跑 biome/tsc/vitest/build 与结构化验收/字段对账，但**真实接口联调、视觉还原（Figma 并排 ≥95%）、交互手感、响应式、QA 用例执行以人工确认为锚点**（分工见 [common/rules/verification-division-of-labor.md](./common/rules/verification-division-of-labor.md)：Agent 固化能回归的逻辑/边界/数据/DOM 契约，人工过一眼能判的像素/手感/响应式）。判断层的 `acceptance-results.json`/`code-review.json` 由 Agent 产出、gate 校验其结构与证据锚点真实性，但语义正确性仍需人工/Review 兜底（执行强度分级见 [common/rules/rule-execution-model.md §3](./common/rules/rule-execution-model.md)）。人工确认在机器侧有落点：`stage-status.json`（G5/G7 处置态）、人工判定的 passed 验收项与 `code-review.json` 都写 `confirmedBy` + `confirmedAt`，缺签名或用 AI 客户端名代签由 `DOC-CONFIRM-001..004` 逐条点名（见 [rule-ids-and-gates.md §3.7](./common/rules/rule-ids-and-gates.md)）。
 
 **9. 上线后回收**：需求合入配置的 `baseRef` 并验证后，回收一次性 worktree（保留 `prds/PR-01234/` 文档）：
 ```bash

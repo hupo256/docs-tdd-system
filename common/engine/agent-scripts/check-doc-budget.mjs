@@ -69,6 +69,7 @@ const SELF_TEST_SCRIPTS = [
   ['lib/rule-ledger.mjs', '--self-test'],
   ['lib/waiver-policy.mjs', '--self-test'],
   ['lib/warn-retirement.mjs', '--self-test'],
+  ['lib/confirmation.mjs', '--self-test'],
   ['install-local-agent-rules.mjs', '--self-test'],
   ['prd-intake.mjs', '--self-test'],
   ['project-orchestrator.mjs', '--self-test'],

@@ -7,6 +7,13 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-08-23（人工确认终于有地方签名：`DOC-CONFIRM-001..004`）
+
+- **「以人工确认为锚点」此前在机器侧不存在**：README 人机分界写着 G5-G8 的真实联调、视觉还原、交互手感、QA 用例执行以人工确认为锚点，但 `stage-status.schema.json` 的 required 只有 status/reason/evidence/updatedAt 且 `additionalProperties:false`——连写 `confirmedBy` 的地方都没有；`acceptance-results.json` 的 `manual`/`manual-visual`/`browser` 项与 `code-review.json` 同理。结果是 Agent 自己把 G5 写成 `completed`、自己把人工验收项写成 `passed`，gate 只能校验结构与证据路径存在，**无法区分「人看过」和「AI 声称人看过」**。
+- **修法**：三份判断层 schema 各加可选 `confirmedBy` + `confirmedAt`（`YYYY-MM-DD`），判定收进新 `lib/confirmation.mjs`（纯函数 + self-test，23 例）：`DOC-CONFIRM-001`（G5 的 `completed`/`not-applicable`/`frontend-complete-pending-reconcile`）、`DOC-CONFIRM-002`（G7 的 `completed`/`skipped`）、`DOC-CONFIRM-003`（`manual`/`manual-visual`/`browser` 的 passed 项逐条，这三种没有机器退出码兜底）、`DOC-CONFIRM-004`（`code-review.json` 的人工签收——`reviewer` 记的是谁做的 review，通常就是 Agent 自己，不能兼任签收）。`pending`/`blocked` 与非人工判定方式不发 check（还没到人确认那一步）。
+- **AI 不能代签**：`classifySignature` 把 AI 客户端名（codex/claude/cursor/…）与 `TBD`/`N/A`/`unknown` 等占位符判为 `agent`，不算人工确认——这正是本规则要防的主要形态。只按独立词匹配，`aichen`、「cursor 组的 aven」不误伤。
+- **生效边界**：四条全部 **warn**，不阻断任何现有交付。晋级路径与 `VERIFY-TEST-002` 同型（新模板 error / 旧项目 warn）：签名字段进模板骨架、且有一个真实项目 G5→G7 全签过一遍后转 error，存量项目走 waiver。骨架不预写空签名（`minLength:1`，占位符也会被判 `agent`），缺签名由 gate 逐条点名。当前 PR-02306 四条全 warn 且未代签，`docs-tdd check` 通过、golden 30 条变异用例无变化、lark 单测 256/256。
+
 ## 2026-08-23（豁免到期真的失效 + warn 观察期的默认结局是退休 + `docs-tdd rule-health`）
 
 - **失效豁免从 warn 提到 error**：判定收进新 `lib/waiver-policy.mjs`（唯一语义源 + self-test）——缺 `reason`/`owner`/`expiresAt` 之一或 `expiresAt` 非 `YYYY-MM-DD` → `DOC-WAIVER-002` error；已过期 → `DOC-WAIVER-003` error 且原规则照旧阻断；文件非法 JSON/非数组 → `DOC-WAIVER-001` error。为什么是 error：失效豁免本来就套不上（原规则照旧红），这一档追加的是**清理台账**的压力——用 warn 表达时「还没写全」和「已经过期」都指向「不用管」，台账只会越腐化；出口很便宜（续期、补 owner/reason、或删掉）。`DOC-WAIVER-004`（命中 non-waivable 规则）仍是 warn：那类条目多是给 `verify-code-rules` 写的，那边不读 `ruleset.json`，判 error 会误伤。存量 4 个项目的 15 条豁免全部字段齐备且未过期，本次不新增任何红。
