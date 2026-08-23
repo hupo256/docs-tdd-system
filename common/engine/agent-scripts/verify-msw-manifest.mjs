@@ -4,6 +4,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { dirname, isAbsolute, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
+import { axesForLifecycle, unresolvedAssumptions } from './lib/assumption-ledger.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, consumerWorktree } = resolveRoots()
@@ -119,8 +120,9 @@ if (manifest) {
   const ledgerOk = Boolean(assumptions) && assumptions.projectId === projectId && Array.isArray(assumptions.assumptions)
   add('DOC-G3-IMPL-005', ledgerOk, ledgerOk ? 'assumption ledger is readable' : `assumption ledger is missing or invalid: ${assumptionsError || 'shape mismatch'}`, assumptionsFile)
   if (ledgerOk) {
-    const blockingStatuses = retired ? ['api-ready', 'reconciling', 'release'] : manifest.lifecycle === 'api-ready' || manifest.lifecycle === 'reconciling' ? ['api-ready', 'reconciling'] : []
-    const unresolved = assumptions.assumptions.filter((item) => item.status === 'open' && blockingStatuses.includes(item.blockingWhen))
+    // lifecycle 轴的销账判定；gate 轴（DOC-ASSUM-001/002）在 verify-project-gate 里同源判定。
+    const axes = axesForLifecycle(manifest.lifecycle)
+    const unresolved = unresolvedAssumptions({ ledger: assumptions, axes })
     add('DOC-G3-IMPL-006', unresolved.length === 0, `no blocking assumptions remain for lifecycle=${manifest.lifecycle}${unresolved.length ? `: ${unresolved.map((item) => item.id).join(', ')}` : ''}`, assumptionsFile)
   }
 }

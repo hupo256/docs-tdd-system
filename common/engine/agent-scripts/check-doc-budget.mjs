@@ -13,6 +13,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { charCount, parseFrontmatter, validateSchema } from './lib/doc-budget-schema.mjs'
+import { undeclaredErrorRules } from './lib/rule-ledger.mjs'
 
 const COMMON_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const DOCS_TDD_DIR = join(COMMON_DIR, '..')
@@ -47,6 +48,7 @@ const SELF_TEST_SCRIPTS = [
   ['lib/agent-clients.mjs', '--self-test'],
   ['lib/agent-rule-adapters.mjs', '--self-test'],
   ['lib/acceptance-results.mjs', '--self-test'],
+  ['lib/assumption-ledger.mjs', '--self-test'],
   ['lib/blockers.mjs', '--self-test'],
   ['lib/changed-detection.mjs', '--self-test'],
   ['lib/code-review.mjs', '--self-test'],
@@ -63,6 +65,7 @@ const SELF_TEST_SCRIPTS = [
   ['lib/project-scaffold.mjs', '--self-test'],
   ['lib/rule-session.mjs', '--self-test'],
   ['lib/rule-chain-runtime.mjs', '--self-test'],
+  ['lib/rule-ledger.mjs', '--self-test'],
   ['install-local-agent-rules.mjs', '--self-test'],
   ['prd-intake.mjs', '--self-test'],
   ['project-orchestrator.mjs', '--self-test'],
@@ -442,7 +445,9 @@ if (!existsSync(ledgerPath)) {
   errors.push(`❌ 缺少 ${LEDGER_EXTENSION_FILE}（rule ID 台账拆分文件）。`)
 } else {
   const ledgerText = `${readFileSync(ledgerPath, 'utf8')}\n${readFileSync(ledgerExtensionPath, 'utf8')}`
-  const idRe = /'((?:CODE|DOC|GIT|VERIFY)-[A-Z0-9]+-\d+)'/g
+  // 中段可含多节（DOC-G3-IMPL-006、DOC-ASSUM-001）：此前 `[A-Z0-9]+-\d+` 只认单节，
+  // DOC-G3-IMPL-* 整族逃过登记校验。
+  const idRe = /'((?:CODE|DOC|GIT|VERIFY)-[A-Z0-9]+(?:-[A-Z]+)*-\d+)'/g
   const scriptIds = new Set()
   // 顶层脚本 + lib/ 子模块都要扫：阻塞语义等纯规则实装在 lib/blockers.mjs，rule ID 台账不能漏掉它。
   const idSourceFiles = [
@@ -466,6 +471,28 @@ if (!existsSync(ledgerPath)) {
     )
   } else {
     console.log(`✅ rule ID 台账：${scriptIds.size} 个脚本 ID 全部登记于 ${LEDGER_FILE} + ${LEDGER_EXTENSION_FILE}。`)
+  }
+
+  // 校验 5b（反方向）：台账里每个 error 级 rule ID 必须在 ruleset.json 声明 blocking + waivable。
+  // 判定源与动机见 lib/rule-ledger.mjs。
+  const rulesetRules = (() => {
+    try {
+      return JSON.parse(readFileSync(join(RULES_DIR, 'ruleset.json'), 'utf8'))?.rules ?? null
+    } catch {
+      return null
+    }
+  })()
+  if (!rulesetRules) {
+    errors.push('❌ 无法解析 common/rules/ruleset.json，规则档位与豁免语义无法校验。')
+  } else {
+    const undeclared = undeclaredErrorRules({ ledgerText: readFileSync(ledgerExtensionPath, 'utf8'), rulesetRules })
+    if (undeclared.length) {
+      errors.push(
+        `❌ 以下 error 级 rule ID 在 ${LEDGER_EXTENSION_FILE} 有台账行但 ruleset.json 未声明 blocking/waivable：\n   ${undeclared.join('\n   ')}\n   未声明的规则不接受豁免、也不参与档位定档（语义未定义）；请补 { maturity, blocking, waivable }。`,
+      )
+    } else {
+      console.log(`✅ ruleset 声明完整：${LEDGER_EXTENSION_FILE} 的 error 级 ID 均已声明 blocking + waivable。`)
+    }
   }
 }
 

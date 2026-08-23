@@ -7,6 +7,16 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-08-23（假设台账真阻断 + 豁免默认拒绝 + lark 写接口强制鉴权）
+
+- **根因（假设销账三重削弱）**：`DOC-G3-IMPL-006`（无阻断假设）早已实装，但对任何项目都不阻断，因为三条削弱叠加：① `ruleset.json` 里 `blocking:false` 被无条件降 warn；② 阻断轴取自 MSW lifecycle 而非 gate——`mock-active` 项目的 open 假设连 warn 都不产生（PR-02074 7 条 open 全静默），`blockingWhen:'release'` 在 G8 完全没有钩子；③ `gatePolicy.currentTouchedRules:"report-only"` 把全部已登记规则无条件降 warn。三条必须一起改，单改任一条都不生效。
+- **修复**：新增 `lib/assumption-ledger.mjs`（阻断轴的单一语义源 + self-test，`verify-msw-manifest` 改调同一 lib 消除两处真值）；`verify-project-gate` 的 G5/G6/G7 按 `api-ready|reconciling` 轴、G8 追加 `release` 轴阻断，规则号 `DOC-ASSUM-001`（G5-G7）/ `DOC-ASSUM-002`（G8）；`DOC-G3-IMPL-006` 晋级 `blocking:true`（trial）。销账 = 改 `status` + 写 `resolution`；确需带风险交付走 `rule-waivers.json` 具名带期限豁免，**不得把 status 谎报成 confirmed**。`blockingWhen:'prd-clarify'` 仍永不阻断（沿用既有设计，走 blockers.json）。
+- **豁免默认拒绝**：此前 `ruleset.json` 只声明 25 条规则，而判据是 `rule?.waivable === false`——**未登记的规则一律落进可豁免分支**（`DOC-G2-*`/`DOC-SYNC-*`/`VERIFY-G8-*` 都能被豁免掉）。现补齐到 106 条声明（30 条 `waivable:false`），判据改 `waivable !== true`（未登记 = 不可豁免），并加 `check-doc-budget` 校验 5b（`lib/rule-ledger.mjs`）反向锁死：台账里每个 error 级 ID 必须在 ruleset 声明 `blocking`+`waivable`。同时修掉校验 5 的正则漏网（多段 ID 如 `DOC-G3-IMPL-006` 此前从未被登记校验，现 140 个脚本 ID 全覆盖）。豁免只对「失败且仍是 error」的检查生效，不再对永久 warn 规则刷 `DOC-WAIVER-004` 噪音。
+- **report-only 语义收紧 + 补文档定义**：`waivable:false` 或 `reportOnlyExempt:true` 的规则免疫项目级 report-only 降级（`DOC-ASSUM-001/002` 属后者：需保留具名豁免出口，故不能靠 `waivable:false` 取得免疫）。`legacyRules` 的定向降级必须排在 ruleset 定档之后（否则 `DOC-G3-001..007` 登记 blocking 后会被推回 error，影响 PR-02172）。`rule-ids-and-gates.md` 新增 §4.1 定义两个开关的分工——report-only 回答「这批规则本项目还没接」，豁免回答「这一条我知道且我担责」。
+- **lark 写接口鉴权由「可选」改硬前置**：此前 401 分支带 `gatewaySecret &&` 短路且本机未配密钥 → 本机任一进程可 POST 触发改代码 / commit / prune / reopen。现 gateway 缺 `LARK_GATEWAY_SECRET` 直接 `exit(1)`（同 `isWhitelisted` 的 fail-closed 立场），`GET /lark/tasks`（返回工单正文/附件路径/内部分支名）一并鉴权，只有 `/lark/health` 可匿名探活；密钥落 `~/.config/fameex-lark/gateway-secret`（0600，**不写 plist**）。`runtime/*.json` 写入带 `mode 0o600`，启动时对历史 0644 统一 chmod 并告警。
+- **`@所有人` 不再直接入队**：降级到与 `@负责人` 同档的只读意图分类（群里喊一句全体通知不等于授权改代码）；未配 `botOpenId` 的旧兼容分支同样收紧。
+- **刻意不做**：运维型端点（retry/prune/reopen）的用户级 ACL。核查后 retry/prune 只能从 `~/.local/bin/lark-bot` 发起、reopen 只能从 poller 发起，强制密钥之后再加 openId ACL 不增加边界，反而会挡住本机 `allowedOpenIds:[]` 下的 QA 验退。
+
 ## 2026-08-11（lark-bot 运维手册归位 lark-bot 子树 + 主题拆分 + 脱离规则指纹）
 
 - **根因**：`common/rules/lark-bot-gateway.md` 本质是 bot 服务运维手册（网关 HTTP 契约 / worker / bug 表 / 长连接 / 调度），却被误分类进 rules 层——既是唯一超 doc-budget 告警线（17449 字符，靠 `DOC_BUDGET_OVERRIDES` 压着）的文件，又被卷进规则指纹链（改一行运维文档就触发 golden-run 重发布）。

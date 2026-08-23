@@ -79,8 +79,8 @@
       "waivable": true
     },
     "DOC-G3-IMPL-006": {
-      "maturity": "experimental",
-      "blocking": false,
+      "maturity": "trial",
+      "blocking": true,
       "waivable": false
     },
     "VERIFY-BIOME-001": {
@@ -127,6 +127,413 @@
       "maturity": "experimental",
       "blocking": false,
       "waivable": true
+    },
+    "DOC-ASSUM-001": {
+      "maturity": "trial",
+      "blocking": true,
+      "waivable": true,
+      "reportOnlyExempt": true
+    },
+    "DOC-ASSUM-002": {
+      "maturity": "trial",
+      "blocking": true,
+      "waivable": true,
+      "reportOnlyExempt": true
+    },
+    "DOC-STRUCT-001": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-STRUCT-002": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-STRUCT-003": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-STRUCT-004": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-STRUCT-005": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-STRUCT-006": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-STRUCT-007": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-STRUCT-008": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-STRUCT-009": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-STRUCT-010": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-STRUCT-011": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-STRUCT-012": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-G0-001": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-G0-002": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-G0-003": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-G1-001": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-G1-002": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-G1-003": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-G1-004": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-G2-001": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": false
+    },
+    "DOC-G2-002": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": false
+    },
+    "DOC-G2-003": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": false
+    },
+    "DOC-G2-004": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": false
+    },
+    "DOC-G2-005": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": false
+    },
+    "DOC-G3-001": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-G3-002": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-G3-003": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-G3-004": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-G3-005": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-G3-006": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-G3-007": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-G4-001": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-G4-002": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-G4-003": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-G4-004": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-G4-005": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-G4-006": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-G4-007": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-G4-008": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-G4-009": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-G5-001": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-G5-002": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-G5-003": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-G5-004": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "CODE-MSW-001": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "CODE-MSW-002": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "CODE-MSW-004": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "VERIFY-G5-001": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "VERIFY-G5-002": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "VERIFY-G5-003": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "VERIFY-G6-001": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "VERIFY-G6-002": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "VERIFY-G6-003": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-AC-001": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-AC-002": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-AC-003": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-AC-004": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-AC-005": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "VERIFY-STAGE-001": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "VERIFY-STAGE-002": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "VERIFY-G7-001": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "VERIFY-G7-002": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "VERIFY-G7-003": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "VERIFY-STAGE-003": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "VERIFY-PROD-BUILD-001": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "VERIFY-RULE-001": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": false
+    },
+    "VERIFY-RULE-002": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": false
+    },
+    "VERIFY-RULE-003": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": false
+    },
+    "VERIFY-RULE-004": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-SYNC-001": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": false
+    },
+    "DOC-SYNC-002": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": false
+    },
+    "DOC-SYNC-003": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": false
+    },
+    "DOC-SYNC-004": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": false
+    },
+    "DOC-CR-001": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "DOC-CR-002": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": true
+    },
+    "VERIFY-G8-001": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": false
+    },
+    "VERIFY-G8-002": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": false
+    },
+    "VERIFY-G8-003": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": false
+    },
+    "VERIFY-G8-004": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": false
     }
   }
 }

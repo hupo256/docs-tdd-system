@@ -54,7 +54,7 @@
 | `DOC-G3-IMPL-003` | G3+ | handler export 已注册且 Provider 挂载 worker hook | warn（experimental） |
 | `DOC-G3-IMPL-004` | G3+ | endpoint 场景结构有效，N/A 有理由，retired 有对账证据 | warn（experimental） |
 | `DOC-G3-IMPL-005` | G3+ | `agent/assumptions.json` 可解析 | warn（experimental） |
-| `DOC-G3-IMPL-006` | G3+ | API ready/reconciling/retired 时无阻断假设 | warn（experimental） |
+| `DOC-G3-IMPL-006` | G3+ | API ready/reconciling/retired 时无阻断假设（lifecycle 轴） | error |
 | `DOC-G4-001` | G4+ | 复用盘点无 `待检查/待确认` 占位 | error |
 | `DOC-G4-002` | G4+ | 技术方案含复用盘点 | error |
 | `DOC-G4-003` | G4+ | 技术方案不含 `跳过复用` | error |
@@ -112,6 +112,8 @@
 | `DOC-BLOCK-001` | G0+（`lib/blockers.mjs`） | `agent/blockers.json` 结构合法：字段合规、id 唯一、resolved 带 resolution+resolvedAt；缺文件不发 check | error（不可豁免） |
 | `DOC-BLOCK-002` | G0+（`lib/blockers.mjs`） | 无 `open` 且 `blocksGate ≤ 当前 gate` 的阻塞/变更未解除 | error（可豁免） |
 | `DOC-BLOCK-003` | G0+（`lib/blockers.mjs`） | 其余 `open` 登记（尚不卡当前 gate）可见性提示 | warn |
+| `DOC-ASSUM-001` | G5-G7（`lib/assumption-ledger.mjs`） | 到 G5 出口仍有 `blockingWhen ∈ {api-ready, reconciling}` 的 `open` 假设未销账（gate 轴） | error（可豁免，免疫 report-only） |
+| `DOC-ASSUM-002` | G8（`lib/assumption-ledger.mjs`） | 交付前仍有 `blockingWhen ∈ {api-ready, reconciling, release}` 的 `open` 假设未销账（gate 轴） | error（可豁免，免疫 report-only） |
 | `DOC-SYNC-001` | —（`check-doc-budget.mjs`） | 已通过 gate 项目的 README 机器行与 `gate-results.json.gate` 一致 | error |
 | `DOC-SYNC-002` | —（`check-doc-budget.mjs`） | 机器版 `context-summary.md` 的当前阶段与 `gate-results.json.gate` 一致 | error |
 | `DOC-SYNC-003` | —（`check-doc-budget.mjs`） | `PROJECTS.md` 与即时重生成结果一致 | error |

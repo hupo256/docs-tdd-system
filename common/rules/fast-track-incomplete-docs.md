@@ -50,7 +50,7 @@
 
 ## 3. 证据：两条「待补」登记线 + 停靠态
 
-1. **API 字段线**：`agent/assumptions.json` + 代码 `// ASSUMED:` + `03-api-contract.md` 状态列；缺失/未就绪 API 在 `blockers.json` 开条目 **`blocksGate: G5`**——真实联调本身完不成，它不挡 G3/G4，精准挡 G5 正式 PASS。
+1. **API 字段线**：`agent/assumptions.json` + 代码 `// ASSUMED:` + `03-api-contract.md` 状态列；缺失/未就绪 API 在 `blockers.json` 开条目 **`blocksGate: G5`**——真实联调本身完不成，它不挡 G3/G4，精准挡 G5 正式 PASS。台账本身也有出口条件：`api-ready/reconciling` 轴的 `open` 假设挡 G5（`DOC-ASSUM-001`）、`release` 轴挡 G8（`DOC-ASSUM-002`），快速通道不豁免这一条（要带风险交付走 `rule-waivers.json` 具名限期豁免）。
 2. **视觉线**：Figma 降级占位 + `06-collaboration.md` + `blockers.json` 条目 **`blocksGate: G6`**（视觉验收在 G6）。允许低保真交付、无需精修时登记为 `type: change` 不填 `blocksGate`（仅可见性提示）。
 3. **G5 停靠**：`agent/stage-status.json` 记 `frontend-complete-pending-reconcile` + 前端 evidence 路径 + 待对账原因，满足 `VERIFY-G5-004`。
 

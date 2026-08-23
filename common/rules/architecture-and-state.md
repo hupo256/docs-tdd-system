@@ -211,7 +211,7 @@ const optionalText = (v?: string) =>
 ### 8.4.1 新功能 MSW 执行契约
 
 1. handler 放 `src/mocks/handlers/<feature>.ts`，按 endpoint 注册；业务代码禁止出现 mock flag、mock 分支或 mock DTO 工厂。
-2. handler response 必须由真实 schema 契约测试验证；没有 API 文档时，假设同时进入 `agent/assumptions.json`，代码以 `// ASSUMED: ASM-xxx` 关联。
+2. handler response 必须由真实 schema 契约测试验证；没有 API 文档时，假设同时进入 `agent/assumptions.json`，代码以 `// ASSUMED: ASM-xxx` 关联。**出口条件**：`blockingWhen: api-ready/reconciling` 的 `open` 假设挡 G5（`DOC-ASSUM-001`），`release` 轴再叠加挡 G8（`DOC-ASSUM-002`）；销账=改 `status` 并写 `resolution`，确需带风险交付走 `rule-waivers.json` 具名限期豁免，不得把 `status` 谎报成 `confirmed`。`prd-clarify` 轴不挡 gate，要挡请用 `blockers.json` 的 `blocksGate`。
 3. worker 仅在 dev 启动，未声明请求用 `onUnhandledRequest: 'bypass'` 打真实接口；若存在 production Service Worker，需验证注册/清理逻辑互不干扰。
 4. 项目 `agent/msw-manifest.json` 是 endpoint、场景、资产和生命周期状态的机器真值；场景按 endpoint 类型裁剪，不适用项写理由。
 5. 不采用 MSW 必须在 `agent/rule-waivers.json` 登记 owner、原因、替代隔离方案和失效时间。

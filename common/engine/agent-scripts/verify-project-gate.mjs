@@ -5,6 +5,7 @@ import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
 import { blockerChecks } from './lib/blockers.mjs'
+import { assumptionChecks } from './lib/assumption-ledger.mjs'
 import { codeReviewChecks } from './lib/code-review.mjs'
 import { acceptanceChecks } from './lib/acceptance-results.mjs'
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
@@ -418,12 +419,19 @@ function applyWaivers() {
     }
     for (const check of checks) {
       if (check.ruleId !== waiver.ruleId) continue
+      // 只有「失败且仍是 error」的检查才需要豁免：warn 级（永久 warn 规则、report-only 降级）
+      // 本就不阻断，对它们发 DOC-WAIVER-004 只是噪音（CODE-MOCK-002/CODE-MSW-003 的豁免其实是给
+      // verify-code-rules 用的，那边不读 ruleset）。
+      if (check.ok || check.severity !== 'error') continue
       const rule = ruleset?.rules?.[check.ruleId]
-      if (rule?.waivable === false) {
+      // 默认不可豁免：只有 ruleset.json 显式声明 waivable:true 的规则才接受豁免。
+      // 此前判的是 `waivable === false`，未登记规则一律落进可豁免分支（DOC-G2-*/DOC-SYNC-* 都能被豁免掉）；
+      // check-doc-budget 校验 5b 保证台账里的 error 级 ID 必须有 waivable 声明，故此处不会误伤已登记规则。
+      if (rule?.waivable !== true) {
         add('DOC-WAIVER-004', false, `waiver for ${check.ruleId} is ignored because the rule is non-waivable`, waiverFile, 'warn')
         continue
       }
-      if (!check.ok && check.severity === 'error' && (!waiver.file || waiver.file === check.file)) {
+      if (!waiver.file || waiver.file === check.file) {
         check.severity = 'waived'
         check.message += ` [waived: ${waiver.reason || 'no reason'} · owner=${waiver.owner || '?'} · until ${waiver.expiresAt}]`
       }
@@ -819,21 +827,39 @@ validators[gate]()
   }
 }
 
+// 假设台账销账（gate 轴）：G5-G7 卡 api-ready/reconciling，G8 additionally 卡 release。
+// 与 DOC-G3-IMPL-006 的 lifecycle 轴同源不同名分，语义源在 lib/assumption-ledger.mjs。
+// 同样放在 applyWaivers 之前，让「接受风险交付」走具名带期限豁免而非静默通过。
+{
+  const ledgerFile = join(projectDir, 'agent/assumptions.json')
+  const ledger = existsSync(ledgerFile) ? readJson(ledgerFile) : null
+  for (const check of assumptionChecks({ ledger, gate, file: rel(ledgerFile) })) {
+    add(check.ruleId, check.ok, check.message, ledgerFile, check.severity, check.category)
+  }
+}
+
 // Local pilots keep their creation-time contract. Newly introduced checks are report-only
 // until a project explicitly opts into blocking current rules.
 const projectManifest = readJson(join(projectDir, 'agent/project-manifest.json'))
 const ruleset = readJson(join(docsRoot, 'common/rules/ruleset.json'))
-if (projectManifest?.gatePolicy?.legacyRules === 'report-only') {
-  for (const check of checks) {
-    if (!check.ok && /^DOC-G3-00[1-7]$/.test(check.ruleId)) check.severity = 'warn'
-  }
-}
 
 for (const check of checks) {
   const rule = ruleset?.rules?.[check.ruleId]
   if (!check.ok && rule) {
     const projectReportOnly = projectManifest?.gatePolicy?.currentTouchedRules === 'report-only'
-    check.severity = !rule.blocking || projectReportOnly ? 'warn' : 'error'
+    // report-only 是「存量债 / 新引入的横向规则不阻断本次」的接入期开关，不是万能后门：
+    // 不可豁免规则（waivable:false）与项目自有台账类规则（reportOnlyExempt）免疫，
+    // 否则一个无 owner、无期限、无规则粒度的项目级开关就能盖掉 DOC-WAIVER-004 的四重防护。
+    const immune = rule.waivable === false || rule.reportOnlyExempt === true
+    check.severity = !rule.blocking || (projectReportOnly && !immune) ? 'warn' : 'error'
+  }
+}
+
+// legacyRules 的定向降级必须排在 ruleset 定档之后：DOC-G3-001..007 已登记 blocking:true，
+// 若先降级会被上面的循环推回 error。
+if (projectManifest?.gatePolicy?.legacyRules === 'report-only') {
+  for (const check of checks) {
+    if (!check.ok && /^DOC-G3-00[1-7]$/.test(check.ruleId)) check.severity = 'warn'
   }
 }
 
