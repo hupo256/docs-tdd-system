@@ -110,8 +110,14 @@ if (command === 'guard') {
   process.exit(worst)
 }
 
+// rule-health 也不针对具体项目：它盘的是规则本身（命中分布 / warn 台账年龄 / 待退休 / 零命中），
+// 是 rule-execution-model.md §6 那条「定期规则体检」的机器入口，故同样在项目 ID 校验之前分流。
+if (command === 'rule-health') {
+  process.exit(run([join(scriptDir, 'warn-ledger.mjs'), '--health', ...cliArgs.slice(1)]))
+}
+
 if (!new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(projectId || '')) {
-  console.error('usage: docs-tdd.mjs <kickoff|status|resume|next|capability|doctor|release|golden|guard|check|gate|context|changed|recommend> PR-01234 [G0-G8|scenario] [--compact|--full|--no-cache] [--client codex|claude|cursor|manual]')
+  console.error('usage: docs-tdd.mjs <kickoff|status|resume|next|capability|doctor|release|golden|guard|rule-health|check|gate|context|changed|recommend> PR-01234 [G0-G8|scenario] [--compact|--full|--no-cache] [--client codex|claude|cursor|manual]')
   process.exit(1)
 }
 

@@ -7,6 +7,14 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-08-23（豁免到期真的失效 + warn 观察期的默认结局是退休 + `docs-tdd rule-health`）
+
+- **失效豁免从 warn 提到 error**：判定收进新 `lib/waiver-policy.mjs`（唯一语义源 + self-test）——缺 `reason`/`owner`/`expiresAt` 之一或 `expiresAt` 非 `YYYY-MM-DD` → `DOC-WAIVER-002` error；已过期 → `DOC-WAIVER-003` error 且原规则照旧阻断；文件非法 JSON/非数组 → `DOC-WAIVER-001` error。为什么是 error：失效豁免本来就套不上（原规则照旧红），这一档追加的是**清理台账**的压力——用 warn 表达时「还没写全」和「已经过期」都指向「不用管」，台账只会越腐化；出口很便宜（续期、补 owner/reason、或删掉）。`DOC-WAIVER-004`（命中 non-waivable 规则）仍是 warn：那类条目多是给 `verify-code-rules` 写的，那边不读 `ruleset.json`，判 error 会误伤。存量 4 个项目的 15 条豁免全部字段齐备且未过期，本次不新增任何红。
+- **warn 观察期有了默认结局：退休，而不是永久 warn**。晋级判据要求人工裁决，而裁决可以永远不发生——台账 12 个格子曾全是 `unreviewed`，`eligible = TP>=2 && FP===0` 因此永远算不出来，规则实际停在「天天刷 WARN、没人负责、也永不晋级」。新 `lib/warn-retirement.mjs` 给它一个终点：某规则首次命中起满 **90 天且一次裁决都没有** → 自动降 `note`（`verify-code-rules` 不再报 WARN、也不再累计入台账）并列入待退休。**沉默 = 撤下**；想留下它只需裁决一次（`warn-ledger.mjs --mark <RULE> <PR> true-positive --write`）。当前 4 条在账规则首次命中都是 2026-08-03，到期日 2026-11-01，故本次零行为变化——机制先立，钟表开始走。
+- **Top-N 高频 warn 打进 G8 交付摘要 §5**：台账文件没人主动打开，交付摘要那一页是每次 G8 必读的，所以「谁最吵 / 谁待退休 / 谁够格提 error」直接渲染在那里（`lib/delivery-summary.mjs` 调 `renderWarnLedgerSection`）。
+- **`docs-tdd rule-health`（新命令）**：`rule-execution-model.md §6` 那条「每月/每 5 个项目做一次规则体检」此前零工具零记录，131 个规则 ID 从未退休过一个。现在一条命令给出①warn 台账逐条（累计命中/PR 数/首末命中/裁决分布/结局与到期日）②门禁命中分布（各项目 `gate-results.json` 的**最近一次**运行，快照非终身累计，口径写在输出里）③零命中清单（当前 145 条声明 ID 里 115 条没咬到任何东西）。报告只摆事实不代人拍板：零命中既可能是预防型规则场景没发生（正常），也可能是判定形同摆设（该删）。
+- **生效边界**：新增 3 个门禁 golden 用例/自测（`waiver-policy`、`warn-retirement`、`unowned-waiver-is-error`），不放宽任何既有 gate；`docs-tdd check` 通过、golden 32 项通过、lark 单测 256/256。
+
 ## 2026-08-23（G5 停靠态有真实出口 G6-partial + 快速通道分两个终点 + 自报阶段下移打标）
 
 - **G5 停靠态终于有出口**：`frontend-complete-pending-reconcile` 此前只是个「更准的 blocked」——前端做完、静态与实现质量本可判定，却因为不放行 G6 而整段悬空，停靠期的真实工作量在索引里等于零证据。新增 `run-project-gate <PR> G6 --partial`：biome/tsc/vitest/code-review/静态规则**照跑照判**，只有依赖真实字段的 `contract`/`browser` 验收项记 pending-reconcile（`DOC-AC-007` 逐条点名欠账、`VERIFY-G6-005` 标本次为部分验收）。语义收在新 `lib/gate-partial.mjs`（单一真值源 + self-test），`verify-project-gate` / `run-project-gate` 只做接线。

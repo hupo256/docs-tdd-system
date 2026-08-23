@@ -15,6 +15,8 @@ import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { openBlockers } from './lib/blockers.mjs'
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
+import { ledgerHealthRows } from './lib/warn-retirement.mjs'
+import { loadLedger } from './warn-ledger.mjs'
 import {
   activeWaivers,
   groupByModule,
@@ -60,7 +62,7 @@ Sections produced:
   2 验证     per-gate PASS timestamps from gate-history.json + command exit codes from gate-results.json
   3 功能清单 做 / 不做 / 延期 counts parsed from product/00-feature-inventory.md
   4 待确认   machine leads: unexpired waivers, ASSUMED placeholders, open collaboration items
-  5 残留风险 machine leads: warn-level gate findings, mock residue hits
+  5 残留风险 machine leads: warn-level gate findings, warn-ledger Top-N + retirement list, mock residue hits
 
 Options:
   --help       Show this help message and exit
@@ -188,6 +190,8 @@ const facts = {
   openChanges: openReg.changes,
   openItems: openCollaborationItems(collaborationText),
   warn: buckets.warn,
+  // warn 台账进交付摘要：台账文件没人主动打开，G8 这一页是必读的（rule-ids-and-gates.md §2.1 退休机制）。
+  warnLedger: ledgerHealthRows(loadLedger(), new Date().toISOString().slice(0, 10)),
   mockResidue: MOCK_RESIDUE_PATTERNS.map((pattern) => grepCount(pattern, assumedTargets)),
 }
 

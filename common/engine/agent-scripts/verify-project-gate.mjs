@@ -10,6 +10,7 @@ import { codeReviewChecks } from './lib/code-review.mjs'
 import { acceptanceChecks } from './lib/acceptance-results.mjs'
 import { allowedG5Statuses, g5DispositionEvidenceOk, partialPrerequisiteCheck, partialRunNoteCheck, resolvePartialRun, splitPendingReconcile } from './lib/gate-partial.mjs'
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
+import { classifyWaiver } from './lib/waiver-policy.mjs'
 
 const scriptPath = fileURLToPath(import.meta.url)
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, config } = resolveRoots()
@@ -400,8 +401,8 @@ function runGit(gitArgs, cwd = repoRoot) {
 }
 
 // 豁免：读 <projectDir>/agent/rule-waivers.json（见 rule-ids-and-gates.md §4）。
-// 命中的 error 失败项降级为 waived（可见、不阻断）；过期 / 无 expiresAt / 文件非法一律不生效，
-// 并以 warn 暴露，避免"永久绕过"和"静默豁免"。
+// 命中的 error 失败项降级为 waived（可见、不阻断）；过期 / 缺 owner·reason·expiresAt / 文件非法
+// 一律不生效，且这三种「台账已失效」本身判 error（生命周期语义见 lib/waiver-policy.mjs）。
 function applyWaivers() {
   const waiverFile = join(projectDir, 'agent/rule-waivers.json')
   if (!existsSync(waiverFile)) return
@@ -409,22 +410,19 @@ function applyWaivers() {
   try {
     waivers = JSON.parse(read(waiverFile))
   } catch (error) {
-    add('DOC-WAIVER-001', false, `rule-waivers.json is not valid JSON: ${error.message}`, waiverFile, 'warn')
+    add('DOC-WAIVER-001', false, `rule-waivers.json is not valid JSON: ${error.message}`, waiverFile, 'error')
     return
   }
   if (!Array.isArray(waivers)) {
-    add('DOC-WAIVER-001', false, 'rule-waivers.json must be a JSON array of waiver objects', waiverFile, 'warn')
+    add('DOC-WAIVER-001', false, 'rule-waivers.json must be a JSON array of waiver objects', waiverFile, 'error')
     return
   }
   const today = new Date().toISOString().slice(0, 10)
   for (const waiver of waivers) {
     if (!waiver || !waiver.ruleId) continue
-    if (!waiver.expiresAt) {
-      add('DOC-WAIVER-002', false, `waiver for ${waiver.ruleId} has no expiresAt; ignored (waivers must expire)`, waiverFile, 'warn')
-      continue
-    }
-    if (waiver.expiresAt < today) {
-      add('DOC-WAIVER-003', false, `waiver for ${waiver.ruleId} expired ${waiver.expiresAt}; still enforced`, waiverFile, 'warn')
+    const verdict = classifyWaiver(waiver, today)
+    if (verdict.state !== 'active') {
+      add(verdict.ruleId, false, verdict.message, waiverFile, 'error')
       continue
     }
     for (const check of checks) {

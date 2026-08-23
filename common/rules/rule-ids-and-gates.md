@@ -56,6 +56,12 @@ node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs gate PR-01234 G8
   - **晋级候选**:`node warn-ledger.mjs --report` 计算——某规则满 **≥2 个 true-positive PR 且零 false-positive** 即列为 `ELIGIBLE`;任一 false-positive 使其失格(对应「误报归零重计」)。达标后人工把脚本里该 finding 的 `'warn'` 改 `'error'` 并在此更新。
   - **范围**:仅登记计划晋级的 warn-first 规则(`warn-ledger.mjs` 的 `PROMOTABLE` 集:`CODE-NAMING-001`/`CODE-MOCK-003`/`CODE-ARCH-002`/`CODE-ARCH-003`/`CODE-STYLE-003`/`CODE-QUERY-001`/`CODE-QUERY-002`/`CODE-MOCK-006`/`CODE-COPY-001`);`CODE-MOCK-001/002`、`CODE-MSW-003`、`CODE-ASSUMED-001`、`CODE-SCOPE-001` 等「按阶段/场景合法」的永久 warn 不进台账。
   - `warn-ledger.json` 是可变执行状态,不参与规则内容指纹(已在 `rule-release` 排除),同 `gate-results.json` 一类。
+- **90 天退休:观察期的默认结局是退休,不是永久 warn**。晋级判据要求人工裁决,而裁决可以永远不发生——台账 12 个格子曾全是 `unreviewed`,`eligible` 于是永远算不出来,规则实际停在「天天刷 warn、没人负责、也永不晋级」。现在给观察期一个**默认结局**(判定源 `lib/warn-retirement.mjs`):某规则**首次命中起满 90 天、一次裁决都没有**(TP=FP=0)→ 自动降为 `note`,即 `verify-code-rules` 不再报 WARN、也不再累计入台账,并列入**待退休**。
+  - **沉默 = 撤下**,不再等于「继续保留」。想留下它出口很便宜:`warn-ledger.mjs --mark <RULE> <PR-xxxxx> true-positive --write` 裁决一次即回观察期(只要有过一次裁决就不算「无人认」)。确认没人认的,直接把该 finding 从脚本里删掉。
+  - **可见性**:待退休与 Top-N 高频 warn 会写进 **G8 交付摘要 §5**(`lib/delivery-summary.mjs` 调 `renderWarnLedgerSection`)——台账文件没人主动打开,G8 那一页是每次交付必读的。
+- **规则体检入口 `docs-tdd rule-health`**([rule-execution-model.md](./rule-execution-model.md) §6 那条「定期复盘」的机器实现,取代靠记性):
+  - ① warn 台账逐条:累计命中 / 涉及 PR 数 / 首末命中时间 / 裁决分布 / 结局(可提 error、裁决中、观察期含到期日、待退休);② 门禁命中分布(各项目 `gate-results.json` 的**最近一次**运行,是快照非终身累计,口径已在输出里注明);③ **零命中清单**(已声明 ID 减去上面两处出现过的)。
+  - 零命中有两种、机器分不了:预防型规则场景没发生(正常),或判定从来没咬到东西(形同摆设)。只有判为后者的才该删——报告只负责把它摆到眼前,不代人拍板。
 - **直接 error 不走 warn-first 的例外**:数据正确性 bug 根因类规则一步到位判 error,不给缓冲期。`CODE-TYPE-002`（`schema.parse(x) as T` 字段静默消失,§3）即属此类——它不是风格偏好,命中即真 bug,正则精确（负向前瞻放行 `as const`)无误报空间。
 - `GIT-G4-001`（分支身份）、`GIT-G4-002`（基线基于 `origin/online`）是**时点检查**:只描述 G4 正在编码那一刻的状态,只有**显式请求 `G4`** 时才执行;累积校验 G5-G8 或复检已交付项目（此时人在 `online`/已合并分支）不再触发,避免假失败。`GIT-G4-001` 对同名 `feature/<PROJECT-ID>` 判 `error`,对其他 `feature/*`（共享/改名分支）降级为 `warn`,非 feature 分支仍 `error`。`GIT-G4-002` 区分两种偏离:与 `origin/online` **无共同历史**（从 dev/test 或无关分支切）判 `error` 阻断;有共同历史但 `origin/online` 已前进（切出后主线正常推进,基线仍合法）降 `warn` 只提示「合入前可同步基线」,不阻断——避免把「主线前进」误判为「切错基线」。
 - **阶段证据职责分离**：`docs-tdd.mjs gate` 是唯一正式写入口。`gate-results.json` 只保存最近一次运行（PASS 或 BLOCK），`gate-history.json` 只追加成功阶段且记录 fingerprint/evidence，`stage-status.json` 保存 G5/G7 人工事实状态。G6/G7/G8 分别要求此前 G5/G6/G7 PASS 历史；任何文件都不能用当前阶段结果证明自身前置条件。
@@ -200,7 +206,7 @@ docs-tdd golden --keep          # 保留 PR-00000 供手工排查
 
 `common/rules/ruleset.json` 是规则档位表：每条规则声明 `{ maturity, blocking, waivable }`。`waivable: false` 的高风险事实校验即使出现在项目 waiver 中也不会降级；**未在 ruleset.json 声明的规则一律不接受豁免**（`waivable !== true` 即拒绝），并由 `check-doc-budget.mjs` 校验 5b 反向强制「rule-id-ledger.md 的每个 error 级 ID 必须有 blocking + waivable 声明」——漏声明视为规则语义未定义，加规则时即拦。当前 MSW 注册链完整性与生命周期/gate 阻断假设清零属不可豁免或需具名担责项。
 
-四重防护防「永久/静默绕过」:无 `expiresAt` → 忽略;已过期 → 仍拦截;文件非法 JSON → 忽略;命中 non-waivable 规则 → 忽略。其中 **`verify-project-gate.mjs`** 分别发 `DOC-WAIVER-002` / `DOC-WAIVER-003` / `DOC-WAIVER-001` / `DOC-WAIVER-004` 的 `WARN` 明示;**`verify-code-rules.mjs`** 对失效豁免静默忽略（不发 WARN、无 `DOC-WAIVER` ID）,但同样仍强制原规则。豁免必须写 `reason`、`owner`、`expiresAt`。
+四重防护防「永久/静默绕过」,由 `lib/waiver-policy.mjs` 判生命周期:缺 `reason`/`owner`/`expiresAt` 之一或 `expiresAt` 非 `YYYY-MM-DD` → 不生效 + `DOC-WAIVER-002` **error**;已过期 → 不生效、原规则照旧阻断 + `DOC-WAIVER-003` **error**;文件非法 JSON / 非数组 → 全部豁免不生效 + `DOC-WAIVER-001` **error**;命中 non-waivable 规则 → 忽略 + `DOC-WAIVER-004` `WARN`（该条常见于给 `verify-code-rules` 写的豁免,那边不读 ruleset,故只提示不阻断）。前三条判 error 而非 warn 的理由:失效豁免本来就不会被套用（原规则照旧红）,error 追加的是**清理台账**的压力——用 warn 表达时,「还没写全」和「已经过期」两个方向都指向「不用管」,台账只会越腐化;出口很便宜:续期、补 `owner`/`reason`,或删掉这条。**`verify-code-rules.mjs`** 对失效豁免静默忽略（不发 WARN、无 `DOC-WAIVER` ID）,但同样仍强制原规则。
 
 ### 4.1 项目级 report-only 开关（与豁免的分工）
 

@@ -115,6 +115,8 @@ export function buildMutationCases({ targetDir, editFixtureFile, writeFixtureFil
       id: 'expired-waiver-still-blocks',
       gate: 'G3',
       expectRuleId: 'DOC-G3-005',
+      // 过期豁免有两个后果，都要在：① 原规则照旧阻断（DOC-G3-005）；② 台账已失效本身判 error（DOC-WAIVER-003）。
+      tolerate: ['DOC-WAIVER-003'],
       apply: () => {
         editFixtureFile('product/03-api-contract.md', (text) => text.replace('worker 注册仅 dev 环境：`browser.ts` 只在 dev-only 分支启动，生产构建不注册。', 'worker 全环境注册。'))
         writeFixtureFile('agent/rule-waivers.json', `${JSON.stringify([
@@ -124,7 +126,17 @@ export function buildMutationCases({ targetDir, editFixtureFile, writeFixtureFil
       assert: (result) => {
         const expired = (result.checks || []).find((check) => check.ruleId === 'DOC-WAIVER-003')
         assert.ok(expired, '过期豁免必须以 DOC-WAIVER-003 暴露，不能静默忽略')
+        assert.equal(expired.severity, 'error', `过期豁免的台账条目本身应判 error（逼续期/删除），实际 ${expired.severity}`)
       },
+    },
+    {
+      id: 'unowned-waiver-is-error',
+      gate: 'G3',
+      // 缺 owner（同理缺 reason/expiresAt）的豁免不生效，且台账条目本身判 error：豁免必须具名担责。
+      expectRuleId: 'DOC-WAIVER-002',
+      apply: () => writeFixtureFile('agent/rule-waivers.json', `${JSON.stringify([
+        { ruleId: 'DOC-G3-005', reason: 'no owner case', expiresAt: '2099-12-31' },
+      ], null, 2)}\n`),
     },
     {
       id: 'open-blocker-blocks-at-gate',

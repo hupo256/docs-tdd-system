@@ -35,6 +35,7 @@ docs-tdd check <PROJECT-ID>                # 校验文档、规则与脚本预�
 docs-tdd release <PROJECT-ID> --scenario X # 原子发布 L3/effective + doctor/golden/context smoke
 docs-tdd golden                            # 让门禁机器自己被回归测试
 docs-tdd guard                             # 机器层兜底：一条命令跑 golden + 发布 fresh 检查 + doctor
+docs-tdd rule-health                       # 规则体检：命中分布、warn 台账年龄、待退休、零命中清单
 ```
 
 统一审计入口是 `docs-tdd doctor`：它检查五个 AI 入口是否一个不少、没有未登记入口，是否引用同一组 L1/L2/L3 source fingerprint，以及软链、adapter、Lark runtime 和发布清单是否漂移。需要连门禁回归一起检查时运行 `docs-tdd guard`；任一项失败都不是 PASS。
