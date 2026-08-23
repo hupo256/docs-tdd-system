@@ -1,12 +1,12 @@
 {
   "version": 1,
   "rulesetVersion": "local-2026.07-msw-v1",
-  "fingerprint": "f652c526dcaad2acf1fb32ac060283da68563a761a1bb391dc14215974adebc5",
-  "publishedAt": "2026-08-23T13:30:13.777Z",
+  "fingerprint": "0aaa384f8bc635cdb8b965e9e5c1bf4b1d7756020a765b595ea21c9120ad91e0",
+  "publishedAt": "2026-08-23T14:22:17.055Z",
   "fileCount": 149,
   "files": {
     "common/CHANGELOG-archive.md": "3f6df9a2d04e917dc0ae67125c84a9209877de3196bd7952639040897e0077cc",
-    "common/CHANGELOG.md": "9445dc4ae0e1c515089300da2c5efa785f681d009cf7c85ce192e31f358d898c",
+    "common/CHANGELOG.md": "44359888bd613009597abd9250d5cc20303f863b25053474d7ce1974deeee8d5",
     "common/engine/agent-scripts/check-doc-budget.mjs": "a56ce0d4d31e508db004ebd7fff7f607fa96e44b5167bd7d009c94677f554bf5",
     "common/engine/agent-scripts/check-doc-links.mjs": "5913f5c037fa0b98cedbeb890a548ab49d9587fdfaea69ae7e9285a4876ab20c",
     "common/engine/agent-scripts/claude-posttooluse-gate.mjs": "a7b62933912d09a8961eebdfba4674d361695e7a3a71741ddb5a54f70f11751b",
