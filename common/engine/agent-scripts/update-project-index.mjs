@@ -6,12 +6,15 @@ import { join, relative } from 'node:path'
 import { listProjectIds, resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 import {
   firstMatch,
+  focusLine,
   frontendReconcileNote,
   frontmatterStatus,
+  latestGateFocus,
   legacyAwareStatus,
   machineRowStatus,
   parseStatus,
   renderMarkdown,
+  replaceFocusLine,
   selfTest,
   stripMd,
 } from './lib/project-index.mjs'
@@ -80,6 +83,16 @@ function listProjectDirs() {
     .sort((a, b) => a.localeCompare(b))
 }
 
+// 被上面 README.md 条件过滤掉的目录。此前是静默过滤：PM-0047 / PR-01645 等孤儿目录既不在索引里、
+// 也没人知道它们存在，看起来像「系统里没这个项目」。改为返回清单，由调用方打 warn（不阻断）。
+function listOrphanDirs() {
+  return listProjectIds()
+    .filter((name) => name !== 'PR-00000')
+    .filter((name) => includeArchive || name !== 'archive')
+    .filter((name) => !existsSync(join(resolveProjectRoot(name), 'README.md')))
+    .sort((a, b) => a.localeCompare(b))
+}
+
 function countEvidence(projectDir) {
   const evidenceDir = join(projectDir, 'evidence')
   if (!existsSync(evidenceDir)) return 0
@@ -92,14 +105,14 @@ function countEvidence(projectDir) {
 
 function readGateSummary(projectDir) {
   const file = join(projectDir, 'agent/gate-results.json')
-  if (!existsSync(file)) return ''
+  if (!existsSync(file)) return { text: '', at: '' }
   try {
     const data = JSON.parse(read(file))
     const fail = data.summary?.fail ?? '?'
     const warn = data.summary?.warn ?? '?'
-    return `${data.gate || '?'} ${data.ok ? 'PASS' : 'BLOCK'} (fail=${fail}, warn=${warn})`
+    return { text: `${data.gate || '?'} ${data.ok ? 'PASS' : 'BLOCK'} (fail=${fail}, warn=${warn})`, at: data.generatedAt || '' }
   } catch {
-    return 'invalid gate-results.json'
+    return { text: 'invalid gate-results.json', at: '' }
   }
 }
 
@@ -131,6 +144,7 @@ function projectInfo(name, byBranch) {
   ], '未记录'))
   const g2 = stripMd(firstMatch(inventory, [/\|\s*G2 确认人 & 日期\s*\|\s*([^|]+)\|/], '未记录')) || '未记录'
   const modulePath = stripMd(firstMatch(inventory, [/\|\s*责任模块目录\s*\|\s*([^|]+)\|/], '未记录')) || '未记录'
+  const gate = readGateSummary(dir)
   return {
     id: name,
     title,
@@ -140,22 +154,45 @@ function projectInfo(name, byBranch) {
     modulePath,
     worktree: worktreePathFor(name, byBranch || {}),
     evidenceCount: countEvidence(dir),
-    gate: readGateSummary(dir) || '未生成',
+    gate: gate.text || '未生成',
+    // gateAt：CONTEXT.md 焦点行取「最近一次门禁活动」用（gate-results.json.generatedAt）。
+    gateAt: gate.at,
     readme: existsSync(join(dir, 'README.md')) ? relative(docsRoot, join(dir, 'README.md')) : '',
   }
 }
 
 const byBranch = worktreesByBranch()
 const projects = listProjectDirs().map((name) => projectInfo(name, byBranch))
+const orphans = listOrphanDirs()
+
+// CONTEXT.md 的「当前工作重点」与 PROJECTS.md 同一次 --write 回写：手写焦点会腐化
+// （曾停在 PR-01685 近两个月），派生自最近一次门禁活动才不会说谎。
+function writeContextFocus() {
+  const contextFile = join(docsRoot, 'CONTEXT.md')
+  if (!existsSync(contextFile)) return
+  const result = replaceFocusLine(read(contextFile), focusLine(latestGateFocus(projects)))
+  if (!result.matched) {
+    console.warn(`warn: CONTEXT.md 没有「- 当前工作重点：」行，焦点未回写（补一行占位即可自动维护）`)
+    return
+  }
+  if (!result.changed) return
+  writeFileSync(contextFile, result.text)
+  console.log(`wrote ${relative(repoRoot, contextFile)} (当前工作重点)`)
+}
+
+if (orphans.length) {
+  console.warn(`warn: ${orphans.length} 个项目目录缺 README.md，未进索引（孤儿目录：${orphans.join(', ')}）——补 README.md 或删目录，别让它们静默存在`)
+}
 
 if (json) {
-  console.log(JSON.stringify({ generatedAt: new Date().toISOString(), count: projects.length, projects }, null, 2))
+  console.log(JSON.stringify({ generatedAt: new Date().toISOString(), count: projects.length, projects, orphans }, null, 2))
 } else {
   const output = renderMarkdown(projects, new Date().toISOString())
   if (write) {
     const outFile = join(docsRoot, 'PROJECTS.md')
     writeFileSync(outFile, output)
     console.log(`wrote ${relative(repoRoot, outFile)} (${projects.length} project(s))`)
+    writeContextFocus()
   } else {
     process.stdout.write(output)
   }

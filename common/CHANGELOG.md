@@ -7,6 +7,13 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-08-23（文档一致性收口 + 可移植性说实话 + lark 完成卡挂静态尺子）
+
+- **交接文档保鲜（`DOC-FRESH-001`，warn）**：根目录 `HANDOFF-*.md` 曾长期躺着一份「方案已获批准、尚未实现」的交接（实际工作早已落地），没人负责删、也没有机制点名。`check-doc-budget.mjs` 新增校验：根目录 `HANDOFF-*.md` 若最后提交日（`git log -1 --format=%cs`，不看 mtime——clone 会重置 mtime）超过 7 天即 warn（对齐 `DOC-PRD-010` 的 >7d 先例），提示「交接完了就删、没完就更新状态或移进 `prds/<PR>/`」。同步删掉那份过期交接。
+- **可移植性说实话**：README 首句原写「与业务仓库解耦，可挂载任意前端项目复用」，但引擎里仍散着 FameEX 具体锚点（`docs-tdd.config.default.json` 的 `@fameex/web` 构建 / `@fameex/ui` 别名、`agent-rule-adapters.mjs` 的 "FameEX Local Execution Protocol" 字面量、多份规则文档的绝对路径示例、消费仓 `.cursor/rules` 依赖）。改为「目前只在一个仓库真实验证过，移植到第二个仓库需改这些锚点」并新增「可移植性的真实边界」小节，把移植必改项列成检查表（配置默认值 / Agent 适配器文本 / 规则文档示例 / 消费仓 L2 依赖 / lark 本机约定）。**未做**抽 `adapters/<consumer>/`：在出现第二个真实消费仓前不造这层抽象。
+- **lark 完成卡挂 changed 静态尺子（D5，非阻断）**：`common/lark-bot/**` 此前从不跑 `docs-tdd changed`，bot 改的代码踩没踩规则只有 bot 自己知道。新 `lib/lark-code-rules.mjs`（纯判定 + lark-pure 单测）在完成前用与人类同一把尺子（`verify-code-rules.mjs --project <ID>`）跑一次，把 error/warn 计数与命中规则 ID 附到完成卡「系统实测」栏。**不阻断**——bot 的硬闸只有规范闸（失效裸色类）一道；跑不成时如实写「未跑成 + 原因」，绝不渲染成零违规。不走 `docs-tdd changed` CLI 是因为那条入口要求编码 rule session，而 lark 按设计不签会话（改为每任务注入规则章节），走 CLI 只会让每张卡挂一条无信息量的会话缺失 FAIL。
+- **lark 提交带机器锚点**：收尾提交正文加 `lark-task: <id>` trailer（标题 `[<id>]` 给人看，trailer 供 `git log --grep '^lark-task: <id>'` 把群内反馈精确对到提交）。lark 单测 261/261。
+
 ## 2026-08-23（人工确认终于有地方签名：`DOC-CONFIRM-001..004`）
 
 - **「以人工确认为锚点」此前在机器侧不存在**：README 人机分界写着 G5-G8 的真实联调、视觉还原、交互手感、QA 用例执行以人工确认为锚点，但 `stage-status.schema.json` 的 required 只有 status/reason/evidence/updatedAt 且 `additionalProperties:false`——连写 `confirmedBy` 的地方都没有；`acceptance-results.json` 的 `manual`/`manual-visual`/`browser` 项与 `code-review.json` 同理。结果是 Agent 自己把 G5 写成 `completed`、自己把人工验收项写成 `passed`，gate 只能校验结构与证据路径存在，**无法区分「人看过」和「AI 声称人看过」**。

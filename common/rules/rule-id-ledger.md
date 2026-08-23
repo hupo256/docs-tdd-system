@@ -122,6 +122,7 @@
 | `DOC-SYNC-003` | —（`check-doc-budget.mjs`） | `PROJECTS.md` 与即时重生成结果一致 | error |
 | `DOC-SYNC-004` | —（`check-doc-budget.mjs`） | active 项目 stage=G5+ 时存在 G5→当前阶段连续 PASS 历史，且历史证据文件真实存在 | error |
 | `DOC-CR-001` | G6+（`lib/code-review.mjs`） | `agent/code-review.json` 结构合法：字段合规（含必填 `head`）、finding id 唯一、fixed 带 resolution；缺文件不发 check | error |
+| `DOC-FRESH-001` | —（`check-doc-budget.mjs`） | 根目录 `HANDOFF-*.md` 在 7 天保鲜期内（按 `git log -1 --format=%cs` 取最后提交日，不看 mtime）。交接完成就删，未完成就更新状态或移进 `prds/<PROJECT-ID>/` | warn |
 | `DOC-CR-002` | G6+（`lib/code-review.mjs`） | code-review 无未处理 finding（open 项须当场修或 waive/标 N/A） | error |
 | `DOC-CR-003` | G6+（`lib/code-review.mjs`） | `code-review.json.head` 覆盖当前 HEAD（head 现为必填，缺 currentSha 不判定），防 review 过时 | warn |
 | `DOC-CONFIRM-001` | G5+（`lib/confirmation.mjs`） | G5 的人工处置态（`completed`/`not-applicable`/`frontend-complete-pending-reconcile`）带 `confirmedBy` + `confirmedAt`；AI 客户端名与占位符不算人工确认 | warn（warn-first，下一轮转 error） |

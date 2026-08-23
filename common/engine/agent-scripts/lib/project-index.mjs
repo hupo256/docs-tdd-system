@@ -133,6 +133,30 @@ ${rows.join('\n')}
 `
 }
 
+// CONTEXT.md 的「当前工作重点」此前是手写的，实际停在两个月前的项目上（PR-01685）。
+// 焦点改为派生：门禁是项目活动里唯一带机器时间戳的痕迹（gate-results.json.generatedAt），
+// 取最近一次门禁活动的项目，在 PROJECTS.md 同一次 --write 里回写，手改会被下次重生成覆盖。
+export function latestGateFocus(projects) {
+  const dated = (projects || []).filter((project) => project?.gateAt)
+  if (!dated.length) return null
+  return dated.slice().sort((a, b) => String(b.gateAt).localeCompare(String(a.gateAt)))[0]
+}
+
+export const FOCUS_LINE_RE = /^- 当前工作重点：.*$/m
+
+export function focusLine(project) {
+  if (!project) return '- 当前工作重点：无门禁活动记录（先跑一次 `docs-tdd gate <PROJECT-ID> <Gx>`，再重生成本行）。'
+  const worktree = project.worktree ? `，worktree \`${project.worktree}\`` : ''
+  return `- 当前工作重点：**${project.title || project.id}**——最近门禁 ${project.gate}（${String(project.gateAt).slice(0, 10)}）${worktree}。本行由 \`update-project-index.mjs --write\` 从最近门禁活动派生，勿手改。`
+}
+
+// 就地替换 CONTEXT.md 的焦点行。找不到该行时不猜位置（返回 matched:false 让调用方告警）。
+export function replaceFocusLine(text, line) {
+  if (!FOCUS_LINE_RE.test(text)) return { text, matched: false, changed: false }
+  const next = text.replace(FOCUS_LINE_RE, line)
+  return { text: next, matched: true, changed: next !== text }
+}
+
 export function selfTest() {
   const stripped = stripMd('`apps/web/docs_tdd/prds/PR-00001` **done**')
   assert.ok(stripped.includes('docs_tdd') && !stripped.includes('`') && !stripped.includes('**'), 'stripMd should preserve underscores and remove markdown markers')
@@ -160,6 +184,21 @@ export function selfTest() {
   assert.equal(legacyAwareStatus('G4 (self-declared)', { runs: [] }, () => false), 'G4 (self-declared)', 'marker must not be appended twice')
   assert.equal(frontendReconcileNote('G4', { stages: { G5: { status: 'frontend-complete-pending-reconcile' } } }), 'G4 · 前端完成待对账', 'frontend-complete-pending-reconcile G5 should annotate status')
   assert.equal(frontendReconcileNote('G4', { stages: { G5: { status: 'blocked' } } }), 'G4', 'non-reconcile G5 status must not annotate')
+  // CONTEXT.md 焦点行派生（B3：手写焦点会腐化）。
+  const focusProjects = [
+    { id: 'PR-00001', title: 'PR-00001 老项目', gate: 'G8 PASS (fail=0, warn=0)', gateAt: '2026-06-01T00:00:00.000Z', worktree: '' },
+    { id: 'PR-00002', title: 'PR-00002 新项目', gate: 'G6 PASS (fail=0, warn=2)', gateAt: '2026-08-20T00:00:00.000Z', worktree: '/tmp/PR-00002' },
+    { id: 'PR-00003', title: 'PR-00003 没跑过门禁', gate: '未生成', gateAt: '' },
+  ]
+  assert.equal(latestGateFocus(focusProjects).id, 'PR-00002', 'focus must be the most recent gate activity')
+  assert.equal(latestGateFocus([{ id: 'PR-00003', gateAt: '' }]), null, 'no dated gate activity → no focus')
+  const line = focusLine(latestGateFocus(focusProjects))
+  assert.ok(line.startsWith('- 当前工作重点：') && line.includes('PR-00002') && line.includes('2026-08-20') && line.includes('/tmp/PR-00002'), `focus line malformed: ${line}`)
+  assert.ok(focusLine(null).includes('无门禁活动记录'), 'empty focus must say so instead of inventing one')
+  const replaced = replaceFocusLine('# ctx\n\n- 主仓库路径：`/x`\n- 当前工作重点：推进 **PR-01685**——旧的。\n- 其他：y\n', line)
+  assert.ok(replaced.matched && replaced.changed && replaced.text.includes('PR-00002') && !replaced.text.includes('PR-01685'), 'focus line replacement failed')
+  assert.ok(replaced.text.includes('- 主仓库路径：`/x`') && replaced.text.includes('- 其他：y'), 'replacement must not touch sibling lines')
+  assert.equal(replaceFocusLine('# ctx\n无焦点行\n', line).matched, false, 'missing focus line must报 matched:false，不猜位置')
   console.log('PASS project index renderer')
 }
 

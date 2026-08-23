@@ -1,6 +1,6 @@
 # docs_tdd — 可移植的 AI 前端开发规则与门禁系统
 
-一套**独立、可复用**的 AI 前端开发操作系统：用「先文档后代码 + G0-G8 门禁 + 机器可验证证据」约束 Codex、Claude Code、Cursor、Lark-Codex、Lark-Claude 与人协作完成前端功能开发。与具体业务仓库解耦，可挂载到任意前端项目复用。
+一套**独立**的 AI 前端开发操作系统：用「先文档后代码 + G0-G8 门禁 + 机器可验证证据」约束 Codex、Claude Code、Cursor、Lark-Codex、Lark-Claude 与人协作完成前端功能开发。引擎与业务仓库通过 `docs-tdd.config.json` + 一个软链解耦；**目前只在一个仓库（`@fameex/web`）真实验证过，移植到第二个仓库需要改动下列锚点**（见[可移植性的真实边界](#可移植性的真实边界)）。
 
 > 本仓库是从某前端工程中沉淀、抽离出的独立系统，经多轮真实项目迭代。作为个人知识库独立版本管理，不含任何业务机密以外的通用方法论。
 
@@ -87,6 +87,20 @@ node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs doctor
 第一条最后显示 `roots: OK`，表示脚本已从当前目录找到三件事：规则系统放在哪里、哪个仓库在使用它、当前命令属于哪个 worktree。第二条检查五个 AI 入口、规则适配、冲突、本地隔离和发布状态。失败时按输出修配置；日常使用只需要维护 `docs-tdd.config.json` 和挂载软链，不需要理解内部变量或手工拼路径。
 
 后续由 `prepare-coding-worktree.mjs` 创建的功能 worktree 会复用同一套配置，并自动挂载这份文档系统。
+
+## 可移植性的真实边界
+
+引擎（`common/engine/`）的路径解析、门禁、发布指纹都从 `docs-tdd.config.json` 派生，换仓库只改配置；但**下面这些位置仍写着 FameEX 的具体锚点，移植到第二个仓库必须逐项处理**。这份清单存在的意义就是不让 README 说「可挂载任意前端项目」这种在真实迁移面前会破的话：
+
+| 类别 | 位置 | 移植动作 |
+| --- | --- | --- |
+| 配置默认值（改配置即可） | [docs-tdd.config.default.json](./docs-tdd.config.default.json) 的 `productionBuild`（`--filter @fameex/web`）、`moduleImportAliases`（`@fameex/ui`）、`cursorLocalGovernance` | 在本地 `docs-tdd.config.json` 覆盖；引擎无硬编码回落之外的依赖 |
+| Agent 适配器文本 | [lib/agent-rule-adapters.mjs](./common/engine/agent-scripts/lib/agent-rule-adapters.mjs)、[install-local-agent-rules.mjs](./common/engine/agent-scripts/install-local-agent-rules.mjs) 里 "FameEX Local Execution Protocol" 等字面量与 `~/.cursor/rules/fameex-local-governance.mdc` 文件名 | 改为按 consumer 名生成（当前是硬编码字符串） |
+| 规则文档示例 | [coding-worktree.md](./common/rules/coding-worktree.md)、[git-branch-flow.md](./common/rules/git-branch-flow.md)、[hook-integration.md](./common/rules/hook-integration.md)、[prd-feature-inventory.md](./common/rules/prd-feature-inventory.md)、[figma-mcp-read-workflow.md](./common/rules/figma-mcp-read-workflow.md)、[rule-inheritance.md](./common/rules/rule-inheritance.md) 中的绝对路径 / 包名 | 示例路径与 `pnpm --filter` 包名换成目标仓；`rule-inheritance.md` 的 L2 锚点描述需按目标仓 `.cursor/rules` 重写 |
+| L2 依赖（不在本仓） | 消费仓的 `AGENTS.md` / `CLAUDE.md` / `.cursor/rules/*.mdc` | 目标仓必须有对应的 L2 锚点文件，否则 `doctor` 的规则适配项不 PASS |
+| lark-bot 本机约定 | `~/.config/fameex-lark/`（密钥目录）、bug 表与项目路由配置 | 改目录名与表配置；lark-bot 是可选组件，不接入则无影响 |
+
+尚未做的是把上面 2-3 类抽成 `adapters/<consumer>/`——在出现第二个真实消费仓之前不做这层抽象（为一个用户造抽象只会造错）。移植时以本表为检查表，逐项落地后再更新本节。
 
 ## 如何使用（Step by Step）
 

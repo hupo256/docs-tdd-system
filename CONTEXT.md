@@ -5,7 +5,7 @@
 ## 本地环境
 
 - 主仓库路径：`/Users/aven/github/fameex-web`（文档在此演进）
-- 当前工作重点：推进 **PR-01685 活动落地页**——已切真实接口（`NEXT_PUBLIC_CAMPAIGN_USE_MOCK=false`），埋点已接入；下一步 Browser/Playwright 验收与 JF 95% UI 还原。
+- 当前工作重点：**PR-02306 注册登录密码规则修改**——最近门禁 G8 PASS (fail=0, warn=4)（2026-08-23），worktree `/Users/aven/github/PR-02306`。本行由 `update-project-index.mjs --write` 从最近门禁活动派生，勿手改。
 - 本地文档目录（唯一真实路径）：`/Users/aven/github/fameex-web/apps/web/docs_tdd/`
 - 文档跟踪：本目录被 `.git/info/exclude` 忽略，只在本机维护，不 commit、不 push。
 

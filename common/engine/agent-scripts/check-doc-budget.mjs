@@ -773,6 +773,29 @@ if (missingTemplateRefs.length) {
   }
 }
 
+// 校验 10.6（DOC-FRESH-001）：根目录 HANDOFF-*.md 的保鲜期。
+// 根因：`HANDOFF-prd-intake-fingerprint-hardening.md` 自称「已批准，未开始实现」，而那批工作
+// 早在 2f345c9 就落地了——交接文档天生是一次性的，交接完成后没人回来删，于是变成一份**主动说谎**
+// 的根目录文件（新 chat 接手会照着它重做已完成的事）。判据用 git 最后提交日（不用 mtime：clone/checkout 会重置）。
+// warn 不阻断：交接文档在有效期内是正当的，只是不该长住。
+{
+  const HANDOFF_STALE_DAYS = 7
+  const handoffs = readdirSync(DOCS_TDD_DIR).filter((name) => /^HANDOFF-.*\.md$/.test(name))
+  const stale = []
+  for (const name of handoffs) {
+    const log = spawnSync('git', ['log', '-1', '--format=%cs', '--', name], { cwd: DOCS_TDD_DIR, encoding: 'utf8' })
+    const committedAt = log.status === 0 ? log.stdout.trim() : ''
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(committedAt)) continue // 未提交/无法判定 → 不猜
+    const days = Math.floor((Date.now() - Date.parse(`${committedAt}T00:00:00Z`)) / 86400000)
+    if (days > HANDOFF_STALE_DAYS) stale.push(`${name}（最后提交 ${committedAt}，${days} 天前）`)
+  }
+  if (stale.length) {
+    console.warn(`⚠ DOC-FRESH-001：根目录交接文档超过 ${HANDOFF_STALE_DAYS} 天未更新：${stale.join('；')}。交接已完成就删掉它，未完成就更新状态或移进 prds/<PROJECT-ID>/。`)
+  } else {
+    console.log(`✅ 交接文档保鲜：根目录 ${handoffs.length} 个 HANDOFF-*.md 均在 ${HANDOFF_STALE_DAYS} 天保鲜期内。`)
+  }
+}
+
 // 校验 11：阶段真值同步（'DOC-SYNC-001'/'DOC-SYNC-002'/'DOC-SYNC-003'）。
 // 只检查「已有 gate-results.json 且 ok=true」的项目——没有机器真值的项目无从漂移。
 {
