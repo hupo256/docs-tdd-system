@@ -9,6 +9,7 @@ import { dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { appendGateHistory, createFingerprint, gateCacheFingerprint } from './lib/gate-cache.mjs'
 import { formatEvidenceRunId, renderEvidence, summarizeCommand } from './lib/gate-evidence.mjs'
+import { resolvePartialRun } from './lib/gate-partial.mjs'
 import { buildQualityGuardCheck, derivePayloadOk, parseJsonOutput, selfTest, shouldUseGateCache, summarizeChecks, syncCommandSummary } from './lib/gate-payload.mjs'
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 import { resolveRuleSessionClient } from './lib/rule-session.mjs'
@@ -31,6 +32,10 @@ const noCache = args.includes('--no-cache')
 // --refresh-index 仍被接受（旧命令行/文档不会报错），但已无效果：--write 下刷新索引是默认行为。
 const noRefreshIndex = args.includes('--no-refresh-index')
 const json = args.includes('--json')
+// --partial：G5 停靠态（frontend-complete-pending-reconcile）的真实出口。语义见 lib/gate-partial.mjs：
+// 静态规则/code-review/biome/tsc/vitest 照跑照判，只有依赖真实字段的 contract/browser 验收项记待对账；
+// 结论以 `G6-partial` 入历史，不构成 G7 前置、也不推进 README 阶段。
+const partialRequested = args.includes('--partial')
 const skipCodeRules = args.includes('--skip-code-rules')
 const skipCodeRulesReason = readOption('--skip-code-rules-reason').trim()
 const skipBuildQuality = args.includes('--skip-build-quality')
@@ -58,6 +63,10 @@ Options:
   --skip-build-quality            Skip the verify-build-quality sub-run (always needs a reason)
   --skip-build-quality-reason     Reason recorded when skipping biome/tsc/vitest execution
   --reviewer                      Reviewer name for evidence (default: $USER)
+  --partial                       G6 only: partial acceptance run for a G5 pending-reconcile project.
+                                  Records gate G6-partial (not a G6 PASS, never satisfies the G7 prerequisite,
+                                  never bumps the README stage); contract/browser acceptance items are
+                                  recorded as pending-reconcile instead of blocked.
   --json                          Output JSON result to stdout`)
 }
 
@@ -90,6 +99,8 @@ if (args.includes('--self-test')) {
 }
 
 if (!new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(projectId || '') || !/^G[0-8]$/.test(gate)) usage()
+const { partial, gateLabel, error: partialError } = resolvePartialRun({ gate, partial: partialRequested })
+if (partialError) fail(partialError)
 if (skipCodeRules && strictCodeRuleGates.includes(gate) && !skipCodeRulesReason) {
   fail('--skip-code-rules-reason is required when using --skip-code-rules for G6/G7/G8')
 }
@@ -131,9 +142,9 @@ if (codeRuleGates.includes(gate)) {
   }
 }
 const fingerprintCtx = { projectId, gate, callerCwd, config, docsRoot }
-const cacheFingerprint = gateCacheFingerprint(projectDir, fingerprintCtx)
+const cacheFingerprint = gateCacheFingerprint(projectDir, { ...fingerprintCtx, gate: gateLabel })
 const cacheDir = join(tmpdir(), 'docs-tdd-gate-cache')
-const cacheFile = join(cacheDir, `${projectId}-${gate}-${cacheFingerprint}.json`)
+const cacheFile = join(cacheDir, `${projectId}-${gateLabel}-${cacheFingerprint}.json`)
 const cached = existsSync(cacheFile) ? JSON.parse(readFileSync(cacheFile, 'utf8')) : null
 if (
   shouldUseGateCache({
@@ -144,17 +155,17 @@ if (
   })
 ) {
   if (json) console.log(JSON.stringify({ ...cached, cache: { hit: true, fingerprint: cacheFingerprint } }, null, 2))
-  else console.log(`run-project-gate: ${projectId} ${gate} — PASS (cache=hit, fingerprint=${cacheFingerprint})`)
+  else console.log(`run-project-gate: ${projectId} ${gateLabel} — PASS (cache=hit, fingerprint=${cacheFingerprint})`)
   process.exit(0)
 }
 
 const reviewer = readOption('--reviewer', process.env.USER || 'local')
-const gateRun = run([join(scriptDir, 'verify-project-gate.mjs'), projectId, gate, '--json'])
-persistRunLog(`verify-project-gate-${gate}`, gateRun)
+const gateRun = run([join(scriptDir, 'verify-project-gate.mjs'), projectId, gate, '--json', ...(partial ? ['--partial'] : [])])
+persistRunLog(`verify-project-gate-${gateLabel}`, gateRun)
 const gateResult = parseJsonOutput(gateRun)
 const commands = [
   {
-    label: `verify-project-gate ${projectId} ${gate}`,
+    label: `verify-project-gate ${projectId} ${gate}${partial ? ' --partial' : ''}`,
     target: '项目 gate',
     result: gateRun,
   },
@@ -206,7 +217,8 @@ const payload = {
   generatedAt: new Date().toISOString(),
   tool: 'run-project-gate.mjs',
   projectId,
-  gate,
+  gate: gateLabel,
+  partial,
   ok: derivePayloadOk(gateResult, summary, codeRulesOk),
   summary,
   groups: gateResult.groups || {},
@@ -257,8 +269,9 @@ if (write) {
   }
   // 阶段同步是 gate 通过后的默认动作；gate 未通过时仍刷索引（PROJECTS.md 的 Latest gate 列需反映 BLOCK）。
   // 同步失败不翻转 gate 结论，但会留在 Command Evidence 表和 stderr，防止阶段真值悄悄漂移。
+  // partial 例外：G6-partial 不是 G6 PASS，绝不能推进 README 的「最新通过门禁」——只刷索引让它显形。
   if (!noRefreshIndex) {
-    if (payload.ok) {
+    if (payload.ok && !partial) {
       const stageRun = run([join(scriptDir, 'set-project-stage.mjs'), projectId, gate])
       persistRunLog('set-project-stage', stageRun)
       commands.push({
@@ -329,7 +342,8 @@ if (json) {
   console.log(JSON.stringify({ ...payload, commands: commands.map(summarizeCommand) }, null, 2))
 } else {
   const groupText = payload.groups?.documentation && payload.groups?.implementation ? `; documentation=${payload.groups.documentation.ok}/${payload.groups.documentation.total}; implementation=${payload.groups.implementation.ok}/${payload.groups.implementation.total}` : ''
-  console.log(`run-project-gate: ${projectId} ${gate} — ${payload.ok ? 'PASS' : 'BLOCK'} (fail=${summary.fail}, warn=${summary.warn}, waived=${summary.waived}${groupText})`)
+  console.log(`run-project-gate: ${projectId} ${gateLabel} — ${payload.ok ? 'PASS' : 'BLOCK'} (fail=${summary.fail}, warn=${summary.warn}, waived=${summary.waived}${groupText})`)
+  if (partial && payload.ok) console.log('run-project-gate: G6-partial 通过 = 部分验收有机器背书；它不满足 G7 前置，真实字段到位后须重跑完整 G6')
   if (!gateRun.ok) printFailureSummary(`verify-project-gate ${projectId} ${gate}`, gateRun, gateResult)
   if (codeRulesRun && !codeRulesRun.ok) printFailureSummary(`verify-code-rules --project ${projectId}`, codeRulesRun, codeRulesResult)
   for (const item of commands.slice(2).filter(({ result }) => !result.ok)) printFailureSummary(item.label, item.result, null)

@@ -8,6 +8,7 @@ import { blockerChecks } from './lib/blockers.mjs'
 import { assumptionChecks } from './lib/assumption-ledger.mjs'
 import { codeReviewChecks } from './lib/code-review.mjs'
 import { acceptanceChecks } from './lib/acceptance-results.mjs'
+import { allowedG5Statuses, g5DispositionEvidenceOk, partialPrerequisiteCheck, partialRunNoteCheck, resolvePartialRun, splitPendingReconcile } from './lib/gate-partial.mjs'
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 
 const scriptPath = fileURLToPath(import.meta.url)
@@ -27,9 +28,11 @@ const gate = (args[1] || '').toUpperCase()
 const json = args.includes('--json')
 const write = args.includes('--write')
 const verbose = args.includes('--verbose')
+// --partial：G6 的部分验收出口（G5 停靠态用）。语义与理由见 lib/gate-partial.mjs。
+const partialRequested = args.includes('--partial')
 
 function printHelp() {
-  console.log(`usage: verify-project-gate.mjs <PR-01234> <G0-G8> [--json] [--write] [--verbose] [--self-test] [--help]
+  console.log(`usage: verify-project-gate.mjs <PR-01234> <G0-G8> [--json] [--write] [--verbose] [--partial] [--self-test] [--help]
 
 Run a single project documentation/structure gate and emit JSON/check results.
 
@@ -38,6 +41,7 @@ Options:
   --json       Output JSON result to stdout
   --write      Persist gate-results.json
   --verbose    Print every check, not just actionable ones
+  --partial    G6 only: partial acceptance run for a G5 pending-reconcile project (records gate G6-partial)
   --self-test  Run inline self-test`)
 }
 
@@ -202,6 +206,12 @@ function runSelfTest() {
 if (args.includes('--self-test')) runSelfTest()
 
 if (!/^PR-\d{5}$/.test(projectId || '') || !/^G[0-8]$/.test(gate)) failUsage()
+// partial 只对 G6 合法；非法组合直接 usage 退出，不静默降级成完整 G6。
+const { partial, gateLabel, error: partialError } = resolvePartialRun({ gate, partial: partialRequested })
+if (partialError) {
+  console.error(`[verify-project-gate] ${partialError}`)
+  process.exit(1)
+}
 
 const projectDir = resolveProjectRoot(projectId)
 const checks = []
@@ -628,16 +638,18 @@ function validateG5() {
 
   const status = stageStatus('G5')
   add('VERIFY-G5-001', Boolean(status), 'agent/stage-status.json records the G5 integration disposition', join(projectDir, 'agent/stage-status.json'))
-  add('VERIFY-G5-002', ['completed', 'not-applicable'].includes(status?.status), `G5 status is completed or not-applicable (got ${status?.status || 'missing'})`, join(projectDir, 'agent/stage-status.json'))
-  const g5EvidenceOk = status?.status === 'not-applicable'
-    ? Boolean(status?.reason)
-    : status?.status === 'completed' && evidencePathsExist(status?.evidence)
-  add('VERIFY-G5-003', g5EvidenceOk, 'G5 completion has existing evidence paths, or not-applicable has a concrete reason', join(projectDir, 'agent/stage-status.json'))
-  // VERIFY-G5-004（报告态）：G5 记为 frontend-complete-pending-reconcile = 前端已完成、仅待真实字段对账。
-  // 该态不放行 G6（VERIFY-G5-002 仍只认 completed/not-applicable），但要求前端 evidence 与待对账原因存在，
-  // 使"前端完成待对账"成为有证据的可交付中间态，而非笼统 blocked（观感上不再显示全线阻塞）。
+  const allowedG5 = allowedG5Statuses(partial)
+  add('VERIFY-G5-002', allowedG5.includes(status?.status), `G5 status is ${allowedG5.join(' / ')} (got ${status?.status || 'missing'})`, join(projectDir, 'agent/stage-status.json'))
+  const g5EvidenceOk = g5DispositionEvidenceOk({
+    status: status?.status,
+    evidenceOk: evidencePathsExist(status?.evidence),
+    hasReason: Boolean(status?.reason),
+  })
+  add('VERIFY-G5-003', g5EvidenceOk, 'G5 completion has existing evidence paths, or not-applicable/pending-reconcile has a concrete reason', join(projectDir, 'agent/stage-status.json'))
+  // VERIFY-G5-004：停靠态 frontend-complete-pending-reconcile = 前端已完成、仅待真实字段对账。
+  // 普通运行下是报告态（warn，不放行完整 G6）；--partial 下它是本次结论的**依据**，故升 error。
   if (status?.status === 'frontend-complete-pending-reconcile') {
-    add('VERIFY-G5-004', evidencePathsExist(status?.evidence) && Boolean(status?.reason), '前端完成待对账：须有前端 evidence 路径与待对账原因；此态为报告态，不放行 G6', join(projectDir, 'agent/stage-status.json'), 'warn')
+    add('VERIFY-G5-004', evidencePathsExist(status?.evidence) && Boolean(status?.reason), '前端完成待对账：须有前端 evidence 路径与待对账原因；此态不放行完整 G6，只能走 G6-partial', join(projectDir, 'agent/stage-status.json'), partial ? 'error' : 'warn')
   }
 
   // 责任模块目录可填在 00-feature-inventory.md（scope 事实）或 agent/context-summary.md（恢复上下文），
@@ -703,7 +715,13 @@ function validateG5() {
 
 function validateG6() {
   validateG5()
-  add('VERIFY-STAGE-001', hasPassedGate('G5'), 'G6 requires a persisted successful G5 run in agent/gate-history.json', join(projectDir, 'agent/gate-history.json'))
+  // 阶段前置：完整 G6 要 G5 PASS；G6-partial 的前提恰恰是 G5 还停靠着，故改要求 G4 PASS（编码前最后一个完整 gate）。
+  if (partial) {
+    const check = partialPrerequisiteCheck({ hasG4Pass: hasPassedGate('G4'), file: rel(join(projectDir, 'agent/gate-history.json')) })
+    add(check.ruleId, check.ok, check.message, join(projectDir, 'agent/gate-history.json'), check.severity, check.category)
+  } else {
+    add('VERIFY-STAGE-001', hasPassedGate('G5'), 'G6 requires a persisted successful G5 run in agent/gate-history.json', join(projectDir, 'agent/gate-history.json'))
+  }
   const evidenceDir = join(projectDir, 'evidence')
   const hasEvidence = existsSync(evidenceDir) && readdirSync(evidenceDir, { recursive: true }).some((name) => String(name).endsWith('README.md'))
   add('VERIFY-G6-001', hasEvidence, 'at least one evidence README exists under project evidence/', evidenceDir)
@@ -733,17 +751,24 @@ function validateG6() {
     .map((row) => row[0])
     .filter(Boolean)
   const acceptanceFile = join(projectDir, 'agent/acceptance-results.json')
+  let pendingReconcileIds = []
   if (existsSync(acceptanceFile)) {
     const report = readJson(acceptanceFile)
     if (report === null) add('DOC-AC-001', false, 'acceptance-results.json 不是合法 JSON', acceptanceFile)
     else {
       const currentSha = runGit(['rev-parse', 'HEAD'], gitCwd).stdout
-      for (const check of acceptanceChecks({ report, doingFeatureIds, expectedProjectId: projectId, currentSha, evidenceExists: (p) => existsSync(join(projectDir, p)), file: rel(acceptanceFile) })) {
+      pendingReconcileIds = partial ? splitPendingReconcile(report.items).pending.map((item) => item.id) : []
+      for (const check of acceptanceChecks({ report, doingFeatureIds, expectedProjectId: projectId, currentSha, evidenceExists: (p) => existsSync(join(projectDir, p)), file: rel(acceptanceFile), partial })) {
         add(check.ruleId, check.ok, check.message, acceptanceFile, check.severity, check.category)
       }
     }
   } else if ((projectManifest?.templateVersion || 0) >= 2) {
     add('DOC-AC-001', false, 'template v2+ 必须存在 agent/acceptance-results.json', acceptanceFile)
+  }
+  // partial 结论标记：把「本次是部分验收、不构成 G7 前置」写进 checks（验收报告不可读时也要出现）。
+  if (partial) {
+    const note = partialRunNoteCheck({ pendingIds: pendingReconcileIds, file: rel(acceptanceFile) })
+    add(note.ruleId, note.ok, note.message, acceptanceFile, note.severity, note.category)
   }
   add('VERIFY-G6-003', /\|\s*命令\s*\|\s*目标文件|Command\s*\|\s*Target|Biome|biome|node --check|verify-code-rules|check-doc-budget/.test(`${evidenceText}\n${collabText}`), 'verification evidence records command target/result, including Biome or documented fallback', evidenceDir)
   const binaryFiles = findBinaryEvidenceFiles(evidenceDir)
@@ -878,7 +903,9 @@ function summarize(checkList) {
 const groups = Object.fromEntries(
   ['documentation', 'implementation'].map((category) => [category, summarize(checks.filter((check) => check.category === category))]),
 )
-const result = { ok: checks.filter((check) => check.severity !== 'warn' && check.severity !== 'waived').every((check) => check.ok), projectId, gate, checks, groups }
+// gate 字段写 gateLabel：partial 记 `G6-partial`，故 hasPassedGate('G6') 恒 false（G7 天然被挡），
+// DOC-SYNC-001/002/003（只认 ^G[0-8]$）也不会据它要求 README 阶段跳级。
+const result = { ok: checks.filter((check) => check.severity !== 'warn' && check.severity !== 'waived').every((check) => check.ok), projectId, gate: gateLabel, checks, groups }
 
 // --write：把本次真实结果（含时间戳）落盘为 agent/gate-results.json，作为 G8 交付证据。
 // 记录的是脚本此刻实际判定，不是人手编造"全绿"。G8 会校验产物来源、项目/阶段和 fail=0。

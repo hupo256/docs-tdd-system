@@ -440,6 +440,11 @@
       "blocking": true,
       "waivable": true
     },
+    "VERIFY-STAGE-004": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": false
+    },
     "VERIFY-G7-001": {
       "maturity": "stable",
       "blocking": true,

@@ -7,7 +7,15 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
-## 2026-08-23（自动提交口径单一化 + 续跑意图补口 + 真实终态入文档）
+## 2026-08-23（G5 停靠态有真实出口 G6-partial + 快速通道分两个终点 + 自报阶段下移打标）
+
+- **G5 停靠态终于有出口**：`frontend-complete-pending-reconcile` 此前只是个「更准的 blocked」——前端做完、静态与实现质量本可判定，却因为不放行 G6 而整段悬空，停靠期的真实工作量在索引里等于零证据。新增 `run-project-gate <PR> G6 --partial`：biome/tsc/vitest/code-review/静态规则**照跑照判**，只有依赖真实字段的 `contract`/`browser` 验收项记 pending-reconcile（`DOC-AC-007` 逐条点名欠账、`VERIFY-G6-005` 标本次为部分验收）。语义收在新 `lib/gate-partial.mjs`（单一真值源 + self-test），`verify-project-gate` / `run-project-gate` 只做接线。
+- **partial 为什么是独立 gate 标签而不是「宽松的 G6」**：结论以 `G6-partial` 入 `gate-history.json`，于是 `hasPassedGate('G6')` 恒为 false → G7 天然被挡，不需要再写一条「partial 不算 G6」的规则去防自己；同时 `--partial` 下不跑 `set-project-stage`，README 的「最新通过门禁」不推进（只刷索引让它显形）。前置由 `VERIFY-STAGE-001`(G5 PASS) 换成 `VERIFY-STAGE-004`(G4 PASS)，且该条**不可豁免**——partial 已经放宽了一层前置，若剩下这层也能豁免它就成了无边界后门，出口是补跑那个很便宜的 G4 文档 gate。`method` 不是 contract/browser 的 blocked 项照旧 fail（已在 PR-02265 实测：`manual-visual/blocked` 的 AC-4/AC-13 仍被 `DOC-AC-003` 咬住）。
+- **快速通道写清两个终点，不再只有「停靠」一种命运**：`fast-track-incomplete-docs.md` 新增 §0.1——接口 100% 已存在（`reuse-api`）就在 G5 当场对账、正常推进到 G8，接口未就绪（`pending-api`）才走 G6-partial 后停靠。此前全文默认所有快速通道项目都停 G5，导致「PRD 有了、文档没齐、但接口本来就在」这类最常见的情况被无谓地悬在 G5 等文档——而对账要的真实响应当下就能取到。出口结论在 G2 一并确认，写进 `06-collaboration.md`，便于交付时复核「为什么这个项目能直达 G8」。
+- **自报阶段打标下移到 G2**：`legacyAwareStatus` 原先只查 G5+，G2-G4 声称什么就显示什么。现无同阶段真实 PASS 历史即打标——G2-G4 记 `self-declared`（gate 从 G2 起就该跑，没跑就是没跑，出口是补跑而不是改 README），G5+ 沿用 `legacy-unverified`（多为机制上线前的旧项目）。G0/G1 不打标：按 `workflow-gates.md`，项目 gate 从 G2 起才要求逐阶段跑。本次显形 PR-01947 / PR-01973 两个自报 G4。
+- **生效边界**：只加检查与标记，不放宽任何既有 gate；`docs-tdd check` 24 项通过、golden 31 项通过、lark 单测 256/256。
+
+
 
 - **自动提交从「隐含约定」收敛为可直测的策略函数**：新增 `lib/lark-commit-policy.mjs`（`resolveCommitMode` / `partitionScopedPaths` + 13 例 self-test）作为唯一裁决——只读或任务未完成 → `none`；隔离临时 worktree（bot 自己开的 hotfix 分支）→ `auto` 全量提交；命中人类已有 worktree → `scoped`，**只**提交本任务实测改动清单里的路径。理由：WIP 路由检查只发生在任务开始前，而 AI 可跑 30 分钟，期间人在同一 worktree 新写的文件会被 `git add -A` 一并扫走。收尾时才出现的路径进 `unexpected` 写进完成卡请人确认，既不入库也不静默丢弃。三种模式都不 push、不开 PR。
 - **顺带修掉一个真 bug**：`paths: []` 在 `paths?.length` 下为 falsy，`commitAll` 会**回落到全量 `git add -A`**——即「实测清单为空」这个最该保守的场景反而提交得最多。守卫上移到调用之前，并补 5 个真 git 级用例（定向提交 / 人类 WIP 被排除且进 `unexpected` / 空清单一个都不提交且 ok=false / 无改动 / git 读不出来）。

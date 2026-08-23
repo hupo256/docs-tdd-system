@@ -1,4 +1,4 @@
-# 文档未齐快速通道（G0→G4→停靠 G5 待对账）
+# 文档未齐快速通道（G0→G4→按接口就绪度分两个出口）
 
 > AI 主用：本文只定义「API 已存在待更新 + UI/UX 低保真 + Figma/API 文档后补」时的**阶段编排**。字段对账、Figma 降级、Mock 生命周期、阻塞登记等正文各归对应 Source，本文只写何时消费、串成什么次序、证据落哪里，不复制阈值/字段表/命令清单。
 
@@ -17,7 +17,22 @@
 
 **不适用**：全新接口且无任何契约线索；UI/UX 必须成品级或纯视觉验收硬需求；scope 未经 G2 人工确认。
 
-## 1. 状态模型（本通道的落点）
+## 0.1 两个出口（进通道时就判定，别走到 G5 才发现）
+
+快速通道**不是**只有「停靠」一个终点。终点由接口就绪度决定，判据只有一条：**本期接口的真实响应现在能不能拿到**。
+
+| 出口 | 判据 | 终点 | G5 字段对账 |
+|---|---|---|---|
+| `reuse-api` | 本期接口 100% 已存在、可直连 test 环境取到真实响应 | **可直达 G8**（G5→G6→G7→G8 正常跑完，无停靠） | 在 G5 **当场**做完：逐 endpoint 比对真实响应，`stage-status.G5` 记 `completed` |
+| `pending-api` | 存在未就绪接口（新接口未上、字段未定、只有文档没有环境） | **G6-partial 后停靠**，等字段到位 | 做不到：G5 记 `frontend-complete-pending-reconcile`，字段到位后重跑完整 G6 再走 G7/G8 |
+
+`reuse-api` 是本通道的典型情况（PRD 有了、Figma/API 文档没有，但接口本来就在），它**没有理由停在 G5**：对账要的真实响应当下就能取到，拖到「文档补齐」再对账等于把可完成的工作人为悬空。拿不到真实响应的那一刻它就是 `pending-api`，改记停靠态，不许含糊。
+
+出口结论写进 `product/06-collaboration.md` 变更边界表旁（一行：出口 + 判据 + 谁确认），G2 一并确认——「为什么这个项目能直达 G8」在交付时可复核。
+
+## 1. 状态模型（`pending-api` 出口专用）
+
+> `reuse-api` 出口不用本节：它在 G5 当场把对账做完、`stage-status.G5` 记 `completed`，按 [workflow-gates.md](./workflow-gates.md) 正常推进到 G8，不进停靠态。
 
 停靠 G5 = **不伪造 G5 PASS**，用仓库既有双真值表达「已进 G5 联调、前端已完成、等对账」：
 
@@ -56,9 +71,13 @@
 
 `blockers.json` 的字段、生命周期与 gate 拦截规则以 [blocking-and-change-protocol.md](./blocking-and-change-protocol.md) 为准，本文不复制。
 
-## 4. 失败处理 / 出口
+## 4. 失败处理 / 出口终点
 
 - **`DOC-G5-004` 防呆**：仍待对账的任务**不得在 `04-frontend-tasks.md` 勾完成**（同行不能留 `ASSUMED` / 待对账）——保持未勾或拆行。
 - **停在 G2 的情形**：缺人工确认，或缺料命中 §0 高影响面 → 停在 G2 等确认，不豁免绕过。
-- **正式资料到达 = 增量收敛，不重跑 G0–G4**：同步 API/Figma 重算 fingerprint → 逐 endpoint 比对 URL/字段/类型/nullable/枚举/错误码并按 [architecture-and-state.md §8.1](./architecture-and-state.md) 对账、逐条销 `ASM-*`、逐接口关 MSW handler（[§8.4.2](./architecture-and-state.md)）→ Figma 只对受影响组件做视觉差异 → 超出 G2 变更边界的**只重开受影响 Feature 的 G2** → `blockers` 置 `resolved`（带 `resolution` + `resolvedAt`，禁静默删）→ `stage-status` 改 `completed` → 跑 G6/G7/G8。
+- **`reuse-api` 终点 = G8**：G5 当场逐 endpoint 对账真实响应并销 `ASM-*` → `stage-status.G5 = completed` → `docs-tdd gate <PR> G6/G7/G8` 正常跑完。视觉线若仍低保真，按 §3.2 登记为 `type: change`（不填 `blocksGate`），不阻断交付。
+- **`pending-api` 终点 = G6-partial 停靠**：前端做完、静态与实现质量已可判定，但依赖真实字段的验收做不了。此时**不要空等**，跑
+  `node …/docs-tdd.mjs gate <PR> G6 --partial`（等价 `run-project-gate <PR> G6 --partial`）：biome/tsc/vitest/code-review/静态规则照跑照判，只有 `contract`/`browser` 方法的验收项记为待对账（`DOC-AC-007` + `VERIFY-G6-005` 逐条点名欠账）。结论以 **`G6-partial`** 入 `gate-history.json`，前置改判 G4 PASS（`VERIFY-STAGE-004`，**不可豁免**）。
+  它**不是** G6 PASS：`hasPassedGate('G6')` 恒为 false → G7 天然被挡；README 的「最新通过门禁」不推进。作用是让停靠期的真实工作量拿到机器背书，而不是让项目在 G5 变成一团无证据的黑箱。
+- **正式资料到达 = 增量收敛，不重跑 G0–G4**：同步 API/Figma 重算 fingerprint → 逐 endpoint 比对 URL/字段/类型/nullable/枚举/错误码并按 [architecture-and-state.md §8.1](./architecture-and-state.md) 对账、逐条销 `ASM-*`、逐接口关 MSW handler（[§8.4.2](./architecture-and-state.md)）→ Figma 只对受影响组件做视觉差异 → 超出 G2 变更边界的**只重开受影响 Feature 的 G2** → `blockers` 置 `resolved`（带 `resolution` + `resolvedAt`，禁静默删）→ `stage-status` 改 `completed` → **重跑完整 G6**（不带 `--partial`，此时才产生 G7 前置）→ G7 → G8。
 - **确需带阻塞越 gate**：走 [rule-ids-and-gates.md §4](./rule-ids-and-gates.md) 的 `agent/rule-waivers.json` 具名 + 限期豁免，不删条目绕过。

@@ -86,13 +86,16 @@
 | `VERIFY-G6-002` | G6+ | `06-collaboration.md` 记录 code-review findings + 处理结论，且无未处理悬空项（`待修复/未处理` 即 fail，须当场修或进 `rule-waivers.json`） | error |
 | `VERIFY-G6-003` | G6+ | 自测证据记录命令、目标文件/场景、结果，含 Biome 或 fallback | error |
 | `VERIFY-G6-004` | G6+ | `evidence/` 下不出现 `.png/.jpg/.html` 等二进制/临时文件（应放 `/tmp/` 或 `.gitignore` 目录） | warn |
+| `VERIFY-G6-005` | G6-partial（`lib/gate-partial.mjs`） | 本次为部分验收：结论记 `G6-partial`，不构成 G7 前置，真实字段到位后须重跑完整 G6 | warn |
 | `DOC-AC-001` | G6+ | `agent/acceptance-results.json` 结构合法；模板 v2 起必须存在 | error |
 | `DOC-AC-002` | G6+ | 每个本期做 Feature 至少有一条 passed 验收结果 | error |
 | `DOC-AC-003` | G6+ | 验收结果无 failed/blocked | error |
 | `DOC-AC-004` | G6+ | 每条 passed 验收都有 evidence | error |
 | `DOC-AC-005` | G6+（`lib/acceptance-results.mjs`） | 每条 passed 验收的 evidence 至少有一个真实存在的文件锚点（截图/报告/DOM 比对），且不含指向不存在文件的路径 | error |
 | `DOC-AC-006` | G6+（`lib/acceptance-results.mjs`） | `acceptance-results.json.head` 覆盖当前 HEAD（缺 currentSha 不判定），防验收过时 | warn |
+| `DOC-AC-007` | G6-partial（`lib/acceptance-results.mjs`） | 部分验收的欠账清单：逐条点名待真实字段对账的 `contract`/`browser` 验收项 | warn |
 | `VERIFY-STAGE-001` | G6+ | `agent/gate-history.json` 存在此前真实写入的 G5 PASS | error |
+| `VERIFY-STAGE-004` | G6-partial | `agent/gate-history.json` 存在此前真实写入的 G4 PASS（G5 停靠态下以 G4 为前置，取代 VERIFY-STAGE-001）。**不可豁免**：partial 已经放宽了一层前置，若剩下这层也能豁免，它就成了无边界后门 | error |
 | `VERIFY-STAGE-002` | G7+ | `agent/gate-history.json` 存在此前真实写入的 G6 PASS | error |
 | `VERIFY-G7-001` | G7+ | `agent/stage-status.json` 存在 G7 结构化结论 | error |
 | `VERIFY-G7-002` | G7+ | G7 状态为 `completed` 或 `skipped` | error |
