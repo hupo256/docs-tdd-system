@@ -80,7 +80,7 @@ Agent/Worker 在任意阶段遇需人工确认、需补资料、缺登录账号/
 - 已收到 QA 用例但因账号/权限/测试环境/后台配置/验收数据缺失无法执行;未提供 QA 用例时只记 G7 跳过,不触发阻塞。
 - Worker 判断任务超出自动执行边界,进 `waiting_confirmation`。
 - 自测/联调/QA 因外部环境阻塞无法继续。
-- 需安装依赖、访问外网、操作生产、commit/push/开 PR 等高风险动作确认。
+- 需安装依赖、访问外网、操作生产、push/开 PR 等高风险动作确认。**本地 commit 不在此列**：Lark Worker 提交自己产生的改动是既定行为，口径（`auto` 全量 / `scoped` 只提交本任务实测路径 / `none` 不提交）由 [lark-commit-policy.mjs](../lark-bot/lib/lark-commit-policy.mjs) 单一裁决，详见 [task-boundaries-and-reply.md](../lark-bot/docs/task-boundaries-and-reply.md) §3.2；提交人类未打算提交的 WIP 仍然禁止。
 
 通知内容至少说明:
 - 卡住的项目和任务/门禁。

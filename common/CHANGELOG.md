@@ -7,6 +7,17 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-08-23（自动提交口径单一化 + 续跑意图补口 + 真实终态入文档）
+
+- **自动提交从「隐含约定」收敛为可直测的策略函数**：新增 `lib/lark-commit-policy.mjs`（`resolveCommitMode` / `partitionScopedPaths` + 13 例 self-test）作为唯一裁决——只读或任务未完成 → `none`；隔离临时 worktree（bot 自己开的 hotfix 分支）→ `auto` 全量提交；命中人类已有 worktree → `scoped`，**只**提交本任务实测改动清单里的路径。理由：WIP 路由检查只发生在任务开始前，而 AI 可跑 30 分钟，期间人在同一 worktree 新写的文件会被 `git add -A` 一并扫走。收尾时才出现的路径进 `unexpected` 写进完成卡请人确认，既不入库也不静默丢弃。三种模式都不 push、不开 PR。
+- **顺带修掉一个真 bug**：`paths: []` 在 `paths?.length` 下为 falsy，`commitAll` 会**回落到全量 `git add -A`**——即「实测清单为空」这个最该保守的场景反而提交得最多。守卫上移到调用之前，并补 5 个真 git 级用例（定向提交 / 人类 WIP 被排除且进 `unexpected` / 空清单一个都不提交且 ok=false / 无改动 / git 读不出来）。
+- **续跑意图补第 ⑤ 类**：话题内直接发补料时 Lark 既不带 `reply_to`、`root_id` 也只指向原 @ 消息本身（而 `task.id === messageId`），此前只认「root_id 命中机器人回执卡」→ PR-01947 的补料落空、原任务空等 3.5 小时。现 root_id 命中**仍处 `waiting_confirmation`/`blocked` 的任务 id** 亦算续跑；收窄点是「仍卡着」，已完成话题的新消息照旧按新任务处理。
+- **项目归属：正文唯一命中优先于群名**（`matchProjectIds`）。共享群里群名带 PR 号、正文明确写另一个工单时，原口径会把任务错投到群名项目。仅当正文命中**恰好一个**项目号时才越过群名，多个或零个仍回落群名——用唯一性做裁决，不在「群名权威」与「正文权威」之间二选一。
+- **`MODIFY_INTENT_RE` 补词表**：位置/命名/列增删/排序/显隐/文案样式这类自带规格的增量（「挪到」「重命名」「置灰」「加一列」…）此前落进 `requirement` 兜底，每次都要人放行一遍才肯动手。现归 `bugfix` 走快车道。
+- **回写耗尽不再假落 `done`**：`resolveWritebackOutcome`（纯函数，三出口）+ `writebackGaveUp` 标记。到重试上限后任务**停在 `done_pending_writeback`**——落 `done` 会让「群里说完成、bug 表还挂着待处理」这个不一致当场消失（`done` 会被每小时终态清理抹掉、health 计数也不再点名），只剩一条没人回看的日志。现 `/lark/health` 区分「正在重试」与「已停止重试、需人工改表格」。
+- **文档补真实终态并收口**：`task-boundaries-and-reply.md` §1 生命周期表补 `done_pending_writeback` / `no_change_needed`（后者是**非完成态终局**）+ 「回执卡二选一」（`no_change_needed` 绝不复用绿色完成卡）+ `done_with_warnings` 只是 AI 侧状态的说明；§3.2 落 `auto/scoped/none` 表；§3 与 `collaboration-and-notifications.md` §4 的高风险动作清单移除 `commit`（本地 commit 是既定行为，push/PR 才需确认）；清掉规则链 stale 的旧 fail-closed 表述残留（`rule-id-ledger.md` / `rule-execution-model.md` / health 文案，均以 d533eb4 的分层口径为准：仅常驻必需规则缺失才阻断）。
+- **生效边界**：全为 lark-bot 运行时与文档，不改 gate 判定；lark 单测 256/256。
+
 ## 2026-08-23（假设台账真阻断 + 豁免默认拒绝 + lark 写接口强制鉴权）
 
 - **根因（假设销账三重削弱）**：`DOC-G3-IMPL-006`（无阻断假设）早已实装，但对任何项目都不阻断，因为三条削弱叠加：① `ruleset.json` 里 `blocking:false` 被无条件降 warn；② 阻断轴取自 MSW lifecycle 而非 gate——`mock-active` 项目的 open 假设连 warn 都不产生（PR-02074 7 条 open 全静默），`blockingWhen:'release'` 在 G8 完全没有钩子；③ `gatePolicy.currentTouchedRules:"report-only"` 把全部已登记规则无条件降 warn。三条必须一起改，单改任一条都不生效。
