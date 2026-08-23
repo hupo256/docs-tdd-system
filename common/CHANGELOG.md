@@ -13,6 +13,8 @@
 - **可移植性说实话**：README 首句原写「与业务仓库解耦，可挂载任意前端项目复用」，但引擎里仍散着 FameEX 具体锚点（`docs-tdd.config.default.json` 的 `@fameex/web` 构建 / `@fameex/ui` 别名、`agent-rule-adapters.mjs` 的 "FameEX Local Execution Protocol" 字面量、多份规则文档的绝对路径示例、消费仓 `.cursor/rules` 依赖）。改为「目前只在一个仓库真实验证过，移植到第二个仓库需改这些锚点」并新增「可移植性的真实边界」小节，把移植必改项列成检查表（配置默认值 / Agent 适配器文本 / 规则文档示例 / 消费仓 L2 依赖 / lark 本机约定）。**未做**抽 `adapters/<consumer>/`：在出现第二个真实消费仓前不造这层抽象。
 - **lark 完成卡挂 changed 静态尺子（D5，非阻断）**：`common/lark-bot/**` 此前从不跑 `docs-tdd changed`，bot 改的代码踩没踩规则只有 bot 自己知道。新 `lib/lark-code-rules.mjs`（纯判定 + lark-pure 单测）在完成前用与人类同一把尺子（`verify-code-rules.mjs --project <ID>`）跑一次，把 error/warn 计数与命中规则 ID 附到完成卡「系统实测」栏。**不阻断**——bot 的硬闸只有规范闸（失效裸色类）一道；跑不成时如实写「未跑成 + 原因」，绝不渲染成零违规。不走 `docs-tdd changed` CLI 是因为那条入口要求编码 rule session，而 lark 按设计不签会话（改为每任务注入规则章节），走 CLI 只会让每张卡挂一条无信息量的会话缺失 FAIL。
 - **lark 提交带机器锚点**：收尾提交正文加 `lark-task: <id>` trailer（标题 `[<id>]` 给人看，trailer 供 `git log --grep '^lark-task: <id>'` 把群内反馈精确对到提交）。lark 单测 261/261。
+- **lark 只读查询词表补「汇报/报告」（真机漏判修复）**：端到端演练时「汇报一下这个项目的状态」被判成新需求拦在 `waiting_confirmation`——`STATUS_QUERY_CUE_RE` 只收了「汇总」漏了「汇报」。补齐 `汇报/报告/说一下/说说/讲一下/介绍/report` 等同义查询信号，仍受「缺陷信号 / 写操作动词一票否决」双闸约束（补反例单测：「汇报下为什么…转圈」「新增…汇报页面」仍判 null）。
+- **lark `no_change_needed` 边界收紧**：worker 提示词与文档原写「需求属后台 API / 别的仓 / 别的职责」，同一 monorepo 内的另一个前端 app（如 admin / futures-admin）可能被「别的仓」误导成不属本仓而被踢走。改为明确「判据是**不属本 git 仓库**、不是不属本前端 app」——同仓另一个 app/package 仍是本仓可改、应直接实现（范围不清则 `waiting_confirmation`）。lark 单测 262/262。
 
 ## 2026-08-23（人工确认终于有地方签名：`DOC-CONFIRM-001..004`）
 
