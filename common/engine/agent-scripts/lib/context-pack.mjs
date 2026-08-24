@@ -35,6 +35,34 @@ export function normalizeRuleRef(ref) {
   throw new Error(`invalid rule reference: ${JSON.stringify(ref)}`)
 }
 
+// 把一个 section selector（如 "1-3" / "2"）解析成 [min,max] 区间；非法即抛错。
+function parseSelectorRange(part) {
+  const match = /^(\d+)(?:-(\d+))?$/.exec(part)
+  if (!match) throw new Error(`invalid section selector: ${part}`)
+  const min = Number(match[1])
+  const max = Number(match[2] || match[1])
+  if (max < min) throw new Error(`invalid section selector: ${part}`)
+  return [min, max]
+}
+
+// 把多个 section selector 合并成最小不重叠区间串（重叠/相邻区间并成一段）。
+// 任一 selector 为空串（整文件）→ 返回 ''（整文件吞并所有区间）。用于同文件多次引用的去重。
+export function mergeSectionSelectors(selectors) {
+  if (selectors.some((selector) => !selector)) return ''
+  const ranges = selectors
+    .flatMap((selector) => selector.split(',').map((part) => part.trim()).filter(Boolean))
+    .map(parseSelectorRange)
+    .sort((a, b) => a[0] - b[0] || a[1] - b[1])
+  const merged = []
+  for (const [min, max] of ranges) {
+    const last = merged[merged.length - 1]
+    // 相邻（min === last.max + 1）也合并：连续标题段拼接后语义不变，且减少引用条数。
+    if (last && min <= last[1] + 1) last[1] = Math.max(last[1], max)
+    else merged.push([min, max])
+  }
+  return merged.map(([min, max]) => (min === max ? `${min}` : `${min}-${max}`)).join(',')
+}
+
 export function expandScenarioRefs(index, scenario, stack = []) {
   if (stack.includes(scenario)) throw new Error(`scenario cycle: ${[...stack, scenario].join(' -> ')}`)
   const refs = index.scenarios?.[scenario]
@@ -48,27 +76,33 @@ export function expandScenarioRefs(index, scenario, stack = []) {
     if (ref && typeof ref.scenario === 'string') return expandScenarioRefs(index, ref.scenario, [...stack, scenario])
     return [normalizeRuleRef(ref)]
   })
-  const seen = new Set()
-  return expanded.filter((ref) => {
-    const key = `${ref.file}#${ref.sections}`
-    if (seen.has(key)) return false
-    seen.add(key)
-    return true
-  })
+  // 按文件聚合（保持首次出现顺序），同文件的多个 section 选择器合并成最小不重叠区间串——
+  // 修掉「去重键是精确串 file#sections、重叠区间不合并」导致的同章节正文重复。
+  const order = []
+  const byFile = new Map()
+  for (const ref of expanded) {
+    if (!byFile.has(ref.file)) {
+      byFile.set(ref.file, [])
+      order.push(ref.file)
+    }
+    byFile.get(ref.file).push(ref.sections)
+  }
+  return order.map((file) => ({ file, sections: mergeSectionSelectors(byFile.get(file)) }))
 }
 
 export function selectMarkdownSections(text, selector) {
   if (!selector) return text
-  const match = /^(\d+)(?:-(\d+))?$/.exec(selector)
-  if (!match) throw new Error(`invalid section selector: ${selector}`)
-  const min = Number(match[1])
-  const max = Number(match[2] || match[1])
-  if (max < min) throw new Error(`invalid section selector: ${selector}`)
   const headings = [...text.matchAll(/^##\s+(\d+)(?:\.|\s)/gm)]
-  const start = headings.find((heading) => Number(heading[1]) === min)?.index
-  const end = headings.find((heading) => Number(heading[1]) > max)?.index
-  if (start === undefined) throw new Error(`section selector ${selector} did not match any heading`)
-  return text.slice(start, end ?? text.length)
+  // 多区间：逗号分隔，逐段切片按区间起点升序拼接。
+  const ranges = selector.split(',').map((part) => part.trim()).filter(Boolean).map(parseSelectorRange)
+  ranges.sort((a, b) => a[0] - b[0] || a[1] - b[1])
+  const slices = ranges.map(([min, max]) => {
+    const start = headings.find((heading) => Number(heading[1]) === min)?.index
+    const end = headings.find((heading) => Number(heading[1]) > max)?.index
+    if (start === undefined) throw new Error(`section selector ${min}${max === min ? '' : `-${max}`} did not match any heading`)
+    return text.slice(start, end ?? text.length)
+  })
+  return slices.join('')
 }
 
 export function createContextPack(id, scenario, release, effectiveRules, mode = 'compact') {
@@ -202,21 +236,32 @@ function selfTest() {
   const md = ['# Test', '', '## 1. One', 'one', '', '## 2 Two', 'two', '', '## 3. Three', 'three'].join('\n')
   assert(selectMarkdownSections(md, '2') === ['## 2 Two', 'two', '', ''].join('\n'), 'section 2 slice')
   assert(selectMarkdownSections(md, '1-2') === ['## 1. One', 'one', '', '## 2 Two', 'two', '', ''].join('\n'), 'section 1-2 slice')
+  // 多区间：不相邻的 1 与 3 分别切片后拼接（跳过中间的 §2）。
+  assert(selectMarkdownSections(md, '1,3') === ['## 1. One', 'one', '', '## 3. Three', 'three'].join('\n'), 'multi-range 1,3 slice')
   let threw = false
   try { selectMarkdownSections(md, '2-1') } catch { threw = true }
   assert(threw, 'reversed selector rejected')
   threw = false
   try { selectMarkdownSections(md, '4') } catch { threw = true }
   assert(threw, 'missing heading rejected')
+  // 区间合并：重叠/相邻/整文件吞并。
+  assert(mergeSectionSelectors(['5-6', '1-3', '3', '6']) === '1-3,5-6', 'overlapping ranges merged (gap kept)')
+  assert(mergeSectionSelectors(['2-4', '2-3', '2']) === '2-4', 'nested ranges merged')
+  assert(mergeSectionSelectors(['1-3', '4-6']) === '1-6', 'adjacent ranges merged')
+  assert(mergeSectionSelectors(['1-3', '']) === '', 'whole-file selector absorbs ranges')
   assert(normalizeRuleRef('a.md').file === 'a.md', 'string ref normalized')
   assert(normalizeRuleRef({ file: 'b.md', sections: '1-2' }).sections === '1-2', 'object ref normalized')
   const index = { scenarios: { base: ['a.md', { file: 'b.md', sections: '1' }], derived: [{ scenario: 'base' }, 'c.md'] } }
   const expanded = expandScenarioRefs(index, 'derived')
   assert(expanded.length === 3 && expanded[2].file === 'c.md', 'scenario refs expanded + deduped')
+  // 同文件多次引用（跨子场景）合并成单条、区间取并集。
+  const overlap = { scenarios: { q: [{ file: 'q.md', sections: '5-6' }, { file: 'q.md', sections: '1-3' }, { file: 'q.md', sections: '3' }] } }
+  const mergedRefs = expandScenarioRefs(overlap, 'q')
+  assert(mergedRefs.length === 1 && mergedRefs[0].sections === '1-3,5-6', 'same-file refs merged to one')
   threw = false
   try { expandScenarioRefs({ scenarios: { x: [{ scenario: 'x' }] } }, 'x') } catch { threw = true }
   assert(threw, 'scenario cycle detected')
-  console.log('PASS context-pack (selectMarkdownSections + normalizeRuleRef + expandScenarioRefs)')
+  console.log('PASS context-pack (selectMarkdownSections + mergeSectionSelectors + normalizeRuleRef + expandScenarioRefs)')
 }
 
 if (process.argv[1] && process.argv[1].endsWith('context-pack.mjs') && process.argv.includes('--self-test')) selfTest()
