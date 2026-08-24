@@ -23,6 +23,7 @@ import { createContextPack, expandScenarioRefs, printContextPack, requireFreshEf
 import { maybeBroadcastGate, printGateHeartbeat } from './lib/gate-heartbeat.mjs'
 import { runChanged, recommendScenarios } from './lib/changed-detection.mjs'
 import { capability, resolveProjectWorktree } from './lib/project-status-report.mjs'
+import { explainRule } from './lib/explain-rule.mjs'
 import { resolveRoots } from './lib/roots.mjs'
 import { resolveRuleSessionClient } from './lib/rule-session.mjs'
 import { CODING_SCENARIOS, requireRuleSession, verifyG2Ready, writeRuleSession } from './lib/rule-session-runtime.mjs'
@@ -119,8 +120,13 @@ if (command === 'rule-health') {
   process.exit(run([join(scriptDir, 'warn-ledger.mjs'), '--health', ...cliArgs.slice(1)]))
 }
 
+// explain 也不针对具体项目：按 RULE-ID 定向切出台账与修复指引（配合 brief 模式，门禁失败才按需展开）。
+if (command === 'explain') {
+  process.exit(explainRule(projectId))
+}
+
 if (!new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(projectId || '')) {
-  console.error('usage: docs-tdd.mjs <kickoff|status|resume|next|capability|doctor|release|golden|guard|rule-health|check|gate|context|changed|recommend> PR-01234 [G0-G8|scenario] [--compact|--full|--no-cache] [--client codex|claude|cursor|manual]')
+  console.error('usage: docs-tdd.mjs <kickoff|status|resume|next|capability|doctor|release|golden|guard|rule-health|explain|check|gate|context|changed|recommend> PR-01234 [G0-G8|scenario] [--compact|--full|--no-cache] [--client codex|claude|cursor|manual]')
   process.exit(1)
 }
 
@@ -150,7 +156,10 @@ else {
     try {
       const scenario = detail || 'g0_g2_scope'
       if (CODING_SCENARIOS.has(scenario) && !verifyG2Ready(projectId, worktree, scriptDir)) process.exit(1)
-      const pack = createContextPack(projectId, scenario, release, effectiveRules, fullContext ? 'full' : 'compact')
+      // 模式选择：--full 优先展开全文；否则 brief 默认场景（编码 + G6 验收）折叠机器/参考型正文，其余 compact。
+      const briefDefault = new Set(readJson(join(docsRoot, 'common/rules/rule-index.json')).policy?.briefDefaultScenarios || [])
+      const mode = fullContext ? 'full' : briefDefault.has(scenario) ? 'brief' : 'compact'
+      const pack = createContextPack(projectId, scenario, release, effectiveRules, mode)
       printContextPack(scenario, pack)
       if (CODING_SCENARIOS.has(scenario)) writeRuleSession(projectId, worktree, release, effectiveRules, pack, agentClient)
       printGateHeartbeat(projectId, resolvedWorktree)

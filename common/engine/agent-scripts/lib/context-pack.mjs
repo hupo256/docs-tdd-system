@@ -109,6 +109,8 @@ export function createContextPack(id, scenario, release, effectiveRules, mode = 
   const started = Date.now()
   const index = readJson(join(docsRoot, 'common/rules/rule-index.json'))
   const refs = expandScenarioRefs(index, scenario)
+  // brief 模式：纯机器/参考型文档（gate 会真跑判定，AI 无需逐字读）折成一行指针，其余照常按 section 切片。
+  const briefCollapse = new Set(mode === 'brief' ? index.policy?.briefCollapse || [] : [])
 
   const summaryRef = {
     file: `${id}/agent/context-summary.md`,
@@ -125,10 +127,18 @@ export function createContextPack(id, scenario, release, effectiveRules, mode = 
         file: inRules ? `common/rules/${normalized.file}` : `common/${normalized.file}`,
         abs: inRules ? rulesPath : join(docsRoot, 'common', normalized.file),
         sections: mode === 'full' ? '' : normalized.sections,
+        collapse: briefCollapse.has(normalized.file),
       }
     }),
   ]
   const sections = sources.map((source) => {
+    if (source.collapse) {
+      const suffix = source.sections ? `#§${source.sections}` : ''
+      return {
+        label: `${source.file}${suffix} (brief)`,
+        text: `> [BRIEF] 机器/门禁校验规则，正文未展开：门禁失败时按 finding 的 RULE-ID 运行 \`docs-tdd explain <RULE-ID>\`，或直接读 \`${source.file}\`${suffix}。`,
+      }
+    }
     const file = source.abs
     if (!existsSync(file)) throw new Error(`context source does not exist: ${source.file}`)
     const raw = readFileSync(file, 'utf8')

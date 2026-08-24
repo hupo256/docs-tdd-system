@@ -55,6 +55,7 @@ const SELF_TEST_SCRIPTS = [
   ['lib/context-pack.mjs', '--self-test'],
   ['lib/delivery-summary.mjs', '--self-test'],
   ['lib/doc-budget-schema.mjs', '--self-test'],
+  ['lib/explain-rule.mjs', '--self-test'],
   ['lib/gate-doc-parsers.mjs', '--self-test'],
   ['lib/gate-heartbeat.mjs', '--self-test'],
   ['lib/fast-track-policy.mjs', '--self-test'],
