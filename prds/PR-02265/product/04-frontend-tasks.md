@@ -16,7 +16,7 @@
 | T04 | F03 | `PRD-IMG-017` `PRD-IMG-018` | 校验失败逐字显示「请输入【-100,100】之间的数字，精度支持6位」；不采用图片中的短文案 | 待办 | 字面量断言 + G6 |
 | T05 | F04 | `PRD-IMG-033` | 外部做市商列表「手续费率」列兼容负费率显示 | 待办 | G6 |
 | T06 | F05 | `PRD-IMG-023` `PRD-IMG-024` `PRD-IMG-025` `PRD-IMG-026` | 前台 web 按最终接口契约展示：`his_trade_list_v2.fee`、`history_position_list.tradeFee` 正常手续费负、返佣正，正数补 `+`、负数原样；`get_transaction_list.amount` 直接保留后端符号；app/h5 不在本仓 | 已完成（2026-08-20 对账） | `formatNumber.test.ts` + G5/G6 |
-| T07 | F06 | `PRD-IMG-027` `PRD-IMG-028` `PRD-IMG-029` `PRD-IMG-030` `PRD-IMG-031` `PRD-IMG-032` | 现货后台用户合约流水及合约后台触点按对应接口口径展示；`history_position_list.tradeFee` 保留后端符号并由渲染层为正数补 `+`，其余 PRD 正数化触点显示绝对值；含补录的 `flowerDetail.vue` | 已完成（原 5 触点 + 补漏 1 项） | `positivizeAmount.spec.js`（两端）/`flowerFlowFee.spec.js` + G5/G6 |
+| T07 | F06 | `PRD-IMG-027` `PRD-IMG-028` `PRD-IMG-029` `PRD-IMG-030` `PRD-IMG-031` `PRD-IMG-032` | 现货后台用户合约流水及合约后台触点按对应接口口径展示；`history_position_list.tradeFee` 保留后端符号并由渲染层为正数补 `+`，其余 PRD 正数化触点显示绝对值；合约后台流水查询（`transactionList`/`get_transaction_list`）与前台 web 同口径，直接保留后端带符号金额、区分正负（2026-08-24 QA 反馈修复，撤销原 `flowerDetail.vue` 正数化） | 已完成 | `positivizeAmount.spec.js`（两端）+ G5/G6 |
 | T08 | F01 F03 F04 F05 F06 | `PRD-EMBED-003` | 对照验收 sheet 9 条逐项自测 | 待办 | `agent/acceptance-results.json` |
 | T09 | F07 | `PRD-TABLE-003` | 返佣计算/入账/异常为后端逻辑；G5 仅确认展示层不受影响 | 已完成（后端/QA 联调） | G5 用户确认记录 |
 | T10 | F01~F13 | scope revision 1576 | 对新增范围重新执行 G4 复用盘点与代码定位；不得沿用 revision 1009 的旧 G4 结论直接编码 | 已完成 | 2026-08-10 G4 PASS |
