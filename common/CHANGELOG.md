@@ -7,6 +7,13 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-08-24（Batch 6：warn 生命周期正文归并 rule-execution-model §6，rule-ids-and-gates 退出预算 warn 区）
+
+- **P2「warn-retirement overdue-review」经核对已随远端合入完整落地，非待办**：`lib/warn-retirement.mjs` 的 90 天默认退休（`due-for-retirement` → note-only）已接进 `verify-code-rules`（`demoteRetiredFindings`）、G8 交付摘要（`renderWarnLedgerSection`）与 `docs-tdd rule-health`，state 机（eligible/reviewing/due-for-retirement/watching）+ self-test 齐备。本批不改其代码。
+- **物理瘦身（真值源归并，非预算把戏）**：Batch 5 对 `rule-ids-and-gates.md` §2.1/§3.7 的补写把它推到 19942/20000（距硬闸仅 58 字符，任何后续编辑即破线）。把 §2.1 里 warn-first 规则生命周期的操作正文（晋级判据 / 机器台账 `warn-ledger.json` / 90 天退休 / `docs-tdd rule-health` 体检，约 2.2k 码点）**移入 [rule-execution-model.md](./rules/rule-execution-model.md) §6**——该节本就是「新规则准入与复盘」且此前已反向指回 §2.1，归并后 §6 成为唯一真值源、§2.1 收成一行指针。`rule-ids-and-gates.md` 由 19942 → 17897（退出 warn 18000 区，距硬闸 ~2100 余量）；execution-model 5109 → 6827（默认闸 warn 9000，余量充足）。
+- **暂不动的两个 grandfather 脚本**：`check-doc-budget.mjs`（45055/48000）、`verify-project-gate.mjs`（53240/58000）仍在 warn 区但各有 3–5k 余量、非破线风险；对核心 gate 聚合器做物理抽 lib 是独立高风险工程，本批不搭车，待专门批次评估。
+- **生效边界**：仅在两份已路由规则文档间搬运操作正文 + 收指针，零逻辑改动；`docs-tdd check` 全绿（rule-ids-and-gates.md 已退出预算告警，311 个本地链接含新指针均解析）、warn-retirement self-test 通过。移动路由规则触发指纹链失效，已重发布（L3 `0834d3ed` / effective `acb28a1e`，doctor error=0/warn=0、golden 38/38）。
+
 ## 2026-08-24（Batch 5：maturity 定档引擎接线 + DOC-CONFIRM 晋级新项目 error）
 
 - **maturity 字段被真正消费（此前是未接线的元数据）**：远端合入时给 `ruleset.json` 每条规则加了 `{maturity, blocking, waivable}`（experimental/trial/stable），但所有闸仍只认 `blocking`，maturity 从不参与定档。新建单一 severity 真值源 `lib/rule-maturity.mjs`（`resolveSeverity` + `projectMeetsRuleSince`，带 `--self-test` 全矩阵）：`stable`/`experimental` 按 `blocking` 定档（保持现状）；`trial` 在 `blocking` 基础上再按可选 `since`（规则引入时的模板版本）向下收窄——项目 `templateVersion < since` 时降 warn，即「规则升级默认不回查阻断存量项目」。report-only 与免疫（`waivable:false` / `reportOnlyExempt`）语义原样搬入。

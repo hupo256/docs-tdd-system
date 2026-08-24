@@ -73,4 +73,15 @@ PostToolUse 是体验优化，不是最终信任边界。当前 Agent 若 `docs-
 5. 运行 `check-doc-budget` 和相关脚本自测，依次执行 `rule-release.mjs --write`、`effective-rules.mjs --write`；再跑 `doctor` 并选一个活跃项目验证 context、changed 和对应 gate。
 6. 在 CHANGELOG 记录生效边界；新规则默认前向生效，除非是安全或数据正确性风险并明确要求追溯。
 
-每月或累计 5 个真实项目后做一次规则健康检查，机器入口是 `docs-tdd rule-health`（逐条命中次数 / warn 台账年龄与裁决分布 / 待退休 / 零命中清单；口径与退休判据见 [rule-ids-and-gates.md](./rule-ids-and-gates.md) §2.1）。它输出数据，不代人拍板：无数据时不得凭感觉晋级；观察期满 90 天仍无一次裁决的 warn 规则**自动降为 note-only 并列入待退休**——不复盘的默认结局是撤下，而不是永久 WARN。优先修复“规则未加载/未运行/证据陈旧”这类执行链缺陷，再增加新规则正文。
+每月或累计 5 个真实项目后做一次规则健康检查。以下是渐进 warn-first 规则从观察到晋级或退休的完整生命周期与口径真值源（[rule-ids-and-gates.md](./rule-ids-and-gates.md) §2.1 只列当前 warn 项并指回本节）：
+
+- **warn → error 晋级判据（防「永久 warn」）**：渐进 warn-first 的规则不是永远 warn。满足全部即提 error：① 连续 **2 个真实 PR** 命中该规则且**零误报**（误报=规则报了但人工判定不该报，如 lang-locale 类、流程控制类 if）；② 命中项都能给出明确修法（非「无法处理」）。达标后把脚本里该 finding 的 `'warn'` 改 `'error'`、更新 §2.1 warn 项列表、在 PR 里记一句「CODE-XXX warn-first 达标，提 error」。**未达标不提**——误报会 error 卡正常交付，比漏报更伤信任。
+- **晋级台账（机器记录，取代手填表）**：判据 ① 靠人脑记不住也无法复核，且手填表长期为空。改为机器台账 `common/warn-ledger.json`，由 `warn-ledger.mjs` 维护：
+  - **自动记录**：`docs-tdd gate --write`（G5+）命中可晋级 warn 规则时，自动按 `(ruleId, PR)` 入账（一 PR 一格，verdict 默认 `unreviewed`），无论 gate PASS/BLOCK。
+  - **人工复核**：`node warn-ledger.mjs --mark <RULE> <PR-xxxxx> <true-positive|false-positive> --write` 标注真命中还是误报（误报请在 PR/CHANGELOG 记形态供改正则）。
+  - **晋级候选**：`node warn-ledger.mjs --report` 计算——某规则满 **≥2 个 true-positive PR 且零 false-positive** 即列为 `ELIGIBLE`；任一 false-positive 使其失格（误报归零重计）。
+  - **范围**：仅登记计划晋级的 warn-first 规则（`warn-ledger.mjs` 的 `PROMOTABLE` 集）；`CODE-MOCK-001/002`、`CODE-MSW-003`、`CODE-ASSUMED-001`、`CODE-SCOPE-001` 等「按阶段/场景合法」的永久 warn 不进台账。`warn-ledger.json` 是可变执行状态、不参与规则内容指纹（已在 `rule-release` 排除）。
+- **90 天退休：观察期的默认结局是退休，不是永久 warn**。晋级判据要求人工裁决，而裁决可以永远不发生——台账曾全是 `unreviewed`，`eligible` 永远算不出来，规则实际停在「天天刷 warn、没人负责、也永不晋级」。判定源 `lib/warn-retirement.mjs`：某规则**首次命中起满 90 天、一次裁决都没有**（TP=FP=0）→ 自动降为 `note`（`verify-code-rules` 不再报 WARN、也不再累计入台账），并列入**待退休**。**沉默 = 撤下**：想留下它就 `warn-ledger.mjs --mark <RULE> <PR-xxxxx> true-positive --write` 裁决一次即回观察期；确认没人认的直接把 finding 从脚本删掉。待退休与 Top-N 高频 warn 写进 **G8 交付摘要 §5**（`lib/delivery-summary.mjs` 调 `renderWarnLedgerSection`）——台账文件没人主动打开，G8 那页是每次交付必读的。
+- **规则体检入口 `docs-tdd rule-health`**（本节这条「定期复盘」的机器实现，取代靠记性）：① warn 台账逐条（累计命中 / 涉及 PR 数 / 首末命中时间 / 裁决分布 / 结局）；② 门禁命中分布（各项目 `gate-results.json` 的**最近一次**运行，是快照非终身累计）；③ **零命中清单**（已声明 ID 减去上面两处出现过的）。零命中有两种、机器分不了：预防型规则场景没发生（正常），或判定从来没咬到东西（形同摆设）——只有后者才该删，报告只摆到眼前、不代人拍板。
+
+它输出数据，不代人拍板：无数据时不得凭感觉晋级。优先修复“规则未加载/未运行/证据陈旧”这类执行链缺陷，再增加新规则正文。
