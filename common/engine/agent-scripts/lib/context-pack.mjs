@@ -16,6 +16,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { resolveProjectRoot, resolveRoots, rulesRoot } from './roots.mjs'
+import { charCount } from './doc-budget-schema.mjs'
 import { printReport } from './cli-report.mjs'
 
 const scriptsDir = join(dirname(fileURLToPath(import.meta.url)), '..')
@@ -180,6 +181,7 @@ export function createContextPack(id, scenario, release, effectiveRules, mode = 
     mode,
     cacheHit,
     sourceChars: sections.reduce((total, item) => total + Array.from(item.text).length, 0),
+    sectionSizes: sections.map(({ label, text }) => ({ label, chars: charCount(text) })),
     packChars: Array.from(body).length + 1,
     durationMs: Date.now() - started,
   }
@@ -208,6 +210,27 @@ export function printContextPack(scenario, pack) {
     ['context metrics', `sources=${pack.refs.length}, sourceChars=${pack.sourceChars}, packChars=${pack.packChars}, cache=${pack.cacheHit ? 'hit' : 'miss'}, duration=${pack.durationMs}ms`],
     ['routed rules', pack.refs.join(', ')],
   ])
+}
+
+// context pack 预算门禁（warn/fail 两档，数据驱动）：把 packChars 真正消费起来，超限列出最大来源。
+// budget 取自 rule-index.json policy.contextBudget[kind]（kind: coding|stage）。缺配置即放行。
+// warn → console.warn 不阻断；fail → console.error + 返回 ok:false（调用方 exit(1)）。对齐 check-doc-budget 两档模型。
+export function enforceContextBudget(pack, kind, budget) {
+  if (!budget) return { ok: true, level: 'ok' }
+  const chars = pack.packChars
+  const { warn, fail } = budget
+  if (chars <= (warn ?? Number.POSITIVE_INFINITY)) return { ok: true, level: 'ok' }
+  const overFail = fail != null && chars > fail
+  const top = [...(pack.sectionSizes || [])]
+    .sort((a, b) => b.chars - a.chars)
+    .slice(0, 5)
+    .map((item) => `    ${String(item.chars).padStart(6)}  ${item.label}`)
+  const emit = overFail ? console.error : console.warn
+  emit(`context budget ${overFail ? 'FAIL' : 'WARN'}: ${kind} pack ${chars} 字符 > ${overFail ? `fail ${fail}` : `warn ${warn}`}`)
+  emit('  最大来源（字符）：')
+  for (const line of top) emit(line)
+  if (overFail) emit('  瘦身：确认编码/验收场景已命中 brief 折叠（勿滥用 --full），或拆分场景引用，机器规则用 docs-tdd explain 按需展开。')
+  return { ok: !overFail, level: overFail ? 'fail' : 'warn' }
 }
 
 export function requireFreshRuleRelease() {
@@ -271,7 +294,26 @@ function selfTest() {
   threw = false
   try { expandScenarioRefs({ scenarios: { x: [{ scenario: 'x' }] } }, 'x') } catch { threw = true }
   assert(threw, 'scenario cycle detected')
-  console.log('PASS context-pack (selectMarkdownSections + mergeSectionSelectors + normalizeRuleRef + expandScenarioRefs)')
+  // 预算门禁三档：无 budget 放行；> warn 且 ≤ fail → warn(ok);  > fail → fail(!ok)。
+  // 静音其打印（warn/error 行是被断言的预期行为，不是测试失败），只校验返回判定。
+  const budgetPack = { packChars: 15000, sectionSizes: [{ label: 'a', chars: 15000 }] }
+  const realWarn = console.warn
+  const realError = console.error
+  console.warn = () => {}
+  console.error = () => {}
+  const budgetVerdicts = {
+    none: enforceContextBudget(budgetPack, 'coding', undefined),
+    under: enforceContextBudget({ packChars: 5000, sectionSizes: [] }, 'coding', { warn: 12000, fail: 24000 }),
+    warn: enforceContextBudget(budgetPack, 'coding', { warn: 12000, fail: 24000 }),
+    fail: enforceContextBudget({ packChars: 30000, sectionSizes: [] }, 'coding', { warn: 12000, fail: 24000 }),
+  }
+  console.warn = realWarn
+  console.error = realError
+  assert(budgetVerdicts.none.ok, 'no budget passes')
+  assert(budgetVerdicts.under.level === 'ok', 'under warn ok')
+  assert(budgetVerdicts.warn.level === 'warn' && budgetVerdicts.warn.ok, 'over warn warns (not blocking)')
+  assert(!budgetVerdicts.fail.ok, 'over fail blocks')
+  console.log('PASS context-pack (selectMarkdownSections + mergeSectionSelectors + normalizeRuleRef + expandScenarioRefs + enforceContextBudget)')
 }
 
 if (process.argv[1] && process.argv[1].endsWith('context-pack.mjs') && process.argv.includes('--self-test')) selfTest()

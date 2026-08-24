@@ -19,7 +19,7 @@ import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { createContextPack, expandScenarioRefs, printContextPack, requireFreshEffectiveRules, requireFreshRuleRelease } from './lib/context-pack.mjs'
+import { createContextPack, enforceContextBudget, expandScenarioRefs, printContextPack, requireFreshEffectiveRules, requireFreshRuleRelease } from './lib/context-pack.mjs'
 import { maybeBroadcastGate, printGateHeartbeat } from './lib/gate-heartbeat.mjs'
 import { runChanged, recommendScenarios } from './lib/changed-detection.mjs'
 import { capability, resolveProjectWorktree } from './lib/project-status-report.mjs'
@@ -157,10 +157,19 @@ else {
       const scenario = detail || 'g0_g2_scope'
       if (CODING_SCENARIOS.has(scenario) && !verifyG2Ready(projectId, worktree, scriptDir)) process.exit(1)
       // 模式选择：--full 优先展开全文；否则 brief 默认场景（编码 + G6 验收）折叠机器/参考型正文，其余 compact。
-      const briefDefault = new Set(readJson(join(docsRoot, 'common/rules/rule-index.json')).policy?.briefDefaultScenarios || [])
+      const index = readJson(join(docsRoot, 'common/rules/rule-index.json'))
+      const briefDefault = new Set(index.policy?.briefDefaultScenarios || [])
       const mode = fullContext ? 'full' : briefDefault.has(scenario) ? 'brief' : 'compact'
       const pack = createContextPack(projectId, scenario, release, effectiveRules, mode)
       printContextPack(scenario, pack)
+      // 预算门禁：编码场景归 coding、其余归 stage；已知偏大的判断密集场景走 scenarios 覆盖（grandfather 带余量）。
+      // --full 是「要全文」的显式逃生口，不受预算硬闸约束（预算治理的是 brief/compact 默认路径的膨胀）。
+      if (!fullContext) {
+        const kind = CODING_SCENARIOS.has(scenario) ? 'coding' : 'stage'
+        const budgets = index.policy?.contextBudget
+        const verdict = enforceContextBudget(pack, kind, budgets?.scenarios?.[scenario] || budgets?.[kind])
+        if (!verdict.ok) process.exit(1)
+      }
       if (CODING_SCENARIOS.has(scenario)) writeRuleSession(projectId, worktree, release, effectiveRules, pack, agentClient)
       printGateHeartbeat(projectId, resolvedWorktree)
     } catch (error) {

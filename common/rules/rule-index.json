@@ -28,7 +28,12 @@
     ],
     "contextBudget": {
       "coding": { "warn": 12000, "fail": 24000 },
-      "stage": { "warn": 20000, "fail": 32000 }
+      "stage": { "warn": 20000, "fail": 32000 },
+      "scenarios": {
+        "new_project": { "warn": 34000, "fail": 40000 },
+        "docs_tdd_maintenance": { "warn": 52000, "fail": 58000 },
+        "g6_verify": { "warn": 32000, "fail": 40000 }
+      }
     }
   },
   "scenarios": {
