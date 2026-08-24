@@ -117,6 +117,11 @@
 | `DOC-BLOCK-003` | G0+（`lib/blockers.mjs`） | 其余 `open` 登记（尚不卡当前 gate）可见性提示 | warn |
 | `DOC-ASSUM-001` | G5-G7（`lib/assumption-ledger.mjs`） | 到 G5 出口仍有 `blockingWhen ∈ {api-ready, reconciling}` 的 `open` 假设未销账（gate 轴） | error（可豁免，免疫 report-only） |
 | `DOC-ASSUM-002` | G8（`lib/assumption-ledger.mjs`） | 交付前仍有 `blockingWhen ∈ {api-ready, reconciling, release}` 的 `open` 假设未销账（gate 轴） | error（可豁免，免疫 report-only） |
+| `DOC-FAST-001` | G0+（存在 `agent/fast-track.json` 时） | 快速通道台账符合 schema、项目 ID 一致且 `FTD-*` 唯一 | error（不可豁免） |
+| `DOC-FAST-002` | G2+（存在 `agent/fast-track.json` 时） | 快速通道及 `reuse-api` / `pending-api` 出口有真人签名和日期，AI/占位符不得代签 | error（不可豁免） |
+| `DOC-FAST-003` | G2+（`lib/fast-track-policy.mjs`） | 无 `semanticStatus=undecided` 且属于高风险类别、跨模块或不可逆的业务决策；Mock 不得替代业务语义 | error（不可豁免） |
+| `DOC-FAST-004` | G2+（`lib/fast-track-policy.mjs`） | open 临时项具有安全降级、owner、销账 gate 和证据；`provisional` 另须有明确临时契约 | error（不可豁免） |
+| `DOC-FAST-005` | G5+（`lib/fast-track-policy.mjs`） | 无已到 `resolveByGate` 仍为 `open` 的快速通道临时决策；`--partial` 下 `reconcileWith=api` 的到期项转待对账 warn、`decision` 类仍硬阻断 | error（可豁免，免疫 report-only） |
 | `DOC-SYNC-001` | —（`check-doc-budget.mjs`） | 已通过 gate 项目的 README 机器行与 `gate-results.json.gate` 一致 | error |
 | `DOC-SYNC-002` | —（`check-doc-budget.mjs`） | 机器版 `context-summary.md` 的当前阶段与 `gate-results.json.gate` 一致 | error |
 | `DOC-SYNC-003` | —（`check-doc-budget.mjs`） | `PROJECTS.md` 与即时重生成结果一致 | error |

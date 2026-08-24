@@ -1,0 +1,24 @@
+{
+  "projectId": "<PROJECT-ID>",
+  "route": "pending-api",
+  "confirmedBy": "<HUMAN>",
+  "confirmedAt": "<YYYY-MM-DD>",
+  "items": [
+    {
+      "id": "FTD-001",
+      "category": "field",
+      "semanticStatus": "undecided",
+      "impact": "local",
+      "summary": "<WHAT IS NOT YET DECIDED>",
+      "source": "<PRD/API/FIGMA/EVIDENCE OR MISSING SOURCE>",
+      "temporaryContract": "",
+      "safeFallback": "<DEV-ONLY PLACEHOLDER OR FAIL-CLOSED BEHAVIOR>",
+      "owner": "<DECISION OWNER>",
+      "reconcileWith": "api",
+      "resolveByGate": "G5",
+      "status": "open",
+      "resolution": "",
+      "evidence": ["product/06-collaboration.md"]
+    }
+  ]
+}

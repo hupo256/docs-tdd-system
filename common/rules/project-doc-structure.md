@@ -39,6 +39,7 @@ PROJECTS.md                    # 顶层项目状态索引，由 update-project-i
     prd-source-manifest.json   # PRD 富媒体盘点、素材 hash、Feature/Task 追踪和 G2 fingerprint
     msw-manifest.json          # endpoint、场景、资产和 mock 生命周期真值
     assumptions.json           # 字段/契约假设台账与销账状态
+    fast-track.json            # 可选：选择文档未齐快速通道时的出口、临时业务契约与销账门禁
     blockers.json              # 阻塞/变更机器真值，新项目默认空数组
     code-review.json           # G6 findings、处置和 review HEAD
     acceptance-results.json    # Feature → 验收场景 → 方法/结果/evidence

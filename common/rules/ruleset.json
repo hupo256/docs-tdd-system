@@ -140,6 +140,32 @@
       "waivable": true,
       "reportOnlyExempt": true
     },
+    "DOC-FAST-001": {
+      "maturity": "experimental",
+      "blocking": true,
+      "waivable": false
+    },
+    "DOC-FAST-002": {
+      "maturity": "experimental",
+      "blocking": true,
+      "waivable": false
+    },
+    "DOC-FAST-003": {
+      "maturity": "experimental",
+      "blocking": true,
+      "waivable": false
+    },
+    "DOC-FAST-004": {
+      "maturity": "experimental",
+      "blocking": true,
+      "waivable": false
+    },
+    "DOC-FAST-005": {
+      "maturity": "experimental",
+      "blocking": true,
+      "waivable": true,
+      "reportOnlyExempt": true
+    },
     "DOC-STRUCT-001": {
       "maturity": "stable",
       "blocking": true,

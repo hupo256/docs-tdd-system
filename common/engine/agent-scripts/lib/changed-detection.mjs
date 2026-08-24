@@ -75,7 +75,7 @@ function changedFingerprint(id, worktree, effectiveFingerprint) {
   const projectDir = resolveProjectRoot(id)
   const prdFile = join(projectDir, 'agent/prd-source-manifest.json')
   const prdHash = existsSync(prdFile) ? createHash('sha256').update(readFileSync(prdFile)).digest('hex') : 'none'
-  const projectDocs = ['product/00-feature-inventory.md', 'product/03-api-contract.md', 'product/04-frontend-tasks.md', 'product/06-collaboration.md', 'agent/project-manifest.json', 'agent/msw-manifest.json', 'agent/assumptions.json']
+  const projectDocs = ['product/00-feature-inventory.md', 'product/03-api-contract.md', 'product/04-frontend-tasks.md', 'product/06-collaboration.md', 'agent/project-manifest.json', 'agent/msw-manifest.json', 'agent/assumptions.json', 'agent/fast-track.json']
     .map((file) => {
       const absolute = join(projectDir, file)
       return existsSync(absolute) ? `${file}\n${readFileSync(absolute)}` : `${file}\nmissing`
