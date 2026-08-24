@@ -11,7 +11,7 @@
 
 import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -233,6 +233,45 @@ export function enforceContextBudget(pack, kind, budget) {
   return { ok: !overFail, level: overFail ? 'fail' : 'warn' }
 }
 
+// ---------------------------------------------------------------------------
+// 注入去重：同任务内同一 (scenario, contextFingerprint) 不重复吐全文，只回 delta 指针。
+// 台账落 agent/context-injections.json（非门禁证据，纯去重提示；schema 校验不覆盖此文件）。
+// 指纹含 effectiveRules + 场景 + 正文，规则/内容一变即失配、自然重新生成。
+// ---------------------------------------------------------------------------
+const INJECTION_LEDGER_LIMIT = 20
+
+export function loadInjectionLedger(id) {
+  const file = join(resolveProjectRoot(id), 'agent/context-injections.json')
+  if (!existsSync(file)) return { file, injections: [] }
+  try {
+    const data = JSON.parse(readFileSync(file, 'utf8'))
+    return { file, injections: Array.isArray(data.injections) ? data.injections : [] }
+  } catch {
+    return { file, injections: [] }
+  }
+}
+
+// 命中条件：场景 + 指纹一致，且缓存包文件仍在（/tmp 被清则视为未注入，重新生成）。
+export function findInjectedPack(ledger, scenario, fingerprint) {
+  return ledger.injections.find((entry) => entry.scenario === scenario && entry.fingerprint === fingerprint && existsSync(entry.output))
+}
+
+export function recordInjection(ledger, entry) {
+  const injections = [entry, ...ledger.injections.filter((prev) => !(prev.scenario === entry.scenario && prev.fingerprint === entry.fingerprint))].slice(0, INJECTION_LEDGER_LIMIT)
+  mkdirSync(dirname(ledger.file), { recursive: true })
+  writeFileSync(ledger.file, `${JSON.stringify({ version: 1, injections }, null, 2)}\n`)
+}
+
+// delta 指针：本任务已注入过同指纹包，提示 AI 直接复用已读内容、无需重读全文。
+export function printContextDelta(scenario, pack) {
+  printReport([
+    ['scenario', scenario],
+    ['context', 'delta: none — 同指纹包本任务已注入，若已读可跳过重读'],
+    ['context pack', pack.output],
+    ['context fingerprint', pack.fingerprint],
+  ])
+}
+
 export function requireFreshRuleRelease() {
   if (skipRuleFreshness) {
     console.error('[docs-tdd] ⚠ DOCS_TDD_SKIP_RULE_FRESHNESS=1：跳过 rule-release 新鲜度检查（重构期临时开关）')
@@ -313,7 +352,15 @@ function selfTest() {
   assert(budgetVerdicts.under.level === 'ok', 'under warn ok')
   assert(budgetVerdicts.warn.level === 'warn' && budgetVerdicts.warn.ok, 'over warn warns (not blocking)')
   assert(!budgetVerdicts.fail.ok, 'over fail blocks')
-  console.log('PASS context-pack (selectMarkdownSections + mergeSectionSelectors + normalizeRuleRef + expandScenarioRefs + enforceContextBudget)')
+  // 注入去重：同 scenario+fingerprint 且包文件存在才算命中；recordInjection 去重 + 限长。
+  const tmpPack = join(tmpdir(), 'ctx-inject-selftest.md')
+  writeFileSync(tmpPack, 'x')
+  const ledger = { file: join(tmpdir(), 'ctx-inject-selftest-ledger.json'), injections: [{ scenario: 's', fingerprint: 'fp', output: tmpPack }] }
+  assert(findInjectedPack(ledger, 's', 'fp'), 'existing injection with live file matched')
+  assert(!findInjectedPack(ledger, 's', 'other'), 'different fingerprint not matched')
+  assert(!findInjectedPack({ injections: [{ scenario: 's', fingerprint: 'fp', output: join(tmpdir(), 'nope.md') }] }, 's', 'fp'), 'missing pack file not matched')
+  rmSync(tmpPack, { force: true })
+  console.log('PASS context-pack (selectMarkdownSections + mergeSectionSelectors + normalizeRuleRef + expandScenarioRefs + enforceContextBudget + injection-ledger)')
 }
 
 if (process.argv[1] && process.argv[1].endsWith('context-pack.mjs') && process.argv.includes('--self-test')) selfTest()

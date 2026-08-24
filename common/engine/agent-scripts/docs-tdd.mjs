@@ -19,7 +19,7 @@ import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { createContextPack, enforceContextBudget, expandScenarioRefs, printContextPack, requireFreshEffectiveRules, requireFreshRuleRelease } from './lib/context-pack.mjs'
+import { createContextPack, enforceContextBudget, expandScenarioRefs, findInjectedPack, loadInjectionLedger, printContextDelta, printContextPack, recordInjection, requireFreshEffectiveRules, requireFreshRuleRelease } from './lib/context-pack.mjs'
 import { maybeBroadcastGate, printGateHeartbeat } from './lib/gate-heartbeat.mjs'
 import { runChanged, recommendScenarios } from './lib/changed-detection.mjs'
 import { capability, resolveProjectWorktree } from './lib/project-status-report.mjs'
@@ -161,15 +161,23 @@ else {
       const briefDefault = new Set(index.policy?.briefDefaultScenarios || [])
       const mode = fullContext ? 'full' : briefDefault.has(scenario) ? 'brief' : 'compact'
       const pack = createContextPack(projectId, scenario, release, effectiveRules, mode)
-      printContextPack(scenario, pack)
-      // 预算门禁：编码场景归 coding、其余归 stage；已知偏大的判断密集场景走 scenarios 覆盖（grandfather 带余量）。
-      // --full 是「要全文」的显式逃生口，不受预算硬闸约束（预算治理的是 brief/compact 默认路径的膨胀）。
-      if (!fullContext) {
-        const kind = CODING_SCENARIOS.has(scenario) ? 'coding' : 'stage'
-        const budgets = index.policy?.contextBudget
-        const verdict = enforceContextBudget(pack, kind, budgets?.scenarios?.[scenario] || budgets?.[kind])
-        if (!verdict.ok) process.exit(1)
+      // 注入去重：同任务内同一 (scenario, fingerprint) 已注入过 → 只回 delta 指针，不重吐全文。
+      const ledger = loadInjectionLedger(projectId)
+      if (findInjectedPack(ledger, scenario, pack.fingerprint)) {
+        printContextDelta(scenario, pack)
+      } else {
+        printContextPack(scenario, pack)
+        // 预算门禁：编码场景归 coding、其余归 stage；已知偏大的判断密集场景走 scenarios 覆盖（grandfather 带余量）。
+        // --full 是「要全文」的显式逃生口，不受预算硬闸约束（预算治理的是 brief/compact 默认路径的膨胀）。
+        if (!fullContext) {
+          const kind = CODING_SCENARIOS.has(scenario) ? 'coding' : 'stage'
+          const budgets = index.policy?.contextBudget
+          const verdict = enforceContextBudget(pack, kind, budgets?.scenarios?.[scenario] || budgets?.[kind])
+          if (!verdict.ok) process.exit(1)
+        }
+        recordInjection(ledger, { scenario, fingerprint: pack.fingerprint, output: pack.output, injectedAt: new Date().toISOString() })
       }
+      // 编码会话仍每次刷新（headSha / codeReadiness 可能变，门禁证据不能靠 delta 复用）。
       if (CODING_SCENARIOS.has(scenario)) writeRuleSession(projectId, worktree, release, effectiveRules, pack, agentClient)
       printGateHeartbeat(projectId, resolvedWorktree)
     } catch (error) {
