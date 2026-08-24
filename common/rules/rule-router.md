@@ -42,6 +42,8 @@
 
 请求驱动的 UI 必须使用 `write_ui`（已包含分层/API 专题）；单独编写或调整 React Query Hook 使用 `write_query_hook`；读取或还原 Figma 使用 `write_figma`，不得只加载视觉或状态专题。
 
+G6 验收按维度顺序加载 `g6_code_review`→`g6_contract`→`g6_visual`→`g6_delivery`，不一次展开 `g6_verify` 整包（整包仅供回顾全貌）。
+
 ## 4. 上下文与预算
 
 - 主线程只保留决策、风险和结果；大文件先 `rg` 定位再读局部，长命令只回传失败行。
