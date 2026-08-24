@@ -15,6 +15,7 @@ import { basename, dirname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { tmpdir } from 'node:os'
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
+import { resolveSeverity } from './lib/rule-maturity.mjs'
 import { activeWaivers, isWaived } from './lib/waiver-policy.mjs'
 
 const scriptPath = fileURLToPath(import.meta.url)
@@ -50,7 +51,16 @@ const packageManager = readOption('--pm', 'pnpm')
 const projectManifest = projectId ? (() => {
   try { return JSON.parse(readFileSync(join(resolveProjectRoot(projectId), 'agent/project-manifest.json'), 'utf8')) } catch { return null }
 })() : null
-const strictTestEvidence = (projectManifest?.templateVersion || 0) >= 2
+// VERIFY-TEST-002 的档位归口到 ruleset + lib/rule-maturity（与 verify-project-gate 同一真值源）。
+// 登记为 trial + since:2 后，v1→warn / v2→error，与历史 strictTestEvidence(templateVersion>=2) 逐位一致；
+// ruleset 读取失败时回落到旧本地判据，保证降级环境不至于全丢档。
+const ruleset = (() => {
+  try { return JSON.parse(readFileSync(join(docsRoot, 'common/rules/ruleset.json'), 'utf8')) } catch { return null }
+})()
+const test002Rule = ruleset?.rules?.['VERIFY-TEST-002']
+const test002Severity = test002Rule
+  ? resolveSeverity({ rule: test002Rule, manifest: projectManifest })
+  : ((projectManifest?.templateVersion || 0) >= 2 ? 'error' : 'warn')
 
 function printHelp() {
   console.log(`usage: verify-build-quality.mjs [--project <PR-ID>] [--base <ref>] [--files <comma-list>]
@@ -596,7 +606,7 @@ let baselineDirty = false
   addCheck({
     ruleId: 'VERIFY-TEST-002',
     ok: missing.length === 0,
-    severity: strictTestEvidence ? 'error' : 'warn',
+    severity: test002Severity,
     message: missing.length
       ? `以下逻辑文件导出了函数但无同名/同目录 __tests__ 单测：${missing.slice(0, 8).join(', ')}${missing.length > 8 ? ` 等 ${missing.length} 个` : ''}`
       : '改动的逻辑文件均有相关单测',

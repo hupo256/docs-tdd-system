@@ -7,6 +7,15 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-08-24（Batch 5：maturity 定档引擎接线 + DOC-CONFIRM 晋级新项目 error）
+
+- **maturity 字段被真正消费（此前是未接线的元数据）**：远端合入时给 `ruleset.json` 每条规则加了 `{maturity, blocking, waivable}`（experimental/trial/stable），但所有闸仍只认 `blocking`，maturity 从不参与定档。新建单一 severity 真值源 `lib/rule-maturity.mjs`（`resolveSeverity` + `projectMeetsRuleSince`，带 `--self-test` 全矩阵）：`stable`/`experimental` 按 `blocking` 定档（保持现状）；`trial` 在 `blocking` 基础上再按可选 `since`（规则引入时的模板版本）向下收窄——项目 `templateVersion < since` 时降 warn，即「规则升级默认不回查阻断存量项目」。report-only 与免疫（`waivable:false` / `reportOnlyExempt`）语义原样搬入。
+- **行为保持 by construction**：现存 9 条 trial + 15 条 experimental 规则当前都 `blocking:true` 且无 `since`（视作 0）→ `projectMeetsRuleSince` 恒真 → 走原 `blocking`/report-only 分支，与合并后逐位一致。只有本批显式带 `since` 的规则才产生「新项目才阻」。天真按语义映射会把这 24 条正在阻断的规则放松，故引擎只让 `trial+since` 向下收窄，不碰 experimental/stable。
+- **两处定档点归一到 lib**：`verify-project-gate.mjs` 的中央 severity 循环、`verify-build-quality.mjs` 的 `VERIFY-TEST-002` 定档（原本地 `strictTestEvidence=templateVersion>=2`）都改调 `resolveSeverity`。DOC-CONFIRM 四条本就流经 project-gate 中央循环，登记后自动重定档。
+- **DOC-CONFIRM-001..004 晋级为「新项目 error / 旧项目 warn」**：四条人工确认签名此前硬编码 `warn`、连 `ruleset.json` 都未登记。现登记为 `{trial, blocking:true, waivable:true, since:3}`；`VERIFY-TEST-002` 登记为 `since:2`（吸收 strictTestEvidence，行为等价）。`rule-id-ledger.md` 五行同步 error 级声明（满足 check-doc-budget 校验 5b：error 级 ID 必须声明 blocking+waivable）。
+- **scaffold 升 v3 + 落签名槽位**：`project-scaffold.mjs` `templateVersion:2→3`；`stage-status.json`（G5/G7）与 `code-review.json` 补空 `confirmedBy`/`confirmedAt` 槽位（空串经 `classifySignature` 判缺签名，逼真人在处置态转 completed/skipped 时补签）。新建 v3 项目缺人工签名即 error，存量 v1/v2（PR-01947/02074/02172/02265/02273/02306）行为不变。
+- **生效边界**：改动集中在定档 lib + 两处接线 + ruleset/台账/scaffold；未新增/改任何检查逻辑，仅把 severity 口径归一并借 since 让 DOC-CONFIRM 只阻新项目。改门禁脚本 + ruleset 触发指纹链失效，收尾走 check → golden → doctor → release 重新发布 L3/effective 链。
+
 ## 2026-08-24（Batch 4：codeRules 文件级归因硬闸 + lark 配置启动校验）
 
 - **codeRules 从纯尺子升为「本次改动引入的 error 才拦」的窄闸**：`lark-code-rules.mjs` 的 changed-file 静态扫描此前明确「不阻断、人来决定回炉」，但 bot 完成后是自动 commit 进分支——「人会在合入前看那行数字并拦下」这个前提在无人值守下不成立，带 error 的改动可能静默进分支。修法保留初衷里两条硬理由、只修正定位：`summarizeCodeRules` 暴露 error 级 finding 的 `{ruleId,file,line}`，新增纯函数 `codeRuleErrorsInDiff({summary,changedFiles})` 只挑「文件 ∈ bot 本次实测改动清单」的 error（文件级归因），task-runner 命中即降级 failed（与失效裸色类硬闸同一路径与立场）。**责任模块存量债不碰、`ran===false`（缺 rg/离线/超时）恒不阻断**——避开 verify-code-rules 项目级口径的误伤（同 VERIFY-TYPE-001 文件级归因的教训）。

@@ -104,9 +104,10 @@
       "waivable": true
     },
     "VERIFY-TEST-002": {
-      "maturity": "experimental",
-      "blocking": false,
-      "waivable": true
+      "maturity": "trial",
+      "blocking": true,
+      "waivable": true,
+      "since": 2
     },
     "VERIFY-BUILD-001": {
       "maturity": "trial",
@@ -139,6 +140,30 @@
       "blocking": true,
       "waivable": true,
       "reportOnlyExempt": true
+    },
+    "DOC-CONFIRM-001": {
+      "maturity": "trial",
+      "blocking": true,
+      "waivable": true,
+      "since": 3
+    },
+    "DOC-CONFIRM-002": {
+      "maturity": "trial",
+      "blocking": true,
+      "waivable": true,
+      "since": 3
+    },
+    "DOC-CONFIRM-003": {
+      "maturity": "trial",
+      "blocking": true,
+      "waivable": true,
+      "since": 3
+    },
+    "DOC-CONFIRM-004": {
+      "maturity": "trial",
+      "blocking": true,
+      "waivable": true,
+      "since": 3
     },
     "DOC-FAST-001": {
       "maturity": "experimental",

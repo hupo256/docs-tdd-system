@@ -13,6 +13,7 @@ import { fastTrackChecks } from './lib/fast-track-policy.mjs'
 import { acceptanceChecks } from './lib/acceptance-results.mjs'
 import { allowedG5Statuses, g5DispositionEvidenceOk, partialPrerequisiteCheck, partialRunNoteCheck, resolvePartialRun, splitPendingReconcile } from './lib/gate-partial.mjs'
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
+import { resolveSeverity } from './lib/rule-maturity.mjs'
 import { classifyWaiver } from './lib/waiver-policy.mjs'
 
 const scriptPath = fileURLToPath(import.meta.url)
@@ -896,12 +897,11 @@ const ruleset = readJson(join(docsRoot, 'common/rules/ruleset.json'))
 for (const check of checks) {
   const rule = ruleset?.rules?.[check.ruleId]
   if (!check.ok && rule) {
+    // 定档单一真值源见 lib/rule-maturity.mjs：experimental/stable 认 blocking（保持现状）；
+    // trial 额外按 since 向下收窄（模板版本低于规则引入版的存量项目不被回溯阻断）；
+    // report-only 降级同样在其中处理，waivable:false / reportOnlyExempt 免疫。
     const projectReportOnly = projectManifest?.gatePolicy?.currentTouchedRules === 'report-only'
-    // report-only 是「存量债 / 新引入的横向规则不阻断本次」的接入期开关，不是万能后门：
-    // 不可豁免规则（waivable:false）与项目自有台账类规则（reportOnlyExempt）免疫，
-    // 否则一个无 owner、无期限、无规则粒度的项目级开关就能盖掉 DOC-WAIVER-004 的四重防护。
-    const immune = rule.waivable === false || rule.reportOnlyExempt === true
-    check.severity = !rule.blocking || (projectReportOnly && !immune) ? 'warn' : 'error'
+    check.severity = resolveSeverity({ rule, manifest: projectManifest, projectReportOnly })
   }
 }
 

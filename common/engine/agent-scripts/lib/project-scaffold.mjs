@@ -33,15 +33,17 @@ export function buildAgentJsonFiles({ projectId, today, branchName, rulesetVersi
       projectId,
       createdAt: today,
       rulesetVersion,
-      templateVersion: 2,
+      templateVersion: 3,
       pilot: { msw: true, prdIntake: true },
       gatePolicy: { legacyRules: 'blocking', currentTouchedRules: 'blocking' },
     }),
     'agent/stage-status.json': json({
       projectId,
       stages: {
-        G5: { status: 'pending', reason: '待完成真实 API 联调，或确认本项目无 API 联调范围。', evidence: [], updatedAt: today },
-        G7: { status: 'pending', reason: '待收到 QA 用例后执行，或明确记录未提供 QA 用例而跳过。', evidence: [], updatedAt: today },
+        // confirmedBy/confirmedAt 是人工签名槽位（DOC-CONFIRM-001/002）：处置态转 completed 等时必须由真人填写，
+        // 空串会被 classifySignature 判为缺签名。模板 v3+ 项目缺签名即 error（trial since:3），存量项目 warn。
+        G5: { status: 'pending', reason: '待完成真实 API 联调，或确认本项目无 API 联调范围。', evidence: [], confirmedBy: '', confirmedAt: '', updatedAt: today },
+        G7: { status: 'pending', reason: '待收到 QA 用例后执行，或明确记录未提供 QA 用例而跳过。', evidence: [], confirmedBy: '', confirmedAt: '', updatedAt: today },
       },
     }),
     'agent/gate-history.json': json({ projectId, runs: [] }),
@@ -68,6 +70,10 @@ export function buildAgentJsonFiles({ projectId, today, branchName, rulesetVersi
       projectId,
       reviewedAt: today,
       reviewer: 'pending',
+      // 人工签收槽位（DOC-CONFIRM-004）：reviewer 记谁做的 review（常是 Agent），confirmedBy 记谁签收结论，
+      // 两者不能同一人。空串判缺签名——模板 v3+ 缺签名 error，存量项目 warn。
+      confirmedBy: '',
+      confirmedAt: '',
       head: '0000000000000000000000000000000000000000',
       findings: [
         { id: 'CR-1', category: 'other', severity: 'high', summary: 'G6 code review 尚未执行', disposition: 'open', evidence: [] },
@@ -96,6 +102,12 @@ export function selfTest() {
   assert.ok(rewritten.includes('../../../common/README.md'), `depth rewrite expected ../../../, got: ${rewritten}`)
   const files = buildAgentJsonFiles({ projectId: 'PR-00001', today: '2026-01-01', branchName: 'feature/PR-00001', rulesetVersion: 3 })
   assert.ok(files['agent/project-manifest.json'].includes('"rulesetVersion": 3'))
+  assert.ok(JSON.parse(files['agent/project-manifest.json']).templateVersion === 3, '新脚手架模板版本应为 3（DOC-CONFIRM 等 since:3 规则的新项目锚点）')
+  // 人工签名槽位随骨架落地（DOC-CONFIRM-001/002/004），真人填写前为空串。
+  const stages = JSON.parse(files['agent/stage-status.json']).stages
+  assert.ok('confirmedBy' in stages.G5 && 'confirmedAt' in stages.G5, 'G5 应带签名槽位')
+  assert.ok('confirmedBy' in stages.G7 && 'confirmedAt' in stages.G7, 'G7 应带签名槽位')
+  assert.ok('confirmedBy' in JSON.parse(files['agent/code-review.json']), 'code-review 应带签收槽位')
   assert.ok(!('agent/gate-results.json' in files), 'gate-results.json 不应预建（VERIFY-G8-001）')
   assert.ok(JSON.parse(files['agent/blockers.json']).length === 0)
   console.log('project-scaffold self-test passed')

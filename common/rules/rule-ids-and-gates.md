@@ -16,7 +16,7 @@
 
 ## 2. 项目阶段 gate
 
-当前本地规则集见 `common/rules/ruleset.json`。试点规则按 `experimental → trial → stable` 晋级：`experimental` 只诊断，`trial` 默认只阻断新项目，`stable` 才进入常规阻断。项目在 `agent/project-manifest.json` 固定 `rulesetVersion` 与 gate policy；规则升级默认不回查阻断存量项目。
+当前本地规则集见 `common/rules/ruleset.json`：每条规则声明 `{ maturity, blocking, waivable }`，定档单一真值源是 `lib/rule-maturity.mjs`（`resolveSeverity`）。`stable` 与 `experimental` 按 `blocking` 定档（`experimental` 想只诊断就置 `blocking:false`；标了 `experimental` 但 `blocking:true` 的规则仍照常阻断）。`trial` 在 `blocking` 基础上再按可选的 `since`（规则引入时的模板版本）向下收窄：项目 `agent/project-manifest.json` 的 `templateVersion` **低于** `since` 时降为 warn——即「规则升级默认不回查阻断存量项目」。不带 `since` 的 trial 规则（`since=0`）对任何项目都阻断。新脚手架写 `templateVersion:3`，故 `since:3` 的规则（如 `DOC-CONFIRM-*`）只阻断新项目、存量 v1/v2 项目 warn。
 
 公共入口:
 
@@ -166,7 +166,7 @@ node apps/web/docs_tdd/common/engine/agent-scripts/verify-build-quality.mjs --pr
 - `agent/code-review.json` 是 G6 review 真值源；模板 v2 起缺文件即阻断，旧项目才允许回退 `06-collaboration.md` 散文判定。`DOC-CR-001/002/003` 分别验证结构（含必填 `head`）、未处理 finding、HEAD 新鲜度。
 - `agent/acceptance-results.json` 把本期 Feature 映射到具体场景、验证方式、结果和 evidence。`DOC-AC-001/002/003/004/005/006` 分别验证结构（含必填 `head`）、Feature 覆盖、无 failed/blocked、PASS 有 evidence、PASS 的 evidence 有真实存在的文件锚点、验收覆盖当前 HEAD。
 - 两者都由 `verify-project-gate.mjs` 直接消费；不能只在 evidence README 写“已 review/已自测”。
-- **人工确认签名**（`DOC-CONFIRM-001..004`，`lib/confirmation.mjs`，均 warn-first）：README 人机分界说 G5-G8 以人工确认为锚点，但此前三份判断层文件里连写签名的字段都没有——机器无法区分「人看过」与「AI 声称人看过」。现在 `stage-status.json`（G5/G7 的人工处置态）、`acceptance-results.json`（`manual`/`manual-visual`/`browser` 的 passed 项）、`code-review.json` 都可写 `confirmedBy` + `confirmedAt`（`YYYY-MM-DD`），缺签名逐条 warn。`reviewer` 不能兼任签收（它记谁做的 review，通常就是 Agent 自己）；**AI 客户端名与 `TBD`/`N/A` 等占位符不算人工确认**（`classifySignature`），只按独立词匹配以免误伤真人名。晋级路径与 `VERIFY-TEST-002` 同型（新模板 error / 旧项目 warn）：签名字段进模板骨架、且有一个真实项目 G5→G7 全签过一遍后转 error，存量项目走 waiver。
+- **人工确认签名**（`DOC-CONFIRM-001..004`，`lib/confirmation.mjs`）：README 人机分界说 G5-G8 以人工确认为锚点，但此前三份判断层文件里连写签名的字段都没有——机器无法区分「人看过」与「AI 声称人看过」。现在 `stage-status.json`（G5/G7 的人工处置态）、`acceptance-results.json`（`manual`/`manual-visual`/`browser` 的 passed 项）、`code-review.json` 都可写 `confirmedBy` + `confirmedAt`（`YYYY-MM-DD`）。`reviewer` 不能兼任签收（它记谁做的 review，通常就是 Agent 自己）；**AI 客户端名与 `TBD`/`N/A` 等占位符不算人工确认**（`classifySignature`），只按独立词匹配以免误伤真人名。**已接线**：四条在 `ruleset.json` 登记为 `trial + since:3`，经 `resolveSeverity` 定档——新脚手架（`templateVersion:3`）缺签名即 error，存量 v1/v2 项目 warn（走 waiver）。签名槽位（空 `confirmedBy`/`confirmedAt`）已随 `project-scaffold` 落入新项目骨架，逼真人在处置态转 completed/skipped 等时补签。
 
 
 ## 3.8 Golden run（回归 gate 机器自己）

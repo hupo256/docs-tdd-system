@@ -68,6 +68,7 @@ const SELF_TEST_SCRIPTS = [
   ['lib/rule-session.mjs', '--self-test'],
   ['lib/rule-chain-runtime.mjs', '--self-test'],
   ['lib/rule-ledger.mjs', '--self-test'],
+  ['lib/rule-maturity.mjs', '--self-test'],
   ['lib/waiver-policy.mjs', '--self-test'],
   ['lib/warn-retirement.mjs', '--self-test'],
   ['lib/confirmation.mjs', '--self-test'],

@@ -105,7 +105,7 @@
 | `VERIFY-TYPE-001` | G6+（`verify-build-quality.mjs`） | 实跑 `tsc --noEmit`，改动文件零报错（存量债不阻断） | error |
 | `VERIFY-TYPE-002` | G6+（`verify-build-quality.mjs`） | 改动之外的 tsc 报错数未超 `agent/tsc-baseline.json`（存量涟漪） | warn |
 | `VERIFY-TEST-001` | G6+（`verify-build-quality.mjs`） | 实跑 `vitest run` 于相关测试文件全绿 | error |
-| `VERIFY-TEST-002` | G6+（`verify-build-quality.mjs`） | 改动的 `.ts` 逻辑文件导出函数须有对应单测 | warn |
+| `VERIFY-TEST-002` | G6+（`verify-build-quality.mjs`） | 改动的 `.ts` 逻辑文件导出函数须有对应单测 | error（trial，since:2：模板 v2+ 阻断、更早项目 warn，可豁免） |
 | `VERIFY-BUILD-001` | G6+（`run-project-gate.mjs`） | 机器事实层缺席守卫：未执行/输出不可解析/无理由跳过即 fail，有理由跳过降 warn；**G8 例外**：交付闸不接受 `--skip-build-quality` 整层跳过（连 biome/tsc/vitest 证据一起丢），带理由也判 error，正当出口是实跑后具名豁免 `VERIFY-PROD-BUILD-001` | error/warn |
 | `VERIFY-PROD-BUILD-001` | G8（`verify-build-quality.mjs`） | 按配置实跑 production build | error |
 | `VERIFY-RULE-001` | 会话启动 / `doctor` | Codex、Claude Code、Cursor、Lark-Codex、Lark-Claude 的 L1/L2/L3 source matrix 指向同一 canonical source fingerprint | error |
@@ -130,10 +130,10 @@
 | `DOC-FRESH-001` | —（`check-doc-budget.mjs`） | 根目录 `HANDOFF-*.md` 在 7 天保鲜期内（按 `git log -1 --format=%cs` 取最后提交日，不看 mtime）。交接完成就删，未完成就更新状态或移进 `prds/<PROJECT-ID>/` | warn |
 | `DOC-CR-002` | G6+（`lib/code-review.mjs`） | code-review 无未处理 finding（open 项须当场修或 waive/标 N/A） | error |
 | `DOC-CR-003` | G6+（`lib/code-review.mjs`） | `code-review.json.head` 覆盖当前 HEAD（head 现为必填，缺 currentSha 不判定），防 review 过时 | warn |
-| `DOC-CONFIRM-001` | G5+（`lib/confirmation.mjs`） | G5 的人工处置态（`completed`/`not-applicable`/`frontend-complete-pending-reconcile`）带 `confirmedBy` + `confirmedAt`；AI 客户端名与占位符不算人工确认 | warn（warn-first，下一轮转 error） |
-| `DOC-CONFIRM-002` | G7+（`lib/confirmation.mjs`） | G7 的人工处置态（`completed`/`skipped`）带 `confirmedBy` + `confirmedAt` | warn（warn-first，下一轮转 error） |
-| `DOC-CONFIRM-003` | G6+（`lib/confirmation.mjs`） | `method ∈ {manual, manual-visual, browser}` 的 `passed` 验收项逐条带 `confirmedBy` + `confirmedAt`（这三种没有机器退出码兜底） | warn（warn-first，下一轮转 error） |
-| `DOC-CONFIRM-004` | G6+（`lib/confirmation.mjs`） | `code-review.json` 带人工签收 `confirmedBy` + `confirmedAt`（`reviewer` 记谁做的 review，通常是 Agent 自己，不能兼任签收） | warn（warn-first，下一轮转 error） |
+| `DOC-CONFIRM-001` | G5+（`lib/confirmation.mjs`） | G5 的人工处置态（`completed`/`not-applicable`/`frontend-complete-pending-reconcile`）带 `confirmedBy` + `confirmedAt`；AI 客户端名与占位符不算人工确认 | error（trial，since:3：模板 v3+ 阻断、存量项目 warn，可豁免） |
+| `DOC-CONFIRM-002` | G7+（`lib/confirmation.mjs`） | G7 的人工处置态（`completed`/`skipped`）带 `confirmedBy` + `confirmedAt` | error（trial，since:3：模板 v3+ 阻断、存量项目 warn，可豁免） |
+| `DOC-CONFIRM-003` | G6+（`lib/confirmation.mjs`） | `method ∈ {manual, manual-visual, browser}` 的 `passed` 验收项逐条带 `confirmedBy` + `confirmedAt`（这三种没有机器退出码兜底） | error（trial，since:3：模板 v3+ 阻断、存量项目 warn，可豁免） |
+| `DOC-CONFIRM-004` | G6+（`lib/confirmation.mjs`） | `code-review.json` 带人工签收 `confirmedBy` + `confirmedAt`（`reviewer` 记谁做的 review，通常是 Agent 自己，不能兼任签收） | error（trial，since:3：模板 v3+ 阻断、存量项目 warn，可豁免） |
 | `VERIFY-G8-001` | G8 | `agent/delivery-status.json` 的 project/mode/branch/headSha/evidence 结构合法；模板 v2 起必须存在 | error |
 | `VERIFY-G8-002` | G8 | 交付模式不是 local，而是 pushed/merged/released | error |
 | `VERIFY-G8-003` | G8 | 实际 Git 工作树干净 | error |
