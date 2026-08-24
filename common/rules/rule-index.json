@@ -4,7 +4,37 @@
   "policy": {
     "readResidentFirst": true,
     "avoidFullCommonRead": true,
-    "changedFileOnlyCodeScan": true
+    "changedFileOnlyCodeScan": true,
+    "briefDefaultScenarios": [
+      "g4_coding_worktree",
+      "write_api",
+      "write_mapper",
+      "write_query_hook",
+      "write_state",
+      "write_msw",
+      "legacy_mock",
+      "write_ui",
+      "write_figma",
+      "g6_code_review",
+      "g6_contract",
+      "g6_visual",
+      "g6_delivery",
+      "g6_verify"
+    ],
+    "briefCollapse": [
+      "rule-ids-and-gates.md",
+      "rule-execution-model.md",
+      "execution-evidence.md"
+    ],
+    "contextBudget": {
+      "coding": { "warn": 12000, "fail": 24000 },
+      "stage": { "warn": 20000, "fail": 32000 },
+      "scenarios": {
+        "new_project": { "warn": 34000, "fail": 40000 },
+        "docs_tdd_maintenance": { "warn": 52000, "fail": 58000 },
+        "g6_verify": { "warn": 32000, "fail": 40000 }
+      }
+    }
   },
   "scenarios": {
     "new_project": [

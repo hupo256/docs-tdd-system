@@ -68,6 +68,19 @@ if (args.includes('--self-test')) {
     console.error('[update-context-summary] self-test failed: blocked stage status parsing')
     process.exit(1)
   }
+  // Next Action stage-aware：有 blocker 优先处理；否则按最近通过阶段指向下一 gate（G3→G5 跳号也要对）。
+  if (!nextActionText(['x'], null).includes('blocker')) {
+    console.error('[update-context-summary] self-test failed: blocker next-action')
+    process.exit(1)
+  }
+  if (!nextActionText([], { gate: 'G3', at: '2026-01-01' }).includes('执行 G5')) {
+    console.error('[update-context-summary] self-test failed: stage-aware next gate (G3→G5)')
+    process.exit(1)
+  }
+  if (!nextActionText([], { gate: 'G8', at: '2026-01-01' }).includes('下一阶段')) {
+    console.error('[update-context-summary] self-test failed: terminal gate next-action')
+    process.exit(1)
+  }
   console.log('PASS scope column parsing')
   process.exit(0)
 }
@@ -204,6 +217,33 @@ function gateRows() {
   }
 }
 
+// 最近一次「通过」验证（resume 用）：gate-history 只记 PASS，取末条即最近验证过的阶段。
+// 兼顾 { runs: [...] } 与裸数组两种历史结构；返回 { gate, at } 或 null。
+function latestPassedGate() {
+  const file = join(projectDir, 'agent/gate-history.json')
+  if (!existsSync(file)) return null
+  try {
+    const data = JSON.parse(readFileSync(file, 'utf8'))
+    const runs = Array.isArray(data) ? data : Array.isArray(data.runs) ? data.runs : []
+    const passed = runs.filter((run) => run?.ok)
+    const last = passed[passed.length - 1]
+    return last ? { gate: last.gate || 'gate', at: (last.generatedAt || '').slice(0, 10) } : null
+  } catch {
+    return null
+  }
+}
+
+// 下一步（stage-aware）：优先「处理首个 blocker」；否则按最近通过阶段指向下一 gate。
+function nextActionText(pending, lastPass) {
+  if (pending.length) return '处理首个 blocker，更新对应项目文档，再重跑对应 gate。'
+  const gateOrder = ['G0', 'G1', 'G2', 'G3', 'G5', 'G6', 'G7', 'G8']
+  const idx = lastPass ? gateOrder.indexOf(lastPass.gate) : -1
+  const next = idx >= 0 && idx < gateOrder.length - 1 ? gateOrder[idx + 1] : null
+  return next
+    ? `执行 ${next}（最近通过 ${lastPass.gate}）；阶段或契约变化后重生成本摘要。`
+    : '执行下一阶段 gate；阶段或契约变化后重生成本摘要。'
+}
+
 const inventory = read('product/00-feature-inventory.md')
 const collaboration = read('product/06-collaboration.md')
 const featureTable = markdownTable(inventory, '## 功能清单')
@@ -211,6 +251,7 @@ const featureRows = featureTable.rows
 const scopeIndex = featureTable.headers.findIndex((header) => header === '本期')
 const pending = [...readStageStatus(), ...pendingRows(collaboration)]
 const gates = gateRows()
+const lastPass = latestPassedGate()
 const now = new Date().toISOString()
 
 const prd = tableValue(inventory, 'PRD 来源') || '待补'
@@ -241,6 +282,7 @@ const content = `# ${projectId} Context Summary
 |------|-----|
 | 项目 | ${projectId} |
 | 当前阶段 | ${stage} |
+| 最近通过 | ${lastPass ? `${lastPass.gate} @ ${lastPass.at}` : '未运行'} |
 | PRD 来源 | ${prd} |
 | Figma | ${figma} |
 | G2 确认 | ${g2} |
@@ -266,7 +308,7 @@ ${gates.length ? gates.join('\n') : '| G2/G6/G8 | 未运行 | | `agent/gate-resu
 
 ## Next Action
 
-- [ ] ${pending.length ? '处理首个 blocker，更新对应项目文档。' : '执行下一阶段 gate；阶段或契约变化后重生成本摘要。'}
+- [ ] ${nextActionText(pending, lastPass)}
 `
 const contentLength = Array.from(content).length
 if (contentLength > SUMMARY_HARD_LIMIT) fail(`generated summary is ${contentLength} chars; hard limit=${SUMMARY_HARD_LIMIT}, target=${SUMMARY_TARGET}`)
