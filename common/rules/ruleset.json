@@ -433,12 +433,12 @@
     "VERIFY-STAGE-001": {
       "maturity": "stable",
       "blocking": true,
-      "waivable": true
+      "waivable": false
     },
     "VERIFY-STAGE-002": {
       "maturity": "stable",
       "blocking": true,
-      "waivable": true
+      "waivable": false
     },
     "VERIFY-STAGE-004": {
       "maturity": "stable",
@@ -463,7 +463,7 @@
     "VERIFY-STAGE-003": {
       "maturity": "stable",
       "blocking": true,
-      "waivable": true
+      "waivable": false
     },
     "VERIFY-PROD-BUILD-001": {
       "maturity": "stable",

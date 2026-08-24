@@ -7,6 +7,8 @@
 // 纯函数、无 I/O、无 process.exit（除 --self-test 入口）：所有 disk/spawn 由调用方负责，
 // 这样 gate 的 --self-test 能直接喂对象断言，不碰真实项目。
 
+import { isPendingReconcileBlocker } from './gate-partial.mjs'
+
 export const BLOCKER_TYPES = ['blocker', 'change']
 export const BLOCKER_STATUSES = ['open', 'resolved']
 export const BLOCKER_CATEGORIES = ['backend', 'design', 'product', 'env', 'qa', 'dependency', 'other']
@@ -97,7 +99,7 @@ export function pendingEntries(entries, gate) {
 // gate 消费：返回标准 check 形状（聚合式，每条规则一条 check），由调用方逐条 add()。
 // 聚合而非逐 blocker 一条：豁免按 ruleId+file 匹配，聚合让「豁免 DOC-BLOCK-002」成为一次
 // 具名带期限的担责动作，而不是给每个 blocker 单独开后门。
-export function blockerChecks({ entries, gate, file = 'agent/blockers.json' }) {
+export function blockerChecks({ entries, gate, file = 'agent/blockers.json', partial = false }) {
   const base = { file, category: 'documentation' }
   // 文件不存在（entries 为 null）→ 不发任何 check：缺失即合法，零回填。
   if (entries === null || entries === undefined) return []
@@ -110,14 +112,20 @@ export function blockerChecks({ entries, gate, file = 'agent/blockers.json' }) {
 
   const checks = [{ ...base, ruleId: 'DOC-BLOCK-001', ok: true, severity: 'error', message: `blockers.json 合法（${entries.length} 条登记）` }]
   const blocking = blockingEntries(entries, gate)
+  // G6-partial：backend 类（后端未上）open 阻塞正是停靠态的题中之义，转待对账 warn、不阻断部分验收；
+  // 权限 / 环境 / 设计等非 backend 阻塞仍是硬阻塞。判据单点在 gate-partial.isPendingReconcileBlocker。
+  const pendingReconcile = partial ? blocking.filter(isPendingReconcileBlocker) : []
+  const hardBlocking = partial ? blocking.filter((entry) => !isPendingReconcileBlocker(entry)) : blocking
   checks.push({
     ...base,
     ruleId: 'DOC-BLOCK-002',
-    ok: blocking.length === 0,
+    ok: hardBlocking.length === 0,
     severity: 'error',
-    message: blocking.length
-      ? `${gate} 前必须解除的 open 阻塞未解除：${blocking.map((entry) => `${entry.id}(${entry.owner}→${entry.blocksGate})`).join('、')}`
-      : `无到达当前阶段(${gate})仍未解除的阻塞`,
+    message: hardBlocking.length
+      ? `${gate} 前必须解除的 open 阻塞未解除：${hardBlocking.map((entry) => `${entry.id}(${entry.owner}→${entry.blocksGate})`).join('、')}`
+      : partial && pendingReconcile.length
+        ? `G6-partial：无非 backend 硬阻塞；${pendingReconcile.length} 项后端未就绪阻塞记为待对账（${pendingReconcile.map((entry) => entry.id).join('、')}），字段到位后须重跑完整 G6`
+        : `无到达当前阶段(${gate})仍未解除的阻塞`,
   })
   const pending = pendingEntries(entries, gate)
   checks.push({
@@ -176,7 +184,14 @@ function selfTest() {
   const grouped = openBlockers([okEntry, { ...okEntry, id: 'CHG-9', type: 'change' }, { ...okEntry, id: 'BLK-9', status: 'resolved', resolution: 'x', resolvedAt: '2026-08-03' }])
   assert('openBlockers splits and drops resolved', grouped.blockers.length === 1 && grouped.changes.length === 1)
 
-  if (!process.exitCode) console.log('blockers lib self-test passed (17 cases)')
+  // G6-partial：backend 类 open 阻塞转待对账（DOC-BLOCK-002 ok），非 backend 仍硬阻塞。
+  const backendAtG6Partial = blockerChecks({ entries: [okEntry], gate: 'G6', partial: true })
+  assert('backend blocker → G6-partial 不阻断', backendAtG6Partial.find((c) => c.ruleId === 'DOC-BLOCK-002')?.ok === true)
+  assert('backend blocker → 完整 G6 仍阻断', blockerChecks({ entries: [okEntry], gate: 'G6' }).find((c) => c.ruleId === 'DOC-BLOCK-002')?.ok === false)
+  const envAtG6Partial = blockerChecks({ entries: [{ ...okEntry, category: 'env' }], gate: 'G6', partial: true })
+  assert('非 backend 阻塞 → G6-partial 仍硬阻断', envAtG6Partial.find((c) => c.ruleId === 'DOC-BLOCK-002')?.ok === false)
+
+  if (!process.exitCode) console.log('blockers lib self-test passed (20 cases)')
 }
 
 if (process.argv[1] && process.argv[1].endsWith('blockers.mjs') && process.argv.includes('--self-test')) {

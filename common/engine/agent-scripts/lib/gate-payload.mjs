@@ -36,14 +36,20 @@ export function conciseFailure(runResult, limit = 12) {
 
 // 机器事实层缺席守卫：子脚本被跳过、崩了或输出无法解析时，不允许静默当成「本阶段没有这一层」。
 // 无理由跳过 = error（否则 --skip-build-quality 就是万能后门）；有理由跳过 = warn，进 warn 台账留痕。
+// G8 例外：交付闸不接受自由文本理由整层跳过（那样连 biome/tsc/vitest 证据都没了）；真跑不了的正当出口是
+// 实跑 verify-build-quality、若唯独 production build 过不了再在 agent/rule-waivers.json 具名豁免 VERIFY-PROD-BUILD-001。
 export function buildQualityGuardCheck({ gate, required, skipped, reason, run, parsed }) {
   if (!required) return null
   const base = { ruleId: 'VERIFY-BUILD-001', category: 'build-quality', file: 'common/engine/agent-scripts/verify-build-quality.mjs' }
   if (skipped) {
     const trimmed = (reason || '').trim()
-    return trimmed
-      ? { ...base, ok: false, severity: 'warn', message: `${gate} 跳过机器事实层（biome/tsc/vitest 未实跑）：${trimmed}`, evidence: '--skip-build-quality' }
-      : { ...base, ok: false, severity: 'error', message: `${gate} 跳过机器事实层但未给 --skip-build-quality-reason，视为无证据`, evidence: '--skip-build-quality' }
+    if (!trimmed) {
+      return { ...base, ok: false, severity: 'error', message: `${gate} 跳过机器事实层但未给 --skip-build-quality-reason，视为无证据`, evidence: '--skip-build-quality' }
+    }
+    if (gate === 'G8') {
+      return { ...base, ok: false, severity: 'error', message: `${gate} 交付闸不接受 --skip-build-quality 整层跳过（会连 biome/tsc/vitest 一起丢证据）：${trimmed}。请实跑 verify-build-quality；若唯独 production build 过不了，在 agent/rule-waivers.json 具名豁免 VERIFY-PROD-BUILD-001`, evidence: '--skip-build-quality' }
+    }
+    return { ...base, ok: false, severity: 'warn', message: `${gate} 跳过机器事实层（biome/tsc/vitest 未实跑）：${trimmed}`, evidence: '--skip-build-quality' }
   }
   if (!run) {
     return { ...base, ok: false, severity: 'error', message: `${gate} 需要机器事实层但 verify-build-quality 未被执行`, evidence: 'no run' }
@@ -91,6 +97,7 @@ export function selfTest() {
     { name: 'G5 不要求', input: { gate: 'G5', required: false, skipped: false, reason: '', run: null, parsed: null }, expect: null },
     { name: 'G6 无理由跳过', input: { gate: 'G6', required: true, skipped: true, reason: '', run: null, parsed: null }, expect: { ok: false, severity: 'error' } },
     { name: 'G6 有理由跳过', input: { gate: 'G6', required: true, skipped: true, reason: '离线环境无依赖', run: null, parsed: null }, expect: { ok: false, severity: 'warn' } },
+    { name: 'G8 有理由整层跳过仍 error', input: { gate: 'G8', required: true, skipped: true, reason: '离线环境无依赖', run: null, parsed: null }, expect: { ok: false, severity: 'error' } },
     { name: 'G6 应跑未跑', input: { gate: 'G6', required: true, skipped: false, reason: '', run: null, parsed: null }, expect: { ok: false, severity: 'error' } },
     { name: 'G6 输出不可解析', input: { gate: 'G6', required: true, skipped: false, reason: '', run: { status: 1 }, parsed: { ok: false, parseError: 'Unexpected token' } }, expect: { ok: false, severity: 'error' } },
     { name: 'G6 正常实跑', input: { gate: 'G6', required: true, skipped: false, reason: '', run: { status: 0 }, parsed: { ok: true, checks: [{ ruleId: 'VERIFY-BIOME-001', ok: true }] } }, expect: { ok: true, severity: 'error' } },

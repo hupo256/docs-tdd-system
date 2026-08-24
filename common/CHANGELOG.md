@@ -7,6 +7,33 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-08-24（三个执行器的豁免套用口径统一到 waiver-policy）
+
+- **口径分裂**：`verify-project-gate` 通过 `classifyWaiver` 只让「生命周期 active」（具名 + 有理由 + ISO 期限且未过期）的 waiver 生效，缺 owner/reason 会判 `DOC-WAIVER-002` 不套用；但 `verify-build-quality` 与 `verify-code-rules` 各自的 `applyWaivers` 只校验 `ruleId + expiresAt 存在且未过期`——**缺 owner/reason 的残缺 waiver 仍会静默把它们的 error 降级**。同一份 `agent/rule-waivers.json`，project-gate 拒收的条目却能豁免掉 biome/tsc/vitest 或静态扫描的红。
+- **修法**：`waiver-policy.mjs` 抽出共享 `activeWaivers(waivers, today)`（筛 active 生命周期）与 `isWaived(active, {ruleId, file})`（ruleId 必配、`waiver.file` 存在时精确匹配），三个执行器一律改调它。`verify-code-rules` 的 `--waivers <path>` / 本地 `agent/rule-waivers.json` 双路径解析、`verify-build-quality` 的本地路径解析都保留，只把「哪些 waiver 算数」这层判据收敛为单一真值源。
+- **生效边界**：仅收紧（残缺 waiver 不再意外生效），不放宽任何豁免。实测存量 4 个项目 15 条 waiver 字段齐备且未过期，零行为回归。台账 error 级 ID → ruleset `waivable` 声明的反向一致性守卫（check-doc-budget「ruleset 声明完整」）此前已到位并通过。`waiver-policy` self-test 补 `activeWaivers`/`isWaived` 正反例；两执行器 self-test（49+22 / 34 例）通过、golden 32 项通过、lark 262/262。
+
+## 2026-08-24（堵掉 G8 构建质量整层跳过的后门）
+
+- **漏洞**：`run-project-gate.mjs` 的 `--skip-build-quality` 只要带一句自由文本 `--skip-build-quality-reason` 就把机器事实层缺席守卫 `VERIFY-BUILD-001` 降成 warn（不挡 `payload.ok`）。在 G8 交付闸这意味着随手写句理由即可整层跳过 biome/tsc/vitest **和** production build，连证据都不留。
+- **修法（只堵洞，不建审批机制）**：`buildQualityGuardCheck` 加 G8 例外——G8 上带理由整层跳过一律判 error（无理由本就 error，不变；G6/G7 带理由仍降 warn 留痕，不变）。正当出口不是「换个更重的跳过审批」，而是**实跑 verify-build-quality**、若唯独 production build 过不了再在 `agent/rule-waivers.json` 具名豁免 `VERIFY-PROD-BUILD-001`（该条维持可豁免）——这样 biome/tsc/vitest 证据照样产出，只有 build 子项被具名带期限地豁免。
+- **生效边界**：判定收在 `lib/gate-payload.mjs`（补 self-test：G8 带理由跳过仍 error），主脚本零改动；`VERIFY-PROD-BUILD-001` 不翻转（承接上一条 2a 里预留的决定）。ledger 的 `VERIFY-BUILD-001` 行标注 G8 例外。
+
+## 2026-08-24（阶段顺序完整性收口：前置 gate PASS 历史不可豁免）
+
+- **`VERIFY-STAGE-001/002/003` 由可豁免收成不可豁免**：这三条查的是「进 G6/G7/G8 前，`gate-history.json` 里有此前真实写入的 G5/G6/G7 PASS」——即阶段顺序的完整性锚点。此前它们在 `ruleset.json` 声明 `waivable:true`，意味着一条具名 waiver 就能跳过「前一阶段真的过了」这件事，让当前阶段自证交付（G8 直接自证、不要求 G7 真过）。收成 `waivable:false`：前置只能**补跑**、不能豁免，与已是不可豁免的 `VERIFY-STAGE-004`（G6-partial 的 G4 前置）同一立场。
+- **为什么安全**：改前实测无任何项目对这三条挂过 waiver，翻转不改变任何现有项目的判定结果。正当的联调/风险出口仍在——那是 `DOC-ASSUM-*`/`DOC-BLOCK-002` 的可豁免销账与 G6-partial 停靠态，而不是伪造「前一阶段过了」。
+- **生效边界**：仅收紧豁免面，不新增/改任何检查逻辑。`rule-id-ledger.md` 三行标注同步为「不可豁免」；`check-doc-budget` 的「ruleset 声明完整」守卫通过、golden 32 项通过。`VERIFY-PROD-BUILD-001`（G8 production build）暂不翻转——它的非豁免形态需要配套「结构化构建质量审批」出口，留待下一批。
+
+## 2026-08-24（G6-partial 收口：公共入口透传 + 台账 partial 感知 + 决策/schema 对齐）
+
+- **公共入口漏传 `--partial`（真机缺陷）**：`docs-tdd gate <PR> G6 --partial` 经 `docs-tdd.mjs` 分发时未把 `--partial` 透传给 `run-project-gate.mjs`，于是用户以为做了部分验收、实际跑的是完整 G6 并被 `VERIFY-STAGE-001`(G5 PASS) 前置挡下。补透传，且 partial 运行**不播报**「G6 通过」（免群里误读为完整通过）。
+- **假设台账 / 阻塞登记在 partial 下不感知**：`assumptionChecks` / `blockerChecks` 此前无视 partial，等接口的 open 假设与后端未就绪的 open 阻塞会在 G6-partial 里照旧判 error，把停靠态本该放行的项挡下。现按单点判据 `isPendingReconcileAssumption`（open 且轴 ∈ api-ready/reconciling）/ `isPendingReconcileBlocker`（open 且 category=backend）记「待对账」不阻断；非接口类 open 假设、非 backend 阻塞仍是硬 error；完整 G6/G7/G8 一律照旧卡销账。判据收在 `lib/gate-partial.mjs`，assumption-ledger / blockers 只 import。
+- **`next`/`resume` 决策不认 `G6-partial`**：`project-decision` 的 `gateNumber` 正则 `^G([0-8])$` 匹配不到 `G6-partial`，PASS 时会落 `run_next_gate` 空命令。新增独立分支：PASS → `waiting_reconcile`（下一步明确为 `docs-tdd gate <PR> G6` 真实字段对账后重跑完整 G6），FAIL → `blocked`（重跑 `--partial`）。
+- **schema 与写入端对齐**：`gate-results.schema.json` 的 `gate` 由 pattern 收成 enum（含 `G6-partial`），显式声明 `partial` 字段并加 `gate=G6-partial ⇔ partial=true` 一致性约束；`verify-project-gate.mjs --write` 补写 `partial`（此前只有 `run-project-gate.mjs` 写，两写入端口径不一，partial 运行产出的 gate-results 缺字段）。
+- **golden 端到端对照**：新增两条共用同一 setup（G4 PASS 历史 + 一条等接口 open 假设 + 一条后端 open 阻塞）的用例——`--partial` 放行（gate=G6-partial、ok、两条记待对账、落 VERIFY-G6-005）、完整 G6 恰好由这两条判 error 阻断。golden-run 支持按用例传 `--partial`。
+- **生效边界**：只收口既有 G6-partial 能力、不放宽任何 gate；各 lib self-test（gate-partial / assumption-ledger 24 例 / blockers 20 例 / project-decision 8 组）通过、golden 32 项通过、`docs-tdd check` 通过。
+
 ## 2026-08-23（文档一致性收口 + 可移植性说实话 + lark 完成卡挂静态尺子）
 
 - **交接文档保鲜（`DOC-FRESH-001`，warn）**：根目录 `HANDOFF-*.md` 曾长期躺着一份「方案已获批准、尚未实现」的交接（实际工作早已落地），没人负责删、也没有机制点名。`check-doc-budget.mjs` 新增校验：根目录 `HANDOFF-*.md` 若最后提交日（`git log -1 --format=%cs`，不看 mtime——clone 会重置 mtime）超过 7 天即 warn（对齐 `DOC-PRD-010` 的 >7d 先例），提示「交接完了就删、没完就更新状态或移进 `prds/<PR>/`」。同步删掉那份过期交接。

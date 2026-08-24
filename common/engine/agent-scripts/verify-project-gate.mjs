@@ -855,7 +855,7 @@ validators[gate]()
   if (existsSync(blockerFile) && entries === null) {
     add('DOC-BLOCK-001', false, 'blockers.json 不是合法 JSON', blockerFile)
   } else {
-    for (const check of blockerChecks({ entries, gate, file: rel(blockerFile) })) {
+    for (const check of blockerChecks({ entries, gate, file: rel(blockerFile), partial })) {
       add(check.ruleId, check.ok, check.message, blockerFile, check.severity, check.category)
     }
   }
@@ -867,7 +867,7 @@ validators[gate]()
 {
   const ledgerFile = join(projectDir, 'agent/assumptions.json')
   const ledger = existsSync(ledgerFile) ? readJson(ledgerFile) : null
-  for (const check of assumptionChecks({ ledger, gate, file: rel(ledgerFile) })) {
+  for (const check of assumptionChecks({ ledger, gate, file: rel(ledgerFile), partial })) {
     add(check.ruleId, check.ok, check.message, ledgerFile, check.severity, check.category)
   }
 }
@@ -914,7 +914,7 @@ const groups = Object.fromEntries(
 )
 // gate 字段写 gateLabel：partial 记 `G6-partial`，故 hasPassedGate('G6') 恒 false（G7 天然被挡），
 // DOC-SYNC-001/002/003（只认 ^G[0-8]$）也不会据它要求 README 阶段跳级。
-const result = { ok: checks.filter((check) => check.severity !== 'warn' && check.severity !== 'waived').every((check) => check.ok), projectId, gate: gateLabel, checks, groups }
+const result = { ok: checks.filter((check) => check.severity !== 'warn' && check.severity !== 'waived').every((check) => check.ok), projectId, gate: gateLabel, partial, checks, groups }
 
 // --write：把本次真实结果（含时间戳）落盘为 agent/gate-results.json，作为 G8 交付证据。
 // 记录的是脚本此刻实际判定，不是人手编造"全绿"。G8 会校验产物来源、项目/阶段和 fail=0。

@@ -46,6 +46,21 @@ export function splitPendingReconcile(items) {
   return { pending, rest: list.filter((item) => !pending.includes(item)) }
 }
 
+// G6-partial 下「与真实接口未就绪关联」的两类欠账判据——只有它们可转 pending-reconcile（warn，不阻断），
+// 权限 / 环境 / PRD 澄清等仍是硬阻塞。判据刻意收窄，避免 partial 沦为「跳过一切欠账的后门」：
+//   · 假设台账：blockingWhen ∈ {api-ready, reconciling}（等接口 / 等对账，正是停靠态的题中之义）；
+//   · 阻塞登记：category === 'backend'（后端未上）。其余 category（permission/env/design 等）不给出口。
+export const PENDING_RECONCILE_ASSUMPTION_AXES = ['api-ready', 'reconciling']
+export const PENDING_RECONCILE_BLOCKER_CATEGORIES = ['backend']
+
+export function isPendingReconcileAssumption(item) {
+  return item?.status === 'open' && PENDING_RECONCILE_ASSUMPTION_AXES.includes(item?.blockingWhen)
+}
+
+export function isPendingReconcileBlocker(entry) {
+  return entry?.status === 'open' && PENDING_RECONCILE_BLOCKER_CATEGORIES.includes(entry?.category)
+}
+
 // G5 阶段态的放行口径：partial 模式额外接受停靠态本身，否则仍只认 completed/not-applicable。
 export function allowedG5Statuses(partial) {
   return partial ? ['completed', 'not-applicable', RECONCILE_G5_STATUS] : ['completed', 'not-applicable']
@@ -118,6 +133,16 @@ function selfTest() {
 
   assert.equal(partialPrerequisiteCheck({ hasG4Pass: false, file: 'agent/gate-history.json' }).ok, false)
   assert.equal(partialPrerequisiteCheck({ hasG4Pass: true, file: 'agent/gate-history.json' }).ok, true)
+
+  // 待接口对账判据：只有等接口/等对账的 open 假设与 backend 类 open 阻塞可转 pending-reconcile。
+  assert.equal(isPendingReconcileAssumption({ status: 'open', blockingWhen: 'api-ready' }), true)
+  assert.equal(isPendingReconcileAssumption({ status: 'open', blockingWhen: 'reconciling' }), true)
+  assert.equal(isPendingReconcileAssumption({ status: 'open', blockingWhen: 'prd-clarify' }), false, 'PRD 澄清类不给 partial 出口')
+  assert.equal(isPendingReconcileAssumption({ status: 'confirmed', blockingWhen: 'api-ready' }), false, '已销账不算 open')
+  assert.equal(isPendingReconcileBlocker({ status: 'open', category: 'backend' }), true)
+  assert.equal(isPendingReconcileBlocker({ status: 'open', category: 'permission' }), false, '权限类仍是硬阻塞')
+  assert.equal(isPendingReconcileBlocker({ status: 'resolved', category: 'backend' }), false)
+
   const note = partialRunNoteCheck({ pendingIds: ['AC-1'], file: 'agent/acceptance-results.json' })
   assert.ok(note.ok && note.severity === 'warn' && note.message.includes('AC-1') && note.message.includes('不构成 G7 前置'))
   assert.ok(partialRunNoteCheck({ pendingIds: [], file: 'x' }).message.includes('无待对账验收项'))

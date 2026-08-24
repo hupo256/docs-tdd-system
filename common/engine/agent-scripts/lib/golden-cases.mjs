@@ -209,5 +209,57 @@ export function buildMutationCases({ targetDir, editFixtureFile, writeFixtureFil
       // evidence 非空但指向不存在的文件：只触发 DOC-AC-005（锚点不存在），不触发 DOC-AC-004（非空）。
       apply: () => editFixtureFile('agent/acceptance-results.json', (text) => text.replace('evidence/gate/g6/README.md', 'evidence/gate/g6/nonexistent.png')),
     },
+    // ---- G6-partial 端到端：同一批「等接口 open 假设 + 后端未就绪阻塞」在部分验收下放行、在完整 G6 下阻断 ----
+    // 两条用例共用同一处 setup（只破坏一处「停靠态」），仅 --partial 开关不同，正反锁死 partial 语义。
+    {
+      id: 'g6-partial-passes-with-pending-reconcile',
+      gate: 'G6',
+      partial: true,
+      expectRuleId: null,
+      apply: () => setupPartialScenario({ editFixtureFile, writeFixtureFile, GOLDEN_PROJECT_ID }),
+      assert: (result) => {
+        assert.equal(result.gate, 'G6-partial', `partial 运行必须记 gate=G6-partial（否则会伪装成 G6 PASS 满足 G7 前置），实际 ${result.gate}`)
+        assert.equal(result.partial, true, 'partial 字段应为 true（写入端与 schema 一致）')
+        assert.equal(result.ok, true, `G6-partial 应放行（待对账不阻断），实际 error：${errorFailures(result.checks).join(', ') || '(无但 ok!==true)'}`)
+        const assumCheck = (result.checks || []).find((check) => check.ruleId === 'DOC-ASSUM-001')
+        assert.ok(assumCheck?.ok, 'DOC-ASSUM-001 在 partial 下应把等接口假设记为待对账（ok）')
+        const blockCheck = (result.checks || []).find((check) => check.ruleId === 'DOC-BLOCK-002')
+        assert.ok(blockCheck?.ok, 'DOC-BLOCK-002 在 partial 下应把后端阻塞记为待对账（ok）')
+        assert.ok((result.checks || []).some((check) => check.ruleId === 'VERIFY-G6-005'), 'partial 运行必须落 VERIFY-G6-005 部分验收结论')
+      },
+    },
+    {
+      id: 'g6-full-blocks-on-same-pending-items',
+      gate: 'G6',
+      partial: false,
+      expectRuleId: null,
+      apply: () => setupPartialScenario({ editFixtureFile, writeFixtureFile, GOLDEN_PROJECT_ID }),
+      assert: (result) => {
+        assert.equal(result.gate, 'G6', `完整 G6 应记 gate=G6，实际 ${result.gate}`)
+        assert.equal(result.ok, false, '同一批待对账项在完整 G6 下必须阻断（partial 不是逃逸口）')
+        assert.deepEqual(
+          new Set(errorFailures(result.checks)),
+          new Set(['DOC-ASSUM-001', 'DOC-BLOCK-002']),
+          `完整 G6 下应恰好由 open 假设 + open 后端阻塞两条判 error，实际：${errorFailures(result.checks).join(', ')}`,
+        )
+      },
+    },
   ]
+}
+
+// G6-partial 场景 setup：补 G4 PASS 历史（VERIFY-STAGE-004 前置）+ 一条等接口 open 假设 + 一条后端未就绪 open 阻塞。
+// 抽成独立函数是因为正反两条用例（partial / 完整 G6）必须喂完全相同的输入，setup 漂移会让对照失效。
+function setupPartialScenario({ editFixtureFile, writeFixtureFile, GOLDEN_PROJECT_ID }) {
+  editFixtureFile('agent/gate-history.json', (text) => {
+    const history = JSON.parse(text)
+    history.runs.unshift({ gate: 'G4', ok: true, generatedAt: '2026-08-03T00:00:00.000Z', tool: 'run-project-gate.mjs', summary: { total: 1, ok: 1, warn: 0, waived: 0, fail: 0 }, evidence: 'evidence/gate/g4/README.md' })
+    return `${JSON.stringify(history, null, 2)}\n`
+  })
+  writeFixtureFile('agent/assumptions.json', `${JSON.stringify({
+    projectId: GOLDEN_PROJECT_ID,
+    assumptions: [{ id: 'ASM-1', endpoint: '/x', field: 'f', code: [], owner: 'be', status: 'open', blockingWhen: 'api-ready', resolution: '' }],
+  }, null, 2)}\n`)
+  writeFixtureFile('agent/blockers.json', `${JSON.stringify([
+    { id: 'BLK-9', type: 'blocker', gate: 'G5', blocksGate: 'G6', category: 'backend', summary: '接口未就绪', owner: 'be', raisedAt: '2026-08-03', status: 'open', evidence: [] },
+  ], null, 2)}\n`)
 }

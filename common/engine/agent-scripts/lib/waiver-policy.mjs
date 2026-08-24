@@ -28,6 +28,19 @@ export function classifyWaiver(waiver, today) {
   return { state: 'active', ruleId: null, message: null }
 }
 
+// 从台账里筛出「可套用」的豁免：生命周期为 active（具名、有理由、ISO 期限且未过期）。
+// 三个执行器（verify-project-gate / verify-build-quality / verify-code-rules）共用同一判据，
+// 避免出现「project-gate 认定 DOC-WAIVER-002 不生效、但 build-quality/code-rules 仍拿它降级」的口径分裂。
+export function activeWaivers(waivers, today) {
+  if (!Array.isArray(waivers)) return []
+  return waivers.filter((waiver) => waiver?.ruleId && classifyWaiver(waiver, today).state === 'active')
+}
+
+// 命中判定：某条 error 是否被一条 active 豁免覆盖（ruleId 必配；waiver.file 存在时须精确匹配文件）。
+export function isWaived(active, { ruleId, file }) {
+  return active.some((waiver) => waiver.ruleId === ruleId && (!waiver.file || waiver.file === file))
+}
+
 export function selfTest() {
   const today = '2026-08-23'
   const base = { ruleId: 'DOC-G3-006', reason: 'r', owner: 'aven', expiresAt: '2026-09-30' }
@@ -47,6 +60,14 @@ export function selfTest() {
   assert.equal(classifyWaiver({ ...base, expiresAt: '2026/09/30' }, today).ruleId, 'DOC-WAIVER-002', '非 ISO 日期应判 invalid 而不是拿去字符串比较')
   assert.equal(classifyWaiver({ ...base, expiresAt: '30-09-2026' }, today).state, 'invalid', 'DD-MM-YYYY 会让字典序比较失真，必须先拦格式')
   assert.ok(classifyWaiver({ reason: 'r', owner: 'a', expiresAt: '2026-09-30' }, today).state === 'active', '无 ruleId 的条目由调用方跳过，本函数只判生命周期')
+  // activeWaivers / isWaived：三执行器共用的套用判据，只放行 active，且缺 ruleId 的条目被丢弃。
+  const pool = [base, { ...base, ruleId: 'DOC-G3-005', owner: '' }, { ...base, ruleId: 'DOC-G3-007', expiresAt: '2020-01-01' }, { reason: 'r', owner: 'a', expiresAt: '2026-09-30' }]
+  const active = activeWaivers(pool, today)
+  assert.deepEqual(active.map((waiver) => waiver.ruleId), ['DOC-G3-006'], 'activeWaivers 只应留下具名齐备且未过期的条目')
+  assert.equal(activeWaivers('not-an-array', today).length, 0, '非数组台账应安全返回空')
+  assert.ok(isWaived(active, { ruleId: 'DOC-G3-006', file: 'a.md' }), 'ruleId 命中且 waiver 无 file 约束时应算覆盖')
+  assert.ok(!isWaived(active, { ruleId: 'DOC-G3-005', file: 'a.md' }), '未在 active 台账中的 ruleId 不应被覆盖')
+  assert.ok(isWaived([{ ruleId: 'X', file: 'b.ts' }], { ruleId: 'X', file: 'b.ts' }) && !isWaived([{ ruleId: 'X', file: 'b.ts' }], { ruleId: 'X', file: 'c.ts' }), 'waiver.file 存在时须精确匹配文件')
   console.log('PASS waiver-policy (豁免生命周期判定)')
 }
 

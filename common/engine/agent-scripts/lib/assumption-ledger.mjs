@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { isPendingReconcileAssumption } from './gate-partial.mjs'
 // 假设台账（agent/assumptions.json）的唯一销账语义源：verify-msw-manifest（实现节奏轴）
 // 和 verify-project-gate（交付节奏轴）都从这里 import，不各写一份 filter。
 //
@@ -44,7 +45,7 @@ const describe = (items) => items.map((item) => `${item.id}(${item.owner}→${it
 // gate 消费：返回标准 check 形状（聚合式，每个 gate 一条 check），由调用方逐条 add()。
 // 聚合而非逐条假设一条：豁免按 ruleId+file 匹配，聚合让「豁免 DOC-ASSUM-002」成为一次
 // 具名带期限的担责动作（= 接受风险交付），而不是给每条假设单独开后门。
-export function assumptionChecks({ ledger, gate, file = 'agent/assumptions.json' }) {
+export function assumptionChecks({ ledger, gate, file = 'agent/assumptions.json', partial = false }) {
   const axes = axesForGate(gate)
   // 台账缺失（ledger 为 null/undefined）或当前 gate 无阻断轴 → 不发 check：零回填。
   // 台账可读性本身由 DOC-G3-IMPL-005 负责（MSW 试点项目），本处不重复报。
@@ -52,6 +53,27 @@ export function assumptionChecks({ ledger, gate, file = 'agent/assumptions.json'
 
   const ruleId = gate === 'G8' ? 'DOC-ASSUM-002' : 'DOC-ASSUM-001'
   const unresolved = unresolvedAssumptions({ ledger, axes })
+
+  // G6-partial（G5 停靠态的部分验收）：等接口 / 等对账的 open 假设正是停靠态的题中之义，
+  // 记为待对账 warn、不阻断本次部分验收；完整 G6/G7/G8（partial 只在 G6 成立）仍按 error 卡销账。
+  // 判据单点收敛在 gate-partial.isPendingReconcileAssumption，本处不另写口径。
+  if (partial) {
+    const pending = unresolved.filter(isPendingReconcileAssumption)
+    const hard = unresolved.filter((item) => !isPendingReconcileAssumption(item))
+    return [
+      {
+        ruleId,
+        ok: hard.length === 0,
+        severity: 'error',
+        category: 'documentation',
+        file,
+        message: hard.length
+          ? `G6-partial 下仍有非接口类 open 假设未销账（不可待对账）：${describe(hard)}`
+          : `G6-partial：${pending.length ? `${pending.length} 条待接口对账的假设记为待对账（${describe(pending)}），不阻断部分验收，真实字段到位后须重跑完整 G6 销账` : '无待对账假设'}`,
+      },
+    ]
+  }
+
   const scope = gate === 'G8' ? '交付前' : `${gate} 出口前`
   return [
     {
@@ -107,7 +129,14 @@ function selfTest() {
   const clean = assumptionChecks({ ledger: { assumptions: [asm('ASM-001', 'confirmed', 'api-ready'), asm('ASM-002', 'open', 'prd-clarify')] }, gate: 'G8' })
   assert('全销账 / 仅 prd-clarify → pass', clean.length === 1 && clean[0].ok)
 
-  if (!process.exitCode) console.log('assumption-ledger lib self-test passed (21 cases)')
+  // G6-partial：等接口的 open 假设记为待对账 warn（ok:true）；完整 G6 仍 fail。
+  const g6partial = assumptionChecks({ ledger, gate: 'G6', partial: true })
+  assert('G6-partial → DOC-ASSUM-001 ok（待对账不阻断）', g6partial.length === 1 && g6partial[0].ruleId === 'DOC-ASSUM-001' && g6partial[0].ok)
+  assert('G6-partial 列出待对账假设 ASM-001', g6partial[0].message.includes('ASM-001') && g6partial[0].message.includes('待对账'))
+  const g6full = assumptionChecks({ ledger, gate: 'G6', partial: false })
+  assert('完整 G6（非 partial）→ 仍 fail', !g6full[0].ok)
+
+  if (!process.exitCode) console.log('assumption-ledger lib self-test passed (24 cases)')
 }
 
 if (process.argv[1] && process.argv[1].endsWith('assumption-ledger.mjs') && process.argv.includes('--self-test')) {

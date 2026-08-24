@@ -23,7 +23,7 @@
     "gate": {
       "type": "string",
       "description": "Gate label. `G6-partial` = partial acceptance run for a G5 pending-reconcile project; it is not a G6 PASS and never satisfies the G7 prerequisite.",
-      "pattern": "^G[0-8](-partial)?$"
+      "enum": ["G0", "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G6-partial"]
     },
     "partial": {
       "type": "boolean",
@@ -188,5 +188,16 @@
       "additionalProperties": false
     }
   },
+  "allOf": [
+    {
+      "$comment": "gate=G6-partial 必须 partial=true：两字段不一致（如 gate=G6-partial 却 partial=false，或反过来）说明写入端逻辑串了，直接 schema 拒。",
+      "if": { "properties": { "gate": { "const": "G6-partial" } }, "required": ["gate"] },
+      "then": { "properties": { "partial": { "const": true } }, "required": ["partial"] }
+    },
+    {
+      "if": { "properties": { "partial": { "const": true } }, "required": ["partial"] },
+      "then": { "properties": { "gate": { "const": "G6-partial" } }, "required": ["gate"] }
+    }
+  ],
   "additionalProperties": false
 }

@@ -94,19 +94,19 @@
 | `DOC-AC-005` | G6+（`lib/acceptance-results.mjs`） | 每条 passed 验收的 evidence 至少有一个真实存在的文件锚点（截图/报告/DOM 比对），且不含指向不存在文件的路径 | error |
 | `DOC-AC-006` | G6+（`lib/acceptance-results.mjs`） | `acceptance-results.json.head` 覆盖当前 HEAD（缺 currentSha 不判定），防验收过时 | warn |
 | `DOC-AC-007` | G6-partial（`lib/acceptance-results.mjs`） | 部分验收的欠账清单：逐条点名待真实字段对账的 `contract`/`browser` 验收项 | warn |
-| `VERIFY-STAGE-001` | G6+ | `agent/gate-history.json` 存在此前真实写入的 G5 PASS | error |
+| `VERIFY-STAGE-001` | G6+ | `agent/gate-history.json` 存在此前真实写入的 G5 PASS | error（不可豁免） |
 | `VERIFY-STAGE-004` | G6-partial | `agent/gate-history.json` 存在此前真实写入的 G4 PASS（G5 停靠态下以 G4 为前置，取代 VERIFY-STAGE-001）。**不可豁免**：partial 已经放宽了一层前置，若剩下这层也能豁免，它就成了无边界后门 | error |
-| `VERIFY-STAGE-002` | G7+ | `agent/gate-history.json` 存在此前真实写入的 G6 PASS | error |
+| `VERIFY-STAGE-002` | G7+ | `agent/gate-history.json` 存在此前真实写入的 G6 PASS | error（不可豁免） |
 | `VERIFY-G7-001` | G7+ | `agent/stage-status.json` 存在 G7 结构化结论 | error |
 | `VERIFY-G7-002` | G7+ | G7 状态为 `completed` 或 `skipped` | error |
 | `VERIFY-G7-003` | G7+ | G7 完成项存在证据路径；跳过项存在具体原因 | error |
-| `VERIFY-STAGE-003` | G8 | `agent/gate-history.json` 存在此前真实写入的 G7 PASS，禁止当前 G8 自证 | error |
+| `VERIFY-STAGE-003` | G8 | `agent/gate-history.json` 存在此前真实写入的 G7 PASS，禁止当前 G8 自证 | error（不可豁免） |
 | `VERIFY-BIOME-001` | G6+（`verify-build-quality.mjs`） | 改动文件实跑 `biome check` 通过，且 `Checked` 文件数 >0 | error |
 | `VERIFY-TYPE-001` | G6+（`verify-build-quality.mjs`） | 实跑 `tsc --noEmit`，改动文件零报错（存量债不阻断） | error |
 | `VERIFY-TYPE-002` | G6+（`verify-build-quality.mjs`） | 改动之外的 tsc 报错数未超 `agent/tsc-baseline.json`（存量涟漪） | warn |
 | `VERIFY-TEST-001` | G6+（`verify-build-quality.mjs`） | 实跑 `vitest run` 于相关测试文件全绿 | error |
 | `VERIFY-TEST-002` | G6+（`verify-build-quality.mjs`） | 改动的 `.ts` 逻辑文件导出函数须有对应单测 | warn |
-| `VERIFY-BUILD-001` | G6+（`run-project-gate.mjs`） | 机器事实层缺席守卫：未执行/输出不可解析/无理由跳过即 fail，有理由跳过降 warn | error/warn |
+| `VERIFY-BUILD-001` | G6+（`run-project-gate.mjs`） | 机器事实层缺席守卫：未执行/输出不可解析/无理由跳过即 fail，有理由跳过降 warn；**G8 例外**：交付闸不接受 `--skip-build-quality` 整层跳过（连 biome/tsc/vitest 证据一起丢），带理由也判 error，正当出口是实跑后具名豁免 `VERIFY-PROD-BUILD-001` | error/warn |
 | `VERIFY-PROD-BUILD-001` | G8（`verify-build-quality.mjs`） | 按配置实跑 production build | error |
 | `VERIFY-RULE-001` | 会话启动 / `doctor` | Codex、Claude Code、Cursor、Lark-Codex、Lark-Claude 的 L1/L2/L3 source matrix 指向同一 canonical source fingerprint | error |
 | `VERIFY-RULE-002` | `changed`、G5-G8 | 编码 rule session v2 存在，且客户端、规则发布、G2 输入、HEAD 与 24 小时有效期均未漂移；一个客户端不能复用另一个客户端的会话 | error |

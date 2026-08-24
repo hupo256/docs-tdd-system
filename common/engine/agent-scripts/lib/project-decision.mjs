@@ -107,6 +107,25 @@ export const decideNext = ({ projectId = 'PR-XXXXX', projectExists = false, stor
   if (gateResult?.gate) {
     const { errors, warns } = classifyGateFailures(gateResult)
     const gate = gateResult.gate
+    // G6-partial（部分验收）不是 G6 PASS：既不推进到 G7，也不能落 run_next_gate 空命令。
+    // 独立状态 waiting_reconcile——下一步明确为「真实字段对账后重跑完整 G6」。
+    if (gate.endsWith('-partial')) {
+      if (gateResult.ok === true) {
+        return decision({
+          status: 'waiting_reconcile', stage: gate, gate, gateOk: true,
+          nextAction: 'reconcile_then_full_g6',
+          command: `docs-tdd gate ${projectId} G6`,
+          advisories: warns,
+        })
+      }
+      return decision({
+        status: 'blocked', stage: gate, gate, gateOk: false,
+        nextAction: 'fix_gate_failures',
+        command: `docs-tdd gate ${projectId} G6 --partial`,
+        blockers: errors,
+        advisories: warns,
+      })
+    }
     if (gateResult.ok === true) {
       if (gate === 'G8') {
         return decision({ status: 'complete', stage: 'G8', gate, gateOk: true, nextAction: 'none', advisories: warns })
@@ -209,7 +228,14 @@ const selfTest = () => {
   assert(early.nextAction === 'sync_prd' && early.command === 'docs-tdd resume PR-9', 'early stage from run-state')
   assert(early.blockers[0]?.message.includes('lark-sources'), 'stored blocker surfaced')
 
-  console.log('PASS project-decision (7 groups: boundaries, advance, PR-01930, PR-01947, early-stage)')
+  // G6-partial PASS：不落 run_next_gate 空命令，而是 waiting_reconcile + 指向重跑完整 G6
+  const g6partial = decideNext({ projectId: 'PR-8', projectExists: true, gateResult: { gate: 'G6-partial', ok: true, checks: [] } })
+  assert(g6partial.status === 'waiting_reconcile' && g6partial.nextAction === 'reconcile_then_full_g6', 'G6-partial pass → waiting_reconcile')
+  assert(g6partial.command === 'docs-tdd gate PR-8 G6', `G6-partial should point at full G6 rerun, got ${g6partial.command}`)
+  const g6partialFail = decideNext({ projectId: 'PR-8', projectExists: true, gateResult: { gate: 'G6-partial', ok: false, summary: { fail: 1 }, checks: [{ ruleId: 'VERIFY-STAGE-004', ok: false, severity: 'error', category: 'verify', message: 'G6-partial requires G4 PASS' }] } })
+  assert(g6partialFail.status === 'blocked' && g6partialFail.command === 'docs-tdd gate PR-8 G6 --partial', 'G6-partial fail → rerun partial')
+
+  console.log('PASS project-decision (8 groups: boundaries, advance, PR-01930, PR-01947, early-stage, G6-partial)')
 }
 
 if (process.argv[1] && process.argv[1].endsWith('project-decision.mjs') && process.argv.includes('--self-test')) selfTest()

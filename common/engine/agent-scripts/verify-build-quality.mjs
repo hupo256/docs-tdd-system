@@ -15,6 +15,7 @@ import { basename, dirname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { tmpdir } from 'node:os'
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
+import { activeWaivers, isWaived } from './lib/waiver-policy.mjs'
 
 const scriptPath = fileURLToPath(import.meta.url)
 const scriptDir = dirname(scriptPath)
@@ -626,7 +627,8 @@ if (productionBuild) {
 
 /* ------------------------------------------------------------- waivers/out */
 
-// 与 verify-code-rules 同口径：命中的 error 可被未过期 waiver 降级为 waived。
+// 与 verify-code-rules / verify-project-gate 同口径：命中的 error 只被「生命周期 active」的 waiver
+// （具名 + 有理由 + ISO 期限且未过期）降级为 waived。判据统一走 waiver-policy.mjs，避免三处口径分裂。
 function applyWaivers(list) {
   if (!projectId) return
   const waiverFile = join(resolveProjectRoot(projectId), 'agent/rule-waivers.json')
@@ -637,12 +639,10 @@ function applyWaivers(list) {
   } catch {
     return
   }
-  if (!Array.isArray(waivers)) return
-  const today = new Date().toISOString().slice(0, 10)
-  const active = waivers.filter((waiver) => waiver && waiver.ruleId && waiver.expiresAt && waiver.expiresAt >= today)
+  const active = activeWaivers(waivers, new Date().toISOString().slice(0, 10))
   for (const check of list) {
     if (check.ok || check.severity !== 'error') continue
-    if (active.some((waiver) => waiver.ruleId === check.ruleId && (!waiver.file || waiver.file === check.file))) {
+    if (isWaived(active, { ruleId: check.ruleId, file: check.file })) {
       check.severity = 'waived'
     }
   }

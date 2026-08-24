@@ -50,6 +50,9 @@ const positional = commandArgs.filter((arg, index) => !arg.startsWith('--') && c
 const detail = positional[0]
 const fullContext = cliArgs.includes('--full')
 const noCache = cliArgs.includes('--no-cache')
+// --partial：G6 部分验收（G5 停靠态出口）。必须在此显式透传给 run-project-gate.mjs——
+// 否则公共入口跑的是普通 G6，用户以为做了部分验收、实际被 G5 前置挡下（真机漏传缺陷修复）。
+const partial = cliArgs.includes('--partial')
 
 // 子进程直通（stdio inherit）：分发到同级脚本时复用，退出码原样上抛。
 function run(args, cwd = repoRoot) {
@@ -137,8 +140,9 @@ else {
   if (!effectiveRules) process.exit(1)
   if (command === 'gate') {
     if (['G5', 'G6', 'G7', 'G8'].includes((detail || 'G3').toUpperCase()) && !requireRuleSession(projectId, worktree, release, effectiveRules, agentClient)) process.exit(1)
-    status = run([join(scriptDir, 'run-project-gate.mjs'), projectId, detail || 'G3', '--write', ...(noCache ? ['--no-cache'] : [])], worktree)
-    if (status === 0) maybeBroadcastGate(projectId, (detail || 'G3').toUpperCase())
+    status = run([join(scriptDir, 'run-project-gate.mjs'), projectId, detail || 'G3', '--write', ...(noCache ? ['--no-cache'] : []), ...(partial ? ['--partial'] : [])], worktree)
+    // partial 不是 G6 PASS：不播报「G6 通过」，免得群里误读为完整通过。
+    if (status === 0 && !partial) maybeBroadcastGate(projectId, (detail || 'G3').toUpperCase())
   } else if (command === 'changed') {
     if (!requireRuleSession(projectId, worktree, release, effectiveRules, agentClient)) process.exit(1)
     status = runChanged(projectId, worktree, effectiveRules.currentFingerprint, { noCache })

@@ -75,8 +75,8 @@ function cleanup() {
   rmSync(targetDir, { recursive: true, force: true })
 }
 
-function runProjectGate(gate) {
-  const result = spawnSync(process.execPath, [join(scriptDir, 'verify-project-gate.mjs'), GOLDEN_PROJECT_ID, gate, '--json'], {
+function runProjectGate(gate, { partial = false } = {}) {
+  const result = spawnSync(process.execPath, [join(scriptDir, 'verify-project-gate.mjs'), GOLDEN_PROJECT_ID, gate, '--json', ...(partial ? ['--partial'] : [])], {
     cwd: repoRoot,
     encoding: 'utf8',
     stdio: 'pipe',
@@ -180,7 +180,7 @@ try {
   for (const testCase of mutationCases) {
     materialize()
     testCase.apply()
-    const result = runProjectGate(testCase.gate)
+    const result = runProjectGate(testCase.gate, { partial: testCase.partial })
     if (result.parseError) {
       record(false, `mutation ${testCase.id}`, `gate 输出无法解析：${result.parseError}`)
       continue

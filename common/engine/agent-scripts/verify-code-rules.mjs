@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 import { demoteRetiredFindings, retiredRuleIds } from './lib/warn-retirement.mjs'
+import { activeWaivers, isWaived } from './lib/waiver-policy.mjs'
 import { loadLedger } from './warn-ledger.mjs'
 
 const scriptPath = fileURLToPath(import.meta.url)
@@ -834,7 +835,8 @@ if (globalScan) {
 }
 
 // 豁免：--waivers <path> 指向 rule-waivers.json（见 rule-ids-and-gates.md §4）。命中的 error
-// finding 降级为 waived（保留在输出、不计入 ok）；过期 / 无 expiresAt / 文件非法一律不生效。
+// finding 降级为 waived（保留在输出、不计入 ok）。套用判据统一走 waiver-policy.mjs 的 activeWaivers：
+// 缺 reason/owner/expiresAt、非 ISO 日期或已过期一律不生效——与 verify-project-gate / verify-build-quality 同口径。
 function applyWaivers(list) {
   const waiverFile = waiversPath ? resolve(worktreeRoot, waiversPath) : ''
   const localOnlyWaiverFile = projectId ? join(resolveProjectRoot(projectId), 'agent/rule-waivers.json') : ''
@@ -846,12 +848,10 @@ function applyWaivers(list) {
   } catch {
     return
   }
-  if (!Array.isArray(waivers)) return
-  const today = new Date().toISOString().slice(0, 10)
-  const active = waivers.filter((w) => w && w.ruleId && w.expiresAt && w.expiresAt >= today)
+  const active = activeWaivers(waivers, new Date().toISOString().slice(0, 10))
   for (const finding of list) {
     if (finding.severity !== 'error') continue
-    if (active.some((w) => w.ruleId === finding.ruleId && (!w.file || w.file === finding.file))) {
+    if (isWaived(active, { ruleId: finding.ruleId, file: finding.file })) {
       finding.severity = 'waived'
     }
   }
