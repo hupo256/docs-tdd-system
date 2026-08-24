@@ -7,6 +7,13 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-08-24（Batch 4：codeRules 文件级归因硬闸 + lark 配置启动校验）
+
+- **codeRules 从纯尺子升为「本次改动引入的 error 才拦」的窄闸**：`lark-code-rules.mjs` 的 changed-file 静态扫描此前明确「不阻断、人来决定回炉」，但 bot 完成后是自动 commit 进分支——「人会在合入前看那行数字并拦下」这个前提在无人值守下不成立，带 error 的改动可能静默进分支。修法保留初衷里两条硬理由、只修正定位：`summarizeCodeRules` 暴露 error 级 finding 的 `{ruleId,file,line}`，新增纯函数 `codeRuleErrorsInDiff({summary,changedFiles})` 只挑「文件 ∈ bot 本次实测改动清单」的 error（文件级归因），task-runner 命中即降级 failed（与失效裸色类硬闸同一路径与立场）。**责任模块存量债不碰、`ran===false`（缺 rg/离线/超时）恒不阻断**——避开 verify-code-rules 项目级口径的误伤（同 VERIFY-TYPE-001 文件级归因的教训）。
+- **lark-bot 配置启动期结构校验**：`loadConfig` 此前只 `JSON.parse`，bugTable 缺 appToken/tableId 等要拖到首轮轮询才炸。新增纯函数 `validateConfig`（不引 ajv，手写守卫贴合固定形状）+ `assertConfigOrExit`：`project` 必填、白名单/数组字段类型校验；**bugTable 配了就得配全 `appToken/tableId/statusField/assigneeField`**（缺任一 poller 会静默拉不到或回写打到空字段），`doneValue` 缺失有优雅降级故只告警；`botOpenId` 缺失只告警（有只读降级兼容）。gateway 与 bugtable-poller 启动即 fail-closed（poller 另将 bugTable 视作刚需）。
+- **现状核对结论（不重复造轮子）**：Batch 4 计划里的「bugtable 回写对账 + retry writeback-only 模式」经核对已随既有 `resolveWritebackOutcome`/`retryPendingWriteback`/`done_pending_writeback` 状态机完整落地（12 次上限 + gaveUp + health 持续告警 + 达上限不落 done），非待办。
+- **生效边界**：全部改动在 `common/lark-bot/` 子系统，不触碰 L3/effective 指纹规则链（doctor error=0/warn=0）。lark 单测 276/276（新增 codeRuleErrorsInDiff/buildCodeRulesBlockedResult 6 例、validateConfig 9 例）；真实 `lark-bot.local.json` 过 `validateConfig` 零 error/warn，不影响运行中的 bot。
+
 ## 2026-08-24（Batch 3 现状核对：lark 写接口鉴权已达成安全目标，不新增 ACL）
 
 - **核对结论**：P0-C（lark-bot 鉴权/ACL）的实质内容已随 `a3ecde8`「lark 写接口强制鉴权」落地并在 live bot 跑通，非待办。逐项：①密钥已就位——`~/.config/fameex-lark/gateway-secret`（0600）经 wrapper export `LARK_GATEWAY_SECRET`，gateway 从 env 读；②缺密钥拒启 + 删短路——`lark-gateway.mjs` 无密钥即 `process.exit(1)`，`lark-routes.mjs` 所有 POST 与 `GET /lark/tasks` 强制校验（`GET /lark/health` 匿名探活）；③`@所有人` 与「无 botOpenId」兼容分支收紧为只读 `task_mention`，不再直接入队改代码；④启动 `hardenRuntimeFiles` 把运行时 JSON 收 0600。live 校验（port 3005）：不带密钥 `POST /lark/tasks/prune`、`GET /lark/tasks` 均 401，匿名 `GET /lark/health` 200。lark 单测 262/262 覆盖上述触发/白名单判定。
