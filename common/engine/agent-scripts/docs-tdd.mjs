@@ -19,10 +19,11 @@ import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { createContextPack, expandScenarioRefs, printContextPack, requireFreshEffectiveRules, requireFreshRuleRelease } from './lib/context-pack.mjs'
+import { createContextPack, enforceContextBudget, expandScenarioRefs, findInjectedPack, loadInjectionLedger, printContextDelta, printContextPack, recordInjection, requireFreshEffectiveRules, requireFreshRuleRelease } from './lib/context-pack.mjs'
 import { maybeBroadcastGate, printGateHeartbeat } from './lib/gate-heartbeat.mjs'
 import { runChanged, recommendScenarios } from './lib/changed-detection.mjs'
 import { capability, resolveProjectWorktree } from './lib/project-status-report.mjs'
+import { explainRule } from './lib/explain-rule.mjs'
 import { resolveRoots } from './lib/roots.mjs'
 import { resolveRuleSessionClient } from './lib/rule-session.mjs'
 import { CODING_SCENARIOS, requireRuleSession, verifyG2Ready, writeRuleSession } from './lib/rule-session-runtime.mjs'
@@ -119,8 +120,13 @@ if (command === 'rule-health') {
   process.exit(run([join(scriptDir, 'warn-ledger.mjs'), '--health', ...cliArgs.slice(1)]))
 }
 
+// explain 也不针对具体项目：按 RULE-ID 定向切出台账与修复指引（配合 brief 模式，门禁失败才按需展开）。
+if (command === 'explain') {
+  process.exit(explainRule(projectId))
+}
+
 if (!new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(projectId || '')) {
-  console.error('usage: docs-tdd.mjs <kickoff|status|resume|next|capability|doctor|release|golden|guard|rule-health|check|gate|context|changed|recommend> PR-01234 [G0-G8|scenario] [--compact|--full|--no-cache] [--client codex|claude|cursor|manual]')
+  console.error('usage: docs-tdd.mjs <kickoff|status|resume|next|capability|doctor|release|golden|guard|rule-health|explain|check|gate|context|changed|recommend> PR-01234 [G0-G8|scenario] [--compact|--full|--no-cache] [--client codex|claude|cursor|manual]')
   process.exit(1)
 }
 
@@ -150,8 +156,28 @@ else {
     try {
       const scenario = detail || 'g0_g2_scope'
       if (CODING_SCENARIOS.has(scenario) && !verifyG2Ready(projectId, worktree, scriptDir)) process.exit(1)
-      const pack = createContextPack(projectId, scenario, release, effectiveRules, fullContext ? 'full' : 'compact')
-      printContextPack(scenario, pack)
+      // 模式选择：--full 优先展开全文；否则 brief 默认场景（编码 + G6 验收）折叠机器/参考型正文，其余 compact。
+      const index = readJson(join(docsRoot, 'common/rules/rule-index.json'))
+      const briefDefault = new Set(index.policy?.briefDefaultScenarios || [])
+      const mode = fullContext ? 'full' : briefDefault.has(scenario) ? 'brief' : 'compact'
+      const pack = createContextPack(projectId, scenario, release, effectiveRules, mode)
+      // 注入去重：同任务内同一 (scenario, fingerprint) 已注入过 → 只回 delta 指针，不重吐全文。
+      const ledger = loadInjectionLedger(projectId)
+      if (findInjectedPack(ledger, scenario, pack.fingerprint)) {
+        printContextDelta(scenario, pack)
+      } else {
+        printContextPack(scenario, pack)
+        // 预算门禁：编码场景归 coding、其余归 stage；已知偏大的判断密集场景走 scenarios 覆盖（grandfather 带余量）。
+        // --full 是「要全文」的显式逃生口，不受预算硬闸约束（预算治理的是 brief/compact 默认路径的膨胀）。
+        if (!fullContext) {
+          const kind = CODING_SCENARIOS.has(scenario) ? 'coding' : 'stage'
+          const budgets = index.policy?.contextBudget
+          const verdict = enforceContextBudget(pack, kind, budgets?.scenarios?.[scenario] || budgets?.[kind])
+          if (!verdict.ok) process.exit(1)
+        }
+        recordInjection(ledger, { scenario, fingerprint: pack.fingerprint, output: pack.output, injectedAt: new Date().toISOString() })
+      }
+      // 编码会话仍每次刷新（headSha / codeReadiness 可能变，门禁证据不能靠 delta 复用）。
       if (CODING_SCENARIOS.has(scenario)) writeRuleSession(projectId, worktree, release, effectiveRules, pack, agentClient)
       printGateHeartbeat(projectId, resolvedWorktree)
     } catch (error) {

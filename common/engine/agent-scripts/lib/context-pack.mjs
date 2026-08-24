@@ -11,11 +11,12 @@
 
 import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { resolveProjectRoot, resolveRoots, rulesRoot } from './roots.mjs'
+import { charCount } from './doc-budget-schema.mjs'
 import { printReport } from './cli-report.mjs'
 
 const scriptsDir = join(dirname(fileURLToPath(import.meta.url)), '..')
@@ -35,6 +36,34 @@ export function normalizeRuleRef(ref) {
   throw new Error(`invalid rule reference: ${JSON.stringify(ref)}`)
 }
 
+// 把一个 section selector（如 "1-3" / "2"）解析成 [min,max] 区间；非法即抛错。
+function parseSelectorRange(part) {
+  const match = /^(\d+)(?:-(\d+))?$/.exec(part)
+  if (!match) throw new Error(`invalid section selector: ${part}`)
+  const min = Number(match[1])
+  const max = Number(match[2] || match[1])
+  if (max < min) throw new Error(`invalid section selector: ${part}`)
+  return [min, max]
+}
+
+// 把多个 section selector 合并成最小不重叠区间串（重叠/相邻区间并成一段）。
+// 任一 selector 为空串（整文件）→ 返回 ''（整文件吞并所有区间）。用于同文件多次引用的去重。
+export function mergeSectionSelectors(selectors) {
+  if (selectors.some((selector) => !selector)) return ''
+  const ranges = selectors
+    .flatMap((selector) => selector.split(',').map((part) => part.trim()).filter(Boolean))
+    .map(parseSelectorRange)
+    .sort((a, b) => a[0] - b[0] || a[1] - b[1])
+  const merged = []
+  for (const [min, max] of ranges) {
+    const last = merged[merged.length - 1]
+    // 相邻（min === last.max + 1）也合并：连续标题段拼接后语义不变，且减少引用条数。
+    if (last && min <= last[1] + 1) last[1] = Math.max(last[1], max)
+    else merged.push([min, max])
+  }
+  return merged.map(([min, max]) => (min === max ? `${min}` : `${min}-${max}`)).join(',')
+}
+
 export function expandScenarioRefs(index, scenario, stack = []) {
   if (stack.includes(scenario)) throw new Error(`scenario cycle: ${[...stack, scenario].join(' -> ')}`)
   const refs = index.scenarios?.[scenario]
@@ -48,33 +77,41 @@ export function expandScenarioRefs(index, scenario, stack = []) {
     if (ref && typeof ref.scenario === 'string') return expandScenarioRefs(index, ref.scenario, [...stack, scenario])
     return [normalizeRuleRef(ref)]
   })
-  const seen = new Set()
-  return expanded.filter((ref) => {
-    const key = `${ref.file}#${ref.sections}`
-    if (seen.has(key)) return false
-    seen.add(key)
-    return true
-  })
+  // 按文件聚合（保持首次出现顺序），同文件的多个 section 选择器合并成最小不重叠区间串——
+  // 修掉「去重键是精确串 file#sections、重叠区间不合并」导致的同章节正文重复。
+  const order = []
+  const byFile = new Map()
+  for (const ref of expanded) {
+    if (!byFile.has(ref.file)) {
+      byFile.set(ref.file, [])
+      order.push(ref.file)
+    }
+    byFile.get(ref.file).push(ref.sections)
+  }
+  return order.map((file) => ({ file, sections: mergeSectionSelectors(byFile.get(file)) }))
 }
 
 export function selectMarkdownSections(text, selector) {
   if (!selector) return text
-  const match = /^(\d+)(?:-(\d+))?$/.exec(selector)
-  if (!match) throw new Error(`invalid section selector: ${selector}`)
-  const min = Number(match[1])
-  const max = Number(match[2] || match[1])
-  if (max < min) throw new Error(`invalid section selector: ${selector}`)
   const headings = [...text.matchAll(/^##\s+(\d+)(?:\.|\s)/gm)]
-  const start = headings.find((heading) => Number(heading[1]) === min)?.index
-  const end = headings.find((heading) => Number(heading[1]) > max)?.index
-  if (start === undefined) throw new Error(`section selector ${selector} did not match any heading`)
-  return text.slice(start, end ?? text.length)
+  // 多区间：逗号分隔，逐段切片按区间起点升序拼接。
+  const ranges = selector.split(',').map((part) => part.trim()).filter(Boolean).map(parseSelectorRange)
+  ranges.sort((a, b) => a[0] - b[0] || a[1] - b[1])
+  const slices = ranges.map(([min, max]) => {
+    const start = headings.find((heading) => Number(heading[1]) === min)?.index
+    const end = headings.find((heading) => Number(heading[1]) > max)?.index
+    if (start === undefined) throw new Error(`section selector ${min}${max === min ? '' : `-${max}`} did not match any heading`)
+    return text.slice(start, end ?? text.length)
+  })
+  return slices.join('')
 }
 
 export function createContextPack(id, scenario, release, effectiveRules, mode = 'compact') {
   const started = Date.now()
   const index = readJson(join(docsRoot, 'common/rules/rule-index.json'))
   const refs = expandScenarioRefs(index, scenario)
+  // brief 模式：纯机器/参考型文档（gate 会真跑判定，AI 无需逐字读）折成一行指针，其余照常按 section 切片。
+  const briefCollapse = new Set(mode === 'brief' ? index.policy?.briefCollapse || [] : [])
 
   const summaryRef = {
     file: `${id}/agent/context-summary.md`,
@@ -91,10 +128,18 @@ export function createContextPack(id, scenario, release, effectiveRules, mode = 
         file: inRules ? `common/rules/${normalized.file}` : `common/${normalized.file}`,
         abs: inRules ? rulesPath : join(docsRoot, 'common', normalized.file),
         sections: mode === 'full' ? '' : normalized.sections,
+        collapse: briefCollapse.has(normalized.file),
       }
     }),
   ]
   const sections = sources.map((source) => {
+    if (source.collapse) {
+      const suffix = source.sections ? `#§${source.sections}` : ''
+      return {
+        label: `${source.file}${suffix} (brief)`,
+        text: `> [BRIEF] 机器/门禁校验规则，正文未展开：门禁失败时按 finding 的 RULE-ID 运行 \`docs-tdd explain <RULE-ID>\`，或直接读 \`${source.file}\`${suffix}。`,
+      }
+    }
     const file = source.abs
     if (!existsSync(file)) throw new Error(`context source does not exist: ${source.file}`)
     const raw = readFileSync(file, 'utf8')
@@ -136,6 +181,7 @@ export function createContextPack(id, scenario, release, effectiveRules, mode = 
     mode,
     cacheHit,
     sourceChars: sections.reduce((total, item) => total + Array.from(item.text).length, 0),
+    sectionSizes: sections.map(({ label, text }) => ({ label, chars: charCount(text) })),
     packChars: Array.from(body).length + 1,
     durationMs: Date.now() - started,
   }
@@ -163,6 +209,66 @@ export function printContextPack(scenario, pack) {
     ['context pack', pack.output],
     ['context metrics', `sources=${pack.refs.length}, sourceChars=${pack.sourceChars}, packChars=${pack.packChars}, cache=${pack.cacheHit ? 'hit' : 'miss'}, duration=${pack.durationMs}ms`],
     ['routed rules', pack.refs.join(', ')],
+  ])
+}
+
+// context pack 预算门禁（warn/fail 两档，数据驱动）：把 packChars 真正消费起来，超限列出最大来源。
+// budget 取自 rule-index.json policy.contextBudget[kind]（kind: coding|stage）。缺配置即放行。
+// warn → console.warn 不阻断；fail → console.error + 返回 ok:false（调用方 exit(1)）。对齐 check-doc-budget 两档模型。
+export function enforceContextBudget(pack, kind, budget) {
+  if (!budget) return { ok: true, level: 'ok' }
+  const chars = pack.packChars
+  const { warn, fail } = budget
+  if (chars <= (warn ?? Number.POSITIVE_INFINITY)) return { ok: true, level: 'ok' }
+  const overFail = fail != null && chars > fail
+  const top = [...(pack.sectionSizes || [])]
+    .sort((a, b) => b.chars - a.chars)
+    .slice(0, 5)
+    .map((item) => `    ${String(item.chars).padStart(6)}  ${item.label}`)
+  const emit = overFail ? console.error : console.warn
+  emit(`context budget ${overFail ? 'FAIL' : 'WARN'}: ${kind} pack ${chars} 字符 > ${overFail ? `fail ${fail}` : `warn ${warn}`}`)
+  emit('  最大来源（字符）：')
+  for (const line of top) emit(line)
+  if (overFail) emit('  瘦身：确认编码/验收场景已命中 brief 折叠（勿滥用 --full），或拆分场景引用，机器规则用 docs-tdd explain 按需展开。')
+  return { ok: !overFail, level: overFail ? 'fail' : 'warn' }
+}
+
+// ---------------------------------------------------------------------------
+// 注入去重：同任务内同一 (scenario, contextFingerprint) 不重复吐全文，只回 delta 指针。
+// 台账落 agent/context-injections.json（非门禁证据，纯去重提示；schema 校验不覆盖此文件）。
+// 指纹含 effectiveRules + 场景 + 正文，规则/内容一变即失配、自然重新生成。
+// ---------------------------------------------------------------------------
+const INJECTION_LEDGER_LIMIT = 20
+
+export function loadInjectionLedger(id) {
+  const file = join(resolveProjectRoot(id), 'agent/context-injections.json')
+  if (!existsSync(file)) return { file, injections: [] }
+  try {
+    const data = JSON.parse(readFileSync(file, 'utf8'))
+    return { file, injections: Array.isArray(data.injections) ? data.injections : [] }
+  } catch {
+    return { file, injections: [] }
+  }
+}
+
+// 命中条件：场景 + 指纹一致，且缓存包文件仍在（/tmp 被清则视为未注入，重新生成）。
+export function findInjectedPack(ledger, scenario, fingerprint) {
+  return ledger.injections.find((entry) => entry.scenario === scenario && entry.fingerprint === fingerprint && existsSync(entry.output))
+}
+
+export function recordInjection(ledger, entry) {
+  const injections = [entry, ...ledger.injections.filter((prev) => !(prev.scenario === entry.scenario && prev.fingerprint === entry.fingerprint))].slice(0, INJECTION_LEDGER_LIMIT)
+  mkdirSync(dirname(ledger.file), { recursive: true })
+  writeFileSync(ledger.file, `${JSON.stringify({ version: 1, injections }, null, 2)}\n`)
+}
+
+// delta 指针：本任务已注入过同指纹包，提示 AI 直接复用已读内容、无需重读全文。
+export function printContextDelta(scenario, pack) {
+  printReport([
+    ['scenario', scenario],
+    ['context', 'delta: none — 同指纹包本任务已注入，若已读可跳过重读'],
+    ['context pack', pack.output],
+    ['context fingerprint', pack.fingerprint],
   ])
 }
 
@@ -202,21 +308,59 @@ function selfTest() {
   const md = ['# Test', '', '## 1. One', 'one', '', '## 2 Two', 'two', '', '## 3. Three', 'three'].join('\n')
   assert(selectMarkdownSections(md, '2') === ['## 2 Two', 'two', '', ''].join('\n'), 'section 2 slice')
   assert(selectMarkdownSections(md, '1-2') === ['## 1. One', 'one', '', '## 2 Two', 'two', '', ''].join('\n'), 'section 1-2 slice')
+  // 多区间：不相邻的 1 与 3 分别切片后拼接（跳过中间的 §2）。
+  assert(selectMarkdownSections(md, '1,3') === ['## 1. One', 'one', '', '## 3. Three', 'three'].join('\n'), 'multi-range 1,3 slice')
   let threw = false
   try { selectMarkdownSections(md, '2-1') } catch { threw = true }
   assert(threw, 'reversed selector rejected')
   threw = false
   try { selectMarkdownSections(md, '4') } catch { threw = true }
   assert(threw, 'missing heading rejected')
+  // 区间合并：重叠/相邻/整文件吞并。
+  assert(mergeSectionSelectors(['5-6', '1-3', '3', '6']) === '1-3,5-6', 'overlapping ranges merged (gap kept)')
+  assert(mergeSectionSelectors(['2-4', '2-3', '2']) === '2-4', 'nested ranges merged')
+  assert(mergeSectionSelectors(['1-3', '4-6']) === '1-6', 'adjacent ranges merged')
+  assert(mergeSectionSelectors(['1-3', '']) === '', 'whole-file selector absorbs ranges')
   assert(normalizeRuleRef('a.md').file === 'a.md', 'string ref normalized')
   assert(normalizeRuleRef({ file: 'b.md', sections: '1-2' }).sections === '1-2', 'object ref normalized')
   const index = { scenarios: { base: ['a.md', { file: 'b.md', sections: '1' }], derived: [{ scenario: 'base' }, 'c.md'] } }
   const expanded = expandScenarioRefs(index, 'derived')
   assert(expanded.length === 3 && expanded[2].file === 'c.md', 'scenario refs expanded + deduped')
+  // 同文件多次引用（跨子场景）合并成单条、区间取并集。
+  const overlap = { scenarios: { q: [{ file: 'q.md', sections: '5-6' }, { file: 'q.md', sections: '1-3' }, { file: 'q.md', sections: '3' }] } }
+  const mergedRefs = expandScenarioRefs(overlap, 'q')
+  assert(mergedRefs.length === 1 && mergedRefs[0].sections === '1-3,5-6', 'same-file refs merged to one')
   threw = false
   try { expandScenarioRefs({ scenarios: { x: [{ scenario: 'x' }] } }, 'x') } catch { threw = true }
   assert(threw, 'scenario cycle detected')
-  console.log('PASS context-pack (selectMarkdownSections + normalizeRuleRef + expandScenarioRefs)')
+  // 预算门禁三档：无 budget 放行；> warn 且 ≤ fail → warn(ok);  > fail → fail(!ok)。
+  // 静音其打印（warn/error 行是被断言的预期行为，不是测试失败），只校验返回判定。
+  const budgetPack = { packChars: 15000, sectionSizes: [{ label: 'a', chars: 15000 }] }
+  const realWarn = console.warn
+  const realError = console.error
+  console.warn = () => {}
+  console.error = () => {}
+  const budgetVerdicts = {
+    none: enforceContextBudget(budgetPack, 'coding', undefined),
+    under: enforceContextBudget({ packChars: 5000, sectionSizes: [] }, 'coding', { warn: 12000, fail: 24000 }),
+    warn: enforceContextBudget(budgetPack, 'coding', { warn: 12000, fail: 24000 }),
+    fail: enforceContextBudget({ packChars: 30000, sectionSizes: [] }, 'coding', { warn: 12000, fail: 24000 }),
+  }
+  console.warn = realWarn
+  console.error = realError
+  assert(budgetVerdicts.none.ok, 'no budget passes')
+  assert(budgetVerdicts.under.level === 'ok', 'under warn ok')
+  assert(budgetVerdicts.warn.level === 'warn' && budgetVerdicts.warn.ok, 'over warn warns (not blocking)')
+  assert(!budgetVerdicts.fail.ok, 'over fail blocks')
+  // 注入去重：同 scenario+fingerprint 且包文件存在才算命中；recordInjection 去重 + 限长。
+  const tmpPack = join(tmpdir(), 'ctx-inject-selftest.md')
+  writeFileSync(tmpPack, 'x')
+  const ledger = { file: join(tmpdir(), 'ctx-inject-selftest-ledger.json'), injections: [{ scenario: 's', fingerprint: 'fp', output: tmpPack }] }
+  assert(findInjectedPack(ledger, 's', 'fp'), 'existing injection with live file matched')
+  assert(!findInjectedPack(ledger, 's', 'other'), 'different fingerprint not matched')
+  assert(!findInjectedPack({ injections: [{ scenario: 's', fingerprint: 'fp', output: join(tmpdir(), 'nope.md') }] }, 's', 'fp'), 'missing pack file not matched')
+  rmSync(tmpPack, { force: true })
+  console.log('PASS context-pack (selectMarkdownSections + mergeSectionSelectors + normalizeRuleRef + expandScenarioRefs + enforceContextBudget + injection-ledger)')
 }
 
 if (process.argv[1] && process.argv[1].endsWith('context-pack.mjs') && process.argv.includes('--self-test')) selfTest()

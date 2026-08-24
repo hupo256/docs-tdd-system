@@ -57,7 +57,10 @@ export function printFailureSummary(label, runResult, parsedResult) {
   if (findings.length) {
     for (const finding of findings) {
       const severity = String(finding.severity || 'error').toUpperCase()
-      console.error(`  [${severity}] ${finding.ruleId || finding.id || 'ERROR'}: ${finding.message || finding.reason || 'check failed'}${finding.file ? ` (${finding.file})` : ''}`)
+      const ruleId = finding.ruleId || finding.id
+      console.error(`  [${severity}] ${ruleId || 'ERROR'}: ${finding.message || finding.reason || 'check failed'}${finding.file ? ` (${finding.file})` : ''}`)
+      // 门禁失败才按需展开规则：brief 模式下正文默认折成指针，这里给出定向拉取入口。
+      if (ruleId) console.error(`    → docs-tdd explain ${ruleId}`)
     }
   } else {
     for (const line of conciseFailure(runResult)) console.error(`  ${line}`)
