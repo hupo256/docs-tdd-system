@@ -8,6 +8,8 @@ import { blockerChecks } from './lib/blockers.mjs'
 import { assumptionChecks } from './lib/assumption-ledger.mjs'
 import { codeReviewChecks } from './lib/code-review.mjs'
 import { acceptanceConfirmationCheck, codeReviewConfirmationCheck, stageConfirmationCheck } from './lib/confirmation.mjs'
+import { validateSchema } from './lib/doc-budget-schema.mjs'
+import { fastTrackChecks } from './lib/fast-track-policy.mjs'
 import { acceptanceChecks } from './lib/acceptance-results.mjs'
 import { allowedG5Statuses, g5DispositionEvidenceOk, partialPrerequisiteCheck, partialRunNoteCheck, resolvePartialRun, splitPendingReconcile } from './lib/gate-partial.mjs'
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
@@ -869,6 +871,20 @@ validators[gate]()
   const ledger = existsSync(ledgerFile) ? readJson(ledgerFile) : null
   for (const check of assumptionChecks({ ledger, gate, file: rel(ledgerFile), partial })) {
     add(check.ruleId, check.ok, check.message, ledgerFile, check.severity, check.category)
+  }
+}
+
+// 快速通道是显式 opt-in：只有 agent/fast-track.json 存在才检查，普通项目零回填。
+// G2 判断「业务语义是否仍未决定」，后续 gate 判断临时契约是否按期销账；Mock 本身不替代业务决策。
+{
+  const fastTrackFile = join(projectDir, 'agent/fast-track.json')
+  if (existsSync(fastTrackFile)) {
+    const ledger = readJson(fastTrackFile)
+    const schema = readJson(join(docsRoot, 'common/engine/schemas/fast-track.schema.json'))
+    const schemaErrors = ledger && schema ? validateSchema(ledger, schema, 'fast-track.json') : ['JSON 或 schema 无法解析']
+    for (const check of fastTrackChecks({ ledger: ledger ?? {}, projectId, gate, schemaErrors, partial, file: rel(fastTrackFile) })) {
+      add(check.ruleId, check.ok, check.message, fastTrackFile, check.severity, check.category)
+    }
   }
 }
 

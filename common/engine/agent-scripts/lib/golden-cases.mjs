@@ -11,6 +11,29 @@ export const baselineGates = ['G0', 'G1', 'G2', 'G3', 'G5', 'G6', 'G7']
 // fx: { targetDir, editFixtureFile, writeFixtureFile, GOLDEN_PROJECT_ID, errorFailures }
 // 每个用例只破坏一处。expectRuleId 是「必须命中」的那条；任何额外 error 命中都算规则变宽。
 export function buildMutationCases({ targetDir, editFixtureFile, writeFixtureFile, GOLDEN_PROJECT_ID, errorFailures }) {
+  const fastTrackLedger = (overrides = {}) => ({
+    projectId: GOLDEN_PROJECT_ID,
+    route: 'pending-api',
+    confirmedBy: 'golden-owner',
+    confirmedAt: '2026-08-24',
+    items: [{
+      id: 'FTD-001',
+      category: 'amount-precision',
+      semanticStatus: 'provisional',
+      impact: 'cross-cutting',
+      summary: '金额精度待真实接口确认',
+      source: 'product/03-api-contract.md',
+      temporaryContract: '临时按 8 位截断，仅用于 dev 验证',
+      safeFallback: '规则未确认时显示 -- 并禁用提交',
+      owner: 'product-owner',
+      reconcileWith: 'api',
+      resolveByGate: 'G5',
+      status: 'open',
+      resolution: '',
+      evidence: ['product/06-collaboration.md'],
+    }],
+    ...overrides,
+  })
   return [
     {
       id: 'missing-api-contract-file',
@@ -174,6 +197,51 @@ export function buildMutationCases({ targetDir, editFixtureFile, writeFixtureFil
         assert.ok(waived, 'DOC-BLOCK-002 应出现在 checks 里')
         assert.equal(waived.severity, 'waived', `未过期豁免应把 DOC-BLOCK-002 降为 waived，实际 ${waived.severity}`)
         assert.equal(errorFailures(result.checks).length, 0, `豁免后不应剩余 error：${errorFailures(result.checks).join(', ')}`)
+      },
+    },
+    {
+      id: 'fast-track-undecided-money-blocks-g2',
+      gate: 'G2',
+      expectRuleId: 'DOC-FAST-003',
+      apply: () => writeFixtureFile('agent/fast-track.json', `${JSON.stringify(fastTrackLedger({
+        items: [{
+          ...fastTrackLedger().items[0],
+          semanticStatus: 'undecided',
+          temporaryContract: '',
+        }],
+      }), null, 2)}\n`),
+    },
+    {
+      id: 'fast-track-open-decision-blocks-at-due-gate',
+      gate: 'G5',
+      expectRuleId: 'DOC-FAST-005',
+      apply: () => writeFixtureFile('agent/fast-track.json', `${JSON.stringify(fastTrackLedger(), null, 2)}\n`),
+    },
+    // G6-partial 正反对照：同一「等真实接口对账」的到期项，partial 下转待对账放行、纯业务 decision 欠账仍阻断。
+    {
+      id: 'fast-track-partial-defers-api-reconcile',
+      gate: 'G6',
+      partial: true,
+      expectRuleId: null,
+      apply: () => writeFixtureFile('agent/fast-track.json', `${JSON.stringify(fastTrackLedger(), null, 2)}\n`),
+      assert: (result) => {
+        const f5 = (result.checks || []).find((check) => check.ruleId === 'DOC-FAST-005')
+        if (!f5?.ok) throw new Error(`G6-partial 下 reconcileWith=api 的到期项应记为待对账、不阻断，实际 DOC-FAST-005 ok=${f5?.ok}：${f5?.message}`)
+        const f4 = (result.checks || []).find((check) => check.ruleId === 'DOC-FAST-004')
+        if (!f4?.ok) throw new Error(`pending-api 等接口项销账 gate 应放宽到 G6，DOC-FAST-004 不应判 error：${f4?.message}`)
+      },
+    },
+    {
+      id: 'fast-track-partial-still-blocks-decision-debt',
+      gate: 'G6',
+      partial: true,
+      expectRuleId: null,
+      apply: () => writeFixtureFile('agent/fast-track.json', `${JSON.stringify(fastTrackLedger({
+        items: [{ ...fastTrackLedger().items[0], id: 'FTD-002', category: 'permission', reconcileWith: 'decision', temporaryContract: '临时默认拒绝', safeFallback: '未知权限一律拒绝' }],
+      }), null, 2)}\n`),
+      assert: (result) => {
+        const f5 = (result.checks || []).find((check) => check.ruleId === 'DOC-FAST-005')
+        if (f5?.ok !== false) throw new Error(`G6-partial 不是逃逸口：纯业务 decision 欠账仍须硬阻断，实际 DOC-FAST-005 ok=${f5?.ok}`)
       },
     },
     {

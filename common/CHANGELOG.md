@@ -46,6 +46,14 @@
 - **golden 端到端对照**：新增两条共用同一 setup（G4 PASS 历史 + 一条等接口 open 假设 + 一条后端 open 阻塞）的用例——`--partial` 放行（gate=G6-partial、ok、两条记待对账、落 VERIFY-G6-005）、完整 G6 恰好由这两条判 error 阻断。golden-run 支持按用例传 `--partial`。
 - **生效边界**：只收口既有 G6-partial 能力、不放宽任何 gate；各 lib self-test（gate-partial / assumption-ledger 24 例 / blockers 20 例 / project-decision 8 组）通过、golden 32 项通过、`docs-tdd check` 通过。
 
+## 2026-08-24（快速通道从类别封禁改为风险分级 + 临时业务契约机器化）
+
+- **修正过粗的 G2 门槛**：原规则把权限、金额精度、状态机、路由、核心交互整体视为 G2 blocker，混淆了“业务语义未决定”和“语义已定但接口/环境未就绪”。现改为三轴判定：`semanticStatus`（confirmed/provisional/undecided）× `impact`（local/cross-cutting/irreversible）× 类别；只有高风险语义仍 undecided，或未决项跨模块/不可逆时阻断 G2。Mock 可以替代不可用系统，不能替代业务决策。
+- **新增显式 opt-in 台账 `agent/fast-track.json`**：选择快速通道才从 `templates/fast-track-template.json` 创建，普通项目零回填。`route`、真人签名、临时契约、安全降级、owner、最迟销账 gate 与证据均结构化；`DOC-FAST-001..005` 分别校验结构、人工确认、高风险未决项、临时护栏和到期未销账。字段/权限/金额/状态最迟 G5，视觉/路由/核心交互最迟 G6，其他项最迟 G8。
+- **允许安全占位，不允许假业务默认**：权限未知默认拒绝，金额规则未知显示 `--` 并禁提交，未知状态不开放动作，正式路由未知只走 dev-only 入口，核心流程未知只做无副作用原型。高风险项若有负责人签认的可逆临时契约可继续 G0→G4；无决策仍停 G2。
+- **执行链**：新 schema 纳入全项目元数据检查，gate cache/changed fingerprint 纳入台账；判定收敛到 `lib/fast-track-policy.mjs` 自测，并补 golden 变异覆盖“未决金额挡 G2”和“临时决策到期挡 G5”。
+- **对齐 G6-partial 停靠出口（补 `reconcileWith`）**：`pending-api` 项目的终点是 G6-partial，但原 `DOC-FAST-005` 不感知 `--partial`，会把等真实接口对账的到期项在部分验收时硬卡，与“不要空等”的初衷相悖；同时类别销账上限一刀切 G5，使高风险 `provisional` 项被 G5 上限与 G6-partial overdue 两头夹死。现给每项加 `reconcileWith`（`api`/`decision`）：`--partial` 下 `api` 类到期项转待对账 warn、`decision` 类仍硬阻断（partial 不是逃逸口）；`pending-api` 路由下 `api` 项销账上限放宽到 G6。待对账判据收敛到 `lib/gate-partial.isPendingReconcileFastTrackItem`，并补 golden G6-partial 正反对照用例。
+
 ## 2026-08-23（文档一致性收口 + 可移植性说实话 + lark 完成卡挂静态尺子）
 
 - **交接文档保鲜（`DOC-FRESH-001`，warn）**：根目录 `HANDOFF-*.md` 曾长期躺着一份「方案已获批准、尚未实现」的交接（实际工作早已落地），没人负责删、也没有机制点名。`check-doc-budget.mjs` 新增校验：根目录 `HANDOFF-*.md` 若最后提交日（`git log -1 --format=%cs`，不看 mtime——clone 会重置 mtime）超过 7 天即 warn（对齐 `DOC-PRD-010` 的 >7d 先例），提示「交接完了就删、没完就更新状态或移进 `prds/<PR>/`」。同步删掉那份过期交接。

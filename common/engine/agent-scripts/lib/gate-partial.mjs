@@ -61,6 +61,14 @@ export function isPendingReconcileBlocker(entry) {
   return entry?.status === 'open' && PENDING_RECONCILE_BLOCKER_CATEGORIES.includes(entry?.category)
 }
 
+// 快速通道台账（agent/fast-track.json）里「等真实接口对账」的 open 项：G6-partial 下转待对账、不阻断。
+// 判据刻意收窄到 reconcileWith==='api'——即语义/临时契约已定、只差真实响应核对的项；
+// reconcileWith==='decision'（纯业务临时决策，不依赖接口）永远按 resolveByGate 硬销账，partial 不给出口，
+// 否则 partial 会沦为「跳过一切业务决策欠账的后门」。与 assumptions/blockers 的待对账口径同源、单点收敛。
+export function isPendingReconcileFastTrackItem(item) {
+  return item?.status === 'open' && item?.reconcileWith === 'api'
+}
+
 // G5 阶段态的放行口径：partial 模式额外接受停靠态本身，否则仍只认 completed/not-applicable。
 export function allowedG5Statuses(partial) {
   return partial ? ['completed', 'not-applicable', RECONCILE_G5_STATUS] : ['completed', 'not-applicable']
@@ -121,6 +129,11 @@ function selfTest() {
   assert.deepEqual(pending.map((item) => item.id), ['AC-1', 'AC-2'], 'only blocked contract/browser items are pending-reconcile')
   assert.deepEqual(rest.map((item) => item.id), ['AC-3', 'AC-4', 'AC-5'], 'blocked vitest and failed contract stay unresolved')
   assert.deepEqual(splitPendingReconcile(null), { pending: [], rest: [] })
+
+  // 快速通道待对账判据：只有 reconcileWith==='api' 的 open 项转待对账；decision 类与已 resolved 不给出口。
+  assert.equal(isPendingReconcileFastTrackItem({ status: 'open', reconcileWith: 'api' }), true)
+  assert.equal(isPendingReconcileFastTrackItem({ status: 'open', reconcileWith: 'decision' }), false, '纯业务决策不依赖接口，partial 不放行')
+  assert.equal(isPendingReconcileFastTrackItem({ status: 'resolved', reconcileWith: 'api' }), false, '已销账不算 open')
 
   assert.deepEqual(allowedG5Statuses(false), ['completed', 'not-applicable'])
   assert.ok(allowedG5Statuses(true).includes(RECONCILE_G5_STATUS))

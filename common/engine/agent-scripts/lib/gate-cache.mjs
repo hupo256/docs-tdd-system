@@ -31,7 +31,7 @@ export function createFingerprint({ callerCwd, config, docsRoot }) {
 const CACHE_TRACKED_FILES = [
   'product/00-feature-inventory.md', 'product/02-technical-design.md', 'product/03-api-contract.md',
   'product/04-frontend-tasks.md', 'product/06-collaboration.md', 'agent/project-manifest.json',
-  'agent/prd-source-manifest.json', 'agent/msw-manifest.json', 'agent/assumptions.json',
+  'agent/prd-source-manifest.json', 'agent/msw-manifest.json', 'agent/assumptions.json', 'agent/fast-track.json',
   'agent/rule-waivers.json', 'agent/stage-status.json', 'agent/gate-history.json',
   'agent/blockers.json', 'agent/code-review.json', 'agent/acceptance-results.json', 'agent/delivery-status.json',
 ]
