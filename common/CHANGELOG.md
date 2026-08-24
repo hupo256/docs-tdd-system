@@ -7,6 +7,11 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-08-24（Batch 3 现状核对：lark 写接口鉴权已达成安全目标，不新增 ACL）
+
+- **核对结论**：P0-C（lark-bot 鉴权/ACL）的实质内容已随 `a3ecde8`「lark 写接口强制鉴权」落地并在 live bot 跑通，非待办。逐项：①密钥已就位——`~/.config/fameex-lark/gateway-secret`（0600）经 wrapper export `LARK_GATEWAY_SECRET`，gateway 从 env 读；②缺密钥拒启 + 删短路——`lark-gateway.mjs` 无密钥即 `process.exit(1)`，`lark-routes.mjs` 所有 POST 与 `GET /lark/tasks` 强制校验（`GET /lark/health` 匿名探活）；③`@所有人` 与「无 botOpenId」兼容分支收紧为只读 `task_mention`，不再直接入队改代码；④启动 `hardenRuntimeFiles` 把运行时 JSON 收 0600。live 校验（port 3005）：不带密钥 `POST /lark/tasks/prune`、`GET /lark/tasks` 均 401，匿名 `GET /lark/health` 200。lark 单测 262/262 覆盖上述触发/白名单判定。
+- **不做 W3.3（运维端点加 operator ∈ allowedOpenIds）**：与锁定的「写任务维持群信任」冲突或纯冗余——①所有 POST 已强制密钥，`retry/prune/reopen` 早已满足计划里「或仅接受带 secret 的本机调用」这一支；②`retry/prune` 是带密钥的 CLI 运维命令、请求体无 operator 可查，边界本就是密钥；③`reopen` 由 poller 从 QA 验退触发，operator 是群里 QA/PM（未必在 allowedOpenIds），要求 operator ∈ allowedOpenIds 会挡掉正当验退，正是群信任要保护的场景。故判定 Batch 3 已达成安全目标、无需新增代码。
+
 ## 2026-08-24（三个执行器的豁免套用口径统一到 waiver-policy）
 
 - **口径分裂**：`verify-project-gate` 通过 `classifyWaiver` 只让「生命周期 active」（具名 + 有理由 + ISO 期限且未过期）的 waiver 生效，缺 owner/reason 会判 `DOC-WAIVER-002` 不套用；但 `verify-build-quality` 与 `verify-code-rules` 各自的 `applyWaivers` 只校验 `ruleId + expiresAt 存在且未过期`——**缺 owner/reason 的残缺 waiver 仍会静默把它们的 error 降级**。同一份 `agent/rule-waivers.json`，project-gate 拒收的条目却能豁免掉 biome/tsc/vitest 或静态扫描的红。
