@@ -21,14 +21,16 @@ export const createRequestHandler = ({ config, store, consumer, port, runtimeVer
     const { pathname } = url
 
     try {
-      // 写操作鉴权：配置了共享密钥时，所有 POST 必须带匹配的 x-lark-gateway-secret
-      if (req.method === 'POST' && gatewaySecret && req.headers['x-lark-gateway-secret'] !== gatewaySecret) {
+      // 写操作鉴权：所有 POST 必须带匹配的 x-lark-gateway-secret。
+      // 密钥缺失不再短路放行——gateway 启动时已断言必须有密钥（见 lark-gateway.mjs），
+      // 这里若还保留 `gatewaySecret &&` 就等于给「配置被清空」留一条静默敞开的路。
+      if (req.method === 'POST' && req.headers['x-lark-gateway-secret'] !== gatewaySecret) {
         return sendJson(res, 401, { ok: false, error: 'unauthorized' })
       }
       // /lark/tasks 列表也要鉴权：它返回全部任务的正文、附件本地路径、AI 结论与内部分支名，
       // 属于业务内容而非运行指标（health 才是可匿名探活的那个）。本机任一进程都能 curl 到，
       // 不鉴权等于把群里的工单内容对本机所有程序敞开。三个客户端（worker/poller/CLI）都已带密钥。
-      if (req.method === 'GET' && pathname === '/lark/tasks' && gatewaySecret && req.headers['x-lark-gateway-secret'] !== gatewaySecret) {
+      if (req.method === 'GET' && pathname === '/lark/tasks' && req.headers['x-lark-gateway-secret'] !== gatewaySecret) {
         return sendJson(res, 401, { ok: false, error: 'unauthorized' })
       }
       if (req.method === 'GET' && pathname === '/lark/health') {
@@ -44,13 +46,22 @@ export const createRequestHandler = ({ config, store, consumer, port, runtimeVer
         if (eventStale) warnings.push(`已 ${Math.round((Date.now() - consumerObs.lastEventAt) / 60000)}min 无事件（夜间空闲属正常，持续整个工作日则需排查长连接）`)
         if (stats.counts?.failed) warnings.push(`${stats.counts.failed} 个 failed 任务待人工处置（lark-bot failed 查看）`)
         if (stats.counts?.intake_failed) warnings.push(`${stats.counts.intake_failed} 条 @负责人消息意图分类失败（未触发代码执行）`)
-        // 中间态不出现在任何终态列表里，不在这儿点名就只能靠翻日志发现（回写重试已有 1h 上限，见 writeback）。
-        if (stats.counts?.done_pending_writeback) warnings.push(`${stats.counts.done_pending_writeback} 个任务已完成但 bug 表状态回写挂起，正在重试`)
+        // 中间态不出现在任何终态列表里，不在这儿点名就只能靠翻日志发现。回写重试有 1h 上限，
+        // 到上限后任务**仍停在这个中间态**（见 lark-bugtable-writeback：不落 done，否则不一致会被 prune 抹掉），
+        // 故这里把「还在重试」与「已放弃、等人改表格」分开报，后者是需要人动手的。
+        if (stats.counts?.done_pending_writeback) {
+          const gaveUp = store.list().filter((task) => task.status === 'done_pending_writeback' && task.writebackGaveUp).length
+          warnings.push(
+            `${stats.counts.done_pending_writeback} 个任务已完成但 bug 表状态回写挂起${gaveUp ? `，其中 ${gaveUp} 个已停止重试、需人工改表格` : '，正在重试'}`,
+          )
+        }
         if (stats.deadLetters) warnings.push(`${stats.deadLetters} 个死信任务`)
-        // 规则链新鲜度：published 规则层（L3 release / effective-rules）与当前源不一致时，worker 每个任务都会
-        // 被 assertFreshRuleChain 以 VERIFY-RULE-004 挡下——在 health 提前暴露，避免只能靠任务全红才发现（A2/C7）。
+        // 规则链新鲜度：published 规则层（L3 release / effective-rules）与当前源不一致时，worker 会带
+        // （可能陈旧的）已发布规则继续执行并记 warning——**不阻断任务**（d533eb4：stale 一律 note-only，
+        // 只有常驻必需规则文件/章节缺失才按 VERIFY-RULE-004 fail-closed）。故这里必须在 health 显形，
+        // 否则「跑的是旧规则」既不报错也没人知道。
         const ruleChain = inspectRuleChain({ cwd: process.cwd() })
-        if (!ruleChain.fresh) warnings.push(`规则链已过期，worker 将拒绝执行所有任务：${ruleChain.failures.join('；')}（需重新发布规则链）`)
+        if (!ruleChain.fresh) warnings.push(`规则链已过期，worker 仍会执行任务但用的是已发布的旧规则：${ruleChain.failures.join('；')}（需重新发布规则链）`)
         // 运行版本漂移：常驻进程跑着旧代码时，本进程的一切行为都按旧版走，外部无从发现（见 lark-runtime-version）。
         // 不参与 ok 判定（同 eventStale：会让 `lark-bot start` 的健康门白等超时），但必须在 warnings + 字段里显形。
         const version = runtimeVersion?.observe() || null

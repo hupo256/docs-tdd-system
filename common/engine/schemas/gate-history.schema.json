@@ -12,7 +12,11 @@
         "type": "object",
         "required": ["gate", "ok", "generatedAt", "tool", "summary", "fingerprint", "evidence"],
         "properties": {
-          "gate": { "type": "string", "pattern": "^G[0-8]$" },
+          "gate": {
+            "type": "string",
+            "description": "`G6-partial` records a partial acceptance run (G5 pending-reconcile). It is a distinct label on purpose: it never satisfies hasPassedGate('G6'), so G7 stays blocked until a full G6 run.",
+            "pattern": "^G[0-8](-partial)?$"
+          },
           "ok": { "const": true },
           "generatedAt": { "type": "string", "minLength": 1 },
           "tool": { "const": "run-project-gate.mjs" },

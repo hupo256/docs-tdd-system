@@ -22,7 +22,12 @@
     },
     "gate": {
       "type": "string",
-      "pattern": "^G[0-8]$"
+      "description": "Gate label. `G6-partial` = partial acceptance run for a G5 pending-reconcile project; it is not a G6 PASS and never satisfies the G7 prerequisite.",
+      "pattern": "^G[0-8](-partial)?$"
+    },
+    "partial": {
+      "type": "boolean",
+      "description": "True when the run used --partial (contract/browser acceptance items recorded as pending-reconcile)."
     },
     "checks": {
       "type": "array",

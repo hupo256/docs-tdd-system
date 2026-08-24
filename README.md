@@ -1,6 +1,6 @@
 # docs_tdd — 可移植的 AI 前端开发规则与门禁系统
 
-一套**独立、可复用**的 AI 前端开发操作系统：用「先文档后代码 + G0-G8 门禁 + 机器可验证证据」约束 Codex、Claude Code、Cursor、Lark-Codex、Lark-Claude 与人协作完成前端功能开发。与具体业务仓库解耦，可挂载到任意前端项目复用。
+一套**独立**的 AI 前端开发操作系统：用「先文档后代码 + G0-G8 门禁 + 机器可验证证据」约束 Codex、Claude Code、Cursor、Lark-Codex、Lark-Claude 与人协作完成前端功能开发。引擎与业务仓库通过 `docs-tdd.config.json` + 一个软链解耦；**目前只在一个仓库（`@fameex/web`）真实验证过，移植到第二个仓库需要改动下列锚点**（见[可移植性的真实边界](#可移植性的真实边界)）。
 
 > 本仓库是从某前端工程中沉淀、抽离出的独立系统，经多轮真实项目迭代。作为个人知识库独立版本管理，不含任何业务机密以外的通用方法论。
 
@@ -35,6 +35,7 @@ docs-tdd check <PROJECT-ID>                # 校验文档、规则与脚本预�
 docs-tdd release <PROJECT-ID> --scenario X # 原子发布 L3/effective + doctor/golden/context smoke
 docs-tdd golden                            # 让门禁机器自己被回归测试
 docs-tdd guard                             # 机器层兜底：一条命令跑 golden + 发布 fresh 检查 + doctor
+docs-tdd rule-health                       # 规则体检：命中分布、warn 台账年龄、待退休、零命中清单
 ```
 
 统一审计入口是 `docs-tdd doctor`：它检查五个 AI 入口是否一个不少、没有未登记入口，是否引用同一组 L1/L2/L3 source fingerprint，以及软链、adapter、Lark runtime 和发布清单是否漂移。需要连门禁回归一起检查时运行 `docs-tdd guard`；任一项失败都不是 PASS。
@@ -87,6 +88,20 @@ node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs doctor
 
 后续由 `prepare-coding-worktree.mjs` 创建的功能 worktree 会复用同一套配置，并自动挂载这份文档系统。
 
+## 可移植性的真实边界
+
+引擎（`common/engine/`）的路径解析、门禁、发布指纹都从 `docs-tdd.config.json` 派生，换仓库只改配置；但**下面这些位置仍写着 FameEX 的具体锚点，移植到第二个仓库必须逐项处理**。这份清单存在的意义就是不让 README 说「可挂载任意前端项目」这种在真实迁移面前会破的话：
+
+| 类别 | 位置 | 移植动作 |
+| --- | --- | --- |
+| 配置默认值（改配置即可） | [docs-tdd.config.default.json](./docs-tdd.config.default.json) 的 `productionBuild`（`--filter @fameex/web`）、`moduleImportAliases`（`@fameex/ui`）、`cursorLocalGovernance` | 在本地 `docs-tdd.config.json` 覆盖；引擎无硬编码回落之外的依赖 |
+| Agent 适配器文本 | [lib/agent-rule-adapters.mjs](./common/engine/agent-scripts/lib/agent-rule-adapters.mjs)、[install-local-agent-rules.mjs](./common/engine/agent-scripts/install-local-agent-rules.mjs) 里 "FameEX Local Execution Protocol" 等字面量与 `~/.cursor/rules/fameex-local-governance.mdc` 文件名 | 改为按 consumer 名生成（当前是硬编码字符串） |
+| 规则文档示例 | [coding-worktree.md](./common/rules/coding-worktree.md)、[git-branch-flow.md](./common/rules/git-branch-flow.md)、[hook-integration.md](./common/rules/hook-integration.md)、[prd-feature-inventory.md](./common/rules/prd-feature-inventory.md)、[figma-mcp-read-workflow.md](./common/rules/figma-mcp-read-workflow.md)、[rule-inheritance.md](./common/rules/rule-inheritance.md) 中的绝对路径 / 包名 | 示例路径与 `pnpm --filter` 包名换成目标仓；`rule-inheritance.md` 的 L2 锚点描述需按目标仓 `.cursor/rules` 重写 |
+| L2 依赖（不在本仓） | 消费仓的 `AGENTS.md` / `CLAUDE.md` / `.cursor/rules/*.mdc` | 目标仓必须有对应的 L2 锚点文件，否则 `doctor` 的规则适配项不 PASS |
+| lark-bot 本机约定 | `~/.config/fameex-lark/`（密钥目录）、bug 表与项目路由配置 | 改目录名与表配置；lark-bot 是可选组件，不接入则无影响 |
+
+尚未做的是把上面 2-3 类抽成 `adapters/<consumer>/`——在出现第二个真实消费仓之前不做这层抽象（为一个用户造抽象只会造错）。移植时以本表为检查表，逐项落地后再更新本节。
+
 ## 如何使用（Step by Step）
 
 以「用本系统跑一个新需求」为例的日常流程（首次接入见上一节）。命令统一走 `<mount>/common/engine/agent-scripts/docs-tdd.mjs`（下文简写 `docs-tdd`）。
@@ -128,7 +143,7 @@ docs-tdd gate PR-01234 G8      # production build + Git 可交付状态 + 交付
 ```
 `docs-tdd doctor` 随时自检适配/冲突/发布状态；缓存仅复用同输入 PASS，强制实跑加 `--no-cache`。
 
-> **人机分界（自动化边界要如实）**：G0–G4（需求→文档→方案→MSW 编码）高度自动；G5–G8 是**人机协同**——gate 机器实跑 biome/tsc/vitest/build 与结构化验收/字段对账，但**真实接口联调、视觉还原（Figma 并排 ≥95%）、交互手感、响应式、QA 用例执行以人工确认为锚点**（分工见 [common/rules/verification-division-of-labor.md](./common/rules/verification-division-of-labor.md)：Agent 固化能回归的逻辑/边界/数据/DOM 契约，人工过一眼能判的像素/手感/响应式）。判断层的 `acceptance-results.json`/`code-review.json` 由 Agent 产出、gate 校验其结构与证据锚点真实性，但语义正确性仍需人工/Review 兜底（执行强度分级见 [common/rules/rule-execution-model.md §3](./common/rules/rule-execution-model.md)）。
+> **人机分界（自动化边界要如实）**：G0–G4（需求→文档→方案→MSW 编码）高度自动；G5–G8 是**人机协同**——gate 机器实跑 biome/tsc/vitest/build 与结构化验收/字段对账，但**真实接口联调、视觉还原（Figma 并排 ≥95%）、交互手感、响应式、QA 用例执行以人工确认为锚点**（分工见 [common/rules/verification-division-of-labor.md](./common/rules/verification-division-of-labor.md)：Agent 固化能回归的逻辑/边界/数据/DOM 契约，人工过一眼能判的像素/手感/响应式）。判断层的 `acceptance-results.json`/`code-review.json` 由 Agent 产出、gate 校验其结构与证据锚点真实性，但语义正确性仍需人工/Review 兜底（执行强度分级见 [common/rules/rule-execution-model.md §3](./common/rules/rule-execution-model.md)）。人工确认在机器侧有落点：`stage-status.json`（G5/G7 处置态）、人工判定的 passed 验收项与 `code-review.json` 都写 `confirmedBy` + `confirmedAt`，缺签名或用 AI 客户端名代签由 `DOC-CONFIRM-001..004` 逐条点名（见 [rule-ids-and-gates.md §3.7](./common/rules/rule-ids-and-gates.md)）。
 
 **9. 上线后回收**：需求合入配置的 `baseRef` 并验证后，回收一次性 worktree（保留 `prds/PR-01234/` 文档）：
 ```bash

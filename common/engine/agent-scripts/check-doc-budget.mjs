@@ -13,6 +13,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { charCount, parseFrontmatter, validateSchema } from './lib/doc-budget-schema.mjs'
+import { undeclaredErrorRules } from './lib/rule-ledger.mjs'
 
 const COMMON_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const DOCS_TDD_DIR = join(COMMON_DIR, '..')
@@ -47,6 +48,7 @@ const SELF_TEST_SCRIPTS = [
   ['lib/agent-clients.mjs', '--self-test'],
   ['lib/agent-rule-adapters.mjs', '--self-test'],
   ['lib/acceptance-results.mjs', '--self-test'],
+  ['lib/assumption-ledger.mjs', '--self-test'],
   ['lib/blockers.mjs', '--self-test'],
   ['lib/changed-detection.mjs', '--self-test'],
   ['lib/code-review.mjs', '--self-test'],
@@ -54,6 +56,8 @@ const SELF_TEST_SCRIPTS = [
   ['lib/delivery-summary.mjs', '--self-test'],
   ['lib/doc-budget-schema.mjs', '--self-test'],
   ['lib/gate-heartbeat.mjs', '--self-test'],
+  ['lib/fast-track-policy.mjs', '--self-test'],
+  ['lib/gate-partial.mjs', '--self-test'],
   ['lib/gate-payload.mjs', '--self-test'],
   ['lib/golden-verdict.mjs', '--self-test'],
   ['lib/lark-prd-drift.mjs', '--self-test'],
@@ -63,6 +67,10 @@ const SELF_TEST_SCRIPTS = [
   ['lib/project-scaffold.mjs', '--self-test'],
   ['lib/rule-session.mjs', '--self-test'],
   ['lib/rule-chain-runtime.mjs', '--self-test'],
+  ['lib/rule-ledger.mjs', '--self-test'],
+  ['lib/waiver-policy.mjs', '--self-test'],
+  ['lib/warn-retirement.mjs', '--self-test'],
+  ['lib/confirmation.mjs', '--self-test'],
   ['install-local-agent-rules.mjs', '--self-test'],
   ['prd-intake.mjs', '--self-test'],
   ['project-orchestrator.mjs', '--self-test'],
@@ -442,7 +450,9 @@ if (!existsSync(ledgerPath)) {
   errors.push(`❌ 缺少 ${LEDGER_EXTENSION_FILE}（rule ID 台账拆分文件）。`)
 } else {
   const ledgerText = `${readFileSync(ledgerPath, 'utf8')}\n${readFileSync(ledgerExtensionPath, 'utf8')}`
-  const idRe = /'((?:CODE|DOC|GIT|VERIFY)-[A-Z0-9]+-\d+)'/g
+  // 中段可含多节（DOC-G3-IMPL-006、DOC-ASSUM-001）：此前 `[A-Z0-9]+-\d+` 只认单节，
+  // DOC-G3-IMPL-* 整族逃过登记校验。
+  const idRe = /'((?:CODE|DOC|GIT|VERIFY)-[A-Z0-9]+(?:-[A-Z]+)*-\d+)'/g
   const scriptIds = new Set()
   // 顶层脚本 + lib/ 子模块都要扫：阻塞语义等纯规则实装在 lib/blockers.mjs，rule ID 台账不能漏掉它。
   const idSourceFiles = [
@@ -466,6 +476,28 @@ if (!existsSync(ledgerPath)) {
     )
   } else {
     console.log(`✅ rule ID 台账：${scriptIds.size} 个脚本 ID 全部登记于 ${LEDGER_FILE} + ${LEDGER_EXTENSION_FILE}。`)
+  }
+
+  // 校验 5b（反方向）：台账里每个 error 级 rule ID 必须在 ruleset.json 声明 blocking + waivable。
+  // 判定源与动机见 lib/rule-ledger.mjs。
+  const rulesetRules = (() => {
+    try {
+      return JSON.parse(readFileSync(join(RULES_DIR, 'ruleset.json'), 'utf8'))?.rules ?? null
+    } catch {
+      return null
+    }
+  })()
+  if (!rulesetRules) {
+    errors.push('❌ 无法解析 common/rules/ruleset.json，规则档位与豁免语义无法校验。')
+  } else {
+    const undeclared = undeclaredErrorRules({ ledgerText: readFileSync(ledgerExtensionPath, 'utf8'), rulesetRules })
+    if (undeclared.length) {
+      errors.push(
+        `❌ 以下 error 级 rule ID 在 ${LEDGER_EXTENSION_FILE} 有台账行但 ruleset.json 未声明 blocking/waivable：\n   ${undeclared.join('\n   ')}\n   未声明的规则不接受豁免、也不参与档位定档（语义未定义）；请补 { maturity, blocking, waivable }。`,
+      )
+    } else {
+      console.log(`✅ ruleset 声明完整：${LEDGER_EXTENSION_FILE} 的 error 级 ID 均已声明 blocking + waivable。`)
+    }
   }
 }
 
@@ -742,6 +774,29 @@ if (missingTemplateRefs.length) {
   }
 }
 
+// 校验 10.6（DOC-FRESH-001）：根目录 HANDOFF-*.md 的保鲜期。
+// 根因：`HANDOFF-prd-intake-fingerprint-hardening.md` 自称「已批准，未开始实现」，而那批工作
+// 早在 2f345c9 就落地了——交接文档天生是一次性的，交接完成后没人回来删，于是变成一份**主动说谎**
+// 的根目录文件（新 chat 接手会照着它重做已完成的事）。判据用 git 最后提交日（不用 mtime：clone/checkout 会重置）。
+// warn 不阻断：交接文档在有效期内是正当的，只是不该长住。
+{
+  const HANDOFF_STALE_DAYS = 7
+  const handoffs = readdirSync(DOCS_TDD_DIR).filter((name) => /^HANDOFF-.*\.md$/.test(name))
+  const stale = []
+  for (const name of handoffs) {
+    const log = spawnSync('git', ['log', '-1', '--format=%cs', '--', name], { cwd: DOCS_TDD_DIR, encoding: 'utf8' })
+    const committedAt = log.status === 0 ? log.stdout.trim() : ''
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(committedAt)) continue // 未提交/无法判定 → 不猜
+    const days = Math.floor((Date.now() - Date.parse(`${committedAt}T00:00:00Z`)) / 86400000)
+    if (days > HANDOFF_STALE_DAYS) stale.push(`${name}（最后提交 ${committedAt}，${days} 天前）`)
+  }
+  if (stale.length) {
+    console.warn(`⚠ DOC-FRESH-001：根目录交接文档超过 ${HANDOFF_STALE_DAYS} 天未更新：${stale.join('；')}。交接已完成就删掉它，未完成就更新状态或移进 prds/<PROJECT-ID>/。`)
+  } else {
+    console.log(`✅ 交接文档保鲜：根目录 ${handoffs.length} 个 HANDOFF-*.md 均在 ${HANDOFF_STALE_DAYS} 天保鲜期内。`)
+  }
+}
+
 // 校验 11：阶段真值同步（'DOC-SYNC-001'/'DOC-SYNC-002'/'DOC-SYNC-003'）。
 // 只检查「已有 gate-results.json 且 ok=true」的项目——没有机器真值的项目无从漂移。
 {
@@ -878,6 +933,7 @@ if (missingTemplateRefs.length) {
     prdSourceManifest: { file: 'prd-source-manifest.schema.json', data: null },
     mswManifest: { file: 'msw-manifest.schema.json', data: null },
     assumptions: { file: 'assumptions.schema.json', data: null },
+    fastTrack: { file: 'fast-track.schema.json', data: null },
     stageStatus: { file: 'stage-status.schema.json', data: null },
     gateHistory: { file: 'gate-history.schema.json', data: null },
     blockers: { file: 'blockers.schema.json', data: null },
@@ -949,6 +1005,7 @@ if (missingTemplateRefs.length) {
         ['prd-source-manifest.json', 'prdSourceManifest'],
         ['msw-manifest.json', 'mswManifest'],
         ['assumptions.json', 'assumptions'],
+        ['fast-track.json', 'fastTrack'],
         ['stage-status.json', 'stageStatus'],
         ['gate-history.json', 'gateHistory'],
         ['blockers.json', 'blockers'],

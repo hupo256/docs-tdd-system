@@ -5,6 +5,8 @@ import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
+import { demoteRetiredFindings, retiredRuleIds } from './lib/warn-retirement.mjs'
+import { loadLedger } from './warn-ledger.mjs'
 
 const scriptPath = fileURLToPath(import.meta.url)
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, config } = resolveRoots()
@@ -856,6 +858,11 @@ function applyWaivers(list) {
 }
 
 applyWaivers(findings)
+
+// warn 台账退休（rule-ids-and-gates.md §2.1）：观察期超 90 天没人裁决过一次的 warn-first 规则
+// 自动降为 note——它不再刷 WARN、也不再进台账累计，只在 `docs-tdd rule-health` 与 G8 摘要里以「待退休」出现。
+const retired = new Set(retiredRuleIds(loadLedger(), new Date().toISOString().slice(0, 10)))
+demoteRetiredFindings(findings, retired)
 
 const result = {
   ok: findings.filter((finding) => finding.severity === 'error').length === 0,

@@ -10,7 +10,8 @@ import { spawnSync } from 'node:child_process'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { codeFingerprint } from './lib/fingerprint.mjs'
-import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
+import { listProjectIds, resolveProjectRoot, resolveRoots, rulesRoot } from './lib/roots.mjs'
+import { RETIREMENT_DAYS, ledgerHealthRows, stateLabel, zeroHitRuleIds } from './lib/warn-retirement.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot } = resolveRoots()
@@ -108,13 +109,88 @@ function reportRows() {
 }
 
 function printHelp() {
-  console.log(`usage: warn-ledger.mjs <record PR-01234 | --report | --mark RULE PR-01234 VERDICT> [--write] [--json] [--self-test] [--help]
+  console.log(`usage: warn-ledger.mjs <record PR-01234 | --report | --health | --mark RULE PR-01234 VERDICT> [--write] [--json] [--self-test] [--help]
 
 Machine ledger for warn-first rule promotion (rule-ids-and-gates.md §2.1).
   record PR-01234   Run verify-code-rules for the project and record promotable warn hits (needs --write to persist)
   --report          Show per-rule true/false-positive counts and promotion eligibility
+  --health          Rule health review: hits per rule, warn ledger age, retirement candidates, zero-hit rules
   --mark R PR V     Set human verdict (V = true-positive|false-positive|unreviewed) for a rule/PR (needs --write)
   --self-test       Run inline pure-function tests`)
+}
+
+// 门禁侧命中统计：只读每个项目 agent/gate-results.json（**最近一次**运行），故这是快照而不是终身累计。
+// 这个口径限制在输出里明说——rule-health 的用途是「哪些规则根本没在咬东西」，快照足够回答它。
+function gateHitStats() {
+  const hits = new Map()
+  for (const id of listProjectIds()) {
+    const file = join(resolveProjectRoot(id), 'agent/gate-results.json')
+    if (!existsSync(file)) continue
+    let payload
+    try { payload = JSON.parse(readFileSync(file, 'utf8')) } catch { continue }
+    const at = String(payload?.generatedAt || '').slice(0, 10)
+    for (const check of payload?.checks || []) {
+      if (!check?.ruleId || check.ok) continue
+      const row = hits.get(check.ruleId) || { ruleId: check.ruleId, fail: 0, warn: 0, waived: 0, lastSeen: '', projects: [] }
+      if (check.severity === 'error') row.fail += 1
+      else if (check.severity === 'warn') row.warn += 1
+      else row.waived += 1
+      if (!row.projects.includes(id)) row.projects.push(id)
+      if (at > row.lastSeen) row.lastSeen = at
+      hits.set(check.ruleId, row)
+    }
+  }
+  return [...hits.values()].sort((a, b) => (b.fail + b.warn) - (a.fail + a.warn) || a.ruleId.localeCompare(b.ruleId))
+}
+
+// 声明过的全部 Rule ID：两份台账正文（rule-id-ledger.md 的阶段 gate 表 + rule-ids-and-gates.md 的 CODE/VERIFY 表）。
+// 多段 ID（如 DOC-G3-IMPL-006）也要认，故中间段允许重复出现。
+function declaredRuleIds() {
+  const text = ['rule-id-ledger.md', 'rule-ids-and-gates.md']
+    .map((name) => join(rulesRoot, name))
+    .filter((file) => existsSync(file))
+    .map((file) => readFileSync(file, 'utf8'))
+    .join('\n')
+  return [...new Set([...text.matchAll(/\b(?:DOC|CODE|GIT|VERIFY)(?:-[A-Z0-9]+)+-\d{3}\b/g)].map((match) => match[0]))].sort()
+}
+
+function healthReport() {
+  const ledgerRows = ledgerHealthRows(loadLedger(), today())
+  const gateRows = gateHitStats()
+  const hitIds = new Set([...ledgerRows.map((row) => row.ruleId), ...gateRows.map((row) => row.ruleId)])
+  const declared = declaredRuleIds()
+  return {
+    generatedAt: nowIso(),
+    retirementDays: RETIREMENT_DAYS,
+    ledger: ledgerRows,
+    gateHits: gateRows,
+    declaredCount: declared.length,
+    zeroHit: zeroHitRuleIds(declared, hitIds),
+    retiring: ledgerRows.filter((row) => row.state === 'due-for-retirement').map((row) => row.ruleId),
+    eligible: ledgerRows.filter((row) => row.eligible).map((row) => row.ruleId),
+  }
+}
+
+function printHealth(report, verbose) {
+  console.log(`rule-health @ ${report.generatedAt.slice(0, 19).replace('T', ' ')}（退休窗口 ${report.retirementDays} 天；正文源 rule-ids-and-gates.md §2.1）\n`)
+  console.log(`1. warn 晋级台账（common/warn-ledger.json，跨 PR 累计）`)
+  if (!report.ledger.length) console.log('   （空）跑一次 G5+ gate --write 才会入账')
+  for (const row of report.ledger) {
+    console.log(`   ${row.ruleId}: 命中 ${row.hits} 次 / ${row.projectCount} 个 PR，首次 ${row.firstSeen} 最近 ${row.lastSeen}，TP=${row.truePositive} FP=${row.falsePositive} 未裁决=${row.unreviewed} → ${stateLabel(row.state)}${row.state === 'watching' ? `（${row.dueAt} 前无人裁决即退休）` : ''}`)
+  }
+  console.log(`\n2. 门禁命中（各项目 gate-results.json 的**最近一次**运行，快照非累计）`)
+  const gateRows = verbose ? report.gateHits : report.gateHits.slice(0, 12)
+  for (const row of gateRows) {
+    console.log(`   ${row.ruleId}: fail=${row.fail} warn=${row.warn} waived=${row.waived}，最近 ${row.lastSeen || '—'}，项目 [${row.projects.join(', ')}]`)
+  }
+  if (report.gateHits.length > gateRows.length) console.log(`   …另有 ${report.gateHits.length - gateRows.length} 条（--verbose 全量）`)
+  console.log(`\n3. 零命中规则（已声明 ${report.declaredCount} 条，其中 ${report.zeroHit.length} 条在台账与最近门禁结果里都没出现）`)
+  console.log(`   ${(verbose ? report.zeroHit : report.zeroHit.slice(0, 20)).join(' ') || '无'}`)
+  if (!verbose && report.zeroHit.length > 20) console.log(`   …另有 ${report.zeroHit.length - 20} 条（--verbose 全量）`)
+  console.log(`\n4. 结论`)
+  console.log(`   待退休（已自动降 note-only）：${report.retiring.join('、') || '无'}${report.retiring.length ? `\n     想留下就裁决一次：node warn-ledger.mjs --mark <RULE> <PR-xxxxx> true-positive --write；否则从脚本里删掉该规则` : ''}`)
+  console.log(`   可提 error：${report.eligible.join('、') || '无'}`)
+  console.log(`   零命中有两种，机器分不了：① 预防型规则场景没发生（这是它该有的样子，别删）；② 正则/判定从来没咬到东西（形同摆设，该删）。只有判定为 ② 的才退休。`)
 }
 
 const args = process.argv.slice(2)
@@ -151,6 +227,13 @@ if (args.includes('--self-test')) {
 const write = args.includes('--write')
 const json = args.includes('--json')
 const positional = args.filter((a) => !a.startsWith('--'))
+
+if (args.includes('--health') || positional[0] === 'health') {
+  const report = healthReport()
+  if (json) console.log(JSON.stringify(report, null, 2))
+  else printHealth(report, args.includes('--verbose'))
+  process.exit(0)
+}
 
 if (positional[0] === 'record') {
   const projectId = positional[1]

@@ -22,6 +22,7 @@ import {
   readBugCommandType,
   readStatusText,
 } from '../lib/lark-bugtable-parse.mjs'
+import { resolveWritebackOutcome } from '../lib/lark-bugtable-writeback.mjs'
 import { createTaskStore } from '../lib/lark-task-store.mjs'
 import { parkedReminderRound } from '../lib/lark-parked-reminder.mjs'
 import { rotateLogIfLarge } from '../lib/lark-log-rotate.mjs'
@@ -41,9 +42,10 @@ import {
   resolveCommandType,
   resolveMessageTrigger,
 } from '../lib/lark-message.mjs'
-import { isProjectId, matchProjectId } from '../lib/lark-project-id.mjs'
+import { isProjectId, matchProjectId, matchProjectIds } from '../lib/lark-project-id.mjs'
 import { allRuleRefs, buildFocusedRuleContext, classifyLarkTask, extractMarkdownSection } from '../lib/lark-rule-context.mjs'
 import { assessDoneResult, crossCheckChangedFiles, detectChangeTier, splitViolations } from '../lib/lark-quality-gate.mjs'
+import { formatCodeRulesLine, summarizeCodeRules } from '../lib/lark-code-rules.mjs'
 import { pruneStaleAudits } from '../lib/lark-worker-audit.mjs'
 import { classifyWorkerFailure } from '../lib/lark-worker-results.mjs'
 import { resolveWorkContext, safeProject, tempWorktreeContextFor } from '../lib/lark-work-context.mjs'
@@ -151,6 +153,17 @@ describe('bug table task status', () => {
     assert.equal(classifyBugTaskStatus('no_change_needed'), 'no-change')
   })
 
+  it('回写重试的三个出口：成功落 done，未到上限继续重试，到上限停在 done_pending_writeback（不伪装成完成）', () => {
+    assert.deepEqual(resolveWritebackOutcome({ ok: true, attempts: 5 }), { status: 'done', attempts: 0, gaveUp: false, retry: false })
+    assert.deepEqual(resolveWritebackOutcome({ ok: false, attempts: 0, max: 3 }), {
+      status: 'done_pending_writeback', attempts: 1, gaveUp: false, retry: true,
+    })
+    // 到上限：状态**仍是中间态**——落 done 会让「群里说完成、bug 表还挂着待处理」这条不一致被 prune 抹掉
+    assert.deepEqual(resolveWritebackOutcome({ ok: false, attempts: 2, max: 3 }), {
+      status: 'done_pending_writeback', attempts: 3, gaveUp: true, retry: false,
+    })
+  })
+
   it('同时查询待处理与验退；未配置验退值时保持单状态过滤', () => {
     assert.deepEqual(
       buildBugStatusFilter({ statusField: '处理状态', pendingValue: '待处理', rejectedValue: '验退' }),
@@ -252,9 +265,20 @@ describe('isForBot', () => {
   it('群里 @所有人（key=@_all）→ true', () => {
     assert.equal(isForBot({ msg: { chatType: 'group', mentions: [{ key: '@_all' }] }, config }), true)
   })
+  it('群里 @所有人 → 只读意图分类，不直接入队', () => {
+    // 群里任何人喊一句「@所有人」不该等于「让机器人改代码」；仍进 task_mention 以便接住真实反馈。
+    assert.equal(resolveMessageTrigger({ msg: { chatType: 'group', mentions: [{ key: '@_all' }] }, config }), 'task_mention')
+  })
+  it('@所有人 同时 @bot → 仍是 direct（明确在叫机器人）', () => {
+    const msg = { chatType: 'group', mentions: [{ key: '@_all' }, { id: BOT }] }
+    assert.equal(resolveMessageTrigger({ msg, config }), 'direct')
+  })
   it('未配置 botOpenId 时：有任意 mention 即算', () => {
     assert.equal(isForBot({ msg: { chatType: 'group', mentions: [{ id: 'x' }] }, config: {} }), true)
     assert.equal(isForBot({ msg: { chatType: 'group', mentions: [] }, config: {} }), false)
+  })
+  it('未配置 botOpenId 的兼容分支 → 降为只读分类而非 direct', () => {
+    assert.equal(resolveMessageTrigger({ msg: { chatType: 'group', mentions: [{ id: 'x' }] }, config: {} }), 'task_mention')
   })
 })
 
@@ -439,6 +463,16 @@ describe('parseCommandType', () => {
     assert.equal(inferCommandType('项目状态字段显示错误'), null)
   })
 
+  it('「汇报/报告」是常见的状态查询问法，与「汇总」同等判 status（真机漏判修复）', () => {
+    // 现场发现：「汇报一下这个项目的状态」曾因 cue 词表只收「汇总」漏「汇报」→ 被当新需求拦。
+    assert.equal(inferCommandType('汇报一下这个项目的状态'), 'status')
+    assert.equal(inferCommandType('报告下当前项目的进度'), 'status')
+    assert.equal(inferCommandType('说一下这个需求现在做到哪了'), 'status')
+    // 词表扩充不得越过缺陷/写操作否决：报障、做功能仍判 null。
+    assert.equal(inferCommandType('汇报下为什么项目状态一直转圈'), null) // 缺陷信号（转圈）一票否决
+    assert.equal(inferCommandType('新增一个项目进度汇报页面'), null) // 写操作（新增）一票否决
+  })
+
   it('缺陷信号一票否决：报障式描述绝不当只读查询', () => {
     // 这些都含项目级主题词 + 查询提示，但带缺陷信号 → 必须判 null（此前「项目状态一直转圈」被误判成 status）。
     assert.equal(inferCommandType('这个项目的状态一直转圈，是什么原因？'), null)
@@ -511,11 +545,15 @@ describe('resolveResumeTarget', () => {
     assert.equal(resolveResumeTarget({ msg: { replyToDirect: 'd', replyTo: 'd' }, store: makeStore({ byId: { d: done } }) }), null)
   })
 
-  it('仅有线程根 root_id（无 reply_to）：只在命中回执且仍待确认/阻塞时锚定，绝不 store.get 任意消息', () => {
-    // root_id 命中一条无关任务消息 → 不锚定（防误命中）
-    assert.equal(resolveResumeTarget({ msg: { replyTo: 'w' }, store: makeStore({ byId: { w: parked } }) }), null)
+  it('仅有线程根 root_id（无 reply_to）：命中回执或原任务消息且仍待确认/阻塞才锚定', () => {
     // root_id 命中待确认回执 → 锚定
     assert.equal(resolveResumeTarget({ msg: { replyTo: 'root' }, store: makeStore({ byReceipt: { root: parked } }) }).task, parked)
+    // root_id 就是原任务消息本身且任务仍卡着（话题内直接发补料，Lark 不带 reply_to）→ 锚定，不建孤儿任务
+    assert.equal(resolveResumeTarget({ msg: { replyTo: 'w' }, store: makeStore({ byId: { w: parked } }) }).task, parked)
+    // 话题根是一条已完成的任务 → 视作线程内新请求，不劫持
+    assert.equal(resolveResumeTarget({ msg: { replyTo: 'd' }, store: makeStore({ byId: { d: done } }) }), null)
+    // root_id 不对应任何任务 → 不锚定
+    assert.equal(resolveResumeTarget({ msg: { replyTo: 'om_other' }, store: makeStore({ byId: { w: parked } }) }), null)
   })
 
   it('无任何续跑信号 → null（普通新任务）', () => {
@@ -621,6 +659,20 @@ describe('matchProjectId（自由文本提取）', () => {
     assert.equal(matchProjectId('没有项目号'), null)
     assert.equal(matchProjectId(''), null)
     assert.equal(matchProjectId(null), null)
+  })
+})
+
+describe('matchProjectIds（全部项目号，用于判「正文是否明确指向唯一项目」）', () => {
+  it('去重 + 大写归一 + 保持出现顺序', () => {
+    assert.deepEqual(matchProjectIds('pr-01947 与 PM-1469 都提到过 PR-01947'), ['PR-01947', 'PM-1469'])
+  })
+  it('恰好一个 → 正文可作权威来源；多个 → 视为引用，调用方回落群名', () => {
+    assert.deepEqual(matchProjectIds('PR-02306 这个页面报错'), ['PR-02306'])
+    assert.equal(matchProjectIds('参考 PR-01947 的做法改 PR-02306').length, 2)
+  })
+  it('无项目号 / 空输入 → 空数组（不抛错）', () => {
+    assert.deepEqual(matchProjectIds('没有项目号'), [])
+    assert.deepEqual(matchProjectIds(null), [])
   })
 })
 
@@ -806,6 +858,47 @@ describe('splitViolations（规范闸残留分级：色类硬拦 / 其余 note�
     ])
     assert.equal(hardRemaining.length, 0)
     assert.equal(softRemaining.length, 1)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// changed-file 静态扫描摘要（D5）：非阻断，但卡片上的数字必须如实
+// ---------------------------------------------------------------------------
+describe('summarizeCodeRules / formatCodeRulesLine（bot 改动过一次同一把静态尺子）', () => {
+  it('按 severity 计数，note 不进点名清单，ruleId 去重', () => {
+    const summary = summarizeCodeRules({
+      changedFiles: ['a.tsx', 'b.ts'],
+      findings: [
+        { severity: 'error', ruleId: 'CODE-ANY-001' },
+        { severity: 'warn', ruleId: 'CODE-I18N-002' },
+        { severity: 'warn', ruleId: 'CODE-I18N-002' },
+        { severity: 'note', ruleId: 'CODE-OLD-009' },
+        { severity: 'future-level', ruleId: 'CODE-NEW-001' },
+      ],
+    })
+    assert.deepEqual(
+      { ok: summary.ok, error: summary.error, warn: summary.warn, note: summary.note, other: summary.other, changedFiles: summary.changedFiles },
+      { ok: false, error: 1, warn: 2, note: 1, other: 1, changedFiles: 2 },
+    )
+    assert.deepEqual(summary.ruleIds, ['CODE-ANY-001', 'CODE-I18N-002', 'CODE-NEW-001'])
+  })
+  it('无 finding → ok 且计数全 0', () => {
+    const summary = summarizeCodeRules({ changedFiles: ['a.ts'], findings: [] })
+    assert.deepEqual({ ok: summary.ok, error: summary.error, warn: summary.warn }, { ok: true, error: 0, warn: 0 })
+  })
+  it('未跑成时如实说未跑成，绝不渲染成 0 违规', () => {
+    const line = formatCodeRulesLine({ ran: false, reason: '扫描输出无法解析' })
+    assert.match(line, /未跑成/)
+    assert.ok(!line.includes('error 0'), '扫描没跑成不能显示成零违规')
+  })
+  it('跑成时把 error/warn 计数与命中规则写进卡片行', () => {
+    const line = formatCodeRulesLine(summarizeCodeRules({
+      changedFiles: ['a.tsx'],
+      findings: [{ severity: 'warn', ruleId: 'CODE-I18N-002' }],
+    }))
+    assert.match(line, /改动 1 文件/)
+    assert.match(line, /error 0 · warn 1/)
+    assert.match(line, /CODE-I18N-002/)
   })
 })
 

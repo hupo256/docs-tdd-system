@@ -22,6 +22,7 @@ apps/web/docs_tdd/prds/<PROJECT-ID>/
     stage-status.json      # G5 联调、G7 QA 的结构化状态与证据路径
     code-review.json       # G6 review findings 与处置结论
     acceptance-results.json # 本期 Feature 的验收结果与证据
+    fast-track.json        # 可选：快速通道出口、临时业务契约、安全降级与销账 gate
     blockers.json          # 阻塞/变更机器真值
     delivery-status.json   # G8 交付模式、branch/headSha 与外部证据
     run-state.json         # 一句话编排与断点恢复状态

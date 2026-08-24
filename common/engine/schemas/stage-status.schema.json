@@ -23,7 +23,9 @@
       "properties": {
         "reason": { "type": "string", "minLength": 1 },
         "evidence": { "type": "array", "items": { "type": "string", "minLength": 1 } },
-        "updatedAt": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" }
+        "updatedAt": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "confirmedBy": { "type": "string", "minLength": 1, "description": "人工确认签名：谁确认了这个阶段处置（DOC-CONFIRM-001/002）。AI 客户端名不算人工确认。" },
+        "confirmedAt": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" }
       },
       "additionalProperties": false
     },

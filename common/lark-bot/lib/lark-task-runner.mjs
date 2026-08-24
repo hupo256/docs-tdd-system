@@ -7,6 +7,7 @@
 import { dirname } from 'node:path'
 
 import { isReadOnlyTask, resolveCommandType } from './lark-message.mjs'
+import { COMMIT_MODES, resolveCommitMode } from './lark-commit-policy.mjs'
 import { isFastLaneTask, requirementGate } from './lark-work-policy.mjs'
 import { tempWorktreeContextFor } from './lark-work-context.mjs'
 import { formatViolations } from './lark-lint-diff.mjs'
@@ -22,6 +23,7 @@ import {
 } from './lark-worker-git.mjs'
 import { classifyTaskIntent, runAI, runProjectDocSync } from './lark-worker-run.mjs'
 import { assessDoneResult, buildQualityBlockedResult, enforceCodeQuality } from './lark-quality-gate.mjs'
+import { formatCodeRulesLine, runCodeRulesScan } from './lark-code-rules.mjs'
 import { prefetchFigmaSpec, taskReferencesFigma } from './lark-figma.mjs'
 import { buildCommitFailedResult, buildFailureResult, buildNeedsReviewResult } from './lark-worker-results.mjs'
 
@@ -130,6 +132,9 @@ export const createTaskRunner = ({ client, workerConfig }) => {
     // 收尾提交只能发生一次：正常 done 路径在**发完成卡之前**主动调用（见 finalizeWork 注释），
     // 其余路径（失败/阻塞/异常）由 finally 兜底。此标记防止两处重复收尾。
     let finalized = false
+    // 本任务实测产生的改动清单（AI 跑完、规范闸之后测得）。收尾提交在命中人类已有 worktree 时按它
+    // 定向提交（见 lark-commit-policy 的 scoped 口径），故必须声明在 finalizeWork 之外。
+    let taskChangedPaths = []
     // 收尾提交并返回 { ok, committed, reason }。**必须在回写 done 之前调用**：
     // 曾经是先回写 done（Gateway 立刻发完成卡 + 回写 bug 表），再提交，提交失败只打一行 worker 日志——
     // 群里显示「已完成」而改动只躺在工作区，人按完成处理，下一次 retry/清理就把它带走了。
@@ -137,14 +142,19 @@ export const createTaskRunner = ({ client, workerConfig }) => {
     const finalizeWork = ({ allowCommit }) => {
       if (finalized) return { ok: true, committed: false, reason: '已收尾' }
       finalized = true
-      // 只读任务在主仓就地回答，绝不提交。
-      const canCommit = allowCommit && !workContext.readOnly
+      // 提交模式的唯一口径在 lark-commit-policy：只读 / 未完成 → none，隔离分支 → auto（全量），
+      // 命中人类 worktree → scoped（只提交本任务实测清单）。这里只按模式分派，不再各自判条件。
+      const { mode, reason } = resolveCommitMode({
+        isolatedBranch: Boolean(workContext.hotfixBranch),
+        readOnly: Boolean(workContext.readOnly),
+        taskDone: Boolean(allowCommit),
+      })
       if (workContext.hotfixBranch) {
-        return finalizeTempWorktree({ path: workContext.cwd, branch: workContext.hotfixBranch, task, allowCommit: canCommit })
+        return finalizeTempWorktree({ path: workContext.cwd, branch: workContext.hotfixBranch, task, allowCommit: mode === COMMIT_MODES.auto })
       }
       // 命中已有 worktree：失败/阻塞一律不提交（不往你的活跃分支写半成品），改动留在工作区。
-      if (!canCommit) return { ok: true, committed: false, reason: workContext.readOnly ? '只读任务不提交' : '未完成，不往已有分支写半成品' }
-      return finalizeExistingWorktree({ cwd: workContext.cwd, task })
+      if (mode === COMMIT_MODES.none) return { ok: true, committed: false, reason }
+      return finalizeExistingWorktree({ cwd: workContext.cwd, task, taskPaths: taskChangedPaths })
     }
     try {
       if (workContext.hotfixBranch) {
@@ -205,6 +215,9 @@ export const createTaskRunner = ({ client, workerConfig }) => {
         // 在 isCompletedAiStatus 分支内测得，故在此外层声明供下方 reportStatus 使用。
         let actualChangedFiles = []
         let changeStat = ''
+        // changed-file 静态扫描摘要（与人类 `docs-tdd changed` 同一把尺子，非阻断）：在完成卡上给出
+        // error/warn 计数，让「bot 改的代码有没有踩规则」不再只有 bot 自己知道（D5）。
+        let codeRules = null
         // 规则上下文里辅助（非 required）章节缺失时的降级 warnings：随结果卡浮现给群，
         // 否则「用不完整规则执行」只在审计里、无人看见（A2）。required 章节缺失仍在 runAI 里 fail-closed。
         if (aiRun.ruleContext?.warnings?.length) warnNotes.push(...aiRun.ruleContext.warnings)
@@ -230,8 +243,16 @@ export const createTaskRunner = ({ client, workerConfig }) => {
             ? []
             : (gitAt(workContext.cwd, ['diff', '--name-only', 'HEAD']).stdout || '')
                 .split('\n').map((line) => line.trim()).filter(Boolean)
+          // 收尾提交的定向清单来自同一次实测，保证「提交了什么」与「卡片说改了什么」同源。
+          taskChangedPaths = actualChangedFiles
           // 系统实测：真实 diff 规模（--shortstat）。
           changeStat = workContext.readOnly ? '' : (gitAt(workContext.cwd, ['diff', '--shortstat', 'HEAD']).stdout || '').trim()
+          // 静态扫描只在真有改动时跑（零改动的路径下面会被判不可信直接降级，跑它没意义）。
+          if (!workContext.readOnly && actualChangedFiles.length) {
+            codeRules = runCodeRulesScan({ cwd: workContext.cwd, projectId: workContext.projectId })
+            updateTaskAudit(auditContext, { codeRules })
+            if (!codeRules.ran) console.warn(`[lark-worker] ⚠ ${task.id} 规则扫描未跑成（不阻断）：${codeRules.reason}`)
+          }
           const assessment = assessDoneResult({
             reportedChangedFiles: aiRun.result.changedFiles,
             actualChangedFiles,
@@ -268,6 +289,7 @@ export const createTaskRunner = ({ client, workerConfig }) => {
             ? `实测改动 ${actualChangedFiles.length} 处（${changeStat}）`
             : `实测改动 ${actualChangedFiles.length} 处`
           resultText += `\n**系统实测**：${changeLabel} · Figma 核验 ${figmaLabel}`
+          if (codeRules) resultText += `\n${formatCodeRulesLine(codeRules)}`
         }
         // owner（AI 推断的责任人角色/关键词）随回写带给 Gateway，用于 waiting/blocked 卡片 @ 责任人。
         let gatewayStatus = gatewayStatusForAiStatus(aiRun.result.status)

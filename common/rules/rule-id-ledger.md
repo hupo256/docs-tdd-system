@@ -54,7 +54,7 @@
 | `DOC-G3-IMPL-003` | G3+ | handler export 已注册且 Provider 挂载 worker hook | warn（experimental） |
 | `DOC-G3-IMPL-004` | G3+ | endpoint 场景结构有效，N/A 有理由，retired 有对账证据 | warn（experimental） |
 | `DOC-G3-IMPL-005` | G3+ | `agent/assumptions.json` 可解析 | warn（experimental） |
-| `DOC-G3-IMPL-006` | G3+ | API ready/reconciling/retired 时无阻断假设 | warn（experimental） |
+| `DOC-G3-IMPL-006` | G3+ | API ready/reconciling/retired 时无阻断假设（lifecycle 轴） | error |
 | `DOC-G4-001` | G4+ | 复用盘点无 `待检查/待确认` 占位 | error |
 | `DOC-G4-002` | G4+ | 技术方案含复用盘点 | error |
 | `DOC-G4-003` | G4+ | 技术方案不含 `跳过复用` | error |
@@ -86,13 +86,16 @@
 | `VERIFY-G6-002` | G6+ | `06-collaboration.md` 记录 code-review findings + 处理结论，且无未处理悬空项（`待修复/未处理` 即 fail，须当场修或进 `rule-waivers.json`） | error |
 | `VERIFY-G6-003` | G6+ | 自测证据记录命令、目标文件/场景、结果，含 Biome 或 fallback | error |
 | `VERIFY-G6-004` | G6+ | `evidence/` 下不出现 `.png/.jpg/.html` 等二进制/临时文件（应放 `/tmp/` 或 `.gitignore` 目录） | warn |
+| `VERIFY-G6-005` | G6-partial（`lib/gate-partial.mjs`） | 本次为部分验收：结论记 `G6-partial`，不构成 G7 前置，真实字段到位后须重跑完整 G6 | warn |
 | `DOC-AC-001` | G6+ | `agent/acceptance-results.json` 结构合法；模板 v2 起必须存在 | error |
 | `DOC-AC-002` | G6+ | 每个本期做 Feature 至少有一条 passed 验收结果 | error |
 | `DOC-AC-003` | G6+ | 验收结果无 failed/blocked | error |
 | `DOC-AC-004` | G6+ | 每条 passed 验收都有 evidence | error |
 | `DOC-AC-005` | G6+（`lib/acceptance-results.mjs`） | 每条 passed 验收的 evidence 至少有一个真实存在的文件锚点（截图/报告/DOM 比对），且不含指向不存在文件的路径 | error |
 | `DOC-AC-006` | G6+（`lib/acceptance-results.mjs`） | `acceptance-results.json.head` 覆盖当前 HEAD（缺 currentSha 不判定），防验收过时 | warn |
+| `DOC-AC-007` | G6-partial（`lib/acceptance-results.mjs`） | 部分验收的欠账清单：逐条点名待真实字段对账的 `contract`/`browser` 验收项 | warn |
 | `VERIFY-STAGE-001` | G6+ | `agent/gate-history.json` 存在此前真实写入的 G5 PASS | error |
+| `VERIFY-STAGE-004` | G6-partial | `agent/gate-history.json` 存在此前真实写入的 G4 PASS（G5 停靠态下以 G4 为前置，取代 VERIFY-STAGE-001）。**不可豁免**：partial 已经放宽了一层前置，若剩下这层也能豁免，它就成了无边界后门 | error |
 | `VERIFY-STAGE-002` | G7+ | `agent/gate-history.json` 存在此前真实写入的 G6 PASS | error |
 | `VERIFY-G7-001` | G7+ | `agent/stage-status.json` 存在 G7 结构化结论 | error |
 | `VERIFY-G7-002` | G7+ | G7 状态为 `completed` 或 `skipped` | error |
@@ -108,17 +111,29 @@
 | `VERIFY-RULE-001` | 会话启动 / `doctor` | Codex、Claude Code、Cursor、Lark-Codex、Lark-Claude 的 L1/L2/L3 source matrix 指向同一 canonical source fingerprint | error |
 | `VERIFY-RULE-002` | `changed`、G5-G8 | 编码 rule session v2 存在，且客户端、规则发布、G2 输入、HEAD 与 24 小时有效期均未漂移；一个客户端不能复用另一个客户端的会话 | error |
 | `VERIFY-RULE-003` | `doctor` | 固定入口全集完整且无多余项：五个入口均登记 adapter、enforcement 与 source fingerprint | error |
-| `VERIFY-RULE-004` | Lark 每次启动 AI 前 | L3/effective 两层发布均 fresh，且本次路由的每个规则文件与章节都存在；任一缺失即 fail-closed | error |
+| `VERIFY-RULE-004` | Lark 每次启动 AI 前 | 本次路由的**常驻必需**规则文件与章节都存在（缺一即 fail-closed）；两层发布 stale 只记 warning 继续执行（d533eb4），辅助章节缺失只降级 | error（仅缺常驻必需规则时） |
 | `DOC-BLOCK-001` | G0+（`lib/blockers.mjs`） | `agent/blockers.json` 结构合法：字段合规、id 唯一、resolved 带 resolution+resolvedAt；缺文件不发 check | error（不可豁免） |
 | `DOC-BLOCK-002` | G0+（`lib/blockers.mjs`） | 无 `open` 且 `blocksGate ≤ 当前 gate` 的阻塞/变更未解除 | error（可豁免） |
 | `DOC-BLOCK-003` | G0+（`lib/blockers.mjs`） | 其余 `open` 登记（尚不卡当前 gate）可见性提示 | warn |
+| `DOC-ASSUM-001` | G5-G7（`lib/assumption-ledger.mjs`） | 到 G5 出口仍有 `blockingWhen ∈ {api-ready, reconciling}` 的 `open` 假设未销账（gate 轴） | error（可豁免，免疫 report-only） |
+| `DOC-ASSUM-002` | G8（`lib/assumption-ledger.mjs`） | 交付前仍有 `blockingWhen ∈ {api-ready, reconciling, release}` 的 `open` 假设未销账（gate 轴） | error（可豁免，免疫 report-only） |
+| `DOC-FAST-001` | G0+（存在 `agent/fast-track.json` 时） | 快速通道台账符合 schema、项目 ID 一致且 `FTD-*` 唯一 | error（不可豁免） |
+| `DOC-FAST-002` | G2+（存在 `agent/fast-track.json` 时） | 快速通道及 `reuse-api` / `pending-api` 出口有真人签名和日期，AI/占位符不得代签 | error（不可豁免） |
+| `DOC-FAST-003` | G2+（`lib/fast-track-policy.mjs`） | 无 `semanticStatus=undecided` 且属于高风险类别、跨模块或不可逆的业务决策；Mock 不得替代业务语义 | error（不可豁免） |
+| `DOC-FAST-004` | G2+（`lib/fast-track-policy.mjs`） | open 临时项具有安全降级、owner、销账 gate 和证据；`provisional` 另须有明确临时契约 | error（不可豁免） |
+| `DOC-FAST-005` | G5+（`lib/fast-track-policy.mjs`） | 无已到 `resolveByGate` 仍为 `open` 的快速通道临时决策；`--partial` 下 `reconcileWith=api` 的到期项转待对账 warn、`decision` 类仍硬阻断 | error（可豁免，免疫 report-only） |
 | `DOC-SYNC-001` | —（`check-doc-budget.mjs`） | 已通过 gate 项目的 README 机器行与 `gate-results.json.gate` 一致 | error |
 | `DOC-SYNC-002` | —（`check-doc-budget.mjs`） | 机器版 `context-summary.md` 的当前阶段与 `gate-results.json.gate` 一致 | error |
 | `DOC-SYNC-003` | —（`check-doc-budget.mjs`） | `PROJECTS.md` 与即时重生成结果一致 | error |
 | `DOC-SYNC-004` | —（`check-doc-budget.mjs`） | active 项目 stage=G5+ 时存在 G5→当前阶段连续 PASS 历史，且历史证据文件真实存在 | error |
 | `DOC-CR-001` | G6+（`lib/code-review.mjs`） | `agent/code-review.json` 结构合法：字段合规（含必填 `head`）、finding id 唯一、fixed 带 resolution；缺文件不发 check | error |
+| `DOC-FRESH-001` | —（`check-doc-budget.mjs`） | 根目录 `HANDOFF-*.md` 在 7 天保鲜期内（按 `git log -1 --format=%cs` 取最后提交日，不看 mtime）。交接完成就删，未完成就更新状态或移进 `prds/<PROJECT-ID>/` | warn |
 | `DOC-CR-002` | G6+（`lib/code-review.mjs`） | code-review 无未处理 finding（open 项须当场修或 waive/标 N/A） | error |
 | `DOC-CR-003` | G6+（`lib/code-review.mjs`） | `code-review.json.head` 覆盖当前 HEAD（head 现为必填，缺 currentSha 不判定），防 review 过时 | warn |
+| `DOC-CONFIRM-001` | G5+（`lib/confirmation.mjs`） | G5 的人工处置态（`completed`/`not-applicable`/`frontend-complete-pending-reconcile`）带 `confirmedBy` + `confirmedAt`；AI 客户端名与占位符不算人工确认 | warn（warn-first，下一轮转 error） |
+| `DOC-CONFIRM-002` | G7+（`lib/confirmation.mjs`） | G7 的人工处置态（`completed`/`skipped`）带 `confirmedBy` + `confirmedAt` | warn（warn-first，下一轮转 error） |
+| `DOC-CONFIRM-003` | G6+（`lib/confirmation.mjs`） | `method ∈ {manual, manual-visual, browser}` 的 `passed` 验收项逐条带 `confirmedBy` + `confirmedAt`（这三种没有机器退出码兜底） | warn（warn-first，下一轮转 error） |
+| `DOC-CONFIRM-004` | G6+（`lib/confirmation.mjs`） | `code-review.json` 带人工签收 `confirmedBy` + `confirmedAt`（`reviewer` 记谁做的 review，通常是 Agent 自己，不能兼任签收） | warn（warn-first，下一轮转 error） |
 | `VERIFY-G8-001` | G8 | `agent/delivery-status.json` 的 project/mode/branch/headSha/evidence 结构合法；模板 v2 起必须存在 | error |
 | `VERIFY-G8-002` | G8 | 交付模式不是 local，而是 pushed/merged/released | error |
 | `VERIFY-G8-003` | G8 | 实际 Git 工作树干净 | error |

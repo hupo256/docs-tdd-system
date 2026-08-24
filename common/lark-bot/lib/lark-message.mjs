@@ -115,7 +115,7 @@ export const normalizeMessage = (raw) => {
   }
 }
 
-// 消息触发类型：原有 p2p / @bot / @所有人直接入队；只 @ 配置中的负责人时先做 AI 意图分类。
+// 消息触发类型：p2p / @bot 直接入队；@所有人 与只 @ 配置中负责人的消息先走 AI 意图分类。
 // taskMentionOpenIds 必须显式配置，避免「任意 @ 某个人」扩大成自动改代码入口。
 export const resolveMessageTrigger = ({ msg, config }) => {
   // 开通群全量消息后可能看到 bot 消息；机器人自己发出的含 @负责人卡片
@@ -123,11 +123,14 @@ export const resolveMessageTrigger = ({ msg, config }) => {
   if (msg.senderType === 'bot') return null
   if (msg.chatType === 'p2p') return 'direct'
   const mentions = msg.mentions || []
-  if (mentions.some((mention) => mention.key === '@_all' || mention.id === config.botOpenId)) return 'direct'
+  if (mentions.some((mention) => mention.id === config.botOpenId)) return 'direct'
   const taskMentionOpenIds = Array.isArray(config.taskMentionOpenIds) ? config.taskMentionOpenIds : []
+  // @所有人 不是「找机器人」：群里任何人喊一句全体通知即可直接入队改代码，是明显过宽的入口。
+  // 降级走只读意图分类（与 @负责人 同档），仍能接住「@所有人 这个页面报错了」这类真实反馈。
+  if (mentions.some((mention) => mention.key === '@_all')) return 'task_mention'
   if (mentions.some((mention) => taskMentionOpenIds.includes(mention.id))) return 'task_mention'
-  // 保留旧配置兼容：未配置 botOpenId 时，任意 mention 仍视作直接触发。
-  if (!config.botOpenId && mentions.length > 0) return 'direct'
+  // 旧配置兼容（未配 botOpenId）同样收紧到只读分类：无法判定「是否在叫机器人」时不该直接入队。
+  if (!config.botOpenId && mentions.length > 0) return 'task_mention'
   return null
 }
 
@@ -180,7 +183,7 @@ export const parseCommandType = (text) => {
 //   3. 出现任一缺陷信号或写操作动词即否决（一票veto）。
 // 仍有歧义一律返回 null，继续走普通变更任务。
 const STATUS_QUERY_TOPIC_RE = /(?:(?:项目|需求|任务|迭代|排期|工单|这边|目前|现在|整体)[^。；\n]{0,8}(?:状态|进度|阶段|情况)|(?:做|进行|完成)到哪|还剩什么|下一步|project\s*status|progress|next\s*step)/i
-const STATUS_QUERY_CUE_RE = /(?:[?？]|是什么|怎么样|如何|怎样|到哪|了吗|了没|是否|查询|查看|看看|告诉我|汇总|what|how|where|show|tell)/i
+const STATUS_QUERY_CUE_RE = /(?:[?？]|是什么|怎么样|如何|怎样|到哪|了吗|了没|是否|查询|查看|看看|告诉我|汇总|汇报|报告|说一下|说说|说下|讲一下|讲讲|介绍|what|how|where|show|tell|report)/i
 const WRITE_INTENT_RE = /(?:修复|修改|调整|新增|增加|删除|更新|实现|改成|优化|处理|补充|fix|change|update|implement|remove|add)/i
 // 缺陷信号：出现即说明这是在报问题，绝不能当只读查询处理（此前「项目状态一直转圈」会被误判成 status）。
 export const DEFECT_SIGNAL_RE = /(?:不显示|没显示|没有显示|不见了|没反应|无反应|点不动|报错|错误|异常|失败|空白|白屏|转圈|加载不出|出不来|不对|不一致|不正确|丢失|错位|重复|卡住|不生效|闪退|崩|超时|为空|样式|文案|接口|字段|null|undefined|error|crash|bug)/i

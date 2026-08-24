@@ -5,9 +5,15 @@ import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
 import { blockerChecks } from './lib/blockers.mjs'
+import { assumptionChecks } from './lib/assumption-ledger.mjs'
 import { codeReviewChecks } from './lib/code-review.mjs'
+import { acceptanceConfirmationCheck, codeReviewConfirmationCheck, stageConfirmationCheck } from './lib/confirmation.mjs'
+import { validateSchema } from './lib/doc-budget-schema.mjs'
+import { fastTrackChecks } from './lib/fast-track-policy.mjs'
 import { acceptanceChecks } from './lib/acceptance-results.mjs'
+import { allowedG5Statuses, g5DispositionEvidenceOk, partialPrerequisiteCheck, partialRunNoteCheck, resolvePartialRun, splitPendingReconcile } from './lib/gate-partial.mjs'
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
+import { classifyWaiver } from './lib/waiver-policy.mjs'
 
 const scriptPath = fileURLToPath(import.meta.url)
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, config } = resolveRoots()
@@ -26,9 +32,11 @@ const gate = (args[1] || '').toUpperCase()
 const json = args.includes('--json')
 const write = args.includes('--write')
 const verbose = args.includes('--verbose')
+// --partial：G6 的部分验收出口（G5 停靠态用）。语义与理由见 lib/gate-partial.mjs。
+const partialRequested = args.includes('--partial')
 
 function printHelp() {
-  console.log(`usage: verify-project-gate.mjs <PR-01234> <G0-G8> [--json] [--write] [--verbose] [--self-test] [--help]
+  console.log(`usage: verify-project-gate.mjs <PR-01234> <G0-G8> [--json] [--write] [--verbose] [--partial] [--self-test] [--help]
 
 Run a single project documentation/structure gate and emit JSON/check results.
 
@@ -37,6 +45,7 @@ Options:
   --json       Output JSON result to stdout
   --write      Persist gate-results.json
   --verbose    Print every check, not just actionable ones
+  --partial    G6 only: partial acceptance run for a G5 pending-reconcile project (records gate G6-partial)
   --self-test  Run inline self-test`)
 }
 
@@ -201,6 +210,12 @@ function runSelfTest() {
 if (args.includes('--self-test')) runSelfTest()
 
 if (!/^PR-\d{5}$/.test(projectId || '') || !/^G[0-8]$/.test(gate)) failUsage()
+// partial 只对 G6 合法；非法组合直接 usage 退出，不静默降级成完整 G6。
+const { partial, gateLabel, error: partialError } = resolvePartialRun({ gate, partial: partialRequested })
+if (partialError) {
+  console.error(`[verify-project-gate] ${partialError}`)
+  process.exit(1)
+}
 
 const projectDir = resolveProjectRoot(projectId)
 const checks = []
@@ -262,6 +277,11 @@ function findBinaryEvidenceFiles(evidenceDir) {
 
 function add(ruleId, ok, message, file = projectDir, severity = 'error', category = 'documentation') {
   checks.push({ ruleId, ok, message, file: rel(file), severity, category })
+}
+
+// lib 产出的 check 统一接入 add()；null = 该 lib 判定本次不适用（不发 check）。
+function addFrom(check, file) {
+  if (check) add(check.ruleId, check.ok, check.message, file, check.severity, check.category)
 }
 
 function requiredFile(ruleId, pathFromProject) {
@@ -389,8 +409,8 @@ function runGit(gitArgs, cwd = repoRoot) {
 }
 
 // 豁免：读 <projectDir>/agent/rule-waivers.json（见 rule-ids-and-gates.md §4）。
-// 命中的 error 失败项降级为 waived（可见、不阻断）；过期 / 无 expiresAt / 文件非法一律不生效，
-// 并以 warn 暴露，避免"永久绕过"和"静默豁免"。
+// 命中的 error 失败项降级为 waived（可见、不阻断）；过期 / 缺 owner·reason·expiresAt / 文件非法
+// 一律不生效，且这三种「台账已失效」本身判 error（生命周期语义见 lib/waiver-policy.mjs）。
 function applyWaivers() {
   const waiverFile = join(projectDir, 'agent/rule-waivers.json')
   if (!existsSync(waiverFile)) return
@@ -398,32 +418,36 @@ function applyWaivers() {
   try {
     waivers = JSON.parse(read(waiverFile))
   } catch (error) {
-    add('DOC-WAIVER-001', false, `rule-waivers.json is not valid JSON: ${error.message}`, waiverFile, 'warn')
+    add('DOC-WAIVER-001', false, `rule-waivers.json is not valid JSON: ${error.message}`, waiverFile, 'error')
     return
   }
   if (!Array.isArray(waivers)) {
-    add('DOC-WAIVER-001', false, 'rule-waivers.json must be a JSON array of waiver objects', waiverFile, 'warn')
+    add('DOC-WAIVER-001', false, 'rule-waivers.json must be a JSON array of waiver objects', waiverFile, 'error')
     return
   }
   const today = new Date().toISOString().slice(0, 10)
   for (const waiver of waivers) {
     if (!waiver || !waiver.ruleId) continue
-    if (!waiver.expiresAt) {
-      add('DOC-WAIVER-002', false, `waiver for ${waiver.ruleId} has no expiresAt; ignored (waivers must expire)`, waiverFile, 'warn')
-      continue
-    }
-    if (waiver.expiresAt < today) {
-      add('DOC-WAIVER-003', false, `waiver for ${waiver.ruleId} expired ${waiver.expiresAt}; still enforced`, waiverFile, 'warn')
+    const verdict = classifyWaiver(waiver, today)
+    if (verdict.state !== 'active') {
+      add(verdict.ruleId, false, verdict.message, waiverFile, 'error')
       continue
     }
     for (const check of checks) {
       if (check.ruleId !== waiver.ruleId) continue
+      // 只有「失败且仍是 error」的检查才需要豁免：warn 级（永久 warn 规则、report-only 降级）
+      // 本就不阻断，对它们发 DOC-WAIVER-004 只是噪音（CODE-MOCK-002/CODE-MSW-003 的豁免其实是给
+      // verify-code-rules 用的，那边不读 ruleset）。
+      if (check.ok || check.severity !== 'error') continue
       const rule = ruleset?.rules?.[check.ruleId]
-      if (rule?.waivable === false) {
+      // 默认不可豁免：只有 ruleset.json 显式声明 waivable:true 的规则才接受豁免。
+      // 此前判的是 `waivable === false`，未登记规则一律落进可豁免分支（DOC-G2-*/DOC-SYNC-* 都能被豁免掉）；
+      // check-doc-budget 校验 5b 保证台账里的 error 级 ID 必须有 waivable 声明，故此处不会误伤已登记规则。
+      if (rule?.waivable !== true) {
         add('DOC-WAIVER-004', false, `waiver for ${check.ruleId} is ignored because the rule is non-waivable`, waiverFile, 'warn')
         continue
       }
-      if (!check.ok && check.severity === 'error' && (!waiver.file || waiver.file === check.file)) {
+      if (!waiver.file || waiver.file === check.file) {
         check.severity = 'waived'
         check.message += ` [waived: ${waiver.reason || 'no reason'} · owner=${waiver.owner || '?'} · until ${waiver.expiresAt}]`
       }
@@ -620,17 +644,21 @@ function validateG5() {
 
   const status = stageStatus('G5')
   add('VERIFY-G5-001', Boolean(status), 'agent/stage-status.json records the G5 integration disposition', join(projectDir, 'agent/stage-status.json'))
-  add('VERIFY-G5-002', ['completed', 'not-applicable'].includes(status?.status), `G5 status is completed or not-applicable (got ${status?.status || 'missing'})`, join(projectDir, 'agent/stage-status.json'))
-  const g5EvidenceOk = status?.status === 'not-applicable'
-    ? Boolean(status?.reason)
-    : status?.status === 'completed' && evidencePathsExist(status?.evidence)
-  add('VERIFY-G5-003', g5EvidenceOk, 'G5 completion has existing evidence paths, or not-applicable has a concrete reason', join(projectDir, 'agent/stage-status.json'))
-  // VERIFY-G5-004（报告态）：G5 记为 frontend-complete-pending-reconcile = 前端已完成、仅待真实字段对账。
-  // 该态不放行 G6（VERIFY-G5-002 仍只认 completed/not-applicable），但要求前端 evidence 与待对账原因存在，
-  // 使"前端完成待对账"成为有证据的可交付中间态，而非笼统 blocked（观感上不再显示全线阻塞）。
+  const allowedG5 = allowedG5Statuses(partial)
+  add('VERIFY-G5-002', allowedG5.includes(status?.status), `G5 status is ${allowedG5.join(' / ')} (got ${status?.status || 'missing'})`, join(projectDir, 'agent/stage-status.json'))
+  const g5EvidenceOk = g5DispositionEvidenceOk({
+    status: status?.status,
+    evidenceOk: evidencePathsExist(status?.evidence),
+    hasReason: Boolean(status?.reason),
+  })
+  add('VERIFY-G5-003', g5EvidenceOk, 'G5 completion has existing evidence paths, or not-applicable/pending-reconcile has a concrete reason', join(projectDir, 'agent/stage-status.json'))
+  // VERIFY-G5-004：停靠态 frontend-complete-pending-reconcile = 前端已完成、仅待真实字段对账。
+  // 普通运行下是报告态（warn，不放行完整 G6）；--partial 下它是本次结论的**依据**，故升 error。
   if (status?.status === 'frontend-complete-pending-reconcile') {
-    add('VERIFY-G5-004', evidencePathsExist(status?.evidence) && Boolean(status?.reason), '前端完成待对账：须有前端 evidence 路径与待对账原因；此态为报告态，不放行 G6', join(projectDir, 'agent/stage-status.json'), 'warn')
+    add('VERIFY-G5-004', evidencePathsExist(status?.evidence) && Boolean(status?.reason), '前端完成待对账：须有前端 evidence 路径与待对账原因；此态不放行完整 G6，只能走 G6-partial', join(projectDir, 'agent/stage-status.json'), partial ? 'error' : 'warn')
   }
+  // DOC-CONFIRM-001（warn）：G5 的人工处置态须留签名——README 人机分界说 G5+ 以人工确认为锚点。
+  addFrom(stageConfirmationCheck({ stage: 'G5', status }), join(projectDir, 'agent/stage-status.json'))
 
   // 责任模块目录可填在 00-feature-inventory.md（scope 事实）或 agent/context-summary.md（恢复上下文），
   // 两处任一命中即可，避免脚手架把字段放在 context-summary 而 gate 只读 inventory 导致恒空。
@@ -695,7 +723,13 @@ function validateG5() {
 
 function validateG6() {
   validateG5()
-  add('VERIFY-STAGE-001', hasPassedGate('G5'), 'G6 requires a persisted successful G5 run in agent/gate-history.json', join(projectDir, 'agent/gate-history.json'))
+  // 阶段前置：完整 G6 要 G5 PASS；G6-partial 的前提恰恰是 G5 还停靠着，故改要求 G4 PASS（编码前最后一个完整 gate）。
+  if (partial) {
+    const check = partialPrerequisiteCheck({ hasG4Pass: hasPassedGate('G4'), file: rel(join(projectDir, 'agent/gate-history.json')) })
+    add(check.ruleId, check.ok, check.message, join(projectDir, 'agent/gate-history.json'), check.severity, check.category)
+  } else {
+    add('VERIFY-STAGE-001', hasPassedGate('G5'), 'G6 requires a persisted successful G5 run in agent/gate-history.json', join(projectDir, 'agent/gate-history.json'))
+  }
   const evidenceDir = join(projectDir, 'evidence')
   const hasEvidence = existsSync(evidenceDir) && readdirSync(evidenceDir, { recursive: true }).some((name) => String(name).endsWith('README.md'))
   add('VERIFY-G6-001', hasEvidence, 'at least one evidence README exists under project evidence/', evidenceDir)
@@ -712,6 +746,7 @@ function validateG6() {
       for (const check of codeReviewChecks({ report, currentSha, expectedProjectId: projectId, file: rel(codeReviewFile) })) {
         add(check.ruleId, check.ok, check.message, codeReviewFile, check.severity, check.category)
       }
+      addFrom(codeReviewConfirmationCheck({ report }), codeReviewFile)
     }
   } else if ((projectManifest?.templateVersion || 0) >= 2) {
     add('DOC-CR-001', false, 'template v2+ 必须存在 agent/code-review.json', codeReviewFile)
@@ -725,17 +760,25 @@ function validateG6() {
     .map((row) => row[0])
     .filter(Boolean)
   const acceptanceFile = join(projectDir, 'agent/acceptance-results.json')
+  let pendingReconcileIds = []
   if (existsSync(acceptanceFile)) {
     const report = readJson(acceptanceFile)
     if (report === null) add('DOC-AC-001', false, 'acceptance-results.json 不是合法 JSON', acceptanceFile)
     else {
       const currentSha = runGit(['rev-parse', 'HEAD'], gitCwd).stdout
-      for (const check of acceptanceChecks({ report, doingFeatureIds, expectedProjectId: projectId, currentSha, evidenceExists: (p) => existsSync(join(projectDir, p)), file: rel(acceptanceFile) })) {
+      pendingReconcileIds = partial ? splitPendingReconcile(report.items).pending.map((item) => item.id) : []
+      for (const check of acceptanceChecks({ report, doingFeatureIds, expectedProjectId: projectId, currentSha, evidenceExists: (p) => existsSync(join(projectDir, p)), file: rel(acceptanceFile), partial })) {
         add(check.ruleId, check.ok, check.message, acceptanceFile, check.severity, check.category)
       }
+      addFrom(acceptanceConfirmationCheck({ report }), acceptanceFile)
     }
   } else if ((projectManifest?.templateVersion || 0) >= 2) {
     add('DOC-AC-001', false, 'template v2+ 必须存在 agent/acceptance-results.json', acceptanceFile)
+  }
+  // partial 结论标记：把「本次是部分验收、不构成 G7 前置」写进 checks（验收报告不可读时也要出现）。
+  if (partial) {
+    const note = partialRunNoteCheck({ pendingIds: pendingReconcileIds, file: rel(acceptanceFile) })
+    add(note.ruleId, note.ok, note.message, acceptanceFile, note.severity, note.category)
   }
   add('VERIFY-G6-003', /\|\s*命令\s*\|\s*目标文件|Command\s*\|\s*Target|Biome|biome|node --check|verify-code-rules|check-doc-budget/.test(`${evidenceText}\n${collabText}`), 'verification evidence records command target/result, including Biome or documented fallback', evidenceDir)
   const binaryFiles = findBinaryEvidenceFiles(evidenceDir)
@@ -752,6 +795,7 @@ function validateG7() {
     ? Boolean(status?.reason)
     : status?.status === 'completed' && evidencePathsExist(status?.evidence)
   add('VERIFY-G7-003', g7EvidenceOk, 'G7 completion has existing evidence paths, or skipped has a concrete reason', join(projectDir, 'agent/stage-status.json'))
+  addFrom(stageConfirmationCheck({ stage: 'G7', status }), join(projectDir, 'agent/stage-status.json'))
 }
 
 function validateG8() {
@@ -819,21 +863,53 @@ validators[gate]()
   }
 }
 
+// 假设台账销账（gate 轴）：G5-G7 卡 api-ready/reconciling，G8 additionally 卡 release。
+// 与 DOC-G3-IMPL-006 的 lifecycle 轴同源不同名分，语义源在 lib/assumption-ledger.mjs。
+// 同样放在 applyWaivers 之前，让「接受风险交付」走具名带期限豁免而非静默通过。
+{
+  const ledgerFile = join(projectDir, 'agent/assumptions.json')
+  const ledger = existsSync(ledgerFile) ? readJson(ledgerFile) : null
+  for (const check of assumptionChecks({ ledger, gate, file: rel(ledgerFile) })) {
+    add(check.ruleId, check.ok, check.message, ledgerFile, check.severity, check.category)
+  }
+}
+
+// 快速通道是显式 opt-in：只有 agent/fast-track.json 存在才检查，普通项目零回填。
+// G2 判断「业务语义是否仍未决定」，后续 gate 判断临时契约是否按期销账；Mock 本身不替代业务决策。
+{
+  const fastTrackFile = join(projectDir, 'agent/fast-track.json')
+  if (existsSync(fastTrackFile)) {
+    const ledger = readJson(fastTrackFile)
+    const schema = readJson(join(docsRoot, 'common/engine/schemas/fast-track.schema.json'))
+    const schemaErrors = ledger && schema ? validateSchema(ledger, schema, 'fast-track.json') : ['JSON 或 schema 无法解析']
+    for (const check of fastTrackChecks({ ledger: ledger ?? {}, projectId, gate, schemaErrors, partial, file: rel(fastTrackFile) })) {
+      add(check.ruleId, check.ok, check.message, fastTrackFile, check.severity, check.category)
+    }
+  }
+}
+
 // Local pilots keep their creation-time contract. Newly introduced checks are report-only
 // until a project explicitly opts into blocking current rules.
 const projectManifest = readJson(join(projectDir, 'agent/project-manifest.json'))
 const ruleset = readJson(join(docsRoot, 'common/rules/ruleset.json'))
-if (projectManifest?.gatePolicy?.legacyRules === 'report-only') {
-  for (const check of checks) {
-    if (!check.ok && /^DOC-G3-00[1-7]$/.test(check.ruleId)) check.severity = 'warn'
-  }
-}
 
 for (const check of checks) {
   const rule = ruleset?.rules?.[check.ruleId]
   if (!check.ok && rule) {
     const projectReportOnly = projectManifest?.gatePolicy?.currentTouchedRules === 'report-only'
-    check.severity = !rule.blocking || projectReportOnly ? 'warn' : 'error'
+    // report-only 是「存量债 / 新引入的横向规则不阻断本次」的接入期开关，不是万能后门：
+    // 不可豁免规则（waivable:false）与项目自有台账类规则（reportOnlyExempt）免疫，
+    // 否则一个无 owner、无期限、无规则粒度的项目级开关就能盖掉 DOC-WAIVER-004 的四重防护。
+    const immune = rule.waivable === false || rule.reportOnlyExempt === true
+    check.severity = !rule.blocking || (projectReportOnly && !immune) ? 'warn' : 'error'
+  }
+}
+
+// legacyRules 的定向降级必须排在 ruleset 定档之后：DOC-G3-001..007 已登记 blocking:true，
+// 若先降级会被上面的循环推回 error。
+if (projectManifest?.gatePolicy?.legacyRules === 'report-only') {
+  for (const check of checks) {
+    if (!check.ok && /^DOC-G3-00[1-7]$/.test(check.ruleId)) check.severity = 'warn'
   }
 }
 
@@ -852,7 +928,9 @@ function summarize(checkList) {
 const groups = Object.fromEntries(
   ['documentation', 'implementation'].map((category) => [category, summarize(checks.filter((check) => check.category === category))]),
 )
-const result = { ok: checks.filter((check) => check.severity !== 'warn' && check.severity !== 'waived').every((check) => check.ok), projectId, gate, checks, groups }
+// gate 字段写 gateLabel：partial 记 `G6-partial`，故 hasPassedGate('G6') 恒 false（G7 天然被挡），
+// DOC-SYNC-001/002/003（只认 ^G[0-8]$）也不会据它要求 README 阶段跳级。
+const result = { ok: checks.filter((check) => check.severity !== 'warn' && check.severity !== 'waived').every((check) => check.ok), projectId, gate: gateLabel, checks, groups }
 
 // --write：把本次真实结果（含时间戳）落盘为 agent/gate-results.json，作为 G8 交付证据。
 // 记录的是脚本此刻实际判定，不是人手编造"全绿"。G8 会校验产物来源、项目/阶段和 fail=0。

@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import { splitPendingReconcile } from './gate-partial.mjs'
+
 export const ACCEPTANCE_METHODS = ['vitest', 'browser', 'contract', 'manual-visual', 'manual', 'not-applicable']
 export const ACCEPTANCE_STATUSES = ['passed', 'failed', 'blocked', 'not-applicable']
 
@@ -53,7 +55,10 @@ export function validateAcceptanceResults(report, expectedProjectId = '') {
   return errors
 }
 
-export function acceptanceChecks({ report, doingFeatureIds, expectedProjectId = '', currentSha = '', evidenceExists = null, file = 'agent/acceptance-results.json' }) {
+// partial=true 即 G6-partial（部分验收）：依赖真实后端字段的 blocked 项（contract/browser）转记
+// pending-reconcile —— 它们不再算 DOC-AC-003 的未处置项，也可代替 passed 满足 DOC-AC-002 的覆盖要求，
+// 但会由 DOC-AC-007（warn）逐条点名。判定源在 lib/gate-partial.mjs。
+export function acceptanceChecks({ report, doingFeatureIds, expectedProjectId = '', currentSha = '', evidenceExists = null, file = 'agent/acceptance-results.json', partial = false }) {
   const base = { file, category: 'documentation' }
   if (report === null || report === undefined) return []
   const structural = validateAcceptanceResults(report, expectedProjectId)
@@ -63,8 +68,11 @@ export function acceptanceChecks({ report, doingFeatureIds, expectedProjectId = 
   const doing = [...new Set(doingFeatureIds || [])]
   const covered = new Set(report.items.map((item) => item.featureId))
   const missing = doing.filter((id) => !covered.has(id))
-  const withoutPass = doing.filter((id) => !report.items.some((item) => item.featureId === id && item.status === 'passed'))
-  const unresolved = report.items.filter((item) => item.status === 'failed' || item.status === 'blocked')
+  const pendingReconcile = partial ? splitPendingReconcile(report.items).pending : []
+  const pendingIdSet = new Set(pendingReconcile.map((item) => item.id))
+  const acceptedStatuses = (item) => item.status === 'passed' || pendingIdSet.has(item.id)
+  const withoutPass = doing.filter((id) => !report.items.some((item) => item.featureId === id && acceptedStatuses(item)))
+  const unresolved = report.items.filter((item) => (item.status === 'failed' || item.status === 'blocked') && !pendingIdSet.has(item.id))
   const missingEvidence = report.items.filter((item) => item.status === 'passed' && item.evidence.length === 0)
   const checks = [
     { ...base, ruleId: 'DOC-AC-001', ok: true, severity: 'error', message: `acceptance-results.json 合法（${report.items.length} 条）` },
@@ -131,6 +139,19 @@ export function acceptanceChecks({ report, doingFeatureIds, expectedProjectId = 
       ? 'acceptance-results 覆盖当前 HEAD（或未提供 currentSha，不判定）'
       : `acceptance-results.head(${report.head}) 与当前 HEAD(${String(currentSha).slice(0, 12)}) 不一致，验收可能已过时`,
   })
+  // DOC-AC-007（warn，仅 partial）：待真实字段对账的验收项逐条点名。它是 partial 的"欠账清单"——
+  // 这些项在本次不算失败，但必须在字段到位后重跑完整 G6 才算真的验收过。
+  if (partial) {
+    checks.push({
+      ...base,
+      ruleId: 'DOC-AC-007',
+      ok: pendingReconcile.length === 0,
+      severity: 'warn',
+      message: pendingReconcile.length
+        ? `G6-partial：${pendingReconcile.length} 条验收待真实字段对账（${pendingReconcile.map((item) => `${item.id}/${item.method}`).join(', ')}），字段到位后须重跑完整 G6`
+        : 'G6-partial：无待真实字段对账的验收项（可直接跑完整 G6）',
+    })
+  }
   return checks
 }
 
@@ -169,7 +190,18 @@ function selfTest() {
   assert('AC-006 stale head warns', acceptanceChecks({ report: passed, doingFeatureIds: ['F01'], currentSha: 'ffffffffffff' }).find((item) => item.ruleId === 'DOC-AC-006')?.ok === false)
   assert('AC-006 matching head passes', acceptanceChecks({ report: passed, doingFeatureIds: ['F01'], currentSha: 'abc123def456789' }).find((item) => item.ruleId === 'DOC-AC-006')?.ok === true)
   assert('AC-006 no currentSha not judged', acceptanceChecks({ report: passed, doingFeatureIds: ['F01'] }).find((item) => item.ruleId === 'DOC-AC-006')?.ok === true)
-  if (!process.exitCode) console.log('acceptance-results lib self-test passed (16 cases)')
+  // partial（G6-partial）：contract/browser 的 blocked 转待对账；vitest 的 blocked 仍算未处置。
+  const blockedContract = { ...passed, items: [{ ...passed.items[0], method: 'contract', status: 'blocked', evidence: [], reason: '后端字段未就绪' }] }
+  const partialContract = acceptanceChecks({ report: blockedContract, doingFeatureIds: ['F01'], partial: true })
+  assert('partial contract blocked not unresolved', partialContract.find((item) => item.ruleId === 'DOC-AC-003')?.ok === true)
+  assert('partial contract blocked covers doing feature', partialContract.find((item) => item.ruleId === 'DOC-AC-002')?.ok === true)
+  assert('partial lists pending in AC-007', partialContract.find((item) => item.ruleId === 'DOC-AC-007')?.ok === false)
+  assert('AC-007 absent without partial', !acceptanceChecks({ report: blockedContract, doingFeatureIds: ['F01'] }).some((item) => item.ruleId === 'DOC-AC-007'))
+  assert('non-partial contract blocked still fails', acceptanceChecks({ report: blockedContract, doingFeatureIds: ['F01'] }).find((item) => item.ruleId === 'DOC-AC-003')?.ok === false)
+  const blockedVitest = { ...passed, items: [{ ...passed.items[0], method: 'vitest', status: 'blocked', evidence: [], reason: '环境缺失' }] }
+  assert('partial does not excuse vitest blocked', acceptanceChecks({ report: blockedVitest, doingFeatureIds: ['F01'], partial: true }).find((item) => item.ruleId === 'DOC-AC-003')?.ok === false)
+  assert('AC-007 clean when nothing pending', acceptanceChecks({ report: passed, doingFeatureIds: ['F01'], partial: true }).find((item) => item.ruleId === 'DOC-AC-007')?.ok === true)
+  if (!process.exitCode) console.log('acceptance-results lib self-test passed (23 cases)')
 }
 
 if (process.argv[1]?.endsWith('acceptance-results.mjs') && process.argv.includes('--self-test')) selfTest()

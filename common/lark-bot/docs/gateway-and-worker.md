@@ -26,7 +26,7 @@ Codex / Claude Worker 领取任务
 Bot Gateway 是独立的本机常驻服务，不放进 `apps/web` 运行时。当前由 `lark-cli event consume im.message.receive_v1` 长连接接收事件，不需要公网 tunnel 或自建 challenge / 验签端点。它负责：
 
 - 只接受白名单群和白名单用户。信任边界是**白名单群**：群内 QA / PM / 后台 @ 都能触发，群消息只按群放行、不按发送人过滤；p2p 直发才按白名单用户放行。**推荐动态成员制 `allowedChatIds:"auto"`**：白名单 = bot 当前所在的群（`im +chat-list`），新群拉进去即时响应、无需改配置或重启（未知 chat 首次 @ 自动刷新再判）。**fail-closed 硬规则**：完全没配任何白名单（`allowedChatIds` 非 `"auto"` 且群 + 用户皆空）时拒绝所有事件，绝不因配置漏填而放行所有人。
-- 群内 `@应用` / `@所有人` 保持直接入队；仅 `@taskMentionOpenIds` 中负责人的消息先走严格只读意图分类，只有中高置信度的 bug / 明确需求才正式入队，其余静默忽略。普通群聊永远不调用 AI。
+- 群内 `@应用` 直接入队；**`@所有人` 与 `@taskMentionOpenIds` 中负责人同档**，先走严格只读意图分类，只有中高置信度的 bug / 明确需求才正式入队，其余静默忽略（喊一句全体通知不该等于「授权改代码」）。未配 `botOpenId` 的旧配置同样收紧到只读分类。普通群聊永远不调用 AI。
 - `@负责人` 代理触发依赖 Lark 应用的“获取群组中所有消息”只读权限（申请项为 `im:message.group_msg:readonly`；当前应用 scope API 展示 tenant `im:message:readonly`）及 `im.message.receive_v1` 事件订阅；未获该权限时 Lark 不会投递未 @bot 的群消息，代码侧无法补救。
 - 前置分类必须持久化 `received` 后由 Worker 执行；Claude 仅开放 Read + plan 权限，Codex 使用 read-only + network off。分类失败落 `intake_failed`、不改代码、不发群失败卡；分类结论与 CLI 输出进入执行审计。全量消息中的 `sender_type=bot` 必须在触发判定前丢弃，防自身卡片回流。
 - 使用 `message_id` 做幂等，避免重复执行。
@@ -99,8 +99,8 @@ Codex / Claude Worker 领取任务后：
 4. 代码变更后运行触达文件 Biome。
 5. UI / 交互变更后验证桌面、390px H5、dark / light。
 6. 输出 diff 摘要、验证结果、风险和待确认项。
-7. 完成后回群通知结果，并写入通知记录。
-8. 完成后 bot 会把**自己产生的改动**本地提交（临时 worktree 提交到其 hotfix 分支；命中已有 worktree 提交到其当前分支），但**从不 push、不开 PR、不合并**，留待人工 review。绝不自动提交人类的既存 WIP：命中的已有 worktree 在任务开始前若已有未提交改动，任务会改路由到隔离的临时 worktree，bot 的改动落隔离分支、完全不碰人类工作区。
+7. 完成后回群通知结果，并写入通知记录。完成卡的「系统实测」栏在真实改动文件的规模、Figma 核验之外，再附一行 **规则扫描**：Worker 用与人类 `docs-tdd changed` 同一把尺子（`verify-code-rules.mjs --project <ID>`，见 [lark-code-rules.mjs](../lib/lark-code-rules.mjs)）在任务 worktree 里跑一次，如实写出 error / warn 计数与命中规则 ID。这一层**不阻断**——bot 自己判「过 / 不过」的硬闸只有规范闸（失效裸色类）那一道；规则扫描只是把「bot 改的代码踩没踩规则」摆到卡片上让人决定要不要回炉，跑不成时写「未跑成 + 原因」而**绝不**渲染成零违规。
+8. 完成后 bot 会把**自己产生的改动**本地提交（临时 worktree 提交到其 hotfix 分支；命中已有 worktree 提交到其当前分支），但**从不 push、不开 PR、不合并**，留待人工 review。提交正文带 `lark-task: <id>` trailer（标题里的 `[<id>]` 给人看，trailer 供 `git log --grep '^lark-task: <id>'` 精确对到「群里哪条反馈 → 哪个提交」）。绝不自动提交人类的既存 WIP：命中的已有 worktree 在任务开始前若已有未提交改动，任务会改路由到隔离的临时 worktree，bot 的改动落隔离分支、完全不碰人类工作区。
 
 任务生命周期、自动执行 / 必须确认的具体边界与回复格式见 [task-boundaries-and-reply.md](./task-boundaries-and-reply.md)。
 

@@ -128,6 +128,8 @@ Modal、分享渠道行、底部浮层、分页、状态 CTA **必须先 grep �
 
 > 泛化：文案只是「按需求原文、不想当然」的一个实例。字段名、枚举值、状态流转、交互行为同理——凡是 PRD/契约已写死的，实现照搬，不自行改写；PRD 没写的显式标 `// ASSUMED:` 待对账（§8.1），不拿「我以为」填空。
 
+快速通道里非 API 的临时业务语义（权限、金额精度、状态机、路由、核心交互）不塞进字段假设台账，统一登记到 [fast-track-incomplete-docs.md](./fast-track-incomplete-docs.md) 定义的 `agent/fast-track.json`；只有语义已确认或有人签认了默认安全、可逆的临时契约才允许实现，Mock 只模拟该契约，不负责发明契约。
+
 ## 8. Mock 策略：默认 MSW 路线 B，临时脚手架、零残留
 
 **默认主路径（硬性）**：新功能一律走 **MSW 路线 B**（§8.4.1）——service/hook/mapper 从第一天只写真实请求，mock 只在 `src/mocks/handlers/`，mock 从不进生产代码路径，结构上不可能残留。不采用 MSW 必须先在 `agent/rule-waivers.json` 登记豁免。**遗留 `if(USE_MOCK)` 路线 A 的隔离/拆除税已移至 [mock-legacy-route-a.md](./mock-legacy-route-a.md)**（仅未采用 MSW 的存量功能读），本文件只保留两路线通用关卡。
@@ -211,7 +213,7 @@ const optionalText = (v?: string) =>
 ### 8.4.1 新功能 MSW 执行契约
 
 1. handler 放 `src/mocks/handlers/<feature>.ts`，按 endpoint 注册；业务代码禁止出现 mock flag、mock 分支或 mock DTO 工厂。
-2. handler response 必须由真实 schema 契约测试验证；没有 API 文档时，假设同时进入 `agent/assumptions.json`，代码以 `// ASSUMED: ASM-xxx` 关联。
+2. handler response 必须由真实 schema 契约测试验证；没有 API 文档时，假设同时进入 `agent/assumptions.json`，代码以 `// ASSUMED: ASM-xxx` 关联。**出口条件**：`blockingWhen: api-ready/reconciling` 的 `open` 假设挡 G5（`DOC-ASSUM-001`），`release` 轴再叠加挡 G8（`DOC-ASSUM-002`）；销账=改 `status` 并写 `resolution`，确需带风险交付走 `rule-waivers.json` 具名限期豁免，不得把 `status` 谎报成 `confirmed`。`prd-clarify` 轴不挡 gate，要挡请用 `blockers.json` 的 `blocksGate`。
 3. worker 仅在 dev 启动，未声明请求用 `onUnhandledRequest: 'bypass'` 打真实接口；若存在 production Service Worker，需验证注册/清理逻辑互不干扰。
 4. 项目 `agent/msw-manifest.json` 是 endpoint、场景、资产和生命周期状态的机器真值；场景按 endpoint 类型裁剪，不适用项写理由。
 5. 不采用 MSW 必须在 `agent/rule-waivers.json` 登记 owner、原因、替代隔离方案和失效时间。

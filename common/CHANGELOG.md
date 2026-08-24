@@ -7,6 +7,67 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-08-24（快速通道从类别封禁改为风险分级 + 临时业务契约机器化）
+
+- **修正过粗的 G2 门槛**：原规则把权限、金额精度、状态机、路由、核心交互整体视为 G2 blocker，混淆了“业务语义未决定”和“语义已定但接口/环境未就绪”。现改为三轴判定：`semanticStatus`（confirmed/provisional/undecided）× `impact`（local/cross-cutting/irreversible）× 类别；只有高风险语义仍 undecided，或未决项跨模块/不可逆时阻断 G2。Mock 可以替代不可用系统，不能替代业务决策。
+- **新增显式 opt-in 台账 `agent/fast-track.json`**：选择快速通道才从 `templates/fast-track-template.json` 创建，普通项目零回填。`route`、真人签名、临时契约、安全降级、owner、最迟销账 gate 与证据均结构化；`DOC-FAST-001..005` 分别校验结构、人工确认、高风险未决项、临时护栏和到期未销账。字段/权限/金额/状态最迟 G5，视觉/路由/核心交互最迟 G6，其他项最迟 G8。
+- **允许安全占位，不允许假业务默认**：权限未知默认拒绝，金额规则未知显示 `--` 并禁提交，未知状态不开放动作，正式路由未知只走 dev-only 入口，核心流程未知只做无副作用原型。高风险项若有负责人签认的可逆临时契约可继续 G0→G4；无决策仍停 G2。
+- **执行链**：新 schema 纳入全项目元数据检查，gate cache/changed fingerprint 纳入台账；判定收敛到 `lib/fast-track-policy.mjs` 自测，并补 golden 变异覆盖“未决金额挡 G2”和“临时决策到期挡 G5”。
+- **对齐 G6-partial 停靠出口（补 `reconcileWith`）**：`pending-api` 项目的终点是 G6-partial，但原 `DOC-FAST-005` 不感知 `--partial`，会把等真实接口对账的到期项在部分验收时硬卡，与“不要空等”的初衷相悖；同时类别销账上限一刀切 G5，使高风险 `provisional` 项被 G5 上限与 G6-partial overdue 两头夹死。现给每项加 `reconcileWith`（`api`/`decision`）：`--partial` 下 `api` 类到期项转待对账 warn、`decision` 类仍硬阻断（partial 不是逃逸口）；`pending-api` 路由下 `api` 项销账上限放宽到 G6。待对账判据收敛到 `lib/gate-partial.isPendingReconcileFastTrackItem`，并补 golden G6-partial 正反对照用例。
+
+## 2026-08-23（文档一致性收口 + 可移植性说实话 + lark 完成卡挂静态尺子）
+
+- **交接文档保鲜（`DOC-FRESH-001`，warn）**：根目录 `HANDOFF-*.md` 曾长期躺着一份「方案已获批准、尚未实现」的交接（实际工作早已落地），没人负责删、也没有机制点名。`check-doc-budget.mjs` 新增校验：根目录 `HANDOFF-*.md` 若最后提交日（`git log -1 --format=%cs`，不看 mtime——clone 会重置 mtime）超过 7 天即 warn（对齐 `DOC-PRD-010` 的 >7d 先例），提示「交接完了就删、没完就更新状态或移进 `prds/<PR>/`」。同步删掉那份过期交接。
+- **可移植性说实话**：README 首句原写「与业务仓库解耦，可挂载任意前端项目复用」，但引擎里仍散着 FameEX 具体锚点（`docs-tdd.config.default.json` 的 `@fameex/web` 构建 / `@fameex/ui` 别名、`agent-rule-adapters.mjs` 的 "FameEX Local Execution Protocol" 字面量、多份规则文档的绝对路径示例、消费仓 `.cursor/rules` 依赖）。改为「目前只在一个仓库真实验证过，移植到第二个仓库需改这些锚点」并新增「可移植性的真实边界」小节，把移植必改项列成检查表（配置默认值 / Agent 适配器文本 / 规则文档示例 / 消费仓 L2 依赖 / lark 本机约定）。**未做**抽 `adapters/<consumer>/`：在出现第二个真实消费仓前不造这层抽象。
+- **lark 完成卡挂 changed 静态尺子（D5，非阻断）**：`common/lark-bot/**` 此前从不跑 `docs-tdd changed`，bot 改的代码踩没踩规则只有 bot 自己知道。新 `lib/lark-code-rules.mjs`（纯判定 + lark-pure 单测）在完成前用与人类同一把尺子（`verify-code-rules.mjs --project <ID>`）跑一次，把 error/warn 计数与命中规则 ID 附到完成卡「系统实测」栏。**不阻断**——bot 的硬闸只有规范闸（失效裸色类）一道；跑不成时如实写「未跑成 + 原因」，绝不渲染成零违规。不走 `docs-tdd changed` CLI 是因为那条入口要求编码 rule session，而 lark 按设计不签会话（改为每任务注入规则章节），走 CLI 只会让每张卡挂一条无信息量的会话缺失 FAIL。
+- **lark 提交带机器锚点**：收尾提交正文加 `lark-task: <id>` trailer（标题 `[<id>]` 给人看，trailer 供 `git log --grep '^lark-task: <id>'` 把群内反馈精确对到提交）。lark 单测 261/261。
+- **lark 只读查询词表补「汇报/报告」（真机漏判修复）**：端到端演练时「汇报一下这个项目的状态」被判成新需求拦在 `waiting_confirmation`——`STATUS_QUERY_CUE_RE` 只收了「汇总」漏了「汇报」。补齐 `汇报/报告/说一下/说说/讲一下/介绍/report` 等同义查询信号，仍受「缺陷信号 / 写操作动词一票否决」双闸约束（补反例单测：「汇报下为什么…转圈」「新增…汇报页面」仍判 null）。
+- **lark `no_change_needed` 边界收紧**：worker 提示词与文档原写「需求属后台 API / 别的仓 / 别的职责」，同一 monorepo 内的另一个前端 app（如 admin / futures-admin）可能被「别的仓」误导成不属本仓而被踢走。改为明确「判据是**不属本 git 仓库**、不是不属本前端 app」——同仓另一个 app/package 仍是本仓可改、应直接实现（范围不清则 `waiting_confirmation`）。lark 单测 262/262。
+
+## 2026-08-23（人工确认终于有地方签名：`DOC-CONFIRM-001..004`）
+
+- **「以人工确认为锚点」此前在机器侧不存在**：README 人机分界写着 G5-G8 的真实联调、视觉还原、交互手感、QA 用例执行以人工确认为锚点，但 `stage-status.schema.json` 的 required 只有 status/reason/evidence/updatedAt 且 `additionalProperties:false`——连写 `confirmedBy` 的地方都没有；`acceptance-results.json` 的 `manual`/`manual-visual`/`browser` 项与 `code-review.json` 同理。结果是 Agent 自己把 G5 写成 `completed`、自己把人工验收项写成 `passed`，gate 只能校验结构与证据路径存在，**无法区分「人看过」和「AI 声称人看过」**。
+- **修法**：三份判断层 schema 各加可选 `confirmedBy` + `confirmedAt`（`YYYY-MM-DD`），判定收进新 `lib/confirmation.mjs`（纯函数 + self-test，23 例）：`DOC-CONFIRM-001`（G5 的 `completed`/`not-applicable`/`frontend-complete-pending-reconcile`）、`DOC-CONFIRM-002`（G7 的 `completed`/`skipped`）、`DOC-CONFIRM-003`（`manual`/`manual-visual`/`browser` 的 passed 项逐条，这三种没有机器退出码兜底）、`DOC-CONFIRM-004`（`code-review.json` 的人工签收——`reviewer` 记的是谁做的 review，通常就是 Agent 自己，不能兼任签收）。`pending`/`blocked` 与非人工判定方式不发 check（还没到人确认那一步）。
+- **AI 不能代签**：`classifySignature` 把 AI 客户端名（codex/claude/cursor/…）与 `TBD`/`N/A`/`unknown` 等占位符判为 `agent`，不算人工确认——这正是本规则要防的主要形态。只按独立词匹配，`aichen`、「cursor 组的 aven」不误伤。
+- **生效边界**：四条全部 **warn**，不阻断任何现有交付。晋级路径与 `VERIFY-TEST-002` 同型（新模板 error / 旧项目 warn）：签名字段进模板骨架、且有一个真实项目 G5→G7 全签过一遍后转 error，存量项目走 waiver。骨架不预写空签名（`minLength:1`，占位符也会被判 `agent`），缺签名由 gate 逐条点名。当前 PR-02306 四条全 warn 且未代签，`docs-tdd check` 通过、golden 30 条变异用例无变化、lark 单测 256/256。
+
+## 2026-08-23（豁免到期真的失效 + warn 观察期的默认结局是退休 + `docs-tdd rule-health`）
+
+- **失效豁免从 warn 提到 error**：判定收进新 `lib/waiver-policy.mjs`（唯一语义源 + self-test）——缺 `reason`/`owner`/`expiresAt` 之一或 `expiresAt` 非 `YYYY-MM-DD` → `DOC-WAIVER-002` error；已过期 → `DOC-WAIVER-003` error 且原规则照旧阻断；文件非法 JSON/非数组 → `DOC-WAIVER-001` error。为什么是 error：失效豁免本来就套不上（原规则照旧红），这一档追加的是**清理台账**的压力——用 warn 表达时「还没写全」和「已经过期」都指向「不用管」，台账只会越腐化；出口很便宜（续期、补 owner/reason、或删掉）。`DOC-WAIVER-004`（命中 non-waivable 规则）仍是 warn：那类条目多是给 `verify-code-rules` 写的，那边不读 `ruleset.json`，判 error 会误伤。存量 4 个项目的 15 条豁免全部字段齐备且未过期，本次不新增任何红。
+- **warn 观察期有了默认结局：退休，而不是永久 warn**。晋级判据要求人工裁决，而裁决可以永远不发生——台账 12 个格子曾全是 `unreviewed`，`eligible = TP>=2 && FP===0` 因此永远算不出来，规则实际停在「天天刷 WARN、没人负责、也永不晋级」。新 `lib/warn-retirement.mjs` 给它一个终点：某规则首次命中起满 **90 天且一次裁决都没有** → 自动降 `note`（`verify-code-rules` 不再报 WARN、也不再累计入台账）并列入待退休。**沉默 = 撤下**；想留下它只需裁决一次（`warn-ledger.mjs --mark <RULE> <PR> true-positive --write`）。当前 4 条在账规则首次命中都是 2026-08-03，到期日 2026-11-01，故本次零行为变化——机制先立，钟表开始走。
+- **Top-N 高频 warn 打进 G8 交付摘要 §5**：台账文件没人主动打开，交付摘要那一页是每次 G8 必读的，所以「谁最吵 / 谁待退休 / 谁够格提 error」直接渲染在那里（`lib/delivery-summary.mjs` 调 `renderWarnLedgerSection`）。
+- **`docs-tdd rule-health`（新命令）**：`rule-execution-model.md §6` 那条「每月/每 5 个项目做一次规则体检」此前零工具零记录，131 个规则 ID 从未退休过一个。现在一条命令给出①warn 台账逐条（累计命中/PR 数/首末命中/裁决分布/结局与到期日）②门禁命中分布（各项目 `gate-results.json` 的**最近一次**运行，快照非终身累计，口径写在输出里）③零命中清单（当前 145 条声明 ID 里 115 条没咬到任何东西）。报告只摆事实不代人拍板：零命中既可能是预防型规则场景没发生（正常），也可能是判定形同摆设（该删）。
+- **生效边界**：新增 3 个门禁 golden 用例/自测（`waiver-policy`、`warn-retirement`、`unowned-waiver-is-error`），不放宽任何既有 gate；`docs-tdd check` 通过、golden 32 项通过、lark 单测 256/256。
+
+## 2026-08-23（G5 停靠态有真实出口 G6-partial + 快速通道分两个终点 + 自报阶段下移打标）
+
+- **G5 停靠态终于有出口**：`frontend-complete-pending-reconcile` 此前只是个「更准的 blocked」——前端做完、静态与实现质量本可判定，却因为不放行 G6 而整段悬空，停靠期的真实工作量在索引里等于零证据。新增 `run-project-gate <PR> G6 --partial`：biome/tsc/vitest/code-review/静态规则**照跑照判**，只有依赖真实字段的 `contract`/`browser` 验收项记 pending-reconcile（`DOC-AC-007` 逐条点名欠账、`VERIFY-G6-005` 标本次为部分验收）。语义收在新 `lib/gate-partial.mjs`（单一真值源 + self-test），`verify-project-gate` / `run-project-gate` 只做接线。
+- **partial 为什么是独立 gate 标签而不是「宽松的 G6」**：结论以 `G6-partial` 入 `gate-history.json`，于是 `hasPassedGate('G6')` 恒为 false → G7 天然被挡，不需要再写一条「partial 不算 G6」的规则去防自己；同时 `--partial` 下不跑 `set-project-stage`，README 的「最新通过门禁」不推进（只刷索引让它显形）。前置由 `VERIFY-STAGE-001`(G5 PASS) 换成 `VERIFY-STAGE-004`(G4 PASS)，且该条**不可豁免**——partial 已经放宽了一层前置，若剩下这层也能豁免它就成了无边界后门，出口是补跑那个很便宜的 G4 文档 gate。`method` 不是 contract/browser 的 blocked 项照旧 fail（已在 PR-02265 实测：`manual-visual/blocked` 的 AC-4/AC-13 仍被 `DOC-AC-003` 咬住）。
+- **快速通道写清两个终点，不再只有「停靠」一种命运**：`fast-track-incomplete-docs.md` 新增 §0.1——接口 100% 已存在（`reuse-api`）就在 G5 当场对账、正常推进到 G8，接口未就绪（`pending-api`）才走 G6-partial 后停靠。此前全文默认所有快速通道项目都停 G5，导致「PRD 有了、文档没齐、但接口本来就在」这类最常见的情况被无谓地悬在 G5 等文档——而对账要的真实响应当下就能取到。出口结论在 G2 一并确认，写进 `06-collaboration.md`，便于交付时复核「为什么这个项目能直达 G8」。
+- **自报阶段打标下移到 G2**：`legacyAwareStatus` 原先只查 G5+，G2-G4 声称什么就显示什么。现无同阶段真实 PASS 历史即打标——G2-G4 记 `self-declared`（gate 从 G2 起就该跑，没跑就是没跑，出口是补跑而不是改 README），G5+ 沿用 `legacy-unverified`（多为机制上线前的旧项目）。G0/G1 不打标：按 `workflow-gates.md`，项目 gate 从 G2 起才要求逐阶段跑。本次显形 PR-01947 / PR-01973 两个自报 G4。
+- **生效边界**：只加检查与标记，不放宽任何既有 gate；`docs-tdd check` 24 项通过、golden 31 项通过、lark 单测 256/256。
+
+
+
+- **自动提交从「隐含约定」收敛为可直测的策略函数**：新增 `lib/lark-commit-policy.mjs`（`resolveCommitMode` / `partitionScopedPaths` + 13 例 self-test）作为唯一裁决——只读或任务未完成 → `none`；隔离临时 worktree（bot 自己开的 hotfix 分支）→ `auto` 全量提交；命中人类已有 worktree → `scoped`，**只**提交本任务实测改动清单里的路径。理由：WIP 路由检查只发生在任务开始前，而 AI 可跑 30 分钟，期间人在同一 worktree 新写的文件会被 `git add -A` 一并扫走。收尾时才出现的路径进 `unexpected` 写进完成卡请人确认，既不入库也不静默丢弃。三种模式都不 push、不开 PR。
+- **顺带修掉一个真 bug**：`paths: []` 在 `paths?.length` 下为 falsy，`commitAll` 会**回落到全量 `git add -A`**——即「实测清单为空」这个最该保守的场景反而提交得最多。守卫上移到调用之前，并补 5 个真 git 级用例（定向提交 / 人类 WIP 被排除且进 `unexpected` / 空清单一个都不提交且 ok=false / 无改动 / git 读不出来）。
+- **续跑意图补第 ⑤ 类**：话题内直接发补料时 Lark 既不带 `reply_to`、`root_id` 也只指向原 @ 消息本身（而 `task.id === messageId`），此前只认「root_id 命中机器人回执卡」→ PR-01947 的补料落空、原任务空等 3.5 小时。现 root_id 命中**仍处 `waiting_confirmation`/`blocked` 的任务 id** 亦算续跑；收窄点是「仍卡着」，已完成话题的新消息照旧按新任务处理。
+- **项目归属：正文唯一命中优先于群名**（`matchProjectIds`）。共享群里群名带 PR 号、正文明确写另一个工单时，原口径会把任务错投到群名项目。仅当正文命中**恰好一个**项目号时才越过群名，多个或零个仍回落群名——用唯一性做裁决，不在「群名权威」与「正文权威」之间二选一。
+- **`MODIFY_INTENT_RE` 补词表**：位置/命名/列增删/排序/显隐/文案样式这类自带规格的增量（「挪到」「重命名」「置灰」「加一列」…）此前落进 `requirement` 兜底，每次都要人放行一遍才肯动手。现归 `bugfix` 走快车道。
+- **回写耗尽不再假落 `done`**：`resolveWritebackOutcome`（纯函数，三出口）+ `writebackGaveUp` 标记。到重试上限后任务**停在 `done_pending_writeback`**——落 `done` 会让「群里说完成、bug 表还挂着待处理」这个不一致当场消失（`done` 会被每小时终态清理抹掉、health 计数也不再点名），只剩一条没人回看的日志。现 `/lark/health` 区分「正在重试」与「已停止重试、需人工改表格」。
+- **文档补真实终态并收口**：`task-boundaries-and-reply.md` §1 生命周期表补 `done_pending_writeback` / `no_change_needed`（后者是**非完成态终局**）+ 「回执卡二选一」（`no_change_needed` 绝不复用绿色完成卡）+ `done_with_warnings` 只是 AI 侧状态的说明；§3.2 落 `auto/scoped/none` 表；§3 与 `collaboration-and-notifications.md` §4 的高风险动作清单移除 `commit`（本地 commit 是既定行为，push/PR 才需确认）；清掉规则链 stale 的旧 fail-closed 表述残留（`rule-id-ledger.md` / `rule-execution-model.md` / health 文案，均以 d533eb4 的分层口径为准：仅常驻必需规则缺失才阻断）。
+- **生效边界**：全为 lark-bot 运行时与文档，不改 gate 判定；lark 单测 256/256。
+
+## 2026-08-23（假设台账真阻断 + 豁免默认拒绝 + lark 写接口强制鉴权）
+
+- **根因（假设销账三重削弱）**：`DOC-G3-IMPL-006`（无阻断假设）早已实装，但对任何项目都不阻断，因为三条削弱叠加：① `ruleset.json` 里 `blocking:false` 被无条件降 warn；② 阻断轴取自 MSW lifecycle 而非 gate——`mock-active` 项目的 open 假设连 warn 都不产生（PR-02074 7 条 open 全静默），`blockingWhen:'release'` 在 G8 完全没有钩子；③ `gatePolicy.currentTouchedRules:"report-only"` 把全部已登记规则无条件降 warn。三条必须一起改，单改任一条都不生效。
+- **修复**：新增 `lib/assumption-ledger.mjs`（阻断轴的单一语义源 + self-test，`verify-msw-manifest` 改调同一 lib 消除两处真值）；`verify-project-gate` 的 G5/G6/G7 按 `api-ready|reconciling` 轴、G8 追加 `release` 轴阻断，规则号 `DOC-ASSUM-001`（G5-G7）/ `DOC-ASSUM-002`（G8）；`DOC-G3-IMPL-006` 晋级 `blocking:true`（trial）。销账 = 改 `status` + 写 `resolution`；确需带风险交付走 `rule-waivers.json` 具名带期限豁免，**不得把 status 谎报成 confirmed**。`blockingWhen:'prd-clarify'` 仍永不阻断（沿用既有设计，走 blockers.json）。
+- **豁免默认拒绝**：此前 `ruleset.json` 只声明 25 条规则，而判据是 `rule?.waivable === false`——**未登记的规则一律落进可豁免分支**（`DOC-G2-*`/`DOC-SYNC-*`/`VERIFY-G8-*` 都能被豁免掉）。现补齐到 106 条声明（30 条 `waivable:false`），判据改 `waivable !== true`（未登记 = 不可豁免），并加 `check-doc-budget` 校验 5b（`lib/rule-ledger.mjs`）反向锁死：台账里每个 error 级 ID 必须在 ruleset 声明 `blocking`+`waivable`。同时修掉校验 5 的正则漏网（多段 ID 如 `DOC-G3-IMPL-006` 此前从未被登记校验，现 140 个脚本 ID 全覆盖）。豁免只对「失败且仍是 error」的检查生效，不再对永久 warn 规则刷 `DOC-WAIVER-004` 噪音。
+- **report-only 语义收紧 + 补文档定义**：`waivable:false` 或 `reportOnlyExempt:true` 的规则免疫项目级 report-only 降级（`DOC-ASSUM-001/002` 属后者：需保留具名豁免出口，故不能靠 `waivable:false` 取得免疫）。`legacyRules` 的定向降级必须排在 ruleset 定档之后（否则 `DOC-G3-001..007` 登记 blocking 后会被推回 error，影响 PR-02172）。`rule-ids-and-gates.md` 新增 §4.1 定义两个开关的分工——report-only 回答「这批规则本项目还没接」，豁免回答「这一条我知道且我担责」。
+- **lark 写接口鉴权由「可选」改硬前置**：此前 401 分支带 `gatewaySecret &&` 短路且本机未配密钥 → 本机任一进程可 POST 触发改代码 / commit / prune / reopen。现 gateway 缺 `LARK_GATEWAY_SECRET` 直接 `exit(1)`（同 `isWhitelisted` 的 fail-closed 立场），`GET /lark/tasks`（返回工单正文/附件路径/内部分支名）一并鉴权，只有 `/lark/health` 可匿名探活；密钥落 `~/.config/fameex-lark/gateway-secret`（0600，**不写 plist**）。`runtime/*.json` 写入带 `mode 0o600`，启动时对历史 0644 统一 chmod 并告警。
+- **`@所有人` 不再直接入队**：降级到与 `@负责人` 同档的只读意图分类（群里喊一句全体通知不等于授权改代码）；未配 `botOpenId` 的旧兼容分支同样收紧。
+- **刻意不做**：运维型端点（retry/prune/reopen）的用户级 ACL。核查后 retry/prune 只能从 `~/.local/bin/lark-bot` 发起、reopen 只能从 poller 发起，强制密钥之后再加 openId ACL 不增加边界，反而会挡住本机 `allowedOpenIds:[]` 下的 QA 验退。
+
 ## 2026-08-11（lark-bot 运维手册归位 lark-bot 子树 + 主题拆分 + 脱离规则指纹）
 
 - **根因**：`common/rules/lark-bot-gateway.md` 本质是 bot 服务运维手册（网关 HTTP 契约 / worker / bug 表 / 长连接 / 调度），却被误分类进 rules 层——既是唯一超 doc-budget 告警线（17449 字符，靠 `DOC_BUDGET_OVERRIDES` 压着）的文件，又被卷进规则指纹链（改一行运维文档就触发 golden-run 重发布）。
