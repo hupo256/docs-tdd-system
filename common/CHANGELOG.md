@@ -7,11 +7,17 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-08-24（Batch 6b：两个 grandfather gate 脚本物理抽 lib / 折表，全部退出预算 warn 区）
+
+- **`verify-project-gate.mjs` 抽出 13 个文档解析纯谓词到 `lib/gate-doc-parsers.mjs`**：主文件逼近硬闸（53240/58000），把表格/字段正则解析器与基线三分支判定（`parseMarkdownTableRows`、`recordsG2Confirmer`、`featureRowStatus`、`technicalDesign*`、`classifyBaseline` 等，逐字保留、无 disk/git 副作用）物理移入新 lib，随附 34 例 `--self-test`（±锚点守表头列序/占位词漂移）并登记进 `check-doc-budget` 的 `SELF_TEST_SCRIPTS`。主文件 `runSelfTest` 改委托 `gateDocParsersSelfTest()`，只留 10 例有 disk/git 副作用、无法搬进纯 lib 的断言（evidence 目录扫描 / gate 历史 / 阻塞聚合器接线）。`verify-project-gate.mjs` 53240 → 42534（退出 warn 52000 区，距硬闸 ~15k）。
+- **`check-doc-budget.mjs` schema 校验块折表去重（DRY）**：项目元数据 schema 校验里 `gate-results.json`/`rule-waivers.json`/`lark-sources.json` 各写一段近乎相同的 `existsSync + try/JSON.parse/validateSchema/catch`，而其下方已有一段 data-driven 表对另 12 个 JSON 做同一件事。把这三个折进那张 `[fileName, schemaKey]` 表（README frontmatter 因走 `parseFrontmatter` 保留特例），删掉 ~27 行重复。`check-doc-budget.mjs` 45102 → 43866（退出 warn 44000 区）。
+- **零行为改动**：谓词逐字搬运、schema 校验对象集合与逐项报错口径不变——`docs-tdd check` 全绿（17 个项目 frontmatter + agent JSON schema 校验照旧通过），golden 38/38（含聚合器烟测），doctor error=0/warn=0。改 gate 脚本触发指纹链失效，已重发布（L3 `c531d5f5` / effective `258cc950`）。至此 Batch 6 计划里点名的三个近上限文件（rule-ids-and-gates.md、verify-project-gate.mjs、check-doc-budget.mjs）全部经真实物理抽离退出预算 warn 区，非预算把戏。
+
 ## 2026-08-24（Batch 6：warn 生命周期正文归并 rule-execution-model §6，rule-ids-and-gates 退出预算 warn 区）
 
 - **P2「warn-retirement overdue-review」经核对已随远端合入完整落地，非待办**：`lib/warn-retirement.mjs` 的 90 天默认退休（`due-for-retirement` → note-only）已接进 `verify-code-rules`（`demoteRetiredFindings`）、G8 交付摘要（`renderWarnLedgerSection`）与 `docs-tdd rule-health`，state 机（eligible/reviewing/due-for-retirement/watching）+ self-test 齐备。本批不改其代码。
 - **物理瘦身（真值源归并，非预算把戏）**：Batch 5 对 `rule-ids-and-gates.md` §2.1/§3.7 的补写把它推到 19942/20000（距硬闸仅 58 字符，任何后续编辑即破线）。把 §2.1 里 warn-first 规则生命周期的操作正文（晋级判据 / 机器台账 `warn-ledger.json` / 90 天退休 / `docs-tdd rule-health` 体检，约 2.2k 码点）**移入 [rule-execution-model.md](./rules/rule-execution-model.md) §6**——该节本就是「新规则准入与复盘」且此前已反向指回 §2.1，归并后 §6 成为唯一真值源、§2.1 收成一行指针。`rule-ids-and-gates.md` 由 19942 → 17897（退出 warn 18000 区，距硬闸 ~2100 余量）；execution-model 5109 → 6827（默认闸 warn 9000，余量充足）。
-- **暂不动的两个 grandfather 脚本**：`check-doc-budget.mjs`（45055/48000）、`verify-project-gate.mjs`（53240/58000）仍在 warn 区但各有 3–5k 余量、非破线风险；对核心 gate 聚合器做物理抽 lib 是独立高风险工程，本批不搭车，待专门批次评估。
+- **当时暂缓、已于 Batch 6b 补做的两个 grandfather 脚本**：`check-doc-budget.mjs`（45055/48000）、`verify-project-gate.mjs`（53240/58000）本批未动（对核心 gate 聚合器抽 lib 属独立高风险工程），随后在 Batch 6b 完成物理抽离，均退出 warn 区（见上一条）。
 - **生效边界**：仅在两份已路由规则文档间搬运操作正文 + 收指针，零逻辑改动；`docs-tdd check` 全绿（rule-ids-and-gates.md 已退出预算告警，311 个本地链接含新指针均解析）、warn-retirement self-test 通过。移动路由规则触发指纹链失效，已重发布（L3 `0834d3ed` / effective `acb28a1e`，doctor error=0/warn=0、golden 38/38）。
 
 ## 2026-08-24（Batch 5：maturity 定档引擎接线 + DOC-CONFIRM 晋级新项目 error）

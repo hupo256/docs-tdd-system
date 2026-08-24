@@ -55,6 +55,7 @@ const SELF_TEST_SCRIPTS = [
   ['lib/context-pack.mjs', '--self-test'],
   ['lib/delivery-summary.mjs', '--self-test'],
   ['lib/doc-budget-schema.mjs', '--self-test'],
+  ['lib/gate-doc-parsers.mjs', '--self-test'],
   ['lib/gate-heartbeat.mjs', '--self-test'],
   ['lib/fast-track-policy.mjs', '--self-test'],
   ['lib/gate-partial.mjs', '--self-test'],
@@ -974,34 +975,10 @@ if (missingTemplateRefs.length) {
           schemaErrors.push(...validateSchema(fm, schemas.frontmatter.data, `${name}/README.md frontmatter`).map((msg) => `❌ ${msg}`))
         }
       }
-      const gateFile = join(projectDir, 'agent/gate-results.json')
-      if (existsSync(gateFile)) {
-        try {
-          const data = JSON.parse(readFileSync(gateFile, 'utf8'))
-          schemaErrors.push(...validateSchema(data, schemas.gateResults.data, `${name}/agent/gate-results.json`).map((msg) => `❌ ${msg}`))
-        } catch (error) {
-          schemaErrors.push(`❌ ${name}/agent/gate-results.json JSON 解析失败：${error.message}`)
-        }
-      }
-      const waiverFile = join(projectDir, 'agent/rule-waivers.json')
-      if (existsSync(waiverFile)) {
-        try {
-          const data = JSON.parse(readFileSync(waiverFile, 'utf8'))
-          schemaErrors.push(...validateSchema(data, schemas.ruleWaivers.data, `${name}/agent/rule-waivers.json`).map((msg) => `❌ ${msg}`))
-        } catch (error) {
-          schemaErrors.push(`❌ ${name}/agent/rule-waivers.json JSON 解析失败：${error.message}`)
-        }
-      }
-      const larkFile = join(projectDir, 'agent/lark-sources.json')
-      if (existsSync(larkFile)) {
-        try {
-          const data = JSON.parse(readFileSync(larkFile, 'utf8'))
-          schemaErrors.push(...validateSchema(data, schemas.larkSources.data, `${name}/agent/lark-sources.json`).map((msg) => `❌ ${msg}`))
-        } catch (error) {
-          schemaErrors.push(`❌ ${name}/agent/lark-sources.json JSON 解析失败：${error.message}`)
-        }
-      }
       for (const [fileName, schemaKey] of [
+        ['gate-results.json', 'gateResults'],
+        ['rule-waivers.json', 'ruleWaivers'],
+        ['lark-sources.json', 'larkSources'],
         ['project-manifest.json', 'projectManifest'],
         ['prd-source-manifest.json', 'prdSourceManifest'],
         ['msw-manifest.json', 'mswManifest'],
