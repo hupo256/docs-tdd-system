@@ -13,7 +13,7 @@
 | 字段 | 值 |
 |------|-----|
 | 项目 | `PR-02074` 预测市场三期 |
-| 契约来源 | ⚠️ 后端接口未 ready；三期接口按一期 Polymarket 风格推测（下方全部标 **ASSUMED**），真实 YApi 到位后按 §5/§8 对账 |
+| 契约来源 | ✅ 后端《Web端接口文档》已到位（`inbox/PR-02074-Web端接口文档.md`，2026-08-25 对账）；下方按真实契约重填，仍标 ASSUMED 者为文档未覆盖项 |
 | 契约版本 | 一期基线：`docs/prediction/api-getTagEventsList.json` / `api-getEstimatedProfit.json`（已落库）|
 | 前端 service 目录 | `apps/web/src/services/api/prediction/` |
 | Mock 路线 | **MSW 路线 B（强制）**；handler：`apps/web/src/mocks/handlers/prediction.ts`；参考 PR-01947 实践 |
@@ -33,10 +33,10 @@
 
 | ID | Method | Path | 用途 | 登录要求 | 状态 |
 |----|--------|------|------|---------|------|
-| A1 | POST | `/fe-ex-api/polymarket/getTagEventsList` | 按分类查事件列表（**一期已有，三期扩展** `tagType` 四类 + 二/三级 `tag`/`subTag` 过滤）| 未登录可看 | ASSUMED（扩展）|
-| A2 | POST | `/fe-ex-api/polymarket/getCategoryTree` | 四大类的二/三级分类树（**新增，可选**）| 未登录可看 | ASSUMED（前端静态兜底优先，见 Q2）|
-| A3 | POST | `/fe-ex-api/polymarket/searchEvents` | 搜索（模糊匹配 / 按展示语言 / 排序 / 分页 50/页）| 未登录可看 | ASSUMED（新增）|
-| A4 | POST | `/fe-ex-api/polymarket/getEstimatedProfit` | 预计收益 + **手续费字段**（一期已有，三期补手续费展示字段）| 需登录 | ASSUMED（补字段）|
+| A1 | POST | `/fe-ex-api/polymarket/getTagEventsList` | 按分类查事件列表（**一期已有，三期扩展** `tagType` 四类 + 二/三级 `tagTypeTow`/`tagTypeThree` 过滤）| 未登录可看 | ✅ 文档确认 |
+| A2 | GET | `/fe-ex-api/polymarket/category/tree` | 四大类的二/三级分类树（语言走 `exchange-language` header，`appLocale` query 保留兼容）| 未登录可看 | ✅ 文档确认（前端静态兜底优先，见 Q2）|
+| A3 | POST | `/fe-ex-api/polymarket/searchEvents` | 搜索（模糊匹配 / 按展示语言 / 排序 / 分页，联想 5、完整 50）| 未登录可看 | ✅ 文档确认（独立响应 `{list,count,currentPage,pageSize}`）|
+| A4 | POST | `/fe-ex-api/polymarket/getEstimatedProfit` | 预计收益 + **价格/手续费/份额明细**（一期已有，三期在旧字段基础上新增）| 需登录 | ✅ 文档确认（新增字段）|
 | A5 | POST | `/fe-ex-api/polymarket/getEventsById` | 单事件详情（一期已有，不改）| 未登录可看 | 已联调 |
 
 ## 2. 通用约定
@@ -52,11 +52,11 @@
 
 不一致或未确认项列入 §8，同步 `06-collaboration.md §B`。
 
-## 3. 核心 DTO（ASSUMED，真实到位对账）
+## 3. 核心 DTO（真实契约，2026-08-25 对账）
 
-> 沿用一期 `polymarketTagEventSchema`。三期**不改现有字段**，仅在请求侧加过滤参数，响应侧加 `tagType`/`categoryLabel`（搜索/更多结果页卡片需要分类标签）。
+> 沿用一期 `polymarketTagEventSchema`。三期**不改现有字段**，请求侧加过滤参数 `tagTypeTow`/`tagTypeThree`，响应侧新增 `tagType`/`tagTypeThree`（供分类归属与组头派生）。`categoryLabel` 经证伪已删（文档未列、UI 未渲染）。
 
-### 3.1 `A1 GET getTagEventsList` 请求（扩展）
+### 3.1 `A1 POST getTagEventsList` 请求（扩展）
 
 ```ts
 interface TagEventsListRequestDTO {
@@ -66,37 +66,40 @@ interface TagEventsListRequestDTO {
   tagType: 'crypto' | 'politics' | 'sports' | 'finance'
   // 体育用：1 比赛 / 2 事件（F15）；非体育可省略
   tableType?: number
-  // 二级分类 slug（如 'trump' / 'soccer' / 'stocks' / '5m'）；'全部'/'进行中' 不传或传固定 key
-  tag?: string | null
-  // 三级分类 slug（仅体育足球/篮球等有）；如 'premier-league'
-  subTag?: string | null
+  // 二级分类 slug（文档 §2 `tagTypeTow`，如 'trump' / 'soccer' / 'stocks' / '5m'）；'全部'='all'、'进行中'='in_progress'
+  tagTypeTow?: string | null
+  // 三级分类 slug（文档 §2 `tagTypeThree`，仅体育足球/篮球等有）；如 'champions-league'
+  tagTypeThree?: string | null
   eventId?: string | number | null
 }
 ```
 
-> **进行中固定分类请求**：`tag='ongoing'` + `tableType=1`（仅比赛形态）。响应含 `matchStatus`(live/upcoming) 供前端拆两区块、`categoryGroupLabel` 供组头（见 §3.2）。
+> **进行中固定分类请求**：`tagTypeTow='in_progress'`（文档明确强制 `tableType=1`，仅比赛形态）。`tagTypeTow='all'` 忽略二级过滤。locale/timezone 由 header 承载不入 body。响应用 `matchStatus`(live/upcoming, ASSUMED ASM-008) 拆两区块、组头由前端用 `tagTypeTow/tagTypeThree` 派生（见 §3.2）。
 
-### 3.2 `A1` 响应（沿用一期 + 加分类标签）
+### 3.2 `A1` 响应（沿用一期 + 加分类归属）
 
 ```ts
-// 沿用一期 tagEventsListResponseSchema：{ total, list: PolymarketTagEvent[] }
+// 沿用一期 tagEventsListResponseSchema：{ total, list: PolymarketTagEvent[] }（文档确认结构不变）
 // PolymarketTagEvent 现有字段不变（id/eventId/title/icon/volume/markets/teams…）
-// 三期新增（ASSUMED，供搜索/更多结果页卡片分类标签用）：
+// 三期新增（文档 §2 确认）：
 interface PolymarketTagEventExtraDTO {
   tagType?: 'crypto' | 'politics' | 'sports' | 'finance'  // 事件所属一级分类
-  categoryLabel?: string  // 展示用分类标签文本（如 "Crypto"，已按 language 翻译）
-  // ↓ 体育「进行中」固定分类专用（ASSUMED，待后端对账 B7）：
+  tagTypeTow?: string   // 二级分类 slug（体育聚合用，供组头派生）
+  tagTypeThree?: string // 三级分类 slug（文档明确「事件元素新增」，供组头派生）
+  // ↓ 体育「进行中」固定分类专用（ASSUMED ASM-008，文档未给，待后端对账）：
   matchStatus?: 'live' | 'upcoming'  // 区分「进行中」/「即将开始」两区块归属
-  categoryGroupLabel?: string        // 聚合组头分类名（如 "足球 | 中超"，已按 language 翻译；前端直接渲染不拼接）
   // 即将开始区块日期分组依据：复用已有 endDateTmeUtc0 / kickoff UTC 毫秒
 }
+// ⚠️ 组头分类名（如 "足球 | 中超"）不再取后端字段：由前端用 tagTypeTow/tagTypeThree
+//    反查分类树 name 派生（resolveSportsGroupLabel）。原臆造 categoryLabel/categoryGroupLabel 已删。
 ```
 
-### 3.3 `A2 GET getCategoryTree` 响应（新增，可选）
+### 3.3 `A2 GET category/tree` 响应（结构不变）
 
 ```ts
+// GET /polymarket/category/tree，语言走 exchange-language header（appLocale query 保留兼容），无 body
 interface CategoryNodeDTO {
-  key: string          // 稳定 slug，用于 tag/subTag 过滤参数
+  key: string          // 稳定 slug，用于 tagTypeTow/tagTypeThree 过滤参数
   name: string         // 展示名（已按 language 翻译，F21）
   children?: CategoryNodeDTO[]
 }
@@ -106,38 +109,47 @@ interface CategoryTreeResponseDTO {
 }
 ```
 
-### 3.4 `A3 GET searchEvents` 请求/响应（新增）
+### 3.4 `A3 POST searchEvents` 请求/响应（独立响应结构）
 
 ```ts
 interface SearchEventsRequestDTO {
-  keyword: string
-  pageNum: number   // 更多结果页 50/页
-  pageSize: number
+  keyword: string   // trim 后 ≤50 unicode 字符；空词后端返回空列表
+  currentPage: number  // 文档字段名 currentPage（非 pageNum）
+  pageSize: number     // Web 联想 5、完整结果页 50（1-50）
   // language 走 header；后端按展示语言标题匹配（F01）
 }
+// ⚠️ 与列表 { total, list } 结构不同，独立响应：
 interface SearchEventsResponseDTO {
-  total: number
-  // 复用事件结构 + 分类标签（F04 弹窗右侧占比%+方向、F05 卡片分类标签）
-  list: PolymarketTagEvent[]  // 含 §3.2 tagType/categoryLabel
+  list: PolymarketTagEvent[]  // 元素复用 PolymarketEventMarketInfoRes（同 §3.2）
+  count: number               // 总命中数（前端无限滚动 loaded<count 判定）
+  currentPage: number
+  pageSize: number
 }
 ```
 
-> **排序（F03）由后端保障**：①匹配字符数量 > ②首个匹配字符在标题中的位置。前端不重排，直接按返回顺序渲染（Q：若后端不排，前端 `sortSearchResults` resolver 兜底，见 T15）。
+> **排序（F03）由后端保障**：①匹配字符数量 > ②首个匹配字符在标题中的位置。前端不重排，直接按返回顺序渲染。前端 `sortSearchResults` resolver 仅后端未就绪时兜底、默认不启用（见 ASM-006）。
 
-### 3.5 `A4 getEstimatedProfit` 响应（补手续费字段，F22/F23）
+### 3.5 `A4 getEstimatedProfit` 响应（在旧字段基础上新增，F22/F23）
 
 ```ts
-// 一期 estimatedProfitDataSchema：{ estimateProfitAmount, profitAmount, rate, multiplier }
-// 三期补（ASSUMED，后端算前端只展示，公式仅备查）：
-interface EstimatedProfitFeeExtraDTO {
-  orderAmount?: string   // 买入：Polymarket 下单金额 = 下注金额×(1-加价率)-手续费扣除
-  feeAmount?: string     // 交易手续费扣除
-  receiveAmount?: string // 卖出：用户获得金额 = 链上卖出金额×(1-抽水比例)-手续费扣除
+// 一期 estimatedProfitDataSchema 旧字段保留：{ estimateProfitAmount, profitAmount, rate, multiplier }
+// 三期在旧字段基础上新增（文档 §4，后端算前端只展示，均字符串数值）：
+interface EstimatedProfitExtraDTO {
+  currentPrice?: string      // 当前市场价（示例 "0.50"）
+  expectedPrice?: string     // 预计成交价 = currentPrice × 1.05（示例 "0.52500000"）
+  grossAmount?: string       // 下注总额未扣费（示例 "100"）
+  platformFee?: string       // 平台手续费扣除（示例 "10.0000"）→ 前端「手续费扣除」行取值
+  polymarketFee?: string     // Polymarket 侧费用（示例 "0.950000"，已含在加价率/净额，前端不单列）
+  netOrderAmount?: string    // 净下单金额（示例 "89.05000000"）→ 前端「下单金额」行取值
+  estimatedShares?: string   // 预计份额（示例 "169.61904761"）
+  estimatedPayout?: string   // 预计赔付（示例 "169.61904761"）
+  estimatedProfit?: string   // 预计盈利（示例 "69.61904761"）
 }
+// 无效入参：后端返回参数错误码，非 data=null。conditionId/tickSize 为 Spot→Node 内部字段，Web 不传。
 ```
 
 **手续费公式（PRD 原文，仅备查，前端不算）**：
-- 买入：`下单金额 = 下注金额 × (1 - 加价率) - 手续费扣除`；`手续费扣除 = 输入金额 × feeRate × (1 - 预计成交价)`；`预计成交价 = 当前买入价格 × 1.05`
+- 买入：`下单金额(netOrderAmount) = 下注金额 × (1 - 加价率) - 手续费扣除`；`手续费扣除(platformFee) = 输入金额 × feeRate × (1 - 预计成交价)`；`预计成交价(expectedPrice) = 当前买入价格 × 1.05`
 - 卖出：`获得金额 = 链上卖出金额 × (1 - 抽水比例) - 手续费扣除`；`手续费扣除 = 卖出份额 × feeRate × 成交价 × (1 - 成交价)`
 
 ## 4. UI 领域模型
@@ -154,7 +166,6 @@ type SingleMarketView = {
   volumeUsd: string       // API volume 同名
   yesClobTokenId?: string
   noClobTokenId?: string
-  categoryLabel?: string  // API 同名，搜索/更多结果页卡片标签
 }
 
 // 多市场事件卡（政治/金融：多行 [名称+占比%+是/否小按钮]，无半环）
@@ -164,8 +175,10 @@ type MultiMarketView = {
   icon?: string
   volumeUsd: string
   outcomes: WorldCupEventOutcome[]  // 复用一期，每行一个 market
-  categoryLabel?: string
 }
+
+// 体育比赛卡组头（进行中/即将开始聚合）：categoryGroupLabel 由前端派生（非 API 字段）
+// WorldCupMatch.categoryGroupLabel ← resolveSportsGroupLabel(event.tagTypeTow, event.tagTypeThree)
 ```
 
 ## 5. 字段对账表（Mock 阶段就建）
@@ -181,7 +194,8 @@ type MultiMarketView = {
 | `volumeUsd` | `event.volume` | `volume` | 同名 | 缺失显 `--` |
 | `yesClobTokenId` | `markets[0].outcomes.Yes.clobTokenId` | `markets{}.outcomes.Yes.clobTokenId` | 同名 | 下单用 |
 | `noClobTokenId` | `markets[0].outcomes.No.clobTokenId` | `markets{}.outcomes.No.clobTokenId` | 同名 | 下单用 |
-| `categoryLabel` | `event.categoryLabel` | `categoryLabel` | 同名 | 仅搜索/更多结果页展示；列表页不渲染 |
+
+> 组头 `categoryGroupLabel`（体育聚合）不是 view 字段来源自 API，由 `resolveSportsGroupLabel(tagTypeTow, tagTypeThree)` 前端派生（API-DERIVED，见 §3.2）。原臆造 `categoryLabel` 已删。
 
 ### 5.2 `MultiMarketView` ← `PolymarketTagEvent`（`A1`，markets 数 > 1）
 
@@ -192,12 +206,19 @@ type MultiMarketView = {
 | `icon` | `event.icon` | `icon` | 同名 | |
 | `volumeUsd` | `event.volume` | `volume` | 同名 | |
 | `outcomes` | `mapTagEventToMarket(event).outcomes` | `markets{}` | 多字段合并 | 复用一期 `mapTagEventToMarket` 每行 market |
-| `categoryLabel` | `event.categoryLabel` | `categoryLabel` | 同名 | |
+
+### 5.3 `A4` 预计收益/手续费 ← `EstimatedProfitData`（文档 §4）
+
+| UI 字段 | mapper 取值 | 契约字段 | 改名类型 | 备注 |
+|---------|-------------|---------|---------|------|
+| `orderAmountDisplay`（下单金额行）| `profitData.netOrderAmount` | `netOrderAmount` | 语义对应 | 缺失显 `--`，前端不算 |
+| `feeAmountDisplay`（手续费扣除行）| `profitData.platformFee` | `platformFee` | 语义对应 | polymarketFee 已含在净额，不单列（窄口径 ASM-002）|
+| 预计收益 | `profitData.estimateProfitAmount` | `estimateProfitAmount` | 同名 | 旧字段保留 |
 
 **G5 联调收尾自检**：
 - [ ] 表格所有 column、type 字段都在本表出现且改名类型非空。
 - [ ] 无两个 UI 字段兜底到同一 `dto.xxx`。
-- [ ] mock 阶段臆造、契约无来源的字段已删除（重点核 `tagType`/`categoryLabel`/`orderAmount`/`feeAmount`/`receiveAmount` 是否真存在）。
+- [x] mock 阶段臆造、契约无来源的字段已删除（`categoryLabel`/`categoryGroupLabel` 已证伪删除；`orderAmount`/`feeAmount`/`receiveAmount` 已替换为文档真实字段 `netOrderAmount`/`platformFee` 等）。`matchStatus` 文档未给，保留标 ASSUMED(ASM-008)。
 
 ### 5.3 真实 fixture schema 对账（推荐）
 
@@ -261,7 +282,7 @@ Mock response 必须过真实 `schema.parse`；新增 `prediction.contract.test.
 固定：`进行中`（含上下两区块：进行中 + `即将开始`，F14）
 
 > **组头文案口径**：本节中文全称契约**仅适用于侧栏分类树静态兜底**（`common/categories.ts`）。
-> 「进行中/即将开始」聚合视图的**组头分类名文案以 API 返回的 `categoryGroupLabel` 为准**（已按 language 翻译，见 §3.2），前端**不自己拼接、不从 subTag 反查**。缺失时不渲染组头（不兜假默认）。
+> 「进行中/即将开始」聚合视图的**组头分类名由前端用 `tagTypeTow/tagTypeThree` 反查分类树 `name` 派生**（`resolveSportsGroupLabel`，如「足球 | 中超」），与侧栏同源同一份 `name`（后端 category/tree ready 后翻译同源）。前端**不从后端取 categoryGroupLabel 字段**（已证伪删除）。tagTypeTow 未命中分类树时不渲染组头（不兜假默认）。
 - `世界杯`（无三级）
 - `一级方程式`（无三级）
 - `足球`：`英超` / `欧冠` / `西甲` / `意甲` / `德甲` / `法甲` / `美职联` / `墨西哥甲级联赛` / `南美解放者杯` / `中超` / `沙特职业足球联赛` / `英冠`
@@ -294,14 +315,15 @@ Mock response 必须过真实 `schema.parse`；新增 `prediction.contract.test.
 
 | # | 接口 / 字段 | 现状 | 期望 | 待谁确认 | 状态 |
 |---|------------|------|------|---------|------|
-| 1 | `A1` `tagType` 四类枚举值 | 一期仅 `'sports'` | 确认 crypto/politics/sports/finance 编码 | 后端 | 待确认（06-B2）|
-| 2 | `A1` 二/三级过滤参数名 | 无 | `tag`/`subTag`？还是 `secondTag`/`thirdTag`？| 后端 | 待确认（06-B2）|
-| 3 | 单 vs 多市场判定字段 | mock 用 `markets` 数量 | 后端真实字段（类型标记？）| 后端 | 待确认（06-B3）|
-| 4 | `A2` 分类树是否提供 | 无 | 前端静态兜底优先；接口 ready 后对齐 slug | 后端 | 待确认（06-B1，Q2）|
-| 5 | `A3` 搜索接口 + 排序是否后端做 | 无 | 后端排序优先；前端 resolver 兜底 | 后端 | 待确认（06-B4）|
-| 6 | `categoryLabel` 是否后端返回 | mock 臆造 | 确认字段名或改由前端按 tagType 映射 | 后端 | 待确认（06-B2）|
-| 7 | `A4` 手续费字段名 | mock 臆造 `orderAmount`/`feeAmount`/`receiveAmount` | 确认真实字段 + feeRate/加价率/抽水比例来源 | 后端 | 待确认（06-B6）|
-| 8 | 翻译存储字段结构 | 前端读已翻译文本 | 确认是随事件返回还是独立接口 | 后端 | 待确认（06-B5）|
+| 1 | `A1` `tagType` 四类枚举值 | crypto/politics/sports/finance | 文档确认小写英文四类 | 后端 | ✅ resolved（文档 §2）|
+| 2 | `A1` 二/三级过滤参数名 | `tag`/`subTag` | 文档确认为 `tagTypeTow`/`tagTypeThree` | 后端 | ✅ resolved（已改契约名）|
+| 3 | 单 vs 多市场判定字段 | mock 用 `markets` 数量 | 后端真实字段（类型标记？）| 后端 | 待确认（06-B3，文档未细化）|
+| 4 | `A2` 分类树是否提供 | 无 | `GET /polymarket/category/tree` 提供，结构不变，语言走 header | 后端 | ✅ resolved（文档 §3）|
+| 5 | `A3` 搜索接口 + 排序 + 响应结构 | 无 | 独立响应 `{list,count,currentPage,pageSize}`，排序后端做 | 后端 | ✅ resolved（文档 §1）|
+| 6 | `categoryLabel` 是否后端返回 | mock 臆造 | 文档未列 → 证伪删除，组头改前端 `tagTypeTow/tagTypeThree` 派生 | 后端 | ✅ resolved（ASM-001）|
+| 7 | `A4` 手续费字段名 | mock 臆造 `orderAmount`/`feeAmount`/`receiveAmount` | 文档确认 `netOrderAmount`/`platformFee`/`polymarketFee` 等 9 新字段（旧字段保留）| 后端 | ✅ resolved（ASM-002，含窄口径 open）|
+| 8 | 翻译存储字段结构 | 前端读已翻译文本 | 确认是随事件返回还是独立接口 | 后端 | 待确认（06-B5，文档未涉及）|
+| 9 | `A1` `matchStatus`（live/upcoming）| mock 臆造 | 文档未给此字段，进行中两区块依赖它 | 后端 | 🔴 open（ASM-008，挡 G5）|
 
 ## 9. 契约变更记录
 

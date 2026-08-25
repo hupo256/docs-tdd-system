@@ -2,6 +2,8 @@
   "projectId": "PR-02074",
   "route": "msw",
   "lifecycle": "mock-active",
+  "reconciledAt": "2026-08-25",
+  "reconcileNote": "Backend Web API doc received; schema/mapper/mock rebuilt to documented contract. Doc gives contract only (backend not confirmed dev-ready), so handlers are kept (not retired) this round.",
   "sourceRoot": "/Users/aven/github/PR-02074",
   "assets": {
     "handler": "apps/web/src/mocks/handlers/prediction.ts",
@@ -17,7 +19,10 @@
       "id": "tag-events-list",
       "method": "POST",
       "path": "/fe-ex-api/polymarket/getTagEventsList",
-      "apiStatus": "not-ready",
+      "apiStatus": "contract-documented",
+      "filterParams": ["tagTypeTow", "tagTypeThree"],
+      "ongoingValue": "in_progress",
+      "assumptions": ["ASM-008 (matchStatus not in doc)"],
       "scenarios": [
         { "name": "normal", "status": "implemented", "reason": "" },
         { "name": "empty", "status": "implemented", "reason": "Search and category fixtures cover empty lists" },
@@ -30,7 +35,9 @@
       "id": "search-events",
       "method": "POST",
       "path": "/fe-ex-api/polymarket/searchEvents",
-      "apiStatus": "not-ready",
+      "apiStatus": "contract-documented",
+      "responseShape": "{ list, count, currentPage, pageSize }",
+      "requestPageField": "currentPage",
       "scenarios": [
         { "name": "normal", "status": "implemented", "reason": "" },
         { "name": "empty", "status": "implemented", "reason": "Empty keyword and unmatched keyword return an empty list" }
@@ -38,9 +45,10 @@
     },
     {
       "id": "category-tree",
-      "method": "POST",
-      "path": "/fe-ex-api/polymarket/getCategoryTree",
-      "apiStatus": "not-ready",
+      "method": "GET",
+      "path": "/fe-ex-api/polymarket/category/tree",
+      "apiStatus": "contract-documented",
+      "note": "Method changed POST getCategoryTree -> GET category/tree; language via header, appLocale query kept for compat",
       "scenarios": [
         { "name": "empty", "status": "implemented", "reason": "Static frontend categories are primary; API fallback returns an empty tree" }
       ]
@@ -49,16 +57,18 @@
       "id": "estimated-profit",
       "method": "POST",
       "path": "/fe-ex-api/polymarket/getEstimatedProfit",
-      "apiStatus": "not-ready",
+      "apiStatus": "contract-documented",
+      "note": "Old fields kept + doc §4 new fields (netOrderAmount/platformFee/polymarketFee/currentPrice/expectedPrice/grossAmount/estimatedShares/estimatedPayout/estimatedProfit)",
       "scenarios": [
         { "name": "buy-success", "status": "implemented", "reason": "" },
         { "name": "sell-success", "status": "implemented", "reason": "" },
-        { "name": "validation-error", "status": "not-applicable", "reason": "Backend validation envelope is not known yet; tracked as an assumption" }
+        { "name": "validation-error", "status": "not-applicable", "reason": "Doc says invalid input returns a param error code (not data=null); envelope shape not fixtured yet" }
       ]
     }
   ],
   "retirement": {
     "retiredAt": "",
-    "reconciliationEvidence": "product/03-api-contract.md#6-字段对账"
+    "retirementCondition": "Backend endpoints confirmed dev-ready (callable), not merely contract-documented",
+    "reconciliationEvidence": "product/03-api-contract.md#5-字段对账表mock-阶段就建"
   }
 }

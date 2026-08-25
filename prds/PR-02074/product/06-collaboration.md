@@ -13,16 +13,18 @@
 ## B. 需后端明确（阻塞联调，非阻塞 G2 文档）
 
 > **G5 决策（aven，2026-08-22）**：等后端接口 ready 再对账，本期不走 fast-track（不改 G5 为 `frontend-complete-pending-reconcile`/`not-applicable`）。前端阶段0-4 已落码，MSW 路线 B 继续挂载至接口 ready；B1-B7 逐项在接口 ready 后一次性对账+销 mock。
+>
+> **G5 对账（aven，2026-08-25）**：后端《Web端接口文档》到位，按真实契约重造 schema/mapper/mock（B1/B2/B4/B6/B7 逐项对账，见下表结论）。文档只给契约未确认后端 dev-ready，故**本轮不退役 handler，MSW 路线 B 继续挂**；接口真正可调后再退役。`matchStatus` 文档未给仍 open（ASM-008），正当挡 G5。
 
-| # | 事项 | 影响功能 |
-|---|------|---------|
-| B1 | 分类树接口（四大类各自二/三级分类，含固定"全部"/"进行中"）| F07,F10,F13,F18 |
-| B2 | 按分类查事件列表接口（`tagType` 扩展 + 二/三级过滤参数）| 全部列表 |
-| B3 | **单市场 vs 多市场事件判定字段**（决定卡片形态）| F12,F20 |
-| B4 | 搜索接口（模糊匹配、按展示语言、排序、分页 50/页）| F01-F06 |
-| B5 | 翻译存储字段结构（前端读已翻译文本还是调接口）| F21 |
-| B6 | feeRate/加价率/抽水比例/预计成交价 取值来源 | F22,F23 |
-| B7 | 体育"进行中"聚合：①是后端返回还是前端聚合 ②两区块拆分依据字段 `matchStatus`('live'/'upcoming') 是否后端返回 ③组头分类名 `categoryGroupLabel`(如"足球\|中超",已翻译)是否后端返回，还是前端从 subTag 反查 | F14 |
+| # | 事项 | 影响功能 | 2026-08-25 对账结论 |
+|---|------|---------|--------------------|
+| B1 | 分类树接口（四大类各自二/三级分类，含固定"全部"/"进行中"）| F07,F10,F13,F18 | ✅ `GET /polymarket/category/tree` 提供，结构不变，语言走 header；前端静态兜底优先，slug 待接口 ready 对齐 |
+| B2 | 按分类查事件列表接口（`tagType` 扩展 + 二/三级过滤参数）| 全部列表 | ✅ 过滤参数确认为 `tagTypeTow`/`tagTypeThree`（原 `tag`/`subTag`），进行中固定值 `in_progress`（强制 tableType=1）；`categoryLabel` 文档未列→证伪删除 |
+| B3 | **单市场 vs 多市场事件判定字段**（决定卡片形态）| F12,F20 | ⏳ 文档未细化，沿用 `markets` 数量判定，保持 open |
+| B4 | 搜索接口（模糊匹配、按展示语言、排序、分页 50/页）| F01-F06 | ✅ 请求 `currentPage`（非 pageNum）；独立响应 `{list,count,currentPage,pageSize}`；排序后端保障；联想 5/完整 50 |
+| B5 | 翻译存储字段结构（前端读已翻译文本还是调接口）| F21 | ⏳ 文档未涉及，保持 open |
+| B6 | feeRate/加价率/抽水比例/预计成交价 取值来源 | F22,F23 | ✅ `getEstimatedProfit` 新增 currentPrice/expectedPrice/grossAmount/platformFee/polymarketFee/netOrderAmount/estimatedShares/estimatedPayout/estimatedProfit（旧字段保留）；下单金额取 netOrderAmount、手续费取 platformFee。窄口径 open：手续费行是否含 polymarketFee（当前取 platformFee 单值）|
+| B7 | 体育"进行中"聚合：①是后端返回还是前端聚合 ②两区块拆分依据字段 `matchStatus`('live'/'upcoming') 是否后端返回 ③组头分类名 `categoryGroupLabel`(如"足球\|中超",已翻译)是否后端返回，还是前端从 subTag 反查 | F14 | ①前端聚合（列表接口按 in_progress 返回全部比赛，前端拆两区块）②`matchStatus` 文档**未给**→🔴 open ASM-008，暂保留 mock ③组头**确定前端派生**：`resolveSportsGroupLabel(tagTypeTow,tagTypeThree)` 反查分类树 name，后端 `categoryGroupLabel` 证伪删除 |
 
 ## C. 需设计确认
 

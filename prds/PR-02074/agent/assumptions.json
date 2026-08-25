@@ -10,22 +10,25 @@
         "apps/web/src/mocks/fixtures/prediction.ts"
       ],
       "owner": "backend",
-      "status": "open",
+      "status": "resolved",
+      "resolvedDate": "2026-08-25",
       "blockingWhen": "api-ready",
-      "resolution": "Confirm the field name or replace it with a frontend tag mapping"
+      "resolution": "证伪删除：Web接口文档未列 categoryLabel 且 UI 从未渲染，属臆造字段。已从 schema/fixture 删除，并删除无引用的 CategoryLabelBadge.tsx。分类展示由前端分类树 name 承载。"
     },
     {
       "id": "ASM-002",
       "endpoint": "estimated-profit",
-      "field": "orderAmount/feeAmount/receiveAmount",
+      "field": "orderAmount/feeAmount/receiveAmount → netOrderAmount/platformFee/...",
       "code": [
         "apps/web/src/services/api/prediction/schemas.ts",
-        "apps/web/src/mocks/fixtures/prediction.ts"
+        "apps/web/src/mocks/fixtures/prediction.ts",
+        "apps/web/src/apps/Prediction/components/PredictionTradeMan/useTradeDerivedState.ts"
       ],
       "owner": "backend",
-      "status": "open",
+      "status": "resolved",
+      "resolvedDate": "2026-08-25",
       "blockingWhen": "api-ready",
-      "resolution": "Confirm real response fields and buy/sell amount semantics"
+      "resolution": "字段替换：Web接口文档 §4 在旧字段(estimateProfitAmount/profitAmount/rate/multiplier)基础上新增 currentPrice/expectedPrice/grossAmount/platformFee/polymarketFee/netOrderAmount/estimatedShares/estimatedPayout/estimatedProfit。已删 orderAmount/feeAmount/receiveAmount。前端「下单金额」取 netOrderAmount、「手续费扣除」取 platformFee。窄口径 note：文档未明确「手续费扣除」显示行应否含 polymarketFee；当前取 platformFee 单值（polymarketFee 已含在加价率/净额），若产品要求合计需改 platformFee+polymarketFee，待 06-B6 最终确认。"
     },
     {
       "id": "ASM-003",
@@ -36,9 +39,10 @@
         "apps/web/src/mocks/handlers/prediction.ts"
       ],
       "owner": "backend",
-      "status": "open",
+      "status": "resolved",
+      "resolvedDate": "2026-08-25",
       "blockingWhen": "api-ready",
-      "resolution": "Fixture 头注释声称 snake_case 但实际字段为 camelCase，toCamel 对多数字段为 no-op，契约测试未真正验证键名转换。确认后端真实键名格式：若 camelCase 则修正注释；若 snake_case 则 fixture 改真实 snake_case 键。"
+      "resolution": "确认为 camelCase：Web接口文档字段(currentPage/tagTypeTow/tagTypeThree/netOrderAmount 等)均 camelCase，仅 outcomes 的 Yes/No 键需 toCamel 归一。已按 camelCase 更正 fixture 头注释；契约测试仍走 toCamel + schema.parse 保证 Yes/No 归一链路。"
     },
     {
       "id": "ASM-004",
@@ -50,7 +54,7 @@
       "owner": "backend",
       "status": "open",
       "blockingWhen": "api-ready",
-      "resolution": "team id 暂按 z.number()。若后端下发 string 需放宽为 z.union([string,number]).transform(String)（会连带调整 mapTagEventsToWorldCup.test.ts / eventCardType.test.ts 的 team fixture 为 string id）。"
+      "resolution": "team id 暂按 z.number()。若后端下发 string 需放宽为 z.union([string,number]).transform(String)（会连带调整 mapTagEventsToWorldCup.test.ts / eventCardType.test.ts 的 team fixture 为 string id）。Web接口文档未细化 team 结构，保持 open。"
     },
     {
       "id": "ASM-005",
@@ -63,19 +67,20 @@
       "owner": "product-backend",
       "status": "open",
       "blockingWhen": "api-ready",
-      "resolution": "volume null→'0'、volumeClob 缺失→'0'、name 回落 enum key/m.id 属假默认（[[feedback_no_fallback_masks_missing_data]]）。确认 volume/name 是否恒有值；若可缺失应改显式空标记 '--'。"
+      "resolution": "volume null→'0'、volumeClob 缺失→'0'、name 回落 enum key/m.id 属假默认（[[feedback_no_fallback_masks_missing_data]]）。确认 volume/name 是否恒有值；若可缺失应改显式空标记 '--'。Web接口文档未涉及，保持 open。"
     },
     {
       "id": "ASM-006",
       "endpoint": "search-events",
-      "field": "searchSort.matchCount 语义",
+      "field": "searchSort.matchCount 语义 / 排序归属",
       "code": [
         "apps/web/src/apps/Prediction/common/searchSort.ts"
       ],
       "owner": "product",
-      "status": "open",
+      "status": "resolved",
+      "resolvedDate": "2026-08-25",
       "blockingWhen": "prd-clarify",
-      "resolution": "F03 排序：matchCount 含重复计数且大小写/locale 敏感（该函数为后端兜底、默认不启用）。确认 PRD 是否指「命中的不同字符数」及英文标题是否需 casefold。"
+      "resolution": "Web接口文档 §1 明确 searchEvents 排序由后端保障，前端不重排。searchSort.ts 为后端未就绪时的本地兜底且默认不启用；真实契约下前端按后端返回顺序渲染，matchCount 语义争议不再阻塞交付。保留兜底函数但不作为交付依据。"
     },
     {
       "id": "ASM-007",
@@ -88,7 +93,21 @@
       "owner": "backend",
       "status": "open",
       "blockingWhen": "api-ready",
-      "resolution": "markets>3 时 OUTCOME_KEYS 坍缩为 home、MatchCard 写死 3 段斜切在 outcomes≠3 时破损。确认真实比赛恒为 3 markets；否则按 length 派生首/中/末角色。"
+      "resolution": "markets>3 时 OUTCOME_KEYS 坍缩为 home、MatchCard 写死 3 段斜切在 outcomes≠3 时破损。确认真实比赛恒为 3 markets；否则按 length 派生首/中/末角色。Web接口文档未细化，保持 open。"
+    },
+    {
+      "id": "ASM-008",
+      "endpoint": "tag-events-list (sports)",
+      "field": "matchStatus",
+      "code": [
+        "apps/web/src/services/api/prediction/schemas.ts",
+        "apps/web/src/services/api/prediction/mapTagEventsToWorldCup.ts",
+        "apps/web/src/mocks/fixtures/prediction.ts"
+      ],
+      "owner": "backend",
+      "status": "open",
+      "blockingWhen": "api-ready",
+      "resolution": "Web接口文档未给 matchStatus 字段，而体育「进行中/即将开始」两区块(PRD F14)依赖它区分 live/upcoming。已保留 schema/mapper/mock 中的 matchStatus('live'|'upcoming') 并标记 ASSUMED，两区块 UI 与聚合逻辑维持。待后端确认字段名/取值或改由 endDateTmeUtc0 与当前时刻派生。"
     }
   ]
 }

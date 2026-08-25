@@ -1,23 +1,24 @@
 {
-  "generatedAt": "2026-08-22T10:56:48.181Z",
+  "generatedAt": "2026-08-25T13:09:04.262Z",
   "tool": "run-project-gate.mjs",
   "projectId": "PR-02074",
   "gate": "G6",
+  "partial": false,
   "ok": false,
   "summary": {
-    "total": 66,
+    "total": 67,
     "ok": 61,
-    "warn": 2,
+    "warn": 4,
     "waived": 0,
-    "fail": 3
+    "fail": 2
   },
   "groups": {
     "documentation": {
-      "total": 54,
+      "total": 55,
       "ok": 50,
-      "warn": 1,
+      "warn": 3,
       "waived": 0,
-      "fail": 3
+      "fail": 2
     },
     "implementation": {
       "total": 6,
@@ -423,17 +424,17 @@
     {
       "ruleId": "VERIFY-G5-002",
       "ok": false,
-      "message": "G5 status is completed or not-applicable (got blocked)",
+      "message": "G5 status is completed / not-applicable (got blocked)",
       "file": "../docs_tdd/prds/PR-02074/agent/stage-status.json",
-      "severity": "error",
+      "severity": "warn",
       "category": "documentation"
     },
     {
       "ruleId": "VERIFY-G5-003",
       "ok": false,
-      "message": "G5 completion has existing evidence paths, or not-applicable has a concrete reason",
+      "message": "G5 completion has existing evidence paths, or not-applicable/pending-reconcile has a concrete reason",
       "file": "../docs_tdd/prds/PR-02074/agent/stage-status.json",
-      "severity": "error",
+      "severity": "warn",
       "category": "documentation"
     },
     {
@@ -509,6 +510,14 @@
       "category": "documentation"
     },
     {
+      "ruleId": "DOC-ASSUM-001",
+      "ok": false,
+      "message": "G6 出口前必须销账的 open 假设未销账：ASM-004(backend→api-ready)、ASM-005(product-backend→api-ready)、ASM-007(backend→api-ready)、ASM-008(backend→api-ready)（销账=改 status 并写 resolution；确需带风险交付走 rule-waivers.json 具名带期限豁免）",
+      "file": "../docs_tdd/prds/PR-02074/agent/assumptions.json",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
       "ruleId": "VERIFY-BIOME-001",
       "ok": true,
       "severity": "error",
@@ -516,17 +525,17 @@
       "file": "",
       "category": "build-quality",
       "evidence": {
-        "command": "pnpm exec biome check --no-errors-on-unmatched apps/web/package.json apps/web/public/mockServiceWorker.js apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/crypto/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/finance/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/politics/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/search/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/sports/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/world-cup/page.tsx apps/web/src/app/[lang]/Providers.tsx apps/web/src/apps/Assets/PredictAccount.tsx apps/web/src/apps/Assets/PredictSellFeeRows.tsx apps/web/src/apps/Prediction/SearchResultsPage.tsx apps/web/src/apps/Prediction/WorldCup/EventTab.tsx apps/web/src/apps/Prediction/WorldCup/MatchTab.tsx apps/web/src/apps/Prediction/WorldCup/OngoingTab.tsx apps/web/src/apps/Prediction/WorldCup/WorldCupFaq.tsx apps/web/src/apps/Prediction/WorldCup/common/MatchCard.tsx apps/web/src/apps/Prediction/WorldCup/common/calc.ts apps/web/src/apps/Prediction/WorldCup/common/format.ts apps/web/src/apps/Prediction/WorldCup/common/matchTime.ts apps/web/src/apps/Prediction/WorldCup/common/ongoingGroup.test.ts apps/web/src/apps/Prediction/WorldCup/common/types.ts apps/web/src/apps/Prediction/WorldCup/index.tsx apps/web/src/apps/Prediction/common/categories.test.ts apps/web/src/apps/Prediction/common/categories.ts apps/web/src/apps/Prediction/common/categorySelection.test.ts apps/web/src/apps/Prediction/common/categorySelection.ts apps/web/src/apps/Prediction/common/eventCardType.test.ts apps/web/src/apps/Prediction/common/eventCardType.ts apps/web/src/apps/Prediction/common/metadata.ts apps/web/src/apps/Prediction/common/outcomeLabels.test.ts apps/web/src/apps/Prediction/common/outcomeLabels.ts apps/web/src/apps/Prediction/common/searchDirection.test.ts apps/web/src/apps/Prediction/common/searchDirection.ts apps/web/src/apps/Prediction/common/searchSort.test.ts apps/web/src/apps/Prediction/common/searchSort.ts apps/web/src/apps/Prediction/components/CategoryLabelBadge.tsx apps/web/src/apps/Prediction/components/CategorySidebar.tsx apps/web/src/apps/Prediction/components/CategoryTabs.tsx apps/web/src/apps/Prediction/components/PredictionCategoryList.tsx apps/web/src/apps/Prediction/components/PredictionTradeMan/EstimatedProfit.tsx apps/web/src/apps/Prediction/components/PredictionTradeMan/types.ts apps/web/src/apps/Prediction/components/PredictionTradeMan/useTradeDerivedState.ts apps/web/src/apps/Prediction/components/SearchBox/HighlightedText.tsx apps/web/src/apps/Prediction/components/SearchBox/SearchPopup.tsx apps/web/src/apps/Prediction/components/SearchBox/highlightMatch.test.ts apps/web/src/apps/Prediction/components/SearchBox/highlightMatch.ts apps/web/src/apps/Prediction/components/SearchBox/index.tsx apps/web/src/apps/Prediction/components/SearchResultCard.tsx apps/web/src/apps/Prediction/index.tsx apps/web/src/components/Empty.tsx apps/web/src/constants/pathnames.ts apps/web/src/i18n/locales/zh-CN/common.json apps/web/src/i18n/locales/zh-CN/polymarket.json apps/web/src/mocks/browser.ts apps/web/src/mocks/fixtures/prediction.ts apps/web/src/mocks/handlers/prediction.test.ts apps/web/src/mocks/handlers/prediction.ts apps/web/src/mocks/prediction.contract.test.ts apps/web/src/mocks/useMockWorker.ts apps/web/src/proxy.ts apps/web/src/services/api/prediction/mapTagEventsToWorldCup.ts apps/web/src/services/api/prediction/polymarket.test.ts apps/web/src/services/api/prediction/polymarket.ts apps/web/src/services/api/prediction/schemas.ts",
+        "command": "pnpm exec biome check --no-errors-on-unmatched apps/web/package.json apps/web/public/mockServiceWorker.js apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/crypto/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/finance/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/politics/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/search/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/sports/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/world-cup/page.tsx apps/web/src/app/[lang]/Providers.tsx apps/web/src/apps/Assets/PredictAccount.tsx apps/web/src/apps/Assets/PredictSellFeeRows.tsx apps/web/src/apps/Prediction/SearchResultsPage.tsx apps/web/src/apps/Prediction/WorldCup/EventTab.tsx apps/web/src/apps/Prediction/WorldCup/MatchTab.tsx apps/web/src/apps/Prediction/WorldCup/OngoingTab.tsx apps/web/src/apps/Prediction/WorldCup/WorldCupFaq.tsx apps/web/src/apps/Prediction/WorldCup/common/MatchCard.tsx apps/web/src/apps/Prediction/WorldCup/common/calc.ts apps/web/src/apps/Prediction/WorldCup/common/format.ts apps/web/src/apps/Prediction/WorldCup/common/matchTime.ts apps/web/src/apps/Prediction/WorldCup/common/ongoingGroup.test.ts apps/web/src/apps/Prediction/WorldCup/common/types.ts apps/web/src/apps/Prediction/WorldCup/index.tsx apps/web/src/apps/Prediction/common/categories.test.ts apps/web/src/apps/Prediction/common/categories.ts apps/web/src/apps/Prediction/common/categorySelection.test.ts apps/web/src/apps/Prediction/common/categorySelection.ts apps/web/src/apps/Prediction/common/eventCardType.test.ts apps/web/src/apps/Prediction/common/eventCardType.ts apps/web/src/apps/Prediction/common/metadata.ts apps/web/src/apps/Prediction/common/outcomeLabels.test.ts apps/web/src/apps/Prediction/common/outcomeLabels.ts apps/web/src/apps/Prediction/common/searchDirection.test.ts apps/web/src/apps/Prediction/common/searchDirection.ts apps/web/src/apps/Prediction/common/searchSort.test.ts apps/web/src/apps/Prediction/common/searchSort.ts apps/web/src/apps/Prediction/components/CategorySidebar.tsx apps/web/src/apps/Prediction/components/CategoryTabs.tsx apps/web/src/apps/Prediction/components/PredictionCategoryList.tsx apps/web/src/apps/Prediction/components/PredictionTradeMan/EstimatedProfit.tsx apps/web/src/apps/Prediction/components/PredictionTradeMan/types.ts apps/web/src/apps/Prediction/components/PredictionTradeMan/useTradeDerivedState.ts apps/web/src/apps/Prediction/components/SearchBox/HighlightedText.tsx apps/web/src/apps/Prediction/components/SearchBox/SearchPopup.tsx apps/web/src/apps/Prediction/components/SearchBox/highlightMatch.test.ts apps/web/src/apps/Prediction/components/SearchBox/highlightMatch.ts apps/web/src/apps/Prediction/components/SearchBox/index.tsx apps/web/src/apps/Prediction/components/SearchResultCard.tsx apps/web/src/apps/Prediction/index.tsx apps/web/src/components/Empty.tsx apps/web/src/constants/pathnames.ts apps/web/src/i18n/locales/zh-CN/common.json apps/web/src/i18n/locales/zh-CN/polymarket.json apps/web/src/mocks/browser.ts apps/web/src/mocks/fixtures/prediction.ts apps/web/src/mocks/handlers/prediction.test.ts apps/web/src/mocks/handlers/prediction.ts apps/web/src/mocks/prediction.contract.test.ts apps/web/src/mocks/useMockWorker.ts apps/web/src/proxy.ts apps/web/src/services/api/prediction/mapTagEventsToWorldCup.ts apps/web/src/services/api/prediction/polymarket.test.ts apps/web/src/services/api/prediction/polymarket.ts apps/web/src/services/api/prediction/schemas.ts apps/web/src/services/api/prediction/mapTagEventsToWorldCup.test.ts",
         "cwd": ".",
         "status": 0,
-        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-08-22T10-56-39-026Z-biome-check.log",
+        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-08-25T13-08-57-139Z-biome-check.log",
         "counts": {
           "candidates": 66,
           "checked": 62,
           "errors": 0,
           "warnings": 2,
           "diagnostics": [
-            "apps/web/src/apps/Prediction/WorldCup/index.tsx:70 lint/correctness/useExhaustiveDependencies",
+            "apps/web/src/apps/Prediction/WorldCup/index.tsx:71 lint/correctness/useExhaustiveDependencies",
             "apps/web/src/apps/Prediction/components/PredictionCategoryList.tsx:38 lint/correctness/useExhaustiveDependencies"
           ]
         }
@@ -543,7 +552,7 @@
         "command": "pnpm exec tsc --project ./tsconfig.json --noEmit --pretty false",
         "cwd": "apps/web",
         "status": 1,
-        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-08-22T10-56-41-221Z-tsc-apps-web.log",
+        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-08-25T13-08-57-695Z-tsc-apps-web.log",
         "counts": {
           "total": 193,
           "inChangedFiles": 0
@@ -576,7 +585,7 @@
         "command": "pnpm exec vitest run apps/web/src/apps/Prediction/WorldCup/common/calc.test.ts apps/web/src/apps/Prediction/WorldCup/common/matchTime.test.ts apps/web/src/apps/Prediction/WorldCup/common/ongoingGroup.test.ts apps/web/src/apps/Prediction/common/categories.test.ts apps/web/src/apps/Prediction/common/categorySelection.test.ts apps/web/src/apps/Prediction/common/eventCardType.test.ts apps/web/src/apps/Prediction/common/outcomeLabels.test.ts apps/web/src/apps/Prediction/common/searchDirection.test.ts apps/web/src/apps/Prediction/common/searchSort.test.ts apps/web/src/apps/Prediction/components/SearchBox/highlightMatch.test.ts apps/web/src/mocks/handlers/prediction.test.ts apps/web/src/mocks/prediction.contract.test.ts apps/web/src/services/api/prediction/mapTagEventsToWorldCup.test.ts apps/web/src/services/api/prediction/polymarket.test.ts",
         "cwd": ".",
         "status": 0,
-        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-08-22T10-56-45-912Z-vitest-related.log",
+        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-08-25T13-09-01-907Z-vitest-related.log",
         "counts": {
           "selected": 14,
           "summary": "14 passed (14)"
@@ -603,7 +612,7 @@
       "ok": true,
       "severity": "error",
       "message": "G6 机器事实层已实跑：5 条 biome/tsc/vitest 结论",
-      "evidence": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-08-22T10-56-38-838Z-verify-build-quality.log"
+      "evidence": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-08-25T13-08-56-915Z-verify-build-quality.log"
     }
   ],
   "commands": [
@@ -611,33 +620,33 @@
       "label": "verify-project-gate PR-02074 G6",
       "status": 1,
       "ok": false,
-      "startedAt": "2026-08-22T10:56:34.759Z",
-      "finishedAt": "2026-08-22T10:56:34.926Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-08-22T10-56-34-759Z-verify-project-gate-g6.log"
+      "startedAt": "2026-08-25T13:08:52.843Z",
+      "finishedAt": "2026-08-25T13:08:52.971Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-08-25T13-08-52-843Z-verify-project-gate-g6.log"
     },
     {
       "label": "verify-code-rules --project PR-02074",
       "status": 1,
       "ok": false,
-      "startedAt": "2026-08-22T10:56:34.927Z",
-      "finishedAt": "2026-08-22T10:56:38.837Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-08-22T10-56-34-927Z-verify-code-rules.log"
+      "startedAt": "2026-08-25T13:08:52.971Z",
+      "finishedAt": "2026-08-25T13:08:56.915Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-08-25T13-08-52-971Z-verify-code-rules.log"
     },
     {
       "label": "verify-build-quality --project PR-02074",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-08-22T10:56:38.838Z",
-      "finishedAt": "2026-08-22T10:56:48.181Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-08-22T10-56-38-838Z-verify-build-quality.log"
+      "startedAt": "2026-08-25T13:08:56.915Z",
+      "finishedAt": "2026-08-25T13:09:04.261Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-08-25T13-08-56-915Z-verify-build-quality.log"
     },
     {
       "label": "update-project-index --write",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-08-22T10:56:48.704Z",
-      "finishedAt": "2026-08-22T10:56:48.771Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-08-22T10-56-48-704Z-update-project-index.log"
+      "startedAt": "2026-08-25T13:09:04.973Z",
+      "finishedAt": "2026-08-25T13:09:05.044Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-08-25T13-09-04-973Z-update-project-index.log"
     }
   ],
   "codeRules": {
@@ -664,17 +673,17 @@
   },
   "fingerprint": {
     "headSha": "266583d9509fd7dee32117ef5dac54b73d6a71d9",
-    "baseSha": "dc3e5c31275218553a928f1cc9d533774ced010c",
-    "dirtyHash": "ee91fec5beef70258d3f4e44aecf6ef1a5b8611e240a82b4d77c17fe7172f806",
-    "dirtyFileCount": 0,
+    "baseSha": "559666e089648e427b496468e3570fc983f3c7bb",
+    "dirtyHash": "0117341fb225700278e10a77e08bffc461a35591bfb5098b5394246454b1b1df",
+    "dirtyFileCount": 19,
     "untrackedFileCount": 0,
     "rulesetVersion": "local-2026.07-msw-v1",
-    "ruleReleaseFingerprint": "42f778c1a3f97d877939423766451bd8189dd0461ed5a885479b3d534172a5ef",
-    "effectiveRulesFingerprint": "ab87a25daf220e7ffa3c4f4b493f2b36eef02f1564559da6218057b3e3413591"
+    "ruleReleaseFingerprint": "ae7cba5f14a1e764e629b492107b4662deca3ef54894f1db83c6451e054d922a",
+    "effectiveRulesFingerprint": "5a91e6bb38e7c88b0e86008f067f6500c0da95f8cb33642bc390cdd43059817f"
   },
   "cache": {
     "hit": false,
-    "fingerprint": "de02a85ecbaea56c"
+    "fingerprint": "461966c462583001"
   },
   "stageSync": {
     "attempted": false,

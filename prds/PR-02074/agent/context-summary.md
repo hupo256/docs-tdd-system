@@ -21,7 +21,7 @@
 
 ## Pending / Blockers
 
-- G5 blocked：已与 aven 确认（2026-08-22）：等后端接口 ready 再对账，本期不走 fast-track。前端阶段0-4（T01-T17）已落码+79 单测绿，MSW 路线 B 继续挂载；真实 fixture/schema 对账、ASSUMED 字段销账（见 06-collaboration.md §B B1-B7）和 MSW handler 退役待后端接口 ready 后一次性处理。
+- G5 blocked（2026-08-25 对账后）：后端《Web端接口文档》到位，已按真实契约重造 schema/mapper/mock（过滤参数 tagTypeTow/tagTypeThree、进行中 in_progress、搜索独立响应、estimatedProfit 真实费用字段、categoryLabel/categoryGroupLabel 证伪删除+组头前端派生），122 单测绿、改动文件 0 新增 tsc 报错。仍 blocked：matchStatus 文档未给（ASM-008 open）+ 后端未确认 dev-ready，MSW 路线 B 继续挂、handler 不退役。详见 stage-status.json / 06-collaboration.md §B。
 
 ## Latest Gate Results
 
