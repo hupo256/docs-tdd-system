@@ -13,7 +13,11 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { charCount, parseFrontmatter, validateSchema } from './lib/doc-budget-schema.mjs'
+import { createContextPack } from './lib/context-pack.mjs'
+import { auditDefaultContextPacks } from './lib/context-budget-audit.mjs'
+import { auditRuleIndex } from './lib/rule-index-audit.mjs'
 import { undeclaredErrorRules } from './lib/rule-ledger.mjs'
+import { CODING_SCENARIOS } from './lib/rule-session.mjs'
 
 const COMMON_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const DOCS_TDD_DIR = join(COMMON_DIR, '..')
@@ -53,11 +57,15 @@ const SELF_TEST_SCRIPTS = [
   ['lib/changed-detection.mjs', '--self-test'],
   ['lib/code-review.mjs', '--self-test'],
   ['lib/context-pack.mjs', '--self-test'],
+  ['lib/context-budget-audit.mjs', '--self-test'],
+  ['lib/context-policy.mjs', '--self-test'],
+  ['lib/context-session.mjs', '--self-test'],
   ['lib/delivery-summary.mjs', '--self-test'],
   ['lib/doc-budget-schema.mjs', '--self-test'],
   ['lib/explain-rule.mjs', '--self-test'],
   ['lib/gate-doc-parsers.mjs', '--self-test'],
   ['lib/gate-heartbeat.mjs', '--self-test'],
+  ['lib/g6-context-session.mjs', '--self-test'],
   ['lib/fast-track-policy.mjs', '--self-test'],
   ['lib/gate-partial.mjs', '--self-test'],
   ['lib/gate-payload.mjs', '--self-test'],
@@ -70,6 +78,7 @@ const SELF_TEST_SCRIPTS = [
   ['lib/rule-session.mjs', '--self-test'],
   ['lib/rule-chain-runtime.mjs', '--self-test'],
   ['lib/rule-ledger.mjs', '--self-test'],
+  ['lib/rule-index-audit.mjs', '--self-test'],
   ['lib/rule-maturity.mjs', '--self-test'],
   ['lib/waiver-policy.mjs', '--self-test'],
   ['lib/warn-retirement.mjs', '--self-test'],
@@ -330,59 +339,34 @@ if (!existsSync(ruleIndexPath)) {
 } else {
   try {
     const ruleIndex = JSON.parse(readFileSync(ruleIndexPath, 'utf8'))
-    if (ruleIndex.resident !== ROUTER_FILE) {
-      errors.push(`❌ ${RULE_INDEX_FILE}.resident 应为 ${ROUTER_FILE}，当前为 ${ruleIndex.resident || '空'}。`)
+    const resolveSourceFile = (file) => {
+      const rulesPath = join(RULES_DIR, file)
+      if (existsSync(rulesPath)) return rulesPath
+      const commonPath = join(COMMON_DIR, file)
+      return existsSync(commonPath) ? commonPath : null
     }
-    const scenarios = ruleIndex.scenarios || {}
-    const scenarioNames = Object.keys(scenarios)
+    const indexAudit = auditRuleIndex({
+      index: ruleIndex,
+      residentFile: ROUTER_FILE,
+      codingScenarios: CODING_SCENARIOS,
+      resolveSourceFile,
+      readSource: (file) => readFileSync(file, 'utf8'),
+    })
+    const { scenarioNames } = indexAudit
     for (const name of scenarioNames) knownScenarioNames.add(name)
-    if (!scenarioNames.length) {
-      errors.push(`❌ ${RULE_INDEX_FILE}.scenarios 不能为空。`)
-    }
-    const validateScenario = (name, stack = []) => {
-      if (stack.includes(name)) {
-        errors.push(`❌ ${RULE_INDEX_FILE}.scenarios 出现循环引用：${[...stack, name].join(' -> ')}`)
-        return
-      }
-      const refs = scenarios[name]
-      if (!Array.isArray(refs) || refs.length === 0) {
-        errors.push(`❌ ${RULE_INDEX_FILE}.scenarios.${name} 必须是非空数组。`)
-        return
-      }
-      for (const ref of refs) {
-        if (ref && typeof ref.scenario === 'string') {
-          if (!Array.isArray(scenarios[ref.scenario])) errors.push(`❌ ${RULE_INDEX_FILE}.scenarios.${name} 引用了不存在的场景：${ref.scenario}`)
-          else validateScenario(ref.scenario, [...stack, name])
-          continue
-        }
-        const normalized = typeof ref === 'string' ? { file: ref, sections: '' } : ref
-        if (!normalized || typeof normalized.file !== 'string') {
-          errors.push(`❌ ${RULE_INDEX_FILE}.scenarios.${name} 含无效引用：${JSON.stringify(ref)}`)
-          continue
-        }
-        const { file, sections = '' } = normalized
-        if (file.endsWith('.md')) indexedRuleRefs.add(file)
-        // 规则文档在 rules/；个别被场景引用的 common/ 层文件（如 CHANGELOG.md）回退到 common/。
-        const rulesPath = join(RULES_DIR, file)
-        const absolute = existsSync(rulesPath) ? rulesPath : join(COMMON_DIR, file)
-        if (!existsSync(absolute)) {
-          errors.push(`❌ ${RULE_INDEX_FILE}.scenarios.${name} 引用了不存在的文件：${file}`)
-          continue
-        }
-        if (sections) {
-          const selector = /^(\d+)(?:-(\d+))?$/.exec(sections)
-          if (!selector || Number(selector[2] || selector[1]) < Number(selector[1])) {
-            errors.push(`❌ ${RULE_INDEX_FILE}.scenarios.${name} 的 sections 无效：${sections}`)
-            continue
-          }
-          const headings = [...readFileSync(absolute, 'utf8').matchAll(/^##\s+(\d+)(?:\.|\s)/gm)].map((match) => Number(match[1]))
-          if (!headings.some((heading) => heading >= Number(selector[1]) && heading <= Number(selector[2] || selector[1]))) {
-            errors.push(`❌ ${RULE_INDEX_FILE}.scenarios.${name} 的 sections 未命中标题：${file} §${sections}`)
-          }
-        }
-      }
-    }
-    for (const name of scenarioNames) validateScenario(name)
+    for (const ref of indexAudit.indexedRuleRefs) indexedRuleRefs.add(ref)
+    for (const error of indexAudit.errors) errors.push(`❌ ${RULE_INDEX_FILE}.${error}`)
+    // 默认路径必须对所有场景实际可生成且不越 hard limit。用 summary 硬上限构造最坏输入，避免活跃项目偏短掩盖回归。
+    const release = { currentFingerprint: 'context-budget-audit' }
+    const effective = { currentFingerprint: 'context-budget-audit', clientMatrix: {} }
+    const contextAudit = auditDefaultContextPacks({
+      index: ruleIndex,
+      codingScenarios: CODING_SCENARIOS,
+      buildPack: (name, mode, options = {}) => createContextPack('PR-00000', name, release, effective, mode, { summaryText: 'x'.repeat(2200), write: false, ...options }),
+    })
+    const packErrors = contextAudit.errors
+    if (packErrors.length) errors.push(`❌ 默认 context pack 越界或无法生成：\n   ${packErrors.join('\n   ')}`)
+    else console.log(`✅ 默认 context pack：${scenarioNames.length} 个场景均可生成且未超过 hard limit；编码中位缩减 ${contextAudit.medianReductionPercent}%，G6 顺序总量 ${contextAudit.g6SequentialChars} 字符。`)
     if (!errors.some((error) => error.includes(RULE_INDEX_FILE))) {
       console.log(`✅ ${RULE_INDEX_FILE}：${scenarioNames.length} 个场景索引可解析，引用文件均存在。`)
     }

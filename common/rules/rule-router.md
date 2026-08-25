@@ -6,7 +6,7 @@
 ## 1. 启动协议
 
 1. 确认项目 ID/阶段；恢复项目先读 `<PROJECT>/agent/context-summary.md`。
-2. 执行 `docs-tdd context <PROJECT-ID> <SCENARIO>` 并读取 `/tmp/docs-tdd-context/...md`；默认 compact，歧义或失败调查才用 `--full`，不得自行全读规则。
+2. 执行 `docs-tdd context <PROJECT-ID> <SCENARIO>` 并读取 `/tmp/docs-tdd-context/...md`；模式由场景默认（常规为 compact，编码/G6 等高频场景为 brief），可显式用互斥的 `--brief|--compact|--full` 覆盖，歧义或失败调查才用 `--full`，不得自行全读规则。
    编码场景同时生成带 L1/L2/L3 fingerprint 的 `agent/rule-session.json`；G2 未通过、规则冲突或发布过期时不生成会话，也不得写业务代码。
 3. 编辑后执行 `docs-tdd changed <PROJECT-ID>`；阶段交付执行 `docs-tdd gate <PROJECT-ID> <Gx>`。缓存仅复用同输入 PASS，需强制实跑时加 `--no-cache`。
 4. 无自动 hook 时显式执行 changed/gate；适配、冲突和发布状态用 `docs-tdd doctor <PROJECT-ID>`，能力摘要用 `docs-tdd capability <PROJECT-ID>`。
@@ -42,12 +42,13 @@
 
 请求驱动的 UI 必须使用 `write_ui`（已包含分层/API 专题）；单独编写或调整 React Query Hook 使用 `write_query_hook`；读取或还原 Figma 使用 `write_figma`，不得只加载视觉或状态专题。
 
-G6 验收按维度顺序加载 `g6_code_review`→`g6_contract`→`g6_visual`→`g6_delivery`，不一次展开 `g6_verify` 整包（整包仅供回顾全貌）。
+G6 验收按维度顺序加载 `g6_code_review`→`g6_contract`→`g6_visual`→`g6_delivery`；`g6_verify` 只打印进度与下一步，不再生成合并包。四维度绑定当前 client/session、代码 HEAD/dirty hash 和规则指纹，缺失或过期时 G6 门禁阻断。
 
 ## 4. 上下文与预算
 
 - 主线程只保留决策、风险和结果；大文件先 `rg` 定位再读局部，长命令只回传失败行。
 - context pack 是带 L3/effective fingerprint 的 `/tmp` 可丢弃缓存；规则真值仍是各层权威源。
+- 只有传入真实 `--session-id`（或客户端提供对应 session 环境变量）才在同一 project/client/session 内返回 delta；不带会话身份时每次完整报告，禁止跨任务猜测“已经读过”。
 - Gate 完成、场景切换、PRD/契约 fingerprint 变化或处理大量日志/图片后，更新 `context-summary.md`；新任务只恢复 Router、摘要和当前 compact pack。
 - 修改规则后依次运行 `docs-tdd check`、`rule-release.mjs --write`、`effective-rules.mjs --write`；任一发布漂移会阻断 context/changed/gate，但不阻断 check/capability/doctor。
 - 规则维护优先使用 `docs-tdd release <PROJECT-ID> --scenario <SCENARIO>` 原子发布两层 manifest、doctor、golden 和 context smoke；任一步失败自动恢复旧 manifest。

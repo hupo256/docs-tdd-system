@@ -541,6 +541,11 @@
       "blocking": true,
       "waivable": true
     },
+    "VERIFY-RULE-005": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": false
+    },
     "DOC-SYNC-001": {
       "maturity": "stable",
       "blocking": true,

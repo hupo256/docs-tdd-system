@@ -4,6 +4,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { decideNext, nextGateOf } from './lib/project-decision.mjs'
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 
 const scriptPath = fileURLToPath(import.meta.url)
@@ -69,16 +70,20 @@ if (args.includes('--self-test')) {
     process.exit(1)
   }
   // Next Action stage-aware：有 blocker 优先处理；否则按最近通过阶段指向下一 gate（G3→G5 跳号也要对）。
-  if (!nextActionText(['x'], null).includes('blocker')) {
+  if (!nextActionText(['x'], null, null).includes('blocker')) {
     console.error('[update-context-summary] self-test failed: blocker next-action')
     process.exit(1)
   }
-  if (!nextActionText([], { gate: 'G3', at: '2026-01-01' }).includes('执行 G5')) {
-    console.error('[update-context-summary] self-test failed: stage-aware next gate (G3→G5)')
+  if (!nextActionText([], null, { gate: 'G3', at: '2026-01-01' }).includes('执行 G4')) {
+    console.error('[update-context-summary] self-test failed: stage-aware next gate (G3→G4)')
     process.exit(1)
   }
-  if (!nextActionText([], { gate: 'G8', at: '2026-01-01' }).includes('下一阶段')) {
+  if (!nextActionText([], { gate: 'G8', ok: true, checks: [] }, { gate: 'G8', at: '2026-01-01' }).includes('无下一 gate')) {
     console.error('[update-context-summary] self-test failed: terminal gate next-action')
+    process.exit(1)
+  }
+  if (!nextActionText([], { gate: 'G6-partial', ok: true, checks: [] }, { gate: 'G6-partial', at: '2026-01-01' }).includes('对账')) {
+    console.error('[update-context-summary] self-test failed: G6-partial next-action')
     process.exit(1)
   }
   console.log('PASS scope column parsing')
@@ -217,6 +222,12 @@ function gateRows() {
   }
 }
 
+function latestGateResult() {
+  const file = join(projectDir, 'agent/gate-results.json')
+  if (!existsSync(file)) return null
+  try { return JSON.parse(readFileSync(file, 'utf8')) } catch { return null }
+}
+
 // 最近一次「通过」验证（resume 用）：gate-history 只记 PASS，取末条即最近验证过的阶段。
 // 兼顾 { runs: [...] } 与裸数组两种历史结构；返回 { gate, at } 或 null。
 function latestPassedGate() {
@@ -234,14 +245,16 @@ function latestPassedGate() {
 }
 
 // 下一步（stage-aware）：优先「处理首个 blocker」；否则按最近通过阶段指向下一 gate。
-function nextActionText(pending, lastPass) {
+function nextActionText(pending, gateResult, lastPass) {
   if (pending.length) return '处理首个 blocker，更新对应项目文档，再重跑对应 gate。'
-  const gateOrder = ['G0', 'G1', 'G2', 'G3', 'G5', 'G6', 'G7', 'G8']
-  const idx = lastPass ? gateOrder.indexOf(lastPass.gate) : -1
-  const next = idx >= 0 && idx < gateOrder.length - 1 ? gateOrder[idx + 1] : null
-  return next
-    ? `执行 ${next}（最近通过 ${lastPass.gate}）；阶段或契约变化后重生成本摘要。`
-    : '执行下一阶段 gate；阶段或契约变化后重生成本摘要。'
+  if (gateResult?.gate) {
+    const decision = decideNext({ projectId, projectExists: true, gateResult })
+    if (decision.status === 'complete') return '已通过 G8，无下一 gate；代码、规则或契约变化后重新验证。'
+    if (decision.status === 'waiting_reconcile') return `完成真实字段对账后重跑完整 G6：${decision.command}`
+    if (decision.command) return `执行：${decision.command}`
+  }
+  const next = nextGateOf(lastPass?.gate)
+  return next ? `执行 ${next}（最近通过 ${lastPass.gate}）；阶段或契约变化后重生成本摘要。` : '执行当前阶段 gate；阶段或契约变化后重生成本摘要。'
 }
 
 const inventory = read('product/00-feature-inventory.md')
@@ -252,6 +265,7 @@ const scopeIndex = featureTable.headers.findIndex((header) => header === '本期
 const pending = [...readStageStatus(), ...pendingRows(collaboration)]
 const gates = gateRows()
 const lastPass = latestPassedGate()
+const gateResult = latestGateResult()
 const now = new Date().toISOString()
 
 const prd = tableValue(inventory, 'PRD 来源') || '待补'
@@ -308,7 +322,7 @@ ${gates.length ? gates.join('\n') : '| G2/G6/G8 | 未运行 | | `agent/gate-resu
 
 ## Next Action
 
-- [ ] ${nextActionText(pending, lastPass)}
+- [ ] ${nextActionText(pending, gateResult, lastPass)}
 `
 const contentLength = Array.from(content).length
 if (contentLength > SUMMARY_HARD_LIMIT) fail(`generated summary is ${contentLength} chars; hard limit=${SUMMARY_HARD_LIMIT}, target=${SUMMARY_TARGET}`)

@@ -14,6 +14,8 @@ import { buildQualityGuardCheck, derivePayloadOk, parseJsonOutput, selfTest, sho
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 import { resolveRuleSessionClient } from './lib/rule-session.mjs'
 import { requireRuleSession } from './lib/rule-session-runtime.mjs'
+import { requireG6ContextSession } from './lib/g6-context-session.mjs'
+import { resolveContextSessionId } from './lib/context-session.mjs'
 import { persistRunLog as persistRunLogRaw, printFailureSummary, run } from './lib/run-log.mjs'
 import { loadLedger, recordFindings, saveLedger } from './warn-ledger.mjs'
 
@@ -36,6 +38,14 @@ const json = args.includes('--json')
 // 静态规则/code-review/biome/tsc/vitest 照跑照判，只有依赖真实字段的 contract/browser 验收项记待对账；
 // 结论以 `G6-partial` 入历史，不构成 G7 前置、也不推进 README 阶段。
 const partialRequested = args.includes('--partial')
+let agentClient
+let contextSessionId
+try {
+  agentClient = resolveRuleSessionClient({ requested: readOption('--client') || undefined })
+  contextSessionId = resolveContextSessionId({ requested: readOption('--session-id') || undefined })
+} catch (error) {
+  fail(error.message)
+}
 const skipCodeRules = args.includes('--skip-code-rules')
 const skipCodeRulesReason = readOption('--skip-code-rules-reason').trim()
 const skipBuildQuality = args.includes('--skip-build-quality')
@@ -63,6 +73,8 @@ Options:
   --skip-build-quality            Skip the verify-build-quality sub-run (always needs a reason)
   --skip-build-quality-reason     Reason recorded when skipping biome/tsc/vitest execution
   --reviewer                      Reviewer name for evidence (default: $USER)
+  --client                        Rule consumer identity: codex, claude, cursor, manual
+  --session-id                    Task/session identity used by G6 context completeness checks
   --partial                       G6 only: partial acceptance run for a G5 pending-reconcile project.
                                   Records gate G6-partial (not a G6 PASS, never satisfies the G7 prerequisite,
                                   never bumps the README stage); contract/browser acceptance items are
@@ -137,8 +149,21 @@ if (!existsSync(projectDir)) fail(`project directory does not exist: ${relative(
 if (codeRuleGates.includes(gate)) {
   const release = JSON.parse(readFileSync(join(docsRoot, 'common/rule-release.json'), 'utf8'))
   const effectiveRules = JSON.parse(readFileSync(join(docsRoot, 'common/effective-rules.json'), 'utf8'))
-  if (!requireRuleSession(projectId, callerCwd, { currentFingerprint: release.fingerprint }, { currentFingerprint: effectiveRules.fingerprint }, resolveRuleSessionClient())) {
+  if (!requireRuleSession(projectId, callerCwd, { currentFingerprint: release.fingerprint }, { currentFingerprint: effectiveRules.fingerprint }, agentClient)) {
     fail(`rerun docs-tdd context ${projectId} <coding-scenario>`)
+  }
+  if (gate === 'G6') {
+    const code = createFingerprint({ callerCwd, config, docsRoot })
+    const current = {
+      projectId,
+      client: agentClient,
+      sessionId: contextSessionId,
+      headSha: code.headSha,
+      dirtyHash: code.dirtyHash,
+      ruleReleaseFingerprint: release.fingerprint,
+      effectiveRulesFingerprint: effectiveRules.fingerprint,
+    }
+    if (!requireG6ContextSession(current)) fail('load all four G6 context dimensions before running G6')
   }
 }
 const fingerprintCtx = { projectId, gate, callerCwd, config, docsRoot }

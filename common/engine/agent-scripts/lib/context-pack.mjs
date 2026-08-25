@@ -11,7 +11,7 @@
 
 import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -31,8 +31,8 @@ const skipRuleFreshness = process.env.DOCS_TDD_SKIP_RULE_FRESHNESS === '1'
 const readJson = (file) => JSON.parse(readFileSync(file, 'utf8'))
 
 export function normalizeRuleRef(ref) {
-  if (typeof ref === 'string') return { file: ref, sections: '' }
-  if (ref && typeof ref.file === 'string') return { file: ref.file, sections: ref.sections || '' }
+  if (typeof ref === 'string') return { file: ref, sections: '', brief: '' }
+  if (ref && typeof ref.file === 'string') return { file: ref.file, sections: ref.sections || '', brief: ref.brief || '' }
   throw new Error(`invalid rule reference: ${JSON.stringify(ref)}`)
 }
 
@@ -64,6 +64,22 @@ export function mergeSectionSelectors(selectors) {
   return merged.map(([min, max]) => (min === max ? `${min}` : `${min}-${max}`)).join(',')
 }
 
+function subtractCoveredRange([min, max], covered) {
+  let pending = [[min, max]]
+  for (const [coveredMin, coveredMax] of covered) {
+    pending = pending.flatMap(([start, end]) => {
+      if (coveredMax < start || coveredMin > end) return [[start, end]]
+      const remaining = []
+      if (coveredMin > start) remaining.push([start, coveredMin - 1])
+      if (coveredMax < end) remaining.push([coveredMax + 1, end])
+      return remaining
+    })
+  }
+  return pending
+}
+
+const formatRanges = (ranges) => ranges.map(([min, max]) => (min === max ? `${min}` : `${min}-${max}`)).join(',')
+
 export function expandScenarioRefs(index, scenario, stack = []) {
   if (stack.includes(scenario)) throw new Error(`scenario cycle: ${[...stack, scenario].join(' -> ')}`)
   const refs = index.scenarios?.[scenario]
@@ -77,18 +93,30 @@ export function expandScenarioRefs(index, scenario, stack = []) {
     if (ref && typeof ref.scenario === 'string') return expandScenarioRefs(index, ref.scenario, [...stack, scenario])
     return [normalizeRuleRef(ref)]
   })
-  // 按文件聚合（保持首次出现顺序），同文件的多个 section 选择器合并成最小不重叠区间串——
-  // 修掉「去重键是精确串 file#sections、重叠区间不合并」导致的同章节正文重复。
-  const order = []
-  const byFile = new Map()
+  // 按展开顺序扣除已经出现过的区间。这样既消除重叠正文，也不会把后续子场景的章节提前到文件首次出现处。
+  const coverage = new Map()
+  const result = []
   for (const ref of expanded) {
-    if (!byFile.has(ref.file)) {
-      byFile.set(ref.file, [])
-      order.push(ref.file)
+    const state = coverage.get(ref.file) || { whole: false, ranges: [], brief: ref.brief }
+    if (state.brief !== ref.brief) throw new Error(`conflicting brief modes for ${ref.file}`)
+    if (state.whole) continue
+    if (!ref.sections) {
+      if (state.ranges.length) throw new Error(`whole-file reference for ${ref.file} appears after section references; make the route explicit to preserve order`)
+      result.push(ref)
+      state.whole = true
+      coverage.set(ref.file, state)
+      continue
     }
-    byFile.get(ref.file).push(ref.sections)
+    // 先归一当前引用自身的重叠/相邻区间，再与历史覆盖相减；否则 `1-3,2-4` 会在同一 source 内重复正文。
+    const requested = mergeSectionSelectors([ref.sections]).split(',').map(parseSelectorRange)
+    const remaining = requested.flatMap((range) => subtractCoveredRange(range, state.ranges))
+    if (remaining.length) result.push({ ...ref, sections: formatRanges(remaining) })
+    const coveredSelectors = state.ranges.map(([min, max]) => (min === max ? `${min}` : `${min}-${max}`))
+    state.ranges = mergeSectionSelectors([...coveredSelectors, ref.sections])
+      .split(',').filter(Boolean).map(parseSelectorRange)
+    coverage.set(ref.file, state)
   }
-  return order.map((file) => ({ file, sections: mergeSectionSelectors(byFile.get(file)) }))
+  return result
 }
 
 export function selectMarkdownSections(text, selector) {
@@ -106,20 +134,18 @@ export function selectMarkdownSections(text, selector) {
   return slices.join('')
 }
 
-export function createContextPack(id, scenario, release, effectiveRules, mode = 'compact') {
+export function createContextPack(id, scenario, release, effectiveRules, mode = 'compact', options = {}) {
   const started = Date.now()
   const index = readJson(join(docsRoot, 'common/rules/rule-index.json'))
   const refs = expandScenarioRefs(index, scenario)
-  // brief 模式：纯机器/参考型文档（gate 会真跑判定，AI 无需逐字读）折成一行指针，其余照常按 section 切片。
-  const briefCollapse = new Set(mode === 'brief' ? index.policy?.briefCollapse || [] : [])
-
   const summaryRef = {
     file: `${id}/agent/context-summary.md`,
     sections: '',
     abs: join(resolveProjectRoot(id), 'agent/context-summary.md'),
+    inlineText: options.summaryText,
   }
   const sources = [
-    summaryRef,
+    ...(options.includeSummary === false ? [] : [summaryRef]),
     ...refs.map((normalized) => {
       // 规则文档在 common/rules/；少数被场景引用的 common/ 层文件（如 CHANGELOG.md）回退到 common/。
       const rulesPath = join(rulesRoot, normalized.file)
@@ -128,11 +154,13 @@ export function createContextPack(id, scenario, release, effectiveRules, mode = 
         file: inRules ? `common/rules/${normalized.file}` : `common/${normalized.file}`,
         abs: inRules ? rulesPath : join(docsRoot, 'common', normalized.file),
         sections: mode === 'full' ? '' : normalized.sections,
-        collapse: briefCollapse.has(normalized.file),
+        collapse: mode === 'brief' && normalized.brief === 'pointer',
       }
     }),
   ]
   const sections = sources.map((source) => {
+    const file = source.abs
+    if (source.inlineText == null && !existsSync(file)) throw new Error(`context source does not exist: ${source.file}`)
     if (source.collapse) {
       const suffix = source.sections ? `#§${source.sections}` : ''
       return {
@@ -140,9 +168,7 @@ export function createContextPack(id, scenario, release, effectiveRules, mode = 
         text: `> [BRIEF] 机器/门禁校验规则，正文未展开：门禁失败时按 finding 的 RULE-ID 运行 \`docs-tdd explain <RULE-ID>\`，或直接读 \`${source.file}\`${suffix}。`,
       }
     }
-    const file = source.abs
-    if (!existsSync(file)) throw new Error(`context source does not exist: ${source.file}`)
-    const raw = readFileSync(file, 'utf8')
+    const raw = source.inlineText ?? readFileSync(file, 'utf8')
     return {
       label: `${source.file}${source.sections ? `#§${source.sections}` : ''}`,
       text: selectMarkdownSections(raw, source.sections),
@@ -169,9 +195,9 @@ export function createContextPack(id, scenario, release, effectiveRules, mode = 
     ...sections.flatMap(({ label, text }) => [`## Source: ${label}`, '', text.trim(), '']),
   ].join('\n')
 
-  mkdirSync(cacheDir, { recursive: true })
+  if (options.write !== false) mkdirSync(cacheDir, { recursive: true })
   const cacheHit = existsSync(output)
-  if (!cacheHit) writeFileSync(output, `${body}\n`)
+  if (options.write !== false && !cacheHit) writeFileSync(output, `${body}\n`)
   return {
     scenario,
     fingerprint,
@@ -233,35 +259,6 @@ export function enforceContextBudget(pack, kind, budget) {
   return { ok: !overFail, level: overFail ? 'fail' : 'warn' }
 }
 
-// ---------------------------------------------------------------------------
-// 注入去重：同任务内同一 (scenario, contextFingerprint) 不重复吐全文，只回 delta 指针。
-// 台账落 agent/context-injections.json（非门禁证据，纯去重提示；schema 校验不覆盖此文件）。
-// 指纹含 effectiveRules + 场景 + 正文，规则/内容一变即失配、自然重新生成。
-// ---------------------------------------------------------------------------
-const INJECTION_LEDGER_LIMIT = 20
-
-export function loadInjectionLedger(id) {
-  const file = join(resolveProjectRoot(id), 'agent/context-injections.json')
-  if (!existsSync(file)) return { file, injections: [] }
-  try {
-    const data = JSON.parse(readFileSync(file, 'utf8'))
-    return { file, injections: Array.isArray(data.injections) ? data.injections : [] }
-  } catch {
-    return { file, injections: [] }
-  }
-}
-
-// 命中条件：场景 + 指纹一致，且缓存包文件仍在（/tmp 被清则视为未注入，重新生成）。
-export function findInjectedPack(ledger, scenario, fingerprint) {
-  return ledger.injections.find((entry) => entry.scenario === scenario && entry.fingerprint === fingerprint && existsSync(entry.output))
-}
-
-export function recordInjection(ledger, entry) {
-  const injections = [entry, ...ledger.injections.filter((prev) => !(prev.scenario === entry.scenario && prev.fingerprint === entry.fingerprint))].slice(0, INJECTION_LEDGER_LIMIT)
-  mkdirSync(dirname(ledger.file), { recursive: true })
-  writeFileSync(ledger.file, `${JSON.stringify({ version: 1, injections }, null, 2)}\n`)
-}
-
 // delta 指针：本任务已注入过同指纹包，提示 AI 直接复用已读内容、无需重读全文。
 export function printContextDelta(scenario, pack) {
   printReport([
@@ -316,7 +313,7 @@ function selfTest() {
   threw = false
   try { selectMarkdownSections(md, '4') } catch { threw = true }
   assert(threw, 'missing heading rejected')
-  // 区间合并：重叠/相邻/整文件吞并。
+  // 区间合并工具仍供 policy/诊断使用；场景展开本身按原始顺序扣除重叠。
   assert(mergeSectionSelectors(['5-6', '1-3', '3', '6']) === '1-3,5-6', 'overlapping ranges merged (gap kept)')
   assert(mergeSectionSelectors(['2-4', '2-3', '2']) === '2-4', 'nested ranges merged')
   assert(mergeSectionSelectors(['1-3', '4-6']) === '1-6', 'adjacent ranges merged')
@@ -326,10 +323,16 @@ function selfTest() {
   const index = { scenarios: { base: ['a.md', { file: 'b.md', sections: '1' }], derived: [{ scenario: 'base' }, 'c.md'] } }
   const expanded = expandScenarioRefs(index, 'derived')
   assert(expanded.length === 3 && expanded[2].file === 'c.md', 'scenario refs expanded + deduped')
-  // 同文件多次引用（跨子场景）合并成单条、区间取并集。
+  // 同文件多次引用（跨子场景）去重但保留首次出现顺序，后续只留下未覆盖区间。
   const overlap = { scenarios: { q: [{ file: 'q.md', sections: '5-6' }, { file: 'q.md', sections: '1-3' }, { file: 'q.md', sections: '3' }] } }
   const mergedRefs = expandScenarioRefs(overlap, 'q')
-  assert(mergedRefs.length === 1 && mergedRefs[0].sections === '1-3,5-6', 'same-file refs merged to one')
+  assert(mergedRefs.length === 2 && mergedRefs[0].sections === '5-6' && mergedRefs[1].sections === '1-3', 'same-file refs deduped without reordering')
+  const internalOverlap = expandScenarioRefs({ scenarios: { q: [{ file: 'q.md', sections: '1-3,2-4' }] } }, 'q')
+  assert(internalOverlap.length === 1 && internalOverlap[0].sections === '1-4', 'same-ref overlapping ranges merged')
+  const partialThenWhole = { scenarios: { q: [{ file: 'q.md', sections: '2' }, 'q.md'] } }
+  threw = false
+  try { expandScenarioRefs(partialThenWhole, 'q') } catch { threw = true }
+  assert(threw, 'ambiguous partial-then-whole route rejected')
   threw = false
   try { expandScenarioRefs({ scenarios: { x: [{ scenario: 'x' }] } }, 'x') } catch { threw = true }
   assert(threw, 'scenario cycle detected')
@@ -352,15 +355,7 @@ function selfTest() {
   assert(budgetVerdicts.under.level === 'ok', 'under warn ok')
   assert(budgetVerdicts.warn.level === 'warn' && budgetVerdicts.warn.ok, 'over warn warns (not blocking)')
   assert(!budgetVerdicts.fail.ok, 'over fail blocks')
-  // 注入去重：同 scenario+fingerprint 且包文件存在才算命中；recordInjection 去重 + 限长。
-  const tmpPack = join(tmpdir(), 'ctx-inject-selftest.md')
-  writeFileSync(tmpPack, 'x')
-  const ledger = { file: join(tmpdir(), 'ctx-inject-selftest-ledger.json'), injections: [{ scenario: 's', fingerprint: 'fp', output: tmpPack }] }
-  assert(findInjectedPack(ledger, 's', 'fp'), 'existing injection with live file matched')
-  assert(!findInjectedPack(ledger, 's', 'other'), 'different fingerprint not matched')
-  assert(!findInjectedPack({ injections: [{ scenario: 's', fingerprint: 'fp', output: join(tmpdir(), 'nope.md') }] }, 's', 'fp'), 'missing pack file not matched')
-  rmSync(tmpPack, { force: true })
-  console.log('PASS context-pack (selectMarkdownSections + mergeSectionSelectors + normalizeRuleRef + expandScenarioRefs + enforceContextBudget + injection-ledger)')
+  console.log('PASS context-pack (section selection + order-preserving dedupe + budget)')
 }
 
 if (process.argv[1] && process.argv[1].endsWith('context-pack.mjs') && process.argv.includes('--self-test')) selfTest()

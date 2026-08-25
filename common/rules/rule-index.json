@@ -19,13 +19,12 @@
       "g6_contract",
       "g6_visual",
       "g6_delivery",
-      "g6_verify"
+      "g6_verify",
+      "review_docs_automation"
     ],
-    "briefCollapse": [
-      "rule-ids-and-gates.md",
-      "rule-execution-model.md",
-      "execution-evidence.md"
-    ],
+    "coordinatorScenarios": {
+      "g6_verify": ["g6_code_review", "g6_contract", "g6_visual", "g6_delivery"]
+    },
     "contextBudget": {
       "coding": { "warn": 12000, "fail": 24000 },
       "stage": { "warn": 20000, "fail": 32000 },
@@ -34,6 +33,10 @@
         "docs_tdd_maintenance": { "warn": 52000, "fail": 58000 },
         "g6_verify": { "warn": 32000, "fail": 40000 }
       }
+    },
+    "contextTargets": {
+      "codingMedianReductionPercent": 50,
+      "g6SequentialMaxChars": 30000
     }
   },
   "scenarios": {
@@ -83,29 +86,41 @@
         "file": "coding-worktree.md",
         "sections": "1-3"
       },
-      "git-branch-flow.md",
-      "change-scope-boundary.md",
-      "architecture-and-state.md"
+      {
+        "file": "git-branch-flow.md",
+        "sections": "1-4"
+      },
+      {
+        "file": "change-scope-boundary.md",
+        "sections": "1-3"
+      },
+      {
+        "file": "architecture-and-state.md",
+        "sections": "1-4"
+      }
     ],
     "write_api_or_mock": [
       "api-and-mapper.md",
       {
         "file": "rule-ids-and-gates.md",
-        "sections": "3"
+        "sections": "3",
+        "brief": "pointer"
       }
     ],
     "write_api": [
       "api-and-mapper.md",
       {
         "file": "rule-ids-and-gates.md",
-        "sections": "3"
+        "sections": "3",
+        "brief": "pointer"
       }
     ],
     "write_mapper": [
       "api-and-mapper.md",
       {
         "file": "rule-ids-and-gates.md",
-        "sections": "3"
+        "sections": "3",
+        "brief": "pointer"
       },
       {
         "file": "quality-checklist.md",
@@ -116,17 +131,18 @@
       "api-and-mapper.md",
       {
         "file": "architecture-and-state.md",
-        "sections": "1-7"
+        "sections": "1-4,6-7"
       },
       {
         "file": "rule-ids-and-gates.md",
-        "sections": "3"
+        "sections": "3",
+        "brief": "pointer"
       }
     ],
     "write_state": [
       {
         "file": "architecture-and-state.md",
-        "sections": "1-7"
+        "sections": "4-7"
       },
       "development-rules.md"
     ],
@@ -138,9 +154,13 @@
       },
       {
         "file": "rule-ids-and-gates.md",
-        "sections": "2-3"
+        "sections": "2-3",
+        "brief": "pointer"
       },
-      "execution-evidence.md"
+      {
+        "file": "execution-evidence.md",
+        "sections": "1-4"
+      }
     ],
     "legacy_mock": [
       "mock-legacy-route-a.md",
@@ -150,7 +170,8 @@
       },
       {
         "file": "rule-ids-and-gates.md",
-        "sections": "3"
+        "sections": "3",
+        "brief": "pointer"
       }
     ],
     "write_ui": [
@@ -160,34 +181,54 @@
       },
       "api-and-mapper.md",
       "ui-style-token-rules.md",
-      "component-reuse-and-visual-fidelity.md"
+      {
+        "file": "component-reuse-and-visual-fidelity.md",
+        "sections": "2-6"
+      }
     ],
     "write_figma": [
-      "figma-mcp-read-workflow.md",
-      "component-reuse-and-visual-fidelity.md",
-      "ui-style-token-rules.md"
+      {
+        "file": "figma-mcp-read-workflow.md",
+        "sections": "2-6"
+      },
+      {
+        "file": "component-reuse-and-visual-fidelity.md",
+        "sections": "3-5"
+      },
+      {
+        "file": "ui-style-token-rules.md",
+        "sections": "1-5,7-9"
+      }
     ],
     "g6_code_review": [
       {
         "file": "quality-checklist.md",
-        "sections": "5-6"
+        "sections": "5"
       },
-      "rule-execution-model.md",
+      {
+        "file": "rule-execution-model.md",
+        "sections": "3"
+      },
       {
         "file": "rule-ids-and-gates.md",
-        "sections": "2-4"
+        "sections": "2-4",
+        "brief": "pointer"
       }
     ],
     "g6_contract": [
       {
         "file": "quality-checklist.md",
-        "sections": "1-3"
+        "sections": "1-2"
       },
       "api-and-mapper.md",
-      "execution-evidence.md",
+      {
+        "file": "execution-evidence.md",
+        "sections": "1-4"
+      },
       {
         "file": "rule-ids-and-gates.md",
-        "sections": "2-3"
+        "sections": "2-3",
+        "brief": "pointer"
       }
     ],
     "g6_visual": [
@@ -195,23 +236,37 @@
         "file": "quality-checklist.md",
         "sections": "3"
       },
-      "verification-division-of-labor.md",
-      "browser-e2e-mcp.md",
-      "component-reuse-and-visual-fidelity.md",
-      "execution-evidence.md"
+      {
+        "file": "verification-division-of-labor.md",
+        "sections": "1-5"
+      },
+      {
+        "file": "browser-e2e-mcp.md",
+        "sections": "1-7"
+      },
+      {
+        "file": "component-reuse-and-visual-fidelity.md",
+        "sections": "3-5"
+      },
+      {
+        "file": "execution-evidence.md",
+        "sections": "5"
+      }
     ],
     "g6_delivery": [
       {
         "file": "quality-checklist.md",
         "sections": "6"
       },
-      "execution-evidence.md",
       {
         "file": "rule-ids-and-gates.md",
-        "sections": "2"
+        "sections": "2",
+        "brief": "pointer"
       },
-      "blocking-and-change-protocol.md",
-      "hook-integration.md"
+      {
+        "file": "blocking-and-change-protocol.md",
+        "sections": "6"
+      }
     ],
     "g6_verify": [
       {
@@ -238,14 +293,24 @@
         "file": "rule-inheritance.md",
         "sections": "0-3"
       },
-      "CHANGELOG.md",
+      {
+        "file": "CHANGELOG.md",
+        "brief": "pointer"
+      },
       {
         "file": "rule-ids-and-gates.md",
-        "sections": "1-2"
+        "sections": "1-2",
+        "brief": "pointer"
       },
-      "rule-execution-model.md",
+      {
+        "file": "rule-execution-model.md",
+        "sections": "1-5"
+      },
       "hook-integration.md",
-      "execution-evidence.md"
+      {
+        "file": "execution-evidence.md",
+        "sections": "1-4"
+      }
     ],
     "docs_tdd_maintenance": [
       "api-and-mapper.md",

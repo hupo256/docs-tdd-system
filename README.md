@@ -23,7 +23,7 @@ AI 编码的两个顽疾：**跳过需求确认直接写码**、**规则散落�
 核心命令统一走 `<mount>/common/engine/agent-scripts/docs-tdd.mjs`。下表中的 `docs-tdd` 是 `node <mount>/common/engine/agent-scripts/docs-tdd.mjs` 的阅读简写：
 
 ```bash
-docs-tdd context <PROJECT-ID> <SCENARIO>   # 按场景生成 compact 规则包
+docs-tdd context <PROJECT-ID> <SCENARIO>   # 按场景生成默认 brief/compact 规则包；可显式覆盖模式
 docs-tdd kickoff <PROJECT-ID> --prd <src>  # 一句话幂等启动：骨架+同步+intake+run-state
 docs-tdd status|next|resume <PROJECT-ID>   # 状态、唯一下一步、断点恢复
 docs-tdd recommend <PROJECT-ID>            # 根据当前改动推荐场景
@@ -118,7 +118,7 @@ AI 会先读 `common/rules/rule-router.md`，再执行 `docs-tdd kickoff PR-0123
 
 **3. G1 文档生成**：AI 基于启动器生成的模板填写 PRD 全量功能清单、scope、技术方案初稿、任务与协作记录；G1 有独立机器出口，不与 G0 共用空骨架判定。`product/00-feature-inventory.md` 是「做 / 不做 / 延期」和 Scope 裁剪记录的唯一真相源，`01-scope-and-phases.md` 只写摘要，`04-frontend-tasks.md` 只保留本期做项，避免多份范围结论漂移。
 
-**4. 按场景加载规则**：`docs-tdd context PR-01234 <SCENARIO>` 生成 compact 规则包，只读命中场景的专题，不全读 `common/`。编码场景须先通过 G2，并签发绑定当前客户端、规则指纹、G2 输入与 HEAD 的 24 小时 rule session v2；`changed` 和 G5-G8 拒绝缺失、过期或由其他客户端签发的会话。Cursor adapter 会自动带 `--client cursor`；手动调用可显式传 `--client codex|claude|cursor|manual`。Lark 两个入口不复用这份会话，而是在每个任务启动 AI 前读取当前规则章节并检查发布链；发布链 stale 会在 health / 日志告警，但不再把修 bug 任务整体挡下，必需常驻规则缺失仍 fail-closed。常用场景：`g0_g2_scope` `write_api` `write_mapper` `write_query_hook` `write_ui` `write_figma` `write_msw` `g6_verify`（全表见 `rule-router.md §3`）。
+**4. 按场景加载规则**：`docs-tdd context PR-01234 <SCENARIO>` 只读命中场景的专题，不全读 `common/`。模式由场景选择默认 brief/compact，也可用互斥的 `--brief|--compact|--full` 显式覆盖；brief 只折叠索引中逐引用标记为安全指针的机器规则。传 `--session-id <task-id>`（或由客户端注入 session 环境变量）后，同一 project/client/session 的相同 pack 才返回 delta；无会话身份时不做跨任务去重。编码场景须先通过 G2，并签发绑定当前客户端、规则指纹、G2 输入与 HEAD 的 24 小时 rule session v2；`changed` 和 G5-G8 拒绝缺失、过期或由其他客户端签发的会话。Cursor adapter 会自动带 `--client cursor`；手动调用可显式传 `--client codex|claude|cursor|manual`。Lark 两个入口不复用这份会话，而是在每个任务启动 AI 前读取当前规则章节并检查发布链；发布链 stale 会在 health / 日志告警，但不再把修 bug 任务整体挡下，必需常驻规则缺失仍 fail-closed。常用场景：`g0_g2_scope` `write_api` `write_mapper` `write_query_hook` `write_ui` `write_figma` `write_msw` `g6_verify`（全表见 `rule-router.md §3`）。其中 `g6_verify` 仅打印四维执行计划；实际依次加载 `g6_code_review`、`g6_contract`、`g6_visual`、`g6_delivery`，完整或 partial G6 门禁会机器校验四维均为当前代码/规则状态。
 
 **5. G2 方案定稿**：对功能清单逐条确认「做 / 不做 / 延期」，写完 `product/02-technical-design.md`（含复用盘点、PRD 路径核验）后**才允许写业务代码**。
 

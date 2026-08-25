@@ -12,6 +12,7 @@ import { existsSync, readFileSync, writeFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { rulesRoot } from './roots.mjs'
+import { remedyFor } from './project-decision.mjs'
 
 const RULE_ID_RE = /^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$/
 
@@ -25,6 +26,26 @@ function grepRuleLines(file, ruleId) {
     .filter(({ text }) => text.includes(needle))
 }
 
+// 若 RULE-ID 自身是小节标题，连同该小节正文一起返回，避免只显示标题却丢掉执行契约。
+function ruleSections(file, ruleId) {
+  if (!existsSync(file)) return []
+  const lines = readFileSync(file, 'utf8').split('\n')
+  const needle = `\`${ruleId}\``
+  const blocks = []
+  for (let index = 0; index < lines.length; index += 1) {
+    const heading = /^(#{2,6})\s+/.exec(lines[index])
+    if (!heading || !lines[index].includes(needle)) continue
+    let end = index + 1
+    while (end < lines.length) {
+      const next = /^(#{2,6})\s+/.exec(lines[end])
+      if (next && next[1].length <= heading[1].length) break
+      end += 1
+    }
+    blocks.push({ line: index + 1, text: lines.slice(index, end).join('\n').trim() })
+  }
+  return blocks
+}
+
 export function explainRule(ruleId) {
   if (!ruleId || !RULE_ID_RE.test(ruleId)) {
     console.error(`usage: docs-tdd explain <RULE-ID>（如 CODE-MAPPER-001 / VERIFY-TYPE-001 / DOC-G2-004）`)
@@ -33,9 +54,9 @@ export function explainRule(ruleId) {
   const ledger = join(rulesRoot, 'rule-id-ledger.md')
   const gates = join(rulesRoot, 'rule-ids-and-gates.md')
   const hits = [
-    { file: 'rule-id-ledger.md', lines: grepRuleLines(ledger, ruleId) },
-    { file: 'rule-ids-and-gates.md', lines: grepRuleLines(gates, ruleId) },
-  ].filter(({ lines }) => lines.length > 0)
+    { file: 'rule-id-ledger.md', lines: grepRuleLines(ledger, ruleId), sections: ruleSections(ledger, ruleId) },
+    { file: 'rule-ids-and-gates.md', lines: grepRuleLines(gates, ruleId), sections: ruleSections(gates, ruleId) },
+  ].filter(({ lines, sections }) => lines.length > 0 || sections.length > 0)
 
   if (hits.length === 0) {
     console.error(`[explain] 未在台账中找到 ${ruleId}；确认 RULE-ID 是否正确，或读 common/rules/rule-ids-and-gates.md。`)
@@ -43,12 +64,25 @@ export function explainRule(ruleId) {
   }
 
   console.log(`# ${ruleId}\n`)
-  for (const { file, lines } of hits) {
+  let primaryCheck = ''
+  let detailedRemedy = ''
+  for (const { file, lines, sections } of hits) {
     console.log(`## ${file}`)
-    for (const { line, text } of lines) console.log(`  L${line}: ${text.trim()}`)
+    const sectionLines = new Set(sections.flatMap(({ text }) => text.split('\n').map((line) => line.trim())))
+    for (const { line, text } of lines) {
+      if (sectionLines.has(text.trim())) continue
+      console.log(`  L${line}: ${text.trim()}`)
+      const cells = text.split('|').map((cell) => cell.trim()).filter(Boolean)
+      if (!primaryCheck && cells.length >= 3) primaryCheck = cells[2]
+    }
+    for (const { line, text } of sections) {
+      console.log(`\nL${line}:\n${text}`)
+      detailedRemedy ||= text.split('\n').find((value) => value.includes('**Failure**'))?.replace(/^[-*\s]+\*\*Failure\*\*[:：]\s*/, '') || ''
+    }
     console.log('')
   }
-  console.log('修复：按上表「机器检查」列补齐对应文档/代码，再重跑 `docs-tdd changed <PR>` 或对应 `docs-tdd gate <PR> <Gx>`。')
+  console.log(`建议修复：${detailedRemedy || remedyFor(ruleId, primaryCheck)}`)
+  console.log('重跑：`node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs changed <PR>` 或对应 `.../docs-tdd.mjs gate <PR> <Gx>`。')
   return 0
 }
 
@@ -67,6 +101,9 @@ function selfTest() {
     const hits = grepRuleLines(tmp, 'CODE-MAPPER-001')
     assert(hits.length === 1 && hits[0].line === 2, 'grep matches only backticked line with lineno')
     assert(grepRuleLines(join(tmpdir(), 'explain-rule-nope.md'), 'CODE-MAPPER-001').length === 0, 'missing file → empty')
+    writeFileSync(tmp, ['# t', '### 3.1 `CODE-ARCH-003` contract', '', 'trigger', '', '#### detail', 'fix', '', '### 3.2 next'].join('\n'))
+    const sections = ruleSections(tmp, 'CODE-ARCH-003')
+    assert(sections.length === 1 && sections[0].text.includes('trigger') && sections[0].text.includes('fix') && !sections[0].text.includes('3.2 next'), 'heading match includes complete rule section')
   } finally {
     rmSync(tmp, { force: true })
   }

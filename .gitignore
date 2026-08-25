@@ -26,6 +26,7 @@ common/lark-bot/runtime/lark-worker-state.json
 **/agent/notification-log.md
 **/agent/rule-session.json
 **/agent/context-injections.json
+**/agent/g6-context-session.json
 
 # PRD remote-drift TTL cache — pure per-machine optimization, not a source artifact
 **/inbox/lark-sync/.drift-cache.json

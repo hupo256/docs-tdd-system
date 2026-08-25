@@ -19,12 +19,16 @@ import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { createContextPack, enforceContextBudget, expandScenarioRefs, findInjectedPack, loadInjectionLedger, printContextDelta, printContextPack, recordInjection, requireFreshEffectiveRules, requireFreshRuleRelease } from './lib/context-pack.mjs'
+import { createContextPack, enforceContextBudget, expandScenarioRefs, printContextDelta, printContextPack, requireFreshEffectiveRules, requireFreshRuleRelease } from './lib/context-pack.mjs'
+import { contextBudgetFor, coordinatorSteps, resolveContextMode, validateContextPolicy } from './lib/context-policy.mjs'
+import { findDeliveredPack, loadContextDeliveryLedger, recordContextDelivery, resolveContextSessionId } from './lib/context-session.mjs'
 import { maybeBroadcastGate, printGateHeartbeat } from './lib/gate-heartbeat.mjs'
 import { runChanged, recommendScenarios } from './lib/changed-detection.mjs'
 import { capability, resolveProjectWorktree } from './lib/project-status-report.mjs'
 import { explainRule } from './lib/explain-rule.mjs'
+import { createFingerprint } from './lib/gate-cache.mjs'
 import { resolveRoots } from './lib/roots.mjs'
+import { G6_CONTEXT_SCENARIOS, loadG6ContextSession, nextG6ContextScenario, printG6ContextPlan, recordG6Context, sameG6ContextBinding } from './lib/g6-context-session.mjs'
 import { resolveRuleSessionClient } from './lib/rule-session.mjs'
 import { CODING_SCENARIOS, requireRuleSession, verifyG2Ready, writeRuleSession } from './lib/rule-session-runtime.mjs'
 
@@ -40,6 +44,11 @@ if (clientIndex >= 0 && !commandArgs[clientIndex + 1]) {
   console.error('--client requires one of: codex, claude, cursor, manual')
   process.exit(1)
 }
+const sessionIndex = commandArgs.indexOf('--session-id')
+if (sessionIndex >= 0 && !commandArgs[sessionIndex + 1]) {
+  console.error('--session-id requires a non-empty task/session identifier')
+  process.exit(1)
+}
 let agentClient
 try {
   agentClient = resolveRuleSessionClient({ requested: clientIndex >= 0 ? commandArgs[clientIndex + 1] : undefined })
@@ -47,9 +56,16 @@ try {
   console.error(error.message)
   process.exit(1)
 }
-const positional = commandArgs.filter((arg, index) => !arg.startsWith('--') && commandArgs[index - 1] !== '--client')
+let contextSessionId
+try {
+  contextSessionId = resolveContextSessionId({ requested: sessionIndex >= 0 ? commandArgs[sessionIndex + 1] : undefined })
+} catch (error) {
+  console.error(error.message)
+  process.exit(1)
+}
+const valueOptions = new Set(['--client', '--session-id'])
+const positional = commandArgs.filter((arg, index) => !arg.startsWith('--') && !valueOptions.has(commandArgs[index - 1]))
 const detail = positional[0]
-const fullContext = cliArgs.includes('--full')
 const noCache = cliArgs.includes('--no-cache')
 // --partial：G6 部分验收（G5 停靠态出口）。必须在此显式透传给 run-project-gate.mjs——
 // 否则公共入口跑的是普通 G6，用户以为做了部分验收、实际被 G5 前置挡下（真机漏传缺陷修复）。
@@ -71,7 +87,9 @@ if (process.argv.includes('--self-test')) {
   if (!ruleset.version || !ruleset.maturity) process.exit(1)
   const index = readJson(join(docsRoot, 'common/rules/rule-index.json'))
   if (!Array.isArray(index.scenarios?.write_mapper) || index.scenarios.write_mapper.length === 0) process.exit(1)
-  assert(expandScenarioRefs(index, 'g6_verify').some((ref) => ref.file === 'quality-checklist.md'))
+  assert.deepEqual(validateContextPolicy(index, { codingScenarios: CODING_SCENARIOS }), [])
+  assert.deepEqual(coordinatorSteps(index, 'g6_verify'), G6_CONTEXT_SCENARIOS)
+  assert(expandScenarioRefs(index, 'g6_code_review').some((ref) => ref.file === 'quality-checklist.md'))
   console.log('docs-tdd self-test passed.')
   process.exit(0)
 }
@@ -126,7 +144,7 @@ if (command === 'explain') {
 }
 
 if (!new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(projectId || '')) {
-  console.error('usage: docs-tdd.mjs <kickoff|status|resume|next|capability|doctor|release|golden|guard|rule-health|explain|check|gate|context|changed|recommend> PR-01234 [G0-G8|scenario] [--compact|--full|--no-cache] [--client codex|claude|cursor|manual]')
+  console.error('usage: docs-tdd.mjs <kickoff|status|resume|next|capability|doctor|release|golden|guard|rule-health|explain|check|gate|context|changed|recommend> PR-01234 [G0-G8|scenario] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|manual] [--session-id <id>]')
   process.exit(1)
 }
 
@@ -146,7 +164,7 @@ else {
   if (!effectiveRules) process.exit(1)
   if (command === 'gate') {
     if (['G5', 'G6', 'G7', 'G8'].includes((detail || 'G3').toUpperCase()) && !requireRuleSession(projectId, worktree, release, effectiveRules, agentClient)) process.exit(1)
-    status = run([join(scriptDir, 'run-project-gate.mjs'), projectId, detail || 'G3', '--write', ...(noCache ? ['--no-cache'] : []), ...(partial ? ['--partial'] : [])], worktree)
+    status = run([join(scriptDir, 'run-project-gate.mjs'), projectId, detail || 'G3', '--write', '--client', agentClient, ...(contextSessionId ? ['--session-id', contextSessionId] : []), ...(noCache ? ['--no-cache'] : []), ...(partial ? ['--partial'] : [])], worktree)
     // partial 不是 G6 PASS：不播报「G6 通过」，免得群里误读为完整通过。
     if (status === 0 && !partial) maybeBroadcastGate(projectId, (detail || 'G3').toUpperCase())
   } else if (command === 'changed') {
@@ -156,29 +174,50 @@ else {
     try {
       const scenario = detail || 'g0_g2_scope'
       if (CODING_SCENARIOS.has(scenario) && !verifyG2Ready(projectId, worktree, scriptDir)) process.exit(1)
-      // 模式选择：--full 优先展开全文；否则 brief 默认场景（编码 + G6 验收）折叠机器/参考型正文，其余 compact。
       const index = readJson(join(docsRoot, 'common/rules/rule-index.json'))
-      const briefDefault = new Set(index.policy?.briefDefaultScenarios || [])
-      const mode = fullContext ? 'full' : briefDefault.has(scenario) ? 'brief' : 'compact'
-      const pack = createContextPack(projectId, scenario, release, effectiveRules, mode)
-      // 注入去重：同任务内同一 (scenario, fingerprint) 已注入过 → 只回 delta 指针，不重吐全文。
-      const ledger = loadInjectionLedger(projectId)
-      if (findInjectedPack(ledger, scenario, pack.fingerprint)) {
+      const policyErrors = validateContextPolicy(index, { codingScenarios: CODING_SCENARIOS })
+      if (policyErrors.length) throw new Error(`invalid context policy:\n- ${policyErrors.join('\n- ')}`)
+      const code = createFingerprint({ callerCwd: worktree, config, docsRoot })
+      const g6Current = {
+        projectId,
+        client: agentClient,
+        sessionId: contextSessionId,
+        headSha: code.headSha,
+        dirtyHash: code.dirtyHash,
+        ruleReleaseFingerprint: release.currentFingerprint,
+        effectiveRulesFingerprint: effectiveRules.currentFingerprint,
+      }
+      if (coordinatorSteps(index, scenario)) {
+        const previous = loadG6ContextSession(projectId)
+        printG6ContextPlan(projectId, sameG6ContextBinding(previous, g6Current) ? previous : null)
+        printGateHeartbeat(projectId, resolvedWorktree)
+        process.exit(0)
+      }
+      const currentG6Session = G6_CONTEXT_SCENARIOS.includes(scenario) ? loadG6ContextSession(projectId) : null
+      const activeG6Session = sameG6ContextBinding(currentG6Session, g6Current) ? currentG6Session : null
+      const expectedG6Scenario = nextG6ContextScenario(activeG6Session)
+      if (G6_CONTEXT_SCENARIOS.includes(scenario) && expectedG6Scenario && scenario !== expectedG6Scenario && !activeG6Session?.dimensions?.[scenario]) {
+        throw new Error(`G6 context order violation: next required scenario is ${expectedG6Scenario}, received ${scenario}`)
+      }
+      const mode = resolveContextMode(cliArgs, scenario, index)
+      const pack = createContextPack(projectId, scenario, release, effectiveRules, mode, {
+        includeSummary: !G6_CONTEXT_SCENARIOS.includes(scenario) || !activeG6Session || Object.keys(activeG6Session.dimensions || {}).length === 0,
+      })
+      const kind = CODING_SCENARIOS.has(scenario) ? 'coding' : 'stage'
+      const verdict = mode === 'full' ? { ok: true } : enforceContextBudget(pack, kind, contextBudgetFor(index, scenario, kind))
+      if (!verdict.ok) throw new Error(`context pack exceeds the ${kind} hard limit`)
+
+      // 只有调用方提供真实 task/session identity 时才做会话内 delivery 去重；无 identity 默认完整报告，绝不跨任务复用。
+      const ledger = loadContextDeliveryLedger({ projectId, client: agentClient, sessionId: contextSessionId })
+      if (findDeliveredPack(ledger, scenario, pack.fingerprint)) {
         printContextDelta(scenario, pack)
       } else {
         printContextPack(scenario, pack)
-        // 预算门禁：编码场景归 coding、其余归 stage；已知偏大的判断密集场景走 scenarios 覆盖（grandfather 带余量）。
-        // --full 是「要全文」的显式逃生口，不受预算硬闸约束（预算治理的是 brief/compact 默认路径的膨胀）。
-        if (!fullContext) {
-          const kind = CODING_SCENARIOS.has(scenario) ? 'coding' : 'stage'
-          const budgets = index.policy?.contextBudget
-          const verdict = enforceContextBudget(pack, kind, budgets?.scenarios?.[scenario] || budgets?.[kind])
-          if (!verdict.ok) process.exit(1)
-        }
-        recordInjection(ledger, { scenario, fingerprint: pack.fingerprint, output: pack.output, injectedAt: new Date().toISOString() })
+        recordContextDelivery(ledger, { scenario, fingerprint: pack.fingerprint, output: pack.output, deliveredAt: new Date().toISOString() })
       }
       // 编码会话仍每次刷新（headSha / codeReadiness 可能变，门禁证据不能靠 delta 复用）。
       if (CODING_SCENARIOS.has(scenario)) writeRuleSession(projectId, worktree, release, effectiveRules, pack, agentClient)
+      if (G6_CONTEXT_SCENARIOS.includes(scenario)) recordG6Context({ current: g6Current, scenario, pack })
       printGateHeartbeat(projectId, resolvedWorktree)
     } catch (error) {
       console.error(error.message)

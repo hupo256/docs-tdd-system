@@ -7,6 +7,13 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-08-25（context-budget-v2：细粒度路由、会话去重与 G6 四维协调）
+
+- **默认上下文减量但不降门禁**：场景引用改为章节级有序去重，brief 只折叠逐引用声明为安全指针的机器规则；新增互斥 `--brief|--compact|--full`、场景预算与全场景审计。按 2200 字符摘要上限实测，常规编码默认包中位缩减 60%，所有默认场景均低于 hard limit。
+- **去重收窄到真实会话**：删除项目级“已注入”推断；仅当调用方提供 session identity 时，按 project/client/session 隔离并在 24 小时内返回 delta。无 session ID 始终完整报告，两个客户端或任务不能相互复用。
+- **G6 拆成四维机器协议**：`g6_verify` 改为只打印计划的协调器，依次加载 code review、contract、visual、delivery；进度绑定 client/session、HEAD、dirty hash、L3/effective 指纹和有效期。乱序、缺维、过期或代码/规则变化均由不可豁免 `VERIFY-RULE-005` 阻断 G6/G6-partial。摘要仅首包加载，四包顺序总量 28723 字符（目标 ≤30000）。
+- **可诊断性与阶段摘要修正**：`docs-tdd explain <RULE-ID>` 展开完整规则小节与 Failure 修复命令；修正 G3/G4/G6-partial/失败 gate/G8 的 summary 下一步推导；规则索引、预算与 G6/session 协议均有独立 self-test。
+
 ## 2026-08-24（Batch 6b：两个 grandfather gate 脚本物理抽 lib / 折表，全部退出预算 warn 区）
 
 - **`verify-project-gate.mjs` 抽出 13 个文档解析纯谓词到 `lib/gate-doc-parsers.mjs`**：主文件逼近硬闸（53240/58000），把表格/字段正则解析器与基线三分支判定（`parseMarkdownTableRows`、`recordsG2Confirmer`、`featureRowStatus`、`technicalDesign*`、`classifyBaseline` 等，逐字保留、无 disk/git 副作用）物理移入新 lib，随附 34 例 `--self-test`（±锚点守表头列序/占位词漂移）并登记进 `check-doc-budget` 的 `SELF_TEST_SCRIPTS`。主文件 `runSelfTest` 改委托 `gateDocParsersSelfTest()`，只留 10 例有 disk/git 副作用、无法搬进纯 lib 的断言（evidence 目录扫描 / gate 历史 / 阻塞聚合器接线）。`verify-project-gate.mjs` 53240 → 42534（退出 warn 52000 区，距硬闸 ~15k）。
