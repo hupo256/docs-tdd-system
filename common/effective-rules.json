@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "fingerprint": "b7971d562277acdb56c7f7858b82c36d6d6458b4b89de40e5eb24a2c0d7b7764",
-  "publishedAt": "2026-08-25T11:50:35.677Z",
+  "fingerprint": "5a91e6bb38e7c88b0e86008f067f6500c0da95f8cb33642bc390cdd43059817f",
+  "publishedAt": "2026-08-25T12:59:54.224Z",
   "l3RuleReleaseFingerprint": "ae7cba5f14a1e764e629b492107b4662deca3ef54894f1db83c6451e054d922a",
   "clientMatrix": {
     "codex": {
@@ -621,7 +621,7 @@
     "~/.cursor/rules/fameex-local-governance.mdc": "8e02a57ddc70633bd32a8d9a0c03902cf9db1cf4e7eac7a673636b8733844afb",
     "AGENTS.md": "392064b3caa6942371cdf5380c7c8b6e368e6ba36d5cae03753afc5d6001c480",
     "CLAUDE.md": "0ae6e4eb08c82210d63d4ad8634de80e5f6078b7989d12ea84dfb5eedd274453",
-    "common/lark-bot/lib/lark-rule-context.mjs": "1961c96d6f9ca31df1ec963d82eccc32aee75aba92de691128beb0a3e14a2a82",
+    "common/lark-bot/lib/lark-rule-context.mjs": "c74a8cbe46b5c3bae158a05ce4654482176d42244d59ab73f387a8c6360a5ef6",
     "common/lark-bot/lib/lark-worker-prompts.mjs": "efd0c3aafd5e011cc1654140d9c03a90294d3564c5686dadc290511073e63e43",
     "common/lark-bot/lib/lark-worker-run.mjs": "02a78348eb62a44653a9742784f0a4aa4e7c97087f4b7be95d4dadd446912f2b"
   }
