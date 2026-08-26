@@ -5,7 +5,7 @@
 ## 本地环境
 
 - 主仓库路径：`/Users/aven/github/fameex-web`（文档在此演进）
-- 当前工作重点：**PR-02074 预测市场三期**——最近门禁 G6 BLOCK (fail=2, warn=4)（2026-08-25），worktree `/Users/aven/github/PR-02074`。本行由 `update-project-index.mjs --write` 从最近门禁活动派生，勿手改。
+- 当前工作重点：**PR-01930 体验金手动失效功能（重做）**——最近门禁 G6 BLOCK (fail=1, warn=4)（2026-08-26），worktree `/Users/aven/github/PR-01930`。本行由 `update-project-index.mjs --write` 从最近门禁活动派生，勿手改。
 - 本地文档目录（唯一真实路径）：`/Users/aven/github/fameex-web/apps/web/docs_tdd/`
 - 文档跟踪：本目录被 `.git/info/exclude` 忽略，只在本机维护，不 commit、不 push。
 

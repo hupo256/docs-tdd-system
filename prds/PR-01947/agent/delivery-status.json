@@ -1,0 +1,12 @@
+{
+  "projectId": "PR-01947",
+  "mode": "released",
+  "branch": "feature/PR-01947",
+  "headSha": "29f304b3b9c382e09ff26c60611700930539bc57",
+  "pullRequestUrl": "",
+  "evidence": [
+    "2026-08-26: git merge-base --is-ancestor feature/PR-01947 origin/online passed",
+    "prds/PR-01947/evidence/release/2026-08-26/README.md"
+  ],
+  "note": "Production release was confirmed on 2026-08-26. This delivery record does not replace the missing historical G5→G8 PASS chain; the project is archived as legacy-unverified."
+}

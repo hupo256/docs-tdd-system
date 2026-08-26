@@ -1,9 +1,9 @@
 ---
 projectId: PR-01947
-status: active
-stage: G4
+status: closed
+stage: G8
 branch: feature/PR-01947
-worktree: /Users/aven/github/PR-01947
+worktree: ""
 port: ""
 visualFidelity: standard
 prdSource: https://qfglxo2m3dc.sg.larksuite.com/docx/Qj5OdXCCroWHopxcfcmlGklMgff
@@ -13,23 +13,24 @@ larkEnabled: false
 
 # PR-01947 跟单设置优化（保证金/杠杆/复制仓位）
 
-## 状态（2026-08-01 更新）
+## 状态（2026-08-26 更新）
 
 | 项 | 值 |
 |----|-----|
-| **最新可信门禁** | **G4（2026-08-01 阶段链审计后回退；旧 G6 缺少 G5→G6 成功历史）** |
-| **当前阶段** | **G5 阻塞**：Web 前台已对账；后台 F19 导出未验收，F20/F21 缺真实 follower 接口/导出契约与响应对账，ST-040～042 均待执行，整体项目不得进入 G6/G7 |
-| **发布状态** | **未生产上线**：PR-01947 关键提交已进入 `origin/dev` / `origin/test`，但截至 2026-08-01 未进入 `origin/pre` / `origin/online`；此前“deploy/节点”指测试环境部署与提测，不是生产发布。证据见 `evidence/release/2026-08-01/README.md` |
-| **代码分支** | `feature/PR-01947`（worktree：`/Users/aven/github/PR-01947`），已推远端、工作区干净 |
-| **本地最新 commit** | `4d2c6398aa` refactor: drop server-state mirror from useSettingFormStore；远端 feature 最新为 `f4a2bc6f18` |
+| **归档门禁标记** | **G8（legacy-unverified）**：项目已关闭，但没有补造 G5→G8 的 PASS 历史；最后一份机器门禁仍是 2026-08-01 的 G5 BLOCK |
+| **当前阶段** | **发布归档**：用户于 2026-08-26 确认已生产上线；历史联调/QA 缺口保留为历史记录，不再作为活动开发工作项 |
+| **发布状态** | **已生产上线**：`feature/PR-01947` 的 HEAD `29f304b3b9` 已进入 `origin/online`；发布核验见 `evidence/release/2026-08-26/README.md` |
+| **代码分支** | `feature/PR-01947` 已保留供回查；上线后 worktree 已回收 |
+| **交付提交** | `29f304b3b9` `chore(PR-01947): make MSW worker opt-in` |
 | **Figma 设计稿** | 2026-07-14 serena 更新 · 智能比例 Tab 规格已落盘 `07-figma-spec.md` |
 | **PRD** | [Lark docx](https://qfglxo2m3dc.sg.larksuite.com/docx/Qj5OdXCCroWHopxcfcmlGklMgff) |
 | **Figma（L2 基线）** | [「FameEX三期」 WEB](https://www.figma.com/design/KzvWxAYxqfgpoiYuKdxMAE/...?node-id=15089-25554&m=dev) |
 | **交接文档** | **`agent/handoff-2026-07-14.md`**（AI 入口）+ `evidence/ui-ux/2026-07-14/README.md` |
 
-## 现状判断
+## 归档判断
 
-- **环境边界**：功能代码已多次合入 `dev/test` 并用于联调、提测，所以使用体验上容易被记成“已经上线”；但 Git 生产事实是 `pre/online` 均未包含该功能，当前不能标记 closed/G8。
+- **生产事实已更新**：旧发布核验（2026-08-01）仅反映当时 `dev/test` 状态；2026-08-26 已确认 feature HEAD 进入 `origin/online`，因此项目按上线归档并回收 worktree。
+- **不伪造门禁**：历史 `agent/gate-results.json` 的 G5 BLOCK 与缺失的 G5→G8 PASS 历史保留原状。这里的 `G8 (legacy-unverified)` 仅是已上线归档标签，不表示补跑或伪造了 G8 gate。
 - 开发链路为 **dev 直连真实 API**，MSW 试点已按计划完整拆除；worker、Provider 启动点、service worker 文件与 `msw` 依赖均已移除，`before_follow` 不再被 MSW 拦截。
 - **F15 已落**：复制全部仓位取值改为选中币对带单仓位数，已接真实接口 `services/api/copyTrading/follow/lead-position-count.ts`（`8a71fde629`），`SettingForm.tsx` 消费。
 - 若后续要恢复 mock-first：先补 `src/mocks/handlers/<feature>.ts` + 契约测试，再把 handler 注册回 `browser.ts`，最后确认 `Providers.tsx` 的 dev-only 启动仍有效；只加一个假数据文件不算闭环。
@@ -63,8 +64,11 @@ larkEnabled: false
   - **仓位风险**：UI 整数百分数（50=50%）↔ API 小数；`save_follow.positionRiskRate` 提交 ÷100 为小数字符串（50→"0.5"）；回填 `positionRiskToDisplay` 兼容 ≤1 小数与历史整数存量值
   - 函数重命名：`percentToApiRate→toOptionalApiRate`、`apiRateToPercentDisplay→apiRateToDisplay`、`apiRateBoundsToPercent→resolveRateBounds`；新增 `resolvePositionRiskBounds`/`positionRiskToDisplay`/`positionRiskToApiRate`/`positionRiskToApiString`
   - 跟单单测 **37/37** 通过（clampLeverage 7 + useFollowParams 16 + before-follow 2 + followRateParams 9 + resolveIsFollowed 3）
+- **2026-08-26 生产发布归档**：确认 `feature/PR-01947` 已合入 `origin/online`；项目切为 `closed`，保留 feature 分支和全部 `docs_tdd` 历史，回收一次性编码 worktree。
 
-## 待其他同学推进
+## 历史未闭环项（不伪装为已验收）
+
+> 以下为 2026-08-01 文档中记录的联调/QA 缺口。生产发布确认不等同于这些历史 gate 证据已补齐；后续若需追溯或修复，应在 `product/06-collaboration.md` 追加记录并按新变更处理。
 
 | 优先级 | 事项 | 负责建议 | 文档 |
 |--------|------|----------|------|
