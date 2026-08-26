@@ -9,11 +9,11 @@
       "baseRef": "origin/online"
     },
     "apps/web": {
-      "total": 430,
-      "recordedAt": "2026-08-22T00:05:02.994Z",
-      "headSha": "3856887218371da48310e18a485fbb6faeb334f1",
+      "total": 356,
+      "recordedAt": "2026-08-26T10:53:44.038Z",
+      "headSha": "304b09e8f03db4c36ee28e56d362ff51d217f160",
       "baseRef": "origin/online"
     }
   },
-  "generatedAt": "2026-08-22T00:05:03.010Z"
+  "generatedAt": "2026-08-26T10:53:46.175Z"
 }

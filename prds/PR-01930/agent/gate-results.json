@@ -1,23 +1,24 @@
 {
-  "generatedAt": "2026-08-22T00:10:33.099Z",
+  "generatedAt": "2026-08-26T10:53:46.179Z",
   "tool": "run-project-gate.mjs",
   "projectId": "PR-01930",
   "gate": "G6",
+  "partial": false,
   "ok": false,
   "summary": {
-    "total": 62,
+    "total": 64,
     "ok": 57,
-    "warn": 1,
-    "waived": 3,
+    "warn": 4,
+    "waived": 2,
     "fail": 1
   },
   "groups": {
     "documentation": {
-      "total": 54,
-      "ok": 52,
-      "warn": 0,
-      "waived": 2,
-      "fail": 0
+      "total": 56,
+      "ok": 51,
+      "warn": 3,
+      "waived": 1,
+      "fail": 1
     },
     "implementation": {
       "total": 0,
@@ -375,7 +376,7 @@
     {
       "ruleId": "VERIFY-G5-002",
       "ok": true,
-      "message": "G5 status is completed or not-applicable (got completed)",
+      "message": "G5 status is completed / not-applicable (got completed)",
       "file": "../docs_tdd/prds/PR-01930/agent/stage-status.json",
       "severity": "error",
       "category": "documentation"
@@ -383,17 +384,25 @@
     {
       "ruleId": "VERIFY-G5-003",
       "ok": true,
-      "message": "G5 completion has existing evidence paths, or not-applicable has a concrete reason",
+      "message": "G5 completion has existing evidence paths, or not-applicable/pending-reconcile has a concrete reason",
       "file": "../docs_tdd/prds/PR-01930/agent/stage-status.json",
       "severity": "error",
       "category": "documentation"
     },
     {
+      "ruleId": "DOC-CONFIRM-001",
+      "ok": false,
+      "message": "G5=completed 断言了人工确认，但缺 confirmedBy（人工确认签名）——README 人机分界要求 G5 以人工确认为锚点",
+      "file": "../docs_tdd/prds/PR-01930/agent/stage-status.json",
+      "severity": "warn",
+      "category": "documentation"
+    },
+    {
       "ruleId": "CODE-MOCK-002",
       "ok": false,
-      "message": "mock residue found:\napps/admin/src/mocks/fixtures/menus.ts:1:// @mock-only [waived: MSW 路线 B 核心 4 接口(manualInvalidRecord/manualInvalidSummary GET·POST/manualInvalid)已部署 dev 并按 §8.4.2 逐接口拆除(2026-08-21)：handler + contractFixtures + mockContract 测试已删，browser.ts 只余 menuHandlers。残留仅 dev-only menu 注入(src/mocks/handlers/menu.ts + fixtures/menus.ts)——仅 NODE_ENV==='development' 注册(无 NEXT_PUBLIC 开关，对齐 PR-01947 先例)、prod build 短路 tree-shake 出包。待服务端菜单树下发「体验金手动失效管理」节点后删除。 · owner=aven · until 2026-09-30]",
+      "message": "mock residue found:\napps/admin/src/mocks/fixtures/menus.ts:1:// @mock-only",
       "file": "../docs_tdd/prds/PR-01930",
-      "severity": "waived",
+      "severity": "error",
       "category": "documentation"
     },
     {
@@ -414,8 +423,8 @@
     },
     {
       "ruleId": "CODE-SCOPE-001",
-      "ok": true,
-      "message": "all changed source files fall inside 责任模块目录",
+      "ok": false,
+      "message": "changed files outside 责任模块目录 (confirm not out-of-scope, §1.1):\napps/web/src/apps/Futures/components/FuturesAssetPanel/Assets.tsx\napps/web/src/apps/Futures/utils/marginRate.test.ts\napps/web/src/apps/Futures/utils/marginRate.ts",
       "file": "../docs_tdd/prds/PR-01930",
       "severity": "warn",
       "category": "documentation"
@@ -461,34 +470,31 @@
       "category": "documentation"
     },
     {
-      "ruleId": "VERIFY-BIOME-001",
+      "ruleId": "DOC-WAIVER-004",
       "ok": false,
+      "message": "waiver for CODE-MOCK-002 is ignored because the rule is non-waivable",
+      "file": "../docs_tdd/prds/PR-01930/agent/rule-waivers.json",
+      "severity": "warn",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "VERIFY-BIOME-001",
+      "ok": true,
       "severity": "error",
-      "message": "biome check 未通过（biome 报 9 error / 1 warning：apps/admin/src/services/api/financeAudit.ts:2 lint/correctness/noUnusedImports; apps/admin/src/services/api/financeAudit.ts:65 lint/suspicious/noExplicitAny; apps/admin/src/services/api/financeAudit.ts:66 lint/suspicious/noExplicitAny; apps/admin/src/services/api/financeAudit.ts:67 lint/suspicious/noExplicitAny）；详见 /var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-01930/2026-08-22T00-10-20-776Z-biome-check.log",
+      "message": "biome check 通过：实检 40 / 候选 44 个文件",
       "file": "",
       "category": "build-quality",
       "evidence": {
-        "command": "pnpm exec biome check --no-errors-on-unmatched apps/admin/package.json apps/admin/public/mockServiceWorker.js apps/admin/src/app/[lang]/(dashboard)/(main)/(sider)/card-manage/manual-invalidate/page.tsx apps/admin/src/app/[lang]/Providers.tsx apps/admin/src/apps/TrialBalanceManualInvalidate/components/AddInvalidateModal.tsx apps/admin/src/apps/TrialBalanceManualInvalidate/components/BatchInvalidateModal.tsx apps/admin/src/apps/TrialBalanceManualInvalidate/components/ConfirmInvalidateModal.tsx apps/admin/src/apps/TrialBalanceManualInvalidate/components/SearchPanel.tsx apps/admin/src/apps/TrialBalanceManualInvalidate/components/Table.tsx apps/admin/src/apps/TrialBalanceManualInvalidate/index.tsx apps/admin/src/apps/TrialBalanceManualInvalidate/utils/manualInvalidateEnum.contract.test.ts apps/admin/src/apps/TrialBalanceManualInvalidate/utils/manualInvalidateRules.test.ts apps/admin/src/apps/TrialBalanceManualInvalidate/utils/manualInvalidateRules.ts apps/admin/src/apps/TrialBalanceManualInvalidate/utils/useColumns.tsx apps/admin/src/apps/TrialBalanceManualInvalidate/utils/useItems.ts apps/admin/src/apps/TrialBalanceManualInvalidate/utils/useSearchFields.tsx apps/admin/src/components/layouts/Sider/index_.tsx apps/admin/src/components/layouts/constants/contentSettings.ts apps/admin/src/constants/routes.ts apps/admin/src/constants/siderItems.ts apps/admin/src/constants/trialBalance.ts apps/admin/src/middleware.ts apps/admin/src/mocks/browser.ts apps/admin/src/mocks/fixtures/menus.ts apps/admin/src/mocks/handlers/menu.ts apps/admin/src/mocks/useMockWorker.ts apps/admin/src/services/api/trialBalanceManualInvalidate.ts apps/admin/src/types/permission.ts apps/admin/src/types/trialBalanceManualInvalidate.ts apps/web/src/apps/CashFlow/futures/FuturesCashFlow.tsx apps/web/src/apps/CashFlow/futures/futuresCashFlowEnum.contract.test.ts apps/web/src/apps/Futures/components/FuturesOrders/FundsFlow/components/TransactionFilter.tsx apps/web/src/apps/Orders/CouponRecord/couponRecordEnum.contract.test.ts apps/web/src/i18n/locales/zh-CN/assets.json apps/admin/src/apps/FinanceAuditAssetsFlow/utils/useColumns.tsx apps/admin/src/services/api/financeAudit.ts apps/admin/src/apps/FinanceAuditAssetsFlow/utils/financeAuditBusinessType.contract.test.ts apps/admin/src/constants/financeAuditBusinessType.ts",
+        "command": "pnpm exec biome check --no-errors-on-unmatched apps/admin/legacy-admin/src/mixin/dictionary/index.js apps/admin/package.json apps/admin/public/mockServiceWorker.js apps/admin/src/app/[lang]/(dashboard)/(main)/(sider)/card-manage/trial-fee-invalid/page.tsx apps/admin/src/app/[lang]/Providers.tsx apps/admin/src/apps/FinanceAuditAssetsFlow/utils/financeAuditBusinessType.contract.test.ts apps/admin/src/apps/FinanceAuditAssetsFlow/utils/useColumns.tsx apps/admin/src/apps/TrialBalanceManualInvalidate/components/AddInvalidateModal.tsx apps/admin/src/apps/TrialBalanceManualInvalidate/components/BatchInvalidateModal.tsx apps/admin/src/apps/TrialBalanceManualInvalidate/components/ConfirmInvalidateModal.tsx apps/admin/src/apps/TrialBalanceManualInvalidate/components/SearchPanel.tsx apps/admin/src/apps/TrialBalanceManualInvalidate/components/Table.tsx apps/admin/src/apps/TrialBalanceManualInvalidate/index.tsx apps/admin/src/apps/TrialBalanceManualInvalidate/utils/f18ContractCapitalFlow.contract.test.ts apps/admin/src/apps/TrialBalanceManualInvalidate/utils/manualInvalidateEnum.contract.test.ts apps/admin/src/apps/TrialBalanceManualInvalidate/utils/manualInvalidateRules.test.ts apps/admin/src/apps/TrialBalanceManualInvalidate/utils/manualInvalidateRules.ts apps/admin/src/apps/TrialBalanceManualInvalidate/utils/useColumns.tsx apps/admin/src/apps/TrialBalanceManualInvalidate/utils/useItems.ts apps/admin/src/apps/TrialBalanceManualInvalidate/utils/useSearchFields.tsx apps/admin/src/components/layouts/Sider/index_.tsx apps/admin/src/components/layouts/constants/contentSettings.ts apps/admin/src/constants/financeAuditBusinessType.ts apps/admin/src/constants/routes.ts apps/admin/src/constants/siderItems.ts apps/admin/src/constants/trialBalance.ts apps/admin/src/middleware.ts apps/admin/src/mocks/browser.ts apps/admin/src/mocks/fixtures/menus.ts apps/admin/src/mocks/handlers/menu.ts apps/admin/src/mocks/useMockWorker.ts apps/admin/src/services/api/financeAudit.ts apps/admin/src/services/api/trialBalanceManualInvalidate.ts apps/admin/src/types/permission.ts apps/admin/src/types/trialBalanceManualInvalidate.ts apps/web/src/apps/CashFlow/futures/FuturesCashFlow.tsx apps/web/src/apps/CashFlow/futures/futuresCashFlowEnum.contract.test.ts apps/web/src/apps/Futures/components/FuturesAssetPanel/Assets.tsx apps/web/src/apps/Futures/components/FuturesOrders/FundsFlow/components/TransactionFilter.tsx apps/web/src/apps/Futures/utils/marginRate.test.ts apps/web/src/apps/Futures/utils/marginRate.ts apps/web/src/apps/Orders/CouponRecord/couponRecordEnum.contract.test.ts apps/web/src/i18n/locales/zh-CN/assets.json apps/admin/src/apps/TrialBalanceManualInvalidate/components/AddInvalidateModal.test.tsx",
         "cwd": ".",
-        "status": 1,
-        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-01930/2026-08-22T00-10-20-776Z-biome-check.log",
+        "status": 0,
+        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-01930/2026-08-26T10-53-34-897Z-biome-check.log",
         "counts": {
-          "candidates": 38,
-          "checked": 35,
-          "errors": 9,
-          "warnings": 1,
-          "diagnostics": [
-            "apps/admin/src/services/api/financeAudit.ts:2 lint/correctness/noUnusedImports",
-            "apps/admin/src/services/api/financeAudit.ts:65 lint/suspicious/noExplicitAny",
-            "apps/admin/src/services/api/financeAudit.ts:66 lint/suspicious/noExplicitAny",
-            "apps/admin/src/services/api/financeAudit.ts:67 lint/suspicious/noExplicitAny",
-            "apps/admin/src/services/api/financeAudit.ts:111 lint/suspicious/noExplicitAny",
-            "apps/admin/src/services/api/financeAudit.ts:112 lint/suspicious/noExplicitAny",
-            "apps/admin/src/services/api/financeAudit.ts:113 lint/suspicious/noExplicitAny",
-            "apps/admin/src/services/api/financeAudit.ts:158 lint/suspicious/noExplicitAny",
-            "apps/admin/src/services/api/financeAudit.ts:159 lint/suspicious/noExplicitAny",
-            "apps/admin/src/services/api/financeAudit.ts:160 lint/suspicious/noExplicitAny"
-          ]
+          "candidates": 44,
+          "checked": 40,
+          "errors": 0,
+          "warnings": 0,
+          "diagnostics": []
         }
       }
     },
@@ -503,7 +509,7 @@
         "command": "pnpm exec tsc --project ./tsconfig.json --noEmit --pretty false",
         "cwd": "apps/admin",
         "status": 1,
-        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-01930/2026-08-22T00-10-21-439Z-tsc-apps-admin.log",
+        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-01930/2026-08-26T10-53-35-463Z-tsc-apps-admin.log",
         "counts": {
           "total": 200,
           "inChangedFiles": 0
@@ -529,17 +535,17 @@
       "ruleId": "VERIFY-TYPE-001",
       "ok": false,
       "severity": "waived",
-      "message": "apps/web 本次改动文件存在 1 处类型错误：apps/web/src/apps/CashFlow/futures/FuturesCashFlow.tsx:220 TS2322",
+      "message": "apps/web 本次改动文件存在 13 处类型错误：apps/web/src/apps/CashFlow/futures/FuturesCashFlow.tsx:220 TS2322; apps/web/src/apps/Futures/utils/marginRate.test.ts:47 TS2322; apps/web/src/apps/Futures/utils/marginRate.test.ts:47 TS2322; apps/web/src/apps/Futures/utils/marginRate.test.ts:60 TS2322; apps/web/src/apps/Futures/utils/marginRate.test.ts:60 TS2322 …",
       "file": "apps/web/src/apps/CashFlow/futures/FuturesCashFlow.tsx",
       "category": "build-quality",
       "evidence": {
         "command": "pnpm exec tsc --project ./tsconfig.json --noEmit --pretty false",
         "cwd": "apps/web",
-        "status": 1,
-        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-01930/2026-08-22T00-10-25-440Z-tsc-apps-web.log",
+        "status": 2,
+        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-01930/2026-08-26T10-53-38-491Z-tsc-apps-web.log",
         "counts": {
-          "total": 431,
-          "inChangedFiles": 1
+          "total": 369,
+          "inChangedFiles": 13
         }
       }
     },
@@ -547,13 +553,13 @@
       "ruleId": "VERIFY-TYPE-002",
       "ok": true,
       "severity": "warn",
-      "message": "apps/web 存量 tsc 报错未增加（改动外 430 ≤ 基线 430）",
+      "message": "apps/web 存量 tsc 报错未增加（改动外 356 ≤ 基线 430）",
       "file": "apps/web",
       "category": "build-quality",
       "evidence": {
         "counts": {
-          "total": 431,
-          "outsideChanged": 430,
+          "total": 369,
+          "outsideChanged": 356,
           "baseline": 430
         }
       }
@@ -562,17 +568,17 @@
       "ruleId": "VERIFY-TEST-001",
       "ok": true,
       "severity": "error",
-      "message": "vitest 通过：5 个相关测试文件（5 passed (5)）",
+      "message": "vitest 通过：8 个相关测试文件（7 passed (7)）",
       "file": "",
       "category": "build-quality",
       "evidence": {
-        "command": "pnpm exec vitest run apps/admin/src/apps/FinanceAuditAssetsFlow/utils/financeAuditBusinessType.contract.test.ts apps/admin/src/apps/TrialBalanceManualInvalidate/utils/manualInvalidateEnum.contract.test.ts apps/admin/src/apps/TrialBalanceManualInvalidate/utils/manualInvalidateRules.test.ts apps/web/src/apps/CashFlow/futures/futuresCashFlowEnum.contract.test.ts apps/web/src/apps/Orders/CouponRecord/couponRecordEnum.contract.test.ts",
+        "command": "pnpm exec vitest run apps/admin/src/apps/FinanceAuditAssetsFlow/utils/financeAuditBusinessType.contract.test.ts apps/admin/src/apps/TrialBalanceManualInvalidate/components/AddInvalidateModal.test.tsx apps/admin/src/apps/TrialBalanceManualInvalidate/utils/f18ContractCapitalFlow.contract.test.ts apps/admin/src/apps/TrialBalanceManualInvalidate/utils/manualInvalidateEnum.contract.test.ts apps/admin/src/apps/TrialBalanceManualInvalidate/utils/manualInvalidateRules.test.ts apps/web/src/apps/CashFlow/futures/futuresCashFlowEnum.contract.test.ts apps/web/src/apps/Futures/utils/marginRate.test.ts apps/web/src/apps/Orders/CouponRecord/couponRecordEnum.contract.test.ts",
         "cwd": ".",
         "status": 0,
-        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-01930/2026-08-22T00-10-30-601Z-vitest-related.log",
+        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-01930/2026-08-26T10-53-44-049Z-vitest-related.log",
         "counts": {
-          "selected": 5,
-          "summary": "5 passed (5)"
+          "selected": 8,
+          "summary": "7 passed (7)"
         }
       }
     },
@@ -596,41 +602,41 @@
       "ok": true,
       "severity": "error",
       "message": "G6 机器事实层已实跑：7 条 biome/tsc/vitest 结论",
-      "evidence": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-01930/2026-08-22T00-10-20-537Z-verify-build-quality.log"
+      "evidence": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-01930/2026-08-26T10-53-34-650Z-verify-build-quality.log"
     }
   ],
   "commands": [
     {
       "label": "verify-project-gate PR-01930 G6",
-      "status": 0,
-      "ok": true,
-      "startedAt": "2026-08-22T00:10:17.470Z",
-      "finishedAt": "2026-08-22T00:10:17.564Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-01930/2026-08-22T00-10-17-470Z-verify-project-gate-g6.log"
+      "status": 1,
+      "ok": false,
+      "startedAt": "2026-08-26T10:53:31.617Z",
+      "finishedAt": "2026-08-26T10:53:31.715Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-01930/2026-08-26T10-53-31-617Z-verify-project-gate-g6.log"
     },
     {
       "label": "verify-code-rules --project PR-01930",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-08-22T00:10:17.564Z",
-      "finishedAt": "2026-08-22T00:10:20.537Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-01930/2026-08-22T00-10-17-564Z-verify-code-rules.log"
+      "startedAt": "2026-08-26T10:53:31.715Z",
+      "finishedAt": "2026-08-26T10:53:34.650Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-01930/2026-08-26T10-53-31-715Z-verify-code-rules.log"
     },
     {
       "label": "verify-build-quality --project PR-01930",
-      "status": 1,
-      "ok": false,
-      "startedAt": "2026-08-22T00:10:20.537Z",
-      "finishedAt": "2026-08-22T00:10:33.098Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-01930/2026-08-22T00-10-20-537Z-verify-build-quality.log"
+      "status": 0,
+      "ok": true,
+      "startedAt": "2026-08-26T10:53:34.650Z",
+      "finishedAt": "2026-08-26T10:53:46.178Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-01930/2026-08-26T10-53-34-650Z-verify-build-quality.log"
     },
     {
       "label": "update-project-index --write",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-08-22T00:10:33.583Z",
-      "finishedAt": "2026-08-22T00:10:33.677Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-01930/2026-08-22T00-10-33-583Z-update-project-index.log"
+      "startedAt": "2026-08-26T10:53:46.624Z",
+      "finishedAt": "2026-08-26T10:53:46.701Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-01930/2026-08-26T10-53-46-624Z-update-project-index.log"
     }
   ],
   "codeRules": {
@@ -643,7 +649,7 @@
     "required": true,
     "skipped": false,
     "reason": "",
-    "ok": false,
+    "ok": true,
     "checkCount": 7,
     "baselineFile": "../docs_tdd/prds/PR-01930/agent/tsc-baseline.json"
   },
@@ -656,18 +662,18 @@
     "buildQualityParseError": null
   },
   "fingerprint": {
-    "headSha": "3856887218371da48310e18a485fbb6faeb334f1",
-    "baseSha": "dc3e5c31275218553a928f1cc9d533774ced010c",
-    "dirtyHash": "6ae65806b3a9f99014ec1e7887bdc01c45aebc60e6962fa92502886c282b6bcf",
-    "dirtyFileCount": 11,
-    "untrackedFileCount": 2,
+    "headSha": "304b09e8f03db4c36ee28e56d362ff51d217f160",
+    "baseSha": "3ff880c4b6af511db56ae56089b525b7c492a356",
+    "dirtyHash": "22e79295afb6a1ce35b5c08783e31e4c39bf1dc356399c67190f5b011433283f",
+    "dirtyFileCount": 4,
+    "untrackedFileCount": 1,
     "rulesetVersion": "local-2026.07-msw-v1",
-    "ruleReleaseFingerprint": "bcb8008808dfffa46657545ce1e179ef8e525adb94bcd9a934514100c04fad2e",
-    "effectiveRulesFingerprint": "bc95e94ff33866aff4813e1aba1175a069d87cf2572f0516bdb3dac7f73f3639"
+    "ruleReleaseFingerprint": "ae7cba5f14a1e764e629b492107b4662deca3ef54894f1db83c6451e054d922a",
+    "effectiveRulesFingerprint": "0169b68ae076b84311b8a4d8b0cac7ca6eec0b7222d3958b342996762e88e7a0"
   },
   "cache": {
     "hit": false,
-    "fingerprint": "9dcc6ba5acff555f"
+    "fingerprint": "bf018554b783cdfb"
   },
   "stageSync": {
     "attempted": false,
