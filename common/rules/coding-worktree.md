@@ -35,6 +35,7 @@
 | PR-01685-1 | `/Users/aven/github/PR-01685-1` | `feature/PR-01685-1` | 4101 | 已关闭（上线 2026-07-30，worktree 已回收） |
 | PR-01832 | `/Users/aven/github/PR-01832` | `feature/PR-01832` | 4102 | 预留 |
 | PR-01822 | `/Users/aven/github/PR-01822` | `feature/PR-01822` | 4103 | 预留 |
+| PR-01947 | `/Users/aven/github/PR-01947` | `feature/PR-01947` | — | 已回收（上线 2026-08-26；分支保留） |
 | PR-01988 | `/Users/aven/github/PR-01988` | `feature/PR-01988` | 4104 | 已回收（上线 2026-07-11） |
 | PR-02006 | `/Users/aven/github/PR-02006` | `feature/PR-02006` | 4105 | 已关闭（上线 2026-07-01，worktree 已回收） |
 | PR-PricePanel | `/Users/aven/github/PR-PricePanel` | `feature/PR-PricePanel` | 4106 | 已回收（上线 2026-07-04） |
