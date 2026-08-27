@@ -1,0 +1,47 @@
+[
+  {
+    "id": "BLK-1",
+    "type": "blocker",
+    "gate": "G6",
+    "blocksGate": "G6",
+    "category": "backend",
+    "summary": "manualInvalidSummary.availableTrialFee 漏计未激活体验金；前端已回滚减法反推(commit 3b26d311eb)，改忠实透出，待后端修正字段口径",
+    "owner": "后端",
+    "raisedAt": "2026-08-26",
+    "status": "open",
+    "evidence": [
+      "agent/handoff-trial-fee-api.md#blk-1-manualinvalidsummaryavailabletrialfee-漏计未激活体验金",
+      "apps/admin/src/apps/TrialBalanceManualInvalidate/components/ConfirmInvalidateModal.tsx"
+    ]
+  },
+  {
+    "id": "BLK-2",
+    "type": "blocker",
+    "gate": "G6",
+    "blocksGate": "G6",
+    "category": "backend",
+    "summary": "manualInvalidSummary.affectedTotalAmount 构成口径待定稿(是否含仓位占用/未激活)；前端已回滚 total-positionOccupied 反推(commit 284261ae48)，按后端字段原样展示",
+    "owner": "后端",
+    "raisedAt": "2026-08-26",
+    "status": "open",
+    "evidence": [
+      "agent/handoff-trial-fee-api.md#blk-2-manualinvalidsummaryaffectedtotalamount-构成口径待定稿",
+      "apps/admin/src/types/trialBalanceManualInvalidate.ts"
+    ]
+  },
+  {
+    "id": "BLK-3",
+    "type": "blocker",
+    "gate": "G6",
+    "blocksGate": "G6",
+    "category": "backend",
+    "summary": "体验金失效后 prize 接口 status 是否下发失效枚举待证据；前端已移除 status??Unused 假默认(commit c040169116)，couponStatusText 文案反推分支挂起待后端 status 证据",
+    "owner": "后端",
+    "raisedAt": "2026-08-26",
+    "status": "open",
+    "evidence": [
+      "agent/handoff-trial-fee-api.md#blk-3-体验金失效后-prize-接口-status-是否下发失效枚举需证据",
+      "apps/web/src/apps/MyRewards/components/RewardCard.tsx"
+    ]
+  }
+]
