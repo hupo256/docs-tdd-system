@@ -53,7 +53,9 @@
     "summary": "治理防线源已落码，但产物重发(rule-release→effective-rules)被 check-doc-budget 卡住；失败项全是 PR-02074 的 msw-manifest/assumptions 违反共享 schema(缺 contract-documented/resolved 枚举+未声明字段)，非本项目改动。需 schema owner 扩枚举/放开字段或 PR-02074 owner 收敛产物后方可重发；本轮未擅改 PR-02074 产物或 reshape schema",
     "owner": "docs_tdd schema owner / PR-02074",
     "raisedAt": "2026-08-27",
-    "status": "open",
+    "status": "resolved",
+    "resolvedAt": "2026-08-27",
+    "resolution": "选路径 A：schema owner 扩共享 schema 建模 PR-02074 真实用法——msw-manifest.apiStatus 增 contract-documented、endpoints[]/顶层/retirement 显式声明 G5 对账富化字段(filterParams/responseShape/requestPageField/note/ongoingValue/assumptions/reconciledAt/reconcileNote/retirementCondition)；assumptions.status 增 resolved、声明 resolvedDate。均为 optional，保 additionalProperties:false，未改任何 PR-02074 产物。check-doc-budget 复跑全绿(18 项目 schema 通过)，rule-release --write golden-run PASS 发 L3 指纹 7b119adf117b(160 files)，effective-rules --write 发聚合指纹 6d540218f9bb(89 files)，--check 返回 fresh。治理产物重发完成，防线源与产物指纹一致。",
     "evidence": [
       "agent/handoff-schema-blocks-republish.md",
       "common/engine/schemas/msw-manifest.schema.json",

@@ -8,6 +8,8 @@
     "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },
     "route": { "type": "string", "enum": ["msw"] },
     "lifecycle": { "type": "string", "enum": ["planned", "mock-active", "api-ready", "reconciling", "mock-retired"] },
+    "reconciledAt": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$", "description": "G5 reconcile: date the manifest was reconciled against the backend contract" },
+    "reconcileNote": { "type": "string", "description": "G5 reconcile: note on what was reconciled and why handlers were kept/retired" },
     "sourceRoot": { "type": "string", "description": "worktree root for resolving asset paths; may be empty for planned lifecycle (assets not built yet). Active-lifecycle asset existence is enforced separately by DOC-G3-IMPL-002." },
     "assets": {
       "type": "object",
@@ -32,7 +34,13 @@
           "id": { "type": "string", "minLength": 1 },
           "method": { "type": "string", "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"] },
           "path": { "type": "string", "minLength": 1 },
-          "apiStatus": { "type": "string", "enum": ["not-ready", "partial", "dev-ready", "real"] },
+          "apiStatus": { "type": "string", "enum": ["not-ready", "partial", "dev-ready", "real", "contract-documented"] },
+          "filterParams": { "type": "array", "items": { "type": "string" }, "description": "G5 reconcile: documented request filter params for this endpoint" },
+          "responseShape": { "type": "string", "description": "G5 reconcile: documented response envelope shape" },
+          "requestPageField": { "type": "string", "description": "G5 reconcile: pagination field name in the request" },
+          "note": { "type": "string", "description": "G5 reconcile: endpoint-level note (method/field changes vs prior contract)" },
+          "ongoingValue": { "type": "string", "description": "G5 reconcile: ongoing/in-progress marker value" },
+          "assumptions": { "type": "array", "items": { "type": "string" }, "description": "G5 reconcile: assumption ids (ASM-xxx) affecting this endpoint" },
           "scenarios": {
             "type": "array",
             "items": {
@@ -55,6 +63,7 @@
       "required": ["retiredAt", "reconciliationEvidence"],
       "properties": {
         "retiredAt": { "type": "string" },
+        "retirementCondition": { "type": "string", "description": "G5 reconcile: condition under which handlers may be retired (e.g. backend confirmed dev-ready, not merely contract-documented)" },
         "reconciliationEvidence": { "type": "string" }
       },
       "additionalProperties": false
