@@ -91,6 +91,7 @@ node apps/web/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --no-gl
 | `CODE-E2E-001` | `package.json` 新增行不添加 `playwright`/`playwright-core`/`puppeteer` | diff 新增行 |
 | `CODE-NAMING-001`（warn） | mapper（`mapXxx.ts`/含 `mapper`）新增行输出字段名≠单一契约字段名，且无 `API-RENAME: cross-source` / `API-DERIVED: sources=` 结构化理由（普通 `// API:` 不豁免） | diff 新增行 |
 | `CODE-MAPPER-001` | mapper 新增行中 ≥2 个语义不同 UI 字段兜底到同一 `dto.xxx`，疑似 mock 臆造字段或 API 契约缺口 | diff 新增行 |
+| `CODE-MAPPER-002`（warn / experimental） | 展示组件（`apps/*/src/**.tsx`）新增行「后端根因→前端凑数」两种指纹：①对 ≥2 个后端字段做加减反推权威值（BigNumber `.minus/.plus` 链 ≥2 或 `dto.a-dto.b-dto.c`）；②以 `*StatusText`/`*StateLabel` 等展示文案字符串反推枚举状态（`=== '已过期'`）。根因在后端字段本身时应上报 blocker+忠实透出，勿前端补偿；纯计算下沉 `.ts` 纯 helper 放行，`status` 枚举直接比较放行（PR-01930 commit 3b26/284261/c04016 反例） | diff 新增行 |
 | `CODE-QUERY-001`（warn） | `apps/web/src/services/api/**` 新增 `useQuery(` 时提示导出稳定 queryKey 工厂并显式传 `queryKey` | diff 新增行 |
 | `CODE-QUERY-002`（warn） | `apps/web/src/services/api/**` 新增 `transfer: (data) => data` / `data as T` 时提示接 schema/toCamel/zCamel 或显式 narrowing | diff 新增行 |
 | `CODE-MOCK-003`（warn） | 真实接口后禁 mock/假默认兜底：`apps/**` 与 mapper 新增行里 `?? '字面量'` 或 `\|\| '非-- 文案'` 等可疑展示兜底（§8.2 落地）；React identity `key`、i18n/URL/locale 等非展示默认放行 | diff 新增行 |
@@ -131,6 +132,7 @@ node apps/web/docs_tdd/common/engine/agent-scripts/verify-build-quality.mjs --pr
 | `VERIFY-TEST-002`（新模板 error；旧项目 warn） | 改动的 `.ts` 逻辑文件（`utils/helpers/mappers/lib`、`mapXxx.ts`、`use*Store.ts`、`format/calc/schema/selector`）导出了函数但无对应单测。`.tsx` 不在范围内（交互/视觉由结构化验收承接） | changed `.ts` 逻辑文件 |
 | `VERIFY-BUILD-001` | 缺席守卫:G6+ 要求本层但被跳过 / 未执行 / 输出无法解析时补一条显式失败,不允许静默当成「本阶段没有这一层」。有理由跳过 = warn,无理由 = error | gate 编排层 |
 | `VERIFY-PROD-BUILD-001` | G8 使用 `docs-tdd.config.json.productionBuild` 实跑生产构建，缺配置或退出码非 0 均阻断 | G8 真实子进程 |
+| `VERIFY-TASK-001` | Lark worker 结果解析层（`lark-ai-result.mjs`）缺陷分诊门禁：结构化结果的 `rootCauseLayer=backend-*/cross-boundary` 时必带完整 `evidence`（userSeenValue/apiActualValue/contractExpectedValue/dataFlowFirstErrorLocation），否则拒收；`taskState=completed` 且根因在后端 / 跨层时，无 `blockers` 转交项不得关单（须改 awaiting_owner_fix）。文件数 / typecheck / 截图不构成根因证据。防「后端根因→前端凑数关单」（PR-01930） | Lark worker 结果解析,非项目 G-gate |
 
 ### 3.5.1 执行契约
 

@@ -144,6 +144,23 @@ function isFeatureComponentFile(file) {
   return /^apps\/web\/src\/apps\/.+\.tsx$/.test(file) && !isTestOrFixtureFile(file)
 }
 
+// CODE-MAPPER-002 目标：任一 app（web/admin/futures-admin/...）展示组件 .tsx。
+// 反模式是「在展示层就地对后端权威字段做加减/文案反推」，纯计算的正当归宿是 .ts 纯 helper，
+// 故只扫 .tsx 组件、放行 .ts 工具（如 marginRate.ts）。
+function isDisplayComponentFile(file) {
+  return /^apps\/[^/]+\/src\/.+\.tsx$/.test(file) && !isTestOrFixtureFile(file)
+}
+
+// 展示层「减法反推后端权威金额」指纹：同一行链式 BigNumber .minus/.plus/.subtract/.add ≥2 次，
+// 或三个以上「点号字段访问」操作数用 +/- 连接（dto.a - dto.b - dto.c）。命中 = 前端在凑一个后端已给的权威值。
+const DISPLAY_BN_CHAIN_RE = /\.\s*(?:minus|plus|subtract|add)\s*\(/g
+const DISPLAY_FIELD_ARITH_RE = /[\w$]+(?:\.[\w$]+)+\s*[-+]\s*[\w$]+(?:\.[\w$]+)+\s*[-+]\s*[\w$]+(?:\.[\w$]+)+/
+// 展示层「用展示文案字符串反推枚举状态」指纹：以 Text/Label/Copy/Desc/Str 结尾且含 status/state 的变量
+// 与「文案值」做 ===/!==。文案值 RHS 覆盖三形态，避免把字面量抽成常量就绕过（PR-01930 c040 真实形态）：
+// ① 非空字符串字面量 'X'；② SCREAMING_SNAKE 常量 EXPIRED_COUPON_STATUS_TEXT；③ 以 Text/Label/Copy/Desc/Str/Status/State 结尾的驼峰标识符。
+// LHS 仍强限「含 stat(us|e) 且以 Text/Label… 结尾」，故 `status === 'expired'`（直接比枚举）、`someLabel === x`（无 stat）均放行。
+const STATE_FROM_TEXT_RE = /\b[\w$]*[Ss]tat(?:us|e)[\w$]*(?:Text|Label|Copy|Desc|Str)\b\s*(?:===|!==|==|!=)\s*(?:['"`].|[A-Z][A-Z0-9_]{2,}|[\w$]*(?:Text|Label|Copy|Desc|Str|Status|State)\b)/
+
 function collectModuleImports(content) {
   const imports = []
   const importRe = /(?:\b(?:import|export)\s+(?:type\s+)?(?:[^'";]*?\s+from\s+)?|\brequire\s*\(|\bimport\s*\()(['"])([^'"]+)\1/g
@@ -555,6 +572,33 @@ function scanAddedLine(file, line, text, findings, { visualFidelityHigh = projec
   if (/(?<!JSON)\.(?:safeParse|parse)\s*\(.*\)\s+as\s+(?!const\b)/.test(text)) {
     addFinding(findings, 'CODE-TYPE-002', file, line, '`schema.parse(x) as T` 组合：.parse() 会静默剥离 schema 未声明字段、as 又蒙蔽 type，字段将全程消失且编译无报错（PR-01685 根因，§3）。删 as 让 type 从 schema 推导（z.infer），或补齐 schema 字段。')
   }
+  // CODE-MAPPER-002（warn-first / experimental）：展示组件里「后端根因 → 前端凑数」两种指纹。
+  // ①对 ≥2 个后端字段做加减反推权威值（BigNumber 链或 dto.a-dto.b-dto.c）；②用展示文案反推枚举状态。
+  // 根因在后端字段本身时应上报 blocker、忠实透出，勿在前端补偿（PR-01930 commit 3b26/284261/c04016 反例）。
+  if (isDisplayComponentFile(file)) {
+    const codeOnly = stripCommentsAndStrings(text)
+    const bnChainHits = (codeOnly.match(DISPLAY_BN_CHAIN_RE) || []).length
+    if (bnChainHits >= 2 || DISPLAY_FIELD_ARITH_RE.test(codeOnly)) {
+      addFinding(
+        findings,
+        'CODE-MAPPER-002',
+        file,
+        line,
+        '展示组件里对多个后端字段做加减反推展示值（疑似前端凑数）。若某展示值算错的根因是后端字段本身错/缺，应上报后端 blocker 并忠实透出该字段，勿在前端用其它字段反推覆盖权威值；纯计算请下沉到 .ts 纯 helper 并有单测。临时兜底需产品/接口负责人批准+缺陷单+生效移除条件+独立契约测试+清理负责人。',
+        'warn',
+      )
+    }
+    if (STATE_FROM_TEXT_RE.test(stripCommentsOnly(text))) {
+      addFinding(
+        findings,
+        'CODE-MAPPER-002',
+        file,
+        line,
+        '用展示文案字符串反推枚举状态（如 `statusText === \'已过期\'`）：耦合本地化文案、掩盖后端未下发干净 status。请改依据后端 `status` 枚举判定；若失效后 status 不下发，属后端缺陷应上报 blocker。',
+        'warn',
+      )
+    }
+  }
   // CODE-STYLE-002：拦字面色（hex / 数字 rgb()）。放行 `rgb(var(--token))`——这是 Tailwind
   // 引用 CSS 变量的语义 token 写法（全库 45+ 处约定），恰是本规则推荐形态，不应误伤。
   if (isSourceFile(file) && !isColorTokenDefFile(file) && !isTestOrFixtureFile(file) && /#[0-9a-fA-F]{3,8}\b|\brgba?\s*\(\s*(?!var\()/.test(stripCommentsOnly(text))) {
@@ -739,6 +783,17 @@ function runSelfTest() {
   eq('CODE-COPY-001 neg comment', ids('apps/web/src/apps/Spot/x.tsx', 'const n = 1 // 立即报名按钮'), [])
   eq('CODE-COPY-001 neg exception', ids('apps/web/src/apps/Spot/x.tsx', 'const label = "调试" // copy-exception'), [])
   eq('CODE-COPY-001 neg non-apps', ids('apps/web/src/services/api/x.tsx', '<span>立即报名</span>'), [])
+
+  // CODE-MAPPER-002：展示层减法反推 / 文案反推状态。正锚点用 PR-01930 被回滚的真实形态。
+  eq('CODE-MAPPER-002 pos bn chain', ids('apps/admin/src/apps/TrialBalanceManualInvalidate/components/ConfirmInvalidateModal.tsx', 'const inactive = bn(affectedTotalAmount).minus(availableTrialFee).minus(frozenAmount)'), ['CODE-MAPPER-002'])
+  eq('CODE-MAPPER-002 pos field arith', ids('apps/web/src/apps/Assets/Panel.tsx', 'const total = preview.total - preview.avail - preview.frozen'), ['CODE-MAPPER-002'])
+  eq('CODE-MAPPER-002 pos text infer state', ids('apps/admin/src/apps/MyRewards/RewardCard.tsx', "if (couponStatusText === '已过期') return null"), ['CODE-MAPPER-002'])
+  eq('CODE-MAPPER-002 pos text infer state const rhs', ids('apps/web/src/apps/MyRewards/components/RewardCard.tsx', 'status === RewardStatus.Unused && couponStatusText === EXPIRED_COUPON_STATUS_TEXT'), ['CODE-MAPPER-002'])
+  eq('CODE-MAPPER-002 neg single bn op', ids('apps/web/src/apps/Assets/Panel.tsx', 'const s = bn(a).plus(b)'), [])
+  eq('CODE-MAPPER-002 neg status enum compare', ids('apps/admin/src/apps/MyRewards/RewardCard.tsx', "if (status === 'expired') return null"), [])
+  eq('CODE-MAPPER-002 neg status text vs undefined', ids('apps/web/src/apps/MyRewards/components/RewardCard.tsx', 'if (couponStatusText === undefined) return null'), [])
+  eq('CODE-MAPPER-002 neg pure helper ts', ids('apps/web/src/apps/Futures/utils/marginRate.ts', 'const t = a.minus(b).minus(c)'), [])
+  eq('CODE-MAPPER-002 neg loop index', ids('apps/web/src/apps/Assets/Panel.tsx', 'const n = a + b + c'), [])
 
   eq('CODE-MAPPER-001 pos same fallback', fileRuleIds('apps/web/src/services/mapUser.ts', [
     { line: 1, text: 'createdAt: dto.createdAt ?? dto.displayTime,' },
