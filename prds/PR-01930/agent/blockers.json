@@ -43,5 +43,21 @@
       "agent/handoff-trial-fee-api.md#blk-3-体验金失效后-prize-接口-status-是否下发失效枚举需证据",
       "apps/web/src/apps/MyRewards/components/RewardCard.tsx"
     ]
+  },
+  {
+    "id": "BLK-4",
+    "type": "blocker",
+    "gate": "G6",
+    "blocksGate": "G6",
+    "category": "dependency",
+    "summary": "治理防线源已落码，但产物重发(rule-release→effective-rules)被 check-doc-budget 卡住；失败项全是 PR-02074 的 msw-manifest/assumptions 违反共享 schema(缺 contract-documented/resolved 枚举+未声明字段)，非本项目改动。需 schema owner 扩枚举/放开字段或 PR-02074 owner 收敛产物后方可重发；本轮未擅改 PR-02074 产物或 reshape schema",
+    "owner": "docs_tdd schema owner / PR-02074",
+    "raisedAt": "2026-08-27",
+    "status": "open",
+    "evidence": [
+      "agent/handoff-schema-blocks-republish.md",
+      "common/engine/schemas/msw-manifest.schema.json",
+      "common/engine/schemas/assumptions.schema.json"
+    ]
   }
 ]
