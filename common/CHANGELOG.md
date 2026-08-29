@@ -7,6 +7,14 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-08-29（MSW 路线 B 试点结项，晋级为新功能强制标准 + 补参考范例）
+
+- **PR-01947 上线归档，试点结论坐实**：MSW 路线 B 随 PR-01947 引入并验证「停用 handler 即切真实接口，业务代码不因拆 mock 而修改」；项目已合入 `origin/online`、handler 完整拆除（manifest lifecycle=`mock-retired`），据此把该路线由试点晋级为新功能强制标准。
+- **`DOC-G3-IMPL-001..006` 晋级阻断（不回溯）**：`ruleset.json` 里 IMPL-001/002/004/005 由 `{experimental, blocking:false}` → `{trial, blocking:true, since:4}`（可豁免），IMPL-003/006 同批 `trial+since:4`（不可豁免）。沿用 Batch 5 的 `since` 收窄范式，只硬阻断模板 v4+ 新项目，存量低版本项目（含 PR-01947 及在飞项目）仍 warn，不被回溯打断。定档逻辑（`lib/rule-maturity.mjs`）无改动。
+- **scaffold 升 v4 + 去过渡措辞**：`project-scaffold.mjs` `templateVersion:3→4` 作为本批新规则锚点（DOC-CONFIRM since:3 仍绑 v3+）；`rule-router.md`、`rule-id-ledger.md`、`rule-ids-and-gates.md`、`msw-manifest.schema.json` 标题去掉「试点/experimental/pilot」过渡态，改口径为强制标准；`architecture-and-state.md §8.4` 收尾为标准路线并指向新范例。
+- **补可照抄参考范例**：新增 `templates/msw-handler-template.ts`（场景矩阵 + `xxxHandlers` 导出）与 `templates/msw-mock-contract-test-template.ts`（真实 schema 契约测试骨架），登记进 `check-doc-budget` REQUIRED_TEMPLATES 并由 §8.4.1 / `03-api-contract-template.md` §6.1 引用；manifest 模板仍由 `start-new-project` 自动落。PR-01947 项目文档标注为「§8.4 路线 B 首个固化范例」，历史事实记录不改。
+- **生效边界**：改动集中在 ruleset/台账/scaffold/模板 + 规则散文，未新增/改任何检查判定逻辑（`verify-msw-manifest.mjs` 不带 severity，仍由 ruleset 定档）。改 ruleset + gate 脚本触发指纹链失效，收尾走 check → golden → doctor → release 重新发布 L3/effective 链；gate 计数以脚本实时输出为准。
+
 ## 2026-08-25（context-budget-v2：细粒度路由、会话去重与 G6 四维协调）
 
 - **默认上下文减量但不降门禁**：场景引用改为章节级有序去重，brief 只折叠逐引用声明为安全指针的机器规则；新增互斥 `--brief|--compact|--full`、场景预算与全场景审计。按 2200 字符摘要上限实测，常规编码默认包中位缩减 60%，所有默认场景均低于 hard limit。

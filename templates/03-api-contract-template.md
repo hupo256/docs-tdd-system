@@ -26,6 +26,7 @@
 ## 0.1 MSW 落地前置（G3 必填）
 
 > 新项目若 API 未 ready，本节必须在 G3 先填满，再进入实现。
+> 可照抄骨架：handler [`templates/msw-handler-template.ts`](msw-handler-template.ts)、契约测试 [`templates/msw-mock-contract-test-template.ts`](msw-mock-contract-test-template.ts)。
 
 | 项 | 需要落地的内容 |
 |----|----------------|

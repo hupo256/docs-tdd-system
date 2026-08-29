@@ -175,6 +175,8 @@ const REQUIRED_TEMPLATES = [
   'notification-log-template.md',
   'project-readme-frontmatter-template.md',
   'real-fixture-reconcile-test-template.ts',
+  'msw-handler-template.ts',
+  'msw-mock-contract-test-template.ts',
 ]
 const COVERAGE_EXEMPT = new Set([README_FILE, ROUTER_FILE, 'CHANGELOG-archive.md', 'rule-id-ledger.md']) // 索引/常驻本身不需被自己收录；归档纯历史、ID 台账纯查表都不进 context 索引
 const SCRIPT_REF_RE = /(?:common\/agent-scripts\/|agent-scripts\/)([A-Za-z0-9_.-]+\.mjs)/g

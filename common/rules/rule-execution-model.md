@@ -85,3 +85,29 @@ PostToolUse 是体验优化，不是最终信任边界。当前 Agent 若 `docs-
 - **规则体检入口 `docs-tdd rule-health`**（本节这条「定期复盘」的机器实现，取代靠记性）：① warn 台账逐条（累计命中 / 涉及 PR 数 / 首末命中时间 / 裁决分布 / 结局）；② 门禁命中分布（各项目 `gate-results.json` 的**最近一次**运行，是快照非终身累计）；③ **零命中清单**（已声明 ID 减去上面两处出现过的）。零命中有两种、机器分不了：预防型规则场景没发生（正常），或判定从来没咬到东西（形同摆设）——只有后者才该删，报告只摆到眼前、不代人拍板。
 
 它输出数据，不代人拍板：无数据时不得凭感觉晋级。优先修复“规则未加载/未运行/证据陈旧”这类执行链缺陷，再增加新规则正文。
+
+## 7. 机器事实层执行契约（`VERIFY-*` 真跑工具链）
+
+Rule ID 与严重度以 [rule-ids-and-gates.md](./rule-ids-and-gates.md) §3.5 为真值源；本节固化其执行契约（§1「落实标准」的具体实例）。
+
+- **Trigger**：`docs-tdd gate <PROJECT-ID> G6|G7|G8`；也可手动跑单个改动文件集。
+- **Source**：本脚本即 Executor，不存在「文档说跑过」这条通路。
+- **Loader**：G6 场景 `g6_verify` 加载 [quality-checklist.md](./quality-checklist.md) 与本节。
+- **Evidence**：命令、退出码、日志路径写入 `evidence/gate/**/README.md` 的 Command Evidence 与 Summary「机器事实层」行；完整输出落 `/tmp/docs-tdd-logs/<PROJECT-ID>/`。
+- **Failure**：`VERIFY-BIOME-001`/`VERIFY-TYPE-001`/`VERIFY-TEST-001`/`VERIFY-BUILD-001`（无理由跳过）阻断 gate，当场修或按 rule-ids-and-gates.md §4 登记有期限豁免；两条 warn 进 warn 台账。
+
+## 8. Golden run（回归 gate 机器自己）
+
+各脚本的 `--self-test` 只覆盖导出的纯谓词，覆盖不到「规则 ID 有没有真的连到判定、聚合器还能不能跑起来、规则改宽后有没有误伤旁边的项」。`golden-run.mjs` 填这一层（§4 第 2 条「规则即测试」的跨规则实现）：把 `common/engine/fixtures/golden-project` 物化成保留 ID 项目 `PR-00000`（模板 v2 基线刚好通过 G0/G1/G2/G3/G6），再逐个变异用例只破坏一处，断言预期规则 ID 正好命中且不牵连基线之外的 error 规则。
+
+```bash
+docs-tdd golden                 # 完整跑（含聚合器烟测，需指纹链已发布）
+docs-tdd golden --verbose       # 逐条打印用例结论
+docs-tdd golden --keep          # 保留 PR-00000 供手工排查
+```
+
+- **变异用例（22 条）**：覆盖结构、G0/G1/G2/G3、阻塞/豁免，以及 G6 的 `DOC-CR-002`、`DOC-AC-002/004/005` 接线；每条只破坏一处。
+- **双向断言**：规则失效（该红不红）与规则变宽（连带误伤）都会 fail。故障注入实测：把 `DOC-G3-005` 改成恒真、把 `DOC-G0-003` 改宽，两类都被抓出。
+- **发布即强制**：`rule-release.mjs --write` 在 `check-doc-budget` 之后跑 `golden-run --skip-aggregator`，不通过就拒绝发布。聚合器烟测（`run-project-gate PR-00000 G2`）需要**已发布**的新指纹，发布前跑不了，所以那一条留给发布后的 `docs-tdd golden`。
+- **边界（不遮掩）**：G6 只覆盖结构化 Review/验收接线；G4+ 的真实分支 / 改动文件 / 工具链由 §7 机器事实层的真实执行负责。`prd-intake` 与 MSW 子链路在夹具里显式关闭，各自有 fixtures 与自测。
+- **副作用**：不传 `--write`，不写 `gate-results.json` / `evidence/**` / `PROJECTS.md` / warn 台账；`PR-00000` 在 `finally` 里删除，且被 `check-doc-budget` 与 `update-project-index.mjs` 的项目扫描显式排除。

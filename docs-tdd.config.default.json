@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "appSubpath": "apps/web",
-  "docsMountPath": "apps/web/docs_tdd",
-  "baseRef": "origin/online",
+  "appSubpath": ".",
+  "docsMountPath": "docs_tdd",
+  "baseRef": "origin/main",
   "projectIdPattern": "PR-\\d{5}",
   "branchPrefix": "feature/",
-  "defaultPort": 4101,
-  "portRangeStart": 4101,
-  "verifyPath": "/zh-CN",
+  "defaultPort": 3000,
+  "portRangeStart": 3000,
+  "verifyPath": "/",
   "ruleSurfaces": {
     "agents": ["AGENTS.md"],
     "claude": ["CLAUDE.md"],
@@ -20,10 +20,16 @@
     "aiRules": "~/.ai-rules",
     "codex": "~/.codex",
     "claude": "~/.claude",
-    "cursorLocalGovernance": "~/.cursor/rules/fameex-local-governance.mdc"
+    "cursorLocalGovernance": "~/.cursor/rules/local-governance.mdc"
   },
-  "typecheckRoots": ["apps/web", "apps/admin"],
-  "productionBuild": ["pnpm", "--filter", "@fameex/web", "build"],
-  "moduleImportAliases": ["@fameex/ui"],
-  "larkOutputDir": "apps/web/docs_tdd/prds/${projectId}/inbox/lark-sync"
+  "enforcementWiring": {
+    "ciConfigCandidates": [".gitlab-ci.yml", ".github/workflows"],
+    "ciMarker": "verify-code-rules.mjs",
+    "precommitConfig": "package.json",
+    "precommitMarker": "precommit-verify-code-rules.mjs"
+  },
+  "typecheckRoots": [],
+  "productionBuild": [],
+  "moduleImportAliases": [],
+  "larkOutputDir": "docs_tdd/prds/${projectId}/inbox/lark-sync"
 }

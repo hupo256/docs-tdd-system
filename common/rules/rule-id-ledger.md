@@ -49,12 +49,12 @@
 | `DOC-G3-005` | G3+ | API 契约记录 dev-only worker 注册 | error |
 | `DOC-G3-006` | G3+ | 前端任务包含 MSW fallback 任务 | error |
 | `DOC-G3-007` | G3+ | 协作记录包含 MSW fallback 决策 / 清单 | error |
-| `DOC-G3-IMPL-001` | G3+ | `agent/msw-manifest.json` 可解析 | warn（experimental） |
-| `DOC-G3-IMPL-002` | G3+ | active 生命周期的 handler/fixture/contract test/注册/worker/provider 文件存在 | warn（experimental） |
-| `DOC-G3-IMPL-003` | G3+ | handler export 已注册且 Provider 挂载 worker hook | warn（experimental） |
-| `DOC-G3-IMPL-004` | G3+ | endpoint 场景结构有效，N/A 有理由，retired 有对账证据 | warn（experimental） |
-| `DOC-G3-IMPL-005` | G3+ | `agent/assumptions.json` 可解析 | warn（experimental） |
-| `DOC-G3-IMPL-006` | G3+ | API ready/reconciling/retired 时无阻断假设（lifecycle 轴） | error |
+| `DOC-G3-IMPL-001` | G3+ | `agent/msw-manifest.json` 可解析 | error（trial，since:4：模板 v4+ 阻断、存量项目 warn，可豁免） |
+| `DOC-G3-IMPL-002` | G3+ | active 生命周期的 handler/fixture/contract test/注册/worker/provider 文件存在 | error（trial，since:4：模板 v4+ 阻断、存量项目 warn，可豁免） |
+| `DOC-G3-IMPL-003` | G3+ | handler export 已注册且 Provider 挂载 worker hook | error（trial，since:4：模板 v4+ 阻断、存量项目 warn，不可豁免） |
+| `DOC-G3-IMPL-004` | G3+ | endpoint 场景结构有效，N/A 有理由，retired 有对账证据 | error（trial，since:4：模板 v4+ 阻断、存量项目 warn，可豁免） |
+| `DOC-G3-IMPL-005` | G3+ | `agent/assumptions.json` 可解析 | error（trial，since:4：模板 v4+ 阻断、存量项目 warn，可豁免） |
+| `DOC-G3-IMPL-006` | G3+ | API ready/reconciling/retired 时无阻断假设（lifecycle 轴） | error（trial，since:4：模板 v4+ 阻断、存量项目 warn，不可豁免） |
 | `DOC-G4-001` | G4+ | 复用盘点无 `待检查/待确认` 占位 | error |
 | `DOC-G4-002` | G4+ | 技术方案含复用盘点 | error |
 | `DOC-G4-003` | G4+ | 技术方案不含 `跳过复用` | error |

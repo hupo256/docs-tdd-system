@@ -32,6 +32,15 @@
 
 Hook 可按项目既有 service 封装把 schema/mapper 接在 `transfer` 中，但职责与数据顺序不变。目录位置不是免责依据：G6 Review 按真实 import 和输入输出判断边界。
 
+### 1.2 `CODE-ARCH-003` 执行契约（本节的机器覆盖）
+
+- **Trigger**：新增或修改 Component、React Query Hook、API Service、schema/DTO、Mapper，或生产代码的 mock 边界 import。
+- **Source**：本节（§1 调用链、数据链和层依赖）是唯一正文源；rule-ids-and-gates.md 只登记机器覆盖。
+- **Loader**：编码前按 `write_ui`、`write_query_hook`、`write_api` 或 `write_mapper` 加载；G6 加载 `quality-checklist.md`。
+- **Executor**：编辑后由 `verify-code-rules.mjs`/`docs-tdd changed` 扫 changed 文件全量 import，阶段出口由 G6 gate 与 code review 共同执行。
+- **Evidence**：扫描 finding 包含 Rule ID、文件、行号和 import source；G6 在 `06-collaboration.md` 记录已修、误报或有期限豁免，并关联 gate fingerprint。
+- **Failure**：当前为 warn-first，不单独阻断；高置信命中优先移动依赖或抽中立类型模块。人工判定合法时登记理由与误报形态；连续 2 个真实 PR 零误报后按 rule-ids-and-gates.md §2.1 晋级 error。
+
 ## 2. Mapper 命名
 
 Mapper 把 API DTO 转成前端可消费模型，但不重新设计字段词汇表。单一来源字段默认与 API 同名同大小写，方便从 View Model 直接追踪 response。
