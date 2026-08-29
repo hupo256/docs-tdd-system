@@ -22,6 +22,12 @@
     "claude": "~/.claude",
     "cursorLocalGovernance": "~/.cursor/rules/local-governance.mdc"
   },
+  "enforcementWiring": {
+    "ciConfigCandidates": [".gitlab-ci.yml", ".github/workflows"],
+    "ciMarker": "verify-code-rules.mjs",
+    "precommitConfig": "package.json",
+    "precommitMarker": "precommit-verify-code-rules.mjs"
+  },
   "typecheckRoots": [],
   "productionBuild": [],
   "moduleImportAliases": [],

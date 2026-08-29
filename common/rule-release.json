@@ -1,8 +1,8 @@
 {
   "version": 1,
   "rulesetVersion": "local-2026.07-msw-v1",
-  "fingerprint": "8110d0dd22dcd787bfe4da5996aa8b34472161ce5aff72a499b64c18790704b6",
-  "publishedAt": "2026-08-29T08:40:00.589Z",
+  "fingerprint": "def68b4f42f51d4f5efffdbb2f32f96d2395ce73215125d5e2a9b02fef57406f",
+  "publishedAt": "2026-08-29T10:51:50.907Z",
   "fileCount": 161,
   "files": {
     "common/CHANGELOG-archive.md": "3f6df9a2d04e917dc0ae67125c84a9209877de3196bd7952639040897e0077cc",
@@ -12,7 +12,7 @@
     "common/engine/agent-scripts/claude-posttooluse-gate.mjs": "a7b62933912d09a8961eebdfba4674d361695e7a3a71741ddb5a54f70f11751b",
     "common/engine/agent-scripts/decommission-worktree.mjs": "2522c47284a24a58d2ae664ee359b1db6b8aed48b2c7288956ca9057cdc992d0",
     "common/engine/agent-scripts/docs-tdd.mjs": "54f2d9a9bfb9c79ceb838dac718fc2caa42c57527ad8f49732567b3ae897d061",
-    "common/engine/agent-scripts/effective-rules.mjs": "94c6c4251f479c56033d82e83c24b7bc71ba6cdc545a6509e87abdc70c1a909b",
+    "common/engine/agent-scripts/effective-rules.mjs": "b876539b20c3ab71893e90f6b68be60657566a993aaf5d25f69d70421e0d1397",
     "common/engine/agent-scripts/golden-run.mjs": "bf3fde017e70f0aed2c9316122a040f398b07cb21ef54849254b3bfb08e9e15d",
     "common/engine/agent-scripts/install-local-agent-rules.mjs": "8a0fba4f010974cd9393528ba6e172e536bca5436da09a89405e173c5e3ed510",
     "common/engine/agent-scripts/lib/acceptance-results.mjs": "4135ab10984ee3951e25959a8ba3ac91a3725fe0eb5d52a4934cc116ce0ed7ea",

@@ -335,6 +335,59 @@ function doctor() {
   const claudeHook = settingsText.includes('PostToolUse') && settingsText.includes('claude-posttooluse-gate.mjs')
   add('CLAUDE-HOOK', claudeHook, 'error', `Claude PostToolUse dispatcher ${claudeHook ? 'is configured' : 'is missing'}`, label(sources.adapters[3]))
 
+  // 强制点对等：Claude 靠自身 PostToolUse hook 拦编辑，但 Codex/Cursor/裸 commit 只能靠消费者仓库的
+  // CI 门禁与 pre-commit 接线兜底。这两条接线属于消费者文件（CI 配置、package.json），docs_tdd 无法自注入，
+  // 一旦漏接或被删则非 Claude 路径静默裸奔。这里把接线在位与否焊进 doctor（severity=warn：消费者可能用别的
+  // CI 或不设 pre-commit，缺失是需暴露的降级而非硬失败）。marker 用 docs_tdd 自带脚本名，保持与业务解耦。
+  const wiring = config.enforcementWiring || {}
+  const ciMarker = wiring.ciMarker || 'verify-code-rules.mjs'
+  const ciCandidates = Array.isArray(wiring.ciConfigCandidates) ? wiring.ciConfigCandidates : ['.gitlab-ci.yml', '.github/workflows']
+  const ciFiles = []
+  for (const candidate of ciCandidates) {
+    const abs = join(repoRoot, candidate)
+    if (!existsSync(abs)) continue
+    if (lstatSync(abs).isDirectory()) {
+      for (const entry of readdirSync(abs)) ciFiles.push(join(abs, entry))
+    } else {
+      ciFiles.push(abs)
+    }
+  }
+  const ciWired = ciFiles.some((file) => {
+    try {
+      return lstatSync(file).isFile() && readFileSync(file, 'utf8').includes(ciMarker)
+    } catch {
+      return false
+    }
+  })
+  add(
+    'CI-GATE',
+    ciWired,
+    'warn',
+    ciFiles.length === 0
+      ? `no CI config found (${ciCandidates.join(', ')}); verify-code-rules CI gate cannot be confirmed`
+      : ciWired
+        ? 'verify-code-rules CI gate is wired'
+        : `CI config present but verify-code-rules gate not wired (expected "${ciMarker}"); Codex/Cursor/manual MRs bypass the machine rule gate`,
+    ciCandidates[0],
+  )
+
+  const precommitConfigName = wiring.precommitConfig || 'package.json'
+  const precommitMarker = wiring.precommitMarker || 'precommit-verify-code-rules.mjs'
+  const precommitConfigPath = join(repoRoot, precommitConfigName)
+  const precommitConfigExists = existsSync(precommitConfigPath)
+  const precommitWired = precommitConfigExists && readFileSync(precommitConfigPath, 'utf8').includes(precommitMarker)
+  add(
+    'PRECOMMIT-GATE',
+    precommitWired,
+    'warn',
+    !precommitConfigExists
+      ? `no ${precommitConfigName} found; verify-code-rules pre-commit gate cannot be confirmed`
+      : precommitWired
+        ? 'verify-code-rules pre-commit gate is wired'
+        : `${precommitConfigName} present but pre-commit gate not wired (expected "${precommitMarker}"); local commits bypass the machine rule gate`,
+    precommitConfigName,
+  )
+
   const release = checkRelease()
   add('L3-RELEASE', release.l3Release.fresh, 'error', `L3 rule release is ${release.l3Release.status}`, 'common/rule-release.json')
   add('EFFECTIVE-RELEASE', release.fresh, 'error', `effective rules release is ${release.status}`, label(manifestFile))
