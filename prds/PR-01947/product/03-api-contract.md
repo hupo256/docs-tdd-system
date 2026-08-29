@@ -160,7 +160,7 @@ export enum CopyPositionMode {
 
 ## 7. Mock 隔离方案（§8.4 路线 B / MSW，G4 编码时落地）
 
-> 决策变更：本项目为 §8.4 MSW 试点，**放弃**原 §8.0 路线 A（`if(USE_MOCK)` + `__mock__/` 工厂 + env flag）。以下为实际落地。
+> 决策变更：本项目是 §8.4 MSW 路线 B 的**首个固化范例**（试点已结项、策略已晋级为新功能强制标准路线），**放弃**原 §8.0 路线 A（`if(USE_MOCK)` + `__mock__/` 工厂 + env flag）。以下为实际落地。
 
 - **网络层拦截**：`src/mocks/handlers/copyTradingFollow.ts` 用 MSW `http.get` 拦截 `*/fe-ex-api/cptrade/follow/before_follow` 返回 mock response；`onUnhandledRequest: 'bypass'` → 未声明的请求照打真实接口。
 - **零业务耦合**：service/hook/mapper/组件**无任何 mock 判断**（`grep USE_MOCK|@mock-only|isMock` 全空）。`useBeforeFollow` 只写真实请求逻辑。

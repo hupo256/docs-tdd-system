@@ -206,11 +206,13 @@ const optionalText = (v?: string) =>
 
 机器兜底：`CODE-MOCK-003`（verify-code-rules.mjs，warn-first）扫 `apps/web/src/apps/**` 与 mapper 新增行里 `?? '字面量'` / `|| '非--文案'` 的可疑展示兜底，提示人工确认是否假默认；稳定后提 error。
 
-### 8.4 路线 B：MSW 当前策略
+### 8.4 路线 B：MSW 强制标准路线
 
-新功能默认用 MSW 在网络层拦截请求；service/hook/mapper/组件只实现真实请求链路。PR-01947 已验证「停用 handler 即切真实接口，业务代码不因拆 mock 而修改」，历史决策过程只在 [CHANGELOG.md](../CHANGELOG.md) 保留。遗留 `if (USE_MOCK)` 功能才消费 [mock-legacy-route-a.md](./mock-legacy-route-a.md)。
+新功能一律用 MSW 在网络层拦截请求；service/hook/mapper/组件只实现真实请求链路。**PR-01947 已作为首个固化范例验证**「停用 handler 即切真实接口，业务代码不因拆 mock 而修改」，试点结项后本路线晋级为**强制标准**：`DOC-G3-IMPL-001..006` 自模板 v4 起硬阻断（trial+since:4，见 [rule-id-ledger.md](./rule-id-ledger.md)），存量低版本项目 warn。历史决策过程只在 [CHANGELOG.md](../CHANGELOG.md) 保留。遗留 `if (USE_MOCK)` 功能才消费 [mock-legacy-route-a.md](./mock-legacy-route-a.md)。
 
 ### 8.4.1 新功能 MSW 执行契约
+
+> 可照抄骨架：handler 见 [`templates/msw-handler-template.ts`](../../templates/msw-handler-template.ts)，契约测试见 [`templates/msw-mock-contract-test-template.ts`](../../templates/msw-mock-contract-test-template.ts)，manifest 由 `start-new-project` 自动落 `agent/msw-manifest.json`。
 
 1. handler 放 `src/mocks/handlers/<feature>.ts`，按 endpoint 注册；业务代码禁止出现 mock flag、mock 分支或 mock DTO 工厂。
 2. handler response 必须由真实 schema 契约测试验证；没有 API 文档时，假设同时进入 `agent/assumptions.json`，代码以 `// ASSUMED: ASM-xxx` 关联。**出口条件**：`blockingWhen: api-ready/reconciling` 的 `open` 假设挡 G5（`DOC-ASSUM-001`），`release` 轴再叠加挡 G8（`DOC-ASSUM-002`）；销账=改 `status` 并写 `resolution`，确需带风险交付走 `rule-waivers.json` 具名限期豁免，不得把 `status` 谎报成 `confirmed`。`prd-clarify` 轴不挡 gate，要挡请用 `blockers.json` 的 `blocksGate`。

@@ -6,7 +6,7 @@
 
 | 类别                 | 状态              | 说明                                                                           |
 | -------------------- | ----------------- | ------------------------------------------------------------------------------ |
-| F01–F14, F16, F17    | **逻辑已合码**    | `FollowParams/` + 三表单 + schema；MSW 试点已拆 handler，当前 dev 直连真实 API |
+| F01–F14, F16, F17    | **逻辑已合码**    | `FollowParams/` + 三表单 + schema；MSW 路线 B handler 已按范例拆除，当前 dev 直连真实 API |
 | **T-F17 提交层映射** | **✅ 已落码**     | `toParams()` marginMode 0/1/2 · leverageMode 0/1 · customLeverageLevel(number) |
 | F19–F21 后台         | **展示代码已落，功能未完成** | `KolListPanel.vue` 已有列与 formatter；F20/F21 缺真实 `follower/page`、`follower/export` 契约和响应对账，三条后台 P0 用例均未执行 |
 | F15                  | **✅ 已落码**     | 接真实接口 `lead-position-count.ts`（`8a71fde`，YApi 5752），复制全部取选中币对带单仓位数；仅余 Q8 读图 |
