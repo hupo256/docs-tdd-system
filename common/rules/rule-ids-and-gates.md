@@ -16,7 +16,7 @@
 
 ## 2. 项目阶段 gate
 
-当前本地规则集见 `common/rules/ruleset.json`：每条规则声明 `{ maturity, blocking, waivable }`，定档单一真值源是 `lib/rule-maturity.mjs`（`resolveSeverity`）。`stable` 与 `experimental` 按 `blocking` 定档（`experimental` 想只诊断就置 `blocking:false`；标了 `experimental` 但 `blocking:true` 的规则仍照常阻断）。`trial` 在 `blocking` 基础上再按可选的 `since`（规则引入时的模板版本）向下收窄：项目 `agent/project-manifest.json` 的 `templateVersion` **低于** `since` 时降为 warn——即「规则升级默认不回查阻断存量项目」。不带 `since` 的 trial 规则（`since=0`）对任何项目都阻断。新脚手架写 `templateVersion:3`，故 `since:3` 的规则（如 `DOC-CONFIRM-*`）只阻断新项目、存量 v1/v2 项目 warn。
+当前本地规则集见 `common/rules/ruleset.json`：每条规则声明 `{ maturity, blocking, waivable }`，定档单一真值源是 `lib/rule-maturity.mjs`（`resolveSeverity`）。`stable` 与 `experimental` 按 `blocking` 定档（`experimental` 想只诊断就置 `blocking:false`；标了 `experimental` 但 `blocking:true` 的规则仍照常阻断）。`trial` 在 `blocking` 基础上再按可选的 `since`（规则引入时的模板版本）向下收窄：项目 `agent/project-manifest.json` 的 `templateVersion` **低于** `since` 时降为 warn——即「规则升级默认不回查阻断存量项目」。不带 `since` 的 trial 规则（`since=0`）对任何项目都阻断。新脚手架写 `templateVersion:4`，故 `since:3` 的规则（如 `DOC-CONFIRM-*`）与 `since:4` 的规则（如 `DOC-G3-IMPL-001..006` MSW 晋级批）都只阻断当代新项目、存量更低版本项目 warn。
 
 公共入口:
 
@@ -103,12 +103,7 @@ node apps/web/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --no-gl
 
 ### 3.1 `CODE-ARCH-003` 执行契约
 
-- **Trigger**：新增或修改 Component、React Query Hook、API Service、schema/DTO、Mapper，或生产代码的 mock 边界 import。
-- **Source**：[api-and-mapper.md §1](./api-and-mapper.md) 是调用链、数据链和层依赖的唯一正文源；本表只登记机器覆盖。
-- **Loader**：编码前按 `write_ui`、`write_query_hook`、`write_api` 或 `write_mapper` 加载；G6 加载 `quality-checklist.md`。
-- **Executor**：编辑后由 `verify-code-rules.mjs`/`docs-tdd changed` 扫 changed 文件全量 import，阶段出口由 G6 gate 与 code review 共同执行。
-- **Evidence**：扫描 finding 包含 Rule ID、文件、行号和 import source；G6 在 `06-collaboration.md` 记录已修、误报或有期限豁免，并关联 gate fingerprint。
-- **Failure**：当前为 warn-first，不单独阻断；高置信命中优先移动依赖或抽中立类型模块。人工判定合法时登记理由与误报形态；连续 2 个真实 PR 零误报后按 §2.1 晋级 error。
+> 执行契约见唯一正文源 [api-and-mapper.md §1.2](./api-and-mapper.md)；本表只登记机器覆盖。
 
 ## 3.5 机器事实层（真跑 biome / tsc / vitest）
 
@@ -136,11 +131,7 @@ node apps/web/docs_tdd/common/engine/agent-scripts/verify-build-quality.mjs --pr
 
 ### 3.5.1 执行契约
 
-- **Trigger**：`docs-tdd gate <PROJECT-ID> G6|G7|G8`;也可手动跑单个改动文件集。
-- **Source**：本脚本即 Executor,不存在「文档说跑过」这条通路。
-- **Loader**：G6 场景 `g6_verify` 加载 [quality-checklist.md](./quality-checklist.md) 与本节。
-- **Evidence**：命令、退出码、日志路径写入 `evidence/gate/**/README.md` 的 Command Evidence 与 Summary「机器事实层」行;完整输出落 `/tmp/docs-tdd-logs/<PROJECT-ID>/`。
-- **Failure**：`VERIFY-BIOME-001`/`VERIFY-TYPE-001`/`VERIFY-TEST-001`/`VERIFY-BUILD-001`（无理由跳过）阻断 gate,当场修或按 §4 登记有期限豁免;两条 warn 进 warn 台账。
+> 执行契约见唯一正文源 [rule-execution-model.md §7](./rule-execution-model.md)；本节只维护上表 Rule ID 与严重度。
 
 ## 3.6 阻塞与变更登记（`agent/blockers.json`）
 
@@ -156,24 +147,12 @@ node apps/web/docs_tdd/common/engine/agent-scripts/verify-build-quality.mjs --pr
 - `agent/code-review.json` 是 G6 review 真值源；模板 v2 起缺文件即阻断，旧项目才允许回退 `06-collaboration.md` 散文判定。`DOC-CR-001/002/003` 分别验证结构（含必填 `head`）、未处理 finding、HEAD 新鲜度。
 - `agent/acceptance-results.json` 把本期 Feature 映射到具体场景、验证方式、结果和 evidence。`DOC-AC-001/002/003/004/005/006` 分别验证结构（含必填 `head`）、Feature 覆盖、无 failed/blocked、PASS 有 evidence、PASS 的 evidence 有真实存在的文件锚点、验收覆盖当前 HEAD。
 - 两者都由 `verify-project-gate.mjs` 直接消费；不能只在 evidence README 写“已 review/已自测”。
-- **人工确认签名**（`DOC-CONFIRM-001..004`，`lib/confirmation.mjs`）：G5-G8 以人工确认为锚点，但判断层文件此前无签名字段，机器无法区分「人看过」与「AI 声称人看过」。现在 `stage-status.json`（G5/G7 处置态）、`acceptance-results.json`（`manual`/`manual-visual`/`browser` 的 passed 项）、`code-review.json` 都可写 `confirmedBy` + `confirmedAt`（`YYYY-MM-DD`）；`reviewer` 不能兼任签收（它记谁做的 review，通常是 Agent 自己）；**AI 客户端名与 `TBD`/`N/A` 占位符不算人工确认**（`classifySignature`，按独立词匹配以免误伤真人名）。**已接线**：四条在 `ruleset.json` 登记为 `trial + since:3`，经 `resolveSeverity` 定档——新脚手架（`templateVersion:3`）缺签名即 error、存量 v1/v2 项目 warn（走 waiver）；空签名槽位已随 `project-scaffold` 落入骨架，逼真人在处置态转 completed/skipped 时补签。
+- **人工确认签名**（`DOC-CONFIRM-001..004`，`lib/confirmation.mjs`）：G5-G8 以人工确认为锚点，但判断层文件此前无签名字段，机器无法区分「人看过」与「AI 声称人看过」。现在 `stage-status.json`（G5/G7 处置态）、`acceptance-results.json`（`manual`/`manual-visual`/`browser` 的 passed 项）、`code-review.json` 都可写 `confirmedBy` + `confirmedAt`（`YYYY-MM-DD`）；`reviewer` 不能兼任签收（它记谁做的 review，通常是 Agent 自己）；**AI 客户端名与 `TBD`/`N/A` 占位符不算人工确认**（`classifySignature`，按独立词匹配以免误伤真人名）。**已接线**：四条在 `ruleset.json` 登记为 `trial + since:3`，经 `resolveSeverity` 定档——新脚手架（`templateVersion:4`）缺签名即 error、存量 v1/v2 项目 warn（走 waiver）；空签名槽位已随 `project-scaffold` 落入骨架，逼真人在处置态转 completed/skipped 时补签。
 
 
 ## 3.8 Golden run（回归 gate 机器自己）
 
-各脚本的 `--self-test` 只覆盖导出的纯谓词，覆盖不到「规则 ID 有没有真的连到判定、聚合器还能不能跑起来、规则改宽后有没有误伤旁边的项」。`golden-run.mjs` 填这一层：把 `common/engine/fixtures/golden-project` 物化成保留 ID 项目 `PR-00000`（模板 v2 基线刚好通过 G0/G1/G2/G3/G6），再逐个变异用例只破坏一处，断言预期规则 ID 正好命中且不牵连基线之外的 error 规则。
-
-```bash
-docs-tdd golden                 # 完整跑（含聚合器烟测，需指纹链已发布）
-docs-tdd golden --verbose       # 逐条打印用例结论
-docs-tdd golden --keep          # 保留 PR-00000 供手工排查
-```
-
-- **变异用例（22 条）**：覆盖结构、G0/G1/G2/G3、阻塞/豁免，以及 G6 的 `DOC-CR-002`、`DOC-AC-002/004/005` 接线；每条只破坏一处。
-- **双向断言**：规则失效（该红不红）与规则变宽（连带误伤）都会 fail。故障注入实测：把 `DOC-G3-005` 改成恒真、把 `DOC-G0-003` 改宽，两类都被抓出。
-- **发布即强制**：`rule-release.mjs --write` 在 `check-doc-budget` 之后跑 `golden-run --skip-aggregator`，不通过就拒绝发布。聚合器烟测（`run-project-gate PR-00000 G2`）需要**已发布**的新指纹，发布前跑不了，所以那一条留给发布后的 `docs-tdd golden`。
-- **边界（不遮掩）**：G6 只覆盖结构化 Review/验收接线；G4+ 的真实分支 / 改动文件 / 工具链由 §3.5 的真实执行负责。`prd-intake` 与 MSW 子链路在夹具里显式关闭，各自有 fixtures 与自测。
-- **副作用**：不传 `--write`，不写 `gate-results.json` / `evidence/**` / `PROJECTS.md` / warn 台账；`PR-00000` 在 `finally` 里删除，且被 `check-doc-budget` 与 `update-project-index.mjs` 的项目扫描显式排除。
+> 完整口径见唯一正文源 [rule-execution-model.md §8](./rule-execution-model.md)。入口 `docs-tdd golden` / `--verbose` / `--keep`。
 
 ## 4. 豁免原则
 

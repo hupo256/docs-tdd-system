@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "msw-manifest.schema.json",
-  "title": "MSW Pilot Manifest",
+  "title": "MSW Manifest",
   "type": "object",
   "required": ["projectId", "route", "lifecycle", "sourceRoot", "assets", "endpoints", "retirement"],
   "properties": {

@@ -28,7 +28,7 @@
 - 新建前查复用；改动限责任模块，越界先记录并重点 review。
 - 固定文案逐字遵循 PRD/Figma 契约，apps/web 开发期只改 zh-CN。
 - G6 必须 code review；findings 清零或登记。JS/TS/JSON touched files 跑 Biome，机器规则和项目 gate 必须通过。
-- 新功能 MSW 当前为 experimental：按 manifest 验证 handler、fixture、schema、注册链、场景、假设和退出策略，不因试点阶段跳过证据。
+- 新功能 MSW 为强制标准路线（PR-01947 固化验证，since 模板 v4 硬阻断新项目）：按 manifest 验证 handler、fixture、schema、注册链、场景、假设和退出策略。
 
 ## 3. 场景
 

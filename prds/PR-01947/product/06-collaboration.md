@@ -42,7 +42,7 @@
 2. **前端职责**：只做参数 UI + 传参 + 展示合约失败原因，业务判定全在后端（PRD 7.4.5 明示）。
 3. **复用**：保证金复用 Futures `MarginModeEnum` + 受控化 UI；杠杆滑块复用 `@fameex/ui` Slider；确认弹窗/开通合约弹窗复用现有组件。
 4. **视觉（Q1）**：正式三期稿 `KzvWxAYxqfgpoiYuKdxMAE` 已落 `07-figma-spec.md` 为 L2 基线；G4 先用标准组件搭通逻辑，JF1 按正式稿校准（Select/行内 Radio/Switch 范式，见 §10 差异表）。
-5. **编码节奏（G3/Q3-Q7）**：历史上先搭 UI + Mock（Mock 走与真实 API 相同 schema/mapper），后端就绪再字段对账、mock 零残留；**当前 PR-01947 已切真实 dev API，MSW handler 仅保留过往试点结论，不再作为现状。** 契约字段名先按 02 §3 建议名建 schema。
+5. **编码节奏（G3/Q3-Q7）**：历史上先搭 UI + Mock（Mock 走与真实 API 相同 schema/mapper），后端就绪再字段对账、mock 零残留；**当前 PR-01947 已切真实 dev API，MSW handler 作为 §8.4 路线 B 的首个固化范例（策略已晋级为强制标准），不再作为现状。** 契约字段名先按 02 §3 建议名建 schema。
 6. **Q2 待补**：`07-figma-spec.md` §12 列出的原子节点 `get_design_context` + 颜色 token，MCP 配额恢复后销账。
 
 ## E. 通知能力决策

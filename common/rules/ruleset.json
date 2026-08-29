@@ -54,34 +54,40 @@
       "waivable": false
     },
     "DOC-G3-IMPL-001": {
-      "maturity": "experimental",
-      "blocking": false,
-      "waivable": true
+      "maturity": "trial",
+      "blocking": true,
+      "waivable": true,
+      "since": 4
     },
     "DOC-G3-IMPL-002": {
-      "maturity": "experimental",
-      "blocking": false,
-      "waivable": true
+      "maturity": "trial",
+      "blocking": true,
+      "waivable": true,
+      "since": 4
     },
     "DOC-G3-IMPL-003": {
-      "maturity": "experimental",
-      "blocking": false,
-      "waivable": false
+      "maturity": "trial",
+      "blocking": true,
+      "waivable": false,
+      "since": 4
     },
     "DOC-G3-IMPL-004": {
-      "maturity": "experimental",
-      "blocking": false,
-      "waivable": true
+      "maturity": "trial",
+      "blocking": true,
+      "waivable": true,
+      "since": 4
     },
     "DOC-G3-IMPL-005": {
-      "maturity": "experimental",
-      "blocking": false,
-      "waivable": true
+      "maturity": "trial",
+      "blocking": true,
+      "waivable": true,
+      "since": 4
     },
     "DOC-G3-IMPL-006": {
       "maturity": "trial",
       "blocking": true,
-      "waivable": false
+      "waivable": false,
+      "since": 4
     },
     "VERIFY-BIOME-001": {
       "maturity": "trial",
