@@ -134,6 +134,7 @@ const SCRIPT_BUDGET_OVERRIDES = {
 const SELF_TEST_EXEMPT = new Set([
   'check-doc-budget.mjs', // 顶层校验入口本身：无导出纯函数，逻辑每次实跑即自检，并被 golden 间接覆盖
   'claude-posttooluse-gate.mjs', // hook 分发薄包装
+  'precommit-verify-code-rules.mjs', // lint-staged 参数转发薄包装（同 claude-posttooluse-gate.mjs 判定逻辑）
   'decommission-worktree.mjs', // worktree 回收 IO
   'log-exec.mjs', // 执行日志 IO
   'notify-lark.mjs', // Lark 发送薄包装（文档只读同步链路，非 bot）
