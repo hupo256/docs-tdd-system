@@ -1,9 +1,9 @@
 ---
 projectId: PR-02306
-status: active
+status: closed
 stage: G8
 branch: feature/PR-02306
-worktree: /Users/aven/github/PR-02306
+worktree: ""
 port: ""
 visualFidelity: standard
 prdSource: https://qfglxo2m3dc.sg.larksuite.com/wiki/KCyhwSvN7idfRCkTbI9lhZUNgbd
@@ -12,6 +12,8 @@ larkEnabled: true
 ---
 
 # PR-02306 注册登录密码规则修改
+
+> 状态：**已上线（2026-08-29 确认，分支已合入 origin/online）**。worktree 已回收（分支保留）；本目录保留历史文档与验收证据。
 
 > 本文件顶部 YAML frontmatter 是机器可读的元数据真值源，修改后请运行 `node apps/web/docs_tdd/common/engine/agent-scripts/update-project-index.mjs --write` 刷新 PROJECTS.md。
 
