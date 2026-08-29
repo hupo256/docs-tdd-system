@@ -163,6 +163,27 @@ function findL2Conflicts() {
     .map(label)
 }
 
+// 通用检测：仓库级三入口(AGENTS.md/CLAUDE.md/.cursor/rules)重叠正文是否回潮。
+// 登记在 config.repoEntryDuplicates(docs-tdd.config.default.json)，不是硬编码在这里——
+// 条目可随收敛进度增删，避免变成永久性、无法审计的硬编码对（见上面 L2-CONFLICT 的历史教训）。
+function findRepoEntryDuplicates() {
+  const entries = Array.isArray(config.repoEntryDuplicates) ? config.repoEntryDuplicates : []
+  const violations = []
+  for (const entry of entries) {
+    for (const banned of Array.isArray(entry.bannedIn) ? entry.bannedIn : []) {
+      const file = join(repoRoot, banned.file)
+      if (!existsSync(file)) continue
+      const text = readFileSync(file, 'utf8')
+      for (const substring of banned.mustNotContain || []) {
+        if (text.includes(substring)) {
+          violations.push({ id: entry.id, file: banned.file, canonicalFile: entry.canonicalFile, canonicalAnchor: entry.canonicalAnchor, substring })
+        }
+      }
+    }
+  }
+  return violations
+}
+
 function resolveL2Conflicts(conflicts, overrides = conflictOverrides, canonicalL1 = existsSync(sources.l1[0]) ? readFileSync(sources.l1[0], 'utf8') : '') {
   const resolved = []
   const unresolved = []
@@ -348,6 +369,17 @@ function doctor() {
         ? `tracked conflict resolved by explicit local override: ${conflicts.resolved.map(({ file, override }) => `${file} -> ${override.winner}`).join(', ')}`
         : 'no known SWR/React Query conflict',
     conflicts.unresolved[0] || conflicts.resolved[0]?.file || '.cursor/rules',
+  )
+
+  const repoEntryDupes = findRepoEntryDuplicates()
+  add(
+    'L2-REPO-ENTRY-DUP',
+    repoEntryDupes.length === 0,
+    'error',
+    repoEntryDupes.length
+      ? `repo-level entry duplicates canonical prose: ${repoEntryDupes.map((v) => `${v.file} repeats "${v.substring}" (canonical: ${v.canonicalFile} § ${v.canonicalAnchor})`).join('; ')}`
+      : 'no known repo-level entry duplicates (see repoEntryDuplicates config)',
+    repoEntryDupes[0]?.file || 'AGENTS.md',
   )
 
   const failed = checks.filter((check) => !check.ok)

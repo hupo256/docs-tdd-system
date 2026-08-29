@@ -15,6 +15,32 @@
   },
   "protectedRuleSurfaces": ["AGENTS.md", "CLAUDE.md", ".cursor", ".claude", ".husky", "package.json"],
   "ruleConflictOverrides": [],
+  "repoEntryDuplicates": [
+    {
+      "id": "build-commands",
+      "canonicalFile": "AGENTS.md",
+      "canonicalAnchor": "Build, Test, and Development Commands",
+      "bannedIn": [
+        { "file": "CLAUDE.md", "mustNotContain": ["turbo run dev --filter=\"@fameex/web\"", "pnpm build:dev / :pre / :prod"] }
+      ]
+    },
+    {
+      "id": "precommit-lint-discipline",
+      "canonicalFile": "AGENTS.md",
+      "canonicalAnchor": "Coding Style & Naming Conventions",
+      "bannedIn": [
+        { "file": "CLAUDE.md", "mustNotContain": ["Always run `pnpm lint` and `pnpm type-check` before committing"] }
+      ]
+    },
+    {
+      "id": "state-ownership",
+      "canonicalFile": "AGENTS.md",
+      "canonicalAnchor": "State & Data Guidelines",
+      "bannedIn": [
+        { "file": "CLAUDE.md", "mustNotContain": ["Zustand for local, React Query for server state"] }
+      ]
+    }
+  ],
   "globalAdapters": {
     "aiRules": "~/.ai-rules",
     "codex": "~/.codex",

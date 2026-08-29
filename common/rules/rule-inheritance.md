@@ -52,6 +52,14 @@ L1/L2 的具体落点:全局短规则与 `coding-quality`、`figma-read` 只在 
 
 发现错层内容时按“先指针,再迁移”的顺序处理:先把 L3 正文改成 L1/L2 入口指针和项目门禁要求;若对应载体尚不存在，个人规则先补到 Codex/Claude 用户目录或本地 `docs_tdd`。只有明确批准为团队规范后才写 `.cursor/rules`，再从本地过渡载体删除正文。禁止为了节省当次工作把同一代码规范同时复制到 L1/L2/L3。
 
+### 0.3 仓库级入口(`CLAUDE.md`/`AGENTS.md`/`.cursor/rules/*.mdc`)重叠正文归属
+
+三个工具各自读一份仓库级入口:Claude 读 `CLAUDE.md`,Codex 读 `AGENTS.md`,Cursor 读 `.cursor/rules/*.mdc`。这三份不是同一份文件的三个别名,也不受 §0 纵轴表约束(纵轴表管 L1/L2/L3 之间怎么分,不管三份同层文件之间怎么分),历史上各自人工维护导致同一件事(构建命令、Biome 提交前纪律、状态管理选型、Agent 行为准则)在三处各写一遍、措辞不一致。
+
+**权威源指定**:仓库贡献指南类内容(构建/测试命令、协作纪律、状态管理选型、Agent 行为准则)以 `AGENTS.md` 为唯一正文源——它是三者里覆盖面最完整的贡献指南。`CLAUDE.md`、`.cursor/rules/*.mdc` 里与 `AGENTS.md` 同一主题的段落改成指向 `AGENTS.md` 对应章节的指针(如「构建命令见 `AGENTS.md` § Build, Test, and Development Commands」),不复制正文;`.cursor/rules/*.mdc` 只保留 Cursor 特有的触发形式(`alwaysApply`/`glob`)和确实 Cursor 专属、`AGENTS.md` 不覆盖的内容。
+
+**判据**:新增仓库级约定时先问「这条 `AGENTS.md` 有没有写」——有则在 `CLAUDE.md`/`.mdc` 里只加指针,没有则先写进 `AGENTS.md`,再决定要不要在别处加指针。禁止为了方便当次编辑,同一条约定同时写进两份或三份仓库级入口。
+
 **横轴见 §3 之后**:选定 L3 后,再分「所有项目通用 → `common/`」vs「当前项目差异 → `PROJECT/`」。
 
 ## 1. 问题定义
