@@ -21,7 +21,8 @@
 
 ## Pending / Blockers
 
-- G5 blocked（2026-08-25 对账后）：后端《Web端接口文档》到位，已按真实契约重造 schema/mapper/mock（过滤参数 tagTypeTow/tagTypeThree、进行中 in_progress、搜索独立响应、estimatedProfit 真实费用字段、categoryLabel/categoryGroupLabel 证伪删除+组头前端派生），122 单测绿、改动文件 0 新增 tsc 报错。仍 blocked：matchStatus 文档未给（ASM-008 open）+ 后端未确认 dev-ready，MSW 路线 B 继续挂、handler 不退役。详见 stage-status.json / 06-collaboration.md §B。
+- G5 blocked（2026-08-31 追加对账）：后端《Web端接口文档(1)》将 getEstimatedProfit 反转为「协议不扩展」（§4/§6 费用明细属后端内部不下发 Web）。已回退 8/25 加的 9 个费用字段，并按 no-fake-data 删除费用拆解 UI 行（EstimatedProfit 费用行 + PredictSellFeeRows.tsx），预计收益主行保留。122 单测绿、改动文件 0 新增 tsc。遗留 PRD F22/F23 与契约冲突 → 🔴 BLK-001（06-collaboration §B）。
+- G5 仍 blocked（承 2026-08-25）：过滤参数 tagTypeTow/tagTypeThree、进行中 in_progress、搜索独立响应、categoryLabel/categoryGroupLabel 证伪删除+组头前端派生已落。matchStatus 文档未给（ASM-008 open）+ 后端未确认 dev-ready，MSW 路线 B 继续挂、handler 不退役。详见 stage-status.json / 06-collaboration.md §B。
 
 ## Latest Gate Results
 

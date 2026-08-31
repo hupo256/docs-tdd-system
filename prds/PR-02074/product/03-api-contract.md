@@ -36,7 +36,7 @@
 | A1 | POST | `/fe-ex-api/polymarket/getTagEventsList` | 按分类查事件列表（**一期已有，三期扩展** `tagType` 四类 + 二/三级 `tagTypeTow`/`tagTypeThree` 过滤）| 未登录可看 | ✅ 文档确认 |
 | A2 | GET | `/fe-ex-api/polymarket/category/tree` | 四大类的二/三级分类树（语言走 `exchange-language` header，`appLocale` query 保留兼容）| 未登录可看 | ✅ 文档确认（前端静态兜底优先，见 Q2）|
 | A3 | POST | `/fe-ex-api/polymarket/searchEvents` | 搜索（模糊匹配 / 按展示语言 / 排序 / 分页，联想 5、完整 50）| 未登录可看 | ✅ 文档确认（独立响应 `{list,count,currentPage,pageSize}`）|
-| A4 | POST | `/fe-ex-api/polymarket/getEstimatedProfit` | 预计收益 + **价格/手续费/份额明细**（一期已有，三期在旧字段基础上新增）| 需登录 | ✅ 文档确认（新增字段）|
+| A4 | POST | `/fe-ex-api/polymarket/getEstimatedProfit` | 预计收益（一期既有，**协议不扩展**；费用明细属后端内部不下发 Web）| 需登录 | ✅ 文档(1) §4 确认（不扩展）|
 | A5 | POST | `/fe-ex-api/polymarket/getEventsById` | 单事件详情（一期已有，不改）| 未登录可看 | 已联调 |
 
 ## 2. 通用约定
@@ -129,28 +129,23 @@ interface SearchEventsResponseDTO {
 
 > **排序（F03）由后端保障**：①匹配字符数量 > ②首个匹配字符在标题中的位置。前端不重排，直接按返回顺序渲染。前端 `sortSearchResults` resolver 仅后端未就绪时兜底、默认不启用（见 ASM-006）。
 
-### 3.5 `A4 getEstimatedProfit` 响应（在旧字段基础上新增，F22/F23）
+### 3.5 `A4 getEstimatedProfit` 响应（协议不扩展，F22/F23）
+
+> **2026-08-31 反转**：《Web端接口文档(1)》§4「协议不扩展」+§6 明确——费用拆解（平台费/Polymarket费/预计成交价/净下单金额/预计份额等）均属后端内部实现，**不下发 Web**。响应仅保留一期既有字段；前端不得自算手续费。8/25 曾按旧版文档加的 9 个费用字段已全部回退，费用拆解 UI 行已删（见 06-collaboration BLK-001）。
 
 ```ts
-// 一期 estimatedProfitDataSchema 旧字段保留：{ estimateProfitAmount, profitAmount, rate, multiplier }
-// 三期在旧字段基础上新增（文档 §4，后端算前端只展示，均字符串数值）：
-interface EstimatedProfitExtraDTO {
-  currentPrice?: string      // 当前市场价（示例 "0.50"）
-  expectedPrice?: string     // 预计成交价 = currentPrice × 1.05（示例 "0.52500000"）
-  grossAmount?: string       // 下注总额未扣费（示例 "100"）
-  platformFee?: string       // 平台手续费扣除（示例 "10.0000"）→ 前端「手续费扣除」行取值
-  polymarketFee?: string     // Polymarket 侧费用（示例 "0.950000"，已含在加价率/净额，前端不单列）
-  netOrderAmount?: string    // 净下单金额（示例 "89.05000000"）→ 前端「下单金额」行取值
-  estimatedShares?: string   // 预计份额（示例 "169.61904761"）
-  estimatedPayout?: string   // 预计赔付（示例 "169.61904761"）
-  estimatedProfit?: string   // 预计盈利（示例 "69.61904761"）
+// estimatedProfitDataSchema：仅一期既有字段（均字符串数值，后端算前端只展示）
+interface EstimatedProfitData {
+  estimateProfitAmount: string // 计算手续费后的预计兑付金额（含本金），示例 BUY "169.61904761"
+  profitAmount: string         // 预计兑付金额 − 用户投入金额，示例 "69.61904761"
+  rate: string                 // profitAmount ÷ amount × 100，示例 "69.619000"
+  multiplier: string           // estimateProfitAmount ÷ amount，示例 "1.696190"
+  // 响应另有 outcomeMap（旧字段，Yes/No 价格+token 数组）；前端用事件列表 outcomes，不消费，故 schema 不建模。
 }
 // 无效入参：后端返回参数错误码，非 data=null。conditionId/tickSize 为 Spot→Node 内部字段，Web 不传。
 ```
 
-**手续费公式（PRD 原文，仅备查，前端不算）**：
-- 买入：`下单金额(netOrderAmount) = 下注金额 × (1 - 加价率) - 手续费扣除`；`手续费扣除(platformFee) = 输入金额 × feeRate × (1 - 预计成交价)`；`预计成交价(expectedPrice) = 当前买入价格 × 1.05`
-- 卖出：`获得金额 = 链上卖出金额 × (1 - 抽水比例) - 手续费扣除`；`手续费扣除 = 卖出份额 × feeRate × 成交价 × (1 - 成交价)`
+**手续费公式（PRD 原文，仅备查，前端不算且不展示明细）**：后端 `PolymarketTradeQuoteService` 内部统一计算并已反映在 `estimateProfitAmount` 中；平台费/Polymarket费/预计成交价/净下单金额等中间值不返回 Web，前端不展示费用拆解行。
 
 ## 4. UI 领域模型
 
@@ -207,18 +202,18 @@ type MultiMarketView = {
 | `volumeUsd` | `event.volume` | `volume` | 同名 | |
 | `outcomes` | `mapTagEventToMarket(event).outcomes` | `markets{}` | 多字段合并 | 复用一期 `mapTagEventToMarket` 每行 market |
 
-### 5.3 `A4` 预计收益/手续费 ← `EstimatedProfitData`（文档 §4）
+### 5.3 `A4` 预计收益 ← `EstimatedProfitData`（文档(1) §4，协议不扩展）
 
 | UI 字段 | mapper 取值 | 契约字段 | 改名类型 | 备注 |
 |---------|-------------|---------|---------|------|
-| `orderAmountDisplay`（下单金额行）| `profitData.netOrderAmount` | `netOrderAmount` | 语义对应 | 缺失显 `--`，前端不算 |
-| `feeAmountDisplay`（手续费扣除行）| `profitData.platformFee` | `platformFee` | 语义对应 | polymarketFee 已含在净额，不单列（窄口径 ASM-002）|
-| 预计收益 | `profitData.estimateProfitAmount` | `estimateProfitAmount` | 同名 | 旧字段保留 |
+| 预计收益（主行）| `profitData.estimateProfitAmount` | `estimateProfitAmount` | 同名 | 已含本金；tooltip 另展示 profitAmount/rate/multiplier |
+
+> 2026-08-31 反转后无费用拆解行——`下单金额`/`手续费扣除`/`获得金额` 等 UI 行已删，因契约不下发费用明细且前端不得自算（见 BLK-001）。
 
 **G5 联调收尾自检**：
-- [ ] 表格所有 column、type 字段都在本表出现且改名类型非空。
-- [ ] 无两个 UI 字段兜底到同一 `dto.xxx`。
-- [x] mock 阶段臆造、契约无来源的字段已删除（`categoryLabel`/`categoryGroupLabel` 已证伪删除；`orderAmount`/`feeAmount`/`receiveAmount` 已替换为文档真实字段 `netOrderAmount`/`platformFee` 等）。`matchStatus` 文档未给，保留标 ASSUMED(ASM-008)。
+- [x] 表格所有 column、type 字段都在本表出现且改名类型非空。
+- [x] 无两个 UI 字段兜底到同一 `dto.xxx`。
+- [x] mock 阶段臆造、契约无来源的字段已删除（`categoryLabel`/`categoryGroupLabel` 已证伪删除；预计收益费用拆解字段 `orderAmount`/`feeAmount`/`receiveAmount` 及 8/25 曾加的 9 个费用字段已随「协议不扩展」全部回退，schema 仅留旧 4 字段）。`matchStatus` 文档未给，保留标 ASSUMED(ASM-008)。
 
 ### 5.3 真实 fixture schema 对账（推荐）
 
@@ -321,7 +316,7 @@ Mock response 必须过真实 `schema.parse`；新增 `prediction.contract.test.
 | 4 | `A2` 分类树是否提供 | 无 | `GET /polymarket/category/tree` 提供，结构不变，语言走 header | 后端 | ✅ resolved（文档 §3）|
 | 5 | `A3` 搜索接口 + 排序 + 响应结构 | 无 | 独立响应 `{list,count,currentPage,pageSize}`，排序后端做 | 后端 | ✅ resolved（文档 §1）|
 | 6 | `categoryLabel` 是否后端返回 | mock 臆造 | 文档未列 → 证伪删除，组头改前端 `tagTypeTow/tagTypeThree` 派生 | 后端 | ✅ resolved（ASM-001）|
-| 7 | `A4` 手续费字段名 | mock 臆造 `orderAmount`/`feeAmount`/`receiveAmount` | 文档确认 `netOrderAmount`/`platformFee`/`polymarketFee` 等 9 新字段（旧字段保留）| 后端 | ✅ resolved（ASM-002，含窄口径 open）|
+| 7 | `A4` 手续费字段名 | mock 臆造 `orderAmount`/`feeAmount`/`receiveAmount`；8/25 曾按旧版加 9 费用字段 | 文档(1) §4「协议不扩展」+§6 明确费用明细不下发 Web → 全部回退，仅留旧 4 字段；费用拆解 UI 删 | 后端 | ✅ resolved（ASM-002；遗留 PRD 冲突见 BLK-001）|
 | 8 | 翻译存储字段结构 | 前端读已翻译文本 | 确认是随事件返回还是独立接口 | 后端 | 待确认（06-B5，文档未涉及）|
 | 9 | `A1` `matchStatus`（live/upcoming）| mock 臆造 | 文档未给此字段，进行中两区块依赖它 | 后端 | 🔴 open（ASM-008，挡 G5）|
 
@@ -330,3 +325,5 @@ Mock response 必须过真实 `schema.parse`；新增 `prediction.contract.test.
 | 日期 | 版本 / commit | 变更 | 前端同步动作 |
 |------|--------------|------|-------------|
 | 2026-07-22 | G4-T01 | 三期契约初稿：A1 扩展四类+二三级过滤、A2 分类树、A3 搜索、A4 手续费字段（全 ASSUMED）；文案契约 §7 逐字锁定分类名 | 待 T02 落 MSW handler + 契约测试 |
+| 2026-08-25 | 《Web端接口文档》| 按真实契约对账：A1 过滤参数 `tagTypeTow/tagTypeThree`、进行中 `in_progress`、A3 独立响应、A4 曾加 9 费用字段、`categoryLabel/categoryGroupLabel` 证伪删除+组头前端派生 | schema/mapper/mock 重造，122 单测绿 |
+| 2026-08-31 | 《Web端接口文档(1)》| **A4 反转「协议不扩展」**：§4/§6 明确费用拆解（平台费/净下单金额/份额等）属后端内部不下发 Web；PM(Tomoto) 确认仅 A4 变、其他不变 | 回退 8/25 加的 9 费用字段（schema/fixture/handler/test），删除费用拆解 UI 行（EstimatedProfit 费用行 + PredictSellFeeRows.tsx），主行保留；122 单测绿、改动文件 0 新增 tsc；遗留 BLK-001 |

@@ -18,17 +18,19 @@
     {
       "id": "ASM-002",
       "endpoint": "estimated-profit",
-      "field": "orderAmount/feeAmount/receiveAmount → netOrderAmount/platformFee/...",
+      "field": "费用拆解字段（曾 orderAmount/feeAmount/receiveAmount，曾扩展 netOrderAmount/platformFee/...）",
       "code": [
         "apps/web/src/services/api/prediction/schemas.ts",
         "apps/web/src/mocks/fixtures/prediction.ts",
-        "apps/web/src/apps/Prediction/components/PredictionTradeMan/useTradeDerivedState.ts"
+        "apps/web/src/apps/Prediction/components/PredictionTradeMan/useTradeDerivedState.ts",
+        "apps/web/src/apps/Prediction/components/PredictionTradeMan/EstimatedProfit.tsx",
+        "apps/web/src/apps/Assets/PredictAccount.tsx"
       ],
       "owner": "backend",
       "status": "resolved",
-      "resolvedDate": "2026-08-25",
+      "resolvedDate": "2026-08-31",
       "blockingWhen": "api-ready",
-      "resolution": "字段替换：Web接口文档 §4 在旧字段(estimateProfitAmount/profitAmount/rate/multiplier)基础上新增 currentPrice/expectedPrice/grossAmount/platformFee/polymarketFee/netOrderAmount/estimatedShares/estimatedPayout/estimatedProfit。已删 orderAmount/feeAmount/receiveAmount。前端「下单金额」取 netOrderAmount、「手续费扣除」取 platformFee。窄口径 note：文档未明确「手续费扣除」显示行应否含 polymarketFee；当前取 platformFee 单值（polymarketFee 已含在加价率/净额），若产品要求合计需改 platformFee+polymarketFee，待 06-B6 最终确认。"
+      "resolution": "2026-08-31 反转：后端《Web端接口文档(1)》§4「协议不扩展」+ §6 明确——estimateProfitAmount/profitAmount/rate/multiplier 之外的费用拆解（平台费/Polymarket费/预计成交价/净下单金额/预计份额等）均为后端内部实现，不下发 Web。PM(Tomoto) Lark 确认「原先返回预计收益的扩展了响应体字段已删掉，不进行扩展，以此文档为准，其他地方没变」。已回退 8/25 加的 9 个费用字段，schema 仅保留旧 4 字段。费用明细无数据来源，且前端不得自算手续费(F22/F23=后端职责)、不兜永久 '--'，故删除 T18 建的费用拆解 UI 行（买入弹窗「下单金额/手续费扣除」EstimatedProfit.tsx、卖出弹窗「获得金额/手续费」PredictSellFeeRows.tsx 整文件删）。「预计收益」主行(estimateProfitAmount)保留。窄口径争议(polymarketFee 合计)随扩展一并作废。遗留 PRD 冲突见 BLK-001。"
     },
     {
       "id": "ASM-003",

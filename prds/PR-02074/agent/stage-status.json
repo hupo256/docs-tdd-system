@@ -3,14 +3,14 @@
   "stages": {
     "G5": {
       "status": "blocked",
-      "reason": "2026-08-25 对账：后端《Web端接口文档》到位，已按真实契约重造 schema/mapper/mock（B1/B2/B4/B6/B7 逐项对账，见 06-collaboration.md §B）——过滤参数改 tagTypeTow/tagTypeThree、进行中 in_progress、搜索独立响应 {list,count,currentPage,pageSize}、estimatedProfit 换真实费用字段、categoryLabel/categoryGroupLabel 证伪删除+组头改前端派生。122 单测绿，改动文件 0 新增 tsc 报错。仍 blocked：①matchStatus 文档未给（ASM-008 open，正当挡 G5）②文档只给契约、后端未确认 dev-ready，故 MSW 路线 B 继续挂、handler 不退役，真实 fixture/schema 对账与 handler 退役待接口真正可调后处理。",
+      "reason": "2026-08-31 追加对账：后端《Web端接口文档(1)》将 getEstimatedProfit 反转为「协议不扩展」——§4/§6 明确费用拆解（平台费/净下单金额/份额等）属后端内部实现，不下发 Web。PM(Tomoto) Lark 确认仅 A4 变、其他不变。已回退 8/25 加的 9 个费用字段（schema/fixture/handler/test），并按 no-fake-data 删除费用拆解 UI 行（EstimatedProfit 费用行 + PredictSellFeeRows.tsx 整文件），预计收益主行保留。122 单测绿，改动文件 0 新增 tsc。遗留 PRD F22/F23 与契约冲突记 BLK-001（06-collaboration §B）。\n\n（8/25 对账保留）过滤参数 tagTypeTow/tagTypeThree、进行中 in_progress、搜索独立响应 {list,count,currentPage,pageSize}、categoryLabel/categoryGroupLabel 证伪删除+组头前端派生。仍 blocked：①matchStatus 文档未给（ASM-008 open，正当挡 G5）②文档只给契约、后端未确认 dev-ready，故 MSW 路线 B 继续挂、handler 不退役。",
       "evidence": [
         "product/03-api-contract.md",
         "product/06-collaboration.md",
         "agent/assumptions.json",
         "agent/msw-manifest.json"
       ],
-      "updatedAt": "2026-08-25"
+      "updatedAt": "2026-08-31"
     },
     "G7": {
       "status": "pending",
