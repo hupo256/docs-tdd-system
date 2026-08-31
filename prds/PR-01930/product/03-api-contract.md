@@ -31,8 +31,8 @@
 | 编号 | 用途 | 方法 | 真实路径 | YAPI id | 状态 | 关键字段 |
 |------|------|------|----------|---------|------|----------|
 | A1 | 失效记录列表 / 导出 | GET | `/operate-api/trialFee/manualInvalidRecord` | 6028 | 已切真实 | query: pageNum/pageSize/configNumber/uid/beginDate/endDate/isExport(0查询 1导出)；rows: id/account/configNumber/trialFeeName/activityName/trialMode(1普通2加强)/endTime/quantity/invalidQuantity/remark/operator/operationTime |
-| A2 | 待失效汇总（手输/单） | GET | `/operate-api/trialFee/manualInvalidSummary` | 6031 | 已切真实 | query: uid/configNumber(逗号分隔)/remark/uploadFlag(1=文件链路)；data: affectedUserCount/affectedTotalAmount/availableTrialFee/frozenAmount/positionOccupiedAmount |
-| A6 | 文件上传解析 | POST | `/operate-api/trialFee/manualInvalidSummary` | 6034 | 已切真实 | form: file；data.fileData[]: {uid, configNumber, remark} |
+| A2 | 待失效汇总（仅手输链路） | GET | `/operate-api/trialFee/manualInvalidSummary` | 6031 | 已切真实 | query: uid/configNumber(逗号分隔)/remark/uploadFlag(前端恒传 0，批量已改走 A6)；data: affectedUserCount/affectedTotalAmount/availableTrialFee/frozenAmount/positionOccupiedAmount（`notActivateAmount` 文档未登记，dev 实测有返回，前端按可缺失处理、缺失显 `--`） |
+| A6 | 文件上传解析 + 汇总 | POST | `/operate-api/trialFee/manualInvalidSummary` | 6034 | 已切真实（2026-08-31 契约更新） | form: file；data 同层返回 7 个必填字段：fileData[]{uid, configNumber, remark} + affectedUserCount/affectedTotalAmount/notActivateAmount/availableTrialFee/frozenAmount/positionOccupiedAmount |
 | A3 | 执行失效 | POST | `/operate-api/trialFee/manualInvalid` | 6037 | 已切真实 | body: uid/configNumber(逗号串)/remark/manualInvalidUploadRows[]{uid,configNumber,remark}；data:{} |
 | menu | 菜单叶子注入（体验金手动失效管理） | — | MSW `menu.ts` handler | — | blocked（服务端菜单树未下发该节点，暂留 mock） | 注入 福利中心>卡券管理>体验金手动失效管理 |
 
@@ -41,6 +41,7 @@
 - **路径**：`manualInvalidate/list|preview|execute|batchPreview|batchExecute` → `manualInvalidRecord`(GET) / `manualInvalidSummary`(GET手输·POST文件) / `manualInvalid`(POST执行)。
 - **预校验方法**：POST → GET（A2 汇总改为 query 传参）。
 - **批量两阶段重构**：旧「A6a 上传返回 batchId → A6b 携 batchId 执行」**不成立**；真实流程 = POST summary(file) 解析出 `fileData` 行 → GET summary(uploadFlag=1) 取汇总 → A3 携 `manualInvalidUploadRows` 执行。**已无 batchId。**
+- **2026-08-31 A6 契约合并（现行口径）**：6034 改为一次返回 `fileData` 行 **+ 二次确认汇总 7 字段**，批量链路 = POST summary(file) → 直接开二次确认 → A3 携 `manualInvalidUploadRows` 执行，**不再单独 GET 汇总**（旧做法要把整批 uid/configNumber 拼进 GET query，万行文件有 URL 长度风险）。`uploadFlag=1` 随之废弃，前端 A2 恒传 0。触发点：dev 实测 POST 返回汇总形状但无 `fileData`，前端 zod 校验报「解析结果格式异常」，回查 YAPI 6034（后端 2026-08-31 20:22 更新）确认为契约变更，已按新契约落码。
 - **requestId 幂等移除**：真实 A3 契约无 `requestId` 字段，已删；幂等改由后端保证 + 前端「确认失效」按钮 loading 期禁点兜双击。⚠ 待后端确认服务端幂等口径。
 - **字段重命名**：`configCode→configNumber`、`type→trialMode`、`operateTime→operationTime`、`affectedUsers→affectedUserCount`、`totalAmount→affectedTotalAmount`、`availableAmount→availableTrialFee`、`positionAmount→positionOccupiedAmount`；预校验/执行入参 `couponCodes→configNumbers`。
 
