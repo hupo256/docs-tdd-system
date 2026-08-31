@@ -56,7 +56,7 @@
       "owner": "backend",
       "status": "open",
       "blockingWhen": "api-ready",
-      "resolution": "team id 暂按 z.number()。若后端下发 string 需放宽为 z.union([string,number]).transform(String)（会连带调整 mapTagEventsToWorldCup.test.ts / eventCardType.test.ts 的 team fixture 为 string id）。Web接口文档未细化 team 结构，保持 open。"
+      "resolution": "team id 暂按 z.number()。若后端下发 string 需放宽为 z.union([string,number]).transform(String)（会连带调整 mapTagEventsToWorldCup.test.ts / eventCardType.test.ts 的 team fixture 为 string id）。Web接口文档未细化 team 结构，保持 open。2026-08-31 已尝试用真实 dev 环境验证：getTagEventsList(sports) 返回 {total:0,list:[]}，无真实比赛事件数据可核 team 结构，待有种子事件后复核。"
     },
     {
       "id": "ASM-005",
@@ -69,7 +69,7 @@
       "owner": "product-backend",
       "status": "open",
       "blockingWhen": "api-ready",
-      "resolution": "volume null→'0'、volumeClob 缺失→'0'、name 回落 enum key/m.id 属假默认（[[feedback_no_fallback_masks_missing_data]]）。确认 volume/name 是否恒有值；若可缺失应改显式空标记 '--'。Web接口文档未涉及，保持 open。"
+      "resolution": "volume null→'0'、volumeClob 缺失→'0'、name 回落 enum key/m.id 属假默认（[[feedback_no_fallback_masks_missing_data]]）。确认 volume/name 是否恒有值；若可缺失应改显式空标记 '--'。Web接口文档未涉及，保持 open。2026-08-31 已尝试用真实 dev 环境验证：列表返回空数据，无真实事件可核字段缺失兜底，待有种子事件后复核。"
     },
     {
       "id": "ASM-006",
@@ -95,7 +95,7 @@
       "owner": "backend",
       "status": "open",
       "blockingWhen": "api-ready",
-      "resolution": "markets>3 时 OUTCOME_KEYS 坍缩为 home、MatchCard 写死 3 段斜切在 outcomes≠3 时破损。确认真实比赛恒为 3 markets；否则按 length 派生首/中/末角色。Web接口文档未细化，保持 open。"
+      "resolution": "markets>3 时 OUTCOME_KEYS 坍缩为 home、MatchCard 写死 3 段斜切在 outcomes≠3 时破损。确认真实比赛恒为 3 markets；否则按 length 派生首/中/末角色。Web接口文档未细化，保持 open。2026-08-31 已尝试用真实 dev 环境验证：列表返回空数据，无真实比赛可核 markets 数量，待有种子事件后复核。"
     },
     {
       "id": "ASM-008",
@@ -107,9 +107,10 @@
         "apps/web/src/mocks/fixtures/prediction.ts"
       ],
       "owner": "backend",
-      "status": "open",
+      "status": "resolved",
+      "resolvedDate": "2026-08-31",
       "blockingWhen": "api-ready",
-      "resolution": "Web接口文档未给 matchStatus 字段，而体育「进行中/即将开始」两区块(PRD F14)依赖它区分 live/upcoming。已保留 schema/mapper/mock 中的 matchStatus('live'|'upcoming') 并标记 ASSUMED，两区块 UI 与聚合逻辑维持。待后端确认字段名/取值或改由 endDateTmeUtc0 与当前时刻派生。"
+      "resolution": "2026-08-31 dev 联调证实：后端不返回 matchStatus 字段（curl 真实 getTagEventsList data 无此键，Web接口文档 §5 也未列）。原 mapper `matchStatus: event.matchStatus` 是透传一个后端根本不返回的字段——MSW 假 fixture 撑着，切真实接口后永远 undefined，「进行中/即将开始」(PRD F14)会永久空。已改为前端派生：schema 删 matchStatus、新增 startTimeUtc0(比赛 UTC 开赛毫秒时间戳，文档 §5)；resolveKickoffUtcMs 优先用 startTimeUtc0(其次 endDateTmeUtc0/endDate)；mapper 用 `Date.now() >= ms ? 'live' : 'upcoming'` 派生。WorldCupMatch.matchStatus 契约不变(仅来源换)。回归测试见 mapTagEventsToWorldCup.test.ts / matchTime.test.ts / prediction.contract.test.ts。"
     }
   ]
 }

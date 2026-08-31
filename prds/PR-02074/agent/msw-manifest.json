@@ -1,9 +1,9 @@
 {
   "projectId": "PR-02074",
   "route": "msw",
-  "lifecycle": "mock-active",
+  "lifecycle": "retiring",
   "reconciledAt": "2026-08-31",
-  "reconcileNote": "2026-08-31: Web API doc(1) reverts getEstimatedProfit to 'no extension' — fee-breakdown fields are backend-internal, not returned to Web. The 9 fee fields added on 2026-08-25 were rolled back (schema/fixture/handler/test) and the fee-breakdown UI rows removed (see BLK-001). Doc still gives contract only (backend not confirmed dev-ready), so handlers are kept (not retired).",
+  "reconcileNote": "2026-08-31 dev 联调：后端 4 接口已发 dev 环境并 curl 实测可调（getTagEventsList/searchEvents/category/tree 返回 code:'0'；空数据但结构对齐）。已在 browser.ts 停止注册 predictionHandlers（setupWorker() 零 handler），4 接口切真实网络。保留 handler/fixture/contractTest 文件（团队约定勿删 MSW 脚手架，契约测试仍需 fixtures 过真实 schema）。category/tree 实测顶层 data 为裸数组（非 {categories:[]}），schema 已改 apiCategoryTreeResponseSchema=z.array(...) 并新接线 useCategoryTreeQuery+resolveCategoryTree（此前从未真正调用）。matchStatus 假透传已修为 startTimeUtc0 时间派生（ASM-008 resolved）。",
   "sourceRoot": "/Users/aven/github/PR-02074",
   "assets": {
     "handler": "apps/web/src/mocks/handlers/prediction.ts",
@@ -19,7 +19,7 @@
       "id": "tag-events-list",
       "method": "POST",
       "path": "/fe-ex-api/polymarket/getTagEventsList",
-      "apiStatus": "contract-documented",
+      "apiStatus": "dev-callable",
       "filterParams": ["tagTypeTow", "tagTypeThree"],
       "ongoingValue": "in_progress",
       "assumptions": ["ASM-008 (matchStatus not in doc)"],
@@ -35,7 +35,7 @@
       "id": "search-events",
       "method": "POST",
       "path": "/fe-ex-api/polymarket/searchEvents",
-      "apiStatus": "contract-documented",
+      "apiStatus": "dev-callable",
       "responseShape": "{ list, count, currentPage, pageSize }",
       "requestPageField": "currentPage",
       "scenarios": [
@@ -47,8 +47,8 @@
       "id": "category-tree",
       "method": "GET",
       "path": "/fe-ex-api/polymarket/category/tree",
-      "apiStatus": "contract-documented",
-      "note": "Method changed POST getCategoryTree -> GET category/tree; language via header, appLocale query kept for compat",
+      "apiStatus": "dev-callable",
+      "note": "Method changed POST getCategoryTree -> GET category/tree; language via header, appLocale query kept for compat. 2026-08-31 dev 实测：顶层 data 为裸数组，节点 {id,parentId,pathIds,level,code,name,nameMap,sort,children}，Web 用 code 关联。schema=apiCategoryTreeResponseSchema(裸数组，仅建模 code/name/children)，useCategoryTreeQuery 新接线，resolveCategoryChildren 后端优先+静态兜底（dev 仅 sports 有真实数据）",
       "scenarios": [
         { "name": "empty", "status": "implemented", "reason": "Static frontend categories are primary; API fallback returns an empty tree" }
       ]
@@ -57,8 +57,8 @@
       "id": "estimated-profit",
       "method": "POST",
       "path": "/fe-ex-api/polymarket/getEstimatedProfit",
-      "apiStatus": "contract-documented",
-      "note": "2026-08-31 反转：Web端接口文档(1) §4「协议不扩展」+§6 费用明细属后端内部不下发 Web。仅旧字段 estimateProfitAmount/profitAmount/rate/multiplier；8/25 曾加的 9 费用字段已回退，费用拆解 UI 行已删（BLK-001）",
+      "apiStatus": "dev-callable",
+      "note": "2026-08-31 反转：Web端接口文档(1) §4「协议不扩展」+§6 费用明细属后端内部不下发 Web。仅旧字段 estimateProfitAmount/profitAmount/rate/multiplier；8/25 曾加的 9 费用字段已回退，费用拆解 UI 行已删（BLK-001）。注：dev 无真实可交易事件数据，未直接 curl 验证响应体（后端报告已部署），待有种子事件后复核",
       "scenarios": [
         { "name": "buy-success", "status": "implemented", "reason": "" },
         { "name": "sell-success", "status": "implemented", "reason": "" },
@@ -67,8 +67,9 @@
     }
   ],
   "retirement": {
-    "retiredAt": "",
+    "retiredAt": "2026-08-31",
     "retirementCondition": "Backend endpoints confirmed dev-ready (callable), not merely contract-documented",
+    "retirementNote": "2026-08-31 停止在 browser.ts 注册 predictionHandlers（setupWorker() 零 handler），4 接口切真实网络。脚手架文件（handler/fixture/contractTest）按团队约定保留，未删除。",
     "reconciliationEvidence": "product/03-api-contract.md#5-字段对账表mock-阶段就建"
   }
 }

@@ -86,28 +86,41 @@ interface PolymarketTagEventExtraDTO {
   tagType?: 'crypto' | 'politics' | 'sports' | 'finance'  // 事件所属一级分类
   tagTypeTow?: string   // 二级分类 slug（体育聚合用，供组头派生）
   tagTypeThree?: string // 三级分类 slug（文档明确「事件元素新增」，供组头派生）
-  // ↓ 体育「进行中」固定分类专用（ASSUMED ASM-008，文档未给，待后端对账）：
-  matchStatus?: 'live' | 'upcoming'  // 区分「进行中」/「即将开始」两区块归属
-  // 即将开始区块日期分组依据：复用已有 endDateTmeUtc0 / kickoff UTC 毫秒
+  // ↓ 体育比赛 UTC 开赛毫秒时间戳（文档 §5），用于派生开赛时间与「进行中/即将开始」归属：
+  startTimeUtc0?: number | null
+  // 即将开始区块日期分组依据：优先 startTimeUtc0，其次已有 endDateTmeUtc0 / kickoff UTC 毫秒
 }
 // ⚠️ 组头分类名（如 "足球 | 中超"）不再取后端字段：由前端用 tagTypeTow/tagTypeThree
 //    反查分类树 name 派生（resolveSportsGroupLabel）。原臆造 categoryLabel/categoryGroupLabel 已删。
+// ⚠️ matchStatus 非响应字段（2026-08-31 dev 联调证实后端不返回）：前端用 startTimeUtc0 vs now 派生
+//    live/upcoming（mapTagEventsToWorldCup：Date.now() >= resolveKickoffUtcMs ? 'live' : 'upcoming'）。
+//    原 mapper 直通一个后端不返回的字段（MSW 假 fixture 撑着），切真实接口后会永久 undefined→两区块空。ASM-008 resolved。
 ```
 
-### 3.3 `A2 GET category/tree` 响应（结构不变）
+### 3.3 `A2 GET category/tree` 响应（2026-08-31 dev 实测：裸数组 + code）
 
 ```ts
 // GET /polymarket/category/tree，语言走 exchange-language header（appLocale query 保留兼容），无 body
-interface CategoryNodeDTO {
-  key: string          // 稳定 slug，用于 tagTypeTow/tagTypeThree 过滤参数
-  name: string         // 展示名（已按 language 翻译，F21）
-  children?: CategoryNodeDTO[]
+// ⚠️ 2026-08-31 dev 联调证实：顶层 data 直接是数组（不是 {categories:[]}），节点用 code（非 key）：
+interface ApiCategoryTreeNodeDTO {
+  id: number           // db 主键，Web 不消费（文档明确「不得用 db id/中文名/下标」）
+  parentId: number
+  pathIds: string      // 如 "20_34"
+  level: number        // 1=一级 2=二级 3=三级
+  code: string         // ✅ Web 唯一关联/筛选值（= tagType / tagTypeTow / tagTypeThree）
+  name: string         // 默认语言展示名
+  nameMap: Record<string, string>  // { 'zh-CN','en-US',... } 多语言名
+  sort: number
+  children?: ApiCategoryTreeNodeDTO[]
 }
-interface CategoryTreeResponseDTO {
-  // 四大类，每类 children 为二级；体育二级下再有三级 children
-  categories: CategoryNodeDTO[]
-}
+// 响应：data 为 ApiCategoryTreeNodeDTO[]（裸数组）
+// 前端 schema 只建模 code/name/children（apiCategoryTreeResponseSchema = z.array(...)）；
+// 其余字段不消费不建模。经 resolveCategoryTree.mapApiNodeToCategoryNode 转成 UI 域 CategoryNode{key,name,children}（code→key）。
+// resolveCategoryChildren(tagType, apiTree)：命中一级 code===tagType 且有 children → 用真实；否则回落静态 CATEGORY_TREE[tagType]。
+// dev 现状：仅 sports→World Cup 一条真实数据（+ 测试脏数据），crypto/politics/finance 走静态兜底。
 ```
+
+> 历史备注：G3 阶段曾按 `{ categories: CategoryNodeDTO[] }` + `{key,name}` 建模，且 `CategorySidebar` 从未真正调用此接口（只读静态树），故一直未暴露形状不符。2026-08-31 首次真实接线时按 dev 实测改为裸数组 + `code`（回归测试 `prediction.contract.test.ts` 断言裸数组解析 + 拒绝旧 `{categories:[]}` 形状）。
 
 ### 3.4 `A3 POST searchEvents` 请求/响应（独立响应结构）
 
@@ -318,7 +331,8 @@ Mock response 必须过真实 `schema.parse`；新增 `prediction.contract.test.
 | 6 | `categoryLabel` 是否后端返回 | mock 臆造 | 文档未列 → 证伪删除，组头改前端 `tagTypeTow/tagTypeThree` 派生 | 后端 | ✅ resolved（ASM-001）|
 | 7 | `A4` 手续费字段名 | mock 臆造 `orderAmount`/`feeAmount`/`receiveAmount`；8/25 曾按旧版加 9 费用字段 | 文档(1) §4「协议不扩展」+§6 明确费用明细不下发 Web → 全部回退，仅留旧 4 字段；费用拆解 UI 删 | 后端 | ✅ resolved（ASM-002；遗留 PRD 冲突见 BLK-001）|
 | 8 | 翻译存储字段结构 | 前端读已翻译文本 | 确认是随事件返回还是独立接口 | 后端 | 待确认（06-B5，文档未涉及）|
-| 9 | `A1` `matchStatus`（live/upcoming）| mock 臆造 | 文档未给此字段，进行中两区块依赖它 | 后端 | 🔴 open（ASM-008，挡 G5）|
+| 9 | `A1` `matchStatus`（live/upcoming）| mock 臆造 | 文档未给此字段，进行中两区块依赖它 | 后端 | ✅ resolved（ASM-008，2026-08-31 dev 证实后端不返回 → 改前端用 `startTimeUtc0` vs now 派生）|
+| 10 | `A2` 分类树响应形状 | G3 建模 `{categories:[]}` + `{key,name}`（从未真正调用）| 2026-08-31 dev 实测：裸数组 + `code`/`name`/`nameMap` | 后端 | ✅ resolved（§3.3；schema 改裸数组，首次真实接线）|
 
 ## 9. 契约变更记录
 
@@ -327,3 +341,4 @@ Mock response 必须过真实 `schema.parse`；新增 `prediction.contract.test.
 | 2026-07-22 | G4-T01 | 三期契约初稿：A1 扩展四类+二三级过滤、A2 分类树、A3 搜索、A4 手续费字段（全 ASSUMED）；文案契约 §7 逐字锁定分类名 | 待 T02 落 MSW handler + 契约测试 |
 | 2026-08-25 | 《Web端接口文档》| 按真实契约对账：A1 过滤参数 `tagTypeTow/tagTypeThree`、进行中 `in_progress`、A3 独立响应、A4 曾加 9 费用字段、`categoryLabel/categoryGroupLabel` 证伪删除+组头前端派生 | schema/mapper/mock 重造，122 单测绿 |
 | 2026-08-31 | 《Web端接口文档(1)》| **A4 反转「协议不扩展」**：§4/§6 明确费用拆解（平台费/净下单金额/份额等）属后端内部不下发 Web；PM(Tomoto) 确认仅 A4 变、其他不变 | 回退 8/25 加的 9 费用字段（schema/fixture/handler/test），删除费用拆解 UI 行（EstimatedProfit 费用行 + PredictSellFeeRows.tsx），主行保留；122 单测绿、改动文件 0 新增 tsc；遗留 BLK-001 |
+| 2026-08-31 | dev 环境联调（后端 4 接口发布 dev）| 从 MSW 切真实接口：curl 实测 A1/A3/A2 可调（结构对齐，dev 空数据）；A2 顶层为**裸数组 + code**（非 `{categories:[]}`）；`matchStatus` **后端不返回** | ①schema 改 `apiCategoryTreeResponseSchema=z.array(...)`、新接线 `useCategoryTreeQuery`+`resolveCategoryTree`（分类树首次真实调用，后端优先+静态兜底）；②`matchStatus` 假透传改为 `startTimeUtc0` 时间派生（`polymarketTagEventSchema` 删 matchStatus、加 startTimeUtc0；mapper 用 `Date.now()>=ms` 派生）；③`browser.ts` 停止注册 predictionHandlers（脚手架文件保留）；133 单测绿、改动文件 0 新增 tsc（基线 193）|
