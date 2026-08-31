@@ -1,17 +1,5 @@
 [
   {
-    "ruleId": "CODE-MOCK-002",
-    "reason": "MSW 路线 B 核心 4 接口(manualInvalidRecord/manualInvalidSummary GET·POST/manualInvalid)已部署 dev 并按 §8.4.2 逐接口拆除(2026-08-21)：handler + contractFixtures + mockContract 测试已删，browser.ts 只余 menuHandlers。残留仅 dev-only menu 注入(src/mocks/handlers/menu.ts + fixtures/menus.ts)——仅 NODE_ENV==='development' 注册(无 NEXT_PUBLIC 开关，对齐 PR-01947 先例)、prod build 短路 tree-shake 出包。待服务端菜单树下发「体验金手动失效管理」节点后删除。",
-    "owner": "aven",
-    "expiresAt": "2026-09-30"
-  },
-  {
-    "ruleId": "CODE-MSW-002",
-    "reason": "同 CODE-MOCK-002：核心 4 接口 handler 已随 dev 部署拆除，仅余 dev-only menu 注入(NODE_ENV 短路，不入 prod 包)，待服务端菜单节点就位后删除。",
-    "owner": "aven",
-    "expiresAt": "2026-09-30"
-  },
-  {
     "ruleId": "VERIFY-TYPE-001",
     "file": "apps/web/src/apps/CashFlow/futures/FuturesCashFlow.tsx",
     "reason": "上游 origin/online 依赖升级涟漪，非本 PR 引入。merge(3856887218)带入 origin/online 的 `fix: update react version` + `fix: update heroui version` 三提交，造成 @react-types/shared 3.32.1↔3.36.0 版本打架，DateRangePicker `value` 类型不兼容(TS2322)——全仓 17 处同款报错(Broker/Alpha/Earning/Spot/Funding CashFlow 等未改文件)。本 PR 对该文件唯一改动 = line 84 新增 `{ key:'114' }` 流水 tab；报错行 line 220 `<DateRangePicker value={dateValue}>` 与 origin/online 逐字一致、本 PR 未碰。属上游依赖 dedup 问题(需 origin/online 收敛 @react-types 版本)，本 PR 无处可修不越界。",

@@ -81,7 +81,7 @@ Biome：本仓库未配置 Biome，回退为 `verify-code-rules.mjs` globalScan 
 - ✅ **模板下载**：后端确认无独立接口，表头与上传文件一致 + 一行样板数据；前端本地生成 CSV（`uid,configNumber,remark` + 样板行），移除占位 handler。
 - ✅ **补充细节**：后端已过滤无匹配数据（不返回错误提示，部分失败报系统异常）、账号已脱敏、trialMode(1/2) 与 invalidQuantity 动态累计口径与前端一致，均无需改动。
 
-销账进展（更新 2026-08-22：F18/F20 PRD 划删移出范围、F19 数仓给 34 已落码，展示点无剩余阻塞；仅 D3 MSW 退役延后）：
+销账进展（更新 2026-08-31：F18/F20 PRD 划删移出范围、F19 数仓给 34 已落码，展示点无剩余阻塞；D3 MSW 路线 B 已于 pre 阶段整体退役，无剩余延后项）：
 - ✅ **F17 / F21 / F22 已销账**：Rullin 确认 114=TRIAL_SYSTEM_CLAWBACK 系统失效即本 PR 事件真码；C 端（`get_transaction_list`）直接使用服务端返回的 `type` 字段识别，前端 key `'114'` 与之一致。103「手动过期」系既存不同类型非本 PR。
 - ✅ **F23 卡券记录「系统回收」已销账**：kingstar 确认继续用 `description` 识别、不新增 `recordType`；前端「说明」列直出 `record.description`，零改动达标。
 - ✂ **F18 合约后台资金流水（admin）已移出范围**：2026-08-22 确认 PRD「用户管理-合约账户-资金流水」段整段划删（删除线=不做），与 F20 同批移出本 PR。既有占位 `manual_invalidate_trial`（挂 order_type）不接入、不回补，前端零改动。原「scene vs ext_scene」对接项作废，**不再阻塞**。见 `handoff-contract-datawarehouse-enums.md` §1a（已作废）。

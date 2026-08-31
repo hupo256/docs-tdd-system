@@ -1,7 +1,8 @@
 # PR-01930 拆分 follow-up 清单（2026-08-18 用户拍板：已确认部分先走 G8）
 
 > 决策：2026-08-18 用户确认「拆分 — 已确认部分先走 G8」。本 PR **收敛闭环范围** = 已对账确认的展示点 + 后台核心 4 接口 + F20/F18 PRD 划删移除。
-> 更新（2026-08-22）：原 D1（F18 合约账户资金流水）经确认 PRD 段整段划删 → 移出范围、非延后；原 D2（F19 财务审计 businessType）数仓给出 34 → 已落码回补。当前仅剩 **D3（MSW 退役）** 一项显式延后，在 G5 以带到期 waiver 可见化，不静默跳过。
+> 更新（2026-08-22）：原 D1（F18 合约账户资金流水）经确认 PRD 段整段划删 → 移出范围、非延后；原 D2（F19 财务审计 businessType）数仓给出 34 → 已落码回补。
+> 更新（2026-08-31）：原 D3（MSW 退役）已在 pre 阶段整体拆除 → 见下方 §已回补，本清单**无剩余延后项**。
 
 ## 本 PR 闭环范围（已确认，可交付）
 
@@ -30,11 +31,16 @@
 - 落码：`apps/admin/src/constants/financeAuditBusinessType.ts`（内容单一源 + 纯 resolver）、`services/api/financeAudit.ts`（`contractBusinessTypes` 新增筛选项）、`FinanceAuditAssetsFlow/utils/useColumns.tsx`（列展示走 resolver）。
 - 内容字面对齐 PRD 7.1.7：筛选类型「体验金系统回收」、列记「系统回收（体验金/增强体验金）」，8 个契约测试锁字面（`financeAuditBusinessType.contract.test.ts`）。
 
-## 延后项（不在本 PR 闭环，回补前提已写明）
+### D3 MSW 路线 B 退役 —— 2026-08-31 pre 阶段整体拆除完成
 
-### D3. MSW 路线 B 退役 —— 待 dev 验证真实接口 + 「体验金管理」菜单节点就位
+- 拆除动作（apps/admin，业务代码 0 改动即切真实路径）：
+  - 删 `src/mocks/**`（`useMockWorker.ts`、`browser.ts`、`handlers/menu.ts`、`fixtures/menus.ts`）。
+  - 删 `public/mockServiceWorker.js`；删 `src/middleware.ts` 内 dev-only Service Worker 放行分支。
+  - `src/app/[lang]/Providers.tsx` 去掉 `useMockWorker()` 与 worker 就绪前的阻塞渲染，恢复裸 Provider 树。
+  - `package.json` 移除 `msw` devDependency 与 `msw.workerDirectory`，`pnpm-lock.yaml` 同步（改动仅限 msw 依赖子树）。
+- 全仓 `grep`：无 `msw` import、无 `@mock-only`/`USE_MOCK`/`isMock` 残留；`CODE-MOCK-002`/`CODE-MSW-002` waiver 已从 `agent/rule-waivers.json` 删除（不再需要豁免）。
+- 菜单节点：`fixtures/menus.ts` 注入的「体验金手动失效管理」叶子随之移除，改由服务端菜单树下发，pre 环境以真实菜单验证。
 
-- 现状：`apps/admin/src/mocks/**`（`handlers/menu.ts`、`fixtures/menus.ts` 注入体验金管理叶子；核心 4 接口 handler 已随 dev 部署删除）仍在，dev-only（仅 `NODE_ENV==='development'` 注册，无 `NEXT_PUBLIC` 开关，对齐 PR-01947 先例；prod build 短路 tree-shake 出包）。
-- 后端「已发 dev」但前端无法单方验证：①核心 4 接口在 dev 可直连；②「体验金管理」菜单节点已服务端注入（不再需要 fixture 注入）。
-- 回补动作：dev 验证通过后，删 `handlers/*` + `fixtures/menus.ts`，业务代码 0 改动即切真实路径。
-- 在 G5 以 waiver（`CODE-MOCK-002`/`CODE-MSW-002`）可见化，到期后强制回收。
+## 延后项（无）
+
+> 2026-08-31：D3 完成后本节清空，本 PR 无显式延后项。
