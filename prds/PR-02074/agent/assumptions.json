@@ -92,13 +92,14 @@
       "field": "markets 数量 / MatchCard 段数",
       "code": [
         "apps/web/src/services/api/prediction/mapTagEventsToWorldCup.ts",
-        "apps/web/src/apps/Prediction/WorldCup/common/MatchCard.tsx"
+        "apps/web/src/apps/Prediction/WorldCup/common/MatchCard.tsx",
+        "apps/web/src/apps/Prediction/WorldCup/common/matchSegments.ts"
       ],
       "owner": "backend",
       "status": "partially-resolved",
       "resolvedDate": "2026-09-01",
       "blockingWhen": "api-ready",
-      "resolution": "2026-09-01 PM 确认比赛 markets **数量可变、不恒三段**。已修 mapTagEventToMatch 的 outcome key 分配（新增 matchOutcomeKeyAt）：2 段比赛（无平局盘，如网球）idx=1 从原先误判 draw（会套用平局样式+『平局』文案）改为 away；3 段保持 home/draw/away 不变；1 段取 home。回归测试见 mapTagEventsToWorldCup.test.ts（新增 2 段/3 段 key 断言）。**仍 open 的边界**：①markets>3 的比赛无法用三值枚举 MatchOutcomeKey 表达（超出下标回落 home，会产生重复 key）——需 PM/设计确认是否存在 >3 段比赛及其 outcome 语义；②MatchCard 斜切分段样式仍按 3 段设计，2 段/其它段数视觉需人工 QA（dev 无非-3 段真实比赛数据可核）；③与 B3 关联：后端『可提供』单/多市场类型标记字段，届时可替代 markets 数量启发式。"
+      "resolution": "2026-09-01 PM 确认比赛 markets **数量可变、不恒三段**。(a) mapper 层：已修 mapTagEventToMatch 的 outcome key 分配（新增 matchOutcomeKeyAt）——2 段比赛（无平局盘，如网球）idx=1 从原先误判 draw（会套用平局样式+『平局』文案）改为 away；3 段保持 home/draw/away 不变；1 段取 home。回归测试见 mapTagEventsToWorldCup.test.ts。(b) 2026-09-01 已补 MatchCard 渲染层：抽出纯函数 matchSegments.ts，斜切几何/配色/文案内边距全部按 `segmentPosition(idx,total)`（first/middle/last/only）派生，不再硬编码 3 段——2 段末段(away)从原先误用『中段两侧斜切+bg-brand-1+无内边距』改为『右缘齐平+bg-4+左偏内边距』，markets>3 内段一律 middle（原 clsArr[idx] 越界返回 undefined 已消除）；3 段渲染逐项核对与旧实现完全一致无回归。新增 matchSegments.test.ts 11 用例。**仍 open 的边界**：①markets>3 的比赛虽渲染不再崩，但 outcome **语义** 仍无法用三值枚举 MatchOutcomeKey 表达（超出下标回落 home，会产生重复 key）——需 PM/设计确认是否存在 >3 段比赛及其 outcome 语义；②非-3 段卡片**视觉**仅经单测断言几何，尚需真实数据 + 人工 QA（dev 无非-3 段真实比赛数据可核）；③与 B3 关联：后端『可提供』单/多市场类型标记字段，届时可替代 markets 数量启发式。"
     },
     {
       "id": "ASM-008",
