@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "fingerprint": "5c49f56426f1c4b11e1921f0c9bf586d465a3c3085c68cb2558622c12cf663f8",
-  "publishedAt": "2026-08-29T12:15:00.232Z",
+  "fingerprint": "fc9362abad77e514b6fbf6dd0ca9ce9065d294992bd75672140f2a714331be6a",
+  "publishedAt": "2026-09-01T05:15:45.745Z",
   "l3RuleReleaseFingerprint": "f121f15c4b2ca94714005544aab179e1a13694916051a0bca08281db7f122370",
   "clientMatrix": {
     "codex": {
@@ -616,7 +616,7 @@
     "~/.ai-rules/skills/coding-quality/SKILL.md": "7c68d7bb90f724e5648eda7ba6209603154ef3ffbfdf2dfcfe301543baeb3256",
     "~/.ai-rules/skills/figma-read/SKILL.md": "17902f4f95ec0000075e1aa5e980a03e2a61e3e067b6d1b3773c5a440acfecce",
     "~/.claude/CLAUDE.md": "607a5963fc1d04fdb0439cc06c1b002aa9c797dc324dc3b61606653bd015cb4e",
-    "~/.claude/settings.json": "912380be5ee1444da526f849da3f50c84249de7cccadd30458025f6803e081df",
+    "~/.claude/settings.json": "cc4dc7057040f6278e79cb25961668545ff7a0224d4357ae4cb423dcc1c8b0ac",
     "~/.codex/AGENTS.md": "607a5963fc1d04fdb0439cc06c1b002aa9c797dc324dc3b61606653bd015cb4e",
     "~/.cursor/rules/fameex-local-governance.mdc": "8e02a57ddc70633bd32a8d9a0c03902cf9db1cf4e7eac7a673636b8733844afb",
     "AGENTS.md": "392064b3caa6942371cdf5380c7c8b6e368e6ba36d5cae03753afc5d6001c480",
