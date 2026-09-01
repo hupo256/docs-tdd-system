@@ -47,6 +47,7 @@ G0–G4 PASS。**G5 编码进行中，纯前端能落的需求已全部落码 + 
 - 待确认：后端 `normalTrialBalance` / `enhancedTrialBalance`（`position-assets-list.ts:172,174`）与 `availableTrialBalance` 是否**同为「已抵扣占用」净口径**。
 - 落法（确认后）：让 hook 传给 liq 的 `bonus` 用普通值（`normalTrialBalance` 或 `availableTrialBalance - enhancedTrialBalance`）。`liq.formulas.test.ts` 已证 bonus 线性进入分子，改 hook 即可。
 - **为什么本期不落**：改既有实盘强平价计算，口径未确认不能自证无回归（change-scope §2.1）。见 `06-collaboration.md §待办`。
+- **2026-09-01 后端答复**：c 端字段全返回（`availableTrialBalance`/`normalTrialBalance`/`enhancedTrialBalance` 均在 schema）；"持仓资产接口"已剔除增强但**覆盖不到开仓页本地预估**（F07 仍需前端改）。**仅差后端一句 `normalTrialBalance` 净/毛口径**（是否同为"已抵扣占用"净值）即可落 F07，届时让 hook 的 `bonus` 用普通值。
 
 ### 3.2 F06 金额口径 / F11 使用记录 / F13 存量兼容
 - 均为后端字段/口径驱动。真实接口到位后：对账 `03-api-contract §5` 字段表；确认 `availableBalance.ts` 的 trial 口径（可用=总额-使用中）与后端字段一致；`CouponUsageRecords` 增强是否后端过滤为空。
@@ -61,7 +62,9 @@ G0–G4 PASS。**G5 编码进行中，纯前端能落的需求已全部落码 + 
 - **前端影响**：三项均后端字段直显/后端过滤口径，**前端无代码改动**（`expiredAmount` 等直显后端值；不得按反造假规则硬编码 0/总额）。已核实 F10 `CouponDistributionRecords` 直显、F11 由后端返回空。此为后端口径简化，前端只需口径确认。
 
 ### 3.3 F09 admin「不可抵扣类型」枚举 + 文案
-- `SearchForm.tsx` 已有 `ENHANCED_NON_DEDUCTIBLE_TRIAL_MODE = 3`（`// ASSUMED:`），**未纳入 `trialModeSelectOptions`**（不可选/不可提交）。后端确认真实枚举值后：改常量、纳入选项、销 ASSUMED。
+- **2026-09-01 后端答复证伪原假设**：不新增枚举，把现有「自由资金优先」(`TrialMode.OwnFundsFirst=2`，`apps/admin/src/constants/trialBalance.ts` 只有 `Proportional=1`/`OwnFundsFirst=2`)**改成「不抵扣类型」**，需 PM Iris 确认。
+- 原状：`SearchForm.tsx` 有 `ENHANCED_NON_DEDUCTIBLE_TRIAL_MODE = 3`（`// ASSUMED:`，未纳入 options）——**此假设已废**。
+- 落法（PM Iris 确认 relabel 后）：删 `ENHANCED_NON_DEDUCTIBLE_TRIAL_MODE=3` 常量与门控；风险提示 `showRebateRatioRisk` 条件改挂 `trialMode === TrialMode.OwnFundsFirst`(2)；`trialModeOptions[2]` label 由「自有资金优先」改「不抵扣类型」（注意 SearchForm 内多处 `OwnFundsFirst` 分支=不传杠杆等既有逻辑不变，仅 label + 风险提示）。销 ASSUMED。
 - 文案「谨慎 vs 合理」：已落 `rebateRatioRisk`=「请谨慎配置比例」并经 PM 2026-08-22 二次确认，**已销**。
 
 ## 4. 本轮重构结构（为后期扩展/复用，续作请沿用分层）
