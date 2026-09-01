@@ -9,7 +9,7 @@
 
 ## 0. 一句话现状
 
-G0–G4 PASS。**G5 编码进行中，纯前端能落的需求已全部落码 + 纯函数单测 + 提交推送**；剩余项为后端字段口径/枚举/PM 文案依赖，已逐条登记，等真实 API 与 PRD 稳定后对账补齐。
+G0–G4 PASS。**G5 编码进行中，纯前端能落的需求已全部落码 + 纯函数单测 + 提交推送；F07/F09 按 2026-09-01 后端答复默认落码（待联调核值 / PM Iris 确认口径），F06 默认不改 C 端**；剩余项为后端字段口径/枚举/PM 文案依赖，已逐条登记，等真实 API 与 PRD 稳定后对账补齐。
 
 - 代码分支 `feature/PR-02273` 最新提交 `fbc19d00cd`（已推 origin）。
 - 文档分支 `pr-02273/kickoff-g0-g2` 最新提交 `70d6ac7`（已推 origin）。
@@ -31,10 +31,10 @@ G0–G4 PASS。**G5 编码进行中，纯前端能落的需求已全部落码 + 
 | F03 | 领取弹窗 配资比例 + 隐藏使用方式 + 提示文案 | ✅ | `b3f02c03d0`+`0eb8c6c37c`：ActivateCouponModal 拆分 |
 | F04 | 详情弹窗增强专版 | ✅ | `fc784fc74c`：BonusDetailMan 分支改造 |
 | F05 | 领取记录使用规则列 -- | ✅ 核实无需改 | 现网 `leverageRange`「可用杠杆范围」列已对增强(trialMode≠'1')显示 `--` |
-| F06 | 金额口径（可用=总额-使用中） | ⏳ 待后端对账 | 金额为后端字段；依赖后端「委托冻结/开仓占用」口径 |
-| F07 | 开仓预估强平价剔除增强 | 🚧 阻塞待后端 | 见 §3.1（bonus 口径未确认，change-scope §2.1 阻塞） |
+| F06 | 金额口径（可用=总额-使用中） | 🔀 默认不改 C 端 | 后端接口/字段不变；加明细属产品加法需求，待 PM Iris 定 |
+| F07 | 开仓预估强平价剔除增强 | ✅ 已落码待联调核值 | `dc0dcfbf36`：bonus `availableTrialBalance`→`normalTrialBalance`（后端直给普通净值） |
 | F08 | 保证金率剔除增强 | ✅ | `286fcedad8`：marginRate 移除 `.plus(enhancedTrialNum)` |
-| F09 | admin 配资比例风险提示 | 🟡 部分 | `286fcedad8`：文案+条件红字 UI；⏳枚举 ASSUMED=3、文案待后端/PM |
+| F09 | admin 配资比例风险提示 | ✅ 已落码待 PM Iris | `286fcedad8`+`dcd8aad26b`：文案+relabel「自有资金优先→不抵扣类型」+风险提示挂 `trialMode===2` |
 | F10 | admin 到期未使用金额口径 | ✅ 核实无需改 | `expiredAmount` 后端字段直显，口径改在后端 |
 | F11 | admin 增强无使用记录 | ⏳ 待后端对账 | 后端过滤口径 |
 | F13 | 存量兼容 | ⏳ 待后端 | 后端停增量不动存量，前端容忍旧态 |
@@ -42,8 +42,8 @@ G0–G4 PASS。**G5 编码进行中，纯前端能落的需求已全部落码 + 
 
 ## 3. 剩余项如何继续（真实 API/PRD 稳定后）
 
-### 3.1 F07 开仓预估强平价 bonus 剔除增强体验金（阻塞）
-- 现状：liq 公式的 `bonus` = `useEffectiveTrialAmount().availableTrialBalance`（普通+增强**合并**、「已抵扣仓位占用」净值）。链路见 `useEstimatedLiqPrice.ts:335,373` / `usePositionLiqPrice.ts:83,110` → `liq.entry.ts:160,177` → `liq.formulas.ts:182,308`。
+### 3.1 F07 开仓预估强平价 bonus 剔除增强体验金（✅ 已默认落码，待联调核值）
+- **2026-09-01 已落码（commit dc0dcfbf36）**：liq 公式的 `bonus` 由 `useEffectiveTrialAmount().availableTrialBalance`（普通+增强合并）改取后端直给 `normalTrialBalance`（普通净值，非算术派生）。链路 `useEstimatedLiqPrice.ts:335` / `usePositionLiqPrice.ts:83` → `useEffectiveTrialAmount.ts:82,139`。仅普通用户零行为变化、含增强用户正好剔除=自证无回归（change-scope §2.1）；`normalTrialBalance` 缺失按 0（宁少计→强平价偏保守）。
 - 待确认：后端 `normalTrialBalance` / `enhancedTrialBalance`（`position-assets-list.ts:172,174`）与 `availableTrialBalance` 是否**同为「已抵扣占用」净口径**。
 - 落法（确认后）：让 hook 传给 liq 的 `bonus` 用普通值（`normalTrialBalance` 或 `availableTrialBalance - enhancedTrialBalance`）。`liq.formulas.test.ts` 已证 bonus 线性进入分子，改 hook 即可。
 - **为什么本期不落**：改既有实盘强平价计算，口径未确认不能自证无回归（change-scope §2.1）。见 `06-collaboration.md §待办`。
@@ -61,11 +61,9 @@ G0–G4 PASS。**G5 编码进行中，纯前端能落的需求已全部落码 + 
 - **卡券使用记录（F11）**：增强体验金**无使用记录**——旧「金额=卡券有效期内历史最大仓位占用金额」整条定义删除。
 - **前端影响**：三项均后端字段直显/后端过滤口径，**前端无代码改动**（`expiredAmount` 等直显后端值；不得按反造假规则硬编码 0/总额）。已核实 F10 `CouponDistributionRecords` 直显、F11 由后端返回空。此为后端口径简化，前端只需口径确认。
 
-### 3.3 F09 admin「不可抵扣类型」枚举 + 文案
-- **2026-09-01 后端答复证伪原假设**：不新增枚举，把现有「自由资金优先」(`TrialMode.OwnFundsFirst=2`，`apps/admin/src/constants/trialBalance.ts` 只有 `Proportional=1`/`OwnFundsFirst=2`)**改成「不抵扣类型」**，需 PM Iris 确认。
-- 原状：`SearchForm.tsx` 有 `ENHANCED_NON_DEDUCTIBLE_TRIAL_MODE = 3`（`// ASSUMED:`，未纳入 options）——**此假设已废**。
-- 落法（PM Iris 确认 relabel 后）：删 `ENHANCED_NON_DEDUCTIBLE_TRIAL_MODE=3` 常量与门控；风险提示 `showRebateRatioRisk` 条件改挂 `trialMode === TrialMode.OwnFundsFirst`(2)；`trialModeOptions[2]` label 由「自有资金优先」改「不抵扣类型」（注意 SearchForm 内多处 `OwnFundsFirst` 分支=不传杠杆等既有逻辑不变，仅 label + 风险提示）。销 ASSUMED。
-- 文案「谨慎 vs 合理」：已落 `rebateRatioRisk`=「请谨慎配置比例」并经 PM 2026-08-22 二次确认，**已销**。
+### 3.3 F09 admin「不抵扣类型」枚举 + 文案（✅ 已默认落码，待 PM Iris 确认口径）
+- **2026-09-01 已落码（commit dcd8aad26b）**：后端答复证伪原 ASSUMED `trialMode=3`——不新增枚举，把现有「自由资金优先」(`TrialMode.OwnFundsFirst=2`) relabel「不抵扣类型」。已删 `SearchForm.tsx` 的 `ENHANCED_NON_DEDUCTIBLE_TRIAL_MODE=3` 常量与门控；风险提示 `showRebateRatioRisk` 改挂 `Number(trialMode) === TrialMode.OwnFundsFirst`；`trialModeOptions[2]` label 由「自有资金优先」→「不抵扣类型」（`constants/trialBalance.ts`，经 `getTrialModeLabel` 传导至 ~8 个后台视图）。SearchForm 内 `OwnFundsFirst` 分支既有逻辑（不传杠杆等）不变，仅 label + 风险提示。
+- **待 PM Iris 确认**：relabel 口径（「自有资金优先」→「不抵扣类型」是否全局改名，还是仅增强体验金场景）。一行可逆，确认后即定稿。
 
 ## 4. 本轮重构结构（为后期扩展/复用，续作请沿用分层）
 
