@@ -9,7 +9,7 @@
 
 ## 0. 一句话现状
 
-G0–G4 PASS。**G5 编码进行中，纯前端能落的需求已全部落码 + 纯函数单测 + 提交推送；F07/F09 按 2026-09-01 后端答复默认落码（待联调核值 / PM Iris 确认口径），F06 默认不改 C 端**；剩余项为后端字段口径/枚举/PM 文案依赖，已逐条登记，等真实 API 与 PRD 稳定后对账补齐。
+G0–G4 PASS。**G5 编码进行中，纯前端能落的需求已全部落码 + 纯函数单测 + 提交推送；F07 按 2026-09-01 后端答复默认落码（作标记待联调核值后更新），F09 relabel 已按 PM 口径收窄为仅申请配置表单（非全局改名，已定稿），F06 默认不改 C 端**；剩余项为后端字段口径/PM 决策依赖，已逐条登记，等真实 API 与 PRD 稳定后对账补齐。
 
 - 代码分支 `feature/PR-02273` 最新提交 `fbc19d00cd`（已推 origin）。
 - 文档分支 `pr-02273/kickoff-g0-g2` 最新提交 `70d6ac7`（已推 origin）。
@@ -34,7 +34,7 @@ G0–G4 PASS。**G5 编码进行中，纯前端能落的需求已全部落码 + 
 | F06 | 金额口径（可用=总额-使用中） | 🔀 默认不改 C 端 | 后端接口/字段不变；加明细属产品加法需求，待 PM Iris 定 |
 | F07 | 开仓预估强平价剔除增强 | ✅ 已落码待联调核值 | `dc0dcfbf36`：bonus `availableTrialBalance`→`normalTrialBalance`（后端直给普通净值） |
 | F08 | 保证金率剔除增强 | ✅ | `286fcedad8`：marginRate 移除 `.plus(enhancedTrialNum)` |
-| F09 | admin 配资比例风险提示 | ✅ 已落码待 PM Iris | `286fcedad8`+`dcd8aad26b`：文案+relabel「自有资金优先→不抵扣类型」+风险提示挂 `trialMode===2` |
+| F09 | admin 配资比例风险提示 | ✅ 已落码待 PM Iris | `286fcedad8`+`dcd8aad26b`+`cd570b94b3`：文案+relabel「自有资金优先→不抵扣类型」**仅申请配置表单**（PM 口径：非全局改名）+风险提示挂 `trialMode===2` |
 | F10 | admin 到期未使用金额口径 | ✅ 核实无需改 | `expiredAmount` 后端字段直显，口径改在后端 |
 | F11 | admin 增强无使用记录 | ⏳ 待后端对账 | 后端过滤口径 |
 | F13 | 存量兼容 | ⏳ 待后端 | 后端停增量不动存量，前端容忍旧态 |
@@ -61,9 +61,9 @@ G0–G4 PASS。**G5 编码进行中，纯前端能落的需求已全部落码 + 
 - **卡券使用记录（F11）**：增强体验金**无使用记录**——旧「金额=卡券有效期内历史最大仓位占用金额」整条定义删除。
 - **前端影响**：三项均后端字段直显/后端过滤口径，**前端无代码改动**（`expiredAmount` 等直显后端值；不得按反造假规则硬编码 0/总额）。已核实 F10 `CouponDistributionRecords` 直显、F11 由后端返回空。此为后端口径简化，前端只需口径确认。
 
-### 3.3 F09 admin「不抵扣类型」枚举 + 文案（✅ 已默认落码，待 PM Iris 确认口径）
-- **2026-09-01 已落码（commit dcd8aad26b）**：后端答复证伪原 ASSUMED `trialMode=3`——不新增枚举，把现有「自由资金优先」(`TrialMode.OwnFundsFirst=2`) relabel「不抵扣类型」。已删 `SearchForm.tsx` 的 `ENHANCED_NON_DEDUCTIBLE_TRIAL_MODE=3` 常量与门控；风险提示 `showRebateRatioRisk` 改挂 `Number(trialMode) === TrialMode.OwnFundsFirst`；`trialModeOptions[2]` label 由「自有资金优先」→「不抵扣类型」（`constants/trialBalance.ts`，经 `getTrialModeLabel` 传导至 ~8 个后台视图）。SearchForm 内 `OwnFundsFirst` 分支既有逻辑（不传杠杆等）不变，仅 label + 风险提示。
-- **待 PM Iris 确认**：relabel 口径（「自有资金优先」→「不抵扣类型」是否全局改名，还是仅增强体验金场景）。一行可逆，确认后即定稿。
+### 3.3 F09 admin「不抵扣类型」文案（✅ 已默认落码，relabel 口径已按 PM 确认收窄）
+- **2026-09-01 已落码（commit dcd8aad26b）**：后端答复证伪原 ASSUMED `trialMode=3`——不新增枚举，把现有「自由资金优先」(`TrialMode.OwnFundsFirst=2`) relabel「不抵扣类型」。已删 `SearchForm.tsx` 的 `ENHANCED_NON_DEDUCTIBLE_TRIAL_MODE=3` 常量与门控；风险提示 `showRebateRatioRisk` 改挂 `Number(trialMode) === TrialMode.OwnFundsFirst`。
+- **2026-09-01 PM 口径确认收窄（commit cd570b94b3）**：relabel **不是全局改名**，只改 PRD F09 列举处——即「现货后台体验金**申请配置**」表单（`TrialBalanceCreateOrder/SearchForm` 的体验金类型下拉）。已回退 `constants/trialBalance.ts` `trialModeOptions[OwnFundsFirst]` 至「自有资金优先」（列表/筛选/审核/派发/明细等 ~12 处视图恢复原 label），仅在 SearchForm 内以 `trialModeCreateOptions` 就地覆盖下拉 label 为「不抵扣类型」。底层逻辑（不传杠杆/配资比例上限 99）与风险提示条件不变。
 
 ## 4. 本轮重构结构（为后期扩展/复用，续作请沿用分层）
 
