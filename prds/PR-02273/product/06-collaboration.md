@@ -23,9 +23,21 @@
 | 2026-08-11 | **F07/F08 复核**：核对 PR-01319 现网预估强平价是否前端本地计算；若是，则「后端下发」结论需回炉重定 | F07/F08 实现方式 | Agent（G4 盘点）→负责人 | ✅ 已闭环：G4 盘点确认前端本地计算（无 PR-01319 标记，即 `utils/liq/*`+`marginRate.ts`），方案改为改本地公式剔除增强体验金，见上表 F07/F08 行 |
 | 2026-08-11 | **C 端「使用规则展示 --」列位**：PRD 文字写"使用规则"，img-004 列头为「可用杠杆范围」显示 --，以现网实际列名为准 | F05 字段定位 | Agent（G4 盘点） | ✅ 已闭环：G5 核对现网无「使用规则」列，PRD 对应现网 `leverageRange`「可用杠杆范围」列；该列已对增强体验金（`trialMode≠'1'`）展示 `--`（useTrialFeeClaimRecordColumns.tsx），F05 无需改代码 |
 | 2026-08-11 | **API 字段/枚举清单**：可用体验金/使用中体验金/配资比例/状态枚举/到期未使用金额，MSW mock 需先定契约 | G3 | 后端/负责人 | 待 G3 |
-| 2026-08-13 | **风险提示文案逐字冲突**：PM 群消息作「请**谨慎**配置比例」，截图 mockup 作「请**合理**配置比例」。当前以 PM 群消息为准（谨慎）落 `copy.admin.rebateRatioRisk`；实现前请 PM 二次确认字面 | F09 文案 | PM Iris | 待 PM 确认 |
+| 2026-08-13 | **风险提示文案逐字冲突**：PM 群消息作「请**谨慎**配置比例」，截图 mockup 作「请**合理**配置比例」。当前以 PM 群消息为准（谨慎）落 `copy.admin.rebateRatioRisk`；实现前请 PM 二次确认字面 | F09 文案 | PM Iris | ✅ 已闭环：PM Iris 2026-08-22 正式确认以「请谨慎配置比例」为准，截图「合理」作废；`rebateRatioRisk` 逐字断言已锁 |
 | 2026-08-14 | **F02/F03 需先拆分超长组件**：F02 卡片去「已使用完」状态在 `RewardCard.tsx`（441 行）、F03「抵扣比例→配资比例 label + 隐藏使用方式行」在 `ActivateCouponModal.tsx`（441 行），二者均 >300 行触发 PostToolUse `CODE-FILE-001`。按 change-scope §2.1 不在本特性顺手重构；需独立拆分子组件后再落这两处。F03 提示说明文案已单独落地（改 rewards.json，无需动组件） | F02 状态收敛 / F03 label 与使用方式 | 前端 | ✅ 已完成：按可复用重构拆分——ActivateCouponModal→useActivateCouponModal(hook)+activateCouponModalParts(展示/纯函数)+瘦视图，落 F03 配资比例/隐藏使用方式；RewardCard→rewardCardModel+rewardCardCopy(纯函数)+瘦身，落 F02 增强 Used→已失效。均配纯函数单测，逻辑等价迁移 |
 | 2026-08-13 | **F07 强平价 bonus 剔除增强体验金的口径**：G5 编码确认——F08 保证金率已剔除增强体验金（`calcCrossMarginRate` 移除 `.plus(enhancedTrialNum)`，数据源 `trialFeeRecordList` 已拆分，纯函数单测锁定）。但 F07 强平价 `bonus` 现取 `useEffectiveTrialAmount().availableTrialBalance`（普通+增强合并，「已抵扣仓位占用」净值）。剔除增强需改 hook 传入普通值，候选=后端 `normalTrialBalance` 或 `availableTrialBalance - enhancedTrialBalance`；但 `normalTrialBalance`/`enhancedTrialBalance` 是否与 `availableTrialBalance` 同为「已抵扣占用」净口径未确认。**按 change-scope §2.1「改既有实盘计算不能自证无回归即阻塞」，本期不落 hook bonus 来源改动**，仅落基础无关的 liq.formulas 纯函数单测；待后端确认字段口径后一并对账 | F07 强平价 hook（useEstimatedLiqPrice/usePositionLiqPrice）bonus 来源 | 合约后端 / 负责人 | 待后端确认字段口径 |
+
+## 提测前后端对接清单（2026-08-22 发 Lark 群问后端，逐条回复后销账）
+
+> 前端展示层大部分已完成，以下依赖后端字段/枚举/口径，未确认前会造成提测口径打架。第 1/2/3 项拿到答复后 F07/F06/F09 即可收口提测。
+
+| # | 项 | 前端为何卡住 | 需后端给的东西 | 关联 F | 状态 |
+|---|----|-------------|----------------|--------|------|
+| B1 | **强平价/保证金率口径统一（最优先）** | F08 保证金率已剔除增强体验金，但 F07 预估强平价/爆仓价仍用合并值 `availableTrialBalance`（含增强）→ 两处口径打架，提测必报不一致 | 确认 `futuresAccountSchema` 三字段 `availableTrialBalance`/`normalTrialBalance`/`enhancedTrialBalance` 是否均为「已扣委托冻结/开仓占用」净值；并明确前端喂强平公式的「不含增强」可用值应取 `normalTrialBalance` / `availableTrialBalance − enhancedTrialBalance` / 新字段 | F07 | 待后端确认 |
+| B2 | **增强体验金金额口径（C 端详情 + 后台领取记录）** | 前端现用 `总额 − 已用` 近似，与 PRD「可用=总额−委托冻结−开仓占用」口径未对齐 | 下发「委托冻结金额」「开仓占用金额」对应字段名，供前端按 总额=可用+使用中、使用中=委托冻结+开仓占用 展示 | F06 | 待后端确认 |
+| B3 | **后台「体验金类型」枚举值** | 「不抵扣类型（增强体验金）」前端用假设值 `trialMode=3`，未敢纳入下拉可选项 → 后台选不到该类型，配资比例风险提示永不展示 | 「不抵扣类型」真实枚举（字段名 + 取值） | F09 | 待后端确认 |
+| B4 | **后台卡券记录金额口径（PRD 删除线简化）** | 前端直显后端字段、不做本地计算，需确认后端已按新口径返回 | 领取记录：增强 `usedAmount=0`、剩余口径删除、`expiredAmount=体验金总额`（不减历史开仓占用）；使用记录：增强**无使用记录**（是否已过滤为空） | F10/F11 | 待后端确认 |
+| B5 | **存量兼容上线策略** | PRD「停增量、不动存量、只切开关」，前端需做旧态容忍展示 | 存量卡券/旧「已使用完」态的下发方式、灰度开关字段 | F13 | 待后端确认 |
 
 ## 假设（未确认前不写业务代码）
 
