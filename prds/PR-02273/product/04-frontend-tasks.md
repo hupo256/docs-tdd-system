@@ -19,10 +19,10 @@
 | T07 | F06 | 正文 §体验金总额/§可用 | 金额口径展示：总额=可用+使用中；使用中=委托冻结+开仓占用 | ⏳ 待后端对账 | 金额为后端字段（availableTrialBalance 等）；可用=总额-使用中口径依赖后端委托冻结/开仓占用，待真实接口对账 |
 | T08 | F07 | 正文预估强平价公式 / `PRD-EMBED-009` | 开仓页预估强平价剔除增强体验金（G4 修正：前端本地计算） | ✅ 完成（默认落码，待联调核值） | commit dc0dcfbf36：2026-09-01 后端确认 c 端字段全返回，`bonus` 由合并值 `availableTrialBalance` 改取后端直给 `normalTrialBalance`（普通净值，非算术派生）；对仅普通用户零行为变化、含增强用户正好剔除=可自证无回归；liq.formulas.test 10 例锁公式。残留假设：`normalTrialBalance` 净口径待后端一句确认（低风险，缺失按 0 偏保守） |
 | T09 | F08 | 正文保证金率公式（rev2 §8.4） | 持仓保证金率/维持保证金率/强平价展示剔除增强体验金 | ✅ 完成 | commit 286fcedad8（marginRate 移除 .plus(enhancedTrialNum)；marginRate.test 8 例） |
-| T10 | F09 | `PRD-IMG-021` `PRD-IMG-022` `PRD-IMG-023` / 群补充 2026-08-13 | 现货后台体验金申请：不抵扣类型、配资比例、隐藏使用规则（apps/admin）；配资比例风险提示（红字静态，`copy.admin.rebateRatioRisk`） | ✅ 完成 | commit 286fcedad8（rebateRatioRisk 逐字文案+条件红字+断言）+ dcd8aad26b（后端确认不加枚举，「自有资金优先」relabel「不抵扣类型」，删 ASSUMED trialMode=3，风险提示挂 `trialMode===OwnFundsFirst(2)`）+ cd570b94b3（**2026-09-01 PM 口径：relabel 非全局改名，收窄为仅申请配置表单 SearchForm 下拉**，回退全局 label）；文案「谨慎」已 PM 确认 |
+| T10 | F09 | `PRD-IMG-021` `PRD-IMG-022` `PRD-IMG-023` / 群补充 2026-08-13 | 现货后台体验金申请：不抵扣类型、配资比例、隐藏使用规则（apps/admin）；配资比例风险提示（红字静态，`copy.admin.rebateRatioRisk`） | ✅ 完成 | commit 286fcedad8（rebateRatioRisk 逐字文案+条件红字+断言）+ dcd8aad26b（后端确认不加枚举，「自有资金优先」relabel「不抵扣类型」，删 ASSUMED trialMode=3，风险提示挂 `trialMode===OwnFundsFirst(2)`）+ cc49b07e09（**PM Iris 2026-09-01 定稿：现货后台全局改名**，经 constants 全局生效；曾临时收窄 cd570b94b3 已回退）；文案「谨慎」已 PM 确认 |
 | T11 | F10 | `PRD-IMG-024` | 现货后台卡券领取记录：增强体验金金额口径（已使用=0 / 剩余口径删除 / 到期未使用=体验金总额） | ✅ 完成（核实无需改） | PRD 删除线更新：三项均后端字段直显（`expiredAmount` 等，CouponDistributionRecords useColumns），口径改在后端；「-历史最大开仓占用」为公式内单项删除线=公式更新非整行删；前端不硬编码（反造假） |
 | T12 | F11 | `PRD-IMG-025` | 现货后台卡券使用记录：增强体验金无使用记录 | ⏳ 待后端对账 | 使用记录由后端返回，增强体验金无记录为后端过滤口径，待真实接口核对 |
-| T13 | F13 | `PRD-EMBED-006` | 存量兼容展示层：容忍存量状态/「已使用完」旧态、灰度开关 | ⏳ 待后端 | 后端「停增量、不动存量、只切开关」；前端仅容忍旧态，待后端上线策略确认 |
+| T13 | F13 | `PRD-EMBED-006` | 存量兼容展示层：容忍存量状态/「已使用完」旧态、灰度开关 | ✅ 完成（收口） | C 端容忍旧态由 F02「已失效」状态覆盖（已落码）；「失效存量增强体验金」按钮 PM 2026-09-01 定为**移出本仓、后台/运维处理**，前端不做。F13 前端职责闭环 |
 | T14 | F02,F04,F06,F07,F08 | `PRD-TABLE-006` `PRD-TABLE-007` | 按核心验收用例逐项自测勾选 | 阻塞(G6) | `evidence/` |
 | T15 | F14 | 正文 §结算/§状态机/§回收/§强平 | 后端引擎（不做，本仓外）——仅对接 API 字段/状态 | 不做 | — |
 
