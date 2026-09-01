@@ -54,9 +54,10 @@
         "apps/web/src/services/api/prediction/schemas.ts"
       ],
       "owner": "backend",
-      "status": "open",
+      "status": "resolved",
+      "resolvedDate": "2026-09-01",
       "blockingWhen": "api-ready",
-      "resolution": "team id 暂按 z.number()。若后端下发 string 需放宽为 z.union([string,number]).transform(String)（会连带调整 mapTagEventsToWorldCup.test.ts / eventCardType.test.ts 的 team fixture 为 string id）。Web接口文档未细化 team 结构，保持 open。2026-08-31 已尝试用真实 dev 环境验证：getTagEventsList(sports) 返回 {total:0,list:[]}，无真实比赛事件数据可核 team 结构，待有种子事件后复核。"
+      "resolution": "2026-09-01 PM/后端确认 team id 类型为 number。schema polymarketTeamSchema.id 保持 z.number() 即正确，已移除 line 40 的 ASSUMED 待对账注释。（此前因 dev getTagEventsList(sports) 返回空数据无法核，现由后端口径直接确认）"
     },
     {
       "id": "ASM-005",
@@ -67,9 +68,10 @@
         "apps/web/src/services/api/prediction/mapTagEventsToWorldCup.ts"
       ],
       "owner": "product-backend",
-      "status": "open",
+      "status": "resolved",
+      "resolvedDate": "2026-09-01",
       "blockingWhen": "api-ready",
-      "resolution": "volume null→'0'、volumeClob 缺失→'0'、name 回落 enum key/m.id 属假默认（[[feedback_no_fallback_masks_missing_data]]）。确认 volume/name 是否恒有值；若可缺失应改显式空标记 '--'。Web接口文档未涉及，保持 open。2026-08-31 已尝试用真实 dev 环境验证：列表返回空数据，无真实事件可核字段缺失兜底，待有种子事件后复核。"
+      "resolution": "2026-09-01 PM 确认：volume 为字符串、上游缺失时后端固定返回 '0'；volumeClob 同（字符串、缺失固定 '0'）——即后端保证有值，前端 `?? '0'` 与后端契约一致，非前端臆造假默认。市场**无 name 字段**，前端应读 `markets.*.question`——现有 mapper 已读 `m.groupItemTitle ?? m.question ?? ...`（未读不存在的 .name），question 为契约字段故保留；`?? m.id`/`?? key` 尾部兜底仅防 question 缺失的极端脏数据（question 后端常返）。schema/mapper 无需改动，仅销账。"
     },
     {
       "id": "ASM-006",
@@ -93,9 +95,10 @@
         "apps/web/src/apps/Prediction/WorldCup/common/MatchCard.tsx"
       ],
       "owner": "backend",
-      "status": "open",
+      "status": "partially-resolved",
+      "resolvedDate": "2026-09-01",
       "blockingWhen": "api-ready",
-      "resolution": "markets>3 时 OUTCOME_KEYS 坍缩为 home、MatchCard 写死 3 段斜切在 outcomes≠3 时破损。确认真实比赛恒为 3 markets；否则按 length 派生首/中/末角色。Web接口文档未细化，保持 open。2026-08-31 已尝试用真实 dev 环境验证：列表返回空数据，无真实比赛可核 markets 数量，待有种子事件后复核。"
+      "resolution": "2026-09-01 PM 确认比赛 markets **数量可变、不恒三段**。已修 mapTagEventToMatch 的 outcome key 分配（新增 matchOutcomeKeyAt）：2 段比赛（无平局盘，如网球）idx=1 从原先误判 draw（会套用平局样式+『平局』文案）改为 away；3 段保持 home/draw/away 不变；1 段取 home。回归测试见 mapTagEventsToWorldCup.test.ts（新增 2 段/3 段 key 断言）。**仍 open 的边界**：①markets>3 的比赛无法用三值枚举 MatchOutcomeKey 表达（超出下标回落 home，会产生重复 key）——需 PM/设计确认是否存在 >3 段比赛及其 outcome 语义；②MatchCard 斜切分段样式仍按 3 段设计，2 段/其它段数视觉需人工 QA（dev 无非-3 段真实比赛数据可核）；③与 B3 关联：后端『可提供』单/多市场类型标记字段，届时可替代 markets 数量启发式。"
     },
     {
       "id": "ASM-008",

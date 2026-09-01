@@ -325,12 +325,12 @@ Mock response 必须过真实 `schema.parse`；新增 `prediction.contract.test.
 |---|------------|------|------|---------|------|
 | 1 | `A1` `tagType` 四类枚举值 | crypto/politics/sports/finance | 文档确认小写英文四类 | 后端 | ✅ resolved（文档 §2）|
 | 2 | `A1` 二/三级过滤参数名 | `tag`/`subTag` | 文档确认为 `tagTypeTow`/`tagTypeThree` | 后端 | ✅ resolved（已改契约名）|
-| 3 | 单 vs 多市场判定字段 | mock 用 `markets` 数量 | 后端真实字段（类型标记？）| 后端 | 待确认（06-B3，文档未细化）|
+| 3 | 单 vs 多市场判定字段 | mock 用 `markets` 数量 | 后端真实字段（类型标记？）| 后端 | 🟡 2026-09-01 PM：**无明确类型标记字段，可提供**。暂沿用 markets 数量判定，待后端补标记（06-B3）；另比赛 markets 数量可变见 ASM-007 |
 | 4 | `A2` 分类树是否提供 | 无 | `GET /polymarket/category/tree` 提供，结构不变，语言走 header | 后端 | ✅ resolved（文档 §3）|
 | 5 | `A3` 搜索接口 + 排序 + 响应结构 | 无 | 独立响应 `{list,count,currentPage,pageSize}`，排序后端做 | 后端 | ✅ resolved（文档 §1）|
 | 6 | `categoryLabel` 是否后端返回 | mock 臆造 | 文档未列 → 证伪删除，组头改前端 `tagTypeTow/tagTypeThree` 派生 | 后端 | ✅ resolved（ASM-001）|
 | 7 | `A4` 手续费字段名 | mock 臆造 `orderAmount`/`feeAmount`/`receiveAmount`；8/25 曾按旧版加 9 费用字段 | 文档(1) §4「协议不扩展」+§6 明确费用明细不下发 Web → 全部回退，仅留旧 4 字段；费用拆解 UI 删 | 后端 | ✅ resolved（ASM-002；遗留 PRD 冲突见 BLK-001）|
-| 8 | 翻译存储字段结构 | 前端读已翻译文本 | 确认是随事件返回还是独立接口 | 后端 | 待确认（06-B5，文档未涉及）|
+| 8 | 翻译存储字段结构 | 前端读已翻译文本 | 确认是随事件返回还是独立接口 | 后端 | ✅ resolved（06-B5，2026-09-01）：**无独立翻译接口**，按 `exchange-language` header 返回当前语言文本；事件读 `title`、市场读 `question`、分类读 `category.name`（`nameMap` 存各语言、缺失回退英文），前端不自调翻译 |
 | 9 | `A1` `matchStatus`（live/upcoming）| mock 臆造 | 文档未给此字段，进行中两区块依赖它 | 后端 | ✅ resolved（ASM-008，2026-08-31 dev 证实后端不返回 → 改前端用 `startTimeUtc0` vs now 派生）|
 | 10 | `A2` 分类树响应形状 | G3 建模 `{categories:[]}` + `{key,name}`（从未真正调用）| 2026-08-31 dev 实测：裸数组 + `code`/`name`/`nameMap` | 后端 | ✅ resolved（§3.3；schema 改裸数组，首次真实接线）|
 
@@ -342,3 +342,4 @@ Mock response 必须过真实 `schema.parse`；新增 `prediction.contract.test.
 | 2026-08-25 | 《Web端接口文档》| 按真实契约对账：A1 过滤参数 `tagTypeTow/tagTypeThree`、进行中 `in_progress`、A3 独立响应、A4 曾加 9 费用字段、`categoryLabel/categoryGroupLabel` 证伪删除+组头前端派生 | schema/mapper/mock 重造，122 单测绿 |
 | 2026-08-31 | 《Web端接口文档(1)》| **A4 反转「协议不扩展」**：§4/§6 明确费用拆解（平台费/净下单金额/份额等）属后端内部不下发 Web；PM(Tomoto) 确认仅 A4 变、其他不变 | 回退 8/25 加的 9 费用字段（schema/fixture/handler/test），删除费用拆解 UI 行（EstimatedProfit 费用行 + PredictSellFeeRows.tsx），主行保留；122 单测绿、改动文件 0 新增 tsc；遗留 BLK-001 |
 | 2026-08-31 | dev 环境联调（后端 4 接口发布 dev）| 从 MSW 切真实接口：curl 实测 A1/A3/A2 可调（结构对齐，dev 空数据）；A2 顶层为**裸数组 + code**（非 `{categories:[]}`）；`matchStatus` **后端不返回** | ①schema 改 `apiCategoryTreeResponseSchema=z.array(...)`、新接线 `useCategoryTreeQuery`+`resolveCategoryTree`（分类树首次真实调用，后端优先+静态兜底）；②`matchStatus` 假透传改为 `startTimeUtc0` 时间派生（`polymarketTagEventSchema` 删 matchStatus、加 startTimeUtc0；mapper 用 `Date.now()>=ms` 派生）；③`browser.ts` 停止注册 predictionHandlers（脚手架文件保留）；133 单测绿、改动文件 0 新增 tsc（基线 193）|
+| 2026-09-01 | PM/后端集中答复（10 项待确认清单）| BLK-001 费用明细**不展示**（关闭）；team id=**number**（ASM-004 resolved）；volume/volumeClob 字符串+缺失固定 `"0"`、市场无 name 字段读 `question`（ASM-005 resolved）；比赛 markets **数量可变**（ASM-007 partially-resolved）；单/多市场**无类型标记字段、可提供**（B3）；**无独立翻译接口**、读 title/question/name（B5 resolved）；分类 `code` 为正式关联值 | ①schema 撤 team id ASSUMED 注释（number 已对）；②mapper 新增 `matchOutcomeKeyAt`：2 段比赛 idx=1 从误判 `draw` 修为 `away`，3 段不变（+2 回归测试）；③BLK-001 关闭、无需追加 UI 改动（8/31 已删费用行即正解）；④markets>3 比赛 outcome 语义 + MatchCard 非-3 段视觉 + 单/多类型标记 3 项仍待后端/设计（见 ASM-007/B3）。改动文件 0 新增 tsc |

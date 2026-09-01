@@ -17,24 +17,26 @@
 > **G5 对账（aven，2026-08-25）**：后端《Web端接口文档》到位，按真实契约重造 schema/mapper/mock（B1/B2/B4/B6/B7 逐项对账，见下表结论）。文档只给契约未确认后端 dev-ready，故**本轮不退役 handler，MSW 路线 B 继续挂**；接口真正可调后再退役。`matchStatus` 文档未给仍 open（ASM-008），正当挡 G5。
 >
 > **预计收益扩展反转（aven，2026-08-31）**：后端《Web端接口文档(1)》§4 改为「协议不扩展」、§6 明确费用拆解（平台费/Polymarket费/预计成交价/净下单金额/预计份额等）均属后端内部实现**不下发 Web**。PM(Tomoto) Lark 确认「原先返回预计收益的扩展了响应体字段已删掉、不扩展，以此文档为准，其他地方没变」。已回退 8/25 加的 9 个费用字段（schema/fixture/handler/test），并**删除 T18 建的费用拆解 UI 行**（买入弹窗「下单金额/手续费扣除」、卖出弹窗「获得金额/手续费」及 PredictSellFeeRows.tsx 整文件），「预计收益」主行保留。遗留 PRD F22/F23（前端按费用明细展示）与新契约冲突，见 🔴 BLK-001。
+>
+> **PM/后端集中答复对账（aven，2026-09-01）**：PM(Tomoto) 逐条回复待确认清单，收敛多项 open 假设与 BLK-001：①**费用明细不展示** → BLK-001 resolved（现状代码已删费用行、留预计收益主行即为正解）；②预计收益接口**已准备**（dev 部署）；③team id 类型 = **number**（ASM-004 resolved，schema `z.number()` 已对）；④`volume`/`volumeClob` 为**字符串**、上游缺失固定返回 `"0"`（后端保证有值，前端 `?? '0'` 与契约一致），市场**无 `name` 字段** → 读 `markets.*.question`（ASM-005 resolved，mapper 已读 question 未读 name）；⑤比赛 markets **数量可变、不恒三段**（ASM-007：修 mapper 2 段比赛 idx=1 从误判 `draw` 改为 `away`）；⑦单/多市场目前**无明确类型标记字段，后端可提供**（B3：暂沿用 markets 数量判定，待后端补标记）；⑧**不提供独立翻译接口**，按 `exchange-language` 返回当前语言文本，事件读 `title`、市场读 `question`、分类读 `category.name`（`nameMap` 存各语言、缺失回退英文），前端**不自调翻译**（B5 resolved）；⑨测试脏数据已清理；⑩分类 `code` 为**正式关联值**（与 §3.3 一致）。
 
 | # | 事项 | 影响功能 | 2026-08-25 对账结论 |
 |---|------|---------|--------------------|
 | B1 | 分类树接口（四大类各自二/三级分类，含固定"全部"/"进行中"）| F07,F10,F13,F18 | ✅ `GET /polymarket/category/tree` 提供，结构不变，语言走 header；前端静态兜底优先，slug 待接口 ready 对齐 |
 | B2 | 按分类查事件列表接口（`tagType` 扩展 + 二/三级过滤参数）| 全部列表 | ✅ 过滤参数确认为 `tagTypeTow`/`tagTypeThree`（原 `tag`/`subTag`），进行中固定值 `in_progress`（强制 tableType=1）；`categoryLabel` 文档未列→证伪删除 |
-| B3 | **单市场 vs 多市场事件判定字段**（决定卡片形态）| F12,F20 | ⏳ 文档未细化，沿用 `markets` 数量判定，保持 open |
+| B3 | **单市场 vs 多市场事件判定字段**（决定卡片形态）| F12,F20 | ⏳→🟡 2026-09-01 PM：目前**无明确类型标记字段，可提供**。暂沿用 `markets` 数量判定（1→single，>1→multi），待后端补类型标记后切换。另比赛 markets **数量可变**（见 ASM-007）|
 | B4 | 搜索接口（模糊匹配、按展示语言、排序、分页 50/页）| F01-F06 | ✅ 请求 `currentPage`（非 pageNum）；独立响应 `{list,count,currentPage,pageSize}`；排序后端保障；联想 5/完整 50 |
-| B5 | 翻译存储字段结构（前端读已翻译文本还是调接口）| F21 | ⏳ 文档未涉及，保持 open |
+| B5 | 翻译存储字段结构（前端读已翻译文本还是调接口）| F21 | ✅ 2026-09-01 PM resolved：**不提供独立翻译接口**，按 `exchange-language` header 返回当前语言文本。事件读 `title`、市场读 `question`、分类读 `category.name`（`nameMap` 存各语言、缺失回退英文原文）。前端直接展示、不自调翻译 |
 | B6 | feeRate/加价率/抽水比例/预计成交价 取值来源 | F22,F23 | ⛔ **2026-08-31 反转**：《Web端接口文档(1)》§4「协议不扩展」+§6 明确费用拆解字段（平台费/Polymarket费/预计成交价/净下单金额/份额等）均属后端内部实现**不下发 Web**。`getEstimatedProfit` 响应仅 estimateProfitAmount/profitAmount/rate/multiplier。8/25 加的 9 字段已回退，前端不得自算手续费。费用拆解 UI 行已删（见 BLK-001）。窄口径争议随扩展作废 |
 | B7 | 体育"进行中"聚合：①是后端返回还是前端聚合 ②两区块拆分依据字段 `matchStatus`('live'/'upcoming') 是否后端返回 ③组头分类名 `categoryGroupLabel`(如"足球\|中超",已翻译)是否后端返回，还是前端从 subTag 反查 | F14 | ①前端聚合（列表接口按 in_progress 返回全部比赛，前端拆两区块）②`matchStatus` 文档**未给**→🔴 open ASM-008，暂保留 mock ③组头**确定前端派生**：`resolveSportsGroupLabel(tagTypeTow,tagTypeThree)` 反查分类树 name，后端 `categoryGroupLabel` 证伪删除 |
 
-### 🔴 BLK-001 预计收益费用明细展示 vs 契约冲突（2026-08-31）
+### ✅ BLK-001 预计收益费用明细展示 vs 契约冲突（2026-08-31 提出，2026-09-01 resolved）
 
-- **状态**：open，待产品/后端明确。
+- **状态**：✅ resolved（2026-09-01 PM Tomoto 明确「不展示」）。
 - **冲突**：PRD F22/F23 要求下单弹窗展示手续费/下单金额等费用明细；但《Web端接口文档(1)》§4/§6 明确这些中间值不下发 Web、且前端不得自算手续费（后端职责）。
-- **本轮处理**：按 no-fake-data 规约，删除无数据来源的费用拆解 UI 行（不保留永久 `--`、不前端计算）。「预计收益」主行（estimateProfitAmount）保留。
-- **待明确**：①产品是否接受下单弹窗不再展示费用拆解（仅展示预计收益）；②若仍需展示，后端是否补下发费用字段（则回退本次 UI 删除 + 重加 schema 字段）。
-- **owner**：product + backend。
+- **裁决**：PM 确认下单/卖出弹窗**不展示费用拆解明细**，仅展示「预计收益」主行（`estimateProfitAmount`，已含后端计算的手续费）。费用收取逻辑（PRD「手续费收取逻辑优化」章）为后端内部口径，不映射为前端 UI。
+- **落地结果**：现状代码已符合裁决——8/31 已删费用拆解 UI 行（买入 EstimatedProfit 费用行 / 卖出 PredictSellFeeRows.tsx / PredictAccount 卖出 Modal），保留预计收益主行；本次无需追加改动。BLK-001 关闭。
+- **owner**：product + backend（已答复）。
 
 ## C. 需设计确认
 
