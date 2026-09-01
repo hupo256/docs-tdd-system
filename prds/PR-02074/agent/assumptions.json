@@ -127,7 +127,21 @@
       "status": "open",
       "resolvedDate": null,
       "blockingWhen": "prd-clarify",
-      "resolution": "2026-09-01 dev 实测发现：sports tableType=1（比赛 tab）当前唯一种子行是 `F1 Drivers' Champion`（id 504）——`teams: []`、markets 为 5 个候选车手的 outright（非对阵制）。mapTagEventToMatch 因缺 teams[0]/teams[1] 跳过该行（dev-only console.warn），故体育「比赛」tab 尽管后端返回 total=1 却渲染为空。这是**数据归类/产品**问题非前端 bug：head-to-head 比赛卡片（home vs away）本就无法承载 teamless 多候选 outright。待确认：①该类 outright 是否应归 tableType=2（事件 tab）而非 tableType=1；②或比赛 tab 需为 teamless 多候选另出卡片形态。当前前端行为（跳过 + warn，不崩不假造）是安全兜底。**连带影响**：ASM-007② 的非-3 段对阵视觉 QA 也因『dev 无真实对阵制比赛种子（唯一 sports 行是 teamless outright）』而无法人工核。"
+      "resolution": "2026-09-01（傍晚发现，深夜复扫更新）：sports tableType=1（比赛 tab）曾出现唯一种子行是 `F1 Drivers' Champion`（id 504）——`teams: []`、markets 为多个候选车手的 outright（非对阵制），mapTagEventToMatch 因缺 teams[0]/teams[1] 跳过该行（dev-only console.warn）→ 体育「比赛」tab 尽管后端返回 total>0 却渲染空。**深夜复扫（同日）：dev 数据已补齐，sports tableType=1 total=4——新增 3 场真实对阵足球（505/506/507，teams 齐全 + markets '0/1/2' 三段主/平/客 + clobTokenId），F1 outright 504 仍在**。故「比赛 tab 空」这一**症状已缓解**（现有 3 场真实对阵可渲染 + 视觉核对），但 **teamless outright 与真实对阵混在同一 tableType=1 的归类问题仍 open**：head-to-head 比赛卡片本就无法承载 teamless 多候选 outright，当前前端跳过 504 而渲染 505/506/507 是安全兜底。待确认：①teamless outright（如 504）是否应归 tableType=2（事件 tab）而非 tableType=1；②或比赛 tab 需为 teamless 多候选另出卡片形态。前端行为（跳过无 teams 行 + warn、渲染有 teams 行，不崩不假造）不变。**连带影响收敛**：ASM-007② 的 3 段对阵视觉 QA 现可用 505/506/507 真实数据做；但 2 段（无平局，网球/篮球）对阵 QA 仍缺真实种子（现有 3 场全是足球 3 段）。"
+    },
+    {
+      "id": "ASM-010",
+      "endpoint": "tag-events-list (非体育分类, tableType)",
+      "field": "tableType 对非体育分类的语义 / 是否生效",
+      "code": [
+        "apps/web/src/services/api/prediction/polymarket.ts",
+        "apps/web/src/apps/Prediction"
+      ],
+      "owner": "backend",
+      "status": "open",
+      "resolvedDate": null,
+      "blockingWhen": "api-ready",
+      "resolution": "2026-09-01 深夜 dev 复扫发现：非体育分类（crypto/politics/finance）传 tableType=1 与 tableType=2 返回**完全相同**数据——tableType 对非体育疑似未生效或语义与体育不同；且 politics tableType=1 混入「美联储9月决定」等 2-market 单事件（非对阵制）。而体育 tableType=1（比赛）与 tableType=2（事件）确有区分。待后端确认：①非体育分类是否支持 tableType 区分，若否前端是否应只发 tableType=2 或不传；②politics tableType=1 混入非对阵单事件是否预期。当前前端按分类维度发起请求、按 teams/markets 数量派生卡片形态，非体育不依赖 tableType 语义，故不阻断交付；但若后端明确语义，需据此校正请求参数。已随 ASM-009/『要 2 段比赛』清单一并发后端确认。"
     }
   ]
 }
