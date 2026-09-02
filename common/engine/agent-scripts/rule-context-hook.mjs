@@ -2,7 +2,7 @@
 
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
-import { renderRuleContext, resolveRulePack } from './lib/l2-rule-resolver.mjs'
+import { normalizeTargetPath, resolveRulePack, selectRuleInjectionBatch } from './lib/l2-rule-resolver.mjs'
 import { loadConfig } from './lib/roots.mjs'
 import { advanceContextEpoch, prepareLedger, recordInjection, recordPendingTool, recordPostTool, resolveGitWorktree } from './lib/rule-consumption.mjs'
 
@@ -31,8 +31,36 @@ function shellTargets(command) {
   const targets = [...patchPaths(command)]
   for (const match of command.matchAll(/(?:^|[^>])>{1,2}\s*(["']?)([^\s"';&|]+)\1/g)) targets.push(match[2])
   for (const match of command.matchAll(/\b(?:touch|rm|unlink)\s+(?:--\s+)?(["']?)([^\s"';&|]+)\1/g)) targets.push(match[2])
+  for (const match of command.matchAll(/\b(?:tee|truncate)\s+(?:-[^\s]+\s+)*(["']?)([^\s"';&|]+)\1/g)) targets.push(match[2])
+  for (const match of command.matchAll(/\b(?:cp|mv)\s+(?:-[^\s]+\s+)*(?:["']?[^\s"';&|]+["']?\s+)+(["']?)([^\s"';&|]+)\1(?=\s*(?:[;&|]|$))/g)) targets.push(match[2])
   for (const match of command.matchAll(/\b(?:biome|prettier)\b[^\n;&|]*\s(?:--write|check\s+--write)[^\n;&|]*\s(["']?)([^\s"';&|]+)\1/g)) targets.push(match[2])
   return targets
+}
+
+export function classifyTargets(input, worktree) {
+  const repoTargets = []
+  const externalTargets = []
+  let dynamicTarget = false
+  for (const target of extractTargets(input)) {
+    if (/[$`*?{}]|^~(?:\/|$)/.test(target)) {
+      dynamicTarget = true
+      continue
+    }
+    try {
+      repoTargets.push(normalizeTargetPath(worktree, target))
+    } catch {
+      externalTargets.push(target)
+    }
+  }
+  const toolInput = input?.tool_input && typeof input.tool_input === 'object' ? input.tool_input : {}
+  const commands = [toolInput.command, toolInput.cmd].filter((value) => typeof value === 'string')
+  const opaqueWrite = commands.some((command) => /(?:^|\s)(?:sed\s+-i|perl\s+-pi|python\s+-c|node\s+-e)(?:\s|$)/.test(command))
+    || (typeof toolInput.code === 'string' && /tools\.(?:apply_patch|exec_command)\s*\(/.test(toolInput.code) && repoTargets.length === 0)
+  return {
+    repoTargets: [...new Set(repoTargets)],
+    externalTargets: [...new Set(externalTargets)],
+    unknownWrite: dynamicTarget || opaqueWrite || (isPotentialUnresolvedWrite(input) && repoTargets.length === 0 && externalTargets.length === 0),
+  }
 }
 
 function looksLikeUnresolvedWrite(command) {
@@ -97,6 +125,13 @@ if (args.includes('--self-test')) {
     'nested apply_patch path',
   )
   assert(extractTargets({ tool_input: { command: "printf x > 'src/c.ts'" } }).join(',') === 'src/c.ts', 'shell redirect path')
+  const external = classifyTargets({ tool_input: { command: 'npm test > /dev/null 2>&1' } }, '/repo')
+  assert(external.repoTargets.length === 0 && external.externalTargets.join(',') === '/dev/null', 'external redirect is classified')
+  const copy = classifyTargets({ tool_input: { command: 'cp /tmp/a src/a.ts' } }, '/repo')
+  assert(copy.repoTargets.join(',') === 'src/a.ts', 'copy destination is classified as a repository target')
+  const opaque = classifyTargets({ tool_input: { command: "python -c 'open(\"src/a.ts\",\"w\").write(\"x\")' > /tmp/out" } }, '/repo')
+  assert(opaque.unknownWrite, 'opaque writes stay unresolved even with an external redirect')
+  assert(classifyTargets({ tool_input: { command: 'printf x > "$TMPDIR/out"' } }, '/repo').unknownWrite, 'dynamic targets stay unresolved')
   assert(
     isPotentialUnresolvedWrite({
       tool_input: { command: 'sed -i x src/a.ts' },
@@ -138,14 +173,17 @@ try {
     process.exit(0)
   }
 
-  const targets = extractTargets(input)
+  const targetClassification = classifyTargets(input, worktree)
+  const targets = targetClassification.repoTargets
+  if (targetClassification.unknownWrite) {
+    hookOutput('PreToolUse', {
+      permissionDecision: 'deny',
+      permissionDecisionReason: 'Potential write has an opaque or statically unresolved repository target. Use Edit/Write/apply_patch or a command with explicit repository-relative paths.',
+    })
+    process.exit(0)
+  }
   if (!targets.length) {
-    if (isPotentialUnresolvedWrite(input)) {
-      hookOutput('PreToolUse', {
-        permissionDecision: 'deny',
-        permissionDecisionReason: 'Potential write has no statically resolvable target path. Use Edit/Write/apply_patch or a command with explicit repository-relative paths.',
-      })
-    } else hookOutput('PreToolUse')
+    hookOutput('PreToolUse')
     process.exit(0)
   }
 
@@ -161,7 +199,7 @@ try {
   const injected = new Set(state?.injectedRuleHashes || [])
   const delta = pack.matchedRules.filter((rule) => !injected.has(rule.sourceHash))
   if (delta.length) {
-    const rendered = renderRuleContext(pack, { rules: delta })
+    const { rendered, remainingCount } = selectRuleInjectionBatch(pack, { rules: delta })
     recordInjection(id, {
       ruleHashes: rendered.ruleHashes,
       packFingerprint: pack.fingerprint,
@@ -171,7 +209,7 @@ try {
     })
     hookOutput('PreToolUse', {
       permissionDecision: 'deny',
-      permissionDecisionReason: `Injected ${rendered.ruleCount} previously unseen rules (${rendered.byteLength} bytes). Read the complete injected context, apply it, then retry the tool call.`,
+      permissionDecisionReason: `Injected ${rendered.ruleCount} previously unseen rules (${rendered.byteLength} bytes)${remainingCount ? `; ${remainingCount} rules remain for the next retry` : ''}. Read the complete injected context, apply it, then retry the tool call.`,
       additionalContext: rendered.text,
     })
     process.exit(0)
@@ -190,9 +228,10 @@ try {
   try {
     const eventName = raw ? JSON.parse(raw).hook_event_name : 'PreToolUse'
     if (eventName === 'PreToolUse') {
+      const repair = error?.code === 'RULE_CONTEXT_SINGLE_RULE_TOO_LARGE' ? ` Rule ${error.rulePath} cannot fit by itself; split or shorten that .mdc file before retrying.` : ''
       hookOutput('PreToolUse', {
         permissionDecision: 'deny',
-        permissionDecisionReason: `L2 rule injection failed closed: ${message}`,
+        permissionDecisionReason: `L2 rule injection failed closed: ${message}.${repair}`,
       })
     } else {
       process.stderr.write(`L2 rule hook failed: ${message}\n`)

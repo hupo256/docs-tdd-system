@@ -162,6 +162,26 @@ export function renderRuleContext(pack, { rules = pack.matchedRules, maxBytes = 
   }
 }
 
+/** Select the largest stable prefix of unseen rules that fits one hook event. */
+export function selectRuleInjectionBatch(pack, { rules = pack.matchedRules, maxBytes = DEFAULT_EVENT_BUDGET_BYTES } = {}) {
+  if (!rules.length) return { rendered: renderRuleContext(pack, { rules: [], maxBytes }), remainingCount: 0 }
+  let rendered = null
+  for (let size = 1; size <= rules.length; size += 1) {
+    try {
+      rendered = renderRuleContext(pack, { rules: rules.slice(0, size), maxBytes })
+    } catch (error) {
+      if (error?.code !== 'RULE_CONTEXT_BUDGET_EXCEEDED') throw error
+      if (size === 1) {
+        error.code = 'RULE_CONTEXT_SINGLE_RULE_TOO_LARGE'
+        error.rulePath = rules[0].relativePath
+        throw error
+      }
+      break
+    }
+  }
+  return { rendered, remainingCount: rules.length - rendered.ruleCount }
+}
+
 function selfTest() {
   const assert = (condition, message) => {
     if (!condition) throw new Error(`l2-rule-resolver self-test failed: ${message}`)
@@ -177,7 +197,26 @@ function selfTest() {
     escaped = true
   }
   assert(escaped, 'outside paths are rejected')
-  console.log('PASS l2-rule-resolver (path normalization)')
+  const syntheticPack = {
+    targets: ['src/a.ts'],
+    fingerprint: 'pack',
+    conflictOverrides: [],
+    matchedRules: [
+      { relativePath: 'a.mdc', sourceHash: 'a', matches: [{ target: 'src/a.ts', reason: 'alwaysApply' }], body: 'a'.repeat(40) },
+      { relativePath: 'b.mdc', sourceHash: 'b', matches: [{ target: 'src/a.ts', reason: 'alwaysApply' }], body: 'b'.repeat(40) },
+    ],
+  }
+  const first = renderRuleContext(syntheticPack, { rules: syntheticPack.matchedRules.slice(0, 1) })
+  const batch = selectRuleInjectionBatch(syntheticPack, { maxBytes: first.byteLength + 1 })
+  assert(batch.rendered.ruleHashes.join(',') === 'a' && batch.remainingCount === 1, 'oversized packs are split in stable order')
+  let oversizedRule = false
+  try {
+    selectRuleInjectionBatch(syntheticPack, { maxBytes: first.byteLength - 1 })
+  } catch (error) {
+    oversizedRule = error?.code === 'RULE_CONTEXT_SINGLE_RULE_TOO_LARGE' && error?.rulePath === 'a.mdc'
+  }
+  assert(oversizedRule, 'a single oversized rule reports an actionable error')
+  console.log('PASS l2-rule-resolver (path normalization and injection batching)')
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1]) && process.argv.includes('--self-test')) selfTest()
