@@ -68,7 +68,9 @@
 | 只刷新项目索引 | `node apps/web/docs_tdd/common/engine/agent-scripts/update-project-index.mjs --write` |
 | warn-first 晋级台账（记录/复核/候选） | `node apps/web/docs_tdd/common/engine/agent-scripts/warn-ledger.mjs --report`（gate --write 自动记录；`--mark <RULE> <PR> <true-positive\|false-positive> --write` 复核） |
 | Markdown 本地链接检查 | `node apps/web/docs_tdd/common/engine/agent-scripts/check-doc-links.mjs` |
-| PostToolUse hook 门禁分发 | `node apps/web/docs_tdd/common/engine/agent-scripts/claude-posttooluse-gate.mjs` |
+| L2 glob 解析/消费回执诊断 | `node apps/web/docs_tdd/common/engine/agent-scripts/rule-context.mjs <resolve|status|verify>` |
+| Claude/Codex Pre/PostToolUse 规则注入 | `node apps/web/docs_tdd/common/engine/agent-scripts/rule-context-hook.mjs --client <claude|codex>` |
+| Claude PostToolUse 代码门禁分发 | `node apps/web/docs_tdd/common/engine/agent-scripts/claude-posttooluse-gate.mjs` |
 | 上线后回收编码 worktree | `node apps/web/docs_tdd/common/engine/agent-scripts/decommission-worktree.mjs PR-01234 [--dry-run]` |
 | Lark Bot Gateway 任务 worker | `node apps/web/docs_tdd/common/lark-bot/lark-worker.mjs [--once]` |
 | PostToolUse Bash 执行证据日志 | `node apps/web/docs_tdd/common/engine/agent-scripts/log-exec.mjs --out <abs-log-path>` |

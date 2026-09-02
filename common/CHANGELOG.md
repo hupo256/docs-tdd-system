@@ -7,6 +7,16 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-09-02（Claude/Codex 机械消费 Cursor L2 规则）
+
+- 新增统一 MDC Resolver 与 Claude/Codex PreToolUse deny-and-retry 注入：直接读取当前 worktree 的 `.cursor/rules`，按 `alwaysApply`/`globs` 匹配，正文逐字注入；单事件 96 KiB 超限阻断，不静默截断。
+- 新增 session/context epoch 消费账本：PostToolUse 记录文件 hash 与规则 fingerprint，`changed` 和 G5+ 拒绝缺回执、绕过 hook、规则漂移或陈旧内容；账本目录排除在变更快照外，Git HEAD 变化会先开启新 epoch 再重新注入。
+- Codex/Claude 用户级 hook 由统一安装器幂等维护；Codex hook timeout 使用真实输入字段 `timeout`，首次或内容变化后必须通过 Codex 启动审查信任新 hash。
+- effective rules 现在递归指纹化 L1 skill 全树，按当前 worktree 读取 L2、但不把物理 worktree 路径写入内容 fingerprint；doctor 阻断可发现的 backup skill 和任一 worktree 中被 `skip-worktree` 隐藏的规则入口。
+- 原子发布链、golden 聚合器与 context 新鲜度检查保留调用方 worktree，不再退回主仓读取另一份本地 L2 入口；不同 worktree 的真实字节差异继续由 effective fingerprint 明示。
+- 未改动的仓库入口重复文案由 doctor 明示为 warning；真实 L2 冲突、入口本地改写/隐藏和 fingerprint 漂移仍保持 error，避免为了消警擅改团队 tracked 文件。
+- 生效边界：Cursor 原生行为不变；Claude/Codex 对有 glob 或 `alwaysApply` 的 MDC 生效。无 glob 且非 alwaysApply 的 `async-api-routes.mdc` 继续在 `unscopedRules` 明示，尚不宣称机械对齐。
+
 ## 2026-09-01（PRD bullet 原子验收与证据类型硬闸）
 
 - 新模板把本期 PRD bullet 固化为 `R-Fxx-xx`，要求一条 requirement 恰好对应一条 Task；存量项目仅在主动加入「原子需求清单」后启用，避免全量回填。

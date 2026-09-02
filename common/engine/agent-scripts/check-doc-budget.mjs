@@ -12,9 +12,9 @@ import { spawnSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { charCount, parseFrontmatter, validateSchema } from './lib/doc-budget-schema.mjs'
-import { createContextPack } from './lib/context-pack.mjs'
 import { auditDefaultContextPacks } from './lib/context-budget-audit.mjs'
+import { createContextPack } from './lib/context-pack.mjs'
+import { charCount, parseFrontmatter, validateSchema } from './lib/doc-budget-schema.mjs'
 import { auditRuleIndex } from './lib/rule-index-audit.mjs'
 import { undeclaredErrorRules } from './lib/rule-ledger.mjs'
 import { CODING_SCENARIOS } from './lib/rule-session.mjs'
@@ -37,6 +37,8 @@ const REQUIRED_SCRIPTS = [
   'publish-rule-chain.mjs',
   'rule-release.mjs',
   'render-delivery-summary.mjs',
+  'rule-context-hook.mjs',
+  'rule-context.mjs',
   'run-project-gate.mjs',
   'schema-fixture-reconcile.mjs',
   'set-project-stage.mjs',
@@ -65,12 +67,15 @@ const SELF_TEST_SCRIPTS = [
   ['lib/explain-rule.mjs', '--self-test'],
   ['lib/gate-doc-parsers.mjs', '--self-test'],
   ['lib/gate-heartbeat.mjs', '--self-test'],
+  ['lib/hook-contract.mjs', '--self-test'],
   ['lib/g6-context-session.mjs', '--self-test'],
   ['lib/fast-track-policy.mjs', '--self-test'],
   ['lib/gate-partial.mjs', '--self-test'],
   ['lib/gate-payload.mjs', '--self-test'],
   ['lib/golden-verdict.mjs', '--self-test'],
   ['lib/lark-prd-drift.mjs', '--self-test'],
+  ['lib/l2-rule-resolver.mjs', '--self-test'],
+  ['lib/l2-rule-resolver-golden.mjs'],
   ['lib/prd-manifest.mjs', '--self-test'],
   ['lib/project-decision.mjs', '--self-test'],
   ['lib/project-index.mjs', '--self-test'],
@@ -81,6 +86,7 @@ const SELF_TEST_SCRIPTS = [
   ['lib/rule-ledger.mjs', '--self-test'],
   ['lib/rule-index-audit.mjs', '--self-test'],
   ['lib/rule-maturity.mjs', '--self-test'],
+  ['lib/rule-consumption.mjs', '--self-test'],
   ['lib/waiver-policy.mjs', '--self-test'],
   ['lib/warn-retirement.mjs', '--self-test'],
   ['lib/confirmation.mjs', '--self-test'],
@@ -90,6 +96,7 @@ const SELF_TEST_SCRIPTS = [
   ['publish-rule-chain.mjs', '--self-test'],
   ['rule-release.mjs', '--self-test'],
   ['render-delivery-summary.mjs', '--self-test'],
+  ['rule-context-hook.mjs', '--self-test'],
   ['run-project-gate.mjs', '--self-test'],
   ['set-project-stage.mjs', '--self-test'],
   ['update-project-index.mjs', '--self-test'],
@@ -139,6 +146,7 @@ const SELF_TEST_EXEMPT = new Set([
   'decommission-worktree.mjs', // worktree 回收 IO
   'log-exec.mjs', // 执行日志 IO
   'notify-lark.mjs', // Lark 发送薄包装（文档只读同步链路，非 bot）
+  'rule-context.mjs', // L2 resolver/receipt 的人工诊断 CLI，核心纯逻辑各自在 lib 自测
   'prepare-coding-worktree.mjs', // worktree 准备 IO
   'start-new-project.mjs', // 项目骨架 IO
   'sync-lark-docs.mjs', // Lark 只读同步 IO
@@ -243,10 +251,7 @@ if (residents.length === 0) {
 // 校验 2：常驻文件大小
 for (const r of residents) {
   if (r.size > RESIDENT_BUDGET) {
-    errors.push(
-      `❌ ${r.name} = ${r.size} 字符，超预算 ${RESIDENT_BUDGET}（超 ${r.size - RESIDENT_BUDGET}）。` +
-        `\n   常驻必须恒定小：把细则移到对应 on-demand 专题，§1 只留"违反即打回"的硬规则。`,
-    )
+    errors.push(`❌ ${r.name} = ${r.size} 字符，超预算 ${RESIDENT_BUDGET}（超 ${r.size - RESIDENT_BUDGET}）。` + `\n   常驻必须恒定小：把细则移到对应 on-demand 专题，§1 只留"违反即打回"的硬规则。`)
   } else {
     console.log(`✅ ${r.name} = ${r.size} / ${RESIDENT_BUDGET} 字符（余 ${RESIDENT_BUDGET - r.size}）`)
   }
@@ -262,10 +267,7 @@ for (const r of residents) {
     const size = charCount(readFileSync(join(RULES_DIR, name), 'utf8'))
     const budget = DOC_BUDGET_OVERRIDES[name] || DOC_BUDGET_DEFAULT
     if (size > budget.fail) {
-      overCap.push(
-        `❌ ${name} = ${size} 字符，超硬上限 ${budget.fail}（超 ${size - budget.fail}）。` +
-          `\n   拆分为更小专题、把历史移出、或改指针；引用型大文件可在 check-doc-budget.mjs 的 DOC_BUDGET_OVERRIDES 调整并说明理由。`,
-      )
+      overCap.push(`❌ ${name} = ${size} 字符，超硬上限 ${budget.fail}（超 ${size - budget.fail}）。` + `\n   拆分为更小专题、把历史移出、或改指针；引用型大文件可在 check-doc-budget.mjs 的 DOC_BUDGET_OVERRIDES 调整并说明理由。`)
     } else if (size > budget.warn) {
       console.warn(`⚠ ${name} = ${size} 字符，超告警线 ${budget.warn}（硬上限 ${budget.fail}）：考虑瘦身/归档/拆指针。`)
     }
@@ -294,10 +296,7 @@ for (const r of residents) {
     const size = charCount(readFileSync(join(SCRIPTS_DIR, rel), 'utf8'))
     const budget = SCRIPT_BUDGET_OVERRIDES[rel] || SCRIPT_BUDGET_DEFAULT
     if (size > budget.fail) {
-      overCap.push(
-        `❌ agent-scripts/${rel} = ${size} 字符，超硬上限 ${budget.fail}（超 ${size - budget.fail}）。` +
-          `\n   抽公共 lib、拆子命令、或把纯逻辑移进可测 lib；确属大执行器可在 SCRIPT_BUDGET_OVERRIDES 调整并说明理由。`,
-      )
+      overCap.push(`❌ agent-scripts/${rel} = ${size} 字符，超硬上限 ${budget.fail}（超 ${size - budget.fail}）。` + `\n   抽公共 lib、拆子命令、或把纯逻辑移进可测 lib；确属大执行器可在 SCRIPT_BUDGET_OVERRIDES 调整并说明理由。`)
     } else if (size > budget.warn) {
       console.warn(`⚠ agent-scripts/${rel} = ${size} 字符，超告警线 ${budget.warn}（硬上限 ${budget.fail}）：考虑抽 lib/拆子命令。`)
     }
@@ -305,10 +304,7 @@ for (const r of residents) {
   }
   if (overCap.length) errors.push(...overCap)
   if (missingSelfTest.length) {
-    errors.push(
-      `❌ 以下脚本既无 --self-test 也未登记豁免：${missingSelfTest.join(', ')}。` +
-        `\n   含可测逻辑的加 --self-test 并登记 SELF_TEST_SCRIPTS；纯 CLI/IO 包装加入 SELF_TEST_EXEMPT（一次有意识决定）。`,
-    )
+    errors.push(`❌ 以下脚本既无 --self-test 也未登记豁免：${missingSelfTest.join(', ')}。` + `\n   含可测逻辑的加 --self-test 并登记 SELF_TEST_SCRIPTS；纯 CLI/IO 包装加入 SELF_TEST_EXEMPT（一次有意识决定）。`)
   }
   if (!overCap.length && !missingSelfTest.length) {
     console.log(`✅ 脚本预算与 self-test 覆盖：${scriptFiles.length} 个 .mjs 均在硬上限内且已 self-test 或登记豁免。`)
@@ -362,11 +358,19 @@ if (!existsSync(ruleIndexPath)) {
     for (const error of indexAudit.errors) errors.push(`❌ ${RULE_INDEX_FILE}.${error}`)
     // 默认路径必须对所有场景实际可生成且不越 hard limit。用 summary 硬上限构造最坏输入，避免活跃项目偏短掩盖回归。
     const release = { currentFingerprint: 'context-budget-audit' }
-    const effective = { currentFingerprint: 'context-budget-audit', clientMatrix: {} }
+    const effective = {
+      currentFingerprint: 'context-budget-audit',
+      clientMatrix: {},
+    }
     const contextAudit = auditDefaultContextPacks({
       index: ruleIndex,
       codingScenarios: CODING_SCENARIOS,
-      buildPack: (name, mode, options = {}) => createContextPack('PR-00000', name, release, effective, mode, { summaryText: 'x'.repeat(2200), write: false, ...options }),
+      buildPack: (name, mode, options = {}) =>
+        createContextPack('PR-00000', name, release, effective, mode, {
+          summaryText: 'x'.repeat(2200),
+          write: false,
+          ...options,
+        }),
     })
     const packErrors = contextAudit.errors
     if (packErrors.length) errors.push(`❌ 默认 context pack 越界或无法生成：\n   ${packErrors.join('\n   ')}`)
@@ -462,9 +466,7 @@ if (!existsSync(ledgerPath)) {
   }
   const unregistered = [...scriptIds].filter((id) => !ledgerText.includes(id)).sort()
   if (unregistered.length) {
-    errors.push(
-      `❌ 以下 rule ID 在脚本里实装但未登记进台账（脱节，Review/通知无法引用）：\n   ${unregistered.join('\n   ')}` + `\n   请在 ${LEDGER_FILE} §3/§3.5/§4 或 ${LEDGER_EXTENSION_FILE} 补台账行。`,
-    )
+    errors.push(`❌ 以下 rule ID 在脚本里实装但未登记进台账（脱节，Review/通知无法引用）：\n   ${unregistered.join('\n   ')}` + `\n   请在 ${LEDGER_FILE} §3/§3.5/§4 或 ${LEDGER_EXTENSION_FILE} 补台账行。`)
   } else {
     console.log(`✅ rule ID 台账：${scriptIds.size} 个脚本 ID 全部登记于 ${LEDGER_FILE} + ${LEDGER_EXTENSION_FILE}。`)
   }
@@ -481,11 +483,12 @@ if (!existsSync(ledgerPath)) {
   if (!rulesetRules) {
     errors.push('❌ 无法解析 common/rules/ruleset.json，规则档位与豁免语义无法校验。')
   } else {
-    const undeclared = undeclaredErrorRules({ ledgerText: readFileSync(ledgerExtensionPath, 'utf8'), rulesetRules })
+    const undeclared = undeclaredErrorRules({
+      ledgerText: readFileSync(ledgerExtensionPath, 'utf8'),
+      rulesetRules,
+    })
     if (undeclared.length) {
-      errors.push(
-        `❌ 以下 error 级 rule ID 在 ${LEDGER_EXTENSION_FILE} 有台账行但 ruleset.json 未声明 blocking/waivable：\n   ${undeclared.join('\n   ')}\n   未声明的规则不接受豁免、也不参与档位定档（语义未定义）；请补 { maturity, blocking, waivable }。`,
-      )
+      errors.push(`❌ 以下 error 级 rule ID 在 ${LEDGER_EXTENSION_FILE} 有台账行但 ruleset.json 未声明 blocking/waivable：\n   ${undeclared.join('\n   ')}\n   未声明的规则不接受豁免、也不参与档位定档（语义未定义）；请补 { maturity, blocking, waivable }。`)
     } else {
       console.log(`✅ ruleset 声明完整：${LEDGER_EXTENSION_FILE} 的 error 级 ID 均已声明 blocking + waivable。`)
     }
@@ -588,20 +591,7 @@ const docFilesForScriptRefs = [
 
 // 默认绑定配置的核心键必须至少有一个运行时消费者，防止“配置看似可移植，脚本仍硬编码”。
 {
-  const coreConfigKeys = [
-    'appSubpath',
-    'docsMountPath',
-    'baseRef',
-    'projectIdPattern',
-    'branchPrefix',
-    'defaultPort',
-    'portRangeStart',
-    'verifyPath',
-    'typecheckRoots',
-    'productionBuild',
-    'moduleImportAliases',
-    'larkOutputDir',
-  ]
+  const coreConfigKeys = ['appSubpath', 'docsMountPath', 'baseRef', 'projectIdPattern', 'branchPrefix', 'defaultPort', 'portRangeStart', 'verifyPath', 'typecheckRoots', 'productionBuild', 'moduleImportAliases', 'larkOutputDir']
   if (!existsSync(DEFAULT_CONFIG_FILE)) {
     errors.push('❌ 缺少 docs-tdd.config.default.json。')
   } else {
@@ -669,8 +659,7 @@ if (missingTemplateRefs.length) {
   const positiveBacktick = '| `PR-01947` | 未记录 |'
   const negativeLink = '各需求项目文档目录；完整清单见 [PR-01685](./PR-01685/README.md)'
   const negativeInline = '- 项目目录：`apps/web/docs_tdd/prds/PR-01685/`；worktree 见 PROJECTS.md'
-  const selfOk =
-    PROJECT_TABLE_ROW_RE.test(positive) && PROJECT_TABLE_ROW_RE.test(positiveBacktick) && !PROJECT_TABLE_ROW_RE.test(negativeLink) && !PROJECT_TABLE_ROW_RE.test(negativeInline)
+  const selfOk = PROJECT_TABLE_ROW_RE.test(positive) && PROJECT_TABLE_ROW_RE.test(positiveBacktick) && !PROJECT_TABLE_ROW_RE.test(negativeLink) && !PROJECT_TABLE_ROW_RE.test(negativeInline)
   if (!selfOk) {
     errors.push('❌ 校验 10 自测失败：PROJECT_TABLE_ROW_RE 判据漂移（正/反样例不符预期），先修脚本再继续。')
   } else {
@@ -723,8 +712,7 @@ if (missingTemplateRefs.length) {
     }
     return null
   }
-  const positive =
-    '1. `apps/web/docs_tdd/AGENTS.md`\n2. `apps/web/docs_tdd/CONTEXT.md`\n3. `apps/web/docs_tdd/common/README.md`\n4. `apps/web/docs_tdd/common/rules/rule-inheritance.md`'
+  const positive = '1. `apps/web/docs_tdd/AGENTS.md`\n2. `apps/web/docs_tdd/CONTEXT.md`\n3. `apps/web/docs_tdd/common/README.md`\n4. `apps/web/docs_tdd/common/rules/rule-inheritance.md`'
   const negative = '1. 读 [common/rules/rule-router.md](./common/rules/rule-router.md)（唯一常驻规则文件），按场景命中才展开专题正文，禁止全读。'
   if (!findReadingList(positive) || findReadingList(negative)) {
     errors.push('❌ 校验 10.4 自测失败：多步阅读清单判据漂移（正/反样例不符预期），先修脚本再继续。')
@@ -775,7 +763,10 @@ if (missingTemplateRefs.length) {
   const handoffs = readdirSync(DOCS_TDD_DIR).filter((name) => /^HANDOFF-.*\.md$/.test(name))
   const stale = []
   for (const name of handoffs) {
-    const log = spawnSync('git', ['log', '-1', '--format=%cs', '--', name], { cwd: DOCS_TDD_DIR, encoding: 'utf8' })
+    const log = spawnSync('git', ['log', '-1', '--format=%cs', '--', name], {
+      cwd: DOCS_TDD_DIR,
+      encoding: 'utf8',
+    })
     const committedAt = log.status === 0 ? log.stdout.trim() : ''
     if (!/^\d{4}-\d{2}-\d{2}$/.test(committedAt)) continue // 未提交/无法判定 → 不猜
     const days = Math.floor((Date.now() - Date.parse(`${committedAt}T00:00:00Z`)) / 86400000)
@@ -811,15 +802,9 @@ if (missingTemplateRefs.length) {
     const machineMatch = MACHINE_ROW_RE.exec(readmeText)
     const machineGate = machineMatch ? machineMatch[1].trim().replace(/^\*\*|\*\*$/g, '') : ''
     if (!machineMatch) {
-      syncErrors.push(
-        `❌ 'DOC-SYNC-001' ${name}：gate-results 已 ${gateData.gate} PASS，但 README 缺「最新通过门禁」机器行。` +
-          `\n   修复：node apps/web/docs_tdd/common/engine/agent-scripts/set-project-stage.mjs ${name} ${gateData.gate}`,
-      )
+      syncErrors.push(`❌ 'DOC-SYNC-001' ${name}：gate-results 已 ${gateData.gate} PASS，但 README 缺「最新通过门禁」机器行。` + `\n   修复：node apps/web/docs_tdd/common/engine/agent-scripts/set-project-stage.mjs ${name} ${gateData.gate}`)
     } else if (machineGate !== gateData.gate) {
-      syncErrors.push(
-        `❌ 'DOC-SYNC-001' ${name}：README 机器行=${machineGate}，gate-results=${gateData.gate}。` +
-          `\n   修复：node apps/web/docs_tdd/common/engine/agent-scripts/set-project-stage.mjs ${name} ${gateData.gate}`,
-      )
+      syncErrors.push(`❌ 'DOC-SYNC-001' ${name}：README 机器行=${machineGate}，gate-results=${gateData.gate}。` + `\n   修复：node apps/web/docs_tdd/common/engine/agent-scripts/set-project-stage.mjs ${name} ${gateData.gate}`)
     }
     const summaryFile = join(PRDS_DIR, name, 'agent/context-summary.md')
     if (existsSync(summaryFile)) {
@@ -829,10 +814,7 @@ if (missingTemplateRefs.length) {
         if (!stageMatch) {
           syncErrors.push(`❌ 'DOC-SYNC-002' ${name}：机器版 context-summary 缺「当前阶段」行，重跑 update-context-summary.mjs。`)
         } else if (stageMatch[1] !== gateData.gate) {
-          syncErrors.push(
-            `❌ 'DOC-SYNC-002' ${name}：context-summary 当前阶段=${stageMatch[1]}，gate-results=${gateData.gate}。` +
-              `\n   修复：node apps/web/docs_tdd/common/engine/agent-scripts/set-project-stage.mjs ${name} ${gateData.gate}`,
-          )
+          syncErrors.push(`❌ 'DOC-SYNC-002' ${name}：context-summary 当前阶段=${stageMatch[1]}，gate-results=${gateData.gate}。` + `\n   修复：node apps/web/docs_tdd/common/engine/agent-scripts/set-project-stage.mjs ${name} ${gateData.gate}`)
         }
       }
       // 手写版摘要（无机器标记）不校验：阶段描述是人工叙述，跳过重写时已有警告。
@@ -847,9 +829,7 @@ if (missingTemplateRefs.length) {
     if (regen.status === 0) {
       const normalize = (text) => text.replace(/at \d{4}-\d{2}-\d{2}T[\d:.]+Z/, 'at <TS>')
       if (normalize(regen.stdout) !== normalize(readFileSync(projectsFile, 'utf8'))) {
-        syncErrors.push(
-          `❌ 'DOC-SYNC-003' PROJECTS.md 与即时重生成结果不一致（内容漂移）。` + `\n   修复：node apps/web/docs_tdd/common/engine/agent-scripts/update-project-index.mjs --write`,
-        )
+        syncErrors.push(`❌ 'DOC-SYNC-003' PROJECTS.md 与即时重生成结果不一致（内容漂移）。` + `\n   修复：node apps/web/docs_tdd/common/engine/agent-scripts/update-project-index.mjs --write`)
       }
     }
   }

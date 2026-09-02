@@ -12,19 +12,19 @@ const CLIENT_DEFINITIONS = Object.freeze([
     id: 'codex',
     kind: 'direct',
     adapter: 'codex',
-    enforcement: 'rule-session + docs-tdd changed/gate',
+    enforcement: 'PreToolUse rule injection + consumption receipt + changed/gate',
   },
   {
     id: 'claude',
     kind: 'direct',
     adapter: 'claude',
-    enforcement: 'PostToolUse + rule-session + changed/gate',
+    enforcement: 'PreToolUse rule injection + PostToolUse receipt + changed/gate',
   },
   {
     id: 'cursor',
     kind: 'direct',
     adapter: 'cursor',
-    enforcement: 'rule-session + docs-tdd changed/gate',
+    enforcement: 'native glob/alwaysApply + resolver conformance + changed/gate',
   },
   {
     id: 'lark-codex',
@@ -98,10 +98,7 @@ function selfTest() {
   assert.equal(matrix['lark-codex'].delegatesTo, 'codex')
   assert.equal(matrix['lark-claude'].delegatesTo, 'claude')
   assert.equal(validateAgentClientMatrix(matrix).ok, true)
-  assert.deepEqual(
-    validateAgentClientMatrix({ codex: matrix.codex }).missing.sort(),
-    REQUIRED_AGENT_CLIENT_IDS.filter((id) => id !== 'codex').sort(),
-  )
+  assert.deepEqual(validateAgentClientMatrix({ codex: matrix.codex }).missing.sort(), REQUIRED_AGENT_CLIENT_IDS.filter((id) => id !== 'codex').sort())
   assert.deepEqual(validateAgentClientMatrix({ ...matrix, unknown: matrix.codex }).extra, ['unknown'])
   assert.deepEqual(
     validateAgentClientMatrix({

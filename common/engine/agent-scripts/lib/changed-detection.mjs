@@ -15,6 +15,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { resolveProjectRoot, resolveRoots } from './roots.mjs'
+import { verifyWorktreeConsumption } from './rule-consumption.mjs'
 
 const scriptsDir = join(dirname(fileURLToPath(import.meta.url)), '..')
 const { config } = resolveRoots()
@@ -25,7 +26,11 @@ const readOptionalJson = (file) => (existsSync(file) ? readJson(file) : null)
 
 function runCaptured(args, cwd) {
   const started = Date.now()
-  const result = spawnSync(process.execPath, args, { cwd, encoding: 'utf8', stdio: 'pipe' })
+  const result = spawnSync(process.execPath, args, {
+    cwd,
+    encoding: 'utf8',
+    stdio: 'pipe',
+  })
   return {
     status: result.status ?? 1,
     stdout: result.stdout || '',
@@ -36,13 +41,23 @@ function runCaptured(args, cwd) {
 
 // git 只读取值：非 0 退出返回空串（调用方按「无输出」处理，不抛）。
 function gitOutput(args, cwd) {
-  const result = spawnSync('git', args, { cwd, encoding: 'utf8', stdio: 'pipe' })
+  const result = spawnSync('git', args, {
+    cwd,
+    encoding: 'utf8',
+    stdio: 'pipe',
+  })
   return result.status === 0 ? result.stdout : ''
 }
 
 // 子检日志文件名：把任意 label 归一成安全文件名片段（小写、非字母数字折成 -、去首尾 -、截断）。纯函数。
 export function safeLogLabel(value) {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 64) || 'check'
+  return (
+    value
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 64) || 'check'
+  )
 }
 
 function persistCapturedLog(id, label, result) {
@@ -56,7 +71,10 @@ function persistCapturedLog(id, label, result) {
 
 // 从子进程 stdout/stderr 里挑出「可行动」的行（含 fail/block/error/... 关键词），无则回退全部；截断到 limit 行。纯函数。
 export function conciseFailure(result, limit = 12) {
-  const lines = `${result.stderr}\n${result.stdout}`.split('\n').map((line) => line.trim()).filter(Boolean)
+  const lines = `${result.stderr}\n${result.stdout}`
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
   const actionable = lines.filter((line) => /\b(?:fail|block|error|warn|action|required|missing|invalid)\b/i.test(line))
   return (actionable.length ? actionable : lines).slice(0, limit)
 }
@@ -86,8 +104,23 @@ function changedFingerprint(id, worktree, effectiveFingerprint) {
 
 // `docs-tdd changed`：跑 code-rules（+ 按 manifest pilot 开关跑 msw-manifest / prd-intake），带指纹缓存。
 // 返回退出码：任一子检非 0 即非 0。noCache=true 跳过读写缓存（强制实跑）。
-export function runChanged(id, worktree, effectiveFingerprint, { noCache = false } = {}) {
+export function runChanged(id, worktree, effectiveFingerprint, { noCache = false, client = 'manual', sessionId = null } = {}) {
   const started = Date.now()
+  if (client === 'codex' || client === 'claude') {
+    const consumption = verifyWorktreeConsumption({
+      worktree,
+      sessionId,
+      client,
+      conflictOverrides: config.ruleConflictOverrides || [],
+    })
+    if (!consumption.ok) {
+      console.error('FAIL rule-consumption')
+      for (const error of consumption.errors) console.error(`  ${error}`)
+      console.error(`changed: ${id} — BLOCK (rule-consumption)`)
+      return 1
+    }
+    console.log(`PASS rule-consumption (files=${consumption.files.length})`)
+  }
   const fingerprint = changedFingerprint(id, worktree, effectiveFingerprint)
   const cacheDir = join(tmpdir(), 'docs-tdd-check-cache')
   const cacheFile = join(cacheDir, `${id}-changed-${fingerprint}.json`)
@@ -98,9 +131,22 @@ export function runChanged(id, worktree, effectiveFingerprint, { noCache = false
   }
 
   const projectManifest = readOptionalJson(join(resolveProjectRoot(id), 'agent/project-manifest.json'))
-  const checks = [{ label: 'code-rules', args: [join(scriptsDir, 'verify-code-rules.mjs'), '--project', id] }]
-  if (projectManifest?.pilot?.msw) checks.push({ label: 'msw-manifest', args: [join(scriptsDir, 'verify-msw-manifest.mjs'), id] })
-  if (projectManifest?.pilot?.prdIntake) checks.push({ label: 'prd-intake', args: [join(scriptsDir, 'prd-intake.mjs'), id, '--stage', 'G2'] })
+  const checks = [
+    {
+      label: 'code-rules',
+      args: [join(scriptsDir, 'verify-code-rules.mjs'), '--project', id],
+    },
+  ]
+  if (projectManifest?.pilot?.msw)
+    checks.push({
+      label: 'msw-manifest',
+      args: [join(scriptsDir, 'verify-msw-manifest.mjs'), id],
+    })
+  if (projectManifest?.pilot?.prdIntake)
+    checks.push({
+      label: 'prd-intake',
+      args: [join(scriptsDir, 'prd-intake.mjs'), id, '--stage', 'G2'],
+    })
 
   let status = 0
   for (const check of checks) {
@@ -127,17 +173,15 @@ export function runChanged(id, worktree, effectiveFingerprint, { noCache = false
 const SCENARIO_RULES = [
   { re: /(?:map[A-Z][^/]*|mapper)\.(?:ts|tsx)$/i, scenario: 'write_mapper' },
   { re: /(?:mocks?\/handlers|fixtures?|msw)/i, scenario: 'write_msw' },
-  { re: /(?:use[A-Z][^/]*Query|query)\.(?:ts|tsx)$/i, scenario: 'write_query_hook' },
+  {
+    re: /(?:use[A-Z][^/]*Query|query)\.(?:ts|tsx)$/i,
+    scenario: 'write_query_hook',
+  },
   { re: /\.(?:tsx|css|scss|less)$/, scenario: 'write_ui' },
   { re: /figma|07-figma-spec/i, scenario: 'write_figma' },
 ]
 export function recommendScenarios(worktree) {
-  const files = new Set(
-    [
-      ...gitOutput(['diff', '--name-only', baseRef()], worktree).trim().split('\n'),
-      ...gitOutput(['ls-files', '--others', '--exclude-standard'], worktree).trim().split('\n'),
-    ].filter(Boolean),
-  )
+  const files = new Set([...gitOutput(['diff', '--name-only', baseRef()], worktree).trim().split('\n'), ...gitOutput(['ls-files', '--others', '--exclude-standard'], worktree).trim().split('\n')].filter(Boolean))
   const recommendations = []
   for (const file of files) {
     for (const rule of SCENARIO_RULES) {
@@ -153,7 +197,12 @@ export function recommendScenarios(worktree) {
 // self-test：纯函数（日志名归一 / 失败行摘要）。node lib/changed-detection.mjs --self-test
 // ---------------------------------------------------------------------------
 function selfTest() {
-  const assert = (cond, msg) => { if (!cond) { console.error(`[changed-detection] self-test failed: ${msg}`); process.exit(1) } }
+  const assert = (cond, msg) => {
+    if (!cond) {
+      console.error(`[changed-detection] self-test failed: ${msg}`)
+      process.exit(1)
+    }
+  }
   assert(safeLogLabel('Code Rules!!') === 'code-rules', 'label normalized')
   assert(safeLogLabel('') === 'check', 'empty label fallback')
   assert(safeLogLabel('---') === 'check', 'all-separator label fallback')

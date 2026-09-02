@@ -7,15 +7,16 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { resolveContextSessionId } from './lib/context-session.mjs'
+import { requireG6ContextSession } from './lib/g6-context-session.mjs'
 import { appendGateHistory, createFingerprint, gateCacheFingerprint } from './lib/gate-cache.mjs'
 import { formatEvidenceRunId, renderEvidence, summarizeCommand } from './lib/gate-evidence.mjs'
 import { resolvePartialRun } from './lib/gate-partial.mjs'
 import { buildQualityGuardCheck, derivePayloadOk, parseJsonOutput, selfTest, shouldUseGateCache, summarizeChecks, syncCommandSummary } from './lib/gate-payload.mjs'
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
+import { verifyWorktreeConsumption } from './lib/rule-consumption.mjs'
 import { resolveRuleSessionClient } from './lib/rule-session.mjs'
 import { requireRuleSession } from './lib/rule-session-runtime.mjs'
-import { requireG6ContextSession } from './lib/g6-context-session.mjs'
-import { resolveContextSessionId } from './lib/context-session.mjs'
 import { persistRunLog as persistRunLogRaw, printFailureSummary, run } from './lib/run-log.mjs'
 import { loadLedger, recordFindings, saveLedger } from './warn-ledger.mjs'
 
@@ -41,8 +42,12 @@ const partialRequested = args.includes('--partial')
 let agentClient
 let contextSessionId
 try {
-  agentClient = resolveRuleSessionClient({ requested: readOption('--client') || undefined })
-  contextSessionId = resolveContextSessionId({ requested: readOption('--session-id') || undefined })
+  agentClient = resolveRuleSessionClient({
+    requested: readOption('--client') || undefined,
+  })
+  contextSessionId = resolveContextSessionId({
+    requested: readOption('--session-id') || undefined,
+  })
 } catch (error) {
   fail(error.message)
 }
@@ -152,6 +157,15 @@ if (codeRuleGates.includes(gate)) {
   if (!requireRuleSession(projectId, callerCwd, { currentFingerprint: release.fingerprint }, { currentFingerprint: effectiveRules.fingerprint }, agentClient)) {
     fail(`rerun docs-tdd context ${projectId} <coding-scenario>`)
   }
+  if (agentClient === 'codex' || agentClient === 'claude') {
+    const consumption = verifyWorktreeConsumption({
+      worktree: callerCwd,
+      sessionId: contextSessionId,
+      client: agentClient,
+      conflictOverrides: config.ruleConflictOverrides || [],
+    })
+    if (!consumption.ok) fail(`rule consumption is incomplete:\n- ${consumption.errors.join('\n- ')}`)
+  }
   if (gate === 'G6') {
     const code = createFingerprint({ callerCwd, config, docsRoot })
     const current = {
@@ -167,7 +181,10 @@ if (codeRuleGates.includes(gate)) {
   }
 }
 const fingerprintCtx = { projectId, gate, callerCwd, config, docsRoot }
-const cacheFingerprint = gateCacheFingerprint(projectDir, { ...fingerprintCtx, gate: gateLabel })
+const cacheFingerprint = gateCacheFingerprint(projectDir, {
+  ...fingerprintCtx,
+  gate: gateLabel,
+})
 const cacheDir = join(tmpdir(), 'docs-tdd-gate-cache')
 const cacheFile = join(cacheDir, `${projectId}-${gateLabel}-${cacheFingerprint}.json`)
 const cached = existsSync(cacheFile) ? JSON.parse(readFileSync(cacheFile, 'utf8')) : null

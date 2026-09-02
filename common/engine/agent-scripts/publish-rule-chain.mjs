@@ -9,7 +9,8 @@ import { fileURLToPath } from 'node:url'
 import { resolveRoots } from './lib/roots.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
-const { docsSystemRoot, consumerRoot: repoRoot, config } = resolveRoots()
+const { docsSystemRoot, consumerRoot: repoRoot, consumerWorktree, config } = resolveRoots()
+const executionRoot = consumerWorktree && consumerWorktree !== docsSystemRoot ? consumerWorktree : repoRoot
 const args = process.argv.slice(2)
 const projectId = args.find((arg) => new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(arg)) || ''
 const scenarioIndex = args.indexOf('--scenario')
@@ -29,7 +30,7 @@ function restoreFiles(snapshot) {
   }
 }
 
-function runStep(label, commandArgs, cwd = repoRoot) {
+function runStep(label, commandArgs, cwd = executionRoot) {
   console.log(`\n=== rule release: ${label} ===`)
   const result = spawnSync(process.execPath, commandArgs, {
     cwd,

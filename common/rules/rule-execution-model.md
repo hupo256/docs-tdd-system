@@ -25,13 +25,13 @@
 |------|----------|----------|
 | 会话启动/恢复 | Codex、Claude Code、Cursor 的 adapter 先读 `rule-router.md`，再执行 `docs-tdd context <PROJECT-ID> <SCENARIO>` | 入口先验证 L3 与 effective 两层发布指纹，再由 `rule-index.json` 按场景生成 context pack；编码场景须先过 G2，并写带客户端、三层 fingerprint、G2 输入与 HEAD 的 24 小时 `rule-session.json` v2；编辑中的未发布规则或其他客户端的旧会话不能被消费 |
 | Lark 无人值守执行 | Lark-Codex / Lark-Claude 在每次启动 AI 前检查发布链，再按任务语义抽取规则章节 | **常驻必需**规则文件或章节缺失以 `VERIFY-RULE-004` 阻断（缺了等于裸跑）；L3/effective stale 与辅助章节缺失只记 warning 并带已发布规则继续（d533eb4：消费仓分支切换会让 stale 成为常态，fail-closed 会让所有修复任务全红），warning 浮现到结果卡、审计与 `/lark/health`；上下文仍绑定两层发布指纹 |
-| 编码前 | 按变更类型加载 L1 全局规则/skill、L2 `.cursor/rules` 和 routed L3 专题 | G2/G4 文档、复用与所有权盘点把方案约束前置；不能只在 Review 时补读 |
-| 编辑后 | 有 PostToolUse 时按文件调度；无 hook 时执行 `docs-tdd changed <PROJECT-ID>` | 先校验编码 rule session，再由 `verify-code-rules` 扫本次新增/修改内容；这是快速反馈层，不代替阶段 gate |
+| 编码前/首次编辑 | 按变更类型加载 L1 全局规则/skill、L2 `.cursor/rules` 和 routed L3 专题 | Cursor 原生按 glob/alwaysApply 消费 L2；Claude/Codex 的 PreToolUse 共用同一 Resolver，首次命中新规则时 deny-and-retry 注入完整正文，超 96 KiB fail-closed |
+| 编辑后 | PostToolUse 写入按 session/context epoch、文件 hash 与规则 fingerprint 绑定的消费回执，再执行代码检查 | `changed` 与 G5+ 对 Claude/Codex 强制校验回执；绕过 hook、规则变化或内容过期即阻断。代码扫描是快速反馈层，不代替阶段 gate |
 | 阶段出口 | 执行 `docs-tdd gate <PROJECT-ID> <Gx>`，G5+ 聚合代码扫描 | `error` 退出码阻断；G6/G8 用 `--write` 生成机器结果和 evidence，规则或工作树变化后旧证据失效 |
 | 判断型验收 | G6 `/code-review` + Browser/Playwright + 必要人工视觉/语义确认 | 处理静态规则无法可靠判断的复用、架构、业务语义和视觉手感；findings 必须逐项已修、豁免或阻塞 |
 | 规则维护 | 更新权威正文、适配器、场景路由、Rule ID/gate、自测和 CHANGELOG | 先发布 L3，再执行 `effective-rules.mjs --write` 发布 L1+direct adapter+Lark runtime adapter+L2+L3 组合指纹；五个入口只消费两层都 fresh 的版本 |
 
-PostToolUse 是体验优化，不是最终信任边界。当前 Agent 若 `docs-tdd capability` 显示没有自动 hook，必须显式执行 `changed`；无论是否有 hook，阶段出口仍以 `run-project-gate --write` 的结果为准。`docs_tdd` 为 local-only 时，仓库 Husky/CI 也不能被描述为已提供这层保障。
+PreToolUse 证明编辑前已注入，PostToolUse 回执绑定本次写入；最终边界仍是 `changed`/阶段 gate。无自动 hook 时，完成前显式运行 `changed`。local-only 时不得宣称 Husky/CI 已承接。
 
 ## 3. 执行强度
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+
 // Golden run：给 gate 机器本身做端到端契约测试，而不是再测一遍纯谓词。
 // - 为什么需要：各脚本的 `--self-test` 只覆盖导出的纯函数；「聚合器能不能跑起来、
 //   规则 ID 有没有真的连到判定、有没有误伤旁边的规则」这类接线问题它一条都拦不住。
@@ -14,17 +15,18 @@
 // - 副作用：临时项目目录在 finally 里删除；不传 `--write`，所以不写 gate-results /
 //   evidence / PROJECTS.md / warn 台账。PR-00000 是保留 ID，索引与预算检查都排除它。
 
-import { existsSync, cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
-import { errorFailures, mutationVerdict, selfTest as verdictSelfTest } from './lib/golden-verdict.mjs'
 import { baselineGates, buildMutationCases } from './lib/golden-cases.mjs'
+import { errorFailures, mutationVerdict, selfTest as verdictSelfTest } from './lib/golden-verdict.mjs'
+import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
-const { docsSystemRoot: docsRoot, consumerRoot: repoRoot } = resolveRoots()
+const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, consumerWorktree } = resolveRoots()
+const executionRoot = consumerWorktree && consumerWorktree !== docsRoot ? consumerWorktree : repoRoot
 const fixtureDir = join(docsRoot, 'common/engine/fixtures/golden-project')
 
 export const GOLDEN_PROJECT_ID = 'PR-00000'
@@ -77,7 +79,7 @@ function cleanup() {
 
 function runProjectGate(gate, { partial = false } = {}) {
   const result = spawnSync(process.execPath, [join(scriptDir, 'verify-project-gate.mjs'), GOLDEN_PROJECT_ID, gate, '--json', ...(partial ? ['--partial'] : [])], {
-    cwd: repoRoot,
+    cwd: executionRoot,
     encoding: 'utf8',
     stdio: 'pipe',
   })
@@ -91,7 +93,7 @@ function runProjectGate(gate, { partial = false } = {}) {
 function runAggregator(gate) {
   // 不传 --write：只验「聚合器能跑起来、产出结构完整」，不产生任何持久化副作用。
   const result = spawnSync(process.execPath, [join(scriptDir, 'run-project-gate.mjs'), GOLDEN_PROJECT_ID, gate, '--json', '--no-cache'], {
-    cwd: repoRoot,
+    cwd: executionRoot,
     encoding: 'utf8',
     stdio: 'pipe',
   })
@@ -152,11 +154,7 @@ try {
     const result = runProjectGate(gate)
     const failed = errorFailures(result.checks)
     baselineFailuresByGate[gate] = failed
-    record(
-      !result.parseError && result.ok === true && failed.length === 0,
-      `baseline ${gate}`,
-      result.parseError ? `gate 输出无法解析：${result.parseError}\n${result.stderr || ''}` : `期望全绿，实际 error 命中：${failed.join(', ') || '(无但 ok!==true)'}`,
-    )
+    record(!result.parseError && result.ok === true && failed.length === 0, `baseline ${gate}`, result.parseError ? `gate 输出无法解析：${result.parseError}\n${result.stderr || ''}` : `期望全绿，实际 error 命中：${failed.join(', ') || '(无但 ok!==true)'}`)
   }
 
   // 1.5 G8 结构 dry-check：合成 fixture 无真实 git 推送，G8 必然因交付/git 规则失败（这是诚实终点，
@@ -167,13 +165,7 @@ try {
     const g8 = runProjectGate('G8')
     const G8_DELIVERY_RULES = new Set(['VERIFY-STAGE-003', 'VERIFY-G8-002', 'VERIFY-G8-003', 'VERIFY-G8-004'])
     const structuralErrors = g8.parseError ? ['(parse error)'] : errorFailures(g8.checks).filter((id) => !G8_DELIVERY_RULES.has(id))
-    record(
-      !g8.parseError && structuralErrors.length === 0,
-      'G8 structural dry-check',
-      g8.parseError
-        ? `gate 输出无法解析：${g8.parseError}`
-        : `G0-G7 文档链在 G8 校验下应无回归（仅允许交付/git 终点规则 ${[...G8_DELIVERY_RULES].join('/')} 失败），实际额外 error：${structuralErrors.join(', ')}`,
-    )
+    record(!g8.parseError && structuralErrors.length === 0, 'G8 structural dry-check', g8.parseError ? `gate 输出无法解析：${g8.parseError}` : `G0-G7 文档链在 G8 校验下应无回归（仅允许交付/git 终点规则 ${[...G8_DELIVERY_RULES].join('/')} 失败），实际额外 error：${structuralErrors.join(', ')}`)
   }
 
   // 2. 变异：每条只破坏一处，预期规则必须红，且不牵连基线之外的 error 规则。
@@ -191,13 +183,7 @@ try {
         checks: result.checks,
         baselineFailures: [...(baselineFailuresByGate[testCase.gate] || []), ...(testCase.tolerate || [])],
       })
-      record(
-        verdict.ok,
-        `mutation ${testCase.id}`,
-        verdict.hit
-          ? `${testCase.expectRuleId} 命中，但连带误伤了：${verdict.collateral.join(', ')}`
-          : `期望 ${testCase.expectRuleId} 判 error，实际 error 命中：${verdict.failures.join(', ') || '(无)'}`,
-      )
+      record(verdict.ok, `mutation ${testCase.id}`, verdict.hit ? `${testCase.expectRuleId} 命中，但连带误伤了：${verdict.collateral.join(', ')}` : `期望 ${testCase.expectRuleId} 判 error，实际 error 命中：${verdict.failures.join(', ') || '(无)'}`)
     }
     if (testCase.assert) {
       try {
@@ -214,18 +200,14 @@ try {
   if (skipAggregator) {
     console.log('golden-run: --skip-aggregator 生效，聚合器烟测未跑（发布后跑 docs-tdd golden 补上）')
   } else {
-  materialize()
-  const aggregated = runAggregator('G2')
-  record(
-    !aggregated.parseError && aggregated.projectId === GOLDEN_PROJECT_ID && aggregated.gate === 'G2' && Array.isArray(aggregated.checks) && typeof aggregated.summary?.total === 'number',
-    'aggregator smoke run-project-gate G2',
-    aggregated.parseError ? `payload 无法解析：${aggregated.parseError}\n${aggregated.stderr || ''}` : `payload 结构不完整：${JSON.stringify({ projectId: aggregated.projectId, gate: aggregated.gate, summary: aggregated.summary })}`,
-  )
-  record(
-    aggregated.buildQuality?.required === false,
-    'aggregator smoke buildQuality 边界',
-    `G2 不应要求机器事实层，实际 required=${aggregated.buildQuality?.required}`,
-  )
+    materialize()
+    const aggregated = runAggregator('G2')
+    record(
+      !aggregated.parseError && aggregated.projectId === GOLDEN_PROJECT_ID && aggregated.gate === 'G2' && Array.isArray(aggregated.checks) && typeof aggregated.summary?.total === 'number',
+      'aggregator smoke run-project-gate G2',
+      aggregated.parseError ? `payload 无法解析：${aggregated.parseError}\n${aggregated.stderr || ''}` : `payload 结构不完整：${JSON.stringify({ projectId: aggregated.projectId, gate: aggregated.gate, summary: aggregated.summary })}`,
+    )
+    record(aggregated.buildQuality?.required === false, 'aggregator smoke buildQuality 边界', `G2 不应要求机器事实层，实际 required=${aggregated.buildQuality?.required}`)
   }
 } finally {
   cleanup()

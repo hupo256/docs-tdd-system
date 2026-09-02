@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
 import assert from 'node:assert/strict'
-import { existsSync, lstatSync, mkdirSync, readFileSync, readlinkSync, renameSync, symlinkSync, writeFileSync } from 'node:fs'
+import { copyFileSync, existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, readlinkSync, renameSync, symlinkSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
-import { dirname, join, relative, resolve } from 'node:path'
+import { basename, dirname, join, relative, resolve } from 'node:path'
 import { createCursorAdapter } from './lib/agent-rule-adapters.mjs'
 import { resolveRoots } from './lib/roots.mjs'
 
-const { consumerRoot: repoRoot, config } = resolveRoots()
+const { docsSystemRoot, consumerRoot: repoRoot, config } = resolveRoots()
 const home = homedir()
 const sharedRoot = join(home, '.ai-rules')
 const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
@@ -43,11 +43,12 @@ function sameLink(entry, target) {
   return resolve(dirname(entry), readlinkSync(entry)) === resolve(target)
 }
 
-function backupAndLink(entry, target) {
+function backupAndLink(entry, target, backupDir = null) {
   mkdirSync(dirname(entry), { recursive: true })
   if (sameLink(entry, target)) return
   if (existsSync(entry)) {
-    const backup = `${entry}.backup-${timestamp}`
+    const backup = backupDir ? join(backupDir, `${basename(entry)}.backup-${timestamp}`) : `${entry}.backup-${timestamp}`
+    mkdirSync(dirname(backup), { recursive: true })
     renameSync(entry, backup)
     console.log(`backup: ${backup}`)
   }
@@ -58,53 +59,157 @@ function backupAndLink(entry, target) {
 function writeCursorAdapter() {
   const file = join(home, '.cursor/rules/fameex-local-governance.mdc')
   mkdirSync(dirname(file), { recursive: true })
-  const content = createCursorAdapter({ sharedRoot, repoRoot, conflictOverrides: config.ruleConflictOverrides || [] })
+  const content = createCursorAdapter({
+    sharedRoot,
+    repoRoot,
+    conflictOverrides: config.ruleConflictOverrides || [],
+  })
   writeFileSync(file, content)
   console.log(`adapter: ${file}`)
 }
 
-function mergeClaudeHook() {
+const ruleContextHook = join(docsSystemRoot, 'common/engine/agent-scripts/rule-context-hook.mjs')
+
+function addHook(settings, event, matcher, hook) {
+  const groups = Array.isArray(settings.hooks?.[event]) ? settings.hooks[event] : []
+  let replaced = false
+  const nextGroups = []
+  for (const group of groups) {
+    const sameMatcher = (group.matcher ?? null) === matcher
+    const hasCommand = group.hooks?.some((candidate) => candidate.command === hook.command)
+    if (!sameMatcher || !hasCommand) {
+      nextGroups.push(group)
+      continue
+    }
+    const remaining = group.hooks.filter((candidate) => candidate.command !== hook.command)
+    if (!replaced) {
+      nextGroups.push({
+        ...(matcher ? { matcher } : {}),
+        hooks: [...remaining, hook],
+      })
+      replaced = true
+    } else if (remaining.length) nextGroups.push({ ...group, hooks: remaining })
+  }
+  if (!replaced) nextGroups.push({ ...(matcher ? { matcher } : {}), hooks: [hook] })
+  settings.hooks = { ...(settings.hooks || {}), [event]: nextGroups }
+}
+
+function moveDiscoverableSkillBackups() {
+  for (const agent of ['.codex', '.claude']) {
+    const skillsDir = join(home, agent, 'skills')
+    if (!existsSync(skillsDir)) continue
+    const backupDir = join(sharedRoot, 'backups', agent.slice(1), 'skills')
+    for (const entry of readdirSync(skillsDir).filter((name) => name.includes('.backup-'))) {
+      mkdirSync(backupDir, { recursive: true })
+      const source = join(skillsDir, entry)
+      const destination = join(backupDir, entry)
+      if (existsSync(destination)) throw new Error(`backup destination already exists: ${destination}`)
+      renameSync(source, destination)
+      console.log(`moved discoverable backup: ${source} -> ${destination}`)
+    }
+  }
+}
+
+function writeJsonWithBackup(file, value) {
+  const content = `${JSON.stringify(value, null, 2)}\n`
+  if (existsSync(file) && readFileSync(file, 'utf8') === content) return
+  mkdirSync(dirname(file), { recursive: true })
+  if (existsSync(file)) {
+    const backup = `${file}.backup-${timestamp}`
+    copyFileSync(file, backup)
+    console.log(`backup: ${backup}`)
+  }
+  writeFileSync(file, content)
+}
+
+function mergeClaudeHooks() {
   const settingsFile = join(home, '.claude/settings.json')
   const settings = existsSync(settingsFile) ? JSON.parse(readFileSync(settingsFile, 'utf8')) : {}
-  const command = `node ${repoRoot}/apps/web/docs_tdd/common/engine/agent-scripts/claude-posttooluse-gate.mjs`
-  const postToolUse = Array.isArray(settings.hooks?.PostToolUse) ? settings.hooks.PostToolUse : []
-  const present = postToolUse.some((group) => group.hooks?.some((hook) => hook.command === command))
-  if (!present) {
-    postToolUse.push({
-      matcher: 'Edit|Write|MultiEdit',
-      hooks: [{ type: 'command', command }],
-    })
-  }
-  settings.hooks = { ...(settings.hooks || {}), PostToolUse: postToolUse }
-  writeFileSync(settingsFile, `${JSON.stringify(settings, null, 2)}\n`)
-  console.log(`hook: ${settingsFile}`)
+  const contextCommand = `node ${ruleContextHook} --client claude`
+  addHook(settings, 'PreToolUse', 'Edit|Write|MultiEdit|NotebookEdit|Bash', {
+    type: 'command',
+    command: contextCommand,
+    timeout: 20,
+  })
+  addHook(settings, 'PostToolUse', 'Edit|Write|MultiEdit|NotebookEdit|Bash', {
+    type: 'command',
+    command: contextCommand,
+    timeout: 20,
+  })
+  addHook(settings, 'SessionStart', null, {
+    type: 'command',
+    command: contextCommand,
+    timeout: 10,
+  })
+  addHook(settings, 'PreCompact', null, {
+    type: 'command',
+    command: contextCommand,
+    timeout: 10,
+  })
+  const gateCommand = `node ${repoRoot}/apps/web/docs_tdd/common/engine/agent-scripts/claude-posttooluse-gate.mjs`
+  addHook(settings, 'PostToolUse', 'Edit|Write|MultiEdit', {
+    type: 'command',
+    command: gateCommand,
+  })
+  writeJsonWithBackup(settingsFile, settings)
+  console.log(`hooks: ${settingsFile}`)
+}
+
+function mergeCodexHooks() {
+  const hooksFile = join(home, '.codex/hooks.json')
+  const settings = existsSync(hooksFile) ? JSON.parse(readFileSync(hooksFile, 'utf8')) : {}
+  const command = `node ${ruleContextHook} --client codex`
+  const matcher = 'functions\\.exec|apply_patch|Bash|Edit|Write|MultiEdit|NotebookEdit'
+  addHook(settings, 'PreToolUse', matcher, {
+    type: 'command',
+    command,
+    async: false,
+    timeout: 20,
+    additionalContextLimit: 0,
+  })
+  addHook(settings, 'PostToolUse', matcher, {
+    type: 'command',
+    command,
+    async: false,
+    timeout: 20,
+  })
+  addHook(settings, 'SessionStart', null, {
+    type: 'command',
+    command,
+    async: false,
+    timeout: 10,
+  })
+  addHook(settings, 'PreCompact', null, {
+    type: 'command',
+    command,
+    async: false,
+    timeout: 10,
+  })
+  writeJsonWithBackup(hooksFile, settings)
+  console.log(`hooks: ${hooksFile}`)
 }
 
 function install() {
   const sharedAgent = join(sharedRoot, 'AGENT.md')
   ensureSharedFile(join(home, '.codex/AGENTS.md'), sharedAgent, (text) => {
-    const neutral = text
-      .replaceAll('/Users/aven/.codex/skills/', '/Users/aven/.ai-rules/skills/')
-      .replace('L1 global craft lives here plus `/Users/aven/.codex/skills/*`', 'L1 global craft lives here plus `/Users/aven/.ai-rules/skills/*`')
+    const neutral = text.replaceAll('/Users/aven/.codex/skills/', '/Users/aven/.ai-rules/skills/').replace('L1 global craft lives here plus `/Users/aven/.codex/skills/*`', 'L1 global craft lives here plus `/Users/aven/.ai-rules/skills/*`')
     return `${neutral.trim()}${protocol}\n`
   })
   for (const skill of ['coding-quality', 'figma-read']) {
-    ensureSharedFile(
-      join(home, `.codex/skills/${skill}/SKILL.md`),
-      join(sharedRoot, `skills/${skill}/SKILL.md`),
-      (text) => `${text.replaceAll('/Users/aven/.codex/AGENTS.md', `${sharedRoot}/AGENT.md`).trim()}\n`,
-    )
+    ensureSharedFile(join(home, `.codex/skills/${skill}/SKILL.md`), join(sharedRoot, `skills/${skill}/SKILL.md`), (text) => `${text.replaceAll('/Users/aven/.codex/AGENTS.md', `${sharedRoot}/AGENT.md`).trim()}\n`)
   }
 
   backupAndLink(join(home, '.codex/AGENTS.md'), sharedAgent)
   backupAndLink(join(home, '.claude/CLAUDE.md'), sharedAgent)
+  moveDiscoverableSkillBackups()
   for (const agent of ['.codex', '.claude']) {
     for (const skill of ['coding-quality', 'figma-read']) {
-      backupAndLink(join(home, `${agent}/skills/${skill}`), join(sharedRoot, `skills/${skill}`))
+      backupAndLink(join(home, `${agent}/skills/${skill}`), join(sharedRoot, `skills/${skill}`), join(sharedRoot, 'backups', agent.slice(1), 'skills'))
     }
   }
   writeCursorAdapter()
-  mergeClaudeHook()
+  mergeClaudeHooks()
+  mergeCodexHooks()
 }
 
 function selfTest() {
@@ -112,6 +217,38 @@ function selfTest() {
   assert.equal(protocol.includes('docs-tdd.mjs changed'), true)
   assert.equal(protocol.includes('docs-tdd.mjs gate'), true)
   assert.equal(typeof repoRoot === 'string' && repoRoot.length > 0, true)
+  assert.equal(ruleContextHook.endsWith('/common/engine/agent-scripts/rule-context-hook.mjs'), true)
+  const settings = {
+    hooks: {
+      PreToolUse: [
+        {
+          matcher: 'x',
+          hooks: [{ type: 'command', command: 'same', timeoutSec: 600 }],
+        },
+      ],
+    },
+  }
+  addHook(settings, 'PreToolUse', 'x', {
+    type: 'command',
+    command: 'same',
+    timeout: 20,
+  })
+  assert.deepEqual(settings.hooks.PreToolUse[0].hooks[0], {
+    type: 'command',
+    command: 'same',
+    timeout: 20,
+  })
+  const duplicateSettings = {
+    hooks: {
+      SessionStart: [{ hooks: [{ type: 'command', command: 'same' }] }, { hooks: [{ type: 'command', command: 'same' }] }],
+    },
+  }
+  addHook(duplicateSettings, 'SessionStart', null, {
+    type: 'command',
+    command: 'same',
+    timeout: 10,
+  })
+  assert.deepEqual(duplicateSettings.hooks.SessionStart, [{ hooks: [{ type: 'command', command: 'same', timeout: 10 }] }])
   console.log('install-local-agent-rules self-test passed.')
 }
 

@@ -19,21 +19,22 @@ import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { recommendScenarios, runChanged } from './lib/changed-detection.mjs'
 import { createContextPack, enforceContextBudget, expandScenarioRefs, printContextDelta, printContextPack, requireFreshEffectiveRules, requireFreshRuleRelease } from './lib/context-pack.mjs'
 import { contextBudgetFor, coordinatorSteps, resolveContextMode, validateContextPolicy } from './lib/context-policy.mjs'
 import { findDeliveredPack, loadContextDeliveryLedger, recordContextDelivery, resolveContextSessionId } from './lib/context-session.mjs'
-import { maybeBroadcastGate, printGateHeartbeat } from './lib/gate-heartbeat.mjs'
-import { runChanged, recommendScenarios } from './lib/changed-detection.mjs'
-import { capability, resolveProjectWorktree } from './lib/project-status-report.mjs'
 import { explainRule } from './lib/explain-rule.mjs'
-import { createFingerprint } from './lib/gate-cache.mjs'
-import { resolveRoots } from './lib/roots.mjs'
 import { G6_CONTEXT_SCENARIOS, loadG6ContextSession, nextG6ContextScenario, printG6ContextPlan, recordG6Context, sameG6ContextBinding } from './lib/g6-context-session.mjs'
+import { createFingerprint } from './lib/gate-cache.mjs'
+import { maybeBroadcastGate, printGateHeartbeat } from './lib/gate-heartbeat.mjs'
+import { capability, resolveProjectWorktree } from './lib/project-status-report.mjs'
+import { resolveRoots } from './lib/roots.mjs'
 import { resolveRuleSessionClient } from './lib/rule-session.mjs'
 import { CODING_SCENARIOS, requireRuleSession, verifyG2Ready, writeRuleSession } from './lib/rule-session-runtime.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
-const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, config } = resolveRoots()
+const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, consumerWorktree, config } = resolveRoots()
+const executionRoot = consumerWorktree && consumerWorktree !== docsRoot ? consumerWorktree : repoRoot
 const releaseScript = join(scriptDir, 'rule-release.mjs')
 const effectiveRulesScript = join(scriptDir, 'effective-rules.mjs')
 const cliArgs = process.argv.slice(2)
@@ -51,14 +52,18 @@ if (sessionIndex >= 0 && !commandArgs[sessionIndex + 1]) {
 }
 let agentClient
 try {
-  agentClient = resolveRuleSessionClient({ requested: clientIndex >= 0 ? commandArgs[clientIndex + 1] : undefined })
+  agentClient = resolveRuleSessionClient({
+    requested: clientIndex >= 0 ? commandArgs[clientIndex + 1] : undefined,
+  })
 } catch (error) {
   console.error(error.message)
   process.exit(1)
 }
 let contextSessionId
 try {
-  contextSessionId = resolveContextSessionId({ requested: sessionIndex >= 0 ? commandArgs[sessionIndex + 1] : undefined })
+  contextSessionId = resolveContextSessionId({
+    requested: sessionIndex >= 0 ? commandArgs[sessionIndex + 1] : undefined,
+  })
 } catch (error) {
   console.error(error.message)
   process.exit(1)
@@ -72,7 +77,7 @@ const noCache = cliArgs.includes('--no-cache')
 const partial = cliArgs.includes('--partial')
 
 // 子进程直通（stdio inherit）：分发到同级脚本时复用，退出码原样上抛。
-function run(args, cwd = repoRoot) {
+function run(args, cwd = executionRoot) {
   const result = spawnSync(process.execPath, args, { cwd, stdio: 'inherit' })
   return result.status ?? 1
 }
@@ -169,13 +174,15 @@ else {
     if (status === 0 && !partial) maybeBroadcastGate(projectId, (detail || 'G3').toUpperCase())
   } else if (command === 'changed') {
     if (!requireRuleSession(projectId, worktree, release, effectiveRules, agentClient)) process.exit(1)
-    status = runChanged(projectId, worktree, effectiveRules.currentFingerprint, { noCache })
+    status = runChanged(projectId, worktree, effectiveRules.currentFingerprint, { noCache, client: agentClient, sessionId: contextSessionId })
   } else if (command === 'context') {
     try {
       const scenario = detail || 'g0_g2_scope'
       if (CODING_SCENARIOS.has(scenario) && !verifyG2Ready(projectId, worktree, scriptDir)) process.exit(1)
       const index = readJson(join(docsRoot, 'common/rules/rule-index.json'))
-      const policyErrors = validateContextPolicy(index, { codingScenarios: CODING_SCENARIOS })
+      const policyErrors = validateContextPolicy(index, {
+        codingScenarios: CODING_SCENARIOS,
+      })
       if (policyErrors.length) throw new Error(`invalid context policy:\n- ${policyErrors.join('\n- ')}`)
       const code = createFingerprint({ callerCwd: worktree, config, docsRoot })
       const g6Current = {
@@ -208,12 +215,21 @@ else {
       if (!verdict.ok) throw new Error(`context pack exceeds the ${kind} hard limit`)
 
       // 只有调用方提供真实 task/session identity 时才做会话内 delivery 去重；无 identity 默认完整报告，绝不跨任务复用。
-      const ledger = loadContextDeliveryLedger({ projectId, client: agentClient, sessionId: contextSessionId })
+      const ledger = loadContextDeliveryLedger({
+        projectId,
+        client: agentClient,
+        sessionId: contextSessionId,
+      })
       if (findDeliveredPack(ledger, scenario, pack.fingerprint)) {
         printContextDelta(scenario, pack)
       } else {
         printContextPack(scenario, pack)
-        recordContextDelivery(ledger, { scenario, fingerprint: pack.fingerprint, output: pack.output, deliveredAt: new Date().toISOString() })
+        recordContextDelivery(ledger, {
+          scenario,
+          fingerprint: pack.fingerprint,
+          output: pack.output,
+          deliveredAt: new Date().toISOString(),
+        })
       }
       // 编码会话仍每次刷新（headSha / codeReadiness 可能变，门禁证据不能靠 delta 复用）。
       if (CODING_SCENARIOS.has(scenario)) writeRuleSession(projectId, worktree, release, effectiveRules, pack, agentClient)

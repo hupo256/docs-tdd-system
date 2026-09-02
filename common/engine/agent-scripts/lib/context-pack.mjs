@@ -15,12 +15,13 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { resolveProjectRoot, resolveRoots, rulesRoot } from './roots.mjs'
-import { charCount } from './doc-budget-schema.mjs'
 import { printReport } from './cli-report.mjs'
+import { charCount } from './doc-budget-schema.mjs'
+import { resolveProjectRoot, resolveRoots, rulesRoot } from './roots.mjs'
 
 const scriptsDir = join(dirname(fileURLToPath(import.meta.url)), '..')
-const { docsSystemRoot: docsRoot, consumerRoot: repoRoot } = resolveRoots()
+const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, consumerWorktree } = resolveRoots()
+const executionRoot = consumerWorktree && consumerWorktree !== docsRoot ? consumerWorktree : repoRoot
 const releaseScript = join(scriptsDir, 'rule-release.mjs')
 const effectiveRulesScript = join(scriptsDir, 'effective-rules.mjs')
 
@@ -51,7 +52,12 @@ function parseSelectorRange(part) {
 export function mergeSectionSelectors(selectors) {
   if (selectors.some((selector) => !selector)) return ''
   const ranges = selectors
-    .flatMap((selector) => selector.split(',').map((part) => part.trim()).filter(Boolean))
+    .flatMap((selector) =>
+      selector
+        .split(',')
+        .map((part) => part.trim())
+        .filter(Boolean),
+    )
     .map(parseSelectorRange)
     .sort((a, b) => a[0] - b[0] || a[1] - b[1])
   const merged = []
@@ -113,7 +119,9 @@ export function expandScenarioRefs(index, scenario, stack = []) {
     if (remaining.length) result.push({ ...ref, sections: formatRanges(remaining) })
     const coveredSelectors = state.ranges.map(([min, max]) => (min === max ? `${min}` : `${min}-${max}`))
     state.ranges = mergeSectionSelectors([...coveredSelectors, ref.sections])
-      .split(',').filter(Boolean).map(parseSelectorRange)
+      .split(',')
+      .filter(Boolean)
+      .map(parseSelectorRange)
     coverage.set(ref.file, state)
   }
   return result
@@ -123,7 +131,11 @@ export function selectMarkdownSections(text, selector) {
   if (!selector) return text
   const headings = [...text.matchAll(/^##\s+(\d+)(?:\.|\s)/gm)]
   // 多区间：逗号分隔，逐段切片按区间起点升序拼接。
-  const ranges = selector.split(',').map((part) => part.trim()).filter(Boolean).map(parseSelectorRange)
+  const ranges = selector
+    .split(',')
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map(parseSelectorRange)
   ranges.sort((a, b) => a[0] - b[0] || a[1] - b[1])
   const slices = ranges.map(([min, max]) => {
     const start = headings.find((heading) => Number(heading[1]) === min)?.index
@@ -214,7 +226,7 @@ export function createContextPack(id, scenario, release, effectiveRules, mode = 
 }
 
 function inspectRelease(script) {
-  const result = spawnSync(process.execPath, [script, '--check', '--json'], { cwd: repoRoot, encoding: 'utf8' })
+  const result = spawnSync(process.execPath, [script, '--check', '--json'], { cwd: executionRoot, encoding: 'utf8' })
   try {
     return { ...JSON.parse(result.stdout), exitCode: result.status ?? 1 }
   } catch (error) {
@@ -301,17 +313,30 @@ export function requireFreshEffectiveRules() {
 // self-test：纯函数（section 切片 / 场景展开 / 引用归一）。node lib/context-pack.mjs --self-test
 // ---------------------------------------------------------------------------
 function selfTest() {
-  const assert = (cond, msg) => { if (!cond) { console.error(`[context-pack] self-test failed: ${msg}`); process.exit(1) } }
+  const assert = (cond, msg) => {
+    if (!cond) {
+      console.error(`[context-pack] self-test failed: ${msg}`)
+      process.exit(1)
+    }
+  }
   const md = ['# Test', '', '## 1. One', 'one', '', '## 2 Two', 'two', '', '## 3. Three', 'three'].join('\n')
   assert(selectMarkdownSections(md, '2') === ['## 2 Two', 'two', '', ''].join('\n'), 'section 2 slice')
   assert(selectMarkdownSections(md, '1-2') === ['## 1. One', 'one', '', '## 2 Two', 'two', '', ''].join('\n'), 'section 1-2 slice')
   // 多区间：不相邻的 1 与 3 分别切片后拼接（跳过中间的 §2）。
   assert(selectMarkdownSections(md, '1,3') === ['## 1. One', 'one', '', '## 3. Three', 'three'].join('\n'), 'multi-range 1,3 slice')
   let threw = false
-  try { selectMarkdownSections(md, '2-1') } catch { threw = true }
+  try {
+    selectMarkdownSections(md, '2-1')
+  } catch {
+    threw = true
+  }
   assert(threw, 'reversed selector rejected')
   threw = false
-  try { selectMarkdownSections(md, '4') } catch { threw = true }
+  try {
+    selectMarkdownSections(md, '4')
+  } catch {
+    threw = true
+  }
   assert(threw, 'missing heading rejected')
   // 区间合并工具仍供 policy/诊断使用；场景展开本身按原始顺序扣除重叠。
   assert(mergeSectionSelectors(['5-6', '1-3', '3', '6']) === '1-3,5-6', 'overlapping ranges merged (gap kept)')
@@ -324,17 +349,33 @@ function selfTest() {
   const expanded = expandScenarioRefs(index, 'derived')
   assert(expanded.length === 3 && expanded[2].file === 'c.md', 'scenario refs expanded + deduped')
   // 同文件多次引用（跨子场景）去重但保留首次出现顺序，后续只留下未覆盖区间。
-  const overlap = { scenarios: { q: [{ file: 'q.md', sections: '5-6' }, { file: 'q.md', sections: '1-3' }, { file: 'q.md', sections: '3' }] } }
+  const overlap = {
+    scenarios: {
+      q: [
+        { file: 'q.md', sections: '5-6' },
+        { file: 'q.md', sections: '1-3' },
+        { file: 'q.md', sections: '3' },
+      ],
+    },
+  }
   const mergedRefs = expandScenarioRefs(overlap, 'q')
   assert(mergedRefs.length === 2 && mergedRefs[0].sections === '5-6' && mergedRefs[1].sections === '1-3', 'same-file refs deduped without reordering')
   const internalOverlap = expandScenarioRefs({ scenarios: { q: [{ file: 'q.md', sections: '1-3,2-4' }] } }, 'q')
   assert(internalOverlap.length === 1 && internalOverlap[0].sections === '1-4', 'same-ref overlapping ranges merged')
   const partialThenWhole = { scenarios: { q: [{ file: 'q.md', sections: '2' }, 'q.md'] } }
   threw = false
-  try { expandScenarioRefs(partialThenWhole, 'q') } catch { threw = true }
+  try {
+    expandScenarioRefs(partialThenWhole, 'q')
+  } catch {
+    threw = true
+  }
   assert(threw, 'ambiguous partial-then-whole route rejected')
   threw = false
-  try { expandScenarioRefs({ scenarios: { x: [{ scenario: 'x' }] } }, 'x') } catch { threw = true }
+  try {
+    expandScenarioRefs({ scenarios: { x: [{ scenario: 'x' }] } }, 'x')
+  } catch {
+    threw = true
+  }
   assert(threw, 'scenario cycle detected')
   // 预算门禁三档：无 budget 放行；> warn 且 ≤ fail → warn(ok);  > fail → fail(!ok)。
   // 静音其打印（warn/error 行是被断言的预期行为，不是测试失败），只校验返回判定。
