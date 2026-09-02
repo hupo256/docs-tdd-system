@@ -16,10 +16,12 @@
 
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { recommendScenarios, runChanged } from './lib/changed-detection.mjs'
+import { printReport } from './lib/cli-report.mjs'
 import { createContextPack, enforceContextBudget, expandScenarioRefs, printContextDelta, printContextPack, requireFreshEffectiveRules, requireFreshRuleRelease } from './lib/context-pack.mjs'
 import { contextBudgetFor, coordinatorSteps, resolveContextMode, validateContextPolicy } from './lib/context-policy.mjs'
 import { findDeliveredPack, loadContextDeliveryLedger, recordContextDelivery, resolveContextSessionId } from './lib/context-session.mjs'
@@ -28,8 +30,9 @@ import { G6_CONTEXT_SCENARIOS, loadG6ContextSession, nextG6ContextScenario, prin
 import { createFingerprint } from './lib/gate-cache.mjs'
 import { maybeBroadcastGate, printGateHeartbeat } from './lib/gate-heartbeat.mjs'
 import { capability, resolveProjectWorktree } from './lib/project-status-report.mjs'
-import { resolveRoots } from './lib/roots.mjs'
+import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 import { resolveRuleSessionClient } from './lib/rule-session.mjs'
+import { latestReleasePin, resolveRulePin, upgradeRulePin } from './lib/rule-pin.mjs'
 import { CODING_SCENARIOS, requireRuleSession, verifyG2Ready, writeRuleSession } from './lib/rule-session-runtime.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
@@ -148,8 +151,61 @@ if (command === 'explain') {
   process.exit(explainRule(projectId))
 }
 
+// rules status|upgrade <PR>：项目级规则版本 pin 的查看/显式升级。子命令在 projectId 槽（cliArgs[1]），
+// 目标 PR 在 detail（cliArgs[2]）。upgrade 只影响该项目：搬 pin 到最新发布、作废其 rule-session /
+// g6-context-session、清该项目 gate cache，要求重跑 context。别的项目仍钉旧版。
+if (command === 'rules') {
+  const subcommand = projectId
+  const targetPr = detail
+  const idPattern = new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`)
+  if (!['status', 'upgrade'].includes(subcommand) || !idPattern.test(targetPr || '')) {
+    console.error('usage: docs-tdd.mjs rules <status|upgrade> PR-01234')
+    process.exit(1)
+  }
+  const latest = latestReleasePin()
+  if (subcommand === 'status') {
+    const pin = resolveRulePin(targetPr, { persist: false })
+    const upToDate = pin.policyFingerprint === latest.policyFingerprint
+    printReport([
+      ['project', targetPr],
+      ['pinned policy', `${(pin.policyFingerprint || 'unpinned').slice(0, 12)}${pin.commit ? ` @ ${pin.commit.slice(0, 12)}` : ''}`],
+      ['pin source', pin.source],
+      ['upgrade mode', pin.upgradeMode || 'explicit'],
+      ['latest policy', `${(latest.policyFingerprint || 'unknown').slice(0, 12)}${latest.commit ? ` @ ${latest.commit.slice(0, 12)}` : ''}`],
+      ['status', upToDate ? 'up to date' : 'newer rules available — run docs-tdd rules upgrade to adopt'],
+    ])
+    process.exit(0)
+  }
+  // upgrade
+  const { previous, next } = upgradeRulePin(targetPr)
+  const projectRoot = resolveProjectRoot(targetPr)
+  for (const rel of ['agent/rule-session.json', 'agent/g6-context-session.json']) {
+    const file = join(projectRoot, rel)
+    if (existsSync(file)) rmSync(file)
+  }
+  const cacheDir = join(tmpdir(), 'docs-tdd-gate-cache')
+  let clearedCache = 0
+  if (existsSync(cacheDir)) {
+    for (const entry of readdirSync(cacheDir)) {
+      if (entry.startsWith(`${targetPr}-`)) {
+        rmSync(join(cacheDir, entry))
+        clearedCache += 1
+      }
+    }
+  }
+  printReport([
+    ['project', targetPr],
+    ['previous policy', previous?.policyFingerprint ? `${previous.policyFingerprint.slice(0, 12)}${previous.commit ? ` @ ${previous.commit.slice(0, 12)}` : ''}` : 'unpinned'],
+    ['new policy', `${next.policyFingerprint.slice(0, 12)}${next.commit ? ` @ ${next.commit.slice(0, 12)}` : ''}`],
+    ['invalidated', 'rule-session + g6-context-session'],
+    ['gate cache cleared', `${clearedCache} entr${clearedCache === 1 ? 'y' : 'ies'}`],
+    ['next step', `run docs-tdd context ${targetPr} <coding-scenario> before editing or gating`],
+  ])
+  process.exit(0)
+}
+
 if (!new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(projectId || '')) {
-  console.error('usage: docs-tdd.mjs <kickoff|status|resume|next|capability|doctor|release|golden|guard|rule-health|explain|check|gate|context|changed|recommend> PR-01234 [G0-G8|scenario] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|manual] [--session-id <id>]')
+  console.error('usage: docs-tdd.mjs <kickoff|status|resume|next|capability|doctor|release|golden|guard|rule-health|rules|explain|check|gate|context|changed|recommend> PR-01234 [G0-G8|scenario] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|manual] [--session-id <id>]')
   process.exit(1)
 }
 
@@ -168,12 +224,12 @@ else {
   const effectiveRules = requireFreshEffectiveRules()
   if (!effectiveRules) process.exit(1)
   if (command === 'gate') {
-    if (['G5', 'G6', 'G7', 'G8'].includes((detail || 'G3').toUpperCase()) && !requireRuleSession(projectId, worktree, release, effectiveRules, agentClient)) process.exit(1)
+    if (['G5', 'G6', 'G7', 'G8'].includes((detail || 'G3').toUpperCase()) && !requireRuleSession(projectId, worktree, agentClient)) process.exit(1)
     status = run([join(scriptDir, 'run-project-gate.mjs'), projectId, detail || 'G3', '--write', '--client', agentClient, ...(contextSessionId ? ['--session-id', contextSessionId] : []), ...(noCache ? ['--no-cache'] : []), ...(partial ? ['--partial'] : [])], worktree)
     // partial 不是 G6 PASS：不播报「G6 通过」，免得群里误读为完整通过。
     if (status === 0 && !partial) maybeBroadcastGate(projectId, (detail || 'G3').toUpperCase())
   } else if (command === 'changed') {
-    if (!requireRuleSession(projectId, worktree, release, effectiveRules, agentClient)) process.exit(1)
+    if (!requireRuleSession(projectId, worktree, agentClient)) process.exit(1)
     status = runChanged(projectId, worktree, effectiveRules.currentFingerprint, { noCache, client: agentClient, sessionId: contextSessionId })
   } else if (command === 'context') {
     try {
@@ -185,14 +241,15 @@ else {
       })
       if (policyErrors.length) throw new Error(`invalid context policy:\n- ${policyErrors.join('\n- ')}`)
       const code = createFingerprint({ callerCwd: worktree, config, docsRoot })
+      // 项目钉版：规则文档从项目 pinned commit 不可变读取，维护者工作副本的下一版编辑不污染在飞项目。
+      const rulePin = resolveRulePin(projectId)
       const g6Current = {
         projectId,
         client: agentClient,
         sessionId: contextSessionId,
         headSha: code.headSha,
         dirtyHash: code.dirtyHash,
-        ruleReleaseFingerprint: release.currentFingerprint,
-        effectiveRulesFingerprint: effectiveRules.currentFingerprint,
+        rulePolicyFingerprint: rulePin.policyFingerprint,
       }
       if (coordinatorSteps(index, scenario)) {
         const previous = loadG6ContextSession(projectId)
@@ -209,6 +266,7 @@ else {
       const mode = resolveContextMode(cliArgs, scenario, index)
       const pack = createContextPack(projectId, scenario, release, effectiveRules, mode, {
         includeSummary: !G6_CONTEXT_SCENARIOS.includes(scenario) || !activeG6Session || Object.keys(activeG6Session.dimensions || {}).length === 0,
+        pinnedCommit: rulePin.commit,
       })
       const kind = CODING_SCENARIOS.has(scenario) ? 'coding' : 'stage'
       const verdict = mode === 'full' ? { ok: true } : enforceContextBudget(pack, kind, contextBudgetFor(index, scenario, kind))
@@ -232,7 +290,7 @@ else {
         })
       }
       // 编码会话仍每次刷新（headSha / codeReadiness 可能变，门禁证据不能靠 delta 复用）。
-      if (CODING_SCENARIOS.has(scenario)) writeRuleSession(projectId, worktree, release, effectiveRules, pack, agentClient)
+      if (CODING_SCENARIOS.has(scenario)) writeRuleSession(projectId, worktree, rulePin, pack, agentClient)
       if (G6_CONTEXT_SCENARIOS.includes(scenario)) recordG6Context({ current: g6Current, scenario, pack })
       printGateHeartbeat(projectId, resolvedWorktree)
     } catch (error) {

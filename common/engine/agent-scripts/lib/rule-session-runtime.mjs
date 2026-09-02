@@ -2,6 +2,7 @@ import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { resolveProjectRoot } from './roots.mjs'
+import { resolveRulePin } from './rule-pin.mjs'
 import { CODING_SCENARIOS, codeReadinessFingerprint, validateRuleSession } from './rule-session.mjs'
 
 export { CODING_SCENARIOS }
@@ -28,12 +29,13 @@ function gitOutput(args, cwd) {
   return result.status === 0 ? result.stdout : ''
 }
 
-function currentState(id, worktree, release, effectiveRules, client) {
+// The project's own authority state used for session validation: identity + G2-input hash + HEAD.
+// codeReadinessFingerprint is computed AFTER the pin is resolved/persisted so that lazily writing
+// rulePolicy into the manifest (a G2 input) does not retroactively invalidate the session.
+function currentState(id, worktree, client) {
   return {
     projectId: id,
     client,
-    ruleReleaseFingerprint: release.currentFingerprint,
-    effectiveRulesFingerprint: effectiveRules.currentFingerprint,
     codeReadinessFingerprint: codeReadinessFingerprint(resolveProjectRoot(id)),
     headSha: gitOutput(['rev-parse', 'HEAD'], worktree).trim() || 'unknown',
   }
@@ -54,13 +56,14 @@ export function verifyG2Ready(id, worktree, scriptDir) {
   return false
 }
 
-/** Persist the coding context and source fingerprints as machine evidence. */
-export function writeRuleSession(id, worktree, release, effectiveRules, pack, client) {
+/** Persist the coding context and the project rule pin as machine evidence. */
+export function writeRuleSession(id, worktree, pin, pack, client) {
   const session = {
     version: 2,
-    ...currentState(id, worktree, release, effectiveRules, client),
+    ...currentState(id, worktree, client),
     scenario: pack.scenario,
     mode: pack.mode,
+    rulePin: { commit: pin.commit || null, policyFingerprint: pin.policyFingerprint },
     contextFingerprint: pack.fingerprint,
     generatedAt: new Date().toISOString(),
   }
@@ -70,14 +73,14 @@ export function writeRuleSession(id, worktree, release, effectiveRules, pack, cl
   console.log(`coding rule session: ${file}`)
 }
 
-/** Block changed/G5+ when the agent did not load the current coding rules. */
-export function requireRuleSession(id, worktree, release, effectiveRules, client) {
+/** Block changed/G5+ when the agent did not load the current coding rules for this project's pin. */
+export function requireRuleSession(id, worktree, client) {
+  // Resolve (and lazily persist) the pin first so currentState hashes the settled manifest.
+  const baseline = resolveRulePin(id)
   const file = join(resolveProjectRoot(id), 'agent/rule-session.json')
   const session = existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : null
-  const result = validateRuleSession({
-    session,
-    current: currentState(id, worktree, release, effectiveRules, client),
-  })
+  const result = validateRuleSession({ session, current: currentState(id, worktree, client), baseline })
+  for (const warning of result.warnings || []) console.error(`[rule-session] ${warning}`)
   if (result.ok) return true
   console.error(`[VERIFY-RULE-002] coding rule session is missing or stale: ${result.errors.join('; ')}`)
   console.error(`run docs-tdd context ${id} <coding-scenario> before editing or delivering business code`)

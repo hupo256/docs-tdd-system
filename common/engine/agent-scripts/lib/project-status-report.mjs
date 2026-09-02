@@ -63,7 +63,7 @@ export function capability(id, { agentClient }) {
   printWarnings([
     !resolvedWorktree.exists && `warning: configured worktree does not exist: ${resolvedWorktree.requestedWorktree}; falling back to ${repoRoot}`,
     resolvedWorktree.exists && !resolvedWorktree.configured && id && `warning: project worktree is not configured; falling back to ${repoRoot}`,
-    !release.fresh && 'warning: context/changed/gate are blocked until the current rules are published',
-    !effectiveRules.fresh && 'warning: context/changed/gate are blocked until effective rules are published',
+    !release.fresh && 'note: rule sources are ahead of the published release; this project runs against its pinned policy (run docs-tdd release to publish, docs-tdd rules upgrade <PR> to adopt)',
+    !effectiveRules.fresh && 'note: effective rules are ahead of the published snapshot; the current agent may want to reload context (not blocking)',
   ])
 }

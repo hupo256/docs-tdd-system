@@ -8,7 +8,11 @@ import { resolveProjectRoot } from './roots.mjs'
 export const G6_CONTEXT_SCENARIOS = ['g6_code_review', 'g6_contract', 'g6_visual', 'g6_delivery']
 const MAX_AGE_MS = 24 * 60 * 60 * 1000
 
-const bindingKeys = ['projectId', 'client', 'sessionId', 'headSha', 'dirtyHash', 'ruleReleaseFingerprint', 'effectiveRulesFingerprint']
+// headSha/dirtyHash bind the four review dimensions to the exact code snapshot under review
+// (that binding is the point of review freshness). The rule dimension is the project's PINNED
+// policy fingerprint, not docs_tdd's global-latest — a shared-repo rule edit must not retroactively
+// invalidate an in-flight G6 review.
+const bindingKeys = ['projectId', 'client', 'sessionId', 'headSha', 'dirtyHash', 'rulePolicyFingerprint']
 
 export const sameG6ContextBinding = (session, current, now = Date.now()) => {
   const updatedAt = Date.parse(session?.updatedAt)
@@ -92,7 +96,7 @@ export function nextG6ContextScenario(session) {
 }
 
 function selfTest() {
-  const current = { projectId: 'PR-00001', client: 'codex', sessionId: 'thread-1', headSha: 'head', dirtyHash: 'dirty', ruleReleaseFingerprint: 'l3', effectiveRulesFingerprint: 'effective' }
+  const current = { projectId: 'PR-00001', client: 'codex', sessionId: 'thread-1', headSha: 'head', dirtyHash: 'dirty', rulePolicyFingerprint: 'pol' }
   const dimensions = Object.fromEntries(G6_CONTEXT_SCENARIOS.map((scenario) => [scenario, { fingerprint: scenario, generatedAt: '2026-01-01T00:00:00.000Z' }]))
   const session = { version: 1, ...current, dimensions, updatedAt: '2026-01-01T00:00:00.000Z' }
   const now = Date.parse('2026-01-01T01:00:00.000Z')

@@ -16,6 +16,7 @@ import { buildQualityGuardCheck, derivePayloadOk, parseJsonOutput, selfTest, sho
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 import { verifyWorktreeConsumption } from './lib/rule-consumption.mjs'
 import { resolveRuleSessionClient } from './lib/rule-session.mjs'
+import { resolveRulePin } from './lib/rule-pin.mjs'
 import { requireRuleSession } from './lib/rule-session-runtime.mjs'
 import { persistRunLog as persistRunLogRaw, printFailureSummary, run } from './lib/run-log.mjs'
 import { loadLedger, recordFindings, saveLedger } from './warn-ledger.mjs'
@@ -128,33 +129,36 @@ const skipRuleFreshness = process.env.DOCS_TDD_SKIP_RULE_FRESHNESS === '1'
 if (skipRuleFreshness) {
   console.error('[run-project-gate] ⚠ DOCS_TDD_SKIP_RULE_FRESHNESS=1：已跳过规则发布/生效新鲜度检查（重构期临时开关，稳定后移除该 env）')
 } else {
-  const releaseCheck = spawnSync(process.execPath, [join(scriptDir, 'rule-release.mjs'), '--check', '--json'], {
-    cwd: callerCwd,
-    encoding: 'utf8',
-    stdio: 'pipe',
-  })
-  if (releaseCheck.status !== 0) {
-    process.stderr.write(releaseCheck.stderr || releaseCheck.stdout)
-    fail('published rule release is missing or stale')
+  // 业务项目 gate 不再因「共享规则仓工作副本领先已发布」而硬阻塞——项目按各自 pin 跑，
+  // 只有 manifest 损坏/缺失才致命。规则维护侧另有 docs-tdd release/golden 硬闸兜住「未发布不能发布」。
+  const inspect = (script, label) => {
+    const check = spawnSync(process.execPath, [join(scriptDir, script), '--check', '--json'], {
+      cwd: callerCwd,
+      encoding: 'utf8',
+      stdio: 'pipe',
+    })
+    let parsed = null
+    try {
+      parsed = JSON.parse(check.stdout)
+    } catch {
+      parsed = null
+    }
+    if (!parsed || parsed.status === 'invalid' || parsed.status === 'missing') {
+      process.stderr.write(check.stderr || check.stdout)
+      fail(`${label} is missing or corrupt`)
+    }
+    if (!parsed.fresh) {
+      console.error(`[run-project-gate] ⚠ ${label} sources are ahead of the published snapshot; project runs against its pinned policy (not blocking).`)
+    }
   }
-
-  const effectiveRulesCheck = spawnSync(process.execPath, [join(scriptDir, 'effective-rules.mjs'), '--check', '--json'], {
-    cwd: callerCwd,
-    encoding: 'utf8',
-    stdio: 'pipe',
-  })
-  if (effectiveRulesCheck.status !== 0) {
-    process.stderr.write(effectiveRulesCheck.stderr || effectiveRulesCheck.stdout)
-    fail('effective rules release is missing or stale')
-  }
+  inspect('rule-release.mjs', 'published rule release')
+  inspect('effective-rules.mjs', 'effective rules release')
 }
 
 const projectDir = resolveProjectRoot(projectId)
 if (!existsSync(projectDir)) fail(`project directory does not exist: ${relative(repoRoot, projectDir)}`)
 if (codeRuleGates.includes(gate)) {
-  const release = JSON.parse(readFileSync(join(docsRoot, 'common/rule-release.json'), 'utf8'))
-  const effectiveRules = JSON.parse(readFileSync(join(docsRoot, 'common/effective-rules.json'), 'utf8'))
-  if (!requireRuleSession(projectId, callerCwd, { currentFingerprint: release.fingerprint }, { currentFingerprint: effectiveRules.fingerprint }, agentClient)) {
+  if (!requireRuleSession(projectId, callerCwd, agentClient)) {
     fail(`rerun docs-tdd context ${projectId} <coding-scenario>`)
   }
   if (agentClient === 'codex' || agentClient === 'claude') {
@@ -168,14 +172,15 @@ if (codeRuleGates.includes(gate)) {
   }
   if (gate === 'G6') {
     const code = createFingerprint({ callerCwd, config, docsRoot })
+    // G6 review 绑定项目 pinned 规则政策指纹（非 docs_tdd 全局最新），共享仓规则漂移不再作废在飞 review。
+    const rulePin = resolveRulePin(projectId)
     const current = {
       projectId,
       client: agentClient,
       sessionId: contextSessionId,
       headSha: code.headSha,
       dirtyHash: code.dirtyHash,
-      ruleReleaseFingerprint: release.fingerprint,
-      effectiveRulesFingerprint: effectiveRules.fingerprint,
+      rulePolicyFingerprint: rulePin.policyFingerprint,
     }
     if (!requireG6ContextSession(current)) fail('load all four G6 context dimensions before running G6')
   }
@@ -288,7 +293,7 @@ const payload = {
     buildQualityCommand: buildQualityRun?.command || null,
     buildQualityParseError: buildQualityResult?.parseError || null,
   },
-  fingerprint: createFingerprint({ callerCwd, config, docsRoot }),
+  fingerprint: createFingerprint({ callerCwd, config, docsRoot, pin: resolveRulePin(projectId, { persist: false }) }),
   cache: { hit: false, fingerprint: cacheFingerprint },
 }
 syncCommandSummary(payload, commands)
