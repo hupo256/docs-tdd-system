@@ -1,12 +1,15 @@
 #!/usr/bin/env node
 
 import { splitPendingReconcile } from './gate-partial.mjs'
+import { evidenceMethodMatches, REQUIREMENT_EVIDENCE_TYPES } from './requirement-coverage.mjs'
 
 export const ACCEPTANCE_METHODS = ['vitest', 'browser', 'contract', 'manual-visual', 'manual', 'not-applicable']
 export const ACCEPTANCE_STATUSES = ['passed', 'failed', 'blocked', 'not-applicable']
 
 const FEATURE_ID_RE = /^F\d+$/
 const ACCEPTANCE_ID_RE = /^AC-\d+$/
+const REQUIREMENT_ID_RE = /^R-F\d+-\d+$/
+const TASK_ID_RE = /^T\d+[a-z]?$/i
 
 function nonEmpty(value) {
   return typeof value === 'string' && value.trim().length > 0
@@ -44,6 +47,9 @@ export function validateAcceptanceResults(report, expectedProjectId = '') {
     else if (ids.has(item.id)) errors.push(`id 重复：${item.id}`)
     else ids.add(item.id)
     if (!FEATURE_ID_RE.test(item.featureId || '')) errors.push(`${at}.featureId 须形如 F01`)
+    if (item.requirementId !== undefined && !REQUIREMENT_ID_RE.test(item.requirementId || '')) errors.push(`${at}.requirementId 须形如 R-F09-01`)
+    if (item.taskId !== undefined && !TASK_ID_RE.test(item.taskId || '')) errors.push(`${at}.taskId 须形如 T10a`)
+    if (item.evidenceType !== undefined && !REQUIREMENT_EVIDENCE_TYPES.includes(item.evidenceType)) errors.push(`${at}.evidenceType 非法`)
     if (!nonEmpty(item.scenario)) errors.push(`${at}.scenario 不能为空`)
     if (!ACCEPTANCE_METHODS.includes(item.method)) errors.push(`${at}.method 非法`)
     if (!ACCEPTANCE_STATUSES.includes(item.status)) errors.push(`${at}.status 非法`)
@@ -58,7 +64,7 @@ export function validateAcceptanceResults(report, expectedProjectId = '') {
 // partial=true 即 G6-partial（部分验收）：依赖真实后端字段的 blocked 项（contract/browser）转记
 // pending-reconcile —— 它们不再算 DOC-AC-003 的未处置项，也可代替 passed 满足 DOC-AC-002 的覆盖要求，
 // 但会由 DOC-AC-007（warn）逐条点名。判定源在 lib/gate-partial.mjs。
-export function acceptanceChecks({ report, doingFeatureIds, expectedProjectId = '', currentSha = '', evidenceExists = null, file = 'agent/acceptance-results.json', partial = false }) {
+export function acceptanceChecks({ report, doingFeatureIds, atomicRequirements = [], requirementTasks = [], expectedProjectId = '', currentSha = '', evidenceExists = null, file = 'agent/acceptance-results.json', partial = false }) {
   const base = { file, category: 'documentation' }
   if (report === null || report === undefined) return []
   const structural = validateAcceptanceResults(report, expectedProjectId)
@@ -152,6 +158,58 @@ export function acceptanceChecks({ report, doingFeatureIds, expectedProjectId = 
         : 'G6-partial：无待真实字段对账的验收项（可直接跑完整 G6）',
     })
   }
+  if (atomicRequirements.length) {
+    const taskByRequirement = new Map(requirementTasks.map((task) => [task.requirementId, task.taskId]))
+    const requirementById = new Map(atomicRequirements.map((requirement) => [requirement.id, requirement]))
+    const missingRequirements = atomicRequirements.filter((requirement) => !report.items.some(
+      (item) => item.requirementId === requirement.id && acceptedStatuses(item),
+    ))
+    checks.push({
+      ...base,
+      ruleId: 'DOC-AC-008',
+      ok: missingRequirements.length === 0,
+      severity: 'error',
+      message: missingRequirements.length
+        ? `原子需求缺 passed 验收：${missingRequirements.map((item) => item.id).join(', ')}`
+        : `所有原子需求均有 passed 验收（${atomicRequirements.length} 条）`,
+    })
+
+    const issues = []
+    for (const requirement of atomicRequirements) {
+      const expectedTaskId = taskByRequirement.get(requirement.id)
+      for (const evidenceType of requirement.evidenceTypes) {
+        const matching = report.items.find((item) => (
+          item.requirementId === requirement.id
+          && item.taskId === expectedTaskId
+          && item.evidenceType === evidenceType
+          && item.featureId === requirement.featureId
+          && acceptedStatuses(item)
+          && evidenceMethodMatches(evidenceType, item.method)
+        ))
+        if (!matching) issues.push(`${requirement.id} 缺 ${evidenceType}`)
+      }
+    }
+    for (const item of report.items.filter((candidate) => candidate.requirementId !== undefined)) {
+      const requirement = requirementById.get(item.requirementId)
+      if (!requirement) {
+        issues.push(`${item.id} 引用未登记需求 ${item.requirementId}`)
+        continue
+      }
+      const expectedTaskId = taskByRequirement.get(item.requirementId)
+      if (item.featureId !== requirement.featureId) issues.push(`${item.id}.featureId 应为 ${requirement.featureId}`)
+      if (item.taskId !== expectedTaskId) issues.push(`${item.id}.taskId 应为 ${expectedTaskId || '已映射任务'}`)
+      if (!evidenceMethodMatches(item.evidenceType, item.method)) issues.push(`${item.id} 的 ${item.evidenceType} 不能由 ${item.method} 证明`)
+    }
+    checks.push({
+      ...base,
+      ruleId: 'DOC-AC-009',
+      ok: issues.length === 0,
+      severity: 'error',
+      message: issues.length
+        ? `原子需求证据类型/映射不匹配：${[...new Set(issues)].join('；')}`
+        : '每条原子需求的全部所需证据类型均由匹配方法覆盖',
+    })
+  }
   return checks
 }
 
@@ -201,7 +259,23 @@ function selfTest() {
   const blockedVitest = { ...passed, items: [{ ...passed.items[0], method: 'vitest', status: 'blocked', evidence: [], reason: '环境缺失' }] }
   assert('partial does not excuse vitest blocked', acceptanceChecks({ report: blockedVitest, doingFeatureIds: ['F01'], partial: true }).find((item) => item.ruleId === 'DOC-AC-003')?.ok === false)
   assert('AC-007 clean when nothing pending', acceptanceChecks({ report: passed, doingFeatureIds: ['F01'], partial: true }).find((item) => item.ruleId === 'DOC-AC-007')?.ok === true)
-  if (!process.exitCode) console.log('acceptance-results lib self-test passed (23 cases)')
+  const atomicRequirements = [{ id: 'R-F01-01', featureId: 'F01', statement: '标签改变', evidenceTypes: ['copy-literal', 'component-dom'] }]
+  const requirementTasks = [{ requirementId: 'R-F01-01', featureId: 'F01', taskId: 'T10a' }]
+  const atomicPassed = {
+    ...passed,
+    items: [
+      { ...passed.items[0], id: 'AC-1', requirementId: 'R-F01-01', taskId: 'T10a', evidenceType: 'copy-literal' },
+      { ...passed.items[0], id: 'AC-2', requirementId: 'R-F01-01', taskId: 'T10a', evidenceType: 'component-dom' },
+    ],
+  }
+  const atomicChecks = acceptanceChecks({ report: atomicPassed, doingFeatureIds: ['F01'], atomicRequirements, requirementTasks })
+  assert('atomic requirements covered', atomicChecks.find((item) => item.ruleId === 'DOC-AC-008')?.ok === true)
+  assert('atomic evidence types matched', atomicChecks.find((item) => item.ruleId === 'DOC-AC-009')?.ok === true)
+  const copyOnly = { ...atomicPassed, items: [atomicPassed.items[0]] }
+  assert('copy evidence cannot prove DOM behavior', acceptanceChecks({ report: copyOnly, doingFeatureIds: ['F01'], atomicRequirements, requirementTasks }).find((item) => item.ruleId === 'DOC-AC-009')?.ok === false)
+  const wrongMethod = { ...atomicPassed, items: atomicPassed.items.map((item) => item.evidenceType === 'component-dom' ? { ...item, method: 'manual' } : item) }
+  assert('evidence method must match type', acceptanceChecks({ report: wrongMethod, doingFeatureIds: ['F01'], atomicRequirements, requirementTasks }).find((item) => item.ruleId === 'DOC-AC-009')?.ok === false)
+  if (!process.exitCode) console.log('acceptance-results lib self-test passed (27 cases)')
 }
 
 if (process.argv[1]?.endsWith('acceptance-results.mjs') && process.argv.includes('--self-test')) selfTest()

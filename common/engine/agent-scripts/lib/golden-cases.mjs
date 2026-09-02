@@ -94,7 +94,20 @@ export function buildMutationCases({ targetDir, editFixtureFile, writeFixtureFil
       id: 'doing-feature-missing-from-tasks',
       gate: 'G2',
       expectRuleId: 'DOC-G2-005',
+      tolerate: ['DOC-G2-006'],
       apply: () => editFixtureFile('product/00-feature-inventory.md', (text) => text.replace('| F03 | 榜单分享卡片 | 延期 | 夹具用延期项 |', '| F04 | 榜单筛选 | 做 | 任务表里故意缺 F04 |')),
+    },
+    {
+      id: 'atomic-requirement-invalid-evidence-type',
+      gate: 'G2',
+      expectRuleId: 'DOC-G2-006',
+      apply: () => editFixtureFile('product/00-feature-inventory.md', (text) => text.replace('| R-F01-01 | F01 | 打开榜单页能看到列表 | component-dom |', '| R-F01-01 | F01 | 打开榜单页能看到列表 | copy-only |')),
+    },
+    {
+      id: 'atomic-requirement-missing-task',
+      gate: 'G2',
+      expectRuleId: 'DOC-G2-007',
+      apply: () => editFixtureFile('product/04-frontend-tasks.md', (text) => text.replace('| T01 | F01 | R-F01-01 |', '| T01 | F01 | — |')),
     },
     {
       id: 'msw-route-b-not-locked',
@@ -108,7 +121,7 @@ export function buildMutationCases({ targetDir, editFixtureFile, writeFixtureFil
       id: 'msw-fallback-task-missing',
       gate: 'G3',
       expectRuleId: 'DOC-G3-006',
-      apply: () => editFixtureFile('product/04-frontend-tasks.md', (text) => text.replace('| T03 | F01 | G3 API 未 ready 时补齐 MSW handler / 契约测试 / dev-only worker 注册 | 完成 |', '| T03 | F01 | 补 mock | 完成 |')),
+      apply: () => editFixtureFile('product/04-frontend-tasks.md', (text) => text.replace('| T03 | F01 | — | G3 API 未 ready 时补齐 MSW handler / 契约测试 / dev-only worker 注册 | 完成 |', '| T03 | F01 | — | 补 mock | 完成 |')),
     },
     {
       id: 'dev-only-worker-note-missing',
@@ -252,6 +265,8 @@ export function buildMutationCases({ targetDir, editFixtureFile, writeFixtureFil
         projectId: GOLDEN_PROJECT_ID,
         reviewedAt: '2026-08-03',
         reviewer: 'golden-fixture',
+        confirmedBy: 'golden-owner',
+        confirmedAt: '2026-08-03',
         head: '0000000000000000000000000000000000000000',
         findings: [{ id: 'CR-1', category: 'correctness', severity: 'high', summary: '未处理问题', disposition: 'open', evidence: [] }],
       }, null, 2)}\n`),
@@ -260,6 +275,7 @@ export function buildMutationCases({ targetDir, editFixtureFile, writeFixtureFil
       id: 'doing-feature-missing-acceptance',
       gate: 'G6',
       expectRuleId: 'DOC-AC-002',
+      tolerate: ['DOC-AC-008', 'DOC-AC-009'],
       apply: () => writeFixtureFile('agent/acceptance-results.json', `${JSON.stringify({ projectId: GOLDEN_PROJECT_ID, head: '0000000000000000000000000000000000000000', items: [] }, null, 2)}\n`),
     },
     {
@@ -276,6 +292,12 @@ export function buildMutationCases({ targetDir, editFixtureFile, writeFixtureFil
       expectRuleId: 'DOC-AC-005',
       // evidence 非空但指向不存在的文件：只触发 DOC-AC-005（锚点不存在），不触发 DOC-AC-004（非空）。
       apply: () => editFixtureFile('agent/acceptance-results.json', (text) => text.replace('evidence/gate/g6/README.md', 'evidence/gate/g6/nonexistent.png')),
+    },
+    {
+      id: 'acceptance-evidence-type-mismatch',
+      gate: 'G6',
+      expectRuleId: 'DOC-AC-009',
+      apply: () => editFixtureFile('agent/acceptance-results.json', (text) => text.replace('"evidenceType": "component-dom"', '"evidenceType": "copy-literal"')),
     },
     // ---- G6-partial 端到端：同一批「等接口 open 假设 + 后端未就绪阻塞」在部分验收下放行、在完整 G6 下阻断 ----
     // 两条用例共用同一处 setup（只破坏一处「停靠态」），仅 --partial 开关不同，正反锁死 partial 语义。

@@ -1,14 +1,14 @@
 {
   "tool": "warn-ledger.mjs",
-  "updatedAt": "2026-08-26T10:53:46.179Z",
+  "updatedAt": "2026-09-01T14:34:34.143Z",
   "rules": {
     "CODE-ARCH-003": {
       "projects": {
         "PR-02074": {
           "firstSeen": "2026-08-03",
-          "lastSeen": "2026-08-25",
-          "lastFingerprint": "266583d9509fd7dee32117ef5dac54b73d6a71d9",
-          "count": 19,
+          "lastSeen": "2026-09-01",
+          "lastFingerprint": "e4a5e1fbb9e3e8ad4d0de4b6627da401db694ac1",
+          "count": 17,
           "verdict": "unreviewed"
         },
         "PR-02306": {
@@ -38,6 +38,13 @@
           "lastFingerprint": "3a9f9a313f44a2286fcb613b42fb3e7488468823",
           "count": 4,
           "verdict": "unreviewed"
+        },
+        "PR-02273": {
+          "firstSeen": "2026-09-01",
+          "lastSeen": "2026-09-01",
+          "lastFingerprint": "269bdd57a96bc5d76f38feba3009475abf5a9c53",
+          "count": 10,
+          "verdict": "unreviewed"
         }
       }
     },
@@ -45,8 +52,8 @@
       "projects": {
         "PR-02074": {
           "firstSeen": "2026-08-03",
-          "lastSeen": "2026-08-25",
-          "lastFingerprint": "266583d9509fd7dee32117ef5dac54b73d6a71d9",
+          "lastSeen": "2026-09-01",
+          "lastFingerprint": "e4a5e1fbb9e3e8ad4d0de4b6627da401db694ac1",
           "count": 3,
           "verdict": "unreviewed"
         },
@@ -63,6 +70,13 @@
           "lastFingerprint": "0236bb907574d17d95505ffc52a3ef9945911e3f",
           "count": 25,
           "verdict": "unreviewed"
+        },
+        "PR-02273": {
+          "firstSeen": "2026-09-01",
+          "lastSeen": "2026-09-01",
+          "lastFingerprint": "269bdd57a96bc5d76f38feba3009475abf5a9c53",
+          "count": 1,
+          "verdict": "unreviewed"
         }
       }
     },
@@ -70,9 +84,9 @@
       "projects": {
         "PR-02074": {
           "firstSeen": "2026-08-03",
-          "lastSeen": "2026-08-25",
-          "lastFingerprint": "266583d9509fd7dee32117ef5dac54b73d6a71d9",
-          "count": 10,
+          "lastSeen": "2026-09-01",
+          "lastFingerprint": "e4a5e1fbb9e3e8ad4d0de4b6627da401db694ac1",
+          "count": 15,
           "verdict": "unreviewed"
         },
         "PR-01930": {
@@ -88,6 +102,13 @@
           "lastFingerprint": "0236bb907574d17d95505ffc52a3ef9945911e3f",
           "count": 27,
           "verdict": "unreviewed"
+        },
+        "PR-02273": {
+          "firstSeen": "2026-09-01",
+          "lastSeen": "2026-09-01",
+          "lastFingerprint": "269bdd57a96bc5d76f38feba3009475abf5a9c53",
+          "count": 16,
+          "verdict": "unreviewed"
         }
       }
     },
@@ -98,6 +119,28 @@
           "lastSeen": "2026-08-21",
           "lastFingerprint": "3a9f9a313f44a2286fcb613b42fb3e7488468823",
           "count": 4,
+          "verdict": "unreviewed"
+        }
+      }
+    },
+    "CODE-NAMING-001": {
+      "projects": {
+        "PR-02074": {
+          "firstSeen": "2026-09-01",
+          "lastSeen": "2026-09-01",
+          "lastFingerprint": "e4a5e1fbb9e3e8ad4d0de4b6627da401db694ac1",
+          "count": 11,
+          "verdict": "unreviewed"
+        }
+      }
+    },
+    "CODE-QUERY-001": {
+      "projects": {
+        "PR-02273": {
+          "firstSeen": "2026-09-01",
+          "lastSeen": "2026-09-01",
+          "lastFingerprint": "269bdd57a96bc5d76f38feba3009475abf5a9c53",
+          "count": 1,
           "verdict": "unreviewed"
         }
       }

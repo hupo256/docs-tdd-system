@@ -42,6 +42,8 @@
 | `DOC-G2-003` | G2+ | 功能清单至少一行 | error |
 | `DOC-G2-004` | G2+ | 每条功能 `本期=做/不做/延期` | error |
 | `DOC-G2-005` | G2+ | 本期做的功能 ID 都进 `04-frontend-tasks.md` | error |
+| `DOC-G2-006` | G2+（`lib/requirement-coverage.mjs`） | 新版清单，或主动加入「原子需求清单」的存量项目：原子需求 ID/功能归属/所需证据类型合法；新版清单每个本期 Feature 至少一条原子需求 | error |
+| `DOC-G2-007` | G2+（`lib/requirement-coverage.mjs`） | 每条原子需求恰好映射一个独立 Task，Task 不得绑定多个需求 ID 或引用未登记需求 | error |
 | `DOC-G3-001` | G3+ | API 契约记录 mock 路线为 MSW 路线 B | error |
 | `DOC-G3-002` | G3+ | API 契约包含 MSW 清单 / 落地前置 | error |
 | `DOC-G3-003` | G3+ | API 契约记录 normal/empty/error/unauthorized/edge 场景 | error |
@@ -94,6 +96,8 @@
 | `DOC-AC-005` | G6+（`lib/acceptance-results.mjs`） | 每条 passed 验收的 evidence 至少有一个真实存在的文件锚点（截图/报告/DOM 比对），且不含指向不存在文件的路径 | error |
 | `DOC-AC-006` | G6+（`lib/acceptance-results.mjs`） | `acceptance-results.json.head` 覆盖当前 HEAD（缺 currentSha 不判定），防验收过时 | warn |
 | `DOC-AC-007` | G6-partial（`lib/acceptance-results.mjs`） | 部分验收的欠账清单：逐条点名待真实字段对账的 `contract`/`browser` 验收项 | warn |
+| `DOC-AC-008` | G6+（`lib/acceptance-results.mjs`） | 每条在范围内原子需求至少有一条 passed 验收；G6-partial 仅允许既有 contract/browser 待对账语义 | error |
+| `DOC-AC-009` | G6+（`lib/acceptance-results.mjs`） | 每条原子需求的全部所需证据类型均被匹配 method 的 passed 项覆盖，且 feature/task 映射一致；copy 证据不得代替 DOM/行为/视觉证据 | error |
 | `VERIFY-STAGE-001` | G6+ | `agent/gate-history.json` 存在此前真实写入的 G5 PASS | error（不可豁免） |
 | `VERIFY-STAGE-004` | G6-partial | `agent/gate-history.json` 存在此前真实写入的 G4 PASS（G5 停靠态下以 G4 为前置，取代 VERIFY-STAGE-001）。**不可豁免**：partial 已经放宽了一层前置，若剩下这层也能豁免，它就成了无边界后门 | error |
 | `VERIFY-STAGE-002` | G7+ | `agent/gate-history.json` 存在此前真实写入的 G6 PASS | error（不可豁免） |

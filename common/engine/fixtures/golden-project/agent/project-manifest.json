@@ -1,8 +1,8 @@
 {
   "projectId": "PR-00000",
   "createdAt": "2026-08-03",
-  "rulesetVersion": "local-2026.07-msw-v1",
-  "templateVersion": 2,
+  "rulesetVersion": "local-2026.09-atomic-acceptance-v1",
+  "templateVersion": 5,
   "pilot": {
     "msw": false,
     "prdIntake": false

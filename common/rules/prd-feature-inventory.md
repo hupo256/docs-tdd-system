@@ -53,13 +53,13 @@ G2 未完成前不写业务代码（同 [workflow-gates.md](./workflow-gates.md)
 
 1. 与负责人确认（或据已明确 PRD/评审结论）每条标**做/不做/延期**。
 2. 更新 `00-feature-inventory.md`:「本期」列全落定;裁剪项写「Scope 裁剪记录」并同步 `06-collaboration.md`，**并从 `01`/`04` 移除该项的裁决/任务行，不在他处复述**;填「G2 确认人 & 日期」（未回复标「待确认」,**此时仍禁写业务代码**）。
-3. 每条「做」在 `04-frontend-tasks.md` 至少一条对应任务（无则补）。**任务备注须链到该字段的权威展示约束（05-ui「展示规则」列）或直接写明约束,不能只链 Figma——Figma 规格常缺长度/截断/空态等边界（PR-01685 任务 E3 只链 07-figma §4.1,致 32/60 字符省略号规则对开发不可见而漏做）。**
+3. 每条「做」先把 PRD bullet 拆进「原子需求清单」，赋稳定 ID（`R-Fxx-xx`），再在 `04-frontend-tasks.md` 为每个 ID 建**恰好一条**独立状态、独立证据的任务。含“以及 / 同时 / 隐藏 X / 改 Y”等多个可独立失败结果的任务必须拆行，不允许一个 ✅ 覆盖一组子点。流程任务的原子需求 ID 写 `—`。**任务备注须链到该字段的权威展示约束（05-ui「展示规则」列）或直接写明约束,不能只链 Figma——Figma 规格常缺长度/截断/空态等边界（PR-01685 任务 E3 只链 07-figma §4.1,致 32/60 字符省略号规则对开发不可见而漏做）。**
 4. 每个 requirement sourceId 必须同时出现在 Feature Inventory 与 Task；运行 `prd-intake.mjs <PROJECT-ID> --approve` 固化当前源文件、素材和映射 fingerprint。
 5. **门禁**:仅当 G2 确认人 & 日期已填、无「待 G2 确认」、无 unresolved sourceId 且 fingerprint 未漂移 → 方可进 G4。
 
 ### 3.4 步骤 D — 编码与交付回查
 
-- G4-G6:对照清单 ID,不得只做 Figma 画板模块。
+- G4-G6:对照原子需求 ID，而非 commit 或 Feature 总标题；每个 ID 必须能指到匹配类型的失败测试或实证记录，不得只做 Figma 画板模块。
 - G4-G6:每次 `docs-tdd changed` 复核 PRD fingerprint；正文、图片、表格或映射变化即暂停并重做 intake/G2 差异确认。
 - G8:交付摘要附清单勾选结果（做了哪些 ID、裁剪哪些 ID）。
 
@@ -112,7 +112,7 @@ G2 未完成前不写业务代码（同 [workflow-gates.md](./workflow-gates.md)
 | 文档 | 关系 |
 |------|------|
 | `01-scope-and-phases.md` | 只写本期范围**摘要** + 阶段计划;**不设 per-F「本期结论」列、不设「不做/延期」表**（明细/裁剪见 00） |
-| `04-frontend-tasks.md` | 每条「做」至少一条任务;**只列在范围内 F-id**，划删/延后项从本表移除、记录归 00 Scope 裁剪记录 |
+| `04-frontend-tasks.md` | 每条原子需求恰好一条任务；**只列在范围内 F-id**，划删/延后项从本表移除、记录归 00 Scope 裁剪记录 |
 | `06-collaboration.md` | 记 Figma vs PRD 差异、裁剪结论 |
 | `05-ui-and-interaction.md` | 按**页面/路由**分节,不只写落地页 |
 

@@ -36,6 +36,7 @@
 - [ ] `03-api-contract.md`
 - [ ] `03-api-contract.md` 已明确 Mock 路线为 MSW 路线 B，并列出 `6.1` 清单（handler / schema / dev-only / 切真实）
 - [ ] `04-frontend-tasks.md`
+- [ ] 每个本期 PRD bullet 已有稳定 `R-Fxx-xx`，且恰好对应一个独立 Task
 - [ ] `05-ui-and-interaction.md`
 - [ ] `06-collaboration.md`
 - [ ] `07-figma-spec.md`（从 [07-figma-spec-template.md](../templates/07-figma-spec-template.md) 复制；含 G1 Checklist、§3 几何表、§4 Figma→preset 映射）
@@ -57,6 +58,7 @@
 - [ ] **代码 Review 逐项过 [quality-checklist.md §5](../common/rules/quality-checklist.md)**（300 行/活注释/mapper 同名/字段对账/mock 零残留拆除/复用/no-any/Zustand/薄路由 等代码级硬项，单一权威源，此处不重复）
 - [ ] 已运行 `verify-code-rules.mjs --project <PROJECT-ID>`；静态代码扫描只检查新增或已修改文件，findings 已修或登记豁免
 - [ ] G6 已跑 `/code-review` skill 审本次 diff，findings 已修或登记原因
+- [ ] G6 已完成 PRD bullet ↔ requirement ↔ Task ↔ evidence 对账；每种证据类型都由匹配方法证明
 - [ ] G6 已运行 `node apps/web/docs_tdd/common/engine/agent-scripts/run-project-gate.mjs <PROJECT-ID> G6 --write`，结果已写入 `agent/gate-results.json` 和 `evidence/gate/`；若跳过代码规则，已带 `--skip-code-rules-reason` 并记录原因
 - [ ] **桌面首屏、390px H5、dark/light、主题默认、核心 CTA/表单/弹窗、空态/错误态/loading 逐项过 [quality-checklist.md §3.2](../common/rules/quality-checklist.md)**（含 L2 走查清单标准，见 [component-reuse-and-visual-fidelity.md §3.0](../common/rules/component-reuse-and-visual-fidelity.md)；单一权威源，此处不重复）
 - [ ] 若提供 QA 用例，已先比对 PRD / Figma / API 差异；若未提供，已记录 G7 跳过且不阻塞交付

@@ -7,6 +7,12 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-09-01（PRD bullet 原子验收与证据类型硬闸）
+
+- 新模板把本期 PRD bullet 固化为 `R-Fxx-xx`，要求一条 requirement 恰好对应一条 Task；存量项目仅在主动加入「原子需求清单」后启用，避免全量回填。
+- `acceptance-results.json` 增加可选 `requirementId/taskId/evidenceType`；`DOC-G2-006/007` 与 `DOC-AC-008/009` 分别阻断原子清单/Task 漏映射，以及 requirement 未通过或 copy/DOM/logic/payload/interaction/visual 证据错配。
+- 新脚手架升至 v5；Golden 增加漏 Task 与证据错型反例。完整 G6 PASS（当前 HEAD/dirty/rule fingerprint）成为“可提测”唯一口径，G6-partial 或 Feature/commit 级证据不可替代。
+
 ## 2026-08-29（MSW 路线 B 试点结项，晋级为新功能强制标准 + 补参考范例）
 
 - **PR-01947 上线归档，试点结论坐实**：MSW 路线 B 随 PR-01947 引入并验证「停用 handler 即切真实接口，业务代码不因拆 mock 而修改」；项目已合入 `origin/online`、handler 完整拆除（manifest lifecycle=`mock-retired`），据此把该路线由试点晋级为新功能强制标准。

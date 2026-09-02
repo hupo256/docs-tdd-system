@@ -15,6 +15,12 @@
         "properties": {
           "id": { "type": "string", "pattern": "^AC-\\d+$" },
           "featureId": { "type": "string", "pattern": "^F\\d+$" },
+          "requirementId": { "type": "string", "pattern": "^R-F\\d+-\\d+$" },
+          "taskId": { "type": "string", "pattern": "^T\\d+[a-z]?$" },
+          "evidenceType": {
+            "type": "string",
+            "enum": ["copy-literal", "component-dom", "pure-logic", "payload-contract", "api-contract", "browser-interaction", "visual"]
+          },
           "scenario": { "type": "string", "minLength": 1 },
           "method": { "type": "string", "enum": ["vitest", "browser", "contract", "manual-visual", "manual", "not-applicable"] },
           "status": { "type": "string", "enum": ["passed", "failed", "blocked", "not-applicable"] },

@@ -15,6 +15,7 @@ import { allowedG5Statuses, g5DispositionEvidenceOk, partialPrerequisiteCheck, p
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 import { resolveSeverity } from './lib/rule-maturity.mjs'
 import { classifyBaseline, codeReviewFindingsResolved, completedTasksWithUnresolvedContract, featureRowStatus, featureRowsMissingStatus, findBlockingPlaceholders, parseMarkdownTableRows, parseResponsibilityModulePaths, recordsG2Confirmer, recordsPrdSource, selfTest as gateDocParsersSelfTest, technicalDesignBreadcrumbCheck, technicalDesignDataFlow, technicalDesignOwnership } from './lib/gate-doc-parsers.mjs'
+import { atomicRequirementChecks, parseAtomicRequirements, parseRequirementTasks } from './lib/requirement-coverage.mjs'
 import { classifyWaiver } from './lib/waiver-policy.mjs'
 
 const scriptPath = fileURLToPath(import.meta.url)
@@ -329,6 +330,8 @@ function validateG2() {
   const taskText = read(tasks)
   const missingTaskIds = doingIds.filter((id) => !taskText.includes(id))
   add('DOC-G2-005', missingTaskIds.length === 0, `all 本期=做 feature IDs appear in frontend tasks${missingTaskIds.length ? `: ${missingTaskIds.join(', ')}` : ''}`, tasks)
+  const atomic = atomicRequirementChecks({ inventoryText: text, tasksText: taskText, doingFeatureIds: doingIds, inventoryFile: inventory, tasksFile: tasks })
+  for (const check of atomic.checks) addFrom(check, check.file)
 }
 
 function validateG1() {
@@ -355,7 +358,7 @@ function validateG3() {
 
   const tasks = join(projectDir, 'product/04-frontend-tasks.md')
   const tasksText = read(tasks)
-  add('DOC-G3-006', /T03\s*\|\s*F01\s*\|\s*G3 API 未 ready 时补齐 MSW handler \/ 契约测试 \/ dev-only worker 注册/.test(tasksText), 'G3 frontend tasks include the MSW fallback task', tasks)
+  add('DOC-G3-006', /T03\s*\|\s*F01\s*\|(?:\s*(?:—|-|N\/A)\s*\|)?\s*G3 API 未 ready 时补齐 MSW handler \/ 契约测试 \/ dev-only worker 注册/.test(tasksText), 'G3 frontend tasks include the MSW fallback task', tasks)
 
   const collab = join(projectDir, 'product/06-collaboration.md')
   const collabText = read(collab)
@@ -571,6 +574,8 @@ function validateG6() {
     .map((row) => row[0])
     .filter(Boolean)
   const acceptanceFile = join(projectDir, 'agent/acceptance-results.json')
+  const atomicRequirements = parseAtomicRequirements(inventoryText).requirements
+  const requirementTasks = parseRequirementTasks(read(join(projectDir, 'product/04-frontend-tasks.md'))).tasks
   let pendingReconcileIds = []
   if (existsSync(acceptanceFile)) {
     const report = readJson(acceptanceFile)
@@ -578,7 +583,7 @@ function validateG6() {
     else {
       const currentSha = runGit(['rev-parse', 'HEAD'], gitCwd).stdout
       pendingReconcileIds = partial ? splitPendingReconcile(report.items).pending.map((item) => item.id) : []
-      for (const check of acceptanceChecks({ report, doingFeatureIds, expectedProjectId: projectId, currentSha, evidenceExists: (p) => existsSync(join(projectDir, p)), file: rel(acceptanceFile), partial })) {
+      for (const check of acceptanceChecks({ report, doingFeatureIds, atomicRequirements, requirementTasks, expectedProjectId: projectId, currentSha, evidenceExists: (p) => existsSync(join(projectDir, p)), file: rel(acceptanceFile), partial })) {
         add(check.ruleId, check.ok, check.message, acceptanceFile, check.severity, check.category)
       }
       addFrom(acceptanceConfirmationCheck({ report }), acceptanceFile)

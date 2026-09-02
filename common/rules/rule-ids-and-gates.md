@@ -16,7 +16,7 @@
 
 ## 2. 项目阶段 gate
 
-当前本地规则集见 `common/rules/ruleset.json`：每条规则声明 `{ maturity, blocking, waivable }`，定档单一真值源是 `lib/rule-maturity.mjs`（`resolveSeverity`）。`stable` 与 `experimental` 按 `blocking` 定档（`experimental` 想只诊断就置 `blocking:false`；标了 `experimental` 但 `blocking:true` 的规则仍照常阻断）。`trial` 在 `blocking` 基础上再按可选的 `since`（规则引入时的模板版本）向下收窄：项目 `agent/project-manifest.json` 的 `templateVersion` **低于** `since` 时降为 warn——即「规则升级默认不回查阻断存量项目」。不带 `since` 的 trial 规则（`since=0`）对任何项目都阻断。新脚手架写 `templateVersion:4`，故 `since:3` 的规则（如 `DOC-CONFIRM-*`）与 `since:4` 的规则（如 `DOC-G3-IMPL-001..006` MSW 晋级批）都只阻断当代新项目、存量更低版本项目 warn。
+当前本地规则集见 `common/rules/ruleset.json`：每条规则声明 `{ maturity, blocking, waivable }`，定档单一真值源是 `lib/rule-maturity.mjs`（`resolveSeverity`）。`stable` 与 `experimental` 按 `blocking` 定档（`experimental` 想只诊断就置 `blocking:false`；标了 `experimental` 但 `blocking:true` 的规则仍照常阻断）。`trial` 在 `blocking` 基础上再按可选的 `since`（规则引入时的模板版本）向下收窄：项目 `agent/project-manifest.json` 的 `templateVersion` **低于** `since` 时降为 warn——即「规则升级默认不回查阻断存量项目」。不带 `since` 的 trial 规则（`since=0`）对任何项目都阻断。新脚手架写 `templateVersion:5`，故 `since:3` 的规则（如 `DOC-CONFIRM-*`）与 `since:4` 的规则（如 `DOC-G3-IMPL-001..006` MSW 晋级批）都只阻断当代新项目、存量更低版本项目 warn。
 
 公共入口:
 
@@ -145,9 +145,9 @@ node apps/web/docs_tdd/common/engine/agent-scripts/verify-build-quality.mjs --pr
 ## 3.7 结构化 Review 与验收结果
 
 - `agent/code-review.json` 是 G6 review 真值源；模板 v2 起缺文件即阻断，旧项目才允许回退 `06-collaboration.md` 散文判定。`DOC-CR-001/002/003` 分别验证结构（含必填 `head`）、未处理 finding、HEAD 新鲜度。
-- `agent/acceptance-results.json` 把本期 Feature 映射到具体场景、验证方式、结果和 evidence。`DOC-AC-001/002/003/004/005/006` 分别验证结构（含必填 `head`）、Feature 覆盖、无 failed/blocked、PASS 有 evidence、PASS 的 evidence 有真实存在的文件锚点、验收覆盖当前 HEAD。
+- `agent/acceptance-results.json` 把本期 Feature/原子 requirement 映射到具体 Task、场景、证据类型、验证方式、结果和 evidence。`DOC-AC-001..009` 分别验证结构、Feature 覆盖、无 failed/blocked、PASS evidence、文件锚点、HEAD 新鲜度、partial 欠账、原子需求覆盖、证据类型/方法/Task 映射。新版项目默认强制；存量项目只有主动加入「原子需求清单」时启用原子规则。
 - 两者都由 `verify-project-gate.mjs` 直接消费；不能只在 evidence README 写“已 review/已自测”。
-- **人工确认签名**（`DOC-CONFIRM-001..004`，`lib/confirmation.mjs`）：G5-G8 以人工确认为锚点，但判断层文件此前无签名字段，机器无法区分「人看过」与「AI 声称人看过」。现在 `stage-status.json`（G5/G7 处置态）、`acceptance-results.json`（`manual`/`manual-visual`/`browser` 的 passed 项）、`code-review.json` 都可写 `confirmedBy` + `confirmedAt`（`YYYY-MM-DD`）；`reviewer` 不能兼任签收（它记谁做的 review，通常是 Agent 自己）；**AI 客户端名与 `TBD`/`N/A` 占位符不算人工确认**（`classifySignature`，按独立词匹配以免误伤真人名）。**已接线**：四条在 `ruleset.json` 登记为 `trial + since:3`，经 `resolveSeverity` 定档——新脚手架（`templateVersion:4`）缺签名即 error、存量 v1/v2 项目 warn（走 waiver）；空签名槽位已随 `project-scaffold` 落入骨架，逼真人在处置态转 completed/skipped 时补签。
+- **人工确认签名**（`DOC-CONFIRM-001..004`，`lib/confirmation.mjs`）：G5-G8 以人工确认为锚点，但判断层文件此前无签名字段，机器无法区分「人看过」与「AI 声称人看过」。现在 `stage-status.json`（G5/G7 处置态）、`acceptance-results.json`（`manual`/`manual-visual`/`browser` 的 passed 项）、`code-review.json` 都可写 `confirmedBy` + `confirmedAt`（`YYYY-MM-DD`）；`reviewer` 不能兼任签收（它记谁做的 review，通常是 Agent 自己）；**AI 客户端名与 `TBD`/`N/A` 占位符不算人工确认**（`classifySignature`，按独立词匹配以免误伤真人名）。**已接线**：四条在 `ruleset.json` 登记为 `trial + since:3`，经 `resolveSeverity` 定档——新脚手架（`templateVersion:5`）缺签名即 error、存量 v1/v2 项目 warn（走 waiver）；空签名槽位已随 `project-scaffold` 落入骨架，逼真人在处置态转 completed/skipped 时补签。
 
 
 ## 3.8 Golden run（回归 gate 机器自己）

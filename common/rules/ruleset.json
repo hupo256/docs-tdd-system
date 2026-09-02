@@ -1,5 +1,5 @@
 {
-  "version": "local-2026.07-msw-v1",
+  "version": "local-2026.09-atomic-acceptance-v1",
   "maturity": "experimental",
   "effectiveSince": "2026-07-24",
   "rules": {
@@ -317,6 +317,16 @@
       "blocking": true,
       "waivable": false
     },
+    "DOC-G2-006": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": false
+    },
+    "DOC-G2-007": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": false
+    },
     "DOC-G3-001": {
       "maturity": "stable",
       "blocking": true,
@@ -486,6 +496,16 @@
       "maturity": "stable",
       "blocking": true,
       "waivable": true
+    },
+    "DOC-AC-008": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": false
+    },
+    "DOC-AC-009": {
+      "maturity": "stable",
+      "blocking": true,
+      "waivable": false
     },
     "VERIFY-STAGE-001": {
       "maturity": "stable",

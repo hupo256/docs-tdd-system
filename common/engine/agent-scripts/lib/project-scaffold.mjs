@@ -33,7 +33,7 @@ export function buildAgentJsonFiles({ projectId, today, branchName, rulesetVersi
       projectId,
       createdAt: today,
       rulesetVersion,
-      templateVersion: 4,
+      templateVersion: 5,
       pilot: { msw: true, prdIntake: true },
       gatePolicy: { legacyRules: 'blocking', currentTouchedRules: 'blocking' },
     }),
@@ -102,7 +102,7 @@ export function selfTest() {
   assert.ok(rewritten.includes('../../../common/README.md'), `depth rewrite expected ../../../, got: ${rewritten}`)
   const files = buildAgentJsonFiles({ projectId: 'PR-00001', today: '2026-01-01', branchName: 'feature/PR-00001', rulesetVersion: 3 })
   assert.ok(files['agent/project-manifest.json'].includes('"rulesetVersion": 3'))
-  assert.ok(JSON.parse(files['agent/project-manifest.json']).templateVersion === 4, '新脚手架模板版本应为 4（MSW-IMPL since:4 晋级强制标准的新项目锚点；DOC-CONFIRM since:3 仍绑 v3+）')
+  assert.ok(JSON.parse(files['agent/project-manifest.json']).templateVersion === 5, '新脚手架模板版本应为 5（原子需求验收默认启用；MSW-IMPL since:4 与 DOC-CONFIRM since:3 继续生效）')
   // 人工签名槽位随骨架落地（DOC-CONFIRM-001/002/004），真人填写前为空串。
   const stages = JSON.parse(files['agent/stage-status.json']).stages
   assert.ok('confirmedBy' in stages.G5 && 'confirmedAt' in stages.G5, 'G5 应带签名槽位')

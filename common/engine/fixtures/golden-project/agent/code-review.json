@@ -2,6 +2,8 @@
   "projectId": "PR-00000",
   "reviewedAt": "2026-08-03",
   "reviewer": "golden-fixture",
+  "confirmedBy": "golden-owner",
+  "confirmedAt": "2026-08-03",
   "head": "0000000000000000000000000000000000000000",
   "findings": []
 }

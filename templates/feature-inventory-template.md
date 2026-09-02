@@ -1,5 +1,5 @@
-<!-- template-version: 2 -->
-<!-- template-effective-since: 2026-07-23 -->
+<!-- template-version: 3 -->
+<!-- template-effective-since: 2026-09-01 -->
 
 # Feature Inventory — `<TICKET-ID> <需求名>`
 
@@ -22,6 +22,14 @@
 |----|--------------|---------|---------|------------|-------|-------------|------|------|------------|
 | F01 | `PRD-IMG-001` / `PRD-TABLE-001` / 正文 §x | | | | ✅ / ❌ | 落地页 / 独立页 / 全局 | 待 G2 确认 | | |
 | F02 | | | | | | | | | |
+
+## 原子需求清单
+
+> 每个「本期=做」的 Feature 至少拆出一条稳定的原子需求 ID。每行只描述一个可独立判定的结果；一个 PRD bullet 若同时包含多种证明维度，在「所需证据类型」中全部列出。证据类型仅允许：`copy-literal`、`component-dom`、`pure-logic`、`payload-contract`、`api-contract`、`browser-interaction`、`visual`。
+
+| 需求 ID | 功能 ID | PRD 原子条目 | 所需证据类型 |
+|---------|---------|--------------|----------------|
+| R-F01-01 | F01 | 用户可观察到的单一结果 | component-dom |
 
 ## 验收标准对照（PRD §x.x）
 

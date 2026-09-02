@@ -75,6 +75,7 @@ const SELF_TEST_SCRIPTS = [
   ['lib/project-decision.mjs', '--self-test'],
   ['lib/project-index.mjs', '--self-test'],
   ['lib/project-scaffold.mjs', '--self-test'],
+  ['lib/requirement-coverage.mjs', '--self-test'],
   ['lib/rule-session.mjs', '--self-test'],
   ['lib/rule-chain-runtime.mjs', '--self-test'],
   ['lib/rule-ledger.mjs', '--self-test'],

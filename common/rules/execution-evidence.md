@@ -21,7 +21,7 @@ apps/web/docs_tdd/prds/<PROJECT-ID>/
     gate-history.json      # 成功 gate 的追加历史，验证 G5→G6→G7→G8 顺序
     stage-status.json      # G5 联调、G7 QA 的结构化状态与证据路径
     code-review.json       # G6 review findings 与处置结论
-    acceptance-results.json # 本期 Feature 的验收结果与证据
+    acceptance-results.json # 验收结果与证据
     fast-track.json        # 可选：快速通道出口、临时业务契约、安全降级与销账 gate
     blockers.json          # 阻塞/变更机器真值
     delivery-status.json   # G8 交付模式、branch/headSha 与外部证据
@@ -59,7 +59,7 @@ node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs gate PR-01234 G8
 - `agent/gate-results.json`：最近一次机器可读 gate 结果，只用于诊断当前运行，不作为成功历史。
 - `agent/gate-history.json`：成功 gate 的追加式历史；G6/G7/G8 的前置阶段证明只认这里的连续记录及其真实 evidence 路径。
 - `agent/stage-status.json`：G5 真实联调和 G7 QA 的结构化人工结论；`completed` 必须有证据，`not-applicable`/`skipped` 必须有具体原因。
-- `agent/code-review.json` + `agent/acceptance-results.json`：G6 的 judgment review 和逐 Feature 验收真值；新模板不再接受散文“已 review/已自测”代替。
+- `agent/code-review.json` + `agent/acceptance-results.json`：G6 review 和逐原子需求验收真值；原子项须带 `requirementId/taskId/evidenceType`，多种证据写多项，不接受散文替代。
 - `evidence/gate/<date>-<HHmmss>-g*/README.md`：命令、阻塞项、review/浏览器待补项的人工可读证据；同一天重复运行不会覆盖旧证据。
 
 `agent/gate-results.json.commands` 是子命令摘要数组，新产物包含 `label`、`status`、`ok`、`startedAt`、`finishedAt`。聚合 gate 同时记录工作树和规则 fingerprint；变化后不得沿用旧证据。正式入口默认写 evidence：通过时先追加 `gate-history.json`，再调用 `set-project-stage.mjs` 校验同阶段历史并同步 README、机器版摘要和索引；未通过时只刷新最近结果与索引，不追加历史。不得直接调用 `verify-project-gate.mjs --write` 或 `set-project-stage.mjs` 代替 runner 完成晋级。

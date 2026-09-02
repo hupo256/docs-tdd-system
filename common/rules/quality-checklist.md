@@ -43,7 +43,7 @@ G6/交付前按「清单 → 场景 → 证据 → 残留风险」顺序自测�
 
 ### 3.3 验收策略
 
-1. **先验清单**：按 `00-feature-inventory.md` 的 ID 逐项标完成/未完成/阻塞。
+1. **先验清单**：按 `00-feature-inventory.md` 的原子需求 ID 逐项标完成/未完成/阻塞；不得用 Feature 总状态或 commit 存在代替逐条验收。
 2. **再验 PRD**：逐条对照 PRD 验收标准，不只验 Figma 出现的模块。
 3. **再验跨页入口**：Header、Markets、交易页、用户中心等跨页功能单独点一遍或写明未验原因。
 4. **再验异常态**：loading/empty/error/未登录/无权限/接口缺字段/无数据标签有可见反馈。
@@ -51,7 +51,7 @@ G6/交付前按「清单 → 场景 → 证据 → 残留风险」顺序自测�
 
 ### 3.4 Browser/Playwright 真实自测要求
 
-每个本期 Feature 都必须进入 `agent/acceptance-results.json`。只有浏览器才能证明的点击副作用、路由、弹窗、toast、hydration/白屏等场景才要求真实 Browser/Playwright；纯函数和数据契约用 Vitest，纯视觉/手感/响应式由人工清单确认。未执行或环境阻塞不能标通过。
+每个本期 Feature 都须进入 `agent/acceptance-results.json`；启用原子清单后，每项还须带 `requirementId/taskId/evidenceType`。类型映射：文案=`copy-literal`，DOM/条件=`component-dom`，逻辑=`pure-logic`，提交/API=`payload-contract/api-contract`，浏览器副作用=`browser-interaction`，样式=`visual`。copy 断言不能证明 DOM 或视觉；未执行/阻塞不能标通过。
 
 ### 3.5 UI 视觉验收：L1 功能 vs L2 Figma 并排（还原度判定见 §3.0）
 
@@ -104,13 +104,15 @@ G7 是「有 QA 用例时执行」的阶段，非必经阻塞点。无 QA 用例
 - [ ] 触达文件已跑 Biome。
 - [ ] 已跑 `verify-code-rules.mjs --project <PROJECT-ID>`（只检查新增/已改文件）；findings 已修或登记豁免。
 - [ ] **G6 已跑 `/code-review` skill 审本次 diff**，`agent/code-review.json` 记录 findings、处置、证据和 review HEAD；不能只写“已 review”。
-- [ ] `agent/acceptance-results.json` 覆盖每个本期 Feature，passed 有 evidence，failed/blocked 为 0。
+- [ ] 已完成 PRD bullet ↔ 原子需求 ↔ 单一 Task ↔ acceptance evidence 对账；每个所需证据类型都有匹配的 passed 项，纯 copy 断言未冒充 label/可见性/条件渲染证据。
 - [ ] Browser/Playwright 验证结论已记录。
 - [ ] Browser/Playwright 已真实打开页面逐项自测，报告记 URL/视口/步骤/结果。
 - [ ] PRD/交互文档写「点击 X→Y」的行为，测试有实际 `browser_click` + Y 副作用验证（URL 变化/弹窗消失/toast/状态变更）；未以文案出现代替交互验证（见 [browser-e2e-mcp.md §5](./browser-e2e-mcp.md)）。
 - [ ] 自测文字报告已写入项目 `evidence/`；未向 `docs_tdd/` 持久保存截图；临时截图/录屏/Playwright 图片已删。
 
 ## 6. 交付摘要
+
+只有当前工作状态下完整 G6 已持久化 PASS（fingerprint 中 HEAD、dirty hash、规则发布与 effective rules 均匹配），且原子验收、Biome/tsc/Vitest、人工 UI 走查清单三者齐全，才可写“可提测”。`G6-partial`、历史 G6 PASS、仅 commit 存在或仅 Feature 级测试通过，只能写“待对账/待补证据”，不得写“可提测”。
 
 说明：改了哪些文件/模块；跑了哪些命令/验证；哪些验证因外部环境阻塞；仍待产品/设计/后端/QA 确认的事项；不贴密钥/账号/Cookie/Webhook URL/完整私有响应。
 

@@ -5,10 +5,15 @@
     {
       "id": "AC-1",
       "featureId": "F01",
+      "requirementId": "R-F01-01",
+      "taskId": "T01",
+      "evidenceType": "component-dom",
       "scenario": "榜单列表展示与空态",
       "method": "browser",
       "status": "passed",
-      "evidence": ["evidence/gate/g6/README.md"]
+      "evidence": ["evidence/gate/g6/README.md"],
+      "confirmedBy": "golden-owner",
+      "confirmedAt": "2026-08-03"
     }
   ]
 }
