@@ -202,6 +202,25 @@ export function collectRelatedTests(changedFiles, exists) {
   return [...tests].sort()
 }
 
+export function groupTestsByVitestRoot(testFiles, hasConfig) {
+  const groups = new Map()
+  for (const file of testFiles) {
+    let root = dirname(file)
+    while (!hasConfig(root)) {
+      const parent = dirname(root)
+      if (parent === root) break
+      root = parent
+    }
+    if (!hasConfig(root)) root = '.'
+    const files = groups.get(root) || []
+    files.push(file)
+    groups.set(root, files)
+  }
+  return [...groups.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([root, files]) => ({ root, files: files.sort() }))
+}
+
 // tsc 的报错路径相对于 tsconfig 所在目录，必须换算成 worktree 相对路径才能与 changedFiles 比对。
 export function parseTscErrors(stdout, appRoot) {
   const errors = []
@@ -348,6 +367,15 @@ function selfTest() {
   expect('related tests include __tests__', related.includes('apps/web/src/apps/X/__tests__/calc.test.ts'))
   expect('related tests include changed test file', related.includes('apps/web/src/z.test.ts'))
   expect('related tests exclude untested source', related.length === 3)
+  const testGroups = groupTestsByVitestRoot(
+    ['apps/web/src/a.test.ts', 'apps/web-next/src/a.test.ts'],
+    (root) => root === '.' || root === 'apps/web-next',
+  )
+  expect('vitest tests grouped by nearest config', JSON.stringify(testGroups) === JSON.stringify([
+    { root: '.', files: ['apps/web/src/a.test.ts'] },
+    { root: 'apps/web-next', files: ['apps/web-next/src/a.test.ts'] },
+  ]))
+  expect('vitest root fallback', groupTestsByVitestRoot(['apps/unknown/src/a.test.ts'], () => false)[0]?.root === '.')
 
   // needsUnitTest 边界
   expect('utils dir needs test', needsUnitTest('apps/web/src/utils/fee.ts'))
@@ -401,7 +429,7 @@ function selfTest() {
     console.error(`verify-build-quality self-test FAILED:\n  ${failures.join('\n  ')}`)
     process.exit(1)
   }
-  console.log('verify-build-quality self-test passed (34 predicate cases).')
+  console.log('verify-build-quality self-test passed (36 predicate cases).')
   process.exit(0)
 }
 
@@ -584,17 +612,28 @@ let baselineDirty = false
       counts: { selected: 0 },
     })
   } else {
-    const run = execTool('vitest-related', packageManager, ['exec', 'vitest', 'run', ...relatedTests], worktreeRoot)
-    const verdict = vitestVerdict(run, relatedTests.length)
-    addCheck({
-      ruleId: 'VERIFY-TEST-001',
-      ok: verdict.ok,
-      message: verdict.ok
-        ? `vitest 通过：${relatedTests.length} 个相关测试文件（${verdict.summary || 'summary 未解析'}）`
-        : `vitest 未通过（${verdict.reason}）；详见 ${run.logFile}`,
-      run,
-      counts: { selected: relatedTests.length, summary: verdict.summary },
-    })
+    const configNames = ['vitest.config.ts', 'vitest.config.mts', 'vitest.config.mjs', 'vitest.config.js', 'vitest.config.cjs', 'vitest.config.cts']
+    const groups = groupTestsByVitestRoot(
+      relatedTests,
+      (root) => configNames.some((name) => existsSync(resolve(worktreeRoot, root, name))),
+    )
+    for (const { root, files } of groups) {
+      const cwd = resolve(worktreeRoot, root)
+      const testFiles = files.map((file) => root === '.' ? file : toPosix(relative(root, file)))
+      const label = root === '.' ? 'vitest-related-root' : `vitest-related-${root}`
+      const run = execTool(label, packageManager, ['exec', 'vitest', 'run', ...testFiles], cwd)
+      const verdict = vitestVerdict(run, files.length)
+      addCheck({
+        ruleId: 'VERIFY-TEST-001',
+        ok: verdict.ok,
+        message: verdict.ok
+          ? `${root} vitest 通过：${files.length} 个相关测试文件（${verdict.summary || 'summary 未解析'}）`
+          : `${root} vitest 未通过（${verdict.reason}）；详见 ${run.logFile}`,
+        file: root === '.' ? '' : root,
+        run,
+        counts: { selected: files.length, summary: verdict.summary },
+      })
+    }
   }
 }
 

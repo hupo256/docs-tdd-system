@@ -48,6 +48,78 @@
         "effectiveRulesFingerprint": "f9f0ba129dd190021d612d01d1f3031964fddeffc4001968d0d3a87787ccc1e4"
       },
       "evidence": "evidence/gate/2026-08-04-073548-g3/README.md"
+    },
+    {
+      "gate": "G5",
+      "ok": true,
+      "generatedAt": "2026-09-02T05:44:38.644Z",
+      "tool": "run-project-gate.mjs",
+      "summary": {
+        "total": 56,
+        "ok": 53,
+        "warn": 3,
+        "waived": 0,
+        "fail": 0
+      },
+      "fingerprint": {
+        "headSha": "071a7e70c934d110bee8d4d185314cd4ad8fe274",
+        "baseSha": "e48c7445657439a7c0bc99467690738554e853bb",
+        "dirtyHash": "2653a57f7212a1cafaf18033ea84a26e7e62910c47fd072d0c31216d3b1c9480",
+        "dirtyFileCount": 91,
+        "untrackedFileCount": 69,
+        "rulesetVersion": "local-2026.09-atomic-acceptance-v1",
+        "ruleReleaseFingerprint": "dcf9df17508497abf0dff3697c0dd436495bac9f801f7fea9a82c8272e92b503",
+        "effectiveRulesFingerprint": "90fc43265e72acb5e9f0fcba4f15ba0e383381535f511badb72ff3c426098ae9"
+      },
+      "evidence": "evidence/gate/2026-09-02-054438-g5/README.md"
+    },
+    {
+      "gate": "G6",
+      "ok": true,
+      "generatedAt": "2026-09-02T05:45:28.911Z",
+      "tool": "run-project-gate.mjs",
+      "summary": {
+        "total": 68,
+        "ok": 63,
+        "warn": 5,
+        "waived": 0,
+        "fail": 0
+      },
+      "fingerprint": {
+        "headSha": "071a7e70c934d110bee8d4d185314cd4ad8fe274",
+        "baseSha": "e48c7445657439a7c0bc99467690738554e853bb",
+        "dirtyHash": "2653a57f7212a1cafaf18033ea84a26e7e62910c47fd072d0c31216d3b1c9480",
+        "dirtyFileCount": 91,
+        "untrackedFileCount": 69,
+        "rulesetVersion": "local-2026.09-atomic-acceptance-v1",
+        "ruleReleaseFingerprint": "dcf9df17508497abf0dff3697c0dd436495bac9f801f7fea9a82c8272e92b503",
+        "effectiveRulesFingerprint": "90fc43265e72acb5e9f0fcba4f15ba0e383381535f511badb72ff3c426098ae9"
+      },
+      "evidence": "evidence/gate/2026-09-02-054528-g6/README.md"
+    },
+    {
+      "gate": "G7",
+      "ok": true,
+      "generatedAt": "2026-09-02T05:46:47.265Z",
+      "tool": "run-project-gate.mjs",
+      "summary": {
+        "total": 72,
+        "ok": 65,
+        "warn": 7,
+        "waived": 0,
+        "fail": 0
+      },
+      "fingerprint": {
+        "headSha": "071a7e70c934d110bee8d4d185314cd4ad8fe274",
+        "baseSha": "e48c7445657439a7c0bc99467690738554e853bb",
+        "dirtyHash": "2653a57f7212a1cafaf18033ea84a26e7e62910c47fd072d0c31216d3b1c9480",
+        "dirtyFileCount": 91,
+        "untrackedFileCount": 69,
+        "rulesetVersion": "local-2026.09-atomic-acceptance-v1",
+        "ruleReleaseFingerprint": "dcf9df17508497abf0dff3697c0dd436495bac9f801f7fea9a82c8272e92b503",
+        "effectiveRulesFingerprint": "90fc43265e72acb5e9f0fcba4f15ba0e383381535f511badb72ff3c426098ae9"
+      },
+      "evidence": "evidence/gate/2026-09-02-054647-g7/README.md"
     }
   ]
 }

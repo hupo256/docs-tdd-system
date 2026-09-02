@@ -1,24 +1,24 @@
 {
-  "generatedAt": "2026-09-01T12:47:12.171Z",
+  "generatedAt": "2026-09-02T05:46:47.265Z",
   "tool": "run-project-gate.mjs",
   "projectId": "PR-02074",
-  "gate": "G6",
+  "gate": "G7",
   "partial": false,
-  "ok": false,
+  "ok": true,
   "summary": {
-    "total": 67,
-    "ok": 58,
-    "warn": 5,
+    "total": 72,
+    "ok": 65,
+    "warn": 7,
     "waived": 0,
-    "fail": 4
+    "fail": 0
   },
   "groups": {
     "documentation": {
-      "total": 55,
-      "ok": 50,
-      "warn": 3,
+      "total": 59,
+      "ok": 54,
+      "warn": 5,
       "waived": 0,
-      "fail": 2
+      "fail": 0
     },
     "implementation": {
       "total": 6,
@@ -296,7 +296,7 @@
     {
       "ruleId": "DOC-G3-IMPL-002",
       "ok": true,
-      "message": "asset existence is not required in lifecycle=retiring",
+      "message": "asset existence is not required in lifecycle=mock-retired",
       "file": "../docs_tdd/prds/PR-02074/agent/msw-manifest.json",
       "severity": "error",
       "category": "implementation"
@@ -304,7 +304,7 @@
     {
       "ruleId": "DOC-G3-IMPL-003",
       "ok": true,
-      "message": "registration is retired in lifecycle=retiring",
+      "message": "registration is retired in lifecycle=mock-retired",
       "file": "../docs_tdd/prds/PR-02074/agent/msw-manifest.json",
       "severity": "error",
       "category": "implementation"
@@ -328,7 +328,7 @@
     {
       "ruleId": "DOC-G3-IMPL-006",
       "ok": true,
-      "message": "no blocking assumptions remain for lifecycle=retiring",
+      "message": "no blocking assumptions remain for lifecycle=mock-retired",
       "file": "../docs_tdd/prds/PR-02074/agent/assumptions.json",
       "severity": "error",
       "category": "implementation"
@@ -471,7 +471,7 @@
     },
     {
       "ruleId": "VERIFY-STAGE-001",
-      "ok": false,
+      "ok": true,
       "message": "G6 requires a persisted successful G5 run in agent/gate-history.json",
       "file": "../docs_tdd/prds/PR-02074/agent/gate-history.json",
       "severity": "error",
@@ -510,35 +510,63 @@
       "category": "documentation"
     },
     {
-      "ruleId": "DOC-ASSUM-001",
+      "ruleId": "VERIFY-STAGE-002",
+      "ok": true,
+      "message": "G7 requires a persisted successful G6 run in agent/gate-history.json",
+      "file": "../docs_tdd/prds/PR-02074/agent/gate-history.json",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "VERIFY-G7-001",
+      "ok": true,
+      "message": "agent/stage-status.json records the G7 QA disposition",
+      "file": "../docs_tdd/prds/PR-02074/agent/stage-status.json",
+      "severity": "error",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "VERIFY-G7-002",
       "ok": false,
-      "message": "G6 出口前必须销账的 open 假设未销账：ASM-010(backend→api-ready)（销账=改 status 并写 resolution；确需带风险交付走 rule-waivers.json 具名带期限豁免）",
+      "message": "G7 status is completed or skipped (got pending)",
+      "file": "../docs_tdd/prds/PR-02074/agent/stage-status.json",
+      "severity": "warn",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "VERIFY-G7-003",
+      "ok": false,
+      "message": "G7 completion has existing evidence paths, or skipped has a concrete reason",
+      "file": "../docs_tdd/prds/PR-02074/agent/stage-status.json",
+      "severity": "warn",
+      "category": "documentation"
+    },
+    {
+      "ruleId": "DOC-ASSUM-001",
+      "ok": true,
+      "message": "无到达当前阶段(G7)仍未销账的假设（阻断轴：api-ready/reconciling）",
       "file": "../docs_tdd/prds/PR-02074/agent/assumptions.json",
       "severity": "error",
       "category": "documentation"
     },
     {
       "ruleId": "VERIFY-BIOME-001",
-      "ok": false,
+      "ok": true,
       "severity": "error",
-      "message": "biome check 未通过（biome 报 1 error / 2 warning：apps/web/src/apps/Prediction/WorldCup/index.tsx:71 lint/correctness/useExhaustiveDependencies; apps/web/src/apps/Prediction/components/PredictionCategoryList.tsx:38 lint/correctness/useExhaustiveDependencies; apps/web-next/src/platform/domain/web/endpoints/getTagEventsListEndpoint.ts format）；详见 /var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-01T12-47-01-065Z-biome-check.log",
+      "message": "biome check 通过：实检 137 / 候选 143 个文件",
       "file": "",
       "category": "build-quality",
       "evidence": {
-        "command": "pnpm exec biome check --no-errors-on-unmatched apps/web/public/mockServiceWorker.js apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/crypto/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/finance/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/politics/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/search/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/sports/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/world-cup/page.tsx apps/web/src/apps/Prediction/SearchResultsPage.tsx apps/web/src/apps/Prediction/WorldCup/EventTab.tsx apps/web/src/apps/Prediction/WorldCup/MatchTab.tsx apps/web/src/apps/Prediction/WorldCup/OngoingTab.tsx apps/web/src/apps/Prediction/WorldCup/WorldCupFaq.tsx apps/web/src/apps/Prediction/WorldCup/common/MatchCard.tsx apps/web/src/apps/Prediction/WorldCup/common/calc.ts apps/web/src/apps/Prediction/WorldCup/common/format.ts apps/web/src/apps/Prediction/WorldCup/common/matchSegments.test.ts apps/web/src/apps/Prediction/WorldCup/common/matchSegments.ts apps/web/src/apps/Prediction/WorldCup/common/matchTime.test.ts apps/web/src/apps/Prediction/WorldCup/common/matchTime.ts apps/web/src/apps/Prediction/WorldCup/common/ongoingGroup.test.ts apps/web/src/apps/Prediction/WorldCup/common/types.ts apps/web/src/apps/Prediction/WorldCup/index.tsx apps/web/src/apps/Prediction/common/categories.test.ts apps/web/src/apps/Prediction/common/categories.ts apps/web/src/apps/Prediction/common/categorySelection.test.ts apps/web/src/apps/Prediction/common/categorySelection.ts apps/web/src/apps/Prediction/common/eventCardType.test.ts apps/web/src/apps/Prediction/common/eventCardType.ts apps/web/src/apps/Prediction/common/metadata.ts apps/web/src/apps/Prediction/common/outcomeLabels.test.ts apps/web/src/apps/Prediction/common/outcomeLabels.ts apps/web/src/apps/Prediction/common/resolveCategoryTree.test.ts apps/web/src/apps/Prediction/common/resolveCategoryTree.ts apps/web/src/apps/Prediction/common/searchDirection.test.ts apps/web/src/apps/Prediction/common/searchDirection.ts apps/web/src/apps/Prediction/common/searchSort.test.ts apps/web/src/apps/Prediction/common/searchSort.ts apps/web/src/apps/Prediction/components/CategorySidebar.tsx apps/web/src/apps/Prediction/components/CategoryTabs.tsx apps/web/src/apps/Prediction/components/PredictionCategoryList.tsx apps/web/src/apps/Prediction/components/PredictionTradeMan/EstimatedProfit.tsx apps/web/src/apps/Prediction/components/PredictionTradeMan/useTradeDerivedState.ts apps/web/src/apps/Prediction/components/SearchBox/HighlightedText.tsx apps/web/src/apps/Prediction/components/SearchBox/SearchPopup.tsx apps/web/src/apps/Prediction/components/SearchBox/highlightMatch.test.ts apps/web/src/apps/Prediction/components/SearchBox/highlightMatch.ts apps/web/src/apps/Prediction/components/SearchBox/index.tsx apps/web/src/apps/Prediction/components/SearchResultCard.tsx apps/web/src/apps/Prediction/index.tsx apps/web/src/components/Empty.tsx apps/web/src/constants/pathnames.ts apps/web/src/i18n/locales/zh-CN/common.json apps/web/src/i18n/locales/zh-CN/polymarket.json apps/web/src/mocks/browser.ts apps/web/src/mocks/fixtures/prediction.ts apps/web/src/mocks/handlers/prediction.test.ts apps/web/src/mocks/handlers/prediction.ts apps/web/src/mocks/prediction.contract.test.ts apps/web/src/mocks/useMockWorker.ts apps/web/src/proxy.ts apps/web/src/services/api/prediction/mapTagEventsToWorldCup.test.ts apps/web/src/services/api/prediction/mapTagEventsToWorldCup.ts apps/web/src/services/api/prediction/polymarket.test.ts apps/web/src/services/api/prediction/polymarket.ts apps/web/src/services/api/prediction/schemas.ts apps/web-next/src/components/Empty.tsx apps/web-next/src/constants/pathnames.ts apps/web-next/src/i18n/core/namespaces.ts apps/web-next/src/i18n/i18next.d.ts apps/web-next/src/i18n/resources/zh-CN/common.json apps/web-next/src/platform/domain/web/WebHttpApi.ts apps/web-next/src/apps/Prediction/common/categories.ts apps/web-next/src/apps/Prediction/common/categorySelection.ts apps/web-next/src/apps/Prediction/common/eventCardType.ts apps/web-next/src/apps/Prediction/common/outcomeLabels.ts apps/web-next/src/apps/Prediction/common/resolveCategoryTree.ts apps/web-next/src/apps/Prediction/common/test/categories.test.ts apps/web-next/src/apps/Prediction/common/test/categorySelection.test.ts apps/web-next/src/apps/Prediction/common/test/eventCardType.test.ts apps/web-next/src/apps/Prediction/common/test/outcomeLabels.test.ts apps/web-next/src/apps/Prediction/common/test/predictionEventFixtures.ts apps/web-next/src/apps/Prediction/common/test/resolveCategoryTree.test.ts apps/web-next/src/apps/Prediction/common/viewModels.ts apps/web-next/src/apps/Prediction/mappers/mapTagEventsToPrediction.ts apps/web-next/src/apps/Prediction/mappers/test/mapTagEventsToPrediction.test.ts apps/web-next/src/i18n/resources/zh-CN/polymarket.json apps/web-next/src/platform/components/ui/pagination/FxPagination.tsx apps/web-next/src/platform/components/ui/pagination/index.ts apps/web-next/src/platform/components/ui/pagination/pageRange.ts apps/web-next/src/platform/components/ui/pagination/test/FxPagination.test.tsx apps/web-next/src/platform/components/ui/pagination/test/pageRange.test.ts apps/web-next/src/platform/domain/web/endpoints/getCategoryTreeEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/getEstimatedProfitEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/getExchangeRateEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/getTagEventsListEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/searchEventsEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/test/getCategoryTreeEndpoint.test.ts apps/web-next/src/platform/domain/web/endpoints/test/getEstimatedProfitEndpoint.test.ts apps/web-next/src/platform/domain/web/endpoints/test/getExchangeRateEndpoint.test.ts apps/web-next/src/platform/domain/web/endpoints/test/getTagEventsListEndpoint.test.ts apps/web-next/src/platform/domain/web/endpoints/test/searchEventsEndpoint.test.ts apps/web-next/src/platform/domain/web/schema/predictionSchemas.ts apps/web-next/src/platform/schema/resilientArray.ts apps/web-next/src/platform/schema/test/resilientArray.test.ts apps/web-next/src/services/hooks/common/exchangeRateQuery.ts apps/web-next/src/services/hooks/prediction/categoryTreeQuery.ts apps/web-next/src/services/hooks/prediction/estimatedProfitQuery.ts apps/web-next/src/services/hooks/prediction/searchEventsQuery.ts apps/web-next/src/services/hooks/prediction/tagEventsListQuery.ts apps/web-next/src/services/hooks/prediction/test/predictionQueries.test.ts",
+        "command": "pnpm exec biome check --no-errors-on-unmatched apps/web/public/mockServiceWorker.js apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/crypto/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/finance/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/politics/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/search/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/sports/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/world-cup/page.tsx apps/web/src/apps/Prediction/SearchResultsPage.tsx apps/web/src/apps/Prediction/WorldCup/EventTab.tsx apps/web/src/apps/Prediction/WorldCup/MatchTab.tsx apps/web/src/apps/Prediction/WorldCup/OngoingTab.tsx apps/web/src/apps/Prediction/WorldCup/WorldCupFaq.tsx apps/web/src/apps/Prediction/WorldCup/common/MatchCard.tsx apps/web/src/apps/Prediction/WorldCup/common/calc.ts apps/web/src/apps/Prediction/WorldCup/common/format.ts apps/web/src/apps/Prediction/WorldCup/common/matchSegments.test.ts apps/web/src/apps/Prediction/WorldCup/common/matchSegments.ts apps/web/src/apps/Prediction/WorldCup/common/matchTime.test.ts apps/web/src/apps/Prediction/WorldCup/common/matchTime.ts apps/web/src/apps/Prediction/WorldCup/common/ongoingGroup.test.ts apps/web/src/apps/Prediction/WorldCup/common/types.ts apps/web/src/apps/Prediction/WorldCup/index.tsx apps/web/src/apps/Prediction/common/categories.test.ts apps/web/src/apps/Prediction/common/categories.ts apps/web/src/apps/Prediction/common/categorySelection.test.ts apps/web/src/apps/Prediction/common/categorySelection.ts apps/web/src/apps/Prediction/common/eventCardType.test.ts apps/web/src/apps/Prediction/common/eventCardType.ts apps/web/src/apps/Prediction/common/metadata.ts apps/web/src/apps/Prediction/common/outcomeLabels.test.ts apps/web/src/apps/Prediction/common/outcomeLabels.ts apps/web/src/apps/Prediction/common/resolveCategoryTree.test.ts apps/web/src/apps/Prediction/common/resolveCategoryTree.ts apps/web/src/apps/Prediction/common/searchDirection.test.ts apps/web/src/apps/Prediction/common/searchDirection.ts apps/web/src/apps/Prediction/common/searchSort.test.ts apps/web/src/apps/Prediction/common/searchSort.ts apps/web/src/apps/Prediction/components/CategorySidebar.tsx apps/web/src/apps/Prediction/components/CategoryTabs.tsx apps/web/src/apps/Prediction/components/PredictionCategoryList.tsx apps/web/src/apps/Prediction/components/PredictionTradeMan/EstimatedProfit.tsx apps/web/src/apps/Prediction/components/PredictionTradeMan/useTradeDerivedState.ts apps/web/src/apps/Prediction/components/SearchBox/HighlightedText.tsx apps/web/src/apps/Prediction/components/SearchBox/SearchPopup.tsx apps/web/src/apps/Prediction/components/SearchBox/highlightMatch.test.ts apps/web/src/apps/Prediction/components/SearchBox/highlightMatch.ts apps/web/src/apps/Prediction/components/SearchBox/index.tsx apps/web/src/apps/Prediction/components/SearchResultCard.tsx apps/web/src/apps/Prediction/index.tsx apps/web/src/components/Empty.tsx apps/web/src/constants/pathnames.ts apps/web/src/i18n/locales/zh-CN/common.json apps/web/src/i18n/locales/zh-CN/polymarket.json apps/web/src/mocks/browser.ts apps/web/src/mocks/fixtures/prediction.ts apps/web/src/mocks/prediction.contract.test.ts apps/web/src/mocks/useMockWorker.ts apps/web/src/proxy.ts apps/web/src/services/api/prediction/mapTagEventsToWorldCup.test.ts apps/web/src/services/api/prediction/mapTagEventsToWorldCup.ts apps/web/src/services/api/prediction/polymarket.test.ts apps/web/src/services/api/prediction/polymarket.ts apps/web/src/services/api/prediction/schemas.ts apps/web-next/setupVitest.ts apps/web-next/src/components/Empty.tsx apps/web-next/src/constants/pathnames.ts apps/web-next/src/i18n/core/namespaces.ts apps/web-next/src/i18n/core/resources.ts apps/web-next/src/i18n/core/test/namespaces.test.ts apps/web-next/src/i18n/i18next.d.ts apps/web-next/src/i18n/resources/zh-CN/common.json apps/web-next/src/platform/domain/web/WebHttpApi.ts apps/web-next/src/platform/http/test/RequestMetadataService.test.ts apps/web-next/src/routeTree.gen.ts apps/web-next/src/routes/test/-__root.test.ts apps/web-next/src/apps/Prediction/PredictionCategoryPage.tsx apps/web-next/src/apps/Prediction/common/categories.ts apps/web-next/src/apps/Prediction/common/categorySelection.ts apps/web-next/src/apps/Prediction/common/eventCardType.ts apps/web-next/src/apps/Prediction/common/formatTradeVolume.ts apps/web-next/src/apps/Prediction/common/outcomeLabels.ts apps/web-next/src/apps/Prediction/common/predictionRoute.ts apps/web-next/src/apps/Prediction/common/resolveCategoryTree.ts apps/web-next/src/apps/Prediction/common/test/categories.test.ts apps/web-next/src/apps/Prediction/common/test/categorySelection.test.ts apps/web-next/src/apps/Prediction/common/test/eventCardType.test.ts apps/web-next/src/apps/Prediction/common/test/formatTradeVolume.test.ts apps/web-next/src/apps/Prediction/common/test/outcomeLabels.test.ts apps/web-next/src/apps/Prediction/common/test/predictionEventFixtures.ts apps/web-next/src/apps/Prediction/common/test/predictionRoute.test.ts apps/web-next/src/apps/Prediction/common/test/resolveCategoryTree.test.ts apps/web-next/src/apps/Prediction/common/viewModels.ts apps/web-next/src/apps/Prediction/components/CategorySidebar.tsx apps/web-next/src/apps/Prediction/components/CategoryTabs.tsx apps/web-next/src/apps/Prediction/components/EventCardVisuals.tsx apps/web-next/src/apps/Prediction/components/EventTab.tsx apps/web-next/src/apps/Prediction/components/PLoadingMan.tsx apps/web-next/src/apps/Prediction/components/PredictionCategoryList.tsx apps/web-next/src/apps/Prediction/components/PredictionListSkeleton.tsx apps/web-next/src/apps/Prediction/components/YesNoPairBtn.tsx apps/web-next/src/apps/Prediction/components/test/CategorySidebar.test.tsx apps/web-next/src/apps/Prediction/components/test/CategoryTabs.test.tsx apps/web-next/src/apps/Prediction/components/test/EventTab.test.tsx apps/web-next/src/apps/Prediction/components/test/PredictionCategoryList.test.tsx apps/web-next/src/apps/Prediction/components/test/YesNoPairBtn.test.tsx apps/web-next/src/apps/Prediction/hooks/useFormatTradeVolume.ts apps/web-next/src/apps/Prediction/mappers/mapTagEventsToPrediction.ts apps/web-next/src/apps/Prediction/mappers/test/mapTagEventsToPrediction.test.ts apps/web-next/src/components/test/Empty.test.tsx apps/web-next/src/i18n/core/test/resources.test.ts apps/web-next/src/i18n/resources/zh-CN/polymarket.json apps/web-next/src/platform/components/ui/pagination/FxPagination.tsx apps/web-next/src/platform/components/ui/pagination/index.ts apps/web-next/src/platform/components/ui/pagination/pageRange.ts apps/web-next/src/platform/components/ui/pagination/test/FxPagination.test.tsx apps/web-next/src/platform/components/ui/pagination/test/pageRange.test.ts apps/web-next/src/platform/domain/web/endpoints/getCategoryTreeEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/getEstimatedProfitEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/getExchangeRateEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/getTagEventsListEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/searchEventsEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/test/getCategoryTreeEndpoint.test.ts apps/web-next/src/platform/domain/web/endpoints/test/getEstimatedProfitEndpoint.test.ts apps/web-next/src/platform/domain/web/endpoints/test/getExchangeRateEndpoint.test.ts apps/web-next/src/platform/domain/web/endpoints/test/getTagEventsListEndpoint.test.ts apps/web-next/src/platform/domain/web/endpoints/test/searchEventsEndpoint.test.ts apps/web-next/src/platform/domain/web/schema/predictionSchemas.ts apps/web-next/src/platform/schema/resilientArray.ts apps/web-next/src/platform/schema/test/resilientArray.test.ts apps/web-next/src/routes/(main)/prediction/crypto.tsx apps/web-next/src/routes/(main)/prediction/finance.tsx apps/web-next/src/routes/(main)/prediction/index.tsx apps/web-next/src/routes/(main)/prediction/politics.tsx apps/web-next/src/routes/(main)/prediction/route.tsx apps/web-next/src/routes/test/-predictionRoutes.test.ts apps/web-next/src/services/hooks/common/exchangeRateQuery.ts apps/web-next/src/services/hooks/common/test/exchangeRateQuery.test.ts apps/web-next/src/services/hooks/prediction/categoryTreeQuery.ts apps/web-next/src/services/hooks/prediction/estimatedProfitQuery.ts apps/web-next/src/services/hooks/prediction/searchEventsQuery.ts apps/web-next/src/services/hooks/prediction/tagEventsListQuery.ts apps/web-next/src/services/hooks/prediction/test/predictionQueries.test.ts",
         "cwd": ".",
-        "status": 1,
-        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-01T12-47-01-065Z-biome-check.log",
+        "status": 0,
+        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-02T05-46-36-139Z-biome-check.log",
         "counts": {
-          "candidates": 111,
-          "checked": 106,
-          "errors": 1,
-          "warnings": 2,
-          "diagnostics": [
-            "apps/web/src/apps/Prediction/WorldCup/index.tsx:71 lint/correctness/useExhaustiveDependencies",
-            "apps/web/src/apps/Prediction/components/PredictionCategoryList.tsx:38 lint/correctness/useExhaustiveDependencies",
-            "apps/web-next/src/platform/domain/web/endpoints/getTagEventsListEndpoint.ts format"
-          ]
+          "candidates": 143,
+          "checked": 137,
+          "errors": 0,
+          "warnings": 0,
+          "diagnostics": []
         }
       }
     },
@@ -552,8 +580,8 @@
       "evidence": {
         "command": "pnpm exec tsc --project ./tsconfig.json --noEmit --pretty false",
         "cwd": "apps/web",
-        "status": 2,
-        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-01T12-47-01-733Z-tsc-apps-web.log",
+        "status": 1,
+        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-02T05-46-36-625Z-tsc-apps-web.log",
         "counts": {
           "total": 429,
           "inChangedFiles": 0
@@ -577,19 +605,37 @@
     },
     {
       "ruleId": "VERIFY-TEST-001",
-      "ok": false,
+      "ok": true,
       "severity": "error",
-      "message": "vitest 未通过（vitest 退出码非 0）；详见 /var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-01T12-47-07-197Z-vitest-related.log",
+      "message": ". vitest 通过：16 个相关测试文件（16 passed (16)）",
       "file": "",
       "category": "build-quality",
       "evidence": {
-        "command": "pnpm exec vitest run apps/web-next/src/apps/Prediction/common/test/categories.test.ts apps/web-next/src/apps/Prediction/common/test/categorySelection.test.ts apps/web-next/src/apps/Prediction/common/test/eventCardType.test.ts apps/web-next/src/apps/Prediction/common/test/outcomeLabels.test.ts apps/web-next/src/apps/Prediction/common/test/resolveCategoryTree.test.ts apps/web-next/src/apps/Prediction/mappers/test/mapTagEventsToPrediction.test.ts apps/web-next/src/platform/components/ui/pagination/test/FxPagination.test.tsx apps/web-next/src/platform/components/ui/pagination/test/pageRange.test.ts apps/web-next/src/platform/domain/web/endpoints/test/getCategoryTreeEndpoint.test.ts apps/web-next/src/platform/domain/web/endpoints/test/getEstimatedProfitEndpoint.test.ts apps/web-next/src/platform/domain/web/endpoints/test/getExchangeRateEndpoint.test.ts apps/web-next/src/platform/domain/web/endpoints/test/getTagEventsListEndpoint.test.ts apps/web-next/src/platform/domain/web/endpoints/test/searchEventsEndpoint.test.ts apps/web-next/src/platform/schema/test/resilientArray.test.ts apps/web-next/src/services/hooks/prediction/test/predictionQueries.test.ts apps/web/src/apps/Prediction/WorldCup/common/calc.test.ts apps/web/src/apps/Prediction/WorldCup/common/matchSegments.test.ts apps/web/src/apps/Prediction/WorldCup/common/matchTime.test.ts apps/web/src/apps/Prediction/WorldCup/common/ongoingGroup.test.ts apps/web/src/apps/Prediction/common/categories.test.ts apps/web/src/apps/Prediction/common/categorySelection.test.ts apps/web/src/apps/Prediction/common/eventCardType.test.ts apps/web/src/apps/Prediction/common/outcomeLabels.test.ts apps/web/src/apps/Prediction/common/resolveCategoryTree.test.ts apps/web/src/apps/Prediction/common/searchDirection.test.ts apps/web/src/apps/Prediction/common/searchSort.test.ts apps/web/src/apps/Prediction/components/SearchBox/highlightMatch.test.ts apps/web/src/constants/pathnames.test.ts apps/web/src/mocks/handlers/prediction.test.ts apps/web/src/mocks/prediction.contract.test.ts apps/web/src/services/api/prediction/mapTagEventsToWorldCup.test.ts apps/web/src/services/api/prediction/polymarket.test.ts",
+        "command": "pnpm exec vitest run apps/web/src/apps/Prediction/WorldCup/common/calc.test.ts apps/web/src/apps/Prediction/WorldCup/common/matchSegments.test.ts apps/web/src/apps/Prediction/WorldCup/common/matchTime.test.ts apps/web/src/apps/Prediction/WorldCup/common/ongoingGroup.test.ts apps/web/src/apps/Prediction/common/categories.test.ts apps/web/src/apps/Prediction/common/categorySelection.test.ts apps/web/src/apps/Prediction/common/eventCardType.test.ts apps/web/src/apps/Prediction/common/outcomeLabels.test.ts apps/web/src/apps/Prediction/common/resolveCategoryTree.test.ts apps/web/src/apps/Prediction/common/searchDirection.test.ts apps/web/src/apps/Prediction/common/searchSort.test.ts apps/web/src/apps/Prediction/components/SearchBox/highlightMatch.test.ts apps/web/src/constants/pathnames.test.ts apps/web/src/mocks/prediction.contract.test.ts apps/web/src/services/api/prediction/mapTagEventsToWorldCup.test.ts apps/web/src/services/api/prediction/polymarket.test.ts",
         "cwd": ".",
-        "status": 1,
-        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-01T12-47-07-197Z-vitest-related.log",
+        "status": 0,
+        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-02T05-46-40-782Z-vitest-related-root.log",
         "counts": {
-          "selected": 32,
-          "summary": "6 failed | 25 passed (31)"
+          "selected": 16,
+          "summary": "16 passed (16)"
+        }
+      }
+    },
+    {
+      "ruleId": "VERIFY-TEST-001",
+      "ok": true,
+      "severity": "error",
+      "message": "apps/web-next vitest 通过：29 个相关测试文件（29 passed (29)）",
+      "file": "apps/web-next",
+      "category": "build-quality",
+      "evidence": {
+        "command": "pnpm exec vitest run src/apps/Prediction/common/test/categories.test.ts src/apps/Prediction/common/test/categorySelection.test.ts src/apps/Prediction/common/test/eventCardType.test.ts src/apps/Prediction/common/test/formatTradeVolume.test.ts src/apps/Prediction/common/test/outcomeLabels.test.ts src/apps/Prediction/common/test/predictionRoute.test.ts src/apps/Prediction/common/test/resolveCategoryTree.test.ts src/apps/Prediction/components/test/CategorySidebar.test.tsx src/apps/Prediction/components/test/CategoryTabs.test.tsx src/apps/Prediction/components/test/EventTab.test.tsx src/apps/Prediction/components/test/PredictionCategoryList.test.tsx src/apps/Prediction/components/test/YesNoPairBtn.test.tsx src/apps/Prediction/mappers/test/mapTagEventsToPrediction.test.ts src/components/test/Empty.test.tsx src/i18n/core/test/namespaces.test.ts src/i18n/core/test/resources.test.ts src/platform/components/ui/pagination/test/FxPagination.test.tsx src/platform/components/ui/pagination/test/pageRange.test.ts src/platform/domain/web/endpoints/test/getCategoryTreeEndpoint.test.ts src/platform/domain/web/endpoints/test/getEstimatedProfitEndpoint.test.ts src/platform/domain/web/endpoints/test/getExchangeRateEndpoint.test.ts src/platform/domain/web/endpoints/test/getTagEventsListEndpoint.test.ts src/platform/domain/web/endpoints/test/searchEventsEndpoint.test.ts src/platform/http/test/RequestMetadataService.test.ts src/platform/schema/test/resilientArray.test.ts src/routes/test/-__root.test.ts src/routes/test/-predictionRoutes.test.ts src/services/hooks/common/test/exchangeRateQuery.test.ts src/services/hooks/prediction/test/predictionQueries.test.ts",
+        "cwd": "apps/web-next",
+        "status": 0,
+        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-02T05-46-43-450Z-vitest-related-apps-web-next.log",
+        "counts": {
+          "selected": 29,
+          "summary": "29 passed (29)"
         }
       }
     },
@@ -612,42 +658,42 @@
       "file": "common/engine/agent-scripts/verify-build-quality.mjs",
       "ok": true,
       "severity": "error",
-      "message": "G6 机器事实层已实跑：5 条 biome/tsc/vitest 结论",
-      "evidence": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-01T12-47-00-686Z-verify-build-quality.log"
+      "message": "G7 机器事实层已实跑：6 条 biome/tsc/vitest 结论",
+      "evidence": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-02T05-46-35-864Z-verify-build-quality.log"
     }
   ],
   "commands": [
     {
-      "label": "verify-project-gate PR-02074 G6",
-      "status": 1,
-      "ok": false,
-      "startedAt": "2026-09-01T12:46:55.135Z",
-      "finishedAt": "2026-09-01T12:46:55.271Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-01T12-46-55-135Z-verify-project-gate-g6.log"
+      "label": "verify-project-gate PR-02074 G7",
+      "status": 0,
+      "ok": true,
+      "startedAt": "2026-09-02T05:46:28.479Z",
+      "finishedAt": "2026-09-02T05:46:28.616Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-02T05-46-28-479Z-verify-project-gate-g7.log"
     },
     {
       "label": "verify-code-rules --project PR-02074",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-09-01T12:46:55.271Z",
-      "finishedAt": "2026-09-01T12:47:00.685Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-01T12-46-55-271Z-verify-code-rules.log"
+      "startedAt": "2026-09-02T05:46:28.616Z",
+      "finishedAt": "2026-09-02T05:46:35.863Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-02T05-46-28-616Z-verify-code-rules.log"
     },
     {
       "label": "verify-build-quality --project PR-02074",
-      "status": 1,
-      "ok": false,
-      "startedAt": "2026-09-01T12:47:00.686Z",
-      "finishedAt": "2026-09-01T12:47:12.171Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-01T12-47-00-686Z-verify-build-quality.log"
-    },
-    {
-      "label": "update-project-index --write",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-09-01T12:47:12.796Z",
-      "finishedAt": "2026-09-01T12:47:12.874Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-01T12-47-12-796Z-update-project-index.log"
+      "startedAt": "2026-09-02T05:46:35.864Z",
+      "finishedAt": "2026-09-02T05:46:47.264Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-02T05-46-35-864Z-verify-build-quality.log"
+    },
+    {
+      "label": "set-project-stage PR-02074 G7",
+      "status": 1,
+      "ok": false,
+      "startedAt": "2026-09-02T05:46:47.672Z",
+      "finishedAt": "2026-09-02T05:46:47.755Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-02T05-46-47-672Z-set-project-stage.log"
     }
   ],
   "codeRules": {
@@ -660,12 +706,12 @@
     "required": true,
     "skipped": false,
     "reason": "",
-    "ok": false,
-    "checkCount": 5,
+    "ok": true,
+    "checkCount": 6,
     "baselineFile": "../docs_tdd/prds/PR-02074/agent/tsc-baseline.json"
   },
   "source": {
-    "gateCommand": "/Users/aven/.nvm/versions/node/v24.7.0/bin/node /Users/aven/github/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-02074 G6 --json",
+    "gateCommand": "/Users/aven/.nvm/versions/node/v24.7.0/bin/node /Users/aven/github/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-02074 G7 --json",
     "parseError": null,
     "codeRulesCommand": "/Users/aven/.nvm/versions/node/v24.7.0/bin/node /Users/aven/github/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --project PR-02074 --json",
     "codeRulesParseError": null,
@@ -673,21 +719,21 @@
     "buildQualityParseError": null
   },
   "fingerprint": {
-    "headSha": "e4a5e1fbb9e3e8ad4d0de4b6627da401db694ac1",
-    "baseSha": "f098f111bc20e19975ef14fd1e49833457443582",
-    "dirtyHash": "ad5a165c550af26cd2d7a039b15d513b95fd44cb7bb7536fe154a753f8d56da4",
-    "dirtyFileCount": 49,
-    "untrackedFileCount": 40,
-    "rulesetVersion": "local-2026.07-msw-v1",
-    "ruleReleaseFingerprint": "f121f15c4b2ca94714005544aab179e1a13694916051a0bca08281db7f122370",
-    "effectiveRulesFingerprint": "2e463b9eb141da64c9fe46451c4a41b37f9b81b764be3633073234e6ce0bacb0"
+    "headSha": "071a7e70c934d110bee8d4d185314cd4ad8fe274",
+    "baseSha": "e48c7445657439a7c0bc99467690738554e853bb",
+    "dirtyHash": "2653a57f7212a1cafaf18033ea84a26e7e62910c47fd072d0c31216d3b1c9480",
+    "dirtyFileCount": 91,
+    "untrackedFileCount": 69,
+    "rulesetVersion": "local-2026.09-atomic-acceptance-v1",
+    "ruleReleaseFingerprint": "dcf9df17508497abf0dff3697c0dd436495bac9f801f7fea9a82c8272e92b503",
+    "effectiveRulesFingerprint": "90fc43265e72acb5e9f0fcba4f15ba0e383381535f511badb72ff3c426098ae9"
   },
   "cache": {
     "hit": false,
-    "fingerprint": "0d2bf3cfc7d46eed"
+    "fingerprint": "9c323161641ce023"
   },
   "stageSync": {
-    "attempted": false,
+    "attempted": true,
     "ok": false
   }
 }

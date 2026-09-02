@@ -558,8 +558,8 @@ function countLines(content) {
 // 逐条守正则漂移（历史假阳性根因）。visualFidelityHigh 默认取项目级判定，self-test 可覆盖以测两态。
 function scanAddedLine(file, line, text, findings, { visualFidelityHigh = projectVisualFidelityHigh } = {}) {
   // CODE-TYPE-001：禁裸 `any` 类型注解。放行 `.any(`（`z.any()`/`expect.any()` 是方法调用非类型洞），
-  // 且不扫测试/fixture 文件（mock 转型常需 any，且本规则是 error 级，误伤会直接卡 gate）。
-  if (/\.(ts|tsx)$/.test(file) && !isTestOrFixtureFile(file) && /(?<!\.)\bany\b/.test(stripCommentsAndStrings(text))) {
+  // 且不扫测试/fixture/生成文件（转型不由业务代码控制，且本规则是 error 级，误伤会直接卡 gate）。
+  if (/\.(ts|tsx)$/.test(file) && !isTestOrFixtureFile(file) && !isDataFile(file) && /(?<!\.)\bany\b/.test(stripCommentsAndStrings(text))) {
     addFinding(findings, 'CODE-TYPE-001', file, line, 'Added line contains `any`; use a named type or a narrower unknown-safe type.')
   }
   if (/\.tsx$/.test(file) && /\bfetch\s*\(/.test(text)) {
@@ -759,6 +759,7 @@ function runSelfTest() {
   eq('CODE-TYPE-001 neg z.any method', ids('a.ts', 'const s = z.any()'), [])
   eq('CODE-TYPE-001 neg expect.any', ids('a.ts', 'expect.any(String)'), [])
   eq('CODE-TYPE-001 neg test file any', ids('a.test.ts', 'const x: any = 1'), [])
+  eq('CODE-TYPE-001 neg generated file any', ids('routeTree.gen.ts', 'const x = value as any'), [])
   eq('CODE-ARCH-001 pos tsx', ids('a.tsx', 'const r = fetch("/x")'), ['CODE-ARCH-001'])
   eq('CODE-ARCH-001 neg ts', ids('a.ts', 'const r = fetch("/x")'), [])
   eq('CODE-TYPE-002 pos', ids('a.ts', 'const v = userSchema.parse(x) as User'), ['CODE-TYPE-002'])

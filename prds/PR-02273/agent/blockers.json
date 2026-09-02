@@ -8,7 +8,7 @@
     "summary": "pre 环境确认 normalTrialBalance 为不含增强体验金且已扣冻结/占用的净口径，并核对开仓预估强平价",
     "owner": "合约后端/QA",
     "raisedAt": "2026-09-01",
-    "status": "resolved-pending-verify",
+    "status": "resolved",
     "resolvedAt": "2026-09-02",
     "resolution": "后端 2026-09-02 答复：接口字段未改动，沿用之前逻辑即可。核实 normalTrialBalance/enhancedTrialBalance 系 PR-01847（commit b66554bcff3，2026-07-10 Julian）既有 schema 字段，非本 PR 臆造；F07（commit dc0dcfbf36）复用同源 store 字段 normalTrialBalance、数据通道不变，符合“用之前的逻辑”。代码不确定性消除，仅余 pre 真实账户数值联调核对（属常规 QA 验证，非代码待办）。",
     "evidence": ["product/06-collaboration.md", "apps/web/src/services/api/futures/position-assets-list.ts:172", "apps/web/src/apps/Futures/hooks/useEffectiveTrialAmount.ts:81"]
@@ -22,7 +22,7 @@
     "summary": "pre 环境核对增强体验金详情金额、后台领取记录金额口径及使用记录过滤结果",
     "owner": "体验金后台/QA",
     "raisedAt": "2026-09-01",
-    "status": "resolved-pending-verify",
+    "status": "resolved",
     "resolvedAt": "2026-09-02",
     "resolution": "后端 2026-09-02 答复：接口字段未改动，PRD 相关口径更新参考 feature/PR-01930 的处理逻辑同步即可。核实 PR-01930 体验金口径 4 笔提交（d91b18a80c 余额/详情按「发放-已使用-已过期=剩余」修正、29f7a17679 手动失效后保证金率显示修复、0fcee3f783 手动失效后含体验金显示为 0 修复、67fed9dedc 待激活体验金统计）均已为 HEAD 祖先（经 a0b99cfc32/4e571d4c53 正向合并合入本分支）；d91b18a80c 改动的 marginRate.ts 与 F08 剔除增强共存无冲突（marginRate.ts:64-65 沿用「发放-已使用-已过期」口径 + 过期过滤，marginRate.ts:138-140 F08 剔除增强）。同步已完成，仅余 pre 真实数据联调核对。",
     "evidence": ["product/06-collaboration.md", "apps/web/src/apps/Futures/utils/marginRate.ts:64", "apps/web/src/apps/Futures/utils/marginRate.ts:138"]

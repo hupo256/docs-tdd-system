@@ -1,7 +1,7 @@
 ---
 projectId: PR-02074
 status: active
-stage: G3
+stage: G7
 branch: feature/PR-02074
 worktree: /Users/aven/github/PR-02074
 port: ""
@@ -17,7 +17,7 @@ larkEnabled: false
 
 | 字段 | 值 |
 |------|-----|
-| 最新通过门禁 | G3 |
+| 最新通过门禁 | G7 |
 | 最新可信门禁 | G4（2026-08-01 阶段链审计后回退；旧 G6 缺少 G5→G6 成功历史且证据仍有模板占位） |
 | 当前阶段 | G5 阻塞：接口未 ready，真实 fixture/schema 对账、ASSUMED 销账、MSW 退役均未完成 |
 | 公共规则 | 继承 ../../common/README.md |

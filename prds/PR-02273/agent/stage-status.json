@@ -3,13 +3,13 @@
   "stages": {
     "G5": {
       "status": "frontend-complete-pending-verify",
-      "reason": "前端实现、PRD review 修复、PR-01930/online 正向合并和定向自动化已完成。2026-09-02 后端答复接口字段未改动、沿用之前逻辑、PRD 更新参考 PR-01930 处理逻辑同步：核实 F07 复用的 normalTrialBalance 系 PR-01847 既有字段，PR-01930 体验金口径 4 笔提交已合入本分支且与 F08 共存无冲突（详见 blockers.json BLK-1/BLK-2）。代码不确定性消除，BLK-1/BLK-2 降级 resolved-pending-verify，仅余 pre 真实数值联调核对（属常规 QA）。",
+      "reason": "前端实现、PRD review 修复、PR-01930/online 正向合并和定向自动化已完成。2026-09-02 后端答复接口字段未改动、沿用之前逻辑、PRD 更新参考 PR-01930 处理逻辑同步：核实 F07 复用的 normalTrialBalance 系 PR-01847 既有字段，PR-01930 体验金口径 4 笔提交已合入本分支且与 F08 共存无冲突（详见 blockers.json BLK-1/BLK-2）。代码不确定性消除，BLK-1/BLK-2 已 resolved，仅余 pre 真实数值联调核对（属常规 QA）。",
       "evidence": ["evidence/acceptance/g6/README.md", "agent/blockers.json"],
       "updatedAt": "2026-09-02"
     },
     "G6": {
       "status": "partial-pass",
-      "reason": "G6-partial 门禁已跑：100 项 96 ok / 4 warn / 0 fail（见 gate-results.json）。原阻断 G6 的 BLK-1/BLK-2 经 2026-09-02 后端答复降级为 resolved-pending-verify，不再阻断。",
+      "reason": "G6-partial 门禁已跑：100 项 96 ok / 4 warn / 0 fail（见 gate-results.json）。原阻断 G6 的 BLK-1/BLK-2 经 2026-09-02 后端答复已 resolved，不再阻断。",
       "evidence": ["evidence/acceptance/g6/README.md", "agent/gate-results.json"],
       "updatedAt": "2026-09-02"
     },

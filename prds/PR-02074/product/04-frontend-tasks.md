@@ -78,3 +78,18 @@
 - [ ] 分类名/按钮名文案逐字取 PRD/截图，不意译（[[feedback_content_assets_verbatim]]）。
 - [ ] 数据缺失显 `--` / 不渲染，禁假默认（[[feedback_no_fallback_masks_missing_data]]）。
 - [ ] 单个 .tsx ≤300 行；卡片形态拆子组件。
+
+## apps/web-next 迁移补充（2026-09-02）
+
+| 范围 | 状态 | 验收证据 |
+| --- | --- | --- |
+| Phase 1：4 endpoint/query、Schema/mapper、逐行容错、i18n、Pagination | ✅ | 聚焦测试覆盖 endpoint、query、mapper、纯函数、分页与文案契约 |
+| Phase 2：crypto / politics / finance 路由与页面 | ✅ | 三条路由可访问；URL 使用 `tag/subTag`；`/prediction` 重定向 crypto；sports/search 本期保持 404 |
+| 请求状态 | ✅ | loading skeleton、empty、error+retry、refresh overlay、禁用 Yes/No 均已落地 |
+| i18n 缺失资源 | ✅ | 批量 hydration 跳过未同步 namespace；`en-US/prediction/crypto` 不崩溃，不跨语言伪回退 |
+| Empty 资源 | ✅ | 改为语义色内联 SVG，不再请求不存在的 `/static/empty-dark.png` / `/static/empty.webp` |
+| 自动化 | ✅ | `pnpm test`、typecheck、lint、`build:test` 全部 exit 0；lint 仅 14 条既存 warning |
+| 浏览器 | 🟡 | 1440px dark/light 与 390px 主体通过；crypto 月度 3 条、politics 4 条、finance 3 条真实卡片已验收；390px 全局 Header 仍有既存横向溢出 |
+| 外部依赖 | ⏳ | C08 分类翻译、crypto 其余 6 个粒度/两段式比赛种子、登录态测试账号、Footer 合入 online |
+| 分支基线 | ⏳ | `feature/PR-02074` 相对最新 `origin/online` 落后 69 / 领先 14；双方当前无重叠文件且 merge-tree 无文本冲突，发布前仍须在保护未提交 web-next 文件后同步 |
+| web-next G6 | ⏳ | 共享规则发布漂移已恢复，MSW 退役检查 6/6 通过；`changed PR-02074` 仅剩 `CODE-TYPE-001` 对自动生成 `routeTree.gen.ts` 的 5 个 `as any` 误报。扫描器已有 `*.gen.ts` 识别但该规则未应用，待规则 owner 修复后重跑四维 G6。 |
