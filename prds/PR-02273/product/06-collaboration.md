@@ -64,10 +64,14 @@
 
 | 时间 | 命令 | findings | 处理结论 | 证据 |
 |------|------|----------|----------|------|
-| 待 G6 | `/code-review` | 待执行 | 待处理 | evidence/.../README.md |
+| 2026-09-01 | PRD 对照 + `origin/online...HEAD` diff review | 5 项：2 个 PRD 缺口、1 个合并类型回归、1 个旧断言冲突、1 个双分支集成风险 | 全部修复；无 open code finding | `agent/code-review.json`、`evidence/acceptance/g6/README.md` |
 
 ## 验证证据索引
 
 | 命令 | 目标文件 / 场景 | 结果 | 备注 |
 |------|-----------------|------|------|
-| 待执行 | Biome / verify-code-rules / Browser | 待记录 | 不接受仅写“已通过” |
+| Web 定向 Vitest | 9 files / 60 tests | PASS | 详情、卡片、领取、金额、强平价、保证金率、schema |
+| Admin 定向 Vitest | 12 files / 55 tests | PASS | 配置申请、手动失效、财务流水、领取记录 |
+| Biome | 本需求触达文件 | PASS | 合并钩子的 online 基线问题另行记录 |
+| TypeScript 定向筛查 | 本需求相关文件 | PASS | 全仓仍有大量既存错误 |
+| Browser / pre API | 真实登录态与增强体验金测试数据 | 待提测执行 | 见 `agent/acceptance-results.json` AC-7/9/12/13/15 |

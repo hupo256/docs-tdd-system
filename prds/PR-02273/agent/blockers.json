@@ -1,1 +1,26 @@
-[]
+[
+  {
+    "id": "BLK-1",
+    "type": "blocker",
+    "gate": "G5",
+    "blocksGate": "G6",
+    "category": "backend",
+    "summary": "pre 环境确认 normalTrialBalance 为不含增强体验金且已扣冻结/占用的净口径，并核对开仓预估强平价",
+    "owner": "合约后端/QA",
+    "raisedAt": "2026-09-01",
+    "status": "open",
+    "evidence": ["product/06-collaboration.md"]
+  },
+  {
+    "id": "BLK-2",
+    "type": "blocker",
+    "gate": "G5",
+    "blocksGate": "G6",
+    "category": "backend",
+    "summary": "pre 环境核对增强体验金详情金额、后台领取记录金额口径及使用记录过滤结果",
+    "owner": "体验金后台/QA",
+    "raisedAt": "2026-09-01",
+    "status": "open",
+    "evidence": ["product/06-collaboration.md"]
+  }
+]

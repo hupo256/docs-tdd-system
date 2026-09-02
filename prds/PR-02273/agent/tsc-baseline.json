@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "baseRef": "origin/online",
+  "roots": {
+    "apps/admin": {
+      "total": 300,
+      "recordedAt": "2026-09-01T14:21:19.774Z",
+      "headSha": "84498bd21809eaa9f3cd79d8b10eff8f0f689616",
+      "baseRef": "origin/online"
+    },
+    "apps/web": {
+      "total": 345,
+      "recordedAt": "2026-09-01T14:21:24.141Z",
+      "headSha": "84498bd21809eaa9f3cd79d8b10eff8f0f689616",
+      "baseRef": "origin/online"
+    }
+  },
+  "generatedAt": "2026-09-01T14:21:27.587Z"
+}

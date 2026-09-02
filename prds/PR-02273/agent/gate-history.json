@@ -120,6 +120,30 @@
         "effectiveRulesFingerprint": "880094f646f3b229d986d82806ce068bcecf01095b2e62bec9285c8ba9a39c2d"
       },
       "evidence": "evidence/gate/2026-08-13-135432-g4/README.md"
+    },
+    {
+      "gate": "G6-partial",
+      "ok": true,
+      "generatedAt": "2026-09-01T14:34:34.143Z",
+      "tool": "run-project-gate.mjs",
+      "summary": {
+        "total": 100,
+        "ok": 96,
+        "warn": 4,
+        "waived": 0,
+        "fail": 0
+      },
+      "fingerprint": {
+        "headSha": "269bdd57a96bc5d76f38feba3009475abf5a9c53",
+        "baseSha": "f098f111bc20e19975ef14fd1e49833457443582",
+        "dirtyHash": "5fa43f297aec379f757c5d591c477245a8e08204702b02d97859140153b0adde",
+        "dirtyFileCount": 0,
+        "untrackedFileCount": 0,
+        "rulesetVersion": "local-2026.07-msw-v1",
+        "ruleReleaseFingerprint": "f121f15c4b2ca94714005544aab179e1a13694916051a0bca08281db7f122370",
+        "effectiveRulesFingerprint": "2e463b9eb141da64c9fe46451c4a41b37f9b81b764be3633073234e6ce0bacb0"
+      },
+      "evidence": "evidence/gate/2026-09-01-143434-g6/README.md"
     }
   ]
 }

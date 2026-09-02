@@ -1,5 +1,21 @@
 {
   "projectId": "PR-02273",
-  "head": "0000000000000000000000000000000000000000",
-  "items": []
+  "head": "269bdd57a96bc5d76f38feba3009475abf5a9c53",
+  "items": [
+    { "id": "AC-1", "featureId": "F01", "scenario": "增强体验金保证金模式文案逐字匹配 PRD", "method": "vitest", "status": "passed", "evidence": ["evidence/acceptance/g6/README.md"] },
+    { "id": "AC-2", "featureId": "F02", "scenario": "福利中心增强体验金卡片按钮态收敛为领取/去使用/已失效，普通体验金状态不变", "method": "vitest", "status": "passed", "evidence": ["evidence/acceptance/g6/README.md"] },
+    { "id": "AC-3", "featureId": "F03", "scenario": "增强体验金领取弹窗展示配资比例并隐藏使用方式", "method": "vitest", "status": "passed", "evidence": ["evidence/acceptance/g6/README.md"] },
+    { "id": "AC-4", "featureId": "F04", "scenario": "详情展示增强体验金名称、可用/使用中金额、配资比例并隐藏使用规则和详情入口", "method": "vitest", "status": "passed", "evidence": ["evidence/acceptance/g6/README.md"] },
+    { "id": "AC-5", "featureId": "F05", "scenario": "增强体验金领取记录按既有 leverageRange 规则展示 --", "method": "vitest", "status": "passed", "evidence": ["evidence/acceptance/g6/README.md"] },
+    { "id": "AC-6", "featureId": "F06", "scenario": "详情可用金额取 availableTrialAmount，使用中金额取 frozen + occupy", "method": "vitest", "status": "passed", "evidence": ["evidence/acceptance/g6/README.md"] },
+    { "id": "AC-7", "featureId": "F06", "scenario": "pre 真实数据核对总额、可用、委托冻结与仓位占用守恒", "method": "contract", "status": "blocked", "reason": "等待 pre 环境真实增强体验金账户数据联调", "owner": "QA/后端", "evidence": [] },
+    { "id": "AC-8", "featureId": "F07", "scenario": "开仓预估强平价使用 normalTrialBalance 排除增强体验金", "method": "vitest", "status": "passed", "evidence": ["evidence/acceptance/g6/README.md"] },
+    { "id": "AC-9", "featureId": "F07", "scenario": "确认 normalTrialBalance 为不含增强且已扣冻结/占用的净口径", "method": "contract", "status": "blocked", "reason": "等待合约后端在 pre 环境核值确认", "owner": "合约后端", "evidence": [] },
+    { "id": "AC-10", "featureId": "F08", "scenario": "全仓保证金率不计入增强体验金，普通体验金仍计入", "method": "vitest", "status": "passed", "evidence": ["evidence/acceptance/g6/README.md"] },
+    { "id": "AC-11", "featureId": "F09", "scenario": "旧 Feature 级组合验收，待按 R-F09-01..07 拆分补齐 copy/DOM/logic/payload/visual 证据", "method": "vitest", "status": "blocked", "reason": "现有 copy 测试不能证明条件标签、字段隐藏、比例逻辑、提交 payload 与红色视觉，禁止继续标 passed", "evidence": ["evidence/acceptance/g6/README.md"] },
+    { "id": "AC-12", "featureId": "F10", "scenario": "pre 核对增强体验金领取记录已使用/到期未使用金额为后端新口径", "method": "contract", "status": "blocked", "reason": "前端直显后端字段，等待 pre 真实响应核值", "owner": "体验金后台/QA", "evidence": [] },
+    { "id": "AC-13", "featureId": "F11", "scenario": "pre 核对增强体验金不返回使用记录", "method": "contract", "status": "blocked", "reason": "过滤逻辑在后端，等待 pre 真实响应核对", "owner": "体验金后台/QA", "evidence": [] },
+    { "id": "AC-14", "featureId": "F13", "scenario": "增强体验金旧 Used 状态兼容显示为已失效，普通体验金状态不变", "method": "vitest", "status": "passed", "evidence": ["evidence/acceptance/g6/README.md"] },
+    { "id": "AC-15", "featureId": "F02", "scenario": "福利中心卡片、领取弹窗、详情弹窗及后台配置表单真实页面交互与视觉走查", "method": "browser", "status": "blocked", "reason": "等待 pre 登录态与对应测试数据，交由提测回归执行", "owner": "QA/前端", "evidence": [] }
+  ]
 }

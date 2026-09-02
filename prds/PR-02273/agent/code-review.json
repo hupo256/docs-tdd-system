@@ -1,16 +1,63 @@
 {
   "projectId": "PR-02273",
-  "reviewedAt": "2026-08-11",
-  "reviewer": "pending",
-  "head": "0000000000000000000000000000000000000000",
+  "reviewedAt": "2026-09-01",
+  "reviewer": "Codex",
+  "base": "origin/online",
+  "head": "269bdd57a96bc5d76f38feba3009475abf5a9c53",
   "findings": [
     {
       "id": "CR-1",
-      "category": "other",
+      "category": "correctness",
       "severity": "high",
-      "summary": "G6 code review 尚未执行",
-      "disposition": "open",
-      "evidence": []
+      "summary": "增强体验金详情仍沿用普通体验金余额/已使用口径，且缺少增强体验金名称",
+      "disposition": "fixed",
+      "resolution": "详情改为可用金额直取 availableTrialAmount、使用中金额取 frozen + occupy，并补充增强体验金名称及逐字文案测试。",
+      "evidence": ["evidence/acceptance/g6/README.md"]
+    },
+    {
+      "id": "CR-2",
+      "category": "correctness",
+      "severity": "high",
+      "summary": "后台不抵扣类型仍展示使用规则，且抵扣比例标签未切换为配资比例",
+      "disposition": "fixed",
+      "resolution": "OwnFundsFirst(2) 下动态展示配资比例并隐藏使用规则，普通体验金逻辑保持不变；提交 payload 同步归一化倍数为 number。",
+      "evidence": ["evidence/acceptance/g6/README.md"]
+    },
+    {
+      "id": "CR-3",
+      "category": "correctness",
+      "severity": "medium",
+      "summary": "合入 online 后资金流水筛选的 string/number 类型与表格行泛型不一致",
+      "disposition": "fixed",
+      "resolution": "筛选值在纯 resolver 中归一化为 number，显式传递 FinanceAuditAssetFlowRecord 表格泛型，并增加字符串枚举值测试。",
+      "evidence": ["evidence/acceptance/g6/README.md"]
+    },
+    {
+      "id": "CR-4",
+      "category": "test-coverage",
+      "severity": "low",
+      "summary": "PR-01930 的领取记录旧断言与 online 后续改名“卡券名称”冲突",
+      "disposition": "fixed",
+      "resolution": "保留 online 的后续产品文案，仅更新旧断言，避免反向回滚线上功能。",
+      "evidence": ["evidence/acceptance/g6/README.md"]
+    },
+    {
+      "id": "CR-5",
+      "category": "other",
+      "severity": "medium",
+      "summary": "PR-02273 需要同时吸收 PR-01930 与最新 online，且不得覆盖任一侧业务逻辑",
+      "disposition": "fixed",
+      "resolution": "先后正向合入 origin/feature/PR-01930@91870c16dc 与 origin/online；6 个冲突逐项取业务并集，未向 PR-01930 反向写入。",
+      "evidence": ["evidence/acceptance/g6/README.md"]
+    },
+    {
+      "id": "CR-6",
+      "category": "correctness",
+      "severity": "medium",
+      "summary": "PR-01930 的业务类型数组已包含“全部”，与 online 包装逻辑合并后筛选项重复",
+      "disposition": "fixed",
+      "resolution": "账户类型 resolver 直接返回唯一选项源，移除重复 prepend，并新增账户分支与唯一“全部”断言。",
+      "evidence": ["apps/admin/src/apps/FinanceAuditAssetsFlow/utils/useBusinessTypes.test.ts"]
     }
   ]
 }
