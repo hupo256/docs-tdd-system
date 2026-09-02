@@ -605,7 +605,7 @@ function validateG7() {
   validateG6()
   add('VERIFY-STAGE-002', hasPassedGate('G6'), 'G7 requires a persisted successful G6 run in agent/gate-history.json', join(projectDir, 'agent/gate-history.json'))
   const status = stageStatus('G7')
-  add('VERIFY-G7-001', Boolean(status), 'agent/stage-status.json records the G7 QA disposition', join(projectDir, 'agent/stage-status.json'))
+  add('VERIFY-G7-001', Boolean(status), 'agent/stage-status.json records the G7 pre-test readiness disposition', join(projectDir, 'agent/stage-status.json'))
   add('VERIFY-G7-002', ['completed', 'skipped'].includes(status?.status), `G7 status is completed or skipped (got ${status?.status || 'missing'})`, join(projectDir, 'agent/stage-status.json'))
   const g7EvidenceOk = status?.status === 'skipped'
     ? Boolean(status?.reason)
@@ -631,7 +631,7 @@ function validateG8() {
     )
     add('VERIFY-G8-001', structureOk, 'delivery-status.json has valid projectId/mode/branch/headSha/evidence', deliveryFile)
     if (structureOk) {
-      add('VERIFY-G8-002', delivery.mode !== 'local', `G8 delivery mode must be pushed/merged/released (got ${delivery.mode})`, deliveryFile)
+      add('VERIFY-G8-002', delivery.mode !== 'local', `G8 test handoff requires pushed/merged/released Git state (got ${delivery.mode}); it does not prove test/pre/online completion`, deliveryFile)
       const dirty = runGit(['status', '--porcelain'], gitCwd).stdout
       add('VERIFY-G8-003', dirty.length === 0, dirty.length ? `G8 worktree is not clean:\n${dirty}` : 'G8 worktree is clean', gitCwd)
       const branch = delivery.branch.trim()

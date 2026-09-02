@@ -63,7 +63,7 @@
 | 增量检查改动 | `node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs changed PR-01234 [--no-cache]` |
 | 单阶段 gate 只看结果 | `node apps/web/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-01234 G6` |
 | 正式阶段 gate + 落证据/历史/阶段 | `node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs gate PR-01234 G6 [--no-cache]` |
-| G8 交付 gate（阶段/索引自动同步） | `node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs gate PR-01234 G8` |
+| G8 test 提测交付 gate（阶段/索引自动同步） | `node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs gate PR-01234 G8` |
 | 阶段同步内部脚本（仅排障/回退） | `node apps/web/docs_tdd/common/engine/agent-scripts/set-project-stage.mjs PR-01234 G4 --force` |
 | 只刷新项目索引 | `node apps/web/docs_tdd/common/engine/agent-scripts/update-project-index.mjs --write` |
 | warn-first 晋级台账（记录/复核/候选） | `node apps/web/docs_tdd/common/engine/agent-scripts/warn-ledger.mjs --report`（gate --write 自动记录；`--mark <RULE> <PR> <true-positive\|false-positive> --write` 复核） |

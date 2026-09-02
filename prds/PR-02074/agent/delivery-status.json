@@ -1,0 +1,12 @@
+{
+  "projectId": "PR-02074",
+  "mode": "pushed",
+  "branch": "feature/PR-02074",
+  "headSha": "8435c7ccb30f09f173ba984f8f1b2cc4cf842dc3",
+  "pullRequestUrl": "",
+  "evidence": [
+    "origin/feature/PR-02074 @ 8435c7ccb30f09f173ba984f8f1b2cc4cf842dc3",
+    "evidence/gate/2026-09-02-062401-g7/README.md"
+  ],
+  "note": "分支已同步最新 origin/online 并推送；本地 G7 与 apps/web、apps/web-next production-mode build 通过。G8 通过后应运行 apps/web、apps/web-next 的 test 流水线提交 AQ；不得直接发 online。"
+}

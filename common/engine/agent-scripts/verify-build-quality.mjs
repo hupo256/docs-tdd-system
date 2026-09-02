@@ -9,7 +9,7 @@
 // - 存量涟漪（改共享类型把没碰过的文件搞挂）用 VERIFY-TYPE-002 的 warn 兜底，
 //   基线只影响 warn，不影响 error，因此基线被篡改的收益上限是「少一个 warn」。
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { basename, dirname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -177,7 +177,7 @@ function hasExportedLogic(file) {
   }
 }
 
-// 与某个源文件相关的测试文件：同目录同名、或同目录 __tests__/ 下同名。
+// 与某个源文件相关的测试文件：同目录同名、或同目录 test/__tests__ 下同名。
 export function relatedTestCandidates(file) {
   const dir = dirname(file)
   const stem = basename(file).replace(/\.(?:ts|tsx|js|jsx)$/, '')
@@ -186,18 +186,58 @@ export function relatedTestCandidates(file) {
     for (const ext of ['ts', 'tsx']) {
       candidates.push(toPosix(join(dir, `${stem}.${kind}.${ext}`)))
       candidates.push(toPosix(join(dir, '__tests__', `${stem}.${kind}.${ext}`)))
+      candidates.push(toPosix(join(dir, 'test', `${stem}.${kind}.${ext}`)))
     }
   }
   return candidates
 }
 
-export function collectRelatedTests(changedFiles, exists) {
+function stripScriptExtension(file) {
+  return file.replace(/\.(?:ts|tsx|js|jsx)$/, '')
+}
+
+export function testImportsSource(testFile, sourceFile, source) {
+  const expected = stripScriptExtension(toPosix(resolve(worktreeRoot, sourceFile)))
+  const testDir = dirname(resolve(worktreeRoot, testFile))
+  const importPattern = /\b(?:from\s+|import\s*\(\s*|import\s+)['"]([^'"]+)['"]/g
+  for (const match of source.matchAll(importPattern)) {
+    const specifier = match[1]
+    if (!specifier.startsWith('.')) continue
+    const imported = stripScriptExtension(toPosix(resolve(testDir, specifier)))
+    if (imported === expected) return true
+  }
+  return false
+}
+
+function findImportingTests(file) {
+  const dir = dirname(file)
+  const tests = []
+  for (const candidateDir of [dir, join(dir, '__tests__'), join(dir, 'test')]) {
+    const absoluteDir = resolve(worktreeRoot, candidateDir)
+    if (!existsSync(absoluteDir)) continue
+    for (const entry of readdirSync(absoluteDir, { withFileTypes: true })) {
+      if (!entry.isFile()) continue
+      const candidate = toPosix(join(candidateDir, entry.name))
+      if (!isTestFile(candidate)) continue
+      try {
+        const source = readFileSync(resolve(worktreeRoot, candidate), 'utf8')
+        if (testImportsSource(candidate, file, source)) tests.push(candidate)
+      } catch {
+        // 单个测试文件不可读时不阻断发现流程，后续缺测试规则会保持可见。
+      }
+    }
+  }
+  return tests
+}
+
+export function collectRelatedTests(changedFiles, exists, importingTests = () => []) {
   const tests = new Set(changedFiles.filter(isTestFile))
   for (const file of changedFiles) {
     if (isTestFile(file) || !/\.(?:ts|tsx)$/.test(file)) continue
     for (const candidate of relatedTestCandidates(file)) {
       if (exists(candidate)) tests.add(candidate)
     }
+    for (const candidate of importingTests(file)) tests.add(candidate)
   }
   return [...tests].sort()
 }
@@ -358,15 +398,43 @@ function selfTest() {
   expect('unknown app root ignored', deriveTypecheckRoots(['apps/cms/src/a.ts'], hasTsconfig).length === 0)
 
   // 相关测试收集
-  const present = new Set(['apps/web/src/utils/fee.test.ts', 'apps/web/src/apps/X/__tests__/calc.test.ts'])
+  const present = new Set([
+    'apps/web/src/utils/fee.test.ts',
+    'apps/web/src/apps/X/__tests__/calc.test.ts',
+    'apps/web-next/src/apps/Prediction/mappers/test/mapTagEventsToPrediction.test.ts',
+  ])
   const related = collectRelatedTests(
-    ['apps/web/src/utils/fee.ts', 'apps/web/src/apps/X/calc.ts', 'apps/web/src/apps/Y/untested.ts', 'apps/web/src/z.test.ts'],
+    [
+      'apps/web/src/utils/fee.ts',
+      'apps/web/src/apps/X/calc.ts',
+      'apps/web-next/src/apps/Prediction/mappers/mapTagEventsToPrediction.ts',
+      'apps/web/src/apps/Y/untested.ts',
+      'apps/web/src/z.test.ts',
+    ],
     (file) => present.has(file),
   )
   expect('related tests include sibling', related.includes('apps/web/src/utils/fee.test.ts'))
   expect('related tests include __tests__', related.includes('apps/web/src/apps/X/__tests__/calc.test.ts'))
+  expect(
+    'related tests include test directory',
+    related.includes('apps/web-next/src/apps/Prediction/mappers/test/mapTagEventsToPrediction.test.ts'),
+  )
   expect('related tests include changed test file', related.includes('apps/web/src/z.test.ts'))
-  expect('related tests exclude untested source', related.length === 3)
+  expect('related tests exclude untested source', related.length === 4)
+  expect(
+    'direct relative import links a differently named test',
+    testImportsSource('apps/web/src/apps/X/ongoingGroup.test.ts', 'apps/web/src/apps/X/format.ts', "import { group } from './format'"),
+  )
+  expect(
+    'unrelated relative import does not link source',
+    !testImportsSource('apps/web/src/apps/X/ongoingGroup.test.ts', 'apps/web/src/apps/X/format.ts', "import { group } from './other'"),
+  )
+  const importRelated = collectRelatedTests(
+    ['apps/web/src/apps/X/format.ts'],
+    () => false,
+    () => ['apps/web/src/apps/X/ongoingGroup.test.ts'],
+  )
+  expect('related tests include direct importers', importRelated[0] === 'apps/web/src/apps/X/ongoingGroup.test.ts')
   const testGroups = groupTestsByVitestRoot(
     ['apps/web/src/a.test.ts', 'apps/web-next/src/a.test.ts'],
     (root) => root === '.' || root === 'apps/web-next',
@@ -429,7 +497,7 @@ function selfTest() {
     console.error(`verify-build-quality self-test FAILED:\n  ${failures.join('\n  ')}`)
     process.exit(1)
   }
-  console.log('verify-build-quality self-test passed (36 predicate cases).')
+  console.log('verify-build-quality self-test passed (40 predicate cases).')
   process.exit(0)
 }
 
@@ -597,7 +665,11 @@ let baselineDirty = false
 
 // ---- VERIFY-TEST-001 --------------------------------------------------------
 {
-  const relatedTests = collectRelatedTests(changedFiles, (file) => existsSync(resolve(worktreeRoot, file)))
+  const relatedTests = collectRelatedTests(
+    changedFiles,
+    (file) => existsSync(resolve(worktreeRoot, file)),
+    findImportingTests,
+  )
   if (skipped('TEST')) {
     addCheck({ ruleId: 'VERIFY-TEST-001', ok: false, severity: 'warn', message: '--skip TEST：单测被跳过，不构成通过证据' })
   } else if (!relatedTests.length) {
@@ -641,13 +713,17 @@ let baselineDirty = false
 {
   const missing = changedFiles
     .filter((file) => needsUnitTest(file) && hasExportedLogic(file))
-    .filter((file) => !relatedTestCandidates(file).some((candidate) => existsSync(resolve(worktreeRoot, candidate))))
+    .filter(
+      (file) =>
+        !relatedTestCandidates(file).some((candidate) => existsSync(resolve(worktreeRoot, candidate))) &&
+        findImportingTests(file).length === 0,
+    )
   addCheck({
     ruleId: 'VERIFY-TEST-002',
     ok: missing.length === 0,
     severity: test002Severity,
     message: missing.length
-      ? `以下逻辑文件导出了函数但无同名/同目录 __tests__ 单测：${missing.slice(0, 8).join(', ')}${missing.length > 8 ? ` 等 ${missing.length} 个` : ''}`
+      ? `以下逻辑文件导出了函数，但未找到同名测试或邻近目录中直接导入它的测试：${missing.slice(0, 8).join(', ')}${missing.length > 8 ? ` 等 ${missing.length} 个` : ''}`
       : '改动的逻辑文件均有相关单测',
     file: missing[0] || '',
     counts: { missing: missing.length },

@@ -19,12 +19,12 @@ apps/web/docs_tdd/prds/<PROJECT-ID>/
     execution-log.md       # 命令执行摘要，可由 log-exec.mjs 追加
     gate-results.json      # 最近一次 gate 结果，可为 PASS 或 BLOCK
     gate-history.json      # 成功 gate 的追加历史，验证 G5→G6→G7→G8 顺序
-    stage-status.json      # G5 联调、G7 QA 的结构化状态与证据路径
+    stage-status.json      # G5 联调、G7 提测准备的结构化状态与证据路径
     code-review.json       # G6 review findings 与处置结论
     acceptance-results.json # 验收结果与证据
     fast-track.json        # 可选：快速通道出口、临时业务契约、安全降级与销账 gate
     blockers.json          # 阻塞/变更机器真值
-    delivery-status.json   # G8 交付模式、branch/headSha 与外部证据
+    delivery-status.json   # G8 test 提测交付模式、branch/headSha 与外部证据
     run-state.json         # 一句话编排与断点恢复状态
     rule-session.json      # 编码前规则会话 v2：客户端、三层 fingerprint、context、G2 输入与 HEAD
     rule-waivers.json      # 可选，规则豁免记录
@@ -58,7 +58,7 @@ node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs gate PR-01234 G8
 
 - `agent/gate-results.json`：最近一次机器可读 gate 结果，只用于诊断当前运行，不作为成功历史。
 - `agent/gate-history.json`：成功 gate 的追加式历史；G6/G7/G8 的前置阶段证明只认这里的连续记录及其真实 evidence 路径。
-- `agent/stage-status.json`：G5 真实联调和 G7 QA 的结构化人工结论；`completed` 必须有证据，`not-applicable`/`skipped` 必须有具体原因。
+- `agent/stage-status.json`：G5 真实联调和 G7 提测准备的结构化人工结论；`completed` 必须有证据，`not-applicable`/`skipped` 必须有具体原因。G7 结论不得冒充 AQ 在 test 环境的正式验收结果。
 - `agent/code-review.json` + `agent/acceptance-results.json`：G6 review 和逐原子需求验收真值；原子项须带 `requirementId/taskId/evidenceType`，多种证据写多项，不接受散文替代。
 - `evidence/gate/<date>-<HHmmss>-g*/README.md`：命令、阻塞项、review/浏览器待补项的人工可读证据；同一天重复运行不会覆盖旧证据。
 

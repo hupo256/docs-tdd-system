@@ -139,9 +139,9 @@
 | `DOC-CONFIRM-002` | G7+（`lib/confirmation.mjs`） | G7 的人工处置态（`completed`/`skipped`）带 `confirmedBy` + `confirmedAt` | error（trial，since:3：模板 v3+ 阻断、存量项目 warn，可豁免） |
 | `DOC-CONFIRM-003` | G6+（`lib/confirmation.mjs`） | `method ∈ {manual, manual-visual, browser}` 的 `passed` 验收项逐条带 `confirmedBy` + `confirmedAt`（这三种没有机器退出码兜底） | error（trial，since:3：模板 v3+ 阻断、存量项目 warn，可豁免） |
 | `DOC-CONFIRM-004` | G6+（`lib/confirmation.mjs`） | `code-review.json` 带人工签收 `confirmedBy` + `confirmedAt`（`reviewer` 记谁做的 review，通常是 Agent 自己，不能兼任签收） | error（trial，since:3：模板 v3+ 阻断、存量项目 warn，可豁免） |
-| `VERIFY-G8-001` | G8 | `agent/delivery-status.json` 的 project/mode/branch/headSha/evidence 结构合法；模板 v2 起必须存在 | error |
-| `VERIFY-G8-002` | G8 | 交付模式不是 local，而是 pushed/merged/released | error |
+| `VERIFY-G8-001` | G8 | `agent/delivery-status.json` 的 project/mode/branch/headSha/evidence 结构合法；模板 v2 起必须存在；该文件记录 Git 交付状态，不代表环境验收状态 | error |
+| `VERIFY-G8-002` | G8 | test 提测交付模式不是 local；pushed 即满足，merged/released 仅兼容事后复核 | error |
 | `VERIFY-G8-003` | G8 | 实际 Git 工作树干净 | error |
-| `VERIFY-G8-004` | G8 | 非 local 交付具备证据；pushed 模式远端分支、当前 HEAD 与记录 SHA 一致；merged/released 模式记录 SHA 已进入基线分支 | error |
+| `VERIFY-G8-004` | G8 | 非 local 交付具备证据；pushed 模式远端分支、当前 HEAD 与记录 SHA 一致；merged/released 模式记录 SHA 已进入基线分支；不据此声称 test/pre/online 已通过 | error |
 
 > `GIT-G4-*` 定位说明见 §2.1(时点检查、worktree cwd 求值);责任模块目录字段可填在 `00-feature-inventory.md` 或 `agent/context-summary.md`。

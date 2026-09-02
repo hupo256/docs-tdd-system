@@ -41,8 +41,8 @@ node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs gate PR-01234 G8
 | G4 | 技术方案复用盘点无占位；模板 v2 的单一事实源所有权表存在且无占位；不出现 `跳过复用`；当前分支是 `feature/<PROJECT-ID>` 且基于 `origin/online` | 阻止未完成复用/所有权盘点或在错误分支编码 |
 | G5 | `stage-status.json` 的 G5 为 `completed`/`not-applicable`；真实联调有证据，或 N/A 有具体原因；API 契约、字段对账、Mock/ASSUMED 状态一致 | 阻止关键词占位冒充真实联调完成 |
 | G6 | 已有 G5 PASS 历史；结构化验收结果覆盖每个本期功能，`code-review.json` findings 清零；**并实跑 biome/tsc/vitest（§3.5 机器事实层）** | 阻止跳过联调、验收或靠散文冒充 review |
-| G7 | 已有 G6 PASS 历史；G7 为 `completed`/`skipped`，完成项有 QA 证据，跳过项有具体原因；机器事实层同 G6 | 阻止复用 G6 校验冒充 QA 完成 |
-| G8 | 已有 G7 PASS 历史；实跑 production build；交付模式为 pushed/merged/released；工作树干净且 Git 远端状态可验证 | G8 仍是唯一终点，同时证明代码真正可交付 |
+| G7 | 已有 G6 PASS；G7 为 `completed`/`skipped`，完成项有提测预检与开发回归证据，跳过有原因；机器事实层同 G6 | 防止冒充提测完成；不代表 AQ/test 通过 |
+| G8 | 已有 G7 PASS；实跑 production-mode build；Git 至少 pushed；工作树干净、远端可验证 | 开发终点、test 提测起点；不代表环境通过 |
 
 这些检查只覆盖机器可判定部分;PRD 语义、视觉手感、复杂复用判断仍需人工或 `/code-review` 兜底,但必须留证据。
 

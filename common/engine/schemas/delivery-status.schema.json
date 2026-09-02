@@ -1,12 +1,16 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "delivery-status.schema.json",
-  "title": "docs_tdd G8 Delivery Status",
+  "title": "docs_tdd G8 Test Handoff Status",
   "type": "object",
   "required": ["projectId", "mode", "branch", "headSha", "evidence"],
   "properties": {
     "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },
-    "mode": { "type": "string", "enum": ["local", "pushed", "merged", "released"] },
+    "mode": {
+      "type": "string",
+      "description": "Git delivery state. pushed is sufficient for G8 test handoff; this is not a test/pre/online environment status.",
+      "enum": ["local", "pushed", "merged", "released"]
+    },
     "branch": { "type": "string" },
     "headSha": { "type": "string", "pattern": "^$|^[0-9a-f]{7,40}$" },
     "pullRequestUrl": { "type": "string" },

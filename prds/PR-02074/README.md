@@ -18,8 +18,8 @@ larkEnabled: false
 | 字段 | 值 |
 |------|-----|
 | 最新通过门禁 | G7 |
-| 最新可信门禁 | G4（2026-08-01 阶段链审计后回退；旧 G6 缺少 G5→G6 成功历史且证据仍有模板占位） |
-| 当前阶段 | G5 阻塞：接口未 ready，真实 fixture/schema 对账、ASSUMED 销账、MSW 退役均未完成 |
+| 最新可信门禁 | G7（2026-09-02，连续 G5→G7 PASS 历史与证据已落盘） |
+| 当前阶段 | G8 待执行；通过后发布 test 并提交 AQ，不代表 pre/online 已通过 |
 | 公共规则 | 继承 ../../common/README.md |
 | PRD 来源 | https://qfglxo2m3dc.sg.larksuite.com/wiki/G7DYwcDijiUnYbkMuiilT8y8gch |
 | visualFidelity | standard |

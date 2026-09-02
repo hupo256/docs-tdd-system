@@ -14,7 +14,7 @@
 import assert from 'node:assert/strict'
 
 export const PARTIAL_SUFFIX = '-partial'
-// 只有 G6 有部分验收语义：G5 之前没有验收项可分，G7/G8 是 QA 与交付，"部分交付"不成立。
+// 只有 G6 有部分验收语义：G5 之前没有验收项可分，G7/G8 是提测准备与提测交付，"部分交付"不成立。
 export const PARTIAL_GATES = ['G6']
 // 可待对账的验收方法只有两种：契约测试（要真实响应体）与浏览器端到端（要真实数据落地）。
 // vitest / manual-visual / manual 不依赖真实字段，它们 blocked 就是真 blocked，不给 partial 出口。

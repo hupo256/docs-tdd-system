@@ -7,7 +7,13 @@
       "recordedAt": "2026-08-03T18:20:54.175Z",
       "headSha": "b8794616798d9c54b2baeb15fb33e13d3472d081",
       "baseRef": "origin/online"
+    },
+    "apps/web-next": {
+      "total": 0,
+      "recordedAt": "2026-09-02T06:10:26.967Z",
+      "headSha": "071a7e70c934d110bee8d4d185314cd4ad8fe274",
+      "baseRef": "origin/online"
     }
   },
-  "generatedAt": "2026-08-03T18:20:56.060Z"
+  "generatedAt": "2026-09-02T06:10:37.573Z"
 }

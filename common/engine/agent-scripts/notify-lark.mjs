@@ -13,8 +13,8 @@ export const gateMeta = {
   G4: { label: '开发实现', defaultStatus: '进行中' },
   G5: { label: '接口联调', defaultStatus: '进行中' },
   G6: { label: '自测验收', defaultStatus: '待确认' },
-  G7: { label: 'QA 用例回归', defaultStatus: '待确认' },
-  G8: { label: '交付', defaultStatus: '待确认' },
+  G7: { label: '提测用例预检', defaultStatus: '待确认' },
+  G8: { label: 'test 提测交付', defaultStatus: '待确认' },
 }
 
 const gateOrder = Object.keys(gateMeta)

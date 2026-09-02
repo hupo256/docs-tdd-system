@@ -33,7 +33,7 @@ PROJECTS.md                    # 顶层项目状态索引，由 update-project-i
   agent/
     README.md
     project-manifest.json      # ruleset/template 版本、试点与存量规则策略
-    stage-status.json          # G5 联调与 G7 QA 的结构化完成/阻塞/跳过结论
+    stage-status.json          # G5 联调与 G7 提测准备的结构化完成/阻塞/跳过结论
     gate-history.json          # 按时间追加的成功 gate 历史，供阶段前置链校验
     run-state.json             # kickoff/status/resume/next 的断点恢复状态
     prd-source-manifest.json   # PRD 富媒体盘点、素材 hash、Feature/Task 追踪和 G2 fingerprint
@@ -43,7 +43,7 @@ PROJECTS.md                    # 顶层项目状态索引，由 update-project-i
     blockers.json              # 阻塞/变更机器真值，新项目默认空数组
     code-review.json           # G6 findings、处置和 review HEAD
     acceptance-results.json    # Feature → 验收场景 → 方法/结果/evidence
-    delivery-status.json       # G8 交付模式 + branch/headSha + 外部证据
+    delivery-status.json       # G8 test 提测交付模式 + branch/headSha + 外部证据
     context-summary.md      # AI 恢复项目时优先读的短摘要
     gate-results.json         # 最近一次 gate 结果，不承担成功历史证明
     execution-log.md          # 可选，命令执行摘要

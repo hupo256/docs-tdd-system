@@ -69,4 +69,4 @@
 
 ## 6. 交付摘要
 
-G8 的 `render-delivery-summary.mjs` 第 4 段从 `openBlockers(entries)` 结构化派生未解除的阻塞与未收口的变更（id + owner + blocksGate + 摘要），第 5 段把 `open` 的 `blocker` 作为上线风险再点一次。人工只在占位处补机器判不了的产品/设计口径。
+G8 的 `render-delivery-summary.mjs` 第 4 段从 `openBlockers(entries)` 结构化派生未解除的阻塞与未收口的变更（id + owner + blocksGate + 摘要），第 5 段把 `open` 的 `blocker` 作为 test 提测风险再点一次。人工只在占位处补机器判不了的产品/设计口径；test/pre/online 的后续验收风险另行跟踪。

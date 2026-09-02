@@ -1,8 +1,8 @@
 {
   "version": 1,
   "rulesetVersion": "local-2026.09-atomic-acceptance-v1",
-  "fingerprint": "dcf9df17508497abf0dff3697c0dd436495bac9f801f7fea9a82c8272e92b503",
-  "publishedAt": "2026-09-02T05:43:08.300Z",
+  "fingerprint": "6c97e1aab09df48556cdd1b5a98f678d5b1e7ce6d098604f926f24100d78569d",
+  "publishedAt": "2026-09-02T06:09:07.515Z",
   "fileCount": 170,
   "files": {
     "common/CHANGELOG-archive.md": "3f6df9a2d04e917dc0ae67125c84a9209877de3196bd7952639040897e0077cc",
@@ -80,7 +80,7 @@
     "common/engine/agent-scripts/sync-lark-docs.mjs": "0566b1c2981e0aa5253440c7e2cc5aaa0cdd824c07c6f5a4719c5c16b9c3164c",
     "common/engine/agent-scripts/update-context-summary.mjs": "d7ed757cd5dcbf7ebb4f2f5dc0aef15e73f10516d8f0e0405c2b58614a968621",
     "common/engine/agent-scripts/update-project-index.mjs": "f9417e7b92022a264ba47464fbcaa31e3557d7d15910630b9b0af7f66217b524",
-    "common/engine/agent-scripts/verify-build-quality.mjs": "3b2bdbaf7fa21d2d2dee7637b2232d5e457b513a51bc6ec61f5115867145d9b2",
+    "common/engine/agent-scripts/verify-build-quality.mjs": "48be7678c2ca12a0387183f84f089e119b563f55f4d12fe124126848f3f9cd77",
     "common/engine/agent-scripts/verify-code-rules.mjs": "fb6a69dd6a98971c32f5d31bf1d9498795a0535076582d94940d0f9ec87e4241",
     "common/engine/agent-scripts/verify-msw-manifest.mjs": "ca693967985978850ad0326e9fa4fc1cb30a60b9f7cf07e30e2b8fff00a3bcdf",
     "common/engine/agent-scripts/verify-project-gate.mjs": "5e70832424957c727d7bbcd7d98461c3512cb70b39208e3dea24cab76d1d3262",

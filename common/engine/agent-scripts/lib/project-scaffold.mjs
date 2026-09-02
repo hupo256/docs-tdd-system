@@ -43,7 +43,7 @@ export function buildAgentJsonFiles({ projectId, today, branchName, rulesetVersi
         // confirmedBy/confirmedAt 是人工签名槽位（DOC-CONFIRM-001/002）：处置态转 completed 等时必须由真人填写，
         // 空串会被 classifySignature 判为缺签名。模板 v3+ 项目缺签名即 error（trial since:3），存量项目 warn。
         G5: { status: 'pending', reason: '待完成真实 API 联调，或确认本项目无 API 联调范围。', evidence: [], confirmedBy: '', confirmedAt: '', updatedAt: today },
-        G7: { status: 'pending', reason: '待收到 QA 用例后执行，或明确记录未提供 QA 用例而跳过。', evidence: [], confirmedBy: '', confirmedAt: '', updatedAt: today },
+        G7: { status: 'pending', reason: '待完成提测用例预检与开发侧回归，或明确记录未提供提测用例而跳过；不代表 AQ/test 已通过。', evidence: [], confirmedBy: '', confirmedAt: '', updatedAt: today },
       },
     }),
     'agent/gate-history.json': json({ projectId, runs: [] }),
@@ -87,7 +87,7 @@ export function buildAgentJsonFiles({ projectId, today, branchName, rulesetVersi
       headSha: '',
       pullRequestUrl: '',
       evidence: [],
-      note: 'G8 前更新为 pushed / merged / released；gate 会用 Git 实际状态复核。',
+      note: 'G8 前至少更新为 pushed；gate 会用 Git 实际状态复核。G8 PASS 表示可发布 test 提交 AQ，不代表 test/pre/online 已通过。',
     }),
   }
 }

@@ -138,10 +138,12 @@ docs-tdd changed PR-01234      # 实跑 code-rules / mock-manifest 校验改动�
 ```bash
 docs-tdd gate PR-01234 G5      # 接口联调（字段对账、删 mock 臆造字段）
 docs-tdd gate PR-01234 G6      # 自测验收（实跑 biome/tsc/vitest + code review findings 清零）
-docs-tdd gate PR-01234 G7      # QA 用例回归
-docs-tdd gate PR-01234 G8      # production build + Git 可交付状态 + 交付摘要
+docs-tdd gate PR-01234 G7      # 提测用例预检与开发侧回归
+docs-tdd gate PR-01234 G8      # production-mode build + feature 推送 + test 提测摘要
 ```
 `docs-tdd doctor` 随时自检适配/冲突/发布状态；缓存仅复用同输入 PASS，强制实跑加 `--no-cache`。
+
+> **G8 边界**：G8 PASS 只表示开发侧已完成并可把功能/修复分支发布到 `test` 提交 AQ 测试，不表示 test、pre 或 online 已通过。后续由同一功能/修复分支分别合入 `test`（AQ 验证）→ `pre`（PM 验证）→ `online`（生产发布）；环境分支不得反向合回功能/修复分支。
 
 > **人机分界（自动化边界要如实）**：G0–G4（需求→文档→方案→MSW 编码）高度自动；G5–G8 是**人机协同**——gate 机器实跑 biome/tsc/vitest/build 与结构化验收/字段对账，但**真实接口联调、视觉还原（Figma 并排 ≥95%）、交互手感、响应式、QA 用例执行以人工确认为锚点**（分工见 [common/rules/verification-division-of-labor.md](./common/rules/verification-division-of-labor.md)：Agent 固化能回归的逻辑/边界/数据/DOM 契约，人工过一眼能判的像素/手感/响应式）。判断层的 `acceptance-results.json`/`code-review.json` 由 Agent 产出、gate 校验其结构与证据锚点真实性，但语义正确性仍需人工/Review 兜底（执行强度分级见 [common/rules/rule-execution-model.md §3](./common/rules/rule-execution-model.md)）。人工确认在机器侧有落点：`stage-status.json`（G5/G7 处置态）、人工判定的 passed 验收项与 `code-review.json` 都写 `confirmedBy` + `confirmedAt`，缺签名或用 AI 客户端名代签由 `DOC-CONFIRM-001..004` 逐条点名（见 [rule-ids-and-gates.md §3.7](./common/rules/rule-ids-and-gates.md)）。
 

@@ -72,9 +72,8 @@ export function maybeBroadcastGate(id, gate) {
 
   const gateResult = readOptionalJson(join(resolveProjectRoot(id), 'agent/gate-results.json'))
   const baseSummary = typeof gateResult?.summary === 'string' && gateResult.summary.trim() ? gateResult.summary.trim() : `${gate} 机器校验通过`
-  // bug 轮询窗口提醒：进 G6/G7（自测/QA，bug 密集期）提醒开轮询，G8（交付）提醒收工。
-  // 这是系统内唯一能感知「进 QA」的信号（收不到 bug 机器人推送），故顺 gate 播报带出。
-  const pollHint = gate === 'G6' || gate === 'G7' ? '；建议 lark-bot poll-on 开始接 bug' : gate === 'G8' ? '；bug 处理完可 lark-bot poll-off 收工' : ''
+  // G8 是发布 test、提交 AQ 的起点，不是 QA 收工或 online 完成；因此在 G8 后开启 bug 轮询。
+  const pollHint = gate === 'G8' ? '；可发布 test 提交 AQ，建议 lark-bot poll-on 开始接 bug' : ''
   const summary = `${baseSummary}${pollHint}`
   const fpKey = createHash('sha1')
     .update(JSON.stringify(gateResult?.fingerprint ?? gate))
