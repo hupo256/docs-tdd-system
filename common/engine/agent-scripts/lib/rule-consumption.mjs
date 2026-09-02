@@ -197,7 +197,9 @@ export function prepareLedger(identity) {
 }
 
 const LOCK_TTL_MS = 60_000
-const LOCK_RETRIES = 6
+const LOCK_WAIT_TIMEOUT_MS = 8_000
+const LOCK_BACKOFF_MIN_MS = 15
+const LOCK_BACKOFF_MAX_MS = 150
 
 function processExists(pid) {
   if (!Number.isInteger(pid) || pid <= 0) return false
@@ -228,7 +230,9 @@ function staleLock(lock) {
 }
 
 function acquireLedgerLock(lock, identity) {
-  for (let attempt = 0; attempt < LOCK_RETRIES; attempt += 1) {
+  const startedAt = Date.now()
+  let attempt = 0
+  while (true) {
     try {
       const descriptor = openSync(lock, 'wx')
       writeFileSync(descriptor, `${JSON.stringify({ pid: process.pid, sessionId: identity.sessionId, createdAt: now() })}\n`)
@@ -239,10 +243,14 @@ function acquireLedgerLock(lock, identity) {
         rmSync(lock, { force: true })
         continue
       }
-      if (attempt + 1 < LOCK_RETRIES) sleepSync(15 * (attempt + 1) + Math.floor(Math.random() * 10))
+      const remaining = LOCK_WAIT_TIMEOUT_MS - (Date.now() - startedAt)
+      if (remaining <= 0) break
+      const backoff = Math.min(LOCK_BACKOFF_MAX_MS, LOCK_BACKOFF_MIN_MS * 2 ** Math.min(attempt, 4))
+      sleepSync(Math.min(remaining, backoff + Math.floor(Math.random() * LOCK_BACKOFF_MIN_MS)))
+      attempt += 1
     }
   }
-  throw new Error(`rule-consumption ledger is busy: ${lock.replace(/\.lock$/, '')}`)
+  throw new Error(`rule-consumption ledger remained busy for ${LOCK_WAIT_TIMEOUT_MS}ms: ${lock.replace(/\.lock$/, '')}`)
 }
 
 export function updateLedger({ worktree, sessionId, client }, update) {

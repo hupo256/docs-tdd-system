@@ -27,7 +27,7 @@ node apps/web/docs_tdd/common/engine/agent-scripts/rule-context.mjs resolve --fi
 
 Resolver 逐字读取当前 worktree 的 MDC：`alwaysApply: true` 总是命中，其余按仓库相对路径匹配 `globs`。`PreToolUse` 首次命中新规则时 deny-and-retry 注入正文，同一 epoch 按内容 hash 去重。96 KiB 内按稳定顺序分批注入；单条自身超限则点名要求拆分，不截断。Shell 目标分仓内、仓外、未知三态：明确写 `/dev/null` 或仓外绝对路径不触发规则，仓内照常注入，动态/不透明落点 fail-closed。
 
-重试放行前记录 pending tool，`PostToolUse` 再把文件内容 hash、规则包 fingerprint、规则 hash 和 session/context epoch 写入 `output-tdd/rule-consumption/`。`changed` 与 G5+ 对 Claude/Codex 校验当前 session 的**累计**回执；未经过 hook 的额外写入、过期内容或规则变化均阻断。SessionStart、PreCompact 和 Git HEAD 变化只开启新的**注入 epoch**（清规则注入缓存与未完成 pending），不重置会话审计基线、已消费回执、touched files 或 taint；因此压缩上下文和中途 commit 都不能洗白未覆盖写入。文件恢复到会话基线内容时可自动解除该文件 taint。账本锁带 PID/时间戳、短重试和 stale 抢占，进程异常退出不会永久卡死后续 hook。
+重试放行前记录 pending tool，`PostToolUse` 再把文件内容 hash、规则包 fingerprint、规则 hash 和 session/context epoch 写入 `output-tdd/rule-consumption/`。`changed` 与 G5+ 对 Claude/Codex 校验当前 session 的**累计**回执；未经过 hook 的额外写入、过期内容或规则变化均阻断。SessionStart、PreCompact 和 Git HEAD 变化只开启新的**注入 epoch**（清规则注入缓存与未完成 pending），不重置会话审计基线、已消费回执、touched files 或 taint；因此压缩上下文和中途 commit 都不能洗白未覆盖写入。文件恢复到会话基线内容时可自动解除该文件 taint。账本锁带 PID/时间戳、8 秒有界退避等待和 stale 抢占；并发 hook 可排队写入且不丢更新，进程异常退出也不会永久卡死后续 hook。
 
 没有 `globs` 且非 `alwaysApply` 的 MDC 无法按文件路径机械触发，Resolver 必须在 `unscopedRules` 中如实报告。目前已知为 `async-api-routes.mdc`；在补充明确 glob 前不宣称该条已与 Cursor 自动行为对齐。
 
