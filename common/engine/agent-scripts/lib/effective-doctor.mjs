@@ -1,0 +1,266 @@
+#!/usr/bin/env node
+// effective rules 体检：从 effective-rules.mjs 抽出的 doctor 装配逻辑。
+//
+// 纯 lib（agent-clients / hook-contract / rule-surface-visibility / l2-conflict-detect）直接 import；
+// 运行态（sources / label / g / config / 已绑定的 snapshot·checkRelease·cursorAdapterMatches / 标志位）
+// 经 deps 注入。私有 helper（containsProtocol / pathsResolveToCanonical / findHiddenRuleEntries 等）留在本文件。
+
+import { spawnSync } from 'node:child_process'
+import { existsSync, lstatSync, readdirSync, readFileSync, realpathSync } from 'node:fs'
+import { join } from 'node:path'
+import { REQUIRED_AGENT_CLIENT_IDS, validateAgentClientMatrix } from './agent-clients.mjs'
+import { createCodexHookSpecs, validateHookContract } from './hook-contract.mjs'
+import { findL2Conflicts, findRepoEntryDuplicates, resolveL2Conflicts } from './l2-conflict-detect.mjs'
+import { isCanonicalL1Symlink } from './rule-surface-visibility.mjs'
+
+function readJson(file) {
+  return JSON.parse(readFileSync(file, 'utf8'))
+}
+
+function containsProtocol(file) {
+  if (!existsSync(file)) return false
+  const text = readFileSync(file, 'utf8')
+  return ['rule-router.md', 'docs-tdd.mjs context', 'docs-tdd.mjs changed', 'docs-tdd.mjs gate'].every((token) => text.includes(token))
+}
+
+export function pathsResolveToCanonical(entries, canonical) {
+  if (!existsSync(canonical)) return false
+  const target = realpathSync(canonical)
+  return entries.every((entry) => existsSync(entry) && realpathSync(entry) === target)
+}
+
+function listConsumerWorktrees(ruleConsumerRoot) {
+  const result = spawnSync('git', ['worktree', 'list', '--porcelain'], { cwd: ruleConsumerRoot, encoding: 'utf8', stdio: 'pipe' })
+  if (result.status !== 0) return [ruleConsumerRoot]
+  return result.stdout
+    .split('\n')
+    .filter((line) => line.startsWith('worktree '))
+    .map((line) => line.slice('worktree '.length))
+}
+
+// skip-worktree 的 rule surface 默认判为「被隐藏」（error）。唯一例外：指向规范 L1 家目录的软链
+// （如 CLAUDE.md → ~/.claude/*.CLAUDE.md），判定在 lib/rule-surface-visibility.mjs（可 --self-test）。
+function findHiddenRuleEntries({ ruleConsumerRoot, config, g }) {
+  const ruleSurfaces = [...config.ruleSurfaces.agents, ...config.ruleSurfaces.claude, config.ruleSurfaces.cursorRulesDir]
+  const l1Roots = [g.aiRules, g.codex, g.claude].filter(Boolean)
+  return listConsumerWorktrees(ruleConsumerRoot).flatMap((worktree) => {
+    const result = spawnSync('git', ['ls-files', '-t', '--', ...ruleSurfaces], { cwd: worktree, encoding: 'utf8', stdio: 'pipe' })
+    if (result.status !== 0) return [{ worktree, file: '(scan failed)' }]
+    return result.stdout
+      .split('\n')
+      .filter((line) => line.startsWith('S '))
+      .map((line) => ({ worktree, file: line.slice(2) }))
+      .filter(({ file }) => !isCanonicalL1Symlink(join(worktree, file), l1Roots))
+  })
+}
+
+function findDiscoverableSkillBackups(g) {
+  return [join(g.codex, 'skills'), join(g.claude, 'skills')].flatMap((skillsDir) => {
+    if (!existsSync(skillsDir)) return []
+    return readdirSync(skillsDir)
+      .filter((name) => name.includes('.backup-'))
+      .map((name) => join(skillsDir, name))
+  })
+}
+
+/**
+ * Run the full effective-rules doctor. Returns `{ ok, summary, effectiveRulesFingerprint, checks }`
+ * and prints (json or text) as a side effect, mirroring the original in-file doctor().
+ */
+export function runDoctor(deps) {
+  const { sources, label, g, config, docsSystemRoot, ruleConsumerRoot, home, manifestFile, expectedCursorAdapter, createSnapshot, checkRelease, collectL2Files, conflictOverrides, cursorAdapterMatches, json, allowTrackedRuleChanges } = deps
+  const CODEX_HOOK_COMMAND = `node ${join(docsSystemRoot, 'common/engine/agent-scripts/rule-context-hook.mjs')} --client codex`
+  const checks = []
+  const add = (id, ok, severity, message, file = '') => checks.push({ id, ok, severity, message, file })
+
+  for (const file of [...sources.l1, ...sources.adapters.slice(0, 3)]) {
+    add('ADAPTER-EXISTS', existsSync(file), 'error', `${label(file)} ${existsSync(file) ? 'exists' : 'is missing'}`, label(file))
+  }
+  for (const file of sources.adapters.slice(0, 3)) {
+    add('ADAPTER-PROTOCOL', containsProtocol(file), 'error', `${label(file)} ${containsProtocol(file) ? 'declares' : 'does not declare'} router/context/changed/gate`, label(file))
+  }
+  const cursorExact = cursorAdapterMatches()
+  add('ADAPTER-EXACT', cursorExact, 'error', `${label(g.cursorLocalGovernance)} ${cursorExact ? 'matches the generated canonical adapter' : 'differs from the generated canonical adapter; rerun install-local-agent-rules.mjs'}`, label(g.cursorLocalGovernance))
+  const adapterTargets = [join(ruleConsumerRoot, config.docsMountPath, 'common/rules/rule-router.md'), join(ruleConsumerRoot, config.docsMountPath, 'common/engine/agent-scripts/docs-tdd.mjs')]
+  const targetsExist = adapterTargets.every(existsSync)
+  add('ADAPTER-TARGETS', targetsExist, 'error', targetsExist ? 'router and docs-tdd command targets exist' : `missing adapter target: ${adapterTargets.filter((file) => !existsSync(file)).join(', ')}`, config.docsMountPath)
+  const matrix = createSnapshot().clientMatrix
+  const coverage = validateAgentClientMatrix(matrix)
+  const matrixFingerprints = new Set(Object.values(matrix).map((client) => client.sourceFingerprint))
+  add(
+    'VERIFY-RULE-003',
+    coverage.ok,
+    'error',
+    coverage.ok ? `all registered AI entrypoints are covered: ${REQUIRED_AGENT_CLIENT_IDS.join(', ')}` : `AI entrypoint coverage invalid; missing=${coverage.missing.join(',') || 'none'} extra=${coverage.extra.join(',') || 'none'} incomplete=${coverage.incomplete.join(',') || 'none'}`,
+    label(manifestFile),
+  )
+  add('VERIFY-RULE-001', matrixFingerprints.size === 1, 'error', matrixFingerprints.size === 1 ? 'all registered AI entrypoints resolve to one canonical L1/L2/L3 source set' : 'client rule source sets diverge', label(manifestFile))
+  for (const runtimeAdapter of sources.runtimeAdapters) {
+    add('RUNTIME-ADAPTER-EXISTS', existsSync(runtimeAdapter), 'error', `${label(runtimeAdapter)} ${existsSync(runtimeAdapter) ? 'exists' : 'is missing'}`, label(runtimeAdapter))
+  }
+  for (const skill of ['coding-quality', 'figma-read']) {
+    const codex = join(home, `.codex/skills/${skill}`)
+    const claude = join(home, `.claude/skills/${skill}`)
+    const canonical = join(home, `.ai-rules/skills/${skill}`)
+    const same = pathsResolveToCanonical([codex, claude], canonical)
+    add('L1-SINGLE-SOURCE', same, 'error', `${skill} ${same ? 'resolves to one shared source' : 'does not resolve to the shared source'}`, label(canonical))
+  }
+  const discoverableSkillBackups = findDiscoverableSkillBackups(g)
+  add('SKILL-DISCOVERY-CLEAN', discoverableSkillBackups.length === 0, 'error', discoverableSkillBackups.length ? `backup skills remain discoverable: ${discoverableSkillBackups.map(label).join(', ')}` : 'no backup skills are exposed through Codex or Claude skill discovery', '~/.ai-rules/backups')
+  // 顶层 L1 入口也必须同源：codex/claude 的规则入口须 realpath 到 canonical AGENT.md，把「读同一套」焊到字节级。
+  const canonicalL1 = sources.l1[0]
+  for (const adapter of [sources.adapters[0], sources.adapters[1]]) {
+    const same = pathsResolveToCanonical([adapter], canonicalL1)
+    add('L1-TOPLEVEL-SINGLE-SOURCE', same, 'error', `${label(adapter)} ${same ? 'resolves to the shared L1 source' : `does not resolve to shared L1 (${label(canonicalL1)}); replace with symlink via install-local-agent-rules.mjs`}`, label(adapter))
+  }
+  const settingsText = existsSync(sources.adapters[3]) ? readFileSync(sources.adapters[3], 'utf8') : ''
+  const claudeHook = settingsText.includes('PreToolUse') && settingsText.includes('rule-context-hook.mjs') && settingsText.includes('claude-posttooluse-gate.mjs')
+  add('CLAUDE-HOOK', claudeHook, 'error', `Claude rule injection and PostToolUse dispatchers ${claudeHook ? 'are configured' : 'are missing'}`, label(sources.adapters[3]))
+  let codexHookIssues = ['hooks file is missing']
+  if (existsSync(sources.adapters[4])) {
+    try {
+      codexHookIssues = validateHookContract(readJson(sources.adapters[4]), createCodexHookSpecs(CODEX_HOOK_COMMAND))
+    } catch (error) {
+      codexHookIssues = [`invalid JSON: ${error.message}`]
+    }
+  }
+  add('CODEX-HOOK', codexHookIssues.length === 0, 'error', codexHookIssues.length === 0 ? 'Codex rule hooks have the required four events, matchers, timeout fields, and no duplicates' : `Codex rule hook contract is invalid: ${codexHookIssues.join('; ')}`, label(sources.adapters[4]))
+
+  // 强制点对等：Claude 靠自身 PostToolUse hook 拦编辑，Codex/Cursor/裸 commit 只能靠消费者仓库的 CI 门禁与
+  // pre-commit 接线兜底。这两条接线属消费者文件，docs_tdd 无法自注入，缺失是需暴露的降级（severity=warn）。
+  const wiring = config.enforcementWiring || {}
+  const ciMarker = wiring.ciMarker || 'verify-code-rules.mjs'
+  const ciCandidates = Array.isArray(wiring.ciConfigCandidates) ? wiring.ciConfigCandidates : ['.gitlab-ci.yml', '.github/workflows']
+  const ciFiles = []
+  for (const candidate of ciCandidates) {
+    const abs = join(ruleConsumerRoot, candidate)
+    if (!existsSync(abs)) continue
+    if (lstatSync(abs).isDirectory()) {
+      for (const entry of readdirSync(abs)) ciFiles.push(join(abs, entry))
+    } else {
+      ciFiles.push(abs)
+    }
+  }
+  const ciWired = ciFiles.some((file) => {
+    try {
+      return lstatSync(file).isFile() && readFileSync(file, 'utf8').includes(ciMarker)
+    } catch {
+      return false
+    }
+  })
+  add(
+    'CI-GATE',
+    ciWired,
+    'warn',
+    ciFiles.length === 0 ? `no CI config found (${ciCandidates.join(', ')}); verify-code-rules CI gate cannot be confirmed` : ciWired ? 'verify-code-rules CI gate is wired' : `CI config present but verify-code-rules gate not wired (expected "${ciMarker}"); Codex/Cursor/manual MRs bypass the machine rule gate`,
+    ciCandidates[0],
+  )
+
+  const precommitConfigName = wiring.precommitConfig || 'package.json'
+  const precommitMarker = wiring.precommitMarker || 'precommit-verify-code-rules.mjs'
+  const precommitConfigPath = join(ruleConsumerRoot, precommitConfigName)
+  const precommitConfigExists = existsSync(precommitConfigPath)
+  const precommitWired = precommitConfigExists && readFileSync(precommitConfigPath, 'utf8').includes(precommitMarker)
+  add(
+    'PRECOMMIT-GATE',
+    precommitWired,
+    'warn',
+    !precommitConfigExists
+      ? `no ${precommitConfigName} found; verify-code-rules pre-commit gate cannot be confirmed`
+      : precommitWired
+        ? 'verify-code-rules pre-commit gate is wired'
+        : `${precommitConfigName} present but pre-commit gate not wired (expected "${precommitMarker}"); local commits bypass the machine rule gate`,
+    precommitConfigName,
+  )
+
+  const release = checkRelease()
+  add('L3-RELEASE', release.l3Release.fresh, 'error', `L3 rule release is ${release.l3Release.status}`, 'common/rule-release.json')
+  add('EFFECTIVE-RELEASE', release.fresh, 'error', `effective rules release is ${release.status}`, label(manifestFile))
+  const ignored = spawnSync('git', ['check-ignore', '-q', config.docsMountPath], { cwd: ruleConsumerRoot })
+  add('LOCAL-ISOLATION', ignored.status === 0, 'error', `docs_tdd ${ignored.status === 0 ? 'is locally ignored' : 'is not ignored'}`, config.docsMountPath)
+  const protectedPaths = config.protectedRuleSurfaces
+  const trackedChanges = spawnSync('git', ['status', '--short', '--', ...protectedPaths], { cwd: ruleConsumerRoot, encoding: 'utf8' }).stdout.trim()
+  const trackedChangesAllowed = Boolean(trackedChanges && allowTrackedRuleChanges)
+  add(
+    'TRACKED-RULE-ISOLATION',
+    !trackedChanges || trackedChangesAllowed,
+    'error',
+    trackedChanges ? (trackedChangesAllowed ? `explicitly approved tracked rule changes are visible: ${trackedChanges.replace(/\n/g, '; ')}` : `tracked rule surfaces have local changes: ${trackedChanges.replace(/\n/g, '; ')}`) : 'tracked rule surfaces are unchanged',
+    ruleConsumerRoot,
+  )
+  const hiddenRuleEntries = findHiddenRuleEntries({ ruleConsumerRoot, config, g })
+  add('RULE-SURFACE-VISIBLE', hiddenRuleEntries.length === 0, 'error', hiddenRuleEntries.length ? `tracked rule entries hidden with skip-worktree: ${hiddenRuleEntries.map(({ worktree, file }) => `${worktree}:${file}`).join(', ')}` : 'tracked rule entries are visible in every consumer worktree index', ruleConsumerRoot)
+
+  const conflicts = resolveL2Conflicts(findL2Conflicts({ ruleConsumerRoot, collectL2Files, label }), conflictOverrides, existsSync(sources.l1[0]) ? readFileSync(sources.l1[0], 'utf8') : '')
+  add(
+    'L2-CONFLICT',
+    conflicts.unresolved.length === 0,
+    'error',
+    conflicts.unresolved.length
+      ? `unresolved tracked rules conflict: SWR versus React Query in ${conflicts.unresolved.join(', ')}`
+      : conflicts.resolved.length
+        ? `tracked conflict resolved by explicit local override: ${conflicts.resolved.map(({ file, override }) => `${file} -> ${override.winner}`).join(', ')}`
+        : 'no known SWR/React Query conflict',
+    conflicts.unresolved[0] || conflicts.resolved[0]?.file || '.cursor/rules',
+  )
+
+  const repoEntryDupes = findRepoEntryDuplicates({ ruleConsumerRoot, config })
+  add(
+    'L2-REPO-ENTRY-DUP',
+    repoEntryDupes.length === 0,
+    'warn',
+    repoEntryDupes.length ? `repo-level entry duplicates canonical prose: ${repoEntryDupes.map((v) => `${v.file} repeats "${v.substring}" (canonical: ${v.canonicalFile} § ${v.canonicalAnchor})`).join('; ')}` : 'no known repo-level entry duplicates (see repoEntryDuplicates config)',
+    repoEntryDupes[0]?.file || 'AGENTS.md',
+  )
+
+  const failed = checks.filter((check) => !check.ok)
+  const result = {
+    ok: !failed.some((check) => check.severity === 'error'),
+    summary: { total: checks.length, error: failed.filter((check) => check.severity === 'error').length, warn: failed.filter((check) => check.severity === 'warn').length },
+    effectiveRulesFingerprint: release.currentFingerprint,
+    checks,
+  }
+  if (json) console.log(JSON.stringify(result, null, 2))
+  else {
+    for (const check of checks) console.log(`${check.ok ? 'PASS' : check.severity.toUpperCase()} ${check.id}: ${check.message}`)
+    console.log(`doctor: ${result.ok ? 'PASS' : 'BLOCK'} (error=${result.summary.error}, warn=${result.summary.warn})`)
+  }
+  return result
+}
+
+// `node lib/effective-doctor.mjs --self-test`
+if (process.argv[1]?.endsWith('effective-doctor.mjs') && process.argv.includes('--self-test')) {
+  const assert = (await import('node:assert/strict')).default
+  const { mkdtempSync, mkdirSync, rmSync, symlinkSync, writeFileSync } = await import('node:fs')
+  const { tmpdir } = await import('node:os')
+  const fixture = mkdtempSync(join(tmpdir(), 'effective-doctor-'))
+  try {
+    // pathsResolveToCanonical：软链→canonical 通过；分叉真实文件不通过；断链不通过。
+    const canonical = join(fixture, 'canonical.md')
+    const linked = join(fixture, 'linked.md')
+    const divergent = join(fixture, 'divergent.md')
+    writeFileSync(canonical, 'x\n')
+    symlinkSync(canonical, linked)
+    writeFileSync(divergent, 'x\n')
+    assert.equal(pathsResolveToCanonical([linked], canonical), true)
+    assert.equal(pathsResolveToCanonical([divergent], canonical), false)
+    assert.equal(pathsResolveToCanonical([join(fixture, 'nope.md')], canonical), false)
+
+    // containsProtocol：四标记齐全才 true。
+    const good = join(fixture, 'good.md')
+    writeFileSync(good, 'see rule-router.md ; docs-tdd.mjs context ; docs-tdd.mjs changed ; docs-tdd.mjs gate\n')
+    assert.equal(containsProtocol(good), true)
+    const bad = join(fixture, 'bad.md')
+    writeFileSync(bad, 'only rule-router.md here\n')
+    assert.equal(containsProtocol(bad), false)
+    assert.equal(containsProtocol(join(fixture, 'missing.md')), false)
+
+    // findHiddenRuleEntries：非 git 目录 → git 命令失败 → 该 worktree 记 (scan failed)，不抛。
+    mkdirSync(join(fixture, 'plain'), { recursive: true })
+    const hidden = findHiddenRuleEntries({ ruleConsumerRoot: join(fixture, 'plain'), config: { ruleSurfaces: { agents: ['AGENTS.md'], claude: ['CLAUDE.md'], cursorRulesDir: '.cursor/rules' } }, g: { aiRules: fixture, codex: fixture, claude: fixture } })
+    assert.ok(Array.isArray(hidden))
+    console.log('effective-doctor self-test passed.')
+  } finally {
+    rmSync(fixture, { recursive: true, force: true })
+  }
+}
