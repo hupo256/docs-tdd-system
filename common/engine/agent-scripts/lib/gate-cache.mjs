@@ -5,9 +5,12 @@ import { createHash } from 'node:crypto'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { codeFingerprint } from './fingerprint.mjs'
+import { resolveRulePin } from './rule-pin.mjs'
 
-// 代码指纹（git）+ 规则集/发布/生效规则指纹：任一变化都让 gate 缓存失效。
-export function createFingerprint({ callerCwd, config, docsRoot }) {
+// 代码指纹（git）+ 规则集版本 + 规则政策指纹：任一变化都让 gate 缓存失效。
+// 规则政策指纹优先取项目 pinned 值（pin.policyFingerprint）；未提供 pin 时回退到全局已发布指纹
+// （旧调用方 / 无项目上下文）。这样共享规则仓漂移不再作废已 pin 项目的通过缓存。
+export function createFingerprint({ callerCwd, config, docsRoot, pin }) {
   const code = codeFingerprint(callerCwd, config.baseRef || 'origin/online')
   const readJson = (rel, fallback) => {
     const file = join(docsRoot, rel)
@@ -15,7 +18,7 @@ export function createFingerprint({ callerCwd, config, docsRoot }) {
   }
   const ruleset = readJson('common/rules/ruleset.json', { version: 'unknown' })
   const release = readJson('common/rule-release.json', { fingerprint: 'unknown' })
-  const effectiveRules = readJson('common/effective-rules.json', { fingerprint: 'unknown' })
+  const rulePolicyFingerprint = pin?.policyFingerprint || release.policyFingerprint || release.fingerprint || 'unknown'
   return {
     headSha: code.headSha,
     baseSha: code.baseSha,
@@ -23,8 +26,7 @@ export function createFingerprint({ callerCwd, config, docsRoot }) {
     dirtyFileCount: code.dirtyFileCount,
     untrackedFileCount: code.untrackedFileCount,
     rulesetVersion: ruleset.version,
-    ruleReleaseFingerprint: release.fingerprint,
-    effectiveRulesFingerprint: effectiveRules.fingerprint,
+    rulePolicyFingerprint,
   }
 }
 
@@ -37,7 +39,9 @@ const CACHE_TRACKED_FILES = [
 ]
 
 export function gateCacheFingerprint(projectDir, { projectId, gate, callerCwd, config, docsRoot }) {
-  const fingerprint = createFingerprint({ callerCwd, config, docsRoot })
+  // 用项目 pinned 规则政策指纹参与 cache key，共享仓规则漂移不再作废已通过缓存。
+  const pin = resolveRulePin(projectId, { persist: false })
+  const fingerprint = createFingerprint({ callerCwd, config, docsRoot, pin })
   const projectFiles = CACHE_TRACKED_FILES
     .map((file) => {
       const absolute = join(projectDir, file)

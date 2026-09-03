@@ -4,6 +4,7 @@ import { existsSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { resolveDocsPath, resolveProjectRoot, resolveRoots } from './lib/roots.mjs';
+import { latestReleasePin } from './lib/rule-pin.mjs';
 import {
   buildAgentJsonFiles,
   rewriteTemplateLinksForProjectDoc,
@@ -209,7 +210,9 @@ await writeFileIfMissing(path.join(projectDir, 'evidence/ui-ux/README.md'), evid
 // （含 generatedAt + tool）。开工桩文件会让 G8 证据检查形同虚设。
 
 // agent/ 下的 JSON 状态文件初始内容集中在 lib/project-scaffold.mjs（buildAgentJsonFiles）。
-for (const [rel, content] of Object.entries(buildAgentJsonFiles({ projectId, today, branchName, rulesetVersion: ruleset.version }))) {
+// kickoff 即钉最新已发布规则政策：新项目出生就绑定确定的规则版本，后续 docs_tdd 演进不追溯性阻断它。
+const rulePolicy = { ...latestReleasePin(), upgradeMode: 'explicit' };
+for (const [rel, content] of Object.entries(buildAgentJsonFiles({ projectId, today, branchName, rulesetVersion: ruleset.version, rulePolicy }))) {
   await writeFileIfMissing(path.join(projectDir, rel), content);
 }
 

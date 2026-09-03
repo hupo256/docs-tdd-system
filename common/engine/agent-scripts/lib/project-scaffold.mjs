@@ -26,7 +26,7 @@ export function sourceTypeFromPrd(prd) {
 
 // agent/ 下开工即写死的 JSON 状态文件初始内容。返回「项目内相对路径 → 内容字符串」映射。
 // 不含 gate-results.json（VERIFY-G8-001 要求它由 verify-project-gate --write 真实产出，桩文件会让 G8 证据形同虚设）。
-export function buildAgentJsonFiles({ projectId, today, branchName, rulesetVersion }) {
+export function buildAgentJsonFiles({ projectId, today, branchName, rulesetVersion, rulePolicy }) {
   return {
     'agent/rule-waivers.json': json([]),
     'agent/project-manifest.json': json({
@@ -36,6 +36,9 @@ export function buildAgentJsonFiles({ projectId, today, branchName, rulesetVersi
       templateVersion: 5,
       pilot: { msw: true, prdIntake: true },
       gatePolicy: { legacyRules: 'blocking', currentTouchedRules: 'blocking' },
+      // 出生即钉版：把项目验收所依据的规则政策版本钉在 kickoff 时的已发布 release，
+      // 让共享规则仓的后续演进不再追溯性地掐停在飞项目。缺 rulePolicy（旧调用方）则留空，由首次运行惰性生成。
+      ...(rulePolicy ? { rulePolicy: { ...rulePolicy, pinnedAt: today } } : {}),
     }),
     'agent/stage-status.json': json({
       projectId,
