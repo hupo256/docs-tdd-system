@@ -40,7 +40,7 @@ cd apps/admin && pnpm exec vitest run \
 
 ## Review 修复
 
-1. 详情弹窗增强体验金金额改为 `availableTrialAmount` 与 `frozen + occupy`，补名称。
+1. 详情弹窗按 `useRuleType=3` 识别增强体验金；总额=`quantity`、可用=`quantity - frozen - occupy`、使用中=`frozen + occupy`，并补名称。
 2. 福利中心卡片说明改为保证金模式原文。
 3. 后台不抵扣类型展示配资比例并隐藏使用规则，倍数 payload 归一化为 number。
 4. 合并中保留 PR-01930 手动失效、系统回收流水、日期范围与错误提示逻辑；同时保留 online 新分页、预测账户、推送权限和新文案。

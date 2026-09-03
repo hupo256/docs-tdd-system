@@ -31,7 +31,7 @@ G0–G4 PASS。**G5 编码进行中，纯前端能落的需求已全部落码 + 
 | F03 | 领取弹窗 配资比例 + 隐藏使用方式 + 提示文案 | ✅ | `b3f02c03d0`+`0eb8c6c37c`：ActivateCouponModal 拆分 |
 | F04 | 详情弹窗增强专版 | ✅ | `fc784fc74c`：BonusDetailMan 分支改造 |
 | F05 | 领取记录使用规则列 -- | ✅ 核实无需改 | 现网 `leverageRange`「可用杠杆范围」列已对增强(trialMode≠'1')显示 `--` |
-| F06 | 金额口径（可用=总额-使用中） | 🔀 默认不改 C 端 | 后端接口/字段不变；加明细属产品加法需求，待 PM Iris 定 |
+| F06 | 金额口径（可用=总额-使用中） | ✅ | 用户 2026-09-02 确认：总额=`quantity`，使用中=`frozen + occupy`，可用=`quantity - frozen - occupy` |
 | F07 | 开仓预估强平价剔除增强 | ✅ 已落码待联调核值 | `dc0dcfbf36`：bonus `availableTrialBalance`→`normalTrialBalance`（后端直给普通净值） |
 | F08 | 保证金率剔除增强 | ✅ | `286fcedad8`：marginRate 移除 `.plus(enhancedTrialNum)` |
 | F09 | admin 配资比例风险提示 | ✅ 定稿 | `286fcedad8`+`dcd8aad26b`+`cc49b07e09`：文案+relabel「自有资金优先→不抵扣类型」**现货后台全局改名**（PM Iris 2026-09-01 定稿）+风险提示挂 `trialMode===2` |

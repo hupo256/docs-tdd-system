@@ -7,7 +7,7 @@
     { "id": "AC-3", "featureId": "F03", "scenario": "增强体验金领取弹窗展示配资比例并隐藏使用方式", "method": "vitest", "status": "passed", "evidence": ["evidence/acceptance/g6/README.md"] },
     { "id": "AC-4", "featureId": "F04", "scenario": "详情展示增强体验金名称、可用/使用中金额、配资比例并隐藏使用规则和详情入口", "method": "vitest", "status": "passed", "evidence": ["evidence/acceptance/g6/README.md"] },
     { "id": "AC-5", "featureId": "F05", "scenario": "增强体验金领取记录按既有 leverageRange 规则展示 --", "method": "vitest", "status": "passed", "evidence": ["evidence/acceptance/g6/README.md"] },
-    { "id": "AC-6", "featureId": "F06", "scenario": "详情可用金额取 availableTrialAmount，使用中金额取 frozen + occupy", "method": "vitest", "status": "passed", "evidence": ["evidence/acceptance/g6/README.md"] },
+    { "id": "AC-6", "featureId": "F06", "scenario": "详情总额取 quantity，可用金额取 quantity - frozen - occupy，使用中金额取 frozen + occupy", "method": "vitest", "status": "passed", "evidence": ["evidence/acceptance/g6/README.md"] },
     { "id": "AC-7", "featureId": "F06", "scenario": "pre 真实数据核对总额、可用、委托冻结与仓位占用守恒", "method": "contract", "status": "blocked", "reason": "等待 pre 环境真实增强体验金账户数据联调", "owner": "QA/后端", "evidence": [] },
     { "id": "AC-8", "featureId": "F07", "scenario": "开仓预估强平价使用 normalTrialBalance 排除增强体验金", "method": "vitest", "status": "passed", "evidence": ["evidence/acceptance/g6/README.md"] },
     { "id": "AC-9", "featureId": "F07", "scenario": "确认 normalTrialBalance 为不含增强且已扣冻结/占用的净口径", "method": "contract", "status": "blocked", "reason": "等待合约后端在 pre 环境核值确认", "owner": "合约后端", "evidence": [] },

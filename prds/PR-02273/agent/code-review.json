@@ -11,7 +11,7 @@
       "severity": "high",
       "summary": "增强体验金详情仍沿用普通体验金余额/已使用口径，且缺少增强体验金名称",
       "disposition": "fixed",
-      "resolution": "详情改为可用金额直取 availableTrialAmount、使用中金额取 frozen + occupy，并补充增强体验金名称及逐字文案测试。",
+      "resolution": "详情按 useRuleType=3 识别增强体验金；总额取 quantity、可用取 quantity-frozen-occupy、使用中取 frozen+occupy，并补充真实响应形状测试。",
       "evidence": ["evidence/acceptance/g6/README.md"]
     },
     {
