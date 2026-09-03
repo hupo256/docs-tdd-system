@@ -11,6 +11,7 @@ import { createAgentClientMatrix, REQUIRED_AGENT_CLIENT_IDS, validateAgentClient
 import { createCursorAdapter } from './lib/agent-rule-adapters.mjs'
 import { createCodexHookSpecs, validateHookContract } from './lib/hook-contract.mjs'
 import { resolveRoots } from './lib/roots.mjs'
+import { isCanonicalL1Symlink } from './lib/rule-surface-visibility.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const { docsSystemRoot, consumerRoot: repoRoot, consumerWorktree, config } = resolveRoots()
@@ -91,8 +92,11 @@ function listConsumerWorktrees() {
     .map((line) => line.slice('worktree '.length))
 }
 
+// skip-worktree 的 rule surface 默认判为「被隐藏」（error）。唯一例外：指向规范 L1 家目录的软链
+// （如 CLAUDE.md → ~/.claude/*.CLAUDE.md），判定抽在 lib/rule-surface-visibility.mjs（可 --self-test）。
 function findHiddenRuleEntries() {
   const ruleSurfaces = [...config.ruleSurfaces.agents, ...config.ruleSurfaces.claude, config.ruleSurfaces.cursorRulesDir]
+  const l1Roots = [g.aiRules, g.codex, g.claude].filter(Boolean)
   return listConsumerWorktrees().flatMap((worktree) => {
     const result = spawnSync('git', ['ls-files', '-t', '--', ...ruleSurfaces], {
       cwd: worktree,
@@ -104,6 +108,7 @@ function findHiddenRuleEntries() {
       .split('\n')
       .filter((line) => line.startsWith('S '))
       .map((line) => ({ worktree, file: line.slice(2) }))
+      .filter(({ file }) => !isCanonicalL1Symlink(join(worktree, file), l1Roots))
   })
 }
 

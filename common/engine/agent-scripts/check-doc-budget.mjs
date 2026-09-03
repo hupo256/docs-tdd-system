@@ -85,6 +85,7 @@ const SELF_TEST_SCRIPTS = [
   ['lib/rule-chain-runtime.mjs', '--self-test'],
   ['lib/rule-ledger.mjs', '--self-test'],
   ['lib/rule-index-audit.mjs', '--self-test'],
+  ['lib/rule-surface-visibility.mjs', '--self-test'],
   ['lib/rule-maturity.mjs', '--self-test'],
   ['lib/rule-consumption.mjs', '--self-test'],
   ['lib/rule-consumption-regression.mjs', '--self-test'],
@@ -139,6 +140,7 @@ const SCRIPT_BUDGET_OVERRIDES = {
   'check-doc-budget.mjs': { warn: 44000, fail: 48000 }, // 本文件：文档/脚本预算 + 覆盖 + 台账自检
   'run-project-gate.mjs': { warn: 32000, fail: 36000 }, // 正式 gate runner（持久化/证据/阶段同步）
   'verify-build-quality.mjs': { warn: 32000, fail: 36000 }, // 实跑 biome/tsc/vitest 机器事实层
+  'effective-rules.mjs': { warn: 31000, fail: 34000 }, // doctor + publish + check + effective 解析合一的维护执行器（纯判定已抽 lib/*）
 }
 // 无 self-test 但可接受的脚本：纯 CLI/IO 包装或副作用型入口（逻辑靠 golden/集成实测覆盖）。
 // 新增脚本若含可测纯逻辑，必须加 --self-test 并登记 SELF_TEST_SCRIPTS；否则显式加入本豁免集（一次有意识决定）。
