@@ -7,6 +7,14 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-09-03（常驻预算闭环与本地多客户端强制补齐）
+
+- L1 `~/.ai-rules/AGENT.md` 纳入 7000 字符硬闸，并新增 L1 + L3 + L2 `alwaysApply` 的 16000 字符首次编辑总预算；重复的通用质量细则下沉到按需 `coding-quality`。
+- Claude/Codex 共用 PostToolUse 代码 gate 与多文件目标解析；Codex 的 hook 合同现在同时验证规则注入、消费回执和即时代码检查。纯人工客户端改名为 `human`，检测到 Codex/Claude 环境时拒绝伪装客户端。
+- 安装器在团队未接相同 gate 时才增加个人 `core.hooksPath` pre-commit 兜底，并链式保留已有 hook；本仓已存在 Husky/lint-staged 与 CI gate，故保持原配置、不重复执行。gate 基础设施失败改为 fail-closed。
+- `doctor` 新增五端实际 loader/executor 能力检查，`guard --strict` 会阻断本地可修 warning；CI 缺口因需团队批准仍只报告。
+- G6 四维默认上下文通过章节去重从约 30K 收敛到 25K 硬目标；业务仓仅修正两份 AI 规则：SWR 改为 React Query，通用 DoD 取消 alwaysApply 与无条件重门禁。
+
 ## 2026-09-02（Claude/Codex 机械消费 Cursor L2 规则）
 
 - 新增统一 MDC Resolver 与 Claude/Codex PreToolUse deny-and-retry 注入：直接读取当前 worktree 的 `.cursor/rules`，按 `alwaysApply`/`globs` 匹配，正文逐字注入；单事件 96 KiB 超限阻断，不静默截断。

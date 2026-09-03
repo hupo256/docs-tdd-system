@@ -45,7 +45,7 @@ const [command, projectId] = cliArgs
 const commandArgs = cliArgs.slice(2)
 const clientIndex = commandArgs.indexOf('--client')
 if (clientIndex >= 0 && !commandArgs[clientIndex + 1]) {
-  console.error('--client requires one of: codex, claude, cursor, manual')
+  console.error('--client requires one of: codex, claude, cursor, human')
   process.exit(1)
 }
 const sessionIndex = commandArgs.indexOf('--session-id')
@@ -108,7 +108,7 @@ if (command === 'capability') {
 }
 
 if (command === 'doctor') {
-  const doctorFlags = commandArgs.filter((arg) => ['--json', '--allow-tracked-rule-changes'].includes(arg))
+  const doctorFlags = commandArgs.filter((arg) => ['--json', '--allow-tracked-rule-changes', '--strict'].includes(arg))
   process.exit(run([effectiveRulesScript, '--doctor', ...doctorFlags]))
 }
 
@@ -124,6 +124,8 @@ if (command === 'golden') {
 // guard：机器层兜底守护，一条命令串跑三检——发布是否 fresh、gate 机器自身能否回归、三端规则加载/冲突。
 // project-agnostic，手动/按需运行（不装 launchd/cron；个人本地，机器层正确性不再只靠"每次记得跑"）。
 if (command === 'guard') {
+  const strict = commandArgs.includes('--strict')
+  const allowTrackedRuleChanges = commandArgs.includes('--allow-tracked-rule-changes')
   let worst = 0
   const step = (label, args) => {
     console.log(`\n=== docs-tdd guard: ${label} ===`)
@@ -135,8 +137,13 @@ if (command === 'guard') {
   // 据此决定是否给 golden 传 --skip-aggregator，而不是伪装通过。stale 本身即 worst≠0，guard 会判 BLOCK。
   const releaseFresh = step('rule-release --check', [releaseScript, '--check']) === 0
   step('golden-run', [join(scriptDir, 'golden-run.mjs'), ...(releaseFresh ? [] : ['--skip-aggregator'])])
-  step('doctor (effective-rules)', [effectiveRulesScript, '--doctor'])
-  console.log(`\ndocs-tdd guard: ${worst === 0 ? 'PASS — 机器层回归/发布/加载三检通过' : 'BLOCK — 见上方失败项'}`)
+  step(`doctor (effective-rules${strict ? ', strict' : ''})`, [
+    effectiveRulesScript,
+    '--doctor',
+    ...(strict ? ['--strict'] : []),
+    ...(allowTrackedRuleChanges ? ['--allow-tracked-rule-changes'] : []),
+  ])
+  console.log(`\ndocs-tdd guard${strict ? ' --strict' : ''}: ${worst === 0 ? 'PASS — 机器层回归/发布/加载三检通过' : 'BLOCK — 见上方失败项'}`)
   process.exit(worst)
 }
 
@@ -205,7 +212,7 @@ if (command === 'rules') {
 }
 
 if (!new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(projectId || '')) {
-  console.error('usage: docs-tdd.mjs <kickoff|status|resume|next|capability|doctor|release|golden|guard|rule-health|rules|explain|check|gate|context|changed|recommend> PR-01234 [G0-G8|scenario] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|manual] [--session-id <id>]')
+  console.error('usage: docs-tdd.mjs <kickoff|status|resume|next|capability|doctor|release|golden|guard|rule-health|rules|explain|check|gate|context|changed|recommend> PR-01234 [G0-G8|scenario] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|human] [--session-id <id>]')
   process.exit(1)
 }
 

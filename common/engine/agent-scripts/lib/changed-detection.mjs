@@ -104,7 +104,7 @@ function changedFingerprint(id, worktree, effectiveFingerprint) {
 
 // `docs-tdd changed`：跑 code-rules（+ 按 manifest pilot 开关跑 msw-manifest / prd-intake），带指纹缓存。
 // 返回退出码：任一子检非 0 即非 0。noCache=true 跳过读写缓存（强制实跑）。
-export function runChanged(id, worktree, effectiveFingerprint, { noCache = false, client = 'manual', sessionId = null } = {}) {
+export function runChanged(id, worktree, effectiveFingerprint, { noCache = false, client = 'human', sessionId = null } = {}) {
   const started = Date.now()
   if (client === 'codex' || client === 'claude') {
     const consumption = verifyWorktreeConsumption({

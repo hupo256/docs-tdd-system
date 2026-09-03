@@ -47,13 +47,13 @@ export function capability(id, { agentClient }) {
   const ruleset = readJson(join(docsRoot, 'common/rules/ruleset.json'))
   const release = inspectRuleRelease()
   const effectiveRules = inspectEffectiveRules()
-  const hook = process.env.CLAUDE_PROJECT_DIR ? 'claude-posttooluse' : 'manual-agent-adapter'
+  const hook = ['claude', 'codex'].includes(agentClient) ? `${agentClient}-posttooluse` : agentClient === 'cursor' ? 'cursor-native-plus-changed' : 'human-cli'
 
   printReport([
     ['docs_tdd root', docsRoot],
     ['agent client', agentClient],
     ['agent adapter', hook],
-    ['automatic post-edit hook', hook === 'claude-posttooluse' ? 'available' : 'unavailable'],
+    ['automatic post-edit hook', ['claude', 'codex'].includes(agentClient) ? 'available' : 'unavailable'],
     ['fallback', `run docs-tdd changed ${id || '<PROJECT-ID>'} before completion`],
     ['ruleset', `${manifest?.rulesetVersion || ruleset.version} (${ruleset.maturity})`],
     ['rule release', `${release.status || 'invalid'} (${(release.currentFingerprint || 'unknown').slice(0, 12)})`],

@@ -12,7 +12,7 @@ node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs changed PR-01234
 node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs gate PR-01234 G3
 ```
 
-`capability` 声明 worktree、当前客户端、ruleset 和发布摘要；`doctor` 验证共享 L1、五入口全集、direct/runtime adapter、Claude/Codex hook、本地隔离、effective release、所有 worktree 的规则入口可见性，并报告 tracked L2 冲突。其中 `L1-SINGLE-SOURCE`（skill）与 `L1-TOPLEVEL-SINGLE-SOURCE`（Codex/Claude Code 顶层入口）用 `realpath` 证明它们读的是**字节级同一份 L1**；skill 的全部引用文件也进入 effective fingerprint。软链断开、出现可被扫描到的 backup skill、规则入口被 `skip-worktree` 隐藏或被换成内容相同的分叉真实文件都会报错。Cursor 使用生成器产出的薄 adapter；Lark-Codex / Lark-Claude 共用纳入 effective fingerprint 的 runtime adapter。
+`capability` 声明 worktree、当前客户端、ruleset 和发布摘要；`doctor` 验证共享 L1、五入口全集、direct/runtime adapter、Claude/Codex hook、本地隔离、effective release、所有 worktree 的规则入口可见性，并报告 tracked L2 冲突。其中 `L1-SINGLE-SOURCE`（skill）与 `L1-TOPLEVEL-SINGLE-SOURCE`（Codex/Claude Code 顶层入口）用 `realpath` 证明它们读的是**字节级同一份 L1**；`CLIENT-RUNTIME-CONFORMANCE` 再按客户端分别验证实际 loader/executor 能力，避免只靠同一个声明式 fingerprint 自证。skill 的全部引用文件也进入 effective fingerprint。软链断开、出现可被扫描到的 backup skill、规则入口被 `skip-worktree` 隐藏或被换成内容相同的分叉真实文件都会报错。Cursor 使用生成器产出的薄 adapter；Lark-Codex / Lark-Claude 共用纳入 effective fingerprint 的 runtime adapter。
 
 固定入口全集为 `codex`、`claude`、`cursor`、`lark-codex`、`lark-claude`。`doctor` 对缺项、多项、缺 adapter、缺 enforcement 或缺 source fingerprint 一律以 `VERIFY-RULE-003` 阻断，避免新增入口后忘记接规则链。
 
@@ -39,11 +39,11 @@ Resolver 逐字读取当前 worktree 的 MDC：`alwaysApply: true` 总是命中�
 node apps/web/docs_tdd/common/engine/agent-scripts/claude-posttooluse-gate.mjs
 ```
 
-当前行为：
+Claude 与 Codex 共用该 dispatcher；Codex 的 `apply_patch`、`functions.exec` 以及多文件 Edit/Write 都由共享目标解析器提取。当前行为：
 
 | 编辑文件 | 自动动作 |
 |----------|----------|
-| `apps/web/src/**/*.{ts,tsx}` | `verify-code-rules.mjs --files <file> --json` |
+| `apps/web/src/**/*.{ts,tsx}` | `verify-code-rules.mjs --files <files> --json` |
 | `package.json` | `verify-code-rules.mjs --files package.json --json` |
 | `apps/web/config/environments/.env*` | `verify-code-rules.mjs --files <env> --global-scan --json` |
 | `apps/web/docs_tdd/common/*.md` | `check-doc-budget.mjs` |
@@ -54,7 +54,7 @@ node apps/web/docs_tdd/common/engine/agent-scripts/claude-posttooluse-gate.mjs
 
 ## 3. 本地安装与配置
 
-统一安装器会备份已有文件，创建 `~/.ai-rules`，把 Codex/Claude 的 L1 入口链接到同一源，为 Cursor 写用户级 adapter，并向 Claude 与 Codex 合并 PreToolUse/PostToolUse/SessionStart/PreCompact hook。skill 旧备份会移到 `~/.ai-rules/backups/<client>/skills/`，避免被客户端当成重复 skill 发现：
+统一安装器会备份已有文件，创建 `~/.ai-rules`，把 Codex/Claude 的 L1 入口链接到同一源，为 Cursor 写用户级 adapter，并向 Claude 与 Codex 合并 PreToolUse/PostToolUse/SessionStart/PreCompact hook。若团队尚未接入代码 gate，它会在 `~/.ai-rules/git-hooks/<repo>/` 安装个人 pre-commit，并通过仓库本地 `core.hooksPath` 接入、链回已有 hook；若 `package.json` + Husky 已接入同一 gate，则保留团队链路、不重复安装。skill 旧备份会移到 `~/.ai-rules/backups/<client>/skills/`，避免被客户端当成重复 skill 发现：
 
 ```bash
 node apps/web/docs_tdd/common/engine/agent-scripts/install-local-agent-rules.mjs
@@ -84,7 +84,7 @@ Claude Code 风格 PostToolUse hook 示例：
 
 本地路径按实际仓库位置替换。
 
-Codex 配置字段名是 `timeout`（秒），不是 `hooks/list` 输出中的 `timeoutSec`；安装后用 Codex `hooks/list` 或启动审查确认四项均为 `trusted`，并确认 timeout 为 20/20/10/10 秒。Claude 的字段同样是 `timeout`。三个直接入口的阶段出口仍必须执行 gate；hook 是编辑时强制消费层，不替代最终门禁。Lark 两个入口由 Worker 在每次 AI 调用前执行 fresh/fail-closed 校验，并继续执行 Worker quality gate。
+Codex 配置字段名是 `timeout`（秒），不是 `hooks/list` 输出中的 `timeoutSec`；安装后用 Codex `hooks/list` 或启动审查确认规则注入、回执、代码 gate、SessionStart、PreCompact 均为 `trusted`。Claude 的字段同样是 `timeout`。三个直接入口的阶段出口仍必须执行 gate；hook 是编辑时强制消费层，不替代最终门禁。Lark 两个入口由 Worker 在每次 AI 调用前执行 fresh/fail-closed 校验，并继续执行 Worker quality gate。
 
 ## 4. Smoke Test
 
@@ -108,12 +108,13 @@ node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs check <PROJECT-I
 
 交付前仍必须把命令结果写入 `agent/gate-results.json` 或交付摘要。
 
-## 6. 机器层兜底守护（无 CI/定时器）
+## 6. 机器层兜底守护（个人本地 + 无 CI）
 
 `docs_tdd` local-only、无 husky/CI；gate 脚本本身的正确性与规则发布是否 fresh，不能只靠"每次记得跑"。定期手动跑一条兜底命令：
 
 ```bash
 node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs guard
+node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs guard --strict
 ```
 
-`guard` 串跑 `rule-release --check`（发布是否 fresh）、`golden-run`（gate 机器自身回归，发布 stale 时自动 `--skip-aggregator`）、`doctor`（五入口覆盖/同源、adapter、冲突与隔离）三检并聚合退出码：任一失败即 BLOCK。建议改完规则/脚本、或每次开工前跑一次；**不安装 launchd/cron 定时器**（个人本地，保持 personal-local，不写常驻定时任务）。
+`guard` 串跑 `rule-release --check`（发布是否 fresh）、`golden-run`（gate 机器自身回归，发布 stale 时自动 `--skip-aggregator`）、`doctor`（五入口覆盖/同源、adapter、冲突与隔离）三检并聚合退出码：任一失败即 BLOCK。`--strict` 还把本地可修的 doctor warning 升为阻断；团队 CI 缺口仍只报告，因为本地治理无权改团队流水线。建议改完规则/脚本、或每次开工前跑一次；**不安装 launchd/cron 定时器**。

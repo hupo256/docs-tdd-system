@@ -29,7 +29,7 @@ function verifyCase(target, expectedCount) {
 }
 
 export function runGolden() {
-  const results = [verifyCase('apps/web/src/Foo.tsx', 47), verifyCase('apps/web/src/useFoo.ts', 34), verifyCase('apps/web/src/foo.ts', 30), verifyCase('README.md', 3)]
+  const results = [verifyCase('apps/web/src/Foo.tsx', 47), verifyCase('apps/web/src/useFoo.ts', 34), verifyCase('apps/web/src/foo.ts', 30), verifyCase('README.md', 0)]
   const tsx = resolveRulePack({
     worktree,
     targetFiles: ['apps/web/src/Foo.tsx'],
@@ -49,10 +49,9 @@ export function runGolden() {
     useTs.matchedRules.some((rule) => rule.relativePath === 'client-localstorage-schema.mdc'),
     'use*.ts rule',
   )
-  assert.ok(
-    useTs.conflictOverrides.some((override) => override.id === 'fameex-server-state'),
-    'conflict override is fingerprinted',
-  )
+  assert.equal(useTs.conflictOverrides.length, 0, 'resolved tracked rules need no local conflict override')
+  const serverStateRule = useTs.matchedRules.find((rule) => rule.relativePath === 'client-swr-dedup.mdc')
+  assert.ok(serverStateRule?.body.includes('TanStack React Query') && !serverStateRule.body.includes("import useSWR"), 'server-state rule follows the repository React Query contract')
   console.log(JSON.stringify({ ok: true, worktree, cases: results }, null, 2))
 }
 

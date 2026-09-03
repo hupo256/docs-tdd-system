@@ -35,6 +35,7 @@ docs-tdd check <PROJECT-ID>                # 校验文档、规则与脚本预�
 docs-tdd release <PROJECT-ID> --scenario X # 原子发布 L3/effective + doctor/golden/context smoke
 docs-tdd golden                            # 让门禁机器自己被回归测试
 docs-tdd guard                             # 机器层兜底：一条命令跑 golden + 发布 fresh 检查 + doctor
+docs-tdd guard --strict                    # 再把本地可修的 doctor warning 视为阻断
 docs-tdd rule-health                       # 规则体检：命中分布、warn 台账年龄、待退休、零命中清单
 ```
 
@@ -118,7 +119,7 @@ AI 会先读 `common/rules/rule-router.md`，再执行 `docs-tdd kickoff PR-0123
 
 **3. G1 文档生成**：AI 基于启动器生成的模板填写 PRD 全量功能清单、scope、技术方案初稿、任务与协作记录；G1 有独立机器出口，不与 G0 共用空骨架判定。`product/00-feature-inventory.md` 是「做 / 不做 / 延期」和 Scope 裁剪记录的唯一真相源，`01-scope-and-phases.md` 只写摘要，`04-frontend-tasks.md` 只保留本期做项，避免多份范围结论漂移。
 
-**4. 按场景加载规则**：`docs-tdd context PR-01234 <SCENARIO>` 只读命中场景的专题，不全读 `common/`。模式由场景选择默认 brief/compact，也可用互斥的 `--brief|--compact|--full` 显式覆盖；brief 只折叠索引中逐引用标记为安全指针的机器规则。传 `--session-id <task-id>`（或由客户端注入 session 环境变量）后，同一 project/client/session 的相同 pack 才返回 delta；无会话身份时不做跨任务去重。编码场景须先通过 G2，并签发绑定当前客户端、规则指纹、G2 输入与 HEAD 的 24 小时 rule session v2；`changed` 和 G5-G8 拒绝缺失、过期或由其他客户端签发的会话。Cursor 原生消费 `.cursor/rules` 的 glob/alwaysApply；Claude/Codex 的 PreToolUse hook 使用同一 Resolver，在首次编辑时 deny-and-retry 注入命中正文，并由 PostToolUse 生成消费回执供 `changed`/G5+ 校验。Cursor adapter 会自动带 `--client cursor`；手动调用可显式传 `--client codex|claude|cursor|manual`。Lark 两个入口不复用这份会话，而是在每个任务启动 AI 前读取当前规则章节并检查发布链；发布链 stale 会在 health / 日志告警，但不再把修 bug 任务整体挡下，必需常驻规则缺失仍 fail-closed。常用场景：`g0_g2_scope` `write_api` `write_mapper` `write_query_hook` `write_ui` `write_figma` `write_msw` `g6_verify`（全表见 `rule-router.md §3`）。其中 `g6_verify` 仅打印四维执行计划；实际依次加载 `g6_code_review`、`g6_contract`、`g6_visual`、`g6_delivery`，完整或 partial G6 门禁会机器校验四维均为当前代码/规则状态。
+**4. 按场景加载规则**：`docs-tdd context PR-01234 <SCENARIO>` 只读命中场景的专题，不全读 `common/`。模式由场景选择默认 brief/compact，也可用互斥的 `--brief|--compact|--full` 显式覆盖；brief 只折叠索引中逐引用标记为安全指针的机器规则。传 `--session-id <task-id>`（或由客户端注入 session 环境变量）后，同一 project/client/session 的相同 pack 才返回 delta；无会话身份时不做跨任务去重。编码场景须先通过 G2，并签发绑定当前客户端、规则指纹、G2 输入与 HEAD 的 24 小时 rule session v2；`changed` 和 G5-G8 拒绝缺失、过期或由其他客户端签发的会话。Cursor 原生消费 `.cursor/rules` 的 glob/alwaysApply；Claude/Codex 的 PreToolUse hook 使用同一 Resolver，在首次编辑时 deny-and-retry 注入命中正文，并由 PostToolUse 生成消费回执供 `changed`/G5+ 校验。Cursor adapter 会自动带 `--client cursor`；纯人工终端使用 `--client human`，检测到 Codex/Claude 环境时不得伪装成其他客户端。Lark 两个入口不复用这份会话，而是在每个任务启动 AI 前读取当前规则章节并检查发布链；发布链 stale 会在 health / 日志告警，但不再把修 bug 任务整体挡下，必需常驻规则缺失仍 fail-closed。常用场景：`g0_g2_scope` `write_api` `write_mapper` `write_query_hook` `write_ui` `write_figma` `write_msw` `g6_verify`（全表见 `rule-router.md §3`）。其中 `g6_verify` 仅打印四维执行计划；实际依次加载 `g6_code_review`、`g6_contract`、`g6_visual`、`g6_delivery`，完整或 partial G6 门禁会机器校验四维均为当前代码/规则状态。
 
 **5. G2 方案定稿**：对功能清单逐条确认「做 / 不做 / 延期」，写完 `product/02-technical-design.md`（含复用盘点、PRD 路径核验）后**才允许写业务代码**。
 
@@ -177,7 +178,7 @@ node <mount>/common/engine/agent-scripts/decommission-worktree.mjs PR-01234
 
 「常驻恒定小」由机器强制，不靠自觉：
 
-- **常驻限额**：唯一常驻文件 `rule-router.md` ≤5000 字符，`check-doc-budget.mjs` 校验。
+- **常驻限额**：L3 唯一常驻文件 `rule-router.md` ≤5000 字符，L1 `~/.ai-rules/AGENT.md` ≤7000 字符；跨层基础常驻面（L1 + L3 + L2 `alwaysApply`）≤16000 字符，均由 `check-doc-budget.mjs` 校验并报告分项；同一检查还报告 TSX/hook/TS 三类首次编辑的实际 L2 注入量。
 - **按需文件预算**：每个 `common/rules/*.md` 有告警线/硬上限（默认 9000 / 13000 字符，少数引用型大文件设有界的 grandfather 上限），超限即打回，逼迫拆分/归档/改指针。
 - **脚本体量预算**：`common/engine/agent-scripts/*.mjs` 与 `common/lark-bot/*.mjs` 同样有告警线/硬上限（默认 24000 / 30000 字符，大执行器设有界 grandfather 上限）。超限就按职责拆——纯逻辑下沉到同域 `lib/` 并带 `--self-test`，`check-doc-budget.mjs` 强制每个 `lib/*.mjs` 要么有自测要么显式登记豁免（门禁/服务脚本是 AI 最难 review、出错影响最大的部分，故拆小、可测、门面只做编排）。
 - **日志轮转**：`CHANGELOG.md` 只保留近期条目，旧条目轮转进 `CHANGELOG-archive.md`（不进 context、不参与预算）。

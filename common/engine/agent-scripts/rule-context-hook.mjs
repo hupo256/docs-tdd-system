@@ -2,9 +2,10 @@
 
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
-import { normalizeTargetPath, resolveRulePack, selectRuleInjectionBatch } from './lib/l2-rule-resolver.mjs'
+import { resolveRulePack, selectRuleInjectionBatch } from './lib/l2-rule-resolver.mjs'
 import { loadConfig } from './lib/roots.mjs'
 import { advanceContextEpoch, prepareLedger, recordInjection, recordPendingTool, recordPostTool, resolveGitWorktree } from './lib/rule-consumption.mjs'
+import { classifyTargets } from './lib/hook-targets.mjs'
 
 const args = process.argv.slice(2)
 const clientIndex = args.indexOf('--client')
@@ -18,75 +19,6 @@ function hookOutput(eventName, fields = {}) {
       hookSpecificOutput: { hookEventName: eventName, ...fields },
     }),
   )
-}
-
-function patchPaths(value) {
-  if (typeof value !== 'string') return []
-  const expanded = value.replaceAll('\\n', '\n')
-  return [...expanded.matchAll(/\*\*\* (?:Add|Update|Delete) File: ([^\r\n"']+)/g)].map((match) => match[1].trim())
-}
-
-function shellTargets(command) {
-  if (typeof command !== 'string') return []
-  const targets = [...patchPaths(command)]
-  for (const match of command.matchAll(/(?:^|[^>])>{1,2}\s*(["']?)([^\s"';&|]+)\1/g)) targets.push(match[2])
-  for (const match of command.matchAll(/\b(?:touch|rm|unlink)\s+(?:--\s+)?(["']?)([^\s"';&|]+)\1/g)) targets.push(match[2])
-  for (const match of command.matchAll(/\b(?:tee|truncate)\s+(?:-[^\s]+\s+)*(["']?)([^\s"';&|]+)\1/g)) targets.push(match[2])
-  for (const match of command.matchAll(/\b(?:cp|mv)\s+(?:-[^\s]+\s+)*(?:["']?[^\s"';&|]+["']?\s+)+(["']?)([^\s"';&|]+)\1(?=\s*(?:[;&|]|$))/g)) targets.push(match[2])
-  for (const match of command.matchAll(/\b(?:biome|prettier)\b[^\n;&|]*\s(?:--write|check\s+--write)[^\n;&|]*\s(["']?)([^\s"';&|]+)\1/g)) targets.push(match[2])
-  return targets
-}
-
-export function classifyTargets(input, worktree) {
-  const repoTargets = []
-  const externalTargets = []
-  let dynamicTarget = false
-  for (const target of extractTargets(input)) {
-    if (/[$`*?{}]|^~(?:\/|$)/.test(target)) {
-      dynamicTarget = true
-      continue
-    }
-    try {
-      repoTargets.push(normalizeTargetPath(worktree, target))
-    } catch {
-      externalTargets.push(target)
-    }
-  }
-  const toolInput = input?.tool_input && typeof input.tool_input === 'object' ? input.tool_input : {}
-  const commands = [toolInput.command, toolInput.cmd].filter((value) => typeof value === 'string')
-  const opaqueWrite = commands.some((command) => /(?:^|\s)(?:sed\s+-i|perl\s+-pi|python\s+-c|node\s+-e)(?:\s|$)/.test(command))
-    || (typeof toolInput.code === 'string' && /tools\.(?:apply_patch|exec_command)\s*\(/.test(toolInput.code) && repoTargets.length === 0)
-  return {
-    repoTargets: [...new Set(repoTargets)],
-    externalTargets: [...new Set(externalTargets)],
-    unknownWrite: dynamicTarget || opaqueWrite || (isPotentialUnresolvedWrite(input) && repoTargets.length === 0 && externalTargets.length === 0),
-  }
-}
-
-function looksLikeUnresolvedWrite(command) {
-  return typeof command === 'string' && /(?:^|\s)(?:sed\s+-i|perl\s+-pi|cp\s|mv\s|tee\s|truncate\s|python\s+-c|node\s+-e)|>{1,2}/.test(command)
-}
-
-export function extractTargets(input) {
-  const toolInput = input?.tool_input && typeof input.tool_input === 'object' ? input.tool_input : {}
-  const targets = []
-  for (const key of ['file_path', 'filePath']) {
-    if (typeof toolInput[key] === 'string') targets.push(toolInput[key])
-  }
-  if (Array.isArray(toolInput.edits)) {
-    for (const edit of toolInput.edits) {
-      if (typeof edit?.file_path === 'string') targets.push(edit.file_path)
-      if (typeof edit?.filePath === 'string') targets.push(edit.filePath)
-    }
-  }
-  for (const key of ['patch', 'code', 'input']) targets.push(...patchPaths(toolInput[key]))
-  for (const key of ['command', 'cmd']) targets.push(...shellTargets(toolInput[key]))
-  return [...new Set(targets)]
-}
-
-function isPotentialUnresolvedWrite(input) {
-  const toolInput = input?.tool_input && typeof input.tool_input === 'object' ? input.tool_input : {}
-  return looksLikeUnresolvedWrite(toolInput.command) || looksLikeUnresolvedWrite(toolInput.cmd) || (typeof toolInput.code === 'string' && /tools\.(?:apply_patch|exec_command)\s*\(/.test(toolInput.code))
 }
 
 function identity(input, worktree) {
@@ -106,39 +38,7 @@ function singleFileReceipt(worktree, file, conflictOverrides) {
 }
 
 if (args.includes('--self-test')) {
-  const assert = (condition, message) => {
-    if (!condition) throw new Error(`rule-context-hook self-test failed: ${message}`)
-  }
-  assert(extractTargets({ tool_input: { file_path: 'a.ts' } }).join(',') === 'a.ts', 'direct file path')
-  assert(
-    extractTargets({
-      tool_input: {
-        patch: '*** Begin Patch\n*** Update File: src/a.ts\n*** End Patch',
-      },
-    }).join(',') === 'src/a.ts',
-    'patch path',
-  )
-  assert(
-    extractTargets({
-      tool_input: { code: 'const p = "*** Add File: src/b.ts\\n+x"' },
-    }).join(',') === 'src/b.ts',
-    'nested apply_patch path',
-  )
-  assert(extractTargets({ tool_input: { command: "printf x > 'src/c.ts'" } }).join(',') === 'src/c.ts', 'shell redirect path')
-  const external = classifyTargets({ tool_input: { command: 'npm test > /dev/null 2>&1' } }, '/repo')
-  assert(external.repoTargets.length === 0 && external.externalTargets.join(',') === '/dev/null', 'external redirect is classified')
-  const copy = classifyTargets({ tool_input: { command: 'cp /tmp/a src/a.ts' } }, '/repo')
-  assert(copy.repoTargets.join(',') === 'src/a.ts', 'copy destination is classified as a repository target')
-  const opaque = classifyTargets({ tool_input: { command: "python -c 'open(\"src/a.ts\",\"w\").write(\"x\")' > /tmp/out" } }, '/repo')
-  assert(opaque.unknownWrite, 'opaque writes stay unresolved even with an external redirect')
-  assert(classifyTargets({ tool_input: { command: 'printf x > "$TMPDIR/out"' } }, '/repo').unknownWrite, 'dynamic targets stay unresolved')
-  assert(
-    isPotentialUnresolvedWrite({
-      tool_input: { command: 'sed -i x src/a.ts' },
-    }),
-    'unresolved write detection',
-  )
-  console.log('PASS rule-context-hook (target extraction)')
+  console.log('PASS rule-context-hook (dispatcher imports shared target extraction)')
   process.exit(0)
 }
 

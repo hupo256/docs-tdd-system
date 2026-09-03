@@ -53,5 +53,5 @@ G6 验收按维度顺序加载 `g6_code_review`→`g6_contract`→`g6_visual`→
 - Gate 完成、场景切换、PRD/契约 fingerprint 变化或处理大量日志/图片后，更新 `context-summary.md`；新任务只恢复 Router、摘要和当前 compact pack。
 - 修改规则后依次运行 `docs-tdd check`、`rule-release.mjs --write`、`effective-rules.mjs --write`；任一发布漂移会阻断 context/changed/gate，但不阻断 check/capability/doctor。
 - 规则维护优先使用 `docs-tdd release <PROJECT-ID> --scenario <SCENARIO>` 原子发布两层 manifest、doctor、golden 和 context smoke；任一步失败自动恢复旧 manifest。
-- 常驻文件仅本文件且 ≤5000 字符；专题必须被 `rule-index.json` 至少一个场景引用，并被 README 人工索引收录。
+- L3 常驻文件仅本文件且 ≤5000 字符；L1 `~/.ai-rules/AGENT.md` ≤7000 字符，跨层基础常驻面（L1 + L3 + L2 `alwaysApply`）≤16000 字符；专题必须被 `rule-index.json` 至少一个场景引用，并被 README 人工索引收录。
 - 新主题只新增/更新场景索引和 on-demand 文件；机器已拦的细则不在常驻层重复。

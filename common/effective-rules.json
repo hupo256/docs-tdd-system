@@ -1,14 +1,14 @@
 {
   "version": 2,
-  "fingerprint": "e0b889d214519872d8b8a090e52332c7d8d2a905d24d4ba9a757a00c46f6dffe",
-  "publishedAt": "2026-09-03T01:30:19.449Z",
-  "l3RuleReleaseFingerprint": "dc86c3ffcad988f7c145fd06ddd32af54d87e198c059782d54ba8f3bc9da63d1",
+  "fingerprint": "fcd23491c42311b5322a89a6e911f3aaeac055ae6033ae1993970c17db495d83",
+  "publishedAt": "2026-09-03T03:17:47.885Z",
+  "l3RuleReleaseFingerprint": "21f3b0cdfaa4d92c28c68bd41f3f22ba8c6c5d20fdadfb55ee2add360f590fd9",
   "clientMatrix": {
     "codex": {
       "kind": "direct",
       "adapter": "~/.codex/AGENTS.md",
-      "enforcement": "PreToolUse rule injection + consumption receipt + changed/gate",
-      "sourceFingerprint": "f3d04c98a2b5777c06767938e55179b612e732f5b8d9cea7c0227f24bf84c3dc",
+      "enforcement": "PreToolUse rule injection + PostToolUse receipt/code gate + changed/gate",
+      "sourceFingerprint": "8b529fda59c71484c78612627719b7f237b8c87ffe3cfd57edb0e2de028b4fdf",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -110,23 +110,14 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "dc86c3ffcad988f7c145fd06ddd32af54d87e198c059782d54ba8f3bc9da63d1",
-      "conflictOverrides": [
-        {
-          "id": "fameex-server-state",
-          "winner": "React Query",
-          "loserFiles": [
-            ".cursor/rules/client-swr-dedup.mdc"
-          ],
-          "reason": "Personal AI workflow follows the repository AGENTS.md server-state contract without changing tracked team rules."
-        }
-      ]
+      "l3Fingerprint": "21f3b0cdfaa4d92c28c68bd41f3f22ba8c6c5d20fdadfb55ee2add360f590fd9",
+      "conflictOverrides": []
     },
     "claude": {
       "kind": "direct",
       "adapter": "~/.claude/CLAUDE.md",
       "enforcement": "PreToolUse rule injection + PostToolUse receipt + changed/gate",
-      "sourceFingerprint": "f3d04c98a2b5777c06767938e55179b612e732f5b8d9cea7c0227f24bf84c3dc",
+      "sourceFingerprint": "8b529fda59c71484c78612627719b7f237b8c87ffe3cfd57edb0e2de028b4fdf",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -228,23 +219,14 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "dc86c3ffcad988f7c145fd06ddd32af54d87e198c059782d54ba8f3bc9da63d1",
-      "conflictOverrides": [
-        {
-          "id": "fameex-server-state",
-          "winner": "React Query",
-          "loserFiles": [
-            ".cursor/rules/client-swr-dedup.mdc"
-          ],
-          "reason": "Personal AI workflow follows the repository AGENTS.md server-state contract without changing tracked team rules."
-        }
-      ]
+      "l3Fingerprint": "21f3b0cdfaa4d92c28c68bd41f3f22ba8c6c5d20fdadfb55ee2add360f590fd9",
+      "conflictOverrides": []
     },
     "cursor": {
       "kind": "direct",
       "adapter": "~/.cursor/rules/fameex-local-governance.mdc",
       "enforcement": "native glob/alwaysApply + resolver conformance + changed/gate",
-      "sourceFingerprint": "f3d04c98a2b5777c06767938e55179b612e732f5b8d9cea7c0227f24bf84c3dc",
+      "sourceFingerprint": "8b529fda59c71484c78612627719b7f237b8c87ffe3cfd57edb0e2de028b4fdf",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -346,24 +328,15 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "dc86c3ffcad988f7c145fd06ddd32af54d87e198c059782d54ba8f3bc9da63d1",
-      "conflictOverrides": [
-        {
-          "id": "fameex-server-state",
-          "winner": "React Query",
-          "loserFiles": [
-            ".cursor/rules/client-swr-dedup.mdc"
-          ],
-          "reason": "Personal AI workflow follows the repository AGENTS.md server-state contract without changing tracked team rules."
-        }
-      ]
+      "l3Fingerprint": "21f3b0cdfaa4d92c28c68bd41f3f22ba8c6c5d20fdadfb55ee2add360f590fd9",
+      "conflictOverrides": []
     },
     "lark-codex": {
       "kind": "unattended",
       "delegatesTo": "codex",
       "adapter": "common/lark-bot/lib/lark-rule-context.mjs + common/lark-bot/lib/lark-worker-prompts.mjs + common/lark-bot/lib/lark-worker-run.mjs + common/engine/agent-scripts/rule-context-hook.mjs + common/engine/agent-scripts/rule-context.mjs + common/engine/agent-scripts/lib/l2-rule-resolver.mjs + common/engine/agent-scripts/lib/rule-consumption.mjs",
       "enforcement": "fresh effective rules + focused context + worker quality gate",
-      "sourceFingerprint": "f3d04c98a2b5777c06767938e55179b612e732f5b8d9cea7c0227f24bf84c3dc",
+      "sourceFingerprint": "8b529fda59c71484c78612627719b7f237b8c87ffe3cfd57edb0e2de028b4fdf",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -465,24 +438,15 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "dc86c3ffcad988f7c145fd06ddd32af54d87e198c059782d54ba8f3bc9da63d1",
-      "conflictOverrides": [
-        {
-          "id": "fameex-server-state",
-          "winner": "React Query",
-          "loserFiles": [
-            ".cursor/rules/client-swr-dedup.mdc"
-          ],
-          "reason": "Personal AI workflow follows the repository AGENTS.md server-state contract without changing tracked team rules."
-        }
-      ]
+      "l3Fingerprint": "21f3b0cdfaa4d92c28c68bd41f3f22ba8c6c5d20fdadfb55ee2add360f590fd9",
+      "conflictOverrides": []
     },
     "lark-claude": {
       "kind": "unattended",
       "delegatesTo": "claude",
       "adapter": "common/lark-bot/lib/lark-rule-context.mjs + common/lark-bot/lib/lark-worker-prompts.mjs + common/lark-bot/lib/lark-worker-run.mjs + common/engine/agent-scripts/rule-context-hook.mjs + common/engine/agent-scripts/rule-context.mjs + common/engine/agent-scripts/lib/l2-rule-resolver.mjs + common/engine/agent-scripts/lib/rule-consumption.mjs",
       "enforcement": "fresh effective rules + focused context + worker quality gate",
-      "sourceFingerprint": "f3d04c98a2b5777c06767938e55179b612e732f5b8d9cea7c0227f24bf84c3dc",
+      "sourceFingerprint": "8b529fda59c71484c78612627719b7f237b8c87ffe3cfd57edb0e2de028b4fdf",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -584,17 +548,8 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "dc86c3ffcad988f7c145fd06ddd32af54d87e198c059782d54ba8f3bc9da63d1",
-      "conflictOverrides": [
-        {
-          "id": "fameex-server-state",
-          "winner": "React Query",
-          "loserFiles": [
-            ".cursor/rules/client-swr-dedup.mdc"
-          ],
-          "reason": "Personal AI workflow follows the repository AGENTS.md server-state contract without changing tracked team rules."
-        }
-      ]
+      "l3Fingerprint": "21f3b0cdfaa4d92c28c68bd41f3f22ba8c6c5d20fdadfb55ee2add360f590fd9",
+      "conflictOverrides": []
     }
   },
   "fileCount": 108,
@@ -605,7 +560,7 @@
     "~/.claude/skills/figma-read": "~/.ai-rules/skills/figma-read"
   },
   "files": {
-    ".cursor/rules/001-guidelines.mdc": "9409bcf4201242c0040130b0d7a3deb34b3ef329c60b6ff8358fcd08b5e0a685",
+    ".cursor/rules/001-guidelines.mdc": "affd9ff8fef372fcb208e657bfedabfd4aaf79ddc01a76c43b5bacd7a92c32fb",
     ".cursor/rules/advanced-event-handler-refs.mdc": "9159564ad05ae8350c837acdd303d870ccd5490f89f0598bf90a02f64d730652",
     ".cursor/rules/advanced-init-once.mdc": "9b62ab547032d5e5f322afabeaf7b86b840109833ed4f1973d69c7b9eeca85d8",
     ".cursor/rules/advanced-use-latest.mdc": "1a1ccb13aa62b31b3218b682198a721ae9ba2833a4b3c32a504f1c3fd2fdb48e",
@@ -624,9 +579,9 @@
     ".cursor/rules/client-event-listeners.mdc": "e1d6bd053fe3a66294a8cbe25b87e04c593c1cb98ac1a54a10c4d2f8833fec31",
     ".cursor/rules/client-localstorage-schema.mdc": "0738c152763b6cff03cf88277cbdf228689f68a04c3be3cb2c4aee17d09619ca",
     ".cursor/rules/client-passive-event-listeners.mdc": "6b43af3a0be0b5cdf9a566073231e813c25d281d52e5677b1e93385396d9394e",
-    ".cursor/rules/client-swr-dedup.mdc": "cbf41117d290ca8b722272e95ab97b304846de6c0e4e2f0d1c2eba6213ba0a36",
-    ".cursor/rules/definition-of-done.mdc": "0e00a0cd980ed88963a61d6e787b9d824e49dfca18cb5afd06d3ecf67d5f069d",
-    ".cursor/rules/frontend-harness.mdc": "7743a7347638e7c11c9deafdf7c19cd0f8b753ce0045c1c5dd6eaffbfda965ae",
+    ".cursor/rules/client-swr-dedup.mdc": "ffc1e83364f3e8e021cf5d6f39f568519e8d10e6846afe7d1c787aa4d5fd3677",
+    ".cursor/rules/definition-of-done.mdc": "a6048d28f37d617434beab157136189b7da7e8274214155dc8d69de59f95e0ce",
+    ".cursor/rules/frontend-harness.mdc": "8b48868647fdc351c1b1df79e1be98a8f76e6b28ec2099f6e760da4c613e51e1",
     ".cursor/rules/js-batch-dom-css.mdc": "070c9f7f317737d250054cf2f968e66377922c7540320cb754b4e35f1dacb3a7",
     ".cursor/rules/js-cache-function-results.mdc": "8699bc5a56c41ef621268013a22caca2c25e49c45c3e9d638b3bc8c0a7c44b95",
     ".cursor/rules/js-cache-property-access.mdc": "246aea1625350af13ad38315743b65fb7d8976cb23c2334d6a6c4f5cc9067c18",
@@ -682,7 +637,7 @@
     ".cursor/rules/state-context-interface.mdc": "cd3f3cf0da916c2315646c9d7b157391931ed2d6d2b6e6b756f87edf550b47c9",
     ".cursor/rules/state-decouple-implementation.mdc": "720aea501afbe5908f518ac8f072b2dfd5f4cfda6cf3cbee8b5c40ae8c109609",
     ".cursor/rules/state-lift-state.mdc": "98fd28e2f0c89a98ffb077ca5ba0a0b1777ebfffab2e4a13ea6a03b31282db8a",
-    "~/.ai-rules/AGENT.md": "607a5963fc1d04fdb0439cc06c1b002aa9c797dc324dc3b61606653bd015cb4e",
+    "~/.ai-rules/AGENT.md": "be6c1226c97693b0c31c84a4548de6f5baa71e130c0b74673a46d0dedfd4712d",
     "~/.ai-rules/skills/coding-quality/references/acceptance-evidence.md": "ba7b5c8e8c1ef133bdd9593d22764847784d507e091e5125fd32ff5bf7110788",
     "~/.ai-rules/skills/coding-quality/references/api-schema-mapper.md": "795fe9dc95e47489411a323e6a67639df0b6ae9c4a84fd9df34044bae3895053",
     "~/.ai-rules/skills/coding-quality/references/controlled-form-hooks.md": "43c6845aeff7e6af1640c3a51d4475dc586918ae7f9cbc62a427adfa552f90e3",
@@ -695,20 +650,20 @@
     "~/.ai-rules/skills/coding-quality/references/state-derivation-lookup.md": "2c09778fb5fc75c019ee7d022b7d1526b53b4c434a057b7d84321345555c79d7",
     "~/.ai-rules/skills/coding-quality/references/styling-visual-qa.md": "0823b2e6f3697ca3df07b49b8411241bec06f2a90314efb53a197b8a749d54d0",
     "~/.ai-rules/skills/coding-quality/references/timers-animation-visibility.md": "53a260cdcee08feb41e2481dade925c025ab51e51d01b3603d5b321e80d65e01",
-    "~/.ai-rules/skills/coding-quality/SKILL.md": "b1285b760756550b2acf7af1c1acd654509a53b32455a77b35a6268af4f3e527",
+    "~/.ai-rules/skills/coding-quality/SKILL.md": "e7bd8883e1761d49d7752dff79c5819d816aca762f1fb75a5a3ae31465d5fbbf",
     "~/.ai-rules/skills/figma-read/scripts/figma-fetch.mjs": "4502e3284d3d8950dcdd81ea0527463820721f4d5022bf433127d22e488b4b71",
     "~/.ai-rules/skills/figma-read/scripts/figma-spec.mjs": "bd1b00cd243c00697549b12fa2ddb3dd4648fe953243519985f5023e0aa93994",
     "~/.ai-rules/skills/figma-read/SKILL.md": "17902f4f95ec0000075e1aa5e980a03e2a61e3e067b6d1b3773c5a440acfecce",
-    "~/.claude/CLAUDE.md": "607a5963fc1d04fdb0439cc06c1b002aa9c797dc324dc3b61606653bd015cb4e",
-    "~/.claude/settings.json": "03a5f2a05f5580a908aabe67a348b0f14236f1c17b437256dc7ef40ff3cf3e0e",
-    "~/.codex/AGENTS.md": "607a5963fc1d04fdb0439cc06c1b002aa9c797dc324dc3b61606653bd015cb4e",
-    "~/.codex/hooks.json": "69289dcd54d696698d9516b25720a14fc1771f2256f25e55c48007586ff6f57f",
-    "~/.cursor/rules/fameex-local-governance.mdc": "8e02a57ddc70633bd32a8d9a0c03902cf9db1cf4e7eac7a673636b8733844afb",
+    "~/.claude/CLAUDE.md": "be6c1226c97693b0c31c84a4548de6f5baa71e130c0b74673a46d0dedfd4712d",
+    "~/.claude/settings.json": "1181474207363bb38ee88f1edf4d7307e033bd54011fe2c843f81ea7d0bd9f2a",
+    "~/.codex/AGENTS.md": "be6c1226c97693b0c31c84a4548de6f5baa71e130c0b74673a46d0dedfd4712d",
+    "~/.codex/hooks.json": "7e348df7fc3f38d464a46983b50a3cb74e50f9df211dafe9bd876f6b10bb4434",
+    "~/.cursor/rules/fameex-local-governance.mdc": "1b34e1269caf928ae2c157970bb915c798824345fd883817a9343001f76f2b45",
     "AGENTS.md": "392064b3caa6942371cdf5380c7c8b6e368e6ba36d5cae03753afc5d6001c480",
     "CLAUDE.md": "e977e463d4123db2a9274bcc8b3ec10a25ae5d4722aa07f1df01e69d31423ce4",
     "common/engine/agent-scripts/lib/l2-rule-resolver.mjs": "a921b4f23ad5ffccf42c9de069c2672e2f866c807c3ed1dadb875e14f72cc6ad",
     "common/engine/agent-scripts/lib/rule-consumption.mjs": "011e89183fd8ca913755f4bf92d967cddc0f48288c725493d0bdf47057fad470",
-    "common/engine/agent-scripts/rule-context-hook.mjs": "b27e04fee6f697ba30ebfe5b83770121593c03736c8eda69183b1ed42114b0b4",
+    "common/engine/agent-scripts/rule-context-hook.mjs": "58f8e36fe1893971c8b7f24078c4073b672137315bf9ca6b5cfdfa1fa9a1660e",
     "common/engine/agent-scripts/rule-context.mjs": "923c19e9138d0f0aa45135aeb3c20272123d6b9a7ce91037d586bee589a1f8e2",
     "common/lark-bot/lib/lark-rule-context.mjs": "c74a8cbe46b5c3bae158a05ce4654482176d42244d59ab73f387a8c6360a5ef6",
     "common/lark-bot/lib/lark-worker-prompts.mjs": "1bfd848027ba91412fdee0d5e2cc23705936f93d9bc5325a76987c277413257b",

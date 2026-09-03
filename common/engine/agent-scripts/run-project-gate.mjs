@@ -79,7 +79,7 @@ Options:
   --skip-build-quality            Skip the verify-build-quality sub-run (always needs a reason)
   --skip-build-quality-reason     Reason recorded when skipping biome/tsc/vitest execution
   --reviewer                      Reviewer name for evidence (default: $USER)
-  --client                        Rule consumer identity: codex, claude, cursor, manual
+  --client                        Rule consumer identity: codex, claude, cursor, human
   --session-id                    Task/session identity used by G6 context completeness checks
   --partial                       G6 only: partial acceptance run for a G5 pending-reconcile project.
                                   Records gate G6-partial (not a G6 PASS, never satisfies the G7 prerequisite,

@@ -12,7 +12,7 @@ const CLIENT_DEFINITIONS = Object.freeze([
     id: 'codex',
     kind: 'direct',
     adapter: 'codex',
-    enforcement: 'PreToolUse rule injection + consumption receipt + changed/gate',
+    enforcement: 'PreToolUse rule injection + PostToolUse receipt/code gate + changed/gate',
   },
   {
     id: 'claude',
@@ -78,6 +78,24 @@ export function validateAgentClientMatrix(matrix) {
   }
 }
 
+const RUNTIME_REQUIREMENTS = Object.freeze({
+  codex: ['l1', 'adapterProtocol', 'preToolRuleInjection', 'postToolReceipt', 'postToolCodeGate'],
+  claude: ['l1', 'adapterProtocol', 'preToolRuleInjection', 'postToolReceipt', 'postToolCodeGate'],
+  cursor: ['l1', 'adapterProtocol', 'nativeL2Rules', 'changedGateFallback'],
+  'lark-codex': ['runtimeAdapter', 'focusedContext', 'workerQualityGate'],
+  'lark-claude': ['runtimeAdapter', 'focusedContext', 'workerQualityGate'],
+})
+
+/** Validate independently observed loader/executor capabilities for each client. */
+export function validateRuntimeClientConformance(observed = {}) {
+  const missing = {}
+  for (const client of REQUIRED_AGENT_CLIENT_IDS) {
+    const absent = RUNTIME_REQUIREMENTS[client].filter((capability) => observed[client]?.[capability] !== true)
+    if (absent.length) missing[client] = absent
+  }
+  return { ok: Object.keys(missing).length === 0, missing }
+}
+
 function selfTest() {
   const matrix = createAgentClientMatrix({
     canonicalSources: {
@@ -107,6 +125,12 @@ function selfTest() {
     }).incomplete,
     ['cursor'],
   )
+  const observed = Object.fromEntries(
+    Object.entries(RUNTIME_REQUIREMENTS).map(([client, requirements]) => [client, Object.fromEntries(requirements.map((requirement) => [requirement, true]))]),
+  )
+  assert.equal(validateRuntimeClientConformance(observed).ok, true)
+  observed.codex.postToolCodeGate = false
+  assert.deepEqual(validateRuntimeClientConformance(observed).missing, { codex: ['postToolCodeGate'] })
   console.log('agent-clients self-test passed.')
 }
 

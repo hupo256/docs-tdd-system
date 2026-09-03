@@ -11,8 +11,19 @@ import { spawnSync } from 'node:child_process'
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url))
 const T = 20000
 
+function stagedFiles() {
+  const result = spawnSync('git', ['diff', '--cached', '--name-only', '--diff-filter=ACMR', '-z'], {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    timeout: T,
+  })
+  if (result.status !== 0) throw new Error(result.stderr.trim() || 'cannot list staged files')
+  return result.stdout.split('\0').filter(Boolean)
+}
+
 function main() {
   const files = process.argv.slice(2).filter(Boolean)
+  if (!files.length) files.push(...stagedFiles())
   if (!files.length) process.exit(0)
   const script = join(SCRIPT_DIR, 'verify-code-rules.mjs')
   const r = spawnSync('node', [script, '--files', files.join(','), '--json'], {
@@ -24,8 +35,8 @@ function main() {
     let findings = []
     try { findings = JSON.parse(r.stdout).findings || [] }
     catch {
-      process.stderr.write('⚠ verify-code-rules: unparseable output, not blocking commit\n')
-      process.exit(0)
+      process.stderr.write('verify-code-rules returned unparseable output; commit blocked because the result is unknown\n')
+      process.exit(1)
     }
     if (!findings.length) process.exit(0)
     process.stderr.write('commit blocked by verify-code-rules, fix before committing:\n' +
@@ -34,7 +45,8 @@ function main() {
   }
   if (r.status !== 0) {
     const reason = r.error ? r.error.message : r.status === null ? `timeout after ${T}ms` : `unexpected exit ${r.status}`
-    process.stderr.write(`⚠ verify-code-rules gate could not run (${reason}); not blocking this commit, run docs-tdd changed manually\n`)
+    process.stderr.write(`verify-code-rules gate could not run (${reason}); commit blocked because the result is unknown\n`)
+    process.exit(1)
   }
   process.exit(0)
 }

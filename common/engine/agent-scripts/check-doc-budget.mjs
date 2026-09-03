@@ -10,6 +10,7 @@
 
 import { spawnSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { homedir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { auditDefaultContextPacks } from './lib/context-budget-audit.mjs'
@@ -18,6 +19,8 @@ import { charCount, parseFrontmatter, validateSchema } from './lib/doc-budget-sc
 import { auditRuleIndex } from './lib/rule-index-audit.mjs'
 import { undeclaredErrorRules } from './lib/rule-ledger.mjs'
 import { CODING_SCENARIOS } from './lib/rule-session.mjs'
+import { loadCursorRules, renderRuleContext, resolveRulePack } from './lib/l2-rule-resolver.mjs'
+import { resolveRoots } from './lib/roots.mjs'
 
 const COMMON_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const DOCS_TDD_DIR = join(COMMON_DIR, '..')
@@ -48,6 +51,7 @@ const REQUIRED_SCRIPTS = [
 ]
 const SELF_TEST_SCRIPTS = [
   ['check-doc-links.mjs', '--self-test'],
+  ['claude-posttooluse-gate.mjs', '--self-test'],
   ['docs-tdd.mjs', '--self-test'],
   ['effective-rules.mjs', '--self-test'],
   ['golden-run.mjs', '--self-test'],
@@ -68,6 +72,7 @@ const SELF_TEST_SCRIPTS = [
   ['lib/gate-doc-parsers.mjs', '--self-test'],
   ['lib/gate-heartbeat.mjs', '--self-test'],
   ['lib/hook-contract.mjs', '--self-test'],
+  ['lib/hook-targets.mjs', '--self-test'],
   ['lib/g6-context-session.mjs', '--self-test'],
   ['lib/fast-track-policy.mjs', '--self-test'],
   ['lib/gate-partial.mjs', '--self-test'],
@@ -123,6 +128,9 @@ const isRealProjectDir = (entry, pattern) => entry.isDirectory() && pattern.test
 
 const RESIDENT_MARKER = '<!-- RESIDENT-DOC'
 const RESIDENT_BUDGET = 5000 // 码点；改此值须同步 rule-router.md §4 的预算声明
+const L1_FILE = join(homedir(), '.ai-rules', 'AGENT.md')
+const L1_RESIDENT_BUDGET = 7000
+const RESIDENT_ENVELOPE_BUDGET = 16000 // L1 + L3 router + L2 alwaysApply bodies
 // per-file on-demand 预算（码点）：常驻恒定小之外，按需专题也要有天花板，防单文件无限膨胀挤爆 context pack。
 // warn = 超过即告警（不阻断，提示该拆分/归档）；fail = 硬上限（阻断，必须瘦身）。
 // 少数「引用型大文件」（rule ID 台账、架构专题、变更日志）grandfather 一个带余量的上限：允许随规则自然增长，但仍有界。
@@ -149,7 +157,6 @@ const SCRIPT_BUDGET_OVERRIDES = {
 // 新增脚本若含可测纯逻辑，必须加 --self-test 并登记 SELF_TEST_SCRIPTS；否则显式加入本豁免集（一次有意识决定）。
 const SELF_TEST_EXEMPT = new Set([
   'check-doc-budget.mjs', // 顶层校验入口本身：无导出纯函数，逻辑每次实跑即自检，并被 golden 间接覆盖
-  'claude-posttooluse-gate.mjs', // hook 分发薄包装
   'precommit-verify-code-rules.mjs', // lint-staged 参数转发薄包装（同 claude-posttooluse-gate.mjs 判定逻辑）
   'decommission-worktree.mjs', // worktree 回收 IO
   'log-exec.mjs', // 执行日志 IO
@@ -263,6 +270,38 @@ for (const r of residents) {
   } else {
     console.log(`✅ ${r.name} = ${r.size} / ${RESIDENT_BUDGET} 字符（余 ${RESIDENT_BUDGET - r.size}）`)
   }
+}
+
+// 校验 2.1：L1 也是每个 Codex/Claude 会话的真实常驻成本，不能留在 L3 闸外无限增长。
+let l1Chars = 0
+if (!existsSync(L1_FILE)) {
+  errors.push(`❌ 缺少 L1 常驻规则：${L1_FILE}`)
+} else {
+  l1Chars = charCount(readFileSync(L1_FILE, 'utf8'))
+  if (l1Chars > L1_RESIDENT_BUDGET) errors.push(`❌ L1 AGENT.md = ${l1Chars} 字符，超预算 ${L1_RESIDENT_BUDGET}（超 ${l1Chars - L1_RESIDENT_BUDGET}）。\n   把长清单移入按需 skill，只在 L1 保留跨仓高风险硬规则与路由。`)
+  else console.log(`✅ L1 AGENT.md = ${l1Chars} / ${L1_RESIDENT_BUDGET} 字符（余 ${L1_RESIDENT_BUDGET - l1Chars}）`)
+}
+
+// 校验 2.2：报告跨层基础常驻面，避免各层分别不超限但合计失控；另报告代表性首次编辑 L2 注入量。
+try {
+  const roots = resolveRoots()
+  const cursorRulesDir = roots.consumerRoot && join(roots.consumerRoot, roots.config.ruleSurfaces.cursorRulesDir)
+  if (!cursorRulesDir || !existsSync(cursorRulesDir)) throw new Error('consumer .cursor/rules directory is unavailable')
+  const alwaysApplyRules = loadCursorRules(cursorRulesDir).filter((rule) => rule.alwaysApply)
+  const l2AlwaysApplyChars = alwaysApplyRules.reduce((sum, rule) => sum + charCount(rule.body), 0)
+  const l3ResidentChars = residents.reduce((sum, rule) => sum + rule.size, 0)
+  const residentEnvelopeChars = l1Chars + l3ResidentChars + l2AlwaysApplyChars
+  const detail = `L1 ${l1Chars} + L3 ${l3ResidentChars} + L2 alwaysApply ${l2AlwaysApplyChars}`
+  if (residentEnvelopeChars > RESIDENT_ENVELOPE_BUDGET) errors.push(`❌ 跨层基础常驻面 = ${residentEnvelopeChars} / ${RESIDENT_ENVELOPE_BUDGET} 字符（${detail}）。`)
+  else console.log(`✅ 跨层基础常驻面 = ${residentEnvelopeChars} / ${RESIDENT_ENVELOPE_BUDGET} 字符（${detail}，余 ${RESIDENT_ENVELOPE_BUDGET - residentEnvelopeChars}）`)
+  const representativeTargets = ['apps/web/src/Foo.tsx', 'apps/web/src/useFoo.ts', 'apps/web/src/foo.ts']
+  for (const target of representativeTargets) {
+    const pack = resolveRulePack({ worktree: roots.consumerRoot, targetFiles: [target], rulesDir: cursorRulesDir, conflictOverrides: roots.config.ruleConflictOverrides || [] })
+    const rendered = renderRuleContext(pack)
+    console.log(`ℹ L2 首次编辑样本 ${target}: ${pack.matchedRules.length} 条 / ${rendered.byteLength} bytes`)
+  }
+} catch (error) {
+  errors.push(`❌ 无法计算首次代码编辑常驻面：${error.message}`)
 }
 
 // 校验 2.5：per-file on-demand 预算。常驻文件已由校验 2 管；其余专题文档各有天花板，防无限膨胀。

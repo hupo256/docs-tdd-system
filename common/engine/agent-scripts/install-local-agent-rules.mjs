@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
 import assert from 'node:assert/strict'
-import { copyFileSync, existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, readlinkSync, renameSync, symlinkSync, writeFileSync } from 'node:fs'
+import { chmodSync, copyFileSync, existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, readlinkSync, renameSync, symlinkSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { basename, dirname, join, relative, resolve } from 'node:path'
+import { spawnSync } from 'node:child_process'
 import { createCursorAdapter } from './lib/agent-rule-adapters.mjs'
 import { resolveRoots } from './lib/roots.mjs'
 
@@ -94,6 +95,16 @@ function addHook(settings, event, matcher, hook) {
   settings.hooks = { ...(settings.hooks || {}), [event]: nextGroups }
 }
 
+function removeHooksMatching(settings, event, predicate) {
+  const groups = Array.isArray(settings.hooks?.[event]) ? settings.hooks[event] : []
+  settings.hooks = {
+    ...(settings.hooks || {}),
+    [event]: groups
+      .map((group) => ({ ...group, hooks: (group.hooks || []).filter((hook) => !predicate(hook)) }))
+      .filter((group) => group.hooks.length > 0),
+  }
+}
+
 function moveDiscoverableSkillBackups() {
   for (const agent of ['.codex', '.claude']) {
     const skillsDir = join(home, agent, 'skills')
@@ -146,7 +157,8 @@ function mergeClaudeHooks() {
     command: contextCommand,
     timeout: 10,
   })
-  const gateCommand = `node ${repoRoot}/apps/web/docs_tdd/common/engine/agent-scripts/claude-posttooluse-gate.mjs`
+  const gateCommand = `node ${docsSystemRoot}/common/engine/agent-scripts/claude-posttooluse-gate.mjs`
+  removeHooksMatching(settings, 'PostToolUse', (hook) => hook.command?.includes('/claude-posttooluse-gate.mjs'))
   addHook(settings, 'PostToolUse', 'Edit|Write|MultiEdit', {
     type: 'command',
     command: gateCommand,
@@ -185,8 +197,57 @@ function mergeCodexHooks() {
     async: false,
     timeout: 10,
   })
+  const gateCommand = `node ${docsSystemRoot}/common/engine/agent-scripts/claude-posttooluse-gate.mjs`
+  removeHooksMatching(settings, 'PostToolUse', (hook) => hook.command?.includes('/claude-posttooluse-gate.mjs'))
+  addHook(settings, 'PostToolUse', matcher, {
+    type: 'command',
+    command: gateCommand,
+    async: false,
+    timeout: 20,
+  })
   writeJsonWithBackup(hooksFile, settings)
   console.log(`hooks: ${hooksFile}`)
+}
+
+function shellQuote(value) {
+  return `'${String(value).replaceAll("'", `'"'"'`)}'`
+}
+
+function installLocalPrecommit() {
+  const hookDir = join(sharedRoot, 'git-hooks', basename(repoRoot))
+  const hookFile = join(hookDir, 'pre-commit')
+  const configured = spawnSync('git', ['config', '--local', '--get', 'core.hooksPath'], { cwd: repoRoot, encoding: 'utf8' })
+  const priorHooksPath = configured.status === 0 ? configured.stdout.trim() : ''
+  const wiring = config.enforcementWiring || {}
+  const teamConfig = join(repoRoot, wiring.precommitConfig || 'package.json')
+  const teamMarker = wiring.precommitMarker || 'precommit-verify-code-rules.mjs'
+  const teamGateWired = existsSync(teamConfig) && readFileSync(teamConfig, 'utf8').includes(teamMarker)
+  const trackedHuskyHook = join(repoRoot, '.husky', 'pre-commit')
+  if (teamGateWired && existsSync(trackedHuskyHook)) {
+    if (resolve(repoRoot, priorHooksPath || '.husky') === resolve(hookDir)) {
+      const restore = spawnSync('git', ['config', '--local', 'core.hooksPath', '.husky'], { cwd: repoRoot, encoding: 'utf8' })
+      if (restore.status !== 0) throw new Error(`cannot restore team core.hooksPath: ${restore.stderr.trim()}`)
+    }
+    console.log('local pre-commit: existing team Husky/lint-staged gate retained')
+    return
+  }
+  const priorHook = existsSync(trackedHuskyHook)
+    ? join('$repo_root', '.husky', 'pre-commit')
+    : priorHooksPath && resolve(repoRoot, priorHooksPath) !== resolve(hookDir)
+      ? (priorHooksPath.startsWith('/') ? join(priorHooksPath, 'pre-commit') : join('$repo_root', priorHooksPath, 'pre-commit'))
+      : ''
+  const priorCommand = priorHook
+    ? priorHook.startsWith('$repo_root')
+      ? `if [ -x "${priorHook}" ]; then "${priorHook}"; fi`
+      : `if [ -x ${shellQuote(priorHook)} ]; then ${shellQuote(priorHook)}; fi`
+    : ''
+  const content = `#!/bin/sh\nset -e\nrepo_root=$(git rev-parse --show-toplevel)\n${priorCommand}\nnode ${shellQuote(join(docsSystemRoot, 'common/engine/agent-scripts/precommit-verify-code-rules.mjs'))}\n`
+  mkdirSync(hookDir, { recursive: true })
+  if (!existsSync(hookFile) || readFileSync(hookFile, 'utf8') !== content) writeFileSync(hookFile, content)
+  chmodSync(hookFile, 0o755)
+  const result = spawnSync('git', ['config', '--local', 'core.hooksPath', hookDir], { cwd: repoRoot, encoding: 'utf8' })
+  if (result.status !== 0) throw new Error(`cannot configure local core.hooksPath: ${result.stderr.trim()}`)
+  console.log(`local pre-commit: ${hookFile}${priorHook ? ` (chains ${priorHook})` : ''}`)
 }
 
 function install() {
@@ -210,6 +271,7 @@ function install() {
   writeCursorAdapter()
   mergeClaudeHooks()
   mergeCodexHooks()
+  installLocalPrecommit()
 }
 
 function selfTest() {
@@ -218,6 +280,7 @@ function selfTest() {
   assert.equal(protocol.includes('docs-tdd.mjs gate'), true)
   assert.equal(typeof repoRoot === 'string' && repoRoot.length > 0, true)
   assert.equal(ruleContextHook.endsWith('/common/engine/agent-scripts/rule-context-hook.mjs'), true)
+  assert.equal(shellQuote("a'b"), `'a'"'"'b'`)
   const settings = {
     hooks: {
       PreToolUse: [
@@ -249,6 +312,9 @@ function selfTest() {
     timeout: 10,
   })
   assert.deepEqual(duplicateSettings.hooks.SessionStart, [{ hooks: [{ type: 'command', command: 'same', timeout: 10 }] }])
+  const staleSettings = { hooks: { PostToolUse: [{ hooks: [{ command: 'node /old/claude-posttooluse-gate.mjs' }, { command: 'keep' }] }] } }
+  removeHooksMatching(staleSettings, 'PostToolUse', (hook) => hook.command?.includes('/claude-posttooluse-gate.mjs'))
+  assert.deepEqual(staleSettings.hooks.PostToolUse, [{ hooks: [{ command: 'keep' }] }])
   console.log('install-local-agent-rules self-test passed.')
 }
 

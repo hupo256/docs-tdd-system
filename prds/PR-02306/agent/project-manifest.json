@@ -10,5 +10,11 @@
   "gatePolicy": {
     "legacyRules": "blocking",
     "currentTouchedRules": "blocking"
+  },
+  "rulePolicy": {
+    "commit": "9b913bba3bc9861827075fa72a36b140c796eb2c",
+    "policyFingerprint": "cd35fa778274e14c93cc0a33d92c1e9928ee16626b1ed623fe369941be0c8d2d",
+    "upgradeMode": "explicit",
+    "pinnedAt": "2026-09-03T03:14:25.062Z"
   }
 }

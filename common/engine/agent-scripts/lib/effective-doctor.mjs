@@ -8,8 +8,8 @@
 import { spawnSync } from 'node:child_process'
 import { existsSync, lstatSync, readdirSync, readFileSync, realpathSync } from 'node:fs'
 import { join } from 'node:path'
-import { REQUIRED_AGENT_CLIENT_IDS, validateAgentClientMatrix } from './agent-clients.mjs'
-import { createCodexHookSpecs, validateHookContract } from './hook-contract.mjs'
+import { REQUIRED_AGENT_CLIENT_IDS, validateAgentClientMatrix, validateRuntimeClientConformance } from './agent-clients.mjs'
+import { createClaudeHookSpecs, createCodexHookSpecs, validateHookContract } from './hook-contract.mjs'
 import { findL2Conflicts, findRepoEntryDuplicates, resolveL2Conflicts } from './l2-conflict-detect.mjs'
 import { isCanonicalL1Symlink } from './rule-surface-visibility.mjs'
 
@@ -68,8 +68,10 @@ function findDiscoverableSkillBackups(g) {
  * and prints (json or text) as a side effect, mirroring the original in-file doctor().
  */
 export function runDoctor(deps) {
-  const { sources, label, g, config, docsSystemRoot, ruleConsumerRoot, home, manifestFile, expectedCursorAdapter, createSnapshot, checkRelease, collectL2Files, conflictOverrides, cursorAdapterMatches, json, allowTrackedRuleChanges } = deps
+  const { sources, label, g, config, docsSystemRoot, ruleConsumerRoot, home, manifestFile, expectedCursorAdapter, createSnapshot, checkRelease, collectL2Files, conflictOverrides, cursorAdapterMatches, json, allowTrackedRuleChanges, strict = false } = deps
   const CODEX_HOOK_COMMAND = `node ${join(docsSystemRoot, 'common/engine/agent-scripts/rule-context-hook.mjs')} --client codex`
+  const CLAUDE_HOOK_COMMAND = `node ${join(docsSystemRoot, 'common/engine/agent-scripts/rule-context-hook.mjs')} --client claude`
+  const CODEX_GATE_COMMAND = `node ${join(docsSystemRoot, 'common/engine/agent-scripts/claude-posttooluse-gate.mjs')}`
   const checks = []
   const add = (id, ok, severity, message, file = '') => checks.push({ id, ok, severity, message, file })
 
@@ -114,20 +116,45 @@ export function runDoctor(deps) {
     add('L1-TOPLEVEL-SINGLE-SOURCE', same, 'error', `${label(adapter)} ${same ? 'resolves to the shared L1 source' : `does not resolve to shared L1 (${label(canonicalL1)}); replace with symlink via install-local-agent-rules.mjs`}`, label(adapter))
   }
   const settingsText = existsSync(sources.adapters[3]) ? readFileSync(sources.adapters[3], 'utf8') : ''
-  const claudeHook = settingsText.includes('PreToolUse') && settingsText.includes('rule-context-hook.mjs') && settingsText.includes('claude-posttooluse-gate.mjs')
-  add('CLAUDE-HOOK', claudeHook, 'error', `Claude rule injection and PostToolUse dispatchers ${claudeHook ? 'are configured' : 'are missing'}`, label(sources.adapters[3]))
+  let claudeHookIssues = ['settings file is missing']
+  if (settingsText) {
+    try {
+      claudeHookIssues = validateHookContract(JSON.parse(settingsText), createClaudeHookSpecs(CLAUDE_HOOK_COMMAND, CODEX_GATE_COMMAND))
+    } catch (error) {
+      claudeHookIssues = [`invalid JSON: ${error.message}`]
+    }
+  }
+  const claudeHook = claudeHookIssues.length === 0
+  add('CLAUDE-HOOK', claudeHook, 'error', claudeHook ? 'Claude rule injection, receipt, and immediate code-gate hooks match the required contract' : `Claude rule hook contract is invalid: ${claudeHookIssues.join('; ')}`, label(sources.adapters[3]))
   let codexHookIssues = ['hooks file is missing']
   if (existsSync(sources.adapters[4])) {
     try {
-      codexHookIssues = validateHookContract(readJson(sources.adapters[4]), createCodexHookSpecs(CODEX_HOOK_COMMAND))
+      codexHookIssues = validateHookContract(readJson(sources.adapters[4]), createCodexHookSpecs(CODEX_HOOK_COMMAND, CODEX_GATE_COMMAND))
     } catch (error) {
       codexHookIssues = [`invalid JSON: ${error.message}`]
     }
   }
-  add('CODEX-HOOK', codexHookIssues.length === 0, 'error', codexHookIssues.length === 0 ? 'Codex rule hooks have the required four events, matchers, timeout fields, and no duplicates' : `Codex rule hook contract is invalid: ${codexHookIssues.join('; ')}`, label(sources.adapters[4]))
+  add('CODEX-HOOK', codexHookIssues.length === 0, 'error', codexHookIssues.length === 0 ? 'Codex rule injection, receipt, and immediate code-gate hooks match the required contract' : `Codex rule hook contract is invalid: ${codexHookIssues.join('; ')}`, label(sources.adapters[4]))
 
-  // 强制点对等：Claude 靠自身 PostToolUse hook 拦编辑，Codex/Cursor/裸 commit 只能靠消费者仓库的 CI 门禁与
-  // pre-commit 接线兜底。这两条接线属消费者文件，docs_tdd 无法自注入，缺失是需暴露的降级（severity=warn）。
+  const adapterProtocol = sources.adapters.slice(0, 3).map(containsProtocol)
+  const l1Shared = sources.adapters.slice(0, 2).map((adapter) => pathsResolveToCanonical([adapter], canonicalL1))
+  const runtimeAdaptersReady = sources.runtimeAdapters.every(existsSync)
+  const conformance = validateRuntimeClientConformance({
+    codex: { l1: l1Shared[0], adapterProtocol: adapterProtocol[0], preToolRuleInjection: codexHookIssues.length === 0, postToolReceipt: codexHookIssues.length === 0, postToolCodeGate: codexHookIssues.length === 0 },
+    claude: { l1: l1Shared[1], adapterProtocol: adapterProtocol[1], preToolRuleInjection: claudeHook, postToolReceipt: claudeHook, postToolCodeGate: claudeHook },
+    cursor: { l1: cursorExact, adapterProtocol: adapterProtocol[2], nativeL2Rules: collectL2Files().length > 0, changedGateFallback: expectedCursorAdapter.includes('docs-tdd.mjs changed') },
+    'lark-codex': { runtimeAdapter: runtimeAdaptersReady, focusedContext: runtimeAdaptersReady, workerQualityGate: runtimeAdaptersReady },
+    'lark-claude': { runtimeAdapter: runtimeAdaptersReady, focusedContext: runtimeAdaptersReady, workerQualityGate: runtimeAdaptersReady },
+  })
+  add(
+    'CLIENT-RUNTIME-CONFORMANCE',
+    conformance.ok,
+    'error',
+    conformance.ok ? 'all five clients have independently observed loader/executor capabilities' : `client enforcement gaps: ${Object.entries(conformance.missing).map(([client, missing]) => `${client}=[${missing.join(',')}]`).join(' ')}`,
+    label(manifestFile),
+  )
+
+  // Cursor 没有可信的 PostToolUse hook，非交互写入也可能绕过 Agent hook；CI / pre-commit 是最终兜底。
   const wiring = config.enforcementWiring || {}
   const ciMarker = wiring.ciMarker || 'verify-code-rules.mjs'
   const ciCandidates = Array.isArray(wiring.ciConfigCandidates) ? wiring.ciConfigCandidates : ['.gitlab-ci.yml', '.github/workflows']
@@ -152,7 +179,7 @@ export function runDoctor(deps) {
     'CI-GATE',
     ciWired,
     'warn',
-    ciFiles.length === 0 ? `no CI config found (${ciCandidates.join(', ')}); verify-code-rules CI gate cannot be confirmed` : ciWired ? 'verify-code-rules CI gate is wired' : `CI config present but verify-code-rules gate not wired (expected "${ciMarker}"); Codex/Cursor/manual MRs bypass the machine rule gate`,
+    ciFiles.length === 0 ? `no CI config found (${ciCandidates.join(', ')}); verify-code-rules CI gate cannot be confirmed` : ciWired ? 'verify-code-rules CI gate is wired' : `CI config present but verify-code-rules gate not wired (expected "${ciMarker}"); Cursor and non-hook commits can bypass the machine rule gate`,
     ciCandidates[0],
   )
 
@@ -160,7 +187,12 @@ export function runDoctor(deps) {
   const precommitMarker = wiring.precommitMarker || 'precommit-verify-code-rules.mjs'
   const precommitConfigPath = join(ruleConsumerRoot, precommitConfigName)
   const precommitConfigExists = existsSync(precommitConfigPath)
-  const precommitWired = precommitConfigExists && readFileSync(precommitConfigPath, 'utf8').includes(precommitMarker)
+  const teamPrecommitWired = precommitConfigExists && readFileSync(precommitConfigPath, 'utf8').includes(precommitMarker)
+  const hooksPathResult = spawnSync('git', ['config', '--local', '--get', 'core.hooksPath'], { cwd: ruleConsumerRoot, encoding: 'utf8', stdio: 'pipe' })
+  const hooksPath = hooksPathResult.status === 0 ? hooksPathResult.stdout.trim() : ''
+  const localPrecommitPath = hooksPath ? join(hooksPath.startsWith('/') ? hooksPath : join(ruleConsumerRoot, hooksPath), 'pre-commit') : ''
+  const localPrecommitWired = Boolean(localPrecommitPath && existsSync(localPrecommitPath) && readFileSync(localPrecommitPath, 'utf8').includes(precommitMarker))
+  const precommitWired = teamPrecommitWired || localPrecommitWired
   add(
     'PRECOMMIT-GATE',
     precommitWired,
@@ -168,9 +200,9 @@ export function runDoctor(deps) {
     !precommitConfigExists
       ? `no ${precommitConfigName} found; verify-code-rules pre-commit gate cannot be confirmed`
       : precommitWired
-        ? 'verify-code-rules pre-commit gate is wired'
+        ? `verify-code-rules pre-commit gate is wired (${teamPrecommitWired ? 'team config' : 'personal core.hooksPath'})`
         : `${precommitConfigName} present but pre-commit gate not wired (expected "${precommitMarker}"); local commits bypass the machine rule gate`,
-    precommitConfigName,
+    localPrecommitWired ? localPrecommitPath : precommitConfigName,
   )
 
   const release = checkRelease()
@@ -214,8 +246,10 @@ export function runDoctor(deps) {
   )
 
   const failed = checks.filter((check) => !check.ok)
+  const strictIgnoredWarnIds = new Set(['CI-GATE']) // CI 需要团队 tracked 改动，不属于个人本地 strict 范围。
+  const strictFailures = strict ? failed.filter((check) => check.severity === 'warn' && !strictIgnoredWarnIds.has(check.id)) : []
   const result = {
-    ok: !failed.some((check) => check.severity === 'error'),
+    ok: !failed.some((check) => check.severity === 'error') && strictFailures.length === 0,
     summary: { total: checks.length, error: failed.filter((check) => check.severity === 'error').length, warn: failed.filter((check) => check.severity === 'warn').length },
     effectiveRulesFingerprint: release.currentFingerprint,
     checks,
@@ -223,7 +257,7 @@ export function runDoctor(deps) {
   if (json) console.log(JSON.stringify(result, null, 2))
   else {
     for (const check of checks) console.log(`${check.ok ? 'PASS' : check.severity.toUpperCase()} ${check.id}: ${check.message}`)
-    console.log(`doctor: ${result.ok ? 'PASS' : 'BLOCK'} (error=${result.summary.error}, warn=${result.summary.warn})`)
+    console.log(`doctor${strict ? ' --strict' : ''}: ${result.ok ? 'PASS' : 'BLOCK'} (error=${result.summary.error}, warn=${result.summary.warn}${strict ? `, strict-blocking-warn=${strictFailures.length}` : ''})`)
   }
   return result
 }

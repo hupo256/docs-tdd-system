@@ -22,6 +22,7 @@ const home = homedir()
 const args = process.argv.slice(2)
 const json = args.includes('--json')
 const allowTrackedRuleChanges = args.includes('--allow-tracked-rule-changes')
+const strict = args.includes('--strict')
 
 const g = config.globalAdapters
 const conflictOverrides = (Array.isArray(config.ruleConflictOverrides) ? config.ruleConflictOverrides : [])
@@ -44,11 +45,12 @@ function printHelp() {
 Publish and diagnose the effective local rules consumed by every registered AI entrypoint.
 
 Options:
-  --allow-tracked-rule-changes  Allow an explicitly approved dirty tracked rule surface for this maintenance run.`)
+  --allow-tracked-rule-changes  Allow an explicitly approved dirty tracked rule surface for this maintenance run.
+  --strict                      Treat locally actionable doctor warnings as blocking.`)
 }
 
 function doctor() {
-  return runDoctor({ sources, label, g, config, docsSystemRoot, ruleConsumerRoot, home, manifestFile, expectedCursorAdapter, createSnapshot, checkRelease, collectL2Files, conflictOverrides, cursorAdapterMatches, json, allowTrackedRuleChanges })
+  return runDoctor({ sources, label, g, config, docsSystemRoot, ruleConsumerRoot, home, manifestFile, expectedCursorAdapter, createSnapshot, checkRelease, collectL2Files, conflictOverrides, cursorAdapterMatches, json, allowTrackedRuleChanges, strict })
 }
 
 function publish() {

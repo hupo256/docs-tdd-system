@@ -64,7 +64,7 @@ node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs gate PR-01234 G8
 
 `agent/gate-results.json.commands` 是子命令摘要数组，新产物包含 `label`、`status`、`ok`、`startedAt`、`finishedAt`。聚合 gate 同时记录工作树和规则 fingerprint；变化后不得沿用旧证据。正式入口默认写 evidence：通过时先追加 `gate-history.json`，再调用 `set-project-stage.mjs` 校验同阶段历史并同步 README、机器版摘要和索引；未通过时只刷新最近结果与索引，不追加历史。不得直接调用 `verify-project-gate.mjs --write` 或 `set-project-stage.mjs` 代替 runner 完成晋级。
 
-编码场景的 `docs-tdd context` 只有在 G2 通过后才写 `agent/rule-session.json` v2。`changed` 与 G5-G8 同时校验客户端、rule-release/effective/context、G2 输入 fingerprint、Git HEAD 和 24 小时有效期；任一变化要求当前客户端重新加载编码场景，不能用另一个客户端或旧会话证明“已读规则”。Cursor adapter 显式传 `--client cursor`；Codex/Claude Code 从各自运行环境识别，也可用 `--client codex|claude|manual` 明确指定。
+编码场景的 `docs-tdd context` 只有在 G2 通过后才写 `agent/rule-session.json` v2。`changed` 与 G5-G8 同时校验客户端、rule-release/effective/context、G2 输入 fingerprint、Git HEAD 和 24 小时有效期；任一变化要求当前客户端重新加载编码场景，不能用另一个客户端或旧会话证明“已读规则”。Cursor adapter 显式传 `--client cursor`；Codex/Claude Code 从各自运行环境识别。纯人工终端可使用 `--client human`；检测到 Codex/Claude 运行环境时，显式伪装成其他客户端（尤其 human）会被拒绝。
 
 Lark-Codex / Lark-Claude 不复用交互式 rule session。Worker 每次启动 AI 前实查 L3/effective 发布新鲜度，并把两层 fingerprint、路由章节摘要与组合指纹写入任务 audit 和 prompt；发布 stale、文件缺失或章节缺失都会在启动 AI 前阻断。
 

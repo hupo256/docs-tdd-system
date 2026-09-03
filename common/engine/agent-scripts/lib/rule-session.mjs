@@ -7,20 +7,26 @@ import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 export const CODING_SCENARIOS = new Set(['g4_coding_worktree', 'write_api', 'write_mapper', 'write_query_hook', 'write_state', 'write_msw', 'legacy_mock', 'write_ui', 'write_figma'])
-export const RULE_SESSION_CLIENTS = new Set(['codex', 'claude', 'cursor', 'manual'])
+export const RULE_SESSION_CLIENTS = new Set(['codex', 'claude', 'cursor', 'human'])
+
+function detectedAiClient(env) {
+  if (env.CLAUDE_PROJECT_DIR) return 'claude'
+  if (env.CODEX_THREAD_ID || env.CODEX_SHELL) return 'codex'
+  return null
+}
 
 const G2_INPUTS = ['product/00-feature-inventory.md', 'product/01-scope-and-phases.md', 'product/02-technical-design.md', 'product/04-frontend-tasks.md', 'agent/project-manifest.json']
 
 /** Resolve the current rule consumer so one AI cannot reuse another client's evidence. */
 export function resolveRuleSessionClient({ requested, env = process.env } = {}) {
   const explicit = requested || env.DOCS_TDD_AGENT_CLIENT
+  const detected = detectedAiClient(env)
   if (explicit) {
     if (!RULE_SESSION_CLIENTS.has(explicit)) throw new Error(`invalid agent client: ${explicit}`)
+    if (detected && explicit !== detected) throw new Error(`agent client mismatch: runtime is ${detected}, requested ${explicit}`)
     return explicit
   }
-  if (env.CLAUDE_PROJECT_DIR) return 'claude'
-  if (env.CODEX_THREAD_ID || env.CODEX_SHELL) return 'codex'
-  return 'manual'
+  return detected || 'human'
 }
 
 /** Fingerprint the project inputs that authorize business coding. */
@@ -113,7 +119,9 @@ function selfTest() {
   assert.equal(resolveRuleSessionClient({ env: { CODEX_THREAD_ID: 'thread' } }), 'codex')
   assert.equal(resolveRuleSessionClient({ env: { CLAUDE_PROJECT_DIR: '/repo' } }), 'claude')
   assert.equal(resolveRuleSessionClient({ requested: 'cursor', env: {} }), 'cursor')
-  assert.equal(resolveRuleSessionClient({ env: {} }), 'manual')
+  assert.equal(resolveRuleSessionClient({ env: {} }), 'human')
+  assert.throws(() => resolveRuleSessionClient({ requested: 'human', env: { CODEX_SHELL: '1' } }), /agent client mismatch/)
+  assert.throws(() => resolveRuleSessionClient({ requested: 'manual', env: {} }), /invalid agent client/)
   assert.throws(() => resolveRuleSessionClient({ requested: 'unknown', env: {} }), /invalid agent client/)
   assert.equal(
     validateRuleSession({ session, current, baseline, now: Date.parse('2026-01-03T00:00:00.000Z') }).ok,
