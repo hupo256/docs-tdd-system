@@ -221,8 +221,8 @@ if (command === 'check') status = run([join(scriptDir, 'check-doc-budget.mjs')])
 else {
   const release = requireFreshRuleRelease()
   if (!release) process.exit(1)
+  // effective-rules 只作展示基线：缺失/损坏/漂移只 warn，业务命令按项目 pinned 政策继续（永不返回 null）。
   const effectiveRules = requireFreshEffectiveRules()
-  if (!effectiveRules) process.exit(1)
   if (command === 'gate') {
     if (['G5', 'G6', 'G7', 'G8'].includes((detail || 'G3').toUpperCase()) && !requireRuleSession(projectId, worktree, agentClient)) process.exit(1)
     status = run([join(scriptDir, 'run-project-gate.mjs'), projectId, detail || 'G3', '--write', '--client', agentClient, ...(contextSessionId ? ['--session-id', contextSessionId] : []), ...(noCache ? ['--no-cache'] : []), ...(partial ? ['--partial'] : [])], worktree)

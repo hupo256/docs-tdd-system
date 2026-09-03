@@ -153,9 +153,9 @@ node <mount>/common/engine/agent-scripts/decommission-worktree.mjs PR-01234 --dr
 node <mount>/common/engine/agent-scripts/decommission-worktree.mjs PR-01234
 ```
 
-> 维护系统本身（改规则/加专题/发指纹）使用场景 `docs_tdd_maintenance`；改完先运行 `docs-tdd check <PROJECT-ID>`，再运行 `docs-tdd release <PROJECT-ID> --scenario docs_tdd_maintenance` 原子发布并自检，否则发布漂移会阻断 context/changed/gate。
+> 维护系统本身（改规则/加专题/发指纹）使用场景 `docs_tdd_maintenance`；改完先运行 `docs-tdd check <PROJECT-ID>`，再运行 `docs-tdd release <PROJECT-ID> --scenario docs_tdd_maintenance` 原子发布并自检。
 >
-> **大规模重构期**（频繁改门禁脚本会让指纹链反复失效、每次都要重发布）可临时 `export DOCS_TDD_SKIP_RULE_FRESHNESS=1` 跳过 `run-project-gate` / `docs-tdd`（context/changed/gate）的规则发布/生效新鲜度硬闸；跳过会打 warn、不静默。稳定后 `unset`（或不设该 env）即自动恢复严格模式。
+> **规则漂移不再阻断在飞项目**：每个业务项目在 `agent/project-manifest.json` 的 `rulePolicy` 钉住其验收依据的规则政策版本（commit + policyFingerprint），context/changed/gate 从该 commit 不可变读规则文档。共享规则仓的后续编辑、未发布草稿、`common/engine/**` 引擎更新、个人 L1/adapter 变化一律只 warn、不阻断业务命令；只有已发布规则政策基线（rule-release manifest）损坏/缺失、或项目 pin 所指 commit 内容缺失才硬阻塞。用 `docs-tdd rules status <PR>` 查 pinned vs latest 差距、`docs-tdd rules upgrade <PR>` 显式升级到最新发布（只影响该项目）。
 
 ## 目录
 

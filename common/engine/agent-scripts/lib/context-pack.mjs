@@ -26,10 +26,6 @@ const executionRoot = consumerWorktree && consumerWorktree !== docsRoot ? consum
 const releaseScript = join(scriptsDir, 'rule-release.mjs')
 const effectiveRulesScript = join(scriptsDir, 'effective-rules.mjs')
 
-// 重构期临时开关：DOCS_TDD_SKIP_RULE_FRESHNESS=1 跳过新鲜度硬闸（context/changed/gate 前置），
-// 稳定后不设此 env 即恢复严格模式。
-const skipRuleFreshness = process.env.DOCS_TDD_SKIP_RULE_FRESHNESS === '1'
-
 const readJson = (file) => JSON.parse(readFileSync(file, 'utf8'))
 
 export function normalizeRuleRef(ref) {
@@ -291,10 +287,6 @@ export function printContextDelta(scenario, pack) {
 }
 
 export function requireFreshRuleRelease() {
-  if (skipRuleFreshness) {
-    console.error('[docs-tdd] ⚠ DOCS_TDD_SKIP_RULE_FRESHNESS=1：跳过 rule-release 新鲜度检查（重构期临时开关）')
-    return { fresh: true, skipped: true }
-  }
   const release = inspectRuleRelease()
   // 只有 manifest 损坏/缺失才致命；stale（工作副本领先已发布）不再阻断业务项目——项目按各自 pin 跑，
   // 规则维护侧另有 `docs-tdd release/golden` 硬闸兜住「未发布不能发布」。
@@ -310,17 +302,14 @@ export function requireFreshRuleRelease() {
   return release
 }
 
+// effective-rules（个人 L1 + 各端 adapter 的聚合快照）已退役为「展示基线」，不再是业务命令的运行前置。
+// 缺失/损坏/漂移一律只 warn 并回退一个占位对象——业务项目按各自 pinned 规则政策跑，绝不因个人规则面
+// 状态而停工（维护侧另有 docs-tdd release/guard/golden 硬闸兜住「个人规则面没发布不能发布」）。
 export function requireFreshEffectiveRules() {
-  if (skipRuleFreshness) {
-    console.error('[docs-tdd] ⚠ DOCS_TDD_SKIP_RULE_FRESHNESS=1：跳过 effective-rules 新鲜度检查（重构期临时开关）')
-    return { fresh: true, skipped: true }
-  }
   const release = inspectEffectiveRules()
   if (release.status === 'invalid' || release.status === 'missing') {
-    console.error(`effective rules release is ${release.status}; current=${release.currentFingerprint || 'unknown'} published=${release.publishedFingerprint || 'none'}`)
-    if (release.missing?.length) console.error(`missing: ${release.missing.join(', ')}`)
-    console.error('run effective-rules.mjs --doctor, fix errors, then effective-rules.mjs --write')
-    return null
+    console.error(`[docs-tdd] ⚠ effective rules snapshot is ${release.status}; business commands run against each project's pinned policy (not blocking). Run effective-rules.mjs --write to refresh the display baseline.`)
+    return { fresh: false, status: release.status, currentFingerprint: release.currentFingerprint || 'unpublished', clientMatrix: release.clientMatrix || {} }
   }
   if (!release.fresh) {
     console.error('[docs-tdd] ⚠ effective rules are ahead of the published snapshot; current agent may need to reload context. Not blocking the project.')

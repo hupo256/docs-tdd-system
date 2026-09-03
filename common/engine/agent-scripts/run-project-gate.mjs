@@ -123,37 +123,33 @@ if (skipCodeRules && strictCodeRuleGates.includes(gate) && !skipCodeRulesReason)
   fail('--skip-code-rules-reason is required when using --skip-code-rules for G6/G7/G8')
 }
 
-// 重构期临时开关：DOCS_TDD_SKIP_RULE_FRESHNESS=1 跳过规则发布/生效新鲜度硬闸
-// （改脚本会让指纹链失效、每次都要重发布，重构期很烦）。稳定后不设此 env 即恢复严格模式。
-const skipRuleFreshness = process.env.DOCS_TDD_SKIP_RULE_FRESHNESS === '1'
-if (skipRuleFreshness) {
-  console.error('[run-project-gate] ⚠ DOCS_TDD_SKIP_RULE_FRESHNESS=1：已跳过规则发布/生效新鲜度检查（重构期临时开关，稳定后移除该 env）')
-} else {
-  // 业务项目 gate 不再因「共享规则仓工作副本领先已发布」而硬阻塞——项目按各自 pin 跑，
-  // 只有 manifest 损坏/缺失才致命。规则维护侧另有 docs-tdd release/golden 硬闸兜住「未发布不能发布」。
-  const inspect = (script, label) => {
-    const check = spawnSync(process.execPath, [join(scriptDir, script), '--check', '--json'], {
-      cwd: callerCwd,
-      encoding: 'utf8',
-      stdio: 'pipe',
-    })
-    let parsed = null
-    try {
-      parsed = JSON.parse(check.stdout)
-    } catch {
-      parsed = null
-    }
-    if (!parsed || parsed.status === 'invalid' || parsed.status === 'missing') {
-      process.stderr.write(check.stderr || check.stdout)
-      fail(`${label} is missing or corrupt`)
-    }
-    if (!parsed.fresh) {
-      console.error(`[run-project-gate] ⚠ ${label} sources are ahead of the published snapshot; project runs against its pinned policy (not blocking).`)
-    }
+// 业务项目 gate 的规则前置：只有已发布规则政策基线（rule-release）损坏/缺失才致命——它是各项目 pin
+// 所引用的发布基线。effective-rules（个人 L1 + adapter 聚合）已退役为展示基线，缺失/损坏/漂移都不阻断业务 gate；
+// 项目按各自 pin 跑。规则维护侧另有 docs-tdd release/golden 硬闸兜住「未发布不能发布」。
+const inspect = (script, label, { fatalOnInvalid }) => {
+  const check = spawnSync(process.execPath, [join(scriptDir, script), '--check', '--json'], {
+    cwd: callerCwd,
+    encoding: 'utf8',
+    stdio: 'pipe',
+  })
+  let parsed = null
+  try {
+    parsed = JSON.parse(check.stdout)
+  } catch {
+    parsed = null
   }
-  inspect('rule-release.mjs', 'published rule release')
-  inspect('effective-rules.mjs', 'effective rules release')
+  if (!parsed || parsed.status === 'invalid' || parsed.status === 'missing') {
+    process.stderr.write(check.stderr || check.stdout)
+    if (fatalOnInvalid) fail(`${label} is missing or corrupt`)
+    console.error(`[run-project-gate] ⚠ ${label} is ${parsed?.status || 'unparseable'}; business gate runs against the project's pinned policy (not blocking).`)
+    return
+  }
+  if (!parsed.fresh) {
+    console.error(`[run-project-gate] ⚠ ${label} sources are ahead of the published snapshot; project runs against its pinned policy (not blocking).`)
+  }
 }
+inspect('rule-release.mjs', 'published rule release', { fatalOnInvalid: true })
+inspect('effective-rules.mjs', 'effective rules release', { fatalOnInvalid: false })
 
 const projectDir = resolveProjectRoot(projectId)
 if (!existsSync(projectDir)) fail(`project directory does not exist: ${relative(repoRoot, projectDir)}`)
