@@ -17,6 +17,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { printReport } from './cli-report.mjs'
 import { charCount } from './doc-budget-schema.mjs'
+import { pinnedFileExists, readPinnedFile } from './pinned-source.mjs'
 import { resolveProjectRoot, resolveRoots, rulesRoot } from './roots.mjs'
 
 const scriptsDir = join(dirname(fileURLToPath(import.meta.url)), '..')
@@ -24,10 +25,6 @@ const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, consumerWorktree } = r
 const executionRoot = consumerWorktree && consumerWorktree !== docsRoot ? consumerWorktree : repoRoot
 const releaseScript = join(scriptsDir, 'rule-release.mjs')
 const effectiveRulesScript = join(scriptsDir, 'effective-rules.mjs')
-
-// 重构期临时开关：DOCS_TDD_SKIP_RULE_FRESHNESS=1 跳过新鲜度硬闸（context/changed/gate 前置），
-// 稳定后不设此 env 即恢复严格模式。
-const skipRuleFreshness = process.env.DOCS_TDD_SKIP_RULE_FRESHNESS === '1'
 
 const readJson = (file) => JSON.parse(readFileSync(file, 'utf8'))
 
@@ -148,6 +145,7 @@ export function selectMarkdownSections(text, selector) {
 
 export function createContextPack(id, scenario, release, effectiveRules, mode = 'compact', options = {}) {
   const started = Date.now()
+  const pinnedCommit = options.pinnedCommit || null
   const index = readJson(join(docsRoot, 'common/rules/rule-index.json'))
   const refs = expandScenarioRefs(index, scenario)
   const summaryRef = {
@@ -162,8 +160,11 @@ export function createContextPack(id, scenario, release, effectiveRules, mode = 
       // 规则文档在 common/rules/；少数被场景引用的 common/ 层文件（如 CHANGELOG.md）回退到 common/。
       const rulesPath = join(rulesRoot, normalized.file)
       const inRules = existsSync(rulesPath)
+      // relPath 相对 docsSystemRoot——供按 pinned commit 不可变读取（`git show <commit>:relPath`）。
+      const relPath = inRules ? `common/rules/${normalized.file}` : `common/${normalized.file}`
       return {
-        file: inRules ? `common/rules/${normalized.file}` : `common/${normalized.file}`,
+        file: relPath,
+        relPath,
         abs: inRules ? rulesPath : join(docsRoot, 'common', normalized.file),
         sections: mode === 'full' ? '' : normalized.sections,
         collapse: mode === 'brief' && normalized.brief === 'pointer',
@@ -171,8 +172,12 @@ export function createContextPack(id, scenario, release, effectiveRules, mode = 
     }),
   ]
   const sections = sources.map((source) => {
-    const file = source.abs
-    if (source.inlineText == null && !existsSync(file)) throw new Error(`context source does not exist: ${source.file}`)
+    // 规则文档走 pinned commit（不可变、不受维护者工作副本编辑污染）；项目摘要/内联文本仍读本地。
+    const pinned = pinnedCommit && source.relPath
+    if (source.inlineText == null && !pinned && !existsSync(source.abs)) throw new Error(`context source does not exist: ${source.file}`)
+    if (pinned && source.inlineText == null && !pinnedFileExists({ commit: pinnedCommit, relPath: source.relPath })) {
+      throw new Error(`pinned rule source missing at ${pinnedCommit.slice(0, 12)}: ${source.relPath}`)
+    }
     if (source.collapse) {
       const suffix = source.sections ? `#§${source.sections}` : ''
       return {
@@ -180,7 +185,7 @@ export function createContextPack(id, scenario, release, effectiveRules, mode = 
         text: `> [BRIEF] 机器/门禁校验规则，正文未展开：门禁失败时按 finding 的 RULE-ID 运行 \`docs-tdd explain <RULE-ID>\`，或直接读 \`${source.file}\`${suffix}。`,
       }
     }
-    const raw = source.inlineText ?? readFileSync(file, 'utf8')
+    const raw = source.inlineText ?? (pinned ? readPinnedFile({ commit: pinnedCommit, relPath: source.relPath }) : readFileSync(source.abs, 'utf8'))
     return {
       label: `${source.file}${source.sections ? `#§${source.sections}` : ''}`,
       text: selectMarkdownSections(raw, source.sections),
@@ -282,31 +287,34 @@ export function printContextDelta(scenario, pack) {
 }
 
 export function requireFreshRuleRelease() {
-  if (skipRuleFreshness) {
-    console.error('[docs-tdd] ⚠ DOCS_TDD_SKIP_RULE_FRESHNESS=1：跳过 rule-release 新鲜度检查（重构期临时开关）')
-    return { fresh: true, skipped: true }
-  }
   const release = inspectRuleRelease()
-  if (release.fresh) return release
-  console.error(`rule release is ${release.status || 'invalid'}; current=${release.currentFingerprint || 'unknown'} published=${release.publishedFingerprint || 'none'}`)
-  for (const key of ['added', 'changed', 'removed']) {
-    if (release.diff?.[key]?.length) console.error(`${key}: ${release.diff[key].join(', ')}`)
+  // 只有 manifest 损坏/缺失才致命；stale（工作副本领先已发布）不再阻断业务项目——项目按各自 pin 跑，
+  // 规则维护侧另有 `docs-tdd release/golden` 硬闸兜住「未发布不能发布」。
+  if (release.status === 'invalid' || release.status === 'missing') {
+    console.error(`rule release is ${release.status}; current=${release.currentFingerprint || 'unknown'} published=${release.publishedFingerprint || 'none'}`)
+    console.error('run docs-tdd check <PROJECT-ID>, then rule-release.mjs --write to repair the manifest')
+    return null
   }
-  console.error('run docs-tdd check <PROJECT-ID>, then rule-release.mjs --write before context/changed/gate')
-  return null
+  if (!release.fresh) {
+    const engineOnly = release.policyFresh && !release.engineFresh
+    console.error(`[docs-tdd] ⚠ rule sources are ahead of the published release${engineOnly ? ' (engine only — does not affect pinned projects)' : ''}; projects run against their pinned policy. Publish with \`docs-tdd release\` when ready.`)
+  }
+  return release
 }
 
+// effective-rules（个人 L1 + 各端 adapter 的聚合快照）已退役为「展示基线」，不再是业务命令的运行前置。
+// 缺失/损坏/漂移一律只 warn 并回退一个占位对象——业务项目按各自 pinned 规则政策跑，绝不因个人规则面
+// 状态而停工（维护侧另有 docs-tdd release/guard/golden 硬闸兜住「个人规则面没发布不能发布」）。
 export function requireFreshEffectiveRules() {
-  if (skipRuleFreshness) {
-    console.error('[docs-tdd] ⚠ DOCS_TDD_SKIP_RULE_FRESHNESS=1：跳过 effective-rules 新鲜度检查（重构期临时开关）')
-    return { fresh: true, skipped: true }
-  }
   const release = inspectEffectiveRules()
-  if (release.fresh) return release
-  console.error(`effective rules release is ${release.status || 'invalid'}; current=${release.currentFingerprint || 'unknown'} published=${release.publishedFingerprint || 'none'}`)
-  if (release.missing?.length) console.error(`missing: ${release.missing.join(', ')}`)
-  console.error('run effective-rules.mjs --doctor, fix errors, then effective-rules.mjs --write')
-  return null
+  if (release.status === 'invalid' || release.status === 'missing') {
+    console.error(`[docs-tdd] ⚠ effective rules snapshot is ${release.status}; business commands run against each project's pinned policy (not blocking). Run effective-rules.mjs --write to refresh the display baseline.`)
+    return { fresh: false, status: release.status, currentFingerprint: release.currentFingerprint || 'unpublished', clientMatrix: release.clientMatrix || {} }
+  }
+  if (!release.fresh) {
+    console.error('[docs-tdd] ⚠ effective rules are ahead of the published snapshot; current agent may need to reload context. Not blocking the project.')
+  }
+  return release
 }
 
 // ---------------------------------------------------------------------------

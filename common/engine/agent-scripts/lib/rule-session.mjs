@@ -32,60 +32,82 @@ export function codeReadinessFingerprint(projectDir) {
   return createHash('sha256').update(payload).digest('hex')
 }
 
-/** Validate that a coding session still represents the current rule and project state. */
-export function validateRuleSession({ session, current, now = Date.now(), maxAgeMs = 24 * 60 * 60 * 1000 }) {
+/**
+ * Validate that a coding session still represents the current rule and project state.
+ *
+ * Blocks ONLY on the project's own authority drifting or the agent not reloading after an
+ * explicit rule upgrade:
+ *   - structural (version/scenario/expiry), projectId, client;
+ *   - codeReadinessFingerprint — the project's G2 authoring inputs changed;
+ *   - rulePin.policyFingerprint != the project's pinned baseline — rules were upgraded but
+ *     context was not reloaded.
+ * It does NOT block on docs_tdd's global-latest rule/effective fingerprint (a shared-repo edit
+ * must not retroactively wedge in-flight projects) nor on headSha (HEAD legitimately advances
+ * between gates); those surface as warnings elsewhere.
+ */
+export function validateRuleSession({ session, current, baseline, now = Date.now(), maxAgeMs = 24 * 60 * 60 * 1000 }) {
   const errors = []
+  const warnings = []
   if (!session || session.version !== 2) errors.push('missing or invalid rule session')
   else {
     if (!CODING_SCENARIOS.has(session.scenario)) errors.push(`non-coding scenario: ${session.scenario || 'missing'}`)
-    for (const key of ['projectId', 'client', 'ruleReleaseFingerprint', 'effectiveRulesFingerprint', 'codeReadinessFingerprint', 'headSha']) {
+    for (const key of ['projectId', 'client', 'codeReadinessFingerprint']) {
       if (session[key] !== current[key]) errors.push(`${key} changed`)
+    }
+    if (baseline && session.rulePin?.policyFingerprint !== baseline.policyFingerprint) {
+      errors.push('rule policy upgraded; reload context')
+    }
+    if (current.headSha && session.headSha && session.headSha !== current.headSha) {
+      warnings.push('headSha advanced since context was loaded (informational)')
     }
     const generatedAt = Date.parse(session.generatedAt)
     if (!Number.isFinite(generatedAt) || now - generatedAt > maxAgeMs) errors.push('rule session expired')
   }
-  return { ok: errors.length === 0, errors }
+  return { ok: errors.length === 0, errors, warnings }
 }
 
 function selfTest() {
   const current = {
     projectId: 'PR-01234',
-    ruleReleaseFingerprint: 'l3',
-    effectiveRulesFingerprint: 'effective',
     codeReadinessFingerprint: 'g2',
     headSha: 'head',
     client: 'codex',
   }
+  const baseline = { policyFingerprint: 'pol' }
   const session = {
     version: 2,
     scenario: 'write_ui',
     generatedAt: '2026-01-01T00:00:00.000Z',
+    rulePin: { policyFingerprint: 'pol' },
     ...current,
   }
   const now = Date.parse('2026-01-01T01:00:00.000Z')
-  assert.equal(validateRuleSession({ session, current, now }).ok, true)
+  assert.equal(validateRuleSession({ session, current, baseline, now }).ok, true)
+  // Global rule/effective fingerprint drift no longer blocks — a shared-repo edit must not wedge the project.
+  assert.equal(
+    validateRuleSession({ session: { ...session, ruleReleaseFingerprint: 'whatever' }, current, baseline, now }).ok,
+    true,
+  )
+  // headSha advancing is a warning, not a block.
+  const advanced = validateRuleSession({ session, current: { ...current, headSha: 'head2' }, baseline, now })
+  assert.equal(advanced.ok, true)
+  assert.ok(advanced.warnings.some((w) => /headSha advanced/.test(w)))
+  // The project's own G2 inputs changing DOES block.
   assert.deepEqual(
-    validateRuleSession({
-      session: { ...session, effectiveRulesFingerprint: 'old' },
-      current,
-      now,
-    }).errors,
-    ['effectiveRulesFingerprint changed'],
+    validateRuleSession({ session, current: { ...current, codeReadinessFingerprint: 'g2b' }, baseline, now }).errors,
+    ['codeReadinessFingerprint changed'],
+  )
+  // An explicit rule upgrade the agent hasn't reloaded blocks.
+  assert.deepEqual(
+    validateRuleSession({ session, current, baseline: { policyFingerprint: 'pol-next' }, now }).errors,
+    ['rule policy upgraded; reload context'],
   )
   assert.deepEqual(
-    validateRuleSession({
-      session: { ...session, client: 'cursor' },
-      current,
-      now,
-    }).errors,
+    validateRuleSession({ session: { ...session, client: 'cursor' }, current, baseline, now }).errors,
     ['client changed'],
   )
   assert.equal(
-    validateRuleSession({
-      session: { ...session, scenario: 'g0_g2_scope' },
-      current,
-      now,
-    }).ok,
+    validateRuleSession({ session: { ...session, scenario: 'g0_g2_scope' }, current, baseline, now }).ok,
     false,
   )
   assert.equal(resolveRuleSessionClient({ env: { CODEX_THREAD_ID: 'thread' } }), 'codex')
@@ -94,11 +116,7 @@ function selfTest() {
   assert.equal(resolveRuleSessionClient({ env: {} }), 'manual')
   assert.throws(() => resolveRuleSessionClient({ requested: 'unknown', env: {} }), /invalid agent client/)
   assert.equal(
-    validateRuleSession({
-      session,
-      current,
-      now: Date.parse('2026-01-03T00:00:00.000Z'),
-    }).ok,
+    validateRuleSession({ session, current, baseline, now: Date.parse('2026-01-03T00:00:00.000Z') }).ok,
     false,
   )
   console.log('rule-session self-test passed.')

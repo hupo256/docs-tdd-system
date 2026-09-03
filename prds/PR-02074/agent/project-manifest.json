@@ -9,5 +9,11 @@
   "gatePolicy": {
     "legacyRules": "report-only",
     "currentTouchedRules": "report-only"
+  },
+  "rulePolicy": {
+    "commit": "c399478a3bfe95bb7ee668c10c5b727e718dd33f",
+    "policyFingerprint": "4763b5474fb9cefaaa18cbc8cd503397ee014f85b8ad548a51bf892086a14503",
+    "upgradeMode": "explicit",
+    "pinnedAt": "2026-09-03T00:39:51.224Z"
   }
 }

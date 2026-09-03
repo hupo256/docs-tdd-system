@@ -26,6 +26,18 @@
         "currentTouchedRules": { "type": "string", "enum": ["report-only", "blocking"] }
       },
       "additionalProperties": false
+    },
+    "rulePolicy": {
+      "type": "object",
+      "description": "Per-project rule version pin (Phase 2 decoupling). Written by lib/rule-pin.mjs (lazy pin / explicit upgrade) and lib/project-scaffold.mjs (new project). policyFingerprint is the identity a G6 session validates against — a docs_tdd release bump does not retroactively invalidate a pinned project. commit is null when no docs_tdd commit is resolvable.",
+      "required": ["commit", "policyFingerprint", "upgradeMode", "pinnedAt"],
+      "properties": {
+        "commit": { "type": ["string", "null"] },
+        "policyFingerprint": { "type": "string", "minLength": 1 },
+        "upgradeMode": { "type": "string", "enum": ["explicit"] },
+        "pinnedAt": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false

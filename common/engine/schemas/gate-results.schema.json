@@ -120,6 +120,7 @@
         "dirtyFileCount": { "type": "integer", "minimum": 0 },
         "untrackedFileCount": { "type": "integer", "minimum": 0 },
         "rulesetVersion": { "type": "string" },
+        "rulePolicyFingerprint": { "type": "string" },
         "ruleReleaseFingerprint": { "type": "string" },
         "effectiveRulesFingerprint": { "type": "string" }
       },
