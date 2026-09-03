@@ -42,14 +42,14 @@ function manifestPath(projectId) {
  * lazily pins to the current published release and (by default) persists it, so legacy
  * projects keep flowing instead of being blocked by docs_tdd's own evolution.
  */
-export function resolveRulePin(projectId, { persist = true } = {}) {
-  const file = manifestPath(projectId)
+export function resolveRulePin(projectId, { persist = true, manifestFile, releaseFile } = {}) {
+  const file = manifestFile || manifestPath(projectId)
   const manifest = readJsonSafe(file)
   const existing = manifest?.rulePolicy
   if (existing?.policyFingerprint) {
     return { commit: existing.commit || null, policyFingerprint: existing.policyFingerprint, upgradeMode: existing.upgradeMode || 'explicit', source: 'manifest' }
   }
-  const latest = latestReleasePin()
+  const latest = latestReleasePin(readJsonSafe(releaseFile || releaseManifestFile))
   const pin = { commit: latest.commit, policyFingerprint: latest.policyFingerprint, upgradeMode: 'explicit' }
   if (persist && manifest) {
     manifest.rulePolicy = { ...pin, pinnedAt: new Date().toISOString() }
@@ -60,11 +60,11 @@ export function resolveRulePin(projectId, { persist = true } = {}) {
 }
 
 /** Explicitly move a project's pin onto the current published release. Returns the new pin. */
-export function upgradeRulePin(projectId) {
-  const file = manifestPath(projectId)
+export function upgradeRulePin(projectId, { manifestFile, releaseFile } = {}) {
+  const file = manifestFile || manifestPath(projectId)
   const manifest = readJsonSafe(file)
   if (!manifest) throw new Error(`project manifest not found: ${projectId}`)
-  const latest = latestReleasePin()
+  const latest = latestReleasePin(readJsonSafe(releaseFile || releaseManifestFile))
   const previous = manifest.rulePolicy || null
   manifest.rulePolicy = { commit: latest.commit, policyFingerprint: latest.policyFingerprint, upgradeMode: 'explicit', pinnedAt: new Date().toISOString() }
   writeFileSync(file, `${JSON.stringify(manifest, null, 2)}\n`)

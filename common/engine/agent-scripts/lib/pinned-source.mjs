@@ -15,11 +15,12 @@ import { docsSystemRoot } from './roots.mjs'
 
 const cache = new Map()
 
-function gitShow(commit, relPath) {
-  const key = `${commit}:${relPath}`
+// root 默认 docsSystemRoot（真实调用零行为差）；回归自测传临时 git 仓根，缓存 key 含 root 避免跨仓串味。
+function gitShow(commit, relPath, root = docsSystemRoot) {
+  const key = `${root}:${commit}:${relPath}`
   if (cache.has(key)) return cache.get(key)
   const result = spawnSync('git', ['show', `${commit}:${relPath}`], {
-    cwd: docsSystemRoot,
+    cwd: root,
     encoding: 'utf8',
     stdio: 'pipe',
     maxBuffer: 32 * 1024 * 1024,
@@ -30,9 +31,9 @@ function gitShow(commit, relPath) {
 }
 
 /** True if `relPath` exists at the pinned commit (or on disk when commit is falsy). */
-export function pinnedFileExists({ commit, relPath }) {
-  if (!commit) return existsSync(join(docsSystemRoot, relPath))
-  return gitShow(commit, relPath).ok
+export function pinnedFileExists({ commit, relPath, root = docsSystemRoot }) {
+  if (!commit) return existsSync(join(root, relPath))
+  return gitShow(commit, relPath, root).ok
 }
 
 /**
@@ -40,20 +41,20 @@ export function pinnedFileExists({ commit, relPath }) {
  * `commit` is falsy (unpinned/legacy). Throws when a pinned commit lacks the file
  * so callers can surface it as a corrupt/missing pinned release.
  */
-export function readPinnedFile({ commit, relPath }) {
+export function readPinnedFile({ commit, relPath, root = docsSystemRoot }) {
   if (!commit) {
-    const abs = join(docsSystemRoot, relPath)
+    const abs = join(root, relPath)
     if (!existsSync(abs)) throw new Error(`rule source does not exist: ${relPath}`)
     return readFileSync(abs, 'utf8')
   }
-  const shown = gitShow(commit, relPath)
+  const shown = gitShow(commit, relPath, root)
   if (!shown.ok) throw new Error(`pinned rule source missing at ${commit.slice(0, 12)}: ${relPath} (${shown.error || 'not found'})`)
   return shown.text
 }
 
 /** Resolve the docs_tdd HEAD commit (host-independent). Null when not a git repo. */
-export function currentDocsCommit() {
-  const result = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: docsSystemRoot, encoding: 'utf8', stdio: 'pipe' })
+export function currentDocsCommit(root = docsSystemRoot) {
+  const result = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8', stdio: 'pipe' })
   return result.status === 0 ? result.stdout.trim() : null
 }
 
