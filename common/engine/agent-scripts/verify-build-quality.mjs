@@ -1,5 +1,13 @@
 #!/usr/bin/env node
-// G6-G8 checks with changed-file attribution.
+// 机器事实层：真正执行 biome / tsc / vitest，而不是在证据文档里正则匹配「Biome」字样。
+//
+// 设计要点（对应 rule-execution-model.md §1 执行契约）：
+// - Trigger：run-project-gate 在 G6/G7/G8 自动调用；也可手动 `--project <PR-ID>`。
+// - Source：本脚本即 Executor，退出码来自真实子进程，不接受任何自述。
+// - 归因只看本次改动文件（与 CODE-* 的 changed-file-only 同一口径），所以存量债不阻断、
+//   也无法通过删基线文件把新增错误洗白。
+// - 存量涟漪（改共享类型把没碰过的文件搞挂）用 VERIFY-TYPE-002 的 warn 兜底，
+//   基线只影响 warn，不影响 error，因此基线被篡改的收益上限是「少一个 warn」。
 
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
@@ -8,7 +16,6 @@ import { fileURLToPath } from 'node:url'
 import { tmpdir } from 'node:os'
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 import { resolveSeverity } from './lib/rule-maturity.mjs'
-import { parseValidationTierOptions, validationClassificationCheck, validationRequirements } from './lib/gate-payload.mjs'
 import { activeWaivers, isWaived } from './lib/waiver-policy.mjs'
 
 const scriptPath = fileURLToPath(import.meta.url)
@@ -41,13 +48,12 @@ const skipList = readOption('--skip')
 const writeBaseline = hasFlag('--write-baseline')
 const productionBuild = hasFlag('--production-build')
 const packageManager = readOption('--pm', 'pnpm')
-const validationTierOptions = parseValidationTierOptions(args)
-const validationTier = validationTierOptions.tier
-const validationTierReason = validationTierOptions.reason
 const projectManifest = projectId ? (() => {
   try { return JSON.parse(readFileSync(join(resolveProjectRoot(projectId), 'agent/project-manifest.json'), 'utf8')) } catch { return null }
 })() : null
-// VERIFY-TEST-002 severity comes from the shared ruleset; legacy fallback is preserved.
+// VERIFY-TEST-002 的档位归口到 ruleset + lib/rule-maturity（与 verify-project-gate 同一真值源）。
+// 登记为 trial + since:2 后，v1→warn / v2→error，与历史 strictTestEvidence(templateVersion>=2) 逐位一致；
+// ruleset 读取失败时回落到旧本地判据，保证降级环境不至于全丢档。
 const ruleset = (() => {
   try { return JSON.parse(readFileSync(join(docsRoot, 'common/rules/ruleset.json'), 'utf8')) } catch { return null }
 })()
@@ -58,7 +64,6 @@ const test002Severity = test002Rule
 
 function printHelp() {
   console.log(`usage: verify-build-quality.mjs [--project <PR-ID>] [--base <ref>] [--files <comma-list>]
-                                [--validation-tier <MICRO|FOCUSED|FULL>] [--validation-tier-reason <text>]
                                 [--skip <BIOME,TYPE,TEST>] [--write-baseline] [--pm <cmd>]
                                 [--json] [--self-test] [--help]
 
@@ -78,8 +83,6 @@ Options:
   --project         Project ID; enables agent/tsc-baseline.json and waivers
   --base            Base ref for the changed-file diff (default: origin/online)
   --files           Comma-separated file list, skips git diff (for targeted runs)
-  --validation-tier Validation matrix; defaults to FULL
-  --validation-tier-reason Required for MICRO/FOCUSED and recorded as evidence
   --skip            Skip check families; each skip is reported as a non-passing check
   --write-baseline  Re-record the tsc baseline totals for this project
   --production-build Run the configured production build (used by G8)
@@ -91,10 +94,6 @@ Options:
 if (hasFlag('--help')) {
   printHelp()
   process.exit(0)
-}
-if (validationTierOptions.error) {
-  console.error(`[verify-build-quality] ${validationTierOptions.error}`)
-  process.exit(1)
 }
 
 /* ------------------------------------------------------------------ helpers */
@@ -350,7 +349,7 @@ function execTool(label, command, commandArgs, cwd) {
 const checks = []
 const commands = []
 
-function addCheck({ ruleId, ok, severity = 'error', message, file = '', run = null, counts = null, disposition = 'executed' }) {
+function addCheck({ ruleId, ok, severity = 'error', message, file = '', run = null, counts = null }) {
   if (run) commands.push({ label: run.label, command: run.command, cwd: run.cwd, status: run.status, ok: run.status === 0, logFile: run.logFile })
   checks.push({
     ruleId,
@@ -359,13 +358,8 @@ function addCheck({ ruleId, ok, severity = 'error', message, file = '', run = nu
     message,
     file,
     category: 'build-quality',
-    disposition,
     evidence: run ? { command: run.command, cwd: run.cwd, status: run.status, logFile: run.logFile, counts } : counts ? { counts } : null,
   })
-}
-
-function addNotRequired(ruleId, message, counts = null) {
-  addCheck({ ruleId, ok: true, message, counts, disposition: 'not-required' })
 }
 
 function skipped(family) {
@@ -498,6 +492,7 @@ function selfTest() {
   expect('ripple ok without baseline', rippleVerdict({ total: 999, inChanged: 0, baselineTotal: null }).ok === true)
   expect('production build exit 0 passes', productionBuildVerdict({ status: 0, spawnError: null }).ok === true)
   expect('production build spawn/exit failure blocks', productionBuildVerdict({ status: 1, spawnError: 'ENOENT' }).ok === false)
+
   if (failures.length) {
     console.error(`verify-build-quality self-test FAILED:\n  ${failures.join('\n  ')}`)
     process.exit(1)
@@ -576,16 +571,11 @@ function readBaseline() {
 
 const baseline = readBaseline()
 let baselineDirty = false
-const requirements = validationRequirements(validationTier)
-
-checks.push(validationClassificationCheck(validationTier, validationTierReason))
 
 // ---- VERIFY-BIOME-001 -------------------------------------------------------
 {
   const targets = changedFiles.filter(isLintTarget)
-  if (!requirements.biome) {
-    addNotRequired('VERIFY-BIOME-001', `${validationTier}：Biome not-required`, { candidates: targets.length })
-  } else if (skipped('BIOME')) {
+  if (skipped('BIOME')) {
     addCheck({ ruleId: 'VERIFY-BIOME-001', ok: false, severity: 'warn', message: '--skip BIOME：静态检查被跳过，不构成通过证据' })
   } else if (!targets.length) {
     addCheck({ ruleId: 'VERIFY-BIOME-001', ok: true, message: '本次无 js/ts/jsx/tsx/json 改动，biome 不适用', counts: { candidates: 0 } })
@@ -607,10 +597,7 @@ checks.push(validationClassificationCheck(validationTier, validationTierReason))
 // ---- VERIFY-TYPE-001 / VERIFY-TYPE-002 --------------------------------------
 {
   const roots = deriveTypecheckRoots(changedFiles, (root) => existsSync(join(worktreeRoot, root, 'tsconfig.json')), config.typecheckRoots || ['apps/web', 'apps/admin'])
-  if (!requirements.type) {
-    addNotRequired('VERIFY-TYPE-001', `${validationTier}：typecheck not-required`, { roots: roots.length })
-    addNotRequired('VERIFY-TYPE-002', `${validationTier}：typecheck ripple detection not-required`, { roots: roots.length })
-  } else if (skipped('TYPE')) {
+  if (skipped('TYPE')) {
     addCheck({ ruleId: 'VERIFY-TYPE-001', ok: false, severity: 'warn', message: '--skip TYPE：类型检查被跳过，不构成通过证据' })
   } else if (!roots.length) {
     addCheck({ ruleId: 'VERIFY-TYPE-001', ok: true, message: '本次改动未落在任何带 tsconfig 的 app 下，typecheck 不适用', counts: { roots: 0 } })
@@ -683,12 +670,8 @@ checks.push(validationClassificationCheck(validationTier, validationTierReason))
     (file) => existsSync(resolve(worktreeRoot, file)),
     findImportingTests,
   )
-  if (!requirements.test) {
-    addNotRequired('VERIFY-TEST-001', `${validationTier}：测试 not-required`, { selected: relatedTests.length })
-  } else if (skipped('TEST')) {
+  if (skipped('TEST')) {
     addCheck({ ruleId: 'VERIFY-TEST-001', ok: false, severity: 'warn', message: '--skip TEST：单测被跳过，不构成通过证据' })
-  } else if (!relatedTests.length && requirements.test === 'existing') {
-    addNotRequired('VERIFY-TEST-001', 'FOCUSED：未发现既有相关测试，不为本次改动机械新增测试文件', { selected: 0 })
   } else if (!relatedTests.length) {
     // 没有相关测试不是「通过」，是缺证据；由 VERIFY-TEST-002 指出该补哪些。
     addCheck({
@@ -735,26 +718,20 @@ checks.push(validationClassificationCheck(validationTier, validationTierReason))
         !relatedTestCandidates(file).some((candidate) => existsSync(resolve(worktreeRoot, candidate))) &&
         findImportingTests(file).length === 0,
     )
-  if (validationTier !== 'FULL') {
-    addNotRequired('VERIFY-TEST-002', `${validationTier}：不机械要求局部逻辑新增测试；由 Review 按测试触发条件判断`, { missing: missing.length })
-  } else {
-    addCheck({
-      ruleId: 'VERIFY-TEST-002',
-      ok: missing.length === 0,
-      severity: test002Severity,
-      message: missing.length
-        ? `以下逻辑文件导出了函数，但未找到同名测试或邻近目录中直接导入它的测试：${missing.slice(0, 8).join(', ')}${missing.length > 8 ? ` 等 ${missing.length} 个` : ''}`
-        : '改动的逻辑文件均有相关单测',
-      file: missing[0] || '',
-      counts: { missing: missing.length },
-    })
-  }
+  addCheck({
+    ruleId: 'VERIFY-TEST-002',
+    ok: missing.length === 0,
+    severity: test002Severity,
+    message: missing.length
+      ? `以下逻辑文件导出了函数，但未找到同名测试或邻近目录中直接导入它的测试：${missing.slice(0, 8).join(', ')}${missing.length > 8 ? ` 等 ${missing.length} 个` : ''}`
+      : '改动的逻辑文件均有相关单测',
+    file: missing[0] || '',
+    counts: { missing: missing.length },
+  })
 }
 
 // ---- VERIFY-PROD-BUILD-001 -------------------------------------------------
-if (!requirements.build) {
-  addNotRequired('VERIFY-PROD-BUILD-001', `${validationTier}：production build not-required`)
-} else if (productionBuild) {
+if (productionBuild) {
   const buildCommand = Array.isArray(config.productionBuild) ? config.productionBuild.filter(Boolean) : []
   if (!buildCommand.length) {
     addCheck({ ruleId: 'VERIFY-PROD-BUILD-001', ok: false, message: 'G8 要求 production build，但 docs-tdd.config.json 未配置 productionBuild' })
@@ -812,8 +789,6 @@ const result = {
   projectId: projectId || null,
   baseRef,
   baseResolvable,
-  validationTier,
-  validationTierReason,
   changedFileCount: changedFiles.length,
   skipped: skipList,
   baselineFile: baselineFile ? toPosix(relative(repoRoot, baselineFile)) : null,

@@ -108,7 +108,7 @@ git log --oneline --merges origin/online..feature/<PROJECT-ID>
 ## 5. 合并前检查清单
 
 1. 功能分支工作树干净（`git status` 无未提交改动）,且已 `git push` 到 `origin/feature/<ID>`。
-2. 本需求已按 [validation-tiering.md](./validation-tiering.md) 完成所需验证；实际命令全绿，档位无需执行的项记为 `not-required`。
+2. 本需求的测试/type-check/lint 全绿（见 [quality-checklist.md](./quality-checklist.md)）。
 3. 真实接口/Mock 自测完成（见 [browser-e2e-mcp.md](./browser-e2e-mcp.md)）,报告落 `evidence/`。
 4. `git fetch` 目标环境分支,确认基于其最新提交合并。
 5. 合并、解决冲突、push 后**必须跑 §4.1 反向污染自检**:功能分支 SHA 与合并前一致、`origin/online..feature/<ID>` 无他人提交、无环境分支 merge 提交。不通过即回退重来,禁止就此 push 功能分支。

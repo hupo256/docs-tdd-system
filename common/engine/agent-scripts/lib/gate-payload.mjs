@@ -5,59 +5,6 @@
 import assert from 'node:assert/strict'
 import { buildQualityCell, formatEvidenceRunId, renderEvidence, summarizeCommand } from './gate-evidence.mjs'
 
-const VALIDATION_TIERS = new Set(['MICRO', 'FOCUSED', 'FULL'])
-
-export function parseValidationTierOptions(args = []) {
-  const tierIndex = args.indexOf('--validation-tier')
-  const reasonIndex = args.indexOf('--validation-tier-reason')
-  const optionValue = (index) => {
-    const value = index >= 0 ? args[index + 1] : ''
-    return typeof value === 'string' && value.trim() && !value.startsWith('--') ? value.trim() : ''
-  }
-  if (tierIndex < 0) {
-    return reasonIndex >= 0
-      ? { tier: 'FULL', reason: '', explicit: false, forwardedArgs: [], error: '--validation-tier-reason requires --validation-tier' }
-      : { tier: 'FULL', reason: '', explicit: false, forwardedArgs: [], error: null }
-  }
-  const rawTier = optionValue(tierIndex)
-  if (!rawTier) return { tier: 'FULL', reason: '', explicit: true, forwardedArgs: [], error: '--validation-tier requires MICRO, FOCUSED, or FULL' }
-  const tier = rawTier.toUpperCase()
-  if (!VALIDATION_TIERS.has(tier)) return { tier: 'FULL', reason: '', explicit: true, forwardedArgs: [], error: `invalid --validation-tier: ${rawTier}` }
-  if (reasonIndex >= 0 && !optionValue(reasonIndex)) {
-    return { tier, reason: '', explicit: true, forwardedArgs: [], error: '--validation-tier-reason requires a non-empty value' }
-  }
-  const reason = optionValue(reasonIndex)
-  if (tier !== 'FULL' && !reason) {
-    return { tier, reason: '', explicit: true, forwardedArgs: [], error: `--validation-tier-reason is required for ${tier}` }
-  }
-  return {
-    tier,
-    reason,
-    explicit: true,
-    forwardedArgs: ['--validation-tier', tier, ...(reason ? ['--validation-tier-reason', reason] : [])],
-    error: null,
-  }
-}
-
-export function validationRequirements(tier) {
-  if (tier === 'MICRO') return { biome: false, type: false, test: false, build: false }
-  if (tier === 'FOCUSED') return { biome: true, type: false, test: 'existing', build: false }
-  return { biome: true, type: true, test: true, build: true }
-}
-
-export function validationClassificationCheck(tier, reason) {
-  return {
-    ruleId: 'VERIFY-TIER-001',
-    ok: true,
-    severity: 'error',
-    message: tier === 'FULL' ? '验证档位 FULL：执行完整机器事实层' : `验证档位 ${tier}：${reason}`,
-    file: '',
-    category: 'build-quality',
-    disposition: 'classification',
-    evidence: { counts: { tier, reason } },
-  }
-}
-
 export function summarizeChecks(checks = []) {
   return {
     total: checks.length,
@@ -111,14 +58,7 @@ export function buildQualityGuardCheck({ gate, required, skipped, reason, run, p
     const detail = parsed?.parseError ? `输出无法解析：${parsed.parseError}` : `退出码 ${run.status ?? 'null'}，未产出 checks`
     return { ...base, ok: false, severity: 'error', message: `${gate} 机器事实层执行失败，${detail}`, evidence: run.logFile || 'verify-build-quality' }
   }
-  const notRequired = parsed.checks.filter((check) => check.disposition === 'not-required').length
-  return {
-    ...base,
-    ok: true,
-    severity: 'error',
-    message: `${gate} 机器事实层已按 ${parsed.validationTier || 'FULL'} 执行：${parsed.checks.length - notRequired} 条执行结论，${notRequired} 条 not-required`,
-    evidence: run.logFile || 'verify-build-quality',
-  }
+  return { ...base, ok: true, severity: 'error', message: `${gate} 机器事实层已实跑：${parsed.checks.length} 条 biome/tsc/vitest 结论`, evidence: run.logFile || 'verify-build-quality' }
 }
 
 export function derivePayloadOk(gateResult, summary, codeRulesOk) {
@@ -141,14 +81,6 @@ export function selfTest() {
   ]
   const summary = summarizeChecks(checks)
   assert.ok(summary.total === 3 && summary.fail === 1 && summary.warn === 1 && summary.ok === 1, `bad summary ${JSON.stringify(summary)}`)
-  assert.deepEqual(parseValidationTierOptions([]), { tier: 'FULL', reason: '', explicit: false, forwardedArgs: [], error: null })
-  assert.equal(parseValidationTierOptions(['--validation-tier', 'MICRO']).error, '--validation-tier-reason is required for MICRO')
-  assert.equal(parseValidationTierOptions(['--validation-tier', '--no-cache']).error, '--validation-tier requires MICRO, FOCUSED, or FULL')
-  assert.deepEqual(parseValidationTierOptions(['--validation-tier', 'focused', '--validation-tier-reason', 'local change']).forwardedArgs, ['--validation-tier', 'FOCUSED', '--validation-tier-reason', 'local change'])
-  assert.ok(Object.values(validationRequirements('MICRO')).every((value) => value === false))
-  assert.equal(validationRequirements('FOCUSED').test, 'existing')
-  assert.ok(Object.values(validationRequirements('FULL')).every((value) => value === true))
-  assert.equal(validationClassificationCheck('MICRO', 'small').disposition, 'classification')
   const text = renderEvidence({ projectId: 'PR-00001', gate: 'G6', generatedAt: '2026-07-14T00:00:00.000Z', summary, checks }, [], 'self-test')
   assert.ok(text.includes('Gate Evidence') && text.includes('SELFTEST-FAIL') && text.includes('Command Evidence'), 'evidence renderer missing required sections')
   assert.equal(formatEvidenceRunId('2026-07-14T12:34:56.000Z', 'G6'), '2026-07-14-123456-g6', 'evidence run id format drifted')
@@ -181,8 +113,7 @@ export function selfTest() {
   }
   assert.ok(buildQualityCell({ required: false }).includes('不要求'), 'build-quality cell must state 不要求 when gate is below G6')
   assert.ok(buildQualityCell({ required: true, skipped: true, reason: 'x' }).includes('已跳过'), 'build-quality cell must surface skip state')
-  assert.ok(buildQualityCell({ required: true, skipped: false, ok: false, checkCount: 5, validationTier: 'FULL' }).includes('FAIL'), 'build-quality cell must surface FAIL')
-  assert.ok(buildQualityCell({ required: true, skipped: false, ok: true, checkCount: 5, notRequiredCount: 4, validationTier: 'MICRO' }).includes('not-required 4'), 'build-quality cell must surface tiered not-required counts')
+  assert.ok(buildQualityCell({ required: true, skipped: false, ok: false, checkCount: 5 }).includes('FAIL'), 'build-quality cell must surface FAIL')
   assert.ok(shouldUseGateCache({ isWrite: false, isNoCache: false, cacheExists: true, cachedOk: true }), 'reusable PASS cache was rejected')
   for (const cacheCase of [
     { isWrite: true, isNoCache: false, cacheExists: true, cachedOk: true },

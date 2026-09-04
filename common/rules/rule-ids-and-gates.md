@@ -40,7 +40,7 @@ node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs gate PR-01234 G8
 | G2/G3 | `00-feature-inventory.md` 无阻断占位;每条功能 `本期=做/不做/延期`;G2 确认人和日期;本期做的功能 ID 进入 `04-frontend-tasks.md` | 阻止 scope 未定稿就写代码 |
 | G4 | 技术方案复用盘点无占位；模板 v2 的单一事实源所有权表存在且无占位；不出现 `跳过复用`；当前分支是 `feature/<PROJECT-ID>` 且基于 `origin/online` | 阻止未完成复用/所有权盘点或在错误分支编码 |
 | G5 | `stage-status.json` 的 G5 为 `completed`/`not-applicable`；真实联调有证据，或 N/A 有具体原因；API 契约、字段对账、Mock/ASSUMED 状态一致 | 阻止关键词占位冒充真实联调完成 |
-| G6 | 已有 G5 PASS 历史；结构化验收结果覆盖每个本期功能，`code-review.json` findings 清零；**并按验证档位执行 §3.5 机器事实层** | 阻止跳过联调、验收或靠散文冒充 review |
+| G6 | 已有 G5 PASS 历史；结构化验收结果覆盖每个本期功能，`code-review.json` findings 清零；**并实跑 biome/tsc/vitest（§3.5 机器事实层）** | 阻止跳过联调、验收或靠散文冒充 review |
 | G7 | 已有 G6 PASS；G7 为 `completed`/`skipped`，完成项有提测预检与开发回归证据，跳过有原因；机器事实层同 G6 | 防止冒充提测完成；不代表 AQ/test 通过 |
 | G8 | 已有 G7 PASS；实跑 production-mode build；Git 至少 pushed；工作树干净、远端可验证 | 开发终点、test 提测起点；不代表环境通过 |
 
@@ -116,18 +116,15 @@ node apps/web/docs_tdd/common/engine/agent-scripts/verify-build-quality.mjs --fi
 node apps/web/docs_tdd/common/engine/agent-scripts/verify-build-quality.mjs --project PR-01234 --write-baseline
 ```
 
-验证前先按 [validation-tiering.md](./validation-tiering.md) 判档。`VERIFY-TIER-001` 要求 gate 记录档位和理由；MICRO/FOCUSED 不要求的检查输出 `not-required`，不是跳过或伪 PASS。相同 diff 状态不重复执行同一检查。
-
 `docs-tdd gate` 在 **G6/G7/G8 自动调用**（G5 之前代码还在联调,存量报错会让它天天红,反而训练出「习惯性忽略」）。它的 checks 直接并入 `gate-results.json` 的 `checks`,因此 summary / 证据表 / warn 台账 / BLOCK 判定复用同一条链路,不存在第二套结论口径。跳过用 `--skip-build-quality` + `--skip-build-quality-reason`,无理由跳过判 `error`。
 
 | Rule ID | 机器检查 | 作用范围 |
 |---------|----------|----------|
-| `VERIFY-TIER-001` | 记录 MICRO/FOCUSED/FULL 与具体理由；未声明按 FULL，MICRO 任一 AND 条件不成立必须升级 | gate 编排层 + Review |
-| `VERIFY-BIOME-001` | FOCUSED/FULL 对本次改动的 JS/TS/JSON 文件实跑 `biome check`; MICRO 为 `not-required` | changed 文件,真实子进程 |
-| `VERIFY-TYPE-001` | FULL 实跑 `tsc --noEmit` 并只归因本次改动文件；MICRO/FOCUSED 为 `not-required` | changed 文件,真实子进程 |
-| `VERIFY-TYPE-002`（warn） | FULL 检查改动外 tsc 报错是否超过基线；MICRO/FOCUSED 为 `not-required` | 全量 tsc 计数 vs 项目基线 |
-| `VERIFY-TEST-001` | FOCUSED 仅实跑既有相关测试，FULL 跑相关测试；MICRO 为 `not-required` | changed 文件推导出的测试集 |
-| `VERIFY-TEST-002`（新模板 error；旧项目 warn） | FULL 检查需要测试的逻辑文件；MICRO/FOCUSED 由 Review 按测试触发条件判断并记 `not-required` | changed `.ts` 逻辑文件 |
+| `VERIFY-BIOME-001` | 对本次改动的 JS/TS/JSON 文件实跑 `biome check`,退出码非 0 即 fail;候选文件 >0 但 `Checked 0 files` 也判 fail（0 files 不算通过证据） | changed 文件,真实子进程 |
+| `VERIFY-TYPE-001` | 实跑 `tsc --noEmit`,把报错路径换算成 worktree 相对路径后**只归因本次改动文件**;存量债不阻断,也无法通过删基线洗白（报错归属来自 git,不来自基线文件） | changed 文件,真实子进程 |
+| `VERIFY-TYPE-002`（warn） | 存量涟漪:改动之外的 tsc 报错总数不得超过 `agent/tsc-baseline.json`;抓「改共享类型把没碰过的文件搞挂」。只做 warn,故基线被篡改的收益上限是「少一个 warn」 | 全量 tsc 计数 vs 项目基线 |
+| `VERIFY-TEST-001` | 实跑 `vitest run` 于相关测试文件（changed 测试文件 ∪ changed 源文件的同名/同目录 `__tests__` 测试）;有选中文件却 `No test files found` 或退出码非 0 即 fail | changed 文件推导出的测试集 |
+| `VERIFY-TEST-002`（新模板 error；旧项目 warn） | 改动的 `.ts` 逻辑文件（`utils/helpers/mappers/lib`、`mapXxx.ts`、`use*Store.ts`、`format/calc/schema/selector`）导出了函数但无对应单测。`.tsx` 不在范围内（交互/视觉由结构化验收承接） | changed `.ts` 逻辑文件 |
 | `VERIFY-BUILD-001` | 缺席守卫:G6+ 要求本层但被跳过 / 未执行 / 输出无法解析时补一条显式失败,不允许静默当成「本阶段没有这一层」。有理由跳过 = warn,无理由 = error | gate 编排层 |
 | `VERIFY-PROD-BUILD-001` | G8 使用 `docs-tdd.config.json.productionBuild` 实跑生产构建，缺配置或退出码非 0 均阻断 | G8 真实子进程 |
 | `VERIFY-TASK-001` | Lark worker 结果解析层（`lark-ai-result.mjs`）缺陷分诊门禁：结构化结果的 `rootCauseLayer=backend-*/cross-boundary` 时必带完整 `evidence`（userSeenValue/apiActualValue/contractExpectedValue/dataFlowFirstErrorLocation），否则拒收；`taskState=completed` 且根因在后端 / 跨层时，无 `blockers` 转交项不得关单（须改 awaiting_owner_fix）。文件数 / typecheck / 截图不构成根因证据。防「后端根因→前端凑数关单」（PR-01930） | Lark worker 结果解析,非项目 G-gate |

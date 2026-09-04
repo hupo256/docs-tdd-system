@@ -31,16 +31,15 @@
 19. [component-reuse-and-visual-fidelity.md](./rules/component-reuse-and-visual-fidelity.md)：组件复用盘点、弹窗/UI 双层视觉验收。
 20. [change-scope-boundary.md](./rules/change-scope-boundary.md)：**改动边界与影响半径**——改动收敛责任模块内；越界（公共/共享 或 其他业务模块）先警告 + 重点 check，确保不影响无关功能。
 21. [react-component-props-types.md](./rules/react-component-props-types.md)：React 组件 2+ 入参 Props/Params 已上移 L1 的本地指针。
-22. [validation-tiering.md](./rules/validation-tiering.md)：**验证力度分级**——MICRO / FOCUSED / FULL、批处理节奏、`not-required` 证据与测试触发条件。
-23. [quality-checklist.md](./rules/quality-checklist.md)：测试、自测、Review checklist。
-24. [verification-division-of-labor.md](./rules/verification-division-of-labor.md)：**验证分工**——Agent 跑逻辑/边界/数据/DOM 契约（Vitest+取值比对），人工跑视觉/手感/响应式（修订旧文「Agent 自己完成 L2 并排」）。
-25. [browser-e2e-mcp.md](./rules/browser-e2e-mcp.md)：Browser / Playwright MCP 自测（禁止项目内安装 Playwright）。
-26. [collaboration-and-notifications.md](./rules/collaboration-and-notifications.md)：协作通知总入口和安全边界。
-27. [lark-active-notification.md](./rules/lark-active-notification.md)：自定义机器人主动发群消息（G0-G8）规则。
-28. [lark-bot 子系统文档](./lark-bot/docs/README.md)：群内 @ 应用触发任务的完整链路（线程文字/图片上下文、项目 scope 注入、Figma 规格预取、bug 表跨项目回执、附件保留期与并行调度）运维手册；不是编码规则，不参与规则指纹。
-29. [lark-doc-sync.md](./rules/lark-doc-sync.md)：Lark CLI 只读同步 PRD / Wiki / Drive / Markdown 到 `docs_tdd` 的规则；PRD intake 使用剥离易变媒体元数据的稳定指纹，历史 manifest 可就地 `--remigrate`。
-30. [project-doc-structure.md](./rules/project-doc-structure.md)：项目文档目录规范。
-31. [CHANGELOG.md](./CHANGELOG.md)：公共规则、gate 脚本和模板的框架变更日志。
+22. [quality-checklist.md](./rules/quality-checklist.md)：测试、自测、Review checklist。
+23. [verification-division-of-labor.md](./rules/verification-division-of-labor.md)：**验证分工**——Agent 跑逻辑/边界/数据/DOM 契约（Vitest+取值比对），人工跑视觉/手感/响应式（修订旧文「Agent 自己完成 L2 并排」）。
+24. [browser-e2e-mcp.md](./rules/browser-e2e-mcp.md)：Browser / Playwright MCP 自测（禁止项目内安装 Playwright）。
+25. [collaboration-and-notifications.md](./rules/collaboration-and-notifications.md)：协作通知总入口和安全边界。
+26. [lark-active-notification.md](./rules/lark-active-notification.md)：自定义机器人主动发群消息（G0-G8）规则。
+27. [lark-bot 子系统文档](./lark-bot/docs/README.md)：群内 @ 应用触发任务的完整链路（线程文字/图片上下文、项目 scope 注入、Figma 规格预取、bug 表跨项目回执、附件保留期与并行调度）运维手册；不是编码规则，不参与规则指纹。
+28. [lark-doc-sync.md](./rules/lark-doc-sync.md)：Lark CLI 只读同步 PRD / Wiki / Drive / Markdown 到 `docs_tdd` 的规则；PRD intake 使用剥离易变媒体元数据的稳定指纹，历史 manifest 可就地 `--remigrate`。
+29. [project-doc-structure.md](./rules/project-doc-structure.md)：项目文档目录规范。
+30. [CHANGELOG.md](./CHANGELOG.md)：公共规则、gate 脚本和模板的框架变更日志。
 
 顶层项目索引用 `node apps/web/docs_tdd/common/engine/agent-scripts/update-project-index.mjs --write` 生成到 `../PROJECTS.md`。它只做导航汇总；项目事实由各项目 `README.md`、`product/00-feature-inventory.md`、`agent/stage-status.json` 和 `agent/gate-history.json` 共同表达，`agent/gate-results.json` 只代表最近一次 gate 运行结果，不能证明历史阶段已通过。
 

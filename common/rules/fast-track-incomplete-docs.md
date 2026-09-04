@@ -87,7 +87,7 @@
 - **临时契约到期**：`fast-track.json` 的 `open` 项到达 `resolveByGate` 必须改为 `resolved` 并填写 `resolution`；确需带风险推进只能对 `DOC-FAST-005` 做具名、限期豁免，不能删除台账或把 `undecided` 伪写成 `confirmed`。
 - **`reuse-api` 终点 = G8**：G5 当场逐 endpoint 对账真实响应并销 `ASM-*` → `stage-status.G5 = completed` → `docs-tdd gate <PR> G6/G7/G8` 正常跑完。视觉线若仍低保真，按 §3.2 登记为 `type: change`（不填 `blocksGate`），不阻断交付。
 - **`pending-api` 终点 = G6-partial 停靠**：前端做完、静态与实现质量已可判定，但依赖真实字段的验收做不了。此时**不要空等**，跑
-  `node …/docs-tdd.mjs gate <PR> G6 --partial`（等价 `run-project-gate <PR> G6 --partial`）：code-review、静态规则与所选验证档位要求的机器检查照跑照判，只有 `contract`/`browser` 方法的验收项记为待对账（`DOC-AC-007` + `VERIFY-G6-005` 逐条点名欠账）。结论以 **`G6-partial`** 入 `gate-history.json`，前置改判 G4 PASS（`VERIFY-STAGE-004`，**不可豁免**）。
+  `node …/docs-tdd.mjs gate <PR> G6 --partial`（等价 `run-project-gate <PR> G6 --partial`）：biome/tsc/vitest/code-review/静态规则照跑照判，只有 `contract`/`browser` 方法的验收项记为待对账（`DOC-AC-007` + `VERIFY-G6-005` 逐条点名欠账）。结论以 **`G6-partial`** 入 `gate-history.json`，前置改判 G4 PASS（`VERIFY-STAGE-004`，**不可豁免**）。
   它**不是** G6 PASS：`hasPassedGate('G6')` 恒为 false → G7 天然被挡；README 的「最新通过门禁」不推进。作用是让停靠期的真实工作量拿到机器背书，而不是让项目在 G5 变成一团无证据的黑箱。
 - **正式资料到达 = 增量收敛，不重跑 G0–G4**：同步 API/Figma 重算 fingerprint → 逐 endpoint 比对 URL/字段/类型/nullable/枚举/错误码并按 [architecture-and-state.md §8.1](./architecture-and-state.md) 对账、逐条销 `ASM-*`、逐接口关 MSW handler（[§8.4.2](./architecture-and-state.md)）→ Figma 只对受影响组件做视觉差异 → 超出 G2 变更边界的**只重开受影响 Feature 的 G2** → `blockers` 置 `resolved`（带 `resolution` + `resolvedAt`，禁静默删）→ `stage-status` 改 `completed` → **重跑完整 G6**（不带 `--partial`，此时才产生 G7 前置）→ G7 → G8。
 - **确需带阻塞越 gate**：走 [rule-ids-and-gates.md §4](./rule-ids-and-gates.md) 的 `agent/rule-waivers.json` 具名 + 限期豁免，不删条目绕过。

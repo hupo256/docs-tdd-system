@@ -29,7 +29,6 @@ import { explainRule } from './lib/explain-rule.mjs'
 import { G6_CONTEXT_SCENARIOS, loadG6ContextSession, nextG6ContextScenario, printG6ContextPlan, recordG6Context, sameG6ContextBinding } from './lib/g6-context-session.mjs'
 import { createFingerprint } from './lib/gate-cache.mjs'
 import { maybeBroadcastGate, printGateHeartbeat } from './lib/gate-heartbeat.mjs'
-import { parseValidationTierOptions } from './lib/gate-payload.mjs'
 import { capability, resolveProjectWorktree } from './lib/project-status-report.mjs'
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 import { resolveRuleSessionClient } from './lib/rule-session.mjs'
@@ -54,12 +53,6 @@ if (sessionIndex >= 0 && !commandArgs[sessionIndex + 1]) {
   console.error('--session-id requires a non-empty task/session identifier')
   process.exit(1)
 }
-const validationTierOptions = parseValidationTierOptions(commandArgs)
-if (validationTierOptions.error) {
-  console.error(validationTierOptions.error)
-  process.exit(1)
-}
-const validationTierArgs = validationTierOptions.forwardedArgs
 let agentClient
 try {
   agentClient = resolveRuleSessionClient({
@@ -78,7 +71,7 @@ try {
   console.error(error.message)
   process.exit(1)
 }
-const valueOptions = new Set(['--client', '--session-id', '--validation-tier', '--validation-tier-reason'])
+const valueOptions = new Set(['--client', '--session-id'])
 const positional = commandArgs.filter((arg, index) => !arg.startsWith('--') && !valueOptions.has(commandArgs[index - 1]))
 const detail = positional[0]
 const noCache = cliArgs.includes('--no-cache')
@@ -105,8 +98,6 @@ if (process.argv.includes('--self-test')) {
   assert.deepEqual(validateContextPolicy(index, { codingScenarios: CODING_SCENARIOS }), [])
   assert.deepEqual(coordinatorSteps(index, 'g6_verify'), G6_CONTEXT_SCENARIOS)
   assert(expandScenarioRefs(index, 'g6_code_review').some((ref) => ref.file === 'quality-checklist.md'))
-  assert.equal(parseValidationTierOptions(['--validation-tier', 'MICRO']).error, '--validation-tier-reason is required for MICRO')
-  assert.deepEqual(parseValidationTierOptions(['--validation-tier', 'FOCUSED', '--validation-tier-reason', 'scoped']).forwardedArgs, ['--validation-tier', 'FOCUSED', '--validation-tier-reason', 'scoped'])
   console.log('docs-tdd self-test passed.')
   process.exit(0)
 }
@@ -241,7 +232,7 @@ else {
   const effectiveRules = requireFreshEffectiveRules()
   if (command === 'gate') {
     if (['G5', 'G6', 'G7', 'G8'].includes((detail || 'G3').toUpperCase()) && !requireRuleSession(projectId, worktree, agentClient)) process.exit(1)
-    status = run([join(scriptDir, 'run-project-gate.mjs'), projectId, detail || 'G3', '--write', '--client', agentClient, ...(contextSessionId ? ['--session-id', contextSessionId] : []), ...validationTierArgs, ...(noCache ? ['--no-cache'] : []), ...(partial ? ['--partial'] : [])], worktree)
+    status = run([join(scriptDir, 'run-project-gate.mjs'), projectId, detail || 'G3', '--write', '--client', agentClient, ...(contextSessionId ? ['--session-id', contextSessionId] : []), ...(noCache ? ['--no-cache'] : []), ...(partial ? ['--partial'] : [])], worktree)
     // partial 不是 G6 PASS：不播报「G6 通过」，免得群里误读为完整通过。
     if (status === 0 && !partial) maybeBroadcastGate(projectId, (detail || 'G3').toUpperCase())
   } else if (command === 'changed') {

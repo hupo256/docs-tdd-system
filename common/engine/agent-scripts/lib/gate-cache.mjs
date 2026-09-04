@@ -38,7 +38,7 @@ const CACHE_TRACKED_FILES = [
   'agent/blockers.json', 'agent/code-review.json', 'agent/acceptance-results.json', 'agent/delivery-status.json',
 ]
 
-export function gateCacheFingerprint(projectDir, { projectId, gate, callerCwd, config, docsRoot, validationTier = 'FULL', validationTierReason = '' }) {
+export function gateCacheFingerprint(projectDir, { projectId, gate, callerCwd, config, docsRoot }) {
   // 用项目 pinned 规则政策指纹参与 cache key，共享仓规则漂移不再作废已通过缓存。
   const pin = resolveRulePin(projectId, { persist: false })
   const fingerprint = createFingerprint({ callerCwd, config, docsRoot, pin })
@@ -48,7 +48,7 @@ export function gateCacheFingerprint(projectDir, { projectId, gate, callerCwd, c
       return existsSync(absolute) ? `${file}\n${readFileSync(absolute)}` : `${file}\nmissing`
     })
     .join('\n')
-  return createHash('sha256').update(`gate-v2\n${projectId}\n${gate}\n${validationTier}\n${validationTierReason}\n${JSON.stringify(fingerprint)}\n${projectFiles}`).digest('hex').slice(0, 16)
+  return createHash('sha256').update(`gate-v1\n${projectId}\n${gate}\n${JSON.stringify(fingerprint)}\n${projectFiles}`).digest('hex').slice(0, 16)
 }
 
 export function appendGateHistory(projectDir, payload, evidenceFile, { repoRoot, onError }) {

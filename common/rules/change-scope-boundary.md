@@ -66,7 +66,7 @@ grep -rn "ComponentName" apps/web/src packages --include=*.tsx --include=*.ts
 - [ ] 若改了公共类型/签名,全部调用方已同步、typecheck 通过。
 - [ ] 受影响的其他功能已抽样验证无回归（关键路径/快照/取值比对）——**明确证明无关功能未被波及**。
 - [ ] 决策、原因、影响面已写入 `06-collaboration.md`;项目特殊约束写入 `engineering/development-rules.md`。
-- [ ] 已按 [validation-tiering.md](./validation-tiering.md) 执行最终验证；公共包改动通常为 FULL，并确认不破坏其它 app 构建。
+- [ ] 触达文件已跑 Biome;公共包改动确认不破坏其它 app 构建。
 
 ## 5. 与其他规则的关系
 

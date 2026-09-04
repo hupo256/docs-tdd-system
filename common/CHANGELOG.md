@@ -325,8 +325,3 @@
 - **提测前契约完整性**：新增 `DOC-G5-004`，已勾选完成的任务同行仍含 `ASSUMED`、待后端/待对账、后端侧待办或契约未完成时直接阻断。源于 PR-01947 F19–F21“展示代码已落”被误写为完成并进入 test，但后台 P0 用例未执行、follower 接口契约未同步的问题。
 
 > 2026-07 及更早条目已轮转到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
-# 2026-09-04：验证力度分级与规则注入瘦身
-
-- 新增 `validation-tiering.md`，以 MICRO / FOCUSED / FULL 取代每次编辑后的机械检查；明确 `not-required` 与 `skipped`、默认不为局部低复杂度 utility 新增测试。
-- 修复 hook 将 `2>&1` / `>&2` 文件描述符复制误判为写文件的问题。
-- 规则注入支持“必需正文 + 顾问目录”：必需规则仍 deny-and-retry，宽 glob 顾问规则只注入摘要且不阻塞。

@@ -105,12 +105,11 @@
 | `VERIFY-G7-002` | G7+ | G7 状态为 `completed` 或 `skipped` | error |
 | `VERIFY-G7-003` | G7+ | G7 完成项存在证据路径；跳过项存在具体原因 | error |
 | `VERIFY-STAGE-003` | G8 | `agent/gate-history.json` 存在此前真实写入的 G7 PASS，禁止当前 G8 自证 | error（不可豁免） |
-| `VERIFY-TIER-001` | G6+（`verify-build-quality.mjs`） | 记录 MICRO/FOCUSED/FULL 与理由；MICRO/FOCUSED 缺理由直接拒绝执行 | error |
-| `VERIFY-BIOME-001` | G6+（`verify-build-quality.mjs`） | FOCUSED/FULL 改动文件实跑 `biome check`；MICRO 为 `not-required` | error |
-| `VERIFY-TYPE-001` | G6+（`verify-build-quality.mjs`） | FULL 实跑 `tsc --noEmit`，改动文件零报错；MICRO/FOCUSED 为 `not-required` | error |
+| `VERIFY-BIOME-001` | G6+（`verify-build-quality.mjs`） | 改动文件实跑 `biome check` 通过，且 `Checked` 文件数 >0 | error |
+| `VERIFY-TYPE-001` | G6+（`verify-build-quality.mjs`） | 实跑 `tsc --noEmit`，改动文件零报错（存量债不阻断） | error |
 | `VERIFY-TYPE-002` | G6+（`verify-build-quality.mjs`） | 改动之外的 tsc 报错数未超 `agent/tsc-baseline.json`（存量涟漪） | warn |
-| `VERIFY-TEST-001` | G6+（`verify-build-quality.mjs`） | FOCUSED 只跑既有相关测试，FULL 跑相关测试；MICRO 为 `not-required` | error |
-| `VERIFY-TEST-002` | G6+（`verify-build-quality.mjs`） | FULL 检查应有测试的逻辑文件；MICRO/FOCUSED 由 Review 按测试触发条件判断并记 `not-required` | error（trial，since:2：模板 v2+ 阻断、更早项目 warn，可豁免） |
+| `VERIFY-TEST-001` | G6+（`verify-build-quality.mjs`） | 实跑 `vitest run` 于相关测试文件全绿 | error |
+| `VERIFY-TEST-002` | G6+（`verify-build-quality.mjs`） | 改动的 `.ts` 逻辑文件导出函数须有对应单测 | error（trial，since:2：模板 v2+ 阻断、更早项目 warn，可豁免） |
 | `VERIFY-BUILD-001` | G6+（`run-project-gate.mjs`） | 机器事实层缺席守卫：未执行/输出不可解析/无理由跳过即 fail，有理由跳过降 warn；**G8 例外**：交付闸不接受 `--skip-build-quality` 整层跳过（连 biome/tsc/vitest 证据一起丢），带理由也判 error，正当出口是实跑后具名豁免 `VERIFY-PROD-BUILD-001` | error/warn |
 | `VERIFY-PROD-BUILD-001` | G8（`verify-build-quality.mjs`） | 按配置实跑 production build | error |
 | `VERIFY-RULE-001` | 会话启动 / `doctor` | Codex、Claude Code、Cursor、Lark-Codex、Lark-Claude 的 L1/L2/L3 source matrix 指向同一 canonical source fingerprint | error |
