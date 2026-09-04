@@ -1,0 +1,123 @@
+{
+  "name": "PR-02265 stale PRD revision",
+  "incident": "A previously reviewed requirement set must not remain green after the source revision changes.",
+  "expectedFailures": [
+    "SOURCE_FRESH"
+  ],
+  "sourceOracle": {
+    "requiredUnits": [
+      {
+        "oracleId": "FEE-AMOUNT-SEMANTICS",
+        "sourceIds": [
+          "PRD-FEE-TABLE"
+        ],
+        "minimumMappings": 1
+      }
+    ]
+  },
+  "discoveredSurfaces": [
+    {
+      "surfaceId": "S-001",
+      "locator": "fee display",
+      "basis": "prd-explicit"
+    }
+  ],
+  "implementation": {
+    "coveredSurfaceIds": [
+      "S-001"
+    ]
+  },
+  "currentSourceSnapshot": {
+    "revision": "revision-2",
+    "contentHash": "fixture-pr-02265-prd-v2",
+    "sources": [
+      {
+        "path": "inbox/lark-sync/prd-latest.extracted.md",
+        "contentHash": "fixture-pr-02265-prd-v2"
+      }
+    ]
+  },
+  "positiveControl": {
+    "refreshWorkItemSourceFromCurrent": true
+  },
+  "workItem": {
+    "schemaVersion": 1,
+    "workflowVersion": 2,
+    "projectId": "PR-02265",
+    "sourceSnapshot": {
+      "revision": "revision-1",
+      "contentHash": "fixture-pr-02265-prd-v1",
+      "sources": [
+        {
+          "path": "inbox/lark-sync/prd-latest.extracted.md",
+          "contentHash": "fixture-pr-02265-prd-v1"
+        }
+      ]
+    },
+    "requirements": [
+      {
+        "requirementId": "R-001",
+        "sourceAnchors": [
+          {
+            "type": "table",
+            "sourceId": "PRD-FEE-TABLE",
+            "path": "inbox/lark-sync/prd-latest.extracted.md",
+            "lineStart": 1,
+            "lineEnd": 1
+          }
+        ],
+        "statement": "Render the fee amount using the PRD-defined sign and amount semantics.",
+        "status": "doing",
+        "collectionSemantics": {
+          "kind": "none",
+          "expectedCount": 0
+        },
+        "affectedSurfaces": [
+          {
+            "surfaceId": "S-001",
+            "locator": "fee display",
+            "disposition": "implement"
+          }
+        ],
+        "evidencePlan": [
+          {
+            "type": "pure-logic",
+            "runtimeRequired": false
+          }
+        ]
+      }
+    ],
+    "coverageAudit": {
+      "sourceFingerprint": "sealed-by-replay",
+      "requirementsFingerprint": "sealed-by-replay",
+      "reviewMode": "independent-cold-read",
+      "reviewRunId": "historical-candidate",
+      "reviewer": {
+        "kind": "model",
+        "id": "deterministic-replay-fixture"
+      },
+      "completedAt": "2000-01-01T00:00:00.000Z",
+      "verdict": "pass",
+      "unresolved": []
+    },
+    "routing": {
+      "scopeClass": "local",
+      "riskSignals": [
+        "funds",
+        "fee-semantics"
+      ],
+      "verificationLevel": "V2",
+      "routerVersion": 1
+    },
+    "scopeApproval": {
+      "confirmationKind": "human",
+      "confirmedBy": "historical-reviewer",
+      "confirmedAt": "2026-08-26",
+      "fingerprint": "6585eb46521f1328a18266e58fcd9d0f1e77e1f2db9db5ff01945280a5eaf6eb"
+    },
+    "apiDependency": {
+      "mode": "real-api",
+      "reason": "Existing fee API is available; no mock is required."
+    }
+  }
+}

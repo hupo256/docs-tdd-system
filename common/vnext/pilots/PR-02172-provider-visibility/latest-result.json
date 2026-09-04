@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "workflowVersion": 2,
+  "tool": "vnext-verify.mjs",
+  "mode": "shadow",
+  "runId": "implemented-PR-02172-final-layout-20260904-r4",
+  "generatedAt": "2026-09-04T10:25:11.620Z",
+  "projectId": "PR-02172",
+  "level": "V1",
+  "status": "passed",
+  "ok": true,
+  "workItemFingerprint": "aa945416a68bee93a6383ce62bd9bdd57f8a64a6575e2ea6bb3aee905689bdc0",
+  "codeFingerprint": {
+    "headSha": "576925c967263ac154a405d84d23ca92c6307dd7",
+    "baseSha": "2a2cfa9afd7f08a1e1cc50e562b3364f5a15668c",
+    "dirtyHash": "918df092b8fab7b9eefe1cd544726f74bca7c1554f18be974a46b661fc8240eb",
+    "dirtyFileCount": 2,
+    "untrackedFileCount": 0,
+    "isGitRepo": true
+  },
+  "checks": [
+    {
+      "code": "SOURCE_FRESH",
+      "ok": true,
+      "problems": []
+    },
+    {
+      "code": "REQUIREMENT_COVERAGE",
+      "ok": true,
+      "problems": []
+    },
+    {
+      "code": "SURFACE_COVERAGE",
+      "ok": true,
+      "problems": []
+    },
+    {
+      "code": "RISK_ROUTE",
+      "ok": true,
+      "problems": []
+    },
+    {
+      "code": "SCOPE_APPROVAL",
+      "ok": true,
+      "problems": []
+    },
+    {
+      "code": "MSW_POLICY",
+      "ok": true,
+      "problems": [],
+      "mode": "no-request",
+      "required": false,
+      "blocked": false
+    },
+    {
+      "code": "CODE_STATE",
+      "ok": true,
+      "problems": [],
+      "evidenceIds": []
+    },
+    {
+      "code": "EVIDENCE_INTEGRITY",
+      "ok": true,
+      "problems": [],
+      "evidenceIds": [
+        "E-PR-02172-R3-DIRECTED",
+        "E-PR-02172-R3-DOM",
+        "E-PR-02172-R3-PRD-DIFF"
+      ]
+    },
+    {
+      "code": "EVIDENCE_FRESHNESS",
+      "ok": true,
+      "problems": [],
+      "evidenceIds": [
+        "E-PR-02172-R3-DIRECTED",
+        "E-PR-02172-R3-DOM",
+        "E-PR-02172-R3-PRD-DIFF"
+      ]
+    },
+    {
+      "code": "REQUIRED_EVIDENCE",
+      "ok": true,
+      "problems": [],
+      "evidenceIds": []
+    },
+    {
+      "code": "REQUIREMENT_EVIDENCE",
+      "ok": true,
+      "problems": [],
+      "evidenceIds": []
+    },
+    {
+      "code": "SURFACE_EVIDENCE",
+      "ok": true,
+      "problems": [],
+      "evidenceIds": []
+    },
+    {
+      "code": "BLOCKERS",
+      "ok": true,
+      "problems": [],
+      "evidenceIds": []
+    }
+  ],
+  "summary": {
+    "total": 13,
+    "passed": 13,
+    "failed": 0
+  },
+  "blockedBy": [],
+  "resultFingerprint": "ed50f66d0a9595e2ad2b9a3633c5c1d50108212ea512d9e0c16a3b5eb20612af"
+}

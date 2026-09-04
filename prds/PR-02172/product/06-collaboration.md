@@ -4,6 +4,8 @@
 # Collaboration — PR-02172 【登录注册】增加第三方（tg、facebook）
 
 > 2026-08-03 当前负责人确认 C01-C18；主要 Web/Admin 功能已进入 G8。2026-08-21 正式 Figma 到位，本轮只同步 UI 与相关文档，授权流程、交互和 API 复用既有实现。
+>
+> **2026-09-04 最终裁决（aven）**：17:48–18:15 会话截图覆盖旧版 3+2 与临时 3+1 方案。登录/注册隐藏 Facebook，剩余 Google、HiChat、Apple、Telegram 按固定顺序排成等尺寸 2×2：第一行 Google/HiChat，第二行 Apple/Telegram。首页、个人中心以及 Telegram/Facebook 授权、绑定、SDK、API、埋点均不变。
 
 ## Figma UI 同步结论（2026-08-21）
 
@@ -220,7 +222,7 @@
 
 | ID | 问题 | 为什么必须确认 | 建议参会 owner | 状态 |
 |----|------|----------------|----------------|------|
-| Q34 | 登录/注册入口排序是 Google、Apple、HiChat、Telegram、Facebook，还是按地区/端动态配置？ | 当前 UI 是固定枚举顺序 | 产品、设计 | 已确认：登录/注册第一行 Google/HiChat/Apple，第二行 Telegram/Facebook；首页 Google/Apple/HiChat/Telegram/Facebook |
+| Q34 | 登录/注册入口排序是 Google、Apple、HiChat、Telegram、Facebook，还是按地区/端动态配置？ | 当前 UI 是固定枚举顺序 | 产品、设计 | 最终确认：登录/注册隐藏 Facebook，第一行 Google/HiChat、第二行 Apple/Telegram；首页仍为 Google/Apple/HiChat/Telegram/Facebook |
 | Q35 | Telegram/Facebook 使用品牌图标按钮还是“继续使用 xxx”整行按钮？首页和弹窗是否同形态？ | 各入口容器形态不同 | 设计、产品 | 已确认：登录/注册为带文字整宽按钮；首页为 40×40 图标按钮；绑定为行内品牌图标 + 右侧操作按钮 |
 | Q36 | popup 打开后的 loading、用户取消、窗口关闭、超时和重复点击如何表现？ | 需完整可测试状态 | 产品、设计、Web | 待确认 |
 | Q37 | Facebook 同邮箱强制关联弹窗展示完整邮箱还是脱敏邮箱？是否允许切换“注册新账户”？ | 涉及隐私与安全 | 产品、安全 | 待确认 |

@@ -20,6 +20,7 @@
 | T11 | F14 | 埋点 | 确认 PostHog 事件名、触发时机、属性枚举、登录前 user_status 口径与 A/B 实验方案 | 待评审 | 埋点契约 |
 | T12 | F01-F15 | `PRD-EMBED-005` + G2 | 补白板、回填会议结论，标记做/不做/延期，补责任模块并执行 intake approve / G2 gate | 待办 | G2 gate |
 | T13 | F01、F08、F09 | Figma `19782:4920` / `19936:2518` / `19800:10744` | 登录/注册同步 3+2 按钮；首页同步五渠道与 QR 点击区；账户绑定只改红框；补品牌 SVG、单测和视觉验收 | 已完成 | 代码 diff、`ProviderLoginButtons.test.ts`、本地 Browser 走查、G8 gate |
+| T14 | F16 | 2026-09-04 最终会话截图 | 登录/注册共享入口从旧 3+2 调整为等尺寸 2×2：隐藏 Facebook，第一行 Google/HiChat、第二行 Apple/Telegram；首页、个人中心和授权代码不改；补定向 DOM/布局测试 | 已完成 | 展示层过滤 Facebook 后按固定顺序每两个入口分组；`ThirdPartyBtns.test.ts` 覆盖隐藏、顺序、2×2 行数、等尺寸 class 与点击；定向测试 2/2、Biome、vNext V1 最终出口 13/13 均通过 |
 
 ## PRD sourceId 逐项追踪
 

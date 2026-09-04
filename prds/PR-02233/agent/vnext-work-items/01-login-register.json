@@ -1,0 +1,405 @@
+{
+  "schemaVersion": 1,
+  "workflowVersion": 2,
+  "projectId": "PR-02233",
+  "sourceSnapshot": {
+    "revision": "670",
+    "contentHash": "9e3a1b2104635c137a715800542084b42d9fd25424f56a25fca1643ba785b78e",
+    "sources": [
+      {
+        "path": "https://qfglxo2m3dc.sg.larksuite.com/docx/QaBEditNroySaGxmywFl8CwXg6d",
+        "contentHash": "d8fa7940d84b9db4d7059d166dbf89e7499e5e32523d0801c1256aab77931ae2"
+      }
+    ]
+  },
+  "requirements": [
+    {
+      "requirementId": "R-002",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-18C0659FD48B"
+        }
+      ],
+      "statement": "On Web registration verification, replace “切换验证方式” with “没收到验证码？尝试邮箱注册”; clicking it returns to the first registration-information step and does not retain the entered verification code.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 1
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-020",
+          "locator": "Web registration verification page",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "copy-literal",
+          "runtimeRequired": false
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-003",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-AD6A18E9ABAE"
+        }
+      ],
+      "statement": "Per the human scope decision on 2026-09-04, App must add and Web must repair a real login verification-method switcher that opens as a dialog rather than returning to login; this overrides the contradictory acceptance-table row.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-021",
+          "locator": "App login verification",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-022",
+          "locator": "Web login verification",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        },
+        {
+          "type": "visual",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-004",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-CBE388031A06"
+        }
+      ],
+      "statement": "Show the login switch-method entry only when the user has at least two bound methods; hide it for a single bound method.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-023",
+          "locator": "App login verification",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-024",
+          "locator": "Web login verification",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-005",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-3E52376B5E22"
+        }
+      ],
+      "statement": "The switch dialog must show the specified title/subtitle, only bound methods, icon/name/description, masked email or phone, GA refresh copy, and a current-method marker.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 1
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-025",
+          "locator": "Verification-method dialog",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "copy-literal",
+          "runtimeRequired": false
+        },
+        {
+          "type": "component-dom",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-006",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-3E52376B5E22"
+        }
+      ],
+      "statement": "Order switch options GA, email, then phone; closing by X or backdrop keeps the current method unchanged.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 1
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-026",
+          "locator": "Verification-method dialog",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-007",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-3E52376B5E22"
+        }
+      ],
+      "statement": "Selecting a method closes the dialog and changes the verification input; login initially chooses the highest-priority bound method.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-027",
+          "locator": "App login verification",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-028",
+          "locator": "Web login verification",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-008",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-546F02B2DC68"
+        }
+      ],
+      "statement": "Email and SMS resend countdowns are independent and retain their prior state when switching away and back.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 1
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-029",
+          "locator": "Shared verification countdown state",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-009",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-7ECA62DDEE18"
+        }
+      ],
+      "statement": "Never show an unbound verification method in the login switch list.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 1
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-030",
+          "locator": "Verification-method dialog",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        },
+        {
+          "type": "component-dom",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-010",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-C7BEF9C7A8EF"
+        }
+      ],
+      "statement": "Registration uses its selected phone or email channel and never GA before account creation.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-031",
+          "locator": "App registration verification",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-032",
+          "locator": "Web registration verification",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-011",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-C7BEF9C7A8EF"
+        }
+      ],
+      "statement": "Login uses one method and defaults by GA > email > phone while allowing a switch among bound methods.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-033",
+          "locator": "App login verification",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-034",
+          "locator": "Web login verification",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    }
+  ],
+  "coverageAudit": {
+    "sourceFingerprint": "a4114cd9071758bb2bb1bf210e2b9ab13ebffd6e4a2ab98c6cb30b77857020af",
+    "requirementsFingerprint": "85c9f2e1b0a33ab9d2cf51eb07138942865025db6e5648688ff61f1a944772b9",
+    "reviewMode": "independent-cold-read",
+    "reviewRunId": "cold-review-remediation-PR-02233-20260904-subset-01-login-register",
+    "reviewer": {
+      "kind": "model",
+      "id": "uniaix/gpt-5.6-terra-independent-remediation"
+    },
+    "completedAt": "2026-09-04T08:30:00Z",
+    "verdict": "pass",
+    "findings": [],
+    "unresolved": []
+  },
+  "routing": {
+    "scopeClass": "cross-boundary",
+    "riskSignals": [
+      "contract-change",
+      "cross-app",
+      "funds",
+      "irreversible",
+      "multiple-entry-points",
+      "permission",
+      "shared-component"
+    ],
+    "verificationLevel": "V2",
+    "routerVersion": 1
+  },
+  "apiDependency": {
+    "mode": "mock-required",
+    "reason": "Human owner confirmed on 2026-09-04 that most flows reuse existing APIs; the small set of added or changed contracts proceeds through MSW route B until real-contract reconciliation.",
+    "contractIds": [
+      "AUTH-METHODS-V1",
+      "AUTH-CHANNEL-SWITCH-V1",
+      "VERIFY-COOLDOWN-V1"
+    ]
+  },
+  "scopeApproval": {
+    "confirmationKind": "human",
+    "confirmedBy": "Aven",
+    "confirmedAt": "2026-09-04",
+    "fingerprint": "c0cfef814945b182feaa28232057b4fc2817eebdaf5b134b6e91af42749e1d9c"
+  }
+}

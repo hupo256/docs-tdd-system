@@ -1,0 +1,373 @@
+{
+  "schemaVersion": 1,
+  "workflowVersion": 2,
+  "projectId": "PR-02233",
+  "sourceSnapshot": {
+    "revision": "670",
+    "contentHash": "9e3a1b2104635c137a715800542084b42d9fd25424f56a25fca1643ba785b78e",
+    "sources": [
+      {
+        "path": "https://qfglxo2m3dc.sg.larksuite.com/docx/QaBEditNroySaGxmywFl8CwXg6d",
+        "contentHash": "d8fa7940d84b9db4d7059d166dbf89e7499e5e32523d0801c1256aab77931ae2"
+      }
+    ]
+  },
+  "requirements": [
+    {
+      "requirementId": "R-001",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-3D89DE00D037"
+        }
+      ],
+      "statement": "Apply the verification interaction changes on App iOS/Android and Web H5/PC, with platform multilingual support, across every explicitly listed verification-code scene.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 19
+      },
+      "affectedSurfaces": [
+        {
+          "locator": "App/Web login",
+          "disposition": "implement",
+          "surfaceId": "S-001"
+        },
+        {
+          "locator": "App/Web registration",
+          "disposition": "implement",
+          "surfaceId": "S-002"
+        },
+        {
+          "locator": "App/Web forgotten password",
+          "disposition": "implement",
+          "surfaceId": "S-003"
+        },
+        {
+          "locator": "App/Web withdrawal including internal transfer",
+          "disposition": "implement",
+          "surfaceId": "S-004"
+        },
+        {
+          "locator": "App/Web password set/change",
+          "disposition": "implement",
+          "surfaceId": "S-005"
+        },
+        {
+          "locator": "App/Web email set/change",
+          "disposition": "implement",
+          "surfaceId": "S-006"
+        },
+        {
+          "locator": "App/Web phone set/change",
+          "disposition": "implement",
+          "surfaceId": "S-007"
+        },
+        {
+          "locator": "App/Web third-party bind/unbind",
+          "disposition": "implement",
+          "surfaceId": "S-008"
+        },
+        {
+          "locator": "App/Web disable GA",
+          "disposition": "implement",
+          "surfaceId": "S-009"
+        },
+        {
+          "locator": "App/Web disable phone verification",
+          "disposition": "implement",
+          "surfaceId": "S-010"
+        },
+        {
+          "locator": "App/Web withdrawal-whitelist toggle",
+          "disposition": "implement",
+          "surfaceId": "S-011"
+        },
+        {
+          "locator": "App/Web address add/edit including internal address",
+          "disposition": "implement",
+          "surfaceId": "S-012"
+        },
+        {
+          "locator": "App/Web account cancellation",
+          "disposition": "implement",
+          "surfaceId": "S-013"
+        },
+        {
+          "locator": "App/Web API view",
+          "disposition": "implement",
+          "surfaceId": "S-014"
+        },
+        {
+          "surfaceId": "S-015",
+          "locator": "App/Web API management",
+          "disposition": "implement"
+        },
+        {
+          "locator": "App/Web API create/edit",
+          "disposition": "implement",
+          "surfaceId": "S-016"
+        },
+        {
+          "locator": "App/Web buy-crypto module 1 purchase/sale",
+          "disposition": "implement",
+          "surfaceId": "S-017"
+        },
+        {
+          "locator": "App/Web buy-crypto module 2 purchase/sale",
+          "disposition": "implement",
+          "surfaceId": "S-018"
+        },
+        {
+          "locator": "App/Web buy-crypto module 3 purchase/sale",
+          "disposition": "implement",
+          "surfaceId": "S-019"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        },
+        {
+          "type": "visual",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-023",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-372D9B225DB8"
+        }
+      ],
+      "statement": "Refresh countdown text every second; show tooltip on Web hover and on App tap, with App close-on-second-tap or outside tap.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-067",
+          "locator": "App verification-code control",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-068",
+          "locator": "Web verification-code control",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-024",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-DBDB92A9BA6E"
+        }
+      ],
+      "statement": "Across App SMS inputs in each of the 19 listed verification scenes, quick fill must replace existing content, insert the received code once, preserve the correct code length, and allow normal verification.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 19
+      },
+      "affectedSurfaces": [
+        {
+          "locator": "App SMS quick-fill — login",
+          "disposition": "implement",
+          "surfaceId": "S-069"
+        },
+        {
+          "locator": "App SMS quick-fill — registration",
+          "disposition": "implement",
+          "surfaceId": "S-070"
+        },
+        {
+          "locator": "App SMS quick-fill — forgotten password",
+          "disposition": "implement",
+          "surfaceId": "S-071"
+        },
+        {
+          "locator": "App SMS quick-fill — withdrawal including internal transfer",
+          "disposition": "implement",
+          "surfaceId": "S-072"
+        },
+        {
+          "locator": "App SMS quick-fill — password set/change",
+          "disposition": "implement",
+          "surfaceId": "S-073"
+        },
+        {
+          "locator": "App SMS quick-fill — email set/change",
+          "disposition": "implement",
+          "surfaceId": "S-074"
+        },
+        {
+          "locator": "App SMS quick-fill — phone set/change",
+          "disposition": "implement",
+          "surfaceId": "S-075"
+        },
+        {
+          "locator": "App SMS quick-fill — third-party bind/unbind",
+          "disposition": "implement",
+          "surfaceId": "S-076"
+        },
+        {
+          "locator": "App SMS quick-fill — disable GA",
+          "disposition": "implement",
+          "surfaceId": "S-077"
+        },
+        {
+          "locator": "App SMS quick-fill — disable phone verification",
+          "disposition": "implement",
+          "surfaceId": "S-078"
+        },
+        {
+          "locator": "App SMS quick-fill — withdrawal-whitelist toggle",
+          "disposition": "implement",
+          "surfaceId": "S-079"
+        },
+        {
+          "locator": "App SMS quick-fill — address add/edit including internal address",
+          "disposition": "implement",
+          "surfaceId": "S-080"
+        },
+        {
+          "locator": "App SMS quick-fill — account cancellation",
+          "disposition": "implement",
+          "surfaceId": "S-081"
+        },
+        {
+          "locator": "App SMS quick-fill — API view",
+          "disposition": "implement",
+          "surfaceId": "S-082"
+        },
+        {
+          "locator": "App SMS quick-fill — API management",
+          "disposition": "implement",
+          "surfaceId": "S-083"
+        },
+        {
+          "locator": "App SMS quick-fill — API create/edit",
+          "disposition": "implement",
+          "surfaceId": "S-084"
+        },
+        {
+          "locator": "App SMS quick-fill — buy-crypto module 1 purchase/sale",
+          "disposition": "implement",
+          "surfaceId": "S-085"
+        },
+        {
+          "locator": "App SMS quick-fill — buy-crypto module 2 purchase/sale",
+          "disposition": "implement",
+          "surfaceId": "S-086"
+        },
+        {
+          "locator": "App SMS quick-fill — buy-crypto module 3 purchase/sale",
+          "disposition": "implement",
+          "surfaceId": "S-087"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-030",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-18C0659FD48B"
+        }
+      ],
+      "statement": "Keep the existing App registration-method-switch guidance unchanged.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 1
+      },
+      "affectedSurfaces": [
+        {
+          "locator": "App registration verification",
+          "disposition": "implement",
+          "surfaceId": "S-097"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        },
+        {
+          "type": "visual",
+          "runtimeRequired": true
+        }
+      ]
+    }
+  ],
+  "coverageAudit": {
+    "sourceFingerprint": "a4114cd9071758bb2bb1bf210e2b9ab13ebffd6e4a2ab98c6cb30b77857020af",
+    "requirementsFingerprint": "6d8648739ee81ceaf34d407544fb4462fc329b0b3c96cd5afacd660773b3c11f",
+    "reviewMode": "independent-cold-read",
+    "reviewRunId": "cold-review-remediation-PR-02233-20260904-subset-06-app-delegated",
+    "reviewer": {
+      "kind": "model",
+      "id": "uniaix/gpt-5.6-terra-independent-remediation"
+    },
+    "completedAt": "2026-09-04T08:30:00Z",
+    "verdict": "pass",
+    "findings": [],
+    "unresolved": []
+  },
+  "routing": {
+    "scopeClass": "cross-boundary",
+    "riskSignals": [
+      "contract-change",
+      "cross-app",
+      "funds",
+      "irreversible",
+      "multiple-entry-points",
+      "permission",
+      "shared-component"
+    ],
+    "verificationLevel": "V2",
+    "routerVersion": 1
+  },
+  "apiDependency": {
+    "mode": "mock-required",
+    "reason": "Human owner confirmed on 2026-09-04 that most flows reuse existing APIs; the small set of added or changed contracts proceeds through MSW route B until real-contract reconciliation.",
+    "contractIds": [
+      "AUTH-METHODS-V1",
+      "AUTH-CHANNEL-SWITCH-V1",
+      "VERIFY-COOLDOWN-V1"
+    ]
+  },
+  "scopeApproval": {
+    "confirmationKind": "human",
+    "confirmedBy": "Aven",
+    "confirmedAt": "2026-09-04",
+    "fingerprint": "6de212df787f2887015c36aa5d4c3641b9b1987ae1fb17fd6c47ef87c7ece0b7"
+  }
+}

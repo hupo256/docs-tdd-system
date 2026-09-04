@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "metric": "Unicode code-point characters in deterministic generated context",
+  "historicalTokenCount": null,
+  "v1Scenarios": [
+    "g0_g2_scope",
+    "g4_coding_worktree",
+    "g6_code_review",
+    "g6_contract"
+  ],
+  "v1Packs": [
+    {
+      "scenario": "g0_g2_scope",
+      "chars": 27888
+    },
+    {
+      "scenario": "g4_coding_worktree",
+      "chars": 16544
+    },
+    {
+      "scenario": "g6_code_review",
+      "chars": 20042
+    },
+    {
+      "scenario": "g6_contract",
+      "chars": 21174
+    }
+  ],
+  "v1PerProjectChars": 85648,
+  "vnextCases": [
+    {
+      "label": "V0-low-risk",
+      "level": "V0",
+      "chars": 465,
+      "budget": 4000,
+      "withinBudget": true
+    },
+    {
+      "label": "V1-PR-02306",
+      "level": "V1",
+      "chars": 623,
+      "budget": 4000,
+      "withinBudget": true
+    },
+    {
+      "label": "V2-PR-01930",
+      "level": "V2",
+      "chars": 920,
+      "budget": 8000,
+      "withinBudget": true
+    },
+    {
+      "label": "V2-PR-02265",
+      "level": "V2",
+      "chars": 710,
+      "budget": 8000,
+      "withinBudget": true
+    }
+  ],
+  "comparison": {
+    "projectCount": 4,
+    "v1ComparableChars": 342592,
+    "vnextComparableChars": 2718,
+    "reductionPercent": 99.21,
+    "targetReductionPercent": 60,
+    "ok": true
+  },
+  "budgets": {
+    "V0": 4000,
+    "V1": 4000,
+    "V2": 8000
+  }
+}

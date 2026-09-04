@@ -1,6 +1,8 @@
 # Collaboration — PR-02074 预测市场三期
 
 > G0 已完成：PRD 同步本地 + 22 张截图逐张读图，全量清单见 [00-feature-inventory.md](./00-feature-inventory.md)。**G2 定稿前不写业务代码。**
+>
+> **2026-09-04 增量裁决（aven）**：分类首页顶部搜索框仅在桌面断点由 `200px` 调整为 `240px`；移动端 `w-full`、独立搜索结果页、搜索逻辑与 API 均不改。
 
 ## A. 待确认：需用户/产品在 G2 确认的 scope
 

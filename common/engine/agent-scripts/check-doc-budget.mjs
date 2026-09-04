@@ -118,6 +118,7 @@ const SELF_TEST_SCRIPTS = [
   ['verify-build-quality.mjs', '--self-test'],
   ['verify-code-rules.mjs', '--self-test'],
   ['verify-project-gate.mjs', '--self-test'],
+  ['vnext-self-test.mjs', '--self-test'],
   ['verify-msw-manifest.mjs', '--self-test'],
   ['warn-ledger.mjs', '--self-test'],
 ]
@@ -347,7 +348,8 @@ try {
     } else if (size > budget.warn) {
       console.warn(`⚠ agent-scripts/${rel} = ${size} 字符，超告警线 ${budget.warn}（硬上限 ${budget.fail}）：考虑抽 lib/拆子命令。`)
     }
-    if (!selfTested.has(rel) && !SELF_TEST_EXEMPT.has(rel)) missingSelfTest.push(rel)
+    const coveredByVnextSuite = rel.startsWith('vnext-') || rel.startsWith('lib/vnext-')
+    if (!selfTested.has(rel) && !SELF_TEST_EXEMPT.has(rel) && !coveredByVnextSuite) missingSelfTest.push(rel)
   }
   if (overCap.length) errors.push(...overCap)
   if (missingSelfTest.length) {
@@ -959,6 +961,9 @@ if (missingTemplateRefs.length) {
     acceptanceResults: { file: 'acceptance-results.schema.json', data: null },
     deliveryStatus: { file: 'delivery-status.schema.json', data: null },
     runState: { file: 'run-state.schema.json', data: null },
+    vnextWorkItem: { file: 'vnext-work-item.schema.json', data: null },
+    vnextCoverageReview: { file: 'vnext-coverage-review.schema.json', data: null },
+    vnextExitResult: { file: 'vnext-exit-result.schema.json', data: null },
   }
   const schemaLoadErrors = []
   for (const [key, { file }] of Object.entries(schemas)) {
@@ -1007,6 +1012,9 @@ if (missingTemplateRefs.length) {
         ['acceptance-results.json', 'acceptanceResults'],
         ['delivery-status.json', 'deliveryStatus'],
         ['run-state.json', 'runState'],
+        ['work-item.json', 'vnextWorkItem'],
+        ['coverage-review.json', 'vnextCoverageReview'],
+        ['latest-result.json', 'vnextExitResult'],
       ]) {
         const file = join(projectDir, 'agent', fileName)
         if (!existsSync(file)) continue

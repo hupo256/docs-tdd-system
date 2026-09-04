@@ -1,0 +1,215 @@
+{
+  "schemaVersion": 1,
+  "purpose": "v1 comparison baseline for docs_tdd vNext; null means the historical value was not recorded and must not be estimated",
+  "collectedAt": "2026-09-04T08:36:00.210Z",
+  "sourceCommit": "97a2cdfd67bdeb8b6caa4428b6d0eba4b3f69003",
+  "metricDefinitions": {
+    "processFiles": "All files under the project except inbox/**; a reproducible proxy for docs_tdd-created persistent artifacts.",
+    "gateRuns": "Entries present in agent/gate-history.json; absent historical logging is not reconstructed.",
+    "gateCheckEvaluations": "Sum of summary.total across recorded gate runs, including repeated checks.",
+    "contextPackCalls": "Entries in agent/context-injections.json when that ledger exists; null otherwise.",
+    "postTestRequirementOmissionFixes": "User-reported incidents captured in baseline-observations.json.",
+    "recordedWindowMinutes": "Elapsed minutes from first to last recorded gate; not total project wall-clock time."
+  },
+  "projects": [
+    {
+      "projectId": "PR-01947",
+      "expectedLevel": "V2",
+      "machineRecorded": {
+        "files": {
+          "total": 48,
+          "process": 38,
+          "inbox": 10,
+          "evidence": 8,
+          "totalBytes": 297370,
+          "processBytes": 219326
+        },
+        "gates": {
+          "runs": 0,
+          "passedRuns": 0,
+          "failedRuns": 0,
+          "distinct": [],
+          "checkEvaluations": 0,
+          "warnings": 0,
+          "waivers": 0,
+          "firstRecordedAt": null,
+          "lastRecordedAt": null,
+          "recordedWindowMinutes": null,
+          "latestResult": {
+            "gate": "G5",
+            "ok": false,
+            "generatedAt": "2026-08-01T09:46:08.760Z"
+          }
+        },
+        "contextPackCalls": null
+      },
+      "retrospective": {
+        "postTestRequirementOmissionFixes": 0,
+        "incidentClass": null
+      },
+      "unavailableHistoricalMetrics": {
+        "firstCodeMinutes": null,
+        "docsTddTokens": null,
+        "processWallClockMinutes": null,
+        "mockWasteMinutes": null
+      }
+    },
+    {
+      "projectId": "PR-02265",
+      "expectedLevel": "V2",
+      "machineRecorded": {
+        "files": {
+          "total": 78,
+          "process": 53,
+          "inbox": 25,
+          "evidence": 17,
+          "totalBytes": 8451308,
+          "processBytes": 220485
+        },
+        "gates": {
+          "runs": 9,
+          "passedRuns": 9,
+          "failedRuns": 0,
+          "distinct": [
+            "G2",
+            "G3",
+            "G4",
+            "G5"
+          ],
+          "checkEvaluations": 459,
+          "warnings": 7,
+          "waivers": 37,
+          "firstRecordedAt": "2026-08-07T11:13:31.346Z",
+          "lastRecordedAt": "2026-08-21T05:23:42.102Z",
+          "recordedWindowMinutes": 19810,
+          "latestResult": {
+            "gate": "G6",
+            "ok": false,
+            "generatedAt": "2026-08-21T05:29:02.643Z"
+          }
+        },
+        "contextPackCalls": 1
+      },
+      "retrospective": {
+        "postTestRequirementOmissionFixes": 1,
+        "incidentClass": "explicit PRD amount/fee semantics omitted"
+      },
+      "unavailableHistoricalMetrics": {
+        "firstCodeMinutes": null,
+        "docsTddTokens": null,
+        "processWallClockMinutes": null,
+        "mockWasteMinutes": null
+      }
+    },
+    {
+      "projectId": "PR-02306",
+      "expectedLevel": "V1",
+      "machineRecorded": {
+        "files": {
+          "total": 65,
+          "process": 55,
+          "inbox": 10,
+          "evidence": 21,
+          "totalBytes": 1013525,
+          "processBytes": 176937
+        },
+        "gates": {
+          "runs": 11,
+          "passedRuns": 11,
+          "failedRuns": 0,
+          "distinct": [
+            "G2",
+            "G3",
+            "G4",
+            "G5",
+            "G6",
+            "G7",
+            "G8"
+          ],
+          "checkEvaluations": 884,
+          "warnings": 17,
+          "waivers": 13,
+          "firstRecordedAt": "2026-08-18T01:37:42.869Z",
+          "lastRecordedAt": "2026-08-23T10:37:18.775Z",
+          "recordedWindowMinutes": 7740,
+          "latestResult": {
+            "gate": "G8",
+            "ok": true,
+            "generatedAt": "2026-08-23T10:37:18.775Z"
+          }
+        },
+        "contextPackCalls": null
+      },
+      "retrospective": {
+        "postTestRequirementOmissionFixes": 1,
+        "incidentClass": "image-backed password entry points omitted"
+      },
+      "unavailableHistoricalMetrics": {
+        "firstCodeMinutes": null,
+        "docsTddTokens": null,
+        "processWallClockMinutes": null,
+        "mockWasteMinutes": null
+      }
+    },
+    {
+      "projectId": "PR-01930",
+      "expectedLevel": "V2",
+      "machineRecorded": {
+        "files": {
+          "total": 134,
+          "process": 107,
+          "inbox": 27,
+          "evidence": 28,
+          "totalBytes": 8182915,
+          "processBytes": 4685403
+        },
+        "gates": {
+          "runs": 4,
+          "passedRuns": 4,
+          "failedRuns": 0,
+          "distinct": [
+            "G5",
+            "G6",
+            "G7",
+            "G8"
+          ],
+          "checkEvaluations": 245,
+          "warnings": 3,
+          "waivers": 8,
+          "firstRecordedAt": "2026-08-18T13:40:26.760Z",
+          "lastRecordedAt": "2026-08-18T23:27:06.232Z",
+          "recordedWindowMinutes": 587,
+          "latestResult": {
+            "gate": "G6",
+            "ok": false,
+            "generatedAt": "2026-08-26T10:53:46.179Z"
+          }
+        },
+        "contextPackCalls": null
+      },
+      "retrospective": {
+        "postTestRequirementOmissionFixes": 1,
+        "incidentClass": "collection of fund-flow entry points incompletely implemented"
+      },
+      "unavailableHistoricalMetrics": {
+        "firstCodeMinutes": null,
+        "docsTddTokens": null,
+        "processWallClockMinutes": null,
+        "mockWasteMinutes": null
+      }
+    }
+  ],
+  "portfolio": {
+    "projectCount": 4,
+    "processFiles": 253,
+    "gateRuns": 24,
+    "gateCheckEvaluations": 1588,
+    "reportedRequirementOmissionFixes": 3,
+    "unavailableMetricsMustRemainNull": [
+      "firstCodeMinutes",
+      "docsTddTokens",
+      "processWallClockMinutes",
+      "mockWasteMinutes"
+    ]
+  }
+}

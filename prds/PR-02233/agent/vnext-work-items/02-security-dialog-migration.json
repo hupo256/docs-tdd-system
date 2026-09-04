@@ -1,0 +1,304 @@
+{
+  "schemaVersion": 1,
+  "workflowVersion": 2,
+  "projectId": "PR-02233",
+  "sourceSnapshot": {
+    "revision": "670",
+    "contentHash": "9e3a1b2104635c137a715800542084b42d9fd25424f56a25fca1643ba785b78e",
+    "sources": [
+      {
+        "path": "https://qfglxo2m3dc.sg.larksuite.com/docx/QaBEditNroySaGxmywFl8CwXg6d",
+        "contentHash": "d8fa7940d84b9db4d7059d166dbf89e7499e5e32523d0801c1256aab77931ae2"
+      }
+    ]
+  },
+  "requirements": [
+    {
+      "requirementId": "R-012",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-C7BEF9C7A8EF"
+        }
+      ],
+      "statement": "Withdrawal and password set/change require the two highest-priority bound verification methods; if withdrawal has fewer than two bound methods, prompt the user to bind at least two methods or apply the existing business fallback.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-035",
+          "locator": "Withdrawal verification",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-036",
+          "locator": "Password verification",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-013",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-C7BEF9C7A8EF"
+        }
+      ],
+      "statement": "Other sensitive operations use the sole bound method when only one exists, or the two highest-priority methods when two or more exist.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 1
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-037",
+          "locator": "Other sensitive-operation verification",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-014",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-E50CC78A923F"
+        }
+      ],
+      "statement": "Web login and registration remain full-page verification; every other Web verification scene uses a dialog.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-038",
+          "locator": "Web login/registration verification",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-039",
+          "locator": "Web non-login verification dialogs",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": true
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-015",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-FE361CD72BE4"
+        }
+      ],
+      "statement": "When changing an existing email or phone, keep new-target ownership verification on the form and perform account-identity verification in the post-submit dialog using the currently bound methods and allowed switch behavior specified by the matrix.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      },
+      "affectedSurfaces": [
+        {
+          "locator": "Web change-email form/dialog",
+          "disposition": "implement",
+          "surfaceId": "S-040"
+        },
+        {
+          "locator": "Web change-phone form/dialog",
+          "disposition": "implement",
+          "surfaceId": "S-041"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-031",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-FE361CD72BE4"
+        }
+      ],
+      "statement": "For first phone binding when only email is bound, keep new-phone verification on the form and use the specified email account-identity verification dialog after submit.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 1
+      },
+      "affectedSurfaces": [
+        {
+          "locator": "Web first-phone-binding form/dialog",
+          "disposition": "implement",
+          "surfaceId": "S-098"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-032",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-FE361CD72BE4"
+        }
+      ],
+      "statement": "For first email binding when phone and GA are bound, keep new-email verification on the form and use the specified phone/GA account-identity dialog and switching rules after submit.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 1
+      },
+      "affectedSurfaces": [
+        {
+          "locator": "Web first-email-binding form/dialog",
+          "disposition": "implement",
+          "surfaceId": "S-099"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-034",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-FE361CD72BE4"
+        }
+      ],
+      "statement": "After new-target verification succeeds, close the form and open account-identity verification; apply the bind/change only after identity verification succeeds, while cancellation or failure leaves it unapplied and retryable.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-102",
+          "locator": "Web security-setting forms",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-103",
+          "locator": "Web identity-verification dialogs",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    }
+  ],
+  "coverageAudit": {
+    "sourceFingerprint": "a4114cd9071758bb2bb1bf210e2b9ab13ebffd6e4a2ab98c6cb30b77857020af",
+    "requirementsFingerprint": "7c2f6ba004f4fab38d8c32e96a21e07e85c52d9f5e30bcb3886a57e049015267",
+    "reviewMode": "independent-cold-read",
+    "reviewRunId": "cold-review-remediation-PR-02233-20260904-subset-02-security-dialog-migration",
+    "reviewer": {
+      "kind": "model",
+      "id": "uniaix/gpt-5.6-terra-independent-remediation"
+    },
+    "completedAt": "2026-09-04T08:30:00Z",
+    "verdict": "pass",
+    "findings": [],
+    "unresolved": []
+  },
+  "routing": {
+    "scopeClass": "cross-boundary",
+    "riskSignals": [
+      "contract-change",
+      "cross-app",
+      "funds",
+      "irreversible",
+      "multiple-entry-points",
+      "permission",
+      "shared-component"
+    ],
+    "verificationLevel": "V2",
+    "routerVersion": 1
+  },
+  "apiDependency": {
+    "mode": "mock-required",
+    "reason": "Human owner confirmed on 2026-09-04 that most flows reuse existing APIs; the small set of added or changed contracts proceeds through MSW route B until real-contract reconciliation.",
+    "contractIds": [
+      "AUTH-METHODS-V1",
+      "AUTH-CHANNEL-SWITCH-V1",
+      "VERIFY-COOLDOWN-V1"
+    ]
+  },
+  "scopeApproval": {
+    "confirmationKind": "human",
+    "confirmedBy": "Aven",
+    "confirmedAt": "2026-09-04",
+    "fingerprint": "fcbc7b8d89303ed0e55f3eb4465c1266cb6256f255f774321363990c608221aa"
+  }
+}

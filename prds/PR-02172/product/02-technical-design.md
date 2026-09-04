@@ -20,7 +20,7 @@
 | TD09 | 用户绑定模型 | 扩展统一 `authUsers` 数组，至少包含 `provider`、`bindStatus`、`maskedAccount`；不新增平铺的渠道状态字段 |
 | TD10 | 外部数据边界 | Telegram/Facebook SDK 数据以 `unknown` 进入 runtime schema，再映射为统一授权模型 |
 | TD11 | 解绑责任 | Web 只刷新用户资料并清理本地临时授权状态；数据库、token、缓存由后端原子清理；Bot 订阅不在本期范围 |
-| TD12 | Figma UI 同步边界 | 登录/注册改 3+2 按钮，首页同步五渠道与 QR 点击区，账户绑定只改红框；不得借 UI 调整改写授权/API 逻辑 |
+| TD12 | Figma UI 同步边界 | 2026-09-04 最终需求将登录/注册展示改为等尺寸 2×2：Google/HiChat、Apple/Telegram，隐藏 Facebook；首页仍为五渠道 + QR，账户绑定仍只改红框；不得借 UI 调整改写授权/API 逻辑 |
 
 ## 复用盘点
 

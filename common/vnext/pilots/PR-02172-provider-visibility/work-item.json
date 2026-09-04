@@ -1,0 +1,335 @@
+{
+  "schemaVersion": 1,
+  "workflowVersion": 2,
+  "projectId": "PR-02172",
+  "sourceSnapshot": {
+    "revision": "chat-screenshot-2026-09-04-2",
+    "contentHash": "88b96b5e1f5af303e6ef33ebf7f8554413a52c75ffd3075a7710ca16ef83b934",
+    "sources": [
+      {
+        "path": "prds/PR-02172/inbox/vnext-login-provider-layout-2026-09-04.md",
+        "contentHash": "62669ed932f9e027b04f117123d09b9ab329405ec0c79b892e555eb5a3a8d937"
+      }
+    ]
+  },
+  "requirements": [
+    {
+      "requirementId": "R-001",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-576976E758E1",
+          "path": "prds/PR-02172/inbox/vnext-login-provider-layout-2026-09-04.md",
+          "lineStart": 11,
+          "lineEnd": 16
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-19EF07852969",
+          "path": "prds/PR-02172/inbox/vnext-login-provider-layout-2026-09-04.md",
+          "lineStart": 20,
+          "lineEnd": 23
+        }
+      ],
+      "statement": "Do not render the Facebook provider button on either the login page or the registration page.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-HIDE-FB-LOGIN",
+          "locator": "Login ThirdPartyLogin provider grid",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-HIDE-FB-REGISTER",
+          "locator": "Registration ThirdPartyLogin provider grid",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-002",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-576976E758E1",
+          "path": "prds/PR-02172/inbox/vnext-login-provider-layout-2026-09-04.md",
+          "lineStart": 11,
+          "lineEnd": 16
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-19EF07852969",
+          "path": "prds/PR-02172/inbox/vnext-login-provider-layout-2026-09-04.md",
+          "lineStart": 20,
+          "lineEnd": 23
+        }
+      ],
+      "statement": "Keep the four visible providers in the fixed order Google, HiChat, Apple, Telegram on login and registration.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-ORDER-LOGIN",
+          "locator": "Login ThirdPartyLogin provider grid",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-ORDER-REGISTER",
+          "locator": "Registration ThirdPartyLogin provider grid",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-003",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-576976E758E1",
+          "path": "prds/PR-02172/inbox/vnext-login-provider-layout-2026-09-04.md",
+          "lineStart": 11,
+          "lineEnd": 16
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-19EF07852969",
+          "path": "prds/PR-02172/inbox/vnext-login-provider-layout-2026-09-04.md",
+          "lineStart": 20,
+          "lineEnd": 23
+        }
+      ],
+      "statement": "Lay out the four visible providers as two rows of two: Google/HiChat on row one and Apple/Telegram on row two.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-GRID-LOGIN",
+          "locator": "Login ThirdPartyLogin provider grid",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-GRID-REGISTER",
+          "locator": "Registration ThirdPartyLogin provider grid",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-004",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-576976E758E1",
+          "path": "prds/PR-02172/inbox/vnext-login-provider-layout-2026-09-04.md",
+          "lineStart": 11,
+          "lineEnd": 16
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-19EF07852969",
+          "path": "prds/PR-02172/inbox/vnext-login-provider-layout-2026-09-04.md",
+          "lineStart": 20,
+          "lineEnd": 23
+        }
+      ],
+      "statement": "Use the same width and height for all four visible provider buttons while preserving existing spacing, icons, labels, loading, and disabled behavior.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-SIZE-LOGIN",
+          "locator": "Login ThirdPartyLogin provider grid",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-SIZE-REGISTER",
+          "locator": "Registration ThirdPartyLogin provider grid",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-005",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-576976E758E1",
+          "path": "prds/PR-02172/inbox/vnext-login-provider-layout-2026-09-04.md",
+          "lineStart": 11,
+          "lineEnd": 16
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-19EF07852969",
+          "path": "prds/PR-02172/inbox/vnext-login-provider-layout-2026-09-04.md",
+          "lineStart": 20,
+          "lineEnd": 23
+        }
+      ],
+      "statement": "Do not change the homepage third-party provider entry.",
+      "status": "not-doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 1
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-HOME",
+          "locator": "HomeThirdLogin provider entry",
+          "disposition": "not-applicable",
+          "reason": "Explicitly excluded by the approved final scope."
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "prd-to-diff-review",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-006",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-576976E758E1",
+          "path": "prds/PR-02172/inbox/vnext-login-provider-layout-2026-09-04.md",
+          "lineStart": 11,
+          "lineEnd": 16
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-19EF07852969",
+          "path": "prds/PR-02172/inbox/vnext-login-provider-layout-2026-09-04.md",
+          "lineStart": 20,
+          "lineEnd": 23
+        }
+      ],
+      "statement": "Do not change the personal-center third-party binding entry.",
+      "status": "not-doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 1
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-PERSONAL",
+          "locator": "Personal-center third-party binding list",
+          "disposition": "not-applicable",
+          "reason": "Explicitly excluded by the approved final scope."
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "prd-to-diff-review",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-007",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-576976E758E1",
+          "path": "prds/PR-02172/inbox/vnext-login-provider-layout-2026-09-04.md",
+          "lineStart": 11,
+          "lineEnd": 16
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-19EF07852969",
+          "path": "prds/PR-02172/inbox/vnext-login-provider-layout-2026-09-04.md",
+          "lineStart": 20,
+          "lineEnd": 23
+        }
+      ],
+      "statement": "Do not modify Telegram/Facebook authorization, binding, SDK, API, analytics, or request behavior; do not create MSW.",
+      "status": "not-doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 1
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-AUTH",
+          "locator": "Third-party provider authorization and binding implementation",
+          "disposition": "not-applicable",
+          "reason": "Only login/register presentation is in scope."
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "prd-to-diff-review",
+          "runtimeRequired": false
+        }
+      ]
+    }
+  ],
+  "coverageAudit": {
+    "sourceFingerprint": "86cc30314e7cb5ad14ab4617129375c711a0cf9dcfb977491da8e67d3380ce69",
+    "requirementsFingerprint": "d37f56ff6f2eaf7a775398c5d808e362fe4bfdd1d03f856e15ee65c7665aca69",
+    "reviewMode": "independent-cold-read",
+    "reviewRunId": "cold-review-PR-02172-provider-layout-20260904-r2",
+    "reviewer": {
+      "kind": "model",
+      "id": "pi/gpt-5.4-independent-cold-read-r2"
+    },
+    "completedAt": "2026-09-04T10:15:00Z",
+    "verdict": "pass",
+    "findings": [],
+    "unresolved": []
+  },
+  "routing": {
+    "scopeClass": "multi-surface",
+    "riskSignals": [
+      "authentication-surface",
+      "multiple-entry-points",
+      "shared-component"
+    ],
+    "verificationLevel": "V1",
+    "routerVersion": 1
+  },
+  "apiDependency": {
+    "mode": "no-request",
+    "reason": "The final requirement changes login/register presentation only and does not add or alter requests."
+  },
+  "scopeApproval": null
+}

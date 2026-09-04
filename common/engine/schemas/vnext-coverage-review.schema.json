@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vnext-coverage-review.schema.json",
+  "title": "docs_tdd vNext Independent Coverage Review Response",
+  "type": "object",
+  "required": ["schemaVersion", "protocol", "projectId", "sourceFingerprint", "requirementsFingerprint", "reviewRunId", "completedAt", "reviewer", "verdict", "findings"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "protocol": { "const": "vnext-independent-coverage-review-v1" },
+    "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },
+    "sourceFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "requirementsFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "reviewRunId": { "type": "string", "minLength": 1 },
+    "completedAt": { "type": "string", "format": "date-time" },
+    "reviewer": {
+      "type": "object",
+      "required": ["kind", "id"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["human", "model"] },
+        "id": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "verdict": { "type": "string", "enum": ["pass", "changes-required"] },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["findingId", "code", "message", "sourceIds", "disposition"],
+        "properties": {
+          "findingId": { "type": "string", "minLength": 1 },
+          "code": { "type": "string", "enum": ["missing-requirement", "merged-requirement", "ambiguous-collection", "missing-surface", "other"] },
+          "message": { "type": "string", "minLength": 1 },
+          "sourceIds": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "disposition": { "type": "string", "enum": ["resolved", "not-applicable", "deferred", "open"] },
+          "reason": { "type": "string" },
+          "owner": { "type": "string" },
+          "batch": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

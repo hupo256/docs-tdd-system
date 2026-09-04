@@ -1,0 +1,20 @@
+{
+  "projectId": "PR-02233",
+  "createdAt": "2026-09-04",
+  "rulesetVersion": "local-2026.09-atomic-acceptance-v1",
+  "templateVersion": 5,
+  "pilot": {
+    "msw": true,
+    "prdIntake": true
+  },
+  "gatePolicy": {
+    "legacyRules": "blocking",
+    "currentTouchedRules": "blocking"
+  },
+  "rulePolicy": {
+    "commit": "9b913bba3bc9861827075fa72a36b140c796eb2c",
+    "policyFingerprint": "0d5464a583162cf9519f2b0e7c005e8a3ff5ac5a56fba096d38babfb1e9f8ec3",
+    "upgradeMode": "explicit",
+    "pinnedAt": "2026-09-04"
+  }
+}

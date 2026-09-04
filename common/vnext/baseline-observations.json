@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "provenance": "User retrospective that initiated docs_tdd vNext; values not recoverable from machine records remain null.",
+  "projects": {
+    "PR-01947": {
+      "expectedLevel": "V2",
+      "postTestRequirementOmissionFixes": 0,
+      "incidentClass": null
+    },
+    "PR-02265": {
+      "expectedLevel": "V2",
+      "postTestRequirementOmissionFixes": 1,
+      "incidentClass": "explicit PRD amount/fee semantics omitted"
+    },
+    "PR-02306": {
+      "expectedLevel": "V1",
+      "postTestRequirementOmissionFixes": 1,
+      "incidentClass": "image-backed password entry points omitted"
+    },
+    "PR-01930": {
+      "expectedLevel": "V2",
+      "postTestRequirementOmissionFixes": 1,
+      "incidentClass": "collection of fund-flow entry points incompletely implemented"
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "name": "low-risk local copy/style task",
+      "projectId": "PR-00000",
+      "scopeClass": "local",
+      "riskSignals": [],
+      "expectedLevel": "V0"
+    },
+    {
+      "name": "PR-02306 password across multiple entry points",
+      "projectId": "PR-02306",
+      "scopeClass": "multi-surface",
+      "riskSignals": ["password", "multiple-entry-points"],
+      "expectedLevel": "V1"
+    },
+    {
+      "name": "PR-02172 authentication entry visibility",
+      "projectId": "PR-02172",
+      "scopeClass": "multi-surface",
+      "riskSignals": ["authentication-surface", "shared-component"],
+      "expectedLevel": "V1"
+    },
+    {
+      "name": "PR-01930 fund flow and irreversible cross-boundary behavior",
+      "projectId": "PR-01930",
+      "scopeClass": "cross-boundary",
+      "riskSignals": ["funds", "irreversible", "multiple-entry-points"],
+      "expectedLevel": "V2"
+    },
+    {
+      "name": "PR-02265 fee and amount semantics",
+      "projectId": "PR-02265",
+      "scopeClass": "local",
+      "riskSignals": ["funds", "fee-semantics", "amount-semantics"],
+      "expectedLevel": "V2"
+    },
+    {
+      "name": "PR-01947 trading parameters and mode combinations",
+      "projectId": "PR-01947",
+      "scopeClass": "multi-surface",
+      "riskSignals": ["trading", "multiple-entry-points"],
+      "expectedLevel": "V2"
+    }
+  ]
+}

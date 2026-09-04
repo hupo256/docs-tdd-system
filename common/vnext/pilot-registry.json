@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "mode": "explicit-dual-track-shadow",
+  "minimumSamples": 5,
+  "maximumSamples": 10,
+  "requiredLevels": [
+    "V0",
+    "V1",
+    "V2"
+  ],
+  "entries": [
+    {
+      "projectId": "PR-02233",
+      "artifactDir": "pilots/PR-02233",
+      "enrolledAt": "2026-09-04T08:45:00Z",
+      "newRequirement": true,
+      "observation": null
+    },
+    {
+      "projectId": "PR-02117",
+      "artifactDir": "pilots/PR-02117",
+      "enrolledAt": "2026-09-04T08:45:00Z",
+      "newRequirement": true,
+      "observation": null
+    },
+    {
+      "projectId": "PR-02133",
+      "artifactDir": "pilots/PR-02133",
+      "enrolledAt": "2026-09-04T08:45:00Z",
+      "newRequirement": true,
+      "observation": null
+    },
+    {
+      "projectId": "PR-02193",
+      "artifactDir": "pilots/PR-02193",
+      "enrolledAt": "2026-09-04T08:45:00Z",
+      "newRequirement": true,
+      "observation": null
+    },
+    {
+      "sampleId": "PR-02074-SEARCH-WIDTH",
+      "projectId": "PR-02074",
+      "artifactDir": "pilots/PR-02074-search-width",
+      "enrolledAt": "2026-09-04T09:42:00Z",
+      "newRequirement": true,
+      "observation": null
+    },
+    {
+      "sampleId": "PR-02172-PROVIDER-VISIBILITY",
+      "projectId": "PR-02172",
+      "artifactDir": "pilots/PR-02172-provider-visibility",
+      "enrolledAt": "2026-09-04T09:42:00Z",
+      "newRequirement": true,
+      "observation": null
+    }
+  ],
+  "candidateAssessments": [
+    {
+      "projectId": "PR-02251",
+      "sourceRef": "https://qfglxo2m3dc.sg.larksuite.com/docx/Z83qdn0EJoY1wQxTAiYlpHqjg3e",
+      "sourceRevision": "1213",
+      "sourceContentHash": "7ffd639e742f8b43f90f9ba4ca4c07b2e008a7e446ead8c0349325f691a44e63",
+      "requestedLevel": "V1",
+      "classifiedLevel": "V2",
+      "decision": "ineligible-for-requested-level",
+      "assessedAt": "2026-09-04T08:35:00Z",
+      "reason": "Cross-module App/Web assets reporting and export scope, including a new API path, asynchronous task flow, event integration, and release-sensitive UI/API contracts."
+    },
+    {
+      "projectId": "PR-02254",
+      "sourceRef": "https://qfglxo2m3dc.sg.larksuite.com/docx/KfSwdrEVCov9foxbNkKllH3Ygpf",
+      "sourceRevision": "229",
+      "sourceContentHash": "8147f4ffd70d94bf58e6156666d32208fd503ab71338b2e2a386f0ad45291658",
+      "requestedLevel": "V1",
+      "classifiedLevel": "V2",
+      "decision": "ineligible-for-requested-level",
+      "assessedAt": "2026-09-04T08:35:00Z",
+      "reason": "Introduces a shared asynchronous export center with permissions, task lifecycle, notification, download, and retention behavior across business pages; this is an architecture/API boundary change."
+    }
+  ],
+  "excludedCandidates": [
+    {
+      "projectId": "PR-02118",
+      "source": "https://qfglxo2m3dc.sg.larksuite.com/wiki/J43NwG6N4ipCEbk6YFaloJk8gWb",
+      "decidedAt": "2026-09-04T08:21:00Z",
+      "decision": "not-coding-pilot",
+      "reason": "Human-confirmed negative sample: the supplied document is an operational market-maker onboarding/offboarding SOP without an explicit software delivery scope."
+    }
+  ]
+}

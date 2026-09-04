@@ -1,0 +1,18 @@
+{
+  "projectId": "PR-02233",
+  "reviewedAt": "2026-09-04",
+  "reviewer": "pending",
+  "confirmedBy": "",
+  "confirmedAt": "",
+  "head": "0000000000000000000000000000000000000000",
+  "findings": [
+    {
+      "id": "CR-1",
+      "category": "other",
+      "severity": "high",
+      "summary": "G6 code review 尚未执行",
+      "disposition": "open",
+      "evidence": []
+    }
+  ]
+}

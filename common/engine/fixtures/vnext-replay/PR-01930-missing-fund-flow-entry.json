@@ -1,0 +1,142 @@
+{
+  "name": "PR-01930 fund-flow surface omission",
+  "incident": "The PRD required the same fund-flow type across a set of entry points, while the implementation/evidence covered only two of three discovered web surfaces.",
+  "expectedFailures": [
+    "SURFACE_COVERAGE"
+  ],
+  "sourceOracle": {
+    "requiredUnits": [
+      {
+        "oracleId": "FUND-FLOW-COLLECTION",
+        "sourceIds": [
+          "PRD-TABLE-C-END-FLOWS"
+        ],
+        "minimumMappings": 1
+      }
+    ]
+  },
+  "discoveredSurfaces": [
+    {
+      "surfaceId": "S-001",
+      "locator": "apps/CashFlow/futures/FuturesCashFlow.tsx#typeItems",
+      "basis": "exact-code-search"
+    },
+    {
+      "surfaceId": "S-002",
+      "locator": "apps/Futures/components/FuturesOrders/FundsFlow/components/TransactionFilter.tsx#typeList",
+      "basis": "exact-code-search"
+    },
+    {
+      "surfaceId": "S-003",
+      "locator": "third fund-flow consumer",
+      "basis": "reference-search"
+    }
+  ],
+  "implementation": {
+    "coveredSurfaceIds": [
+      "S-001",
+      "S-002"
+    ]
+  },
+  "positiveControl": {
+    "addAffectedSurfaces": [
+      {
+        "requirementId": "R-001",
+        "surface": {
+          "surfaceId": "S-003",
+          "locator": "third fund-flow consumer",
+          "disposition": "implement"
+        }
+      }
+    ],
+    "addCoveredSurfaceIds": [
+      "S-003"
+    ]
+  },
+  "workItem": {
+    "schemaVersion": 1,
+    "workflowVersion": 2,
+    "projectId": "PR-01930",
+    "sourceSnapshot": {
+      "revision": "historical-replay",
+      "contentHash": "fixture-pr-01930-prd",
+      "sources": [
+        {
+          "path": "inbox/lark-sync/prd-latest.extracted.md",
+          "contentHash": "fixture-pr-01930-prd"
+        }
+      ]
+    },
+    "requirements": [
+      {
+        "requirementId": "R-001",
+        "sourceAnchors": [
+          {
+            "type": "table",
+            "sourceId": "PRD-TABLE-C-END-FLOWS",
+            "path": "inbox/lark-sync/prd-latest.extracted.md",
+            "lineStart": 133,
+            "lineEnd": 138
+          }
+        ],
+        "statement": "Add the trial-fund system-recovery flow type to every applicable web fund-flow entry.",
+        "status": "doing",
+        "collectionSemantics": {
+          "kind": "discovered-set",
+          "expectedCount": 3
+        },
+        "affectedSurfaces": [
+          {
+            "surfaceId": "S-001",
+            "locator": "apps/CashFlow/futures/FuturesCashFlow.tsx#typeItems",
+            "disposition": "implement"
+          },
+          {
+            "surfaceId": "S-002",
+            "locator": "apps/Futures/components/FuturesOrders/FundsFlow/components/TransactionFilter.tsx#typeList",
+            "disposition": "implement"
+          }
+        ],
+        "evidencePlan": [
+          {
+            "type": "component-dom",
+            "runtimeRequired": false
+          }
+        ]
+      }
+    ],
+    "coverageAudit": {
+      "sourceFingerprint": "sealed-by-replay",
+      "requirementsFingerprint": "sealed-by-replay",
+      "reviewMode": "independent-cold-read",
+      "reviewRunId": "historical-candidate",
+      "reviewer": {
+        "kind": "model",
+        "id": "deterministic-replay-fixture"
+      },
+      "completedAt": "2000-01-01T00:00:00.000Z",
+      "verdict": "pass",
+      "unresolved": []
+    },
+    "routing": {
+      "scopeClass": "cross-boundary",
+      "riskSignals": [
+        "funds",
+        "irreversible",
+        "multiple-entry-points"
+      ],
+      "verificationLevel": "V2",
+      "routerVersion": 1
+    },
+    "scopeApproval": {
+      "confirmationKind": "human",
+      "confirmedBy": "historical-reviewer",
+      "confirmedAt": "2026-08-26",
+      "fingerprint": "d5e4e8817cf7d0858b8c716e6661b7664e64bf89339ce3d5a5c28f110a50623b"
+    },
+    "apiDependency": {
+      "mode": "real-api",
+      "reason": "Existing fund-flow API is available for integration."
+    }
+  }
+}

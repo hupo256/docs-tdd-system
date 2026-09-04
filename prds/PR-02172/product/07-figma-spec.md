@@ -5,6 +5,8 @@
 
 > 读取流程：[figma-mcp-read-workflow.md](../../../common/rules/figma-mcp-read-workflow.md)
 > Token 规则：[ui-style-token-rules.md](../../../common/rules/ui-style-token-rules.md)；本项目 `visualFidelity: standard`，不为单页修改 preset。
+>
+> **最新覆盖（2026-09-04）**：本文件记录的 3+2 是 2026-08-21 Figma 原始规格；最终会话需求将登录/注册改为等尺寸 2×2（Google/HiChat、Apple/Telegram，Facebook 隐藏），不影响首页、个人中心和授权能力。
 
 ## 0. 元信息
 
@@ -106,9 +108,10 @@
 
 ### 7.1 登录 / 注册
 
-- 顺序固定：第一行 Google、HiChat、Apple；第二行 Telegram、Facebook。
+- 最新顺序与分行：第一行 Google、HiChat；第二行 Apple、Telegram。Facebook 登录按钮不渲染。
+- 两行均为两个 `flex-1` 按钮，四个按钮宽高一致，沿用 20px 行距与列距。
 - 标签继续使用现有 `thirdLogin:*` literal i18n key；单行 `truncate`，窄屏不撑破按钮。
-- loading 只替换当前 TG/FB 图标；其他授权逻辑、Google 透明 SDK 层与埋点不变。
+- 授权逻辑仍保留 TG/FB 能力；loading、Google 透明 SDK 层与埋点不变。
 
 ### 7.2 账户绑定
 
@@ -134,7 +137,7 @@
 
 | # | PRD / 旧实现 | Figma | 结论 |
 |---|----------------|-------|------|
-| 1 | 登录/注册为一排圆形图标 + 下方文字 | 两行 3+2 整宽圆角按钮 | 以 Figma 更新 UI |
+| 1 | 登录/注册为一排圆形图标 + 下方文字 | 2026-08-21 Figma 为两行 3+2；2026-09-04 最终会话改为 2×2 | 以最终需求为准：隐藏 Facebook，Google/HiChat、Apple/Telegram 等尺寸分行 |
 | 2 | 首页只有 Google/Apple/HiChat，点击区按图标尺寸 | 五渠道各 40×40，后接 QR | 新增 TG/FB 并扩大统一点击区 |
 | 3 | 绑定弹窗局部强制 12px；操作按钮白底描边定宽 | 弹窗 16px；按钮 `BG-B` / `Text-7` / 自适应宽 | 仅改红框相关区域，其他不变 |
 | 4 | PRD 竞品截图形态不一致 | FameEX 正式设计已到位 | Figma 为本轮视觉真值源 |

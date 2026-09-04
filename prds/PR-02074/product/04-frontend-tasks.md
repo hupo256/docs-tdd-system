@@ -68,6 +68,7 @@
 |----|------|------|------|----------|
 | T18 | F22/F23 | `PredictionTradeMan` 接后端手续费字段，**只展示不计算**（下单金额/手续费扣除/获得金额）| 🟡 | mock 版落码：schema 补 3 optional 字段 + `getEstimatedProfit` mock；买入 `EstimatedProfit.tsx` 展示下单金额/手续费扣除、卖出 `PredictAccount`+`PredictSellFeeRows` 展示获得金额/手续费扣除，缺失显 `--`；契约测试 2 项绿。**真实字段/amount 语义待后端 B6** |
 | T19 | 全部 | G6 `/code-review` + Biome + type-check；L2 逐张对 bitmart 截图走查 | 🟡 | 自动化部分完成：`verify-code-rules` 0 findings + 人工 review 0 阻断（06 已记）+ 改动文件 tsc 零报错 + Prediction 全量 79 项绿；**G6 gate PASS(40/42，2 WARN 非阻断)**。**L2 对图 22 张走查待人工**（视觉/手感） |
+| T20 | F24 | 分类首页 `SearchBox` 桌面宽度改为 `240px`，保留移动端 `w-full`，不改搜索结果页；补定向渲染测试 | ✅ | 已完成：`index.tsx` 仅调整桌面宽度；`index.test.ts` 锁定桌面/移动端类名；定向测试 5/5、Biome、vNext V0 出口均通过 |
 
 ## 实现检查
 

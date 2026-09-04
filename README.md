@@ -164,6 +164,7 @@ node <mount>/common/engine/agent-scripts/decommission-worktree.mjs PR-01234
 | --- | --- |
 | [common/rules/](./common/rules/) | 跨项目复用的规则与场景路由 |
 | [common/engine/](./common/engine/) | CLI、门禁脚本、schema 与 golden 夹具 |
+| [common/vnext/](./common/vnext/) | vNext shadow 实施计划、基线与迁移状态；未接入 v1 正式 Gate |
 | [common/lark-bot/](./common/lark-bot/) | 可选的消息接入与任务执行服务：合并话题上下文/图片、注入项目 scope、预取 Figma 规格、按项目路由 bug 回执并自动清理附件 |
 | [prds/](./prds/) | 各项目的文档、状态与证据 |
 | [common/rules/rule-router.md](./common/rules/rule-router.md) | **开工常驻入口**（渐进披露路由） |

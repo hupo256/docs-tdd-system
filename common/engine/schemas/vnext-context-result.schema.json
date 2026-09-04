@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vnext-context-result.schema.json",
+  "title": "docs_tdd vNext Context Result",
+  "type": "object",
+  "required": ["schemaVersion", "workflowVersion", "projectId", "level", "mode", "chars", "budget", "text", "session"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "workflowVersion": { "const": 2 },
+    "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },
+    "level": { "type": "string", "enum": ["V0", "V1", "V2"] },
+    "mode": { "type": "string", "enum": ["full", "delta", "unchanged"] },
+    "chars": { "type": "integer", "minimum": 1 },
+    "budget": { "type": "integer", "enum": [4000, 8000] },
+    "text": { "type": "string", "minLength": 1 },
+    "session": {
+      "type": "object",
+      "required": ["schemaVersion", "projectId", "level", "workItemFingerprint", "resultStateFingerprint", "contextFingerprint", "generatedAt"],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },
+        "level": { "type": "string", "enum": ["V0", "V1", "V2"] },
+        "workItemFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "resultStateFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "contextFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "generatedAt": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

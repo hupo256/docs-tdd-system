@@ -1,0 +1,201 @@
+{
+  "schemaVersion": 1,
+  "base": {
+    "generatedAt": "2026-09-04T00:00:05Z",
+    "workItem": {
+      "projectId": "PR-00001",
+      "routing": {
+        "verificationLevel": "V1"
+      },
+      "requirements": [
+        {
+          "requirementId": "R-001",
+          "status": "doing",
+          "evidencePlan": [
+            {
+              "type": "pure-logic",
+              "runtimeRequired": false
+            }
+          ],
+          "affectedSurfaces": [
+            {
+              "surfaceId": "S-001",
+              "disposition": "implement"
+            }
+          ]
+        }
+      ],
+      "apiDependency": {
+        "mode": "no-request",
+        "reason": "Pure logic fixture makes no request."
+      }
+    },
+    "preflightChecks": [
+      {
+        "code": "SOURCE_FRESH",
+        "ok": true,
+        "problems": []
+      },
+      {
+        "code": "REQUIREMENT_COVERAGE",
+        "ok": true,
+        "problems": []
+      },
+      {
+        "code": "SURFACE_COVERAGE",
+        "ok": true,
+        "problems": []
+      },
+      {
+        "code": "RISK_ROUTE",
+        "ok": true,
+        "problems": []
+      },
+      {
+        "code": "SCOPE_APPROVAL",
+        "ok": true,
+        "problems": []
+      }
+    ],
+    "currentCodeState": {
+      "headSha": "abcdef1234567",
+      "baseSha": "base123456789",
+      "dirtyHash": "current-dirty-hash",
+      "dirtyFileCount": 2,
+      "untrackedFileCount": 0,
+      "isGitRepo": true
+    },
+    "evidence": {
+      "runId": "exit-replay-pass",
+      "capturedAt": "2026-09-04T00:00:04Z",
+      "codeFingerprint": {
+        "headSha": "abcdef1234567",
+        "baseSha": "base123456789",
+        "dirtyHash": "current-dirty-hash",
+        "dirtyFileCount": 2,
+        "untrackedFileCount": 0,
+        "isGitRepo": true
+      },
+      "facts": [
+        {
+          "evidenceId": "E-REQ",
+          "kind": "pure-logic",
+          "result": "pass",
+          "codeFingerprint": {
+            "headSha": "abcdef1234567",
+            "dirtyHash": "current-dirty-hash"
+          },
+          "requirementIds": [
+            "R-001"
+          ],
+          "surfaceIds": [
+            "S-001"
+          ],
+          "evidenceRefs": [
+            "logs/requirement-test.txt"
+          ],
+          "producer": {
+            "kind": "command",
+            "command": "vitest requirement",
+            "exitCode": 0,
+            "startedAt": "2026-09-04T00:00:00Z",
+            "finishedAt": "2026-09-04T00:00:01Z"
+          }
+        },
+        {
+          "evidenceId": "E-DIRECTED",
+          "kind": "directed-tests",
+          "result": "pass",
+          "codeFingerprint": {
+            "headSha": "abcdef1234567",
+            "dirtyHash": "current-dirty-hash"
+          },
+          "requirementIds": [
+            "R-001"
+          ],
+          "surfaceIds": [
+            "S-001"
+          ],
+          "evidenceRefs": [
+            "logs/directed-tests.txt"
+          ],
+          "producer": {
+            "kind": "command",
+            "command": "vitest changed feature",
+            "exitCode": 0,
+            "startedAt": "2026-09-04T00:00:01Z",
+            "finishedAt": "2026-09-04T00:00:02Z"
+          }
+        },
+        {
+          "evidenceId": "E-DIFF",
+          "kind": "prd-to-diff-review",
+          "result": "pass",
+          "codeFingerprint": {
+            "headSha": "abcdef1234567",
+            "dirtyHash": "current-dirty-hash"
+          },
+          "requirementIds": [
+            "R-001"
+          ],
+          "surfaceIds": [
+            "S-001"
+          ],
+          "evidenceRefs": [
+            "reviews/prd-to-diff.json"
+          ],
+          "producer": {
+            "kind": "human",
+            "confirmedBy": "reviewer@example.com",
+            "confirmedAt": "2026-09-04T00:00:03Z"
+          }
+        }
+      ]
+    },
+    "blockers": []
+  },
+  "cases": [
+    {
+      "name": "evidence from stale HEAD",
+      "mutation": "stale-head",
+      "expectedFailures": [
+        "EVIDENCE_FRESHNESS"
+      ],
+      "expectedStatus": "failed"
+    },
+    {
+      "name": "open dependency blocker",
+      "mutation": "open-blocker",
+      "expectedFailures": [
+        "BLOCKERS"
+      ],
+      "expectedStatus": "blocked"
+    },
+    {
+      "name": "command claims PASS with non-zero exit",
+      "mutation": "forged-command-pass",
+      "expectedFailures": [
+        "EVIDENCE_INTEGRITY",
+        "REQUIRED_EVIDENCE"
+      ],
+      "expectedStatus": "failed"
+    },
+    {
+      "name": "V1 missing directed evidence",
+      "mutation": "missing-directed-evidence",
+      "expectedFailures": [
+        "REQUIRED_EVIDENCE"
+      ],
+      "expectedStatus": "failed"
+    },
+    {
+      "name": "persisted failed result edited to PASS",
+      "mutation": "forged-result-pass",
+      "expectedFailures": [
+        "REQUIRED_EVIDENCE",
+        "RESULT_INTEGRITY"
+      ],
+      "expectedStatus": "failed"
+    }
+  ]
+}

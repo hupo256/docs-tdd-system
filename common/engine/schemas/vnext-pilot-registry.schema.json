@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vnext-pilot-registry.schema.json",
+  "title": "docs_tdd vNext Pilot Registry",
+  "type": "object",
+  "required": ["schemaVersion", "mode", "minimumSamples", "maximumSamples", "requiredLevels", "entries"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "mode": { "const": "explicit-dual-track-shadow" },
+    "minimumSamples": { "type": "integer", "minimum": 5, "maximum": 10 },
+    "maximumSamples": { "type": "integer", "minimum": 5, "maximum": 10 },
+    "requiredLevels": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "enum": ["V0", "V1", "V2"] }
+    },
+    "entries": {
+      "type": "array",
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "required": ["projectId", "artifactDir", "enrolledAt", "newRequirement", "observation"],
+        "properties": {
+          "sampleId": { "type": "string", "pattern": "^[A-Z0-9][A-Z0-9._-]{2,63}$" },
+          "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },
+          "artifactDir": { "type": "string", "minLength": 1 },
+          "enrolledAt": { "type": "string", "format": "date-time" },
+          "newRequirement": { "const": true },
+          "observation": {
+            "type": ["object", "null"],
+            "required": ["confirmedBy", "observedThrough", "requirementOmissionEscapes", "falseGreenEscapes"],
+            "properties": {
+              "confirmedBy": { "type": "string", "minLength": 1 },
+              "observedThrough": { "type": "string", "format": "date-time" },
+              "requirementOmissionEscapes": { "type": "integer", "minimum": 0 },
+              "falseGreenEscapes": { "type": "integer", "minimum": 0 },
+              "notes": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "candidateAssessments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["projectId", "sourceRef", "sourceRevision", "sourceContentHash", "requestedLevel", "classifiedLevel", "decision", "assessedAt", "reason"],
+        "properties": {
+          "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },
+          "sourceRef": { "type": "string", "minLength": 1 },
+          "sourceRevision": { "type": "string", "minLength": 1 },
+          "sourceContentHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "requestedLevel": { "enum": ["V0", "V1", "V2"] },
+          "classifiedLevel": { "enum": ["V0", "V1", "V2"] },
+          "decision": { "enum": ["eligible", "ineligible-for-requested-level", "needs-clarification"] },
+          "assessedAt": { "type": "string", "format": "date-time" },
+          "reason": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "excludedCandidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["projectId", "source", "decidedAt", "decision", "reason"],
+        "properties": {
+          "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },
+          "source": { "type": "string", "minLength": 1 },
+          "decidedAt": { "type": "string", "format": "date-time" },
+          "decision": { "const": "not-coding-pilot" },
+          "reason": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

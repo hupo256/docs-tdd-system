@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "generatedFrom": "baseline.json",
+  "defaultArtifacts": [
+    "work-item.json",
+    "latest-result.json",
+    "runs.jsonl"
+  ],
+  "comparison": {
+    "baselineProcessFiles": 263,
+    "projectCount": 4,
+    "vnextFilesPerProject": 3,
+    "projectedVNextFiles": 12,
+    "reductionPercent": 95.44,
+    "targetReductionPercent": 80,
+    "ok": true
+  },
+  "note": "Projected vNext count compares the same four-project portfolio; optional evidence attachments are excluded from both default scaffolds."
+}

@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 1,
+  "workflowVersion": 2,
+  "projectId": "PR-02074",
+  "sourceSnapshot": {
+    "revision": "chat-2026-09-04-1",
+    "contentHash": "768fa5756bfb0d957d9334f9dbe3bf9d2b39f94075fa0439ae90ff63345114b4",
+    "sources": [
+      {
+        "path": "prds/PR-02074/inbox/vnext-search-width-2026-09-04.md",
+        "contentHash": "c436580d518dfd9e0753b5208b46fb06b1263b310d9428fbbd67a71a0ab1446d"
+      }
+    ]
+  },
+  "requirements": [
+    {
+      "requirementId": "R-001",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-E0009B92FC4D",
+          "path": "prds/PR-02074/inbox/vnext-search-width-2026-09-04.md",
+          "lineStart": 3,
+          "lineEnd": 6
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-6C40F5BC4187",
+          "path": "prds/PR-02074/inbox/vnext-search-width-2026-09-04.md",
+          "lineStart": 10,
+          "lineEnd": 13
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-46B7A9C45B1C",
+          "path": "prds/PR-02074/inbox/vnext-search-width-2026-09-04.md",
+          "lineStart": 17,
+          "lineEnd": 19
+        }
+      ],
+      "statement": "On prediction category landing pages, set the header search box to exactly 240px wide at the desktop breakpoint.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 1
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-001",
+          "locator": "Prediction category landing-page header SearchBox",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-002",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-6C40F5BC4187",
+          "path": "prds/PR-02074/inbox/vnext-search-width-2026-09-04.md",
+          "lineStart": 10,
+          "lineEnd": 13
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-46B7A9C45B1C",
+          "path": "prds/PR-02074/inbox/vnext-search-width-2026-09-04.md",
+          "lineStart": 17,
+          "lineEnd": 19
+        }
+      ],
+      "statement": "Preserve the existing full-width search box layout below the desktop breakpoint.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 1
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-002",
+          "locator": "Prediction category landing-page mobile SearchBox",
+          "disposition": "already-covered",
+          "reason": "The existing w-full class remains and is locked by the directed component test."
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-003",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-6C40F5BC4187",
+          "path": "prds/PR-02074/inbox/vnext-search-width-2026-09-04.md",
+          "lineStart": 10,
+          "lineEnd": 13
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-46B7A9C45B1C",
+          "path": "prds/PR-02074/inbox/vnext-search-width-2026-09-04.md",
+          "lineStart": 17,
+          "lineEnd": 19
+        }
+      ],
+      "statement": "Do not change the independent prediction search-results page search box.",
+      "status": "not-doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 1
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-003",
+          "locator": "Prediction SearchResultsPage SearchBox",
+          "disposition": "not-applicable",
+          "reason": "Explicitly excluded by the approved incremental scope."
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        }
+      ]
+    }
+  ],
+  "coverageAudit": {
+    "sourceFingerprint": "15df98d9bed2fb019d003e7bc12e60b4b65c0552e1d51adb96110adac5fca13f",
+    "requirementsFingerprint": "b13633f10feb4c901632b9ca9bb281e1166e2f170fd76fdccecdbed4f36b4d19",
+    "reviewMode": "independent-cold-read",
+    "reviewRunId": "cold-review-PR-02074-search-width-20260904",
+    "reviewer": {
+      "kind": "model",
+      "id": "pi/gpt-5.4-independent-cold-read"
+    },
+    "completedAt": "2026-09-04T09:42:00Z",
+    "verdict": "pass",
+    "findings": [],
+    "unresolved": []
+  },
+  "routing": {
+    "scopeClass": "local",
+    "riskSignals": [],
+    "verificationLevel": "V0",
+    "routerVersion": 1
+  },
+  "apiDependency": {
+    "mode": "no-request",
+    "reason": "The approved change is presentation-only and does not add or alter any network request."
+  },
+  "scopeApproval": null
+}

@@ -1,0 +1,425 @@
+{
+  "schemaVersion": 1,
+  "workflowVersion": 2,
+  "projectId": "PR-02193",
+  "sourceSnapshot": {
+    "revision": "142",
+    "contentHash": "3a3f94f507db5c0f3d9c659122e54139c5e00cab3539c1b315da9b272370928c",
+    "sources": [
+      {
+        "path": "https://qfglxo2m3dc.sg.larksuite.com/docx/QUrddpRfQoUT5IxqOpllEDtygCF",
+        "contentHash": "341da8295f6262013cfc6627bb0606cc6ac1db4ff2da404ce5bd1fb99e698ab6"
+      }
+    ]
+  },
+  "requirements": [
+    {
+      "requirementId": "R-001",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-22ABB67CA72A"
+        }
+      ],
+      "statement": "Add a queryable “抵扣金扣减” flow type to the management data-overview contract-account flow section.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 1
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-001",
+          "locator": "Management data overview - contract-account flow filters/results",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "api-contract",
+          "runtimeRequired": true
+        },
+        {
+          "type": "component-dom",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-002",
+      "sourceAnchors": [
+        {
+          "type": "image",
+          "sourceId": "SRC-FE9244DE48EF"
+        }
+      ],
+      "statement": "Display the new deduction flow in the management-side contract-account flow list with the PRD-specified presentation.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 1
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-002",
+          "locator": "Management data overview - contract-account flows",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": true
+        },
+        {
+          "type": "visual",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-003",
+      "sourceAnchors": [
+        {
+          "type": "image",
+          "sourceId": "SRC-44431C45EA96"
+        }
+      ],
+      "statement": "Use the user-side flow reference to keep the management-side deduction-flow meaning and presentation semantically consistent; this does not itself require a user-side code change.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 1
+      },
+      "affectedSurfaces": [
+        {
+          "locator": "Management data overview - contract-account flows",
+          "disposition": "implement",
+          "surfaceId": "S-003"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "api-contract",
+          "runtimeRequired": true
+        },
+        {
+          "type": "visual",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-004",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-CD649207C7B4"
+        }
+      ],
+      "statement": "Include contract deduction usage in the contract-account total-income equivalent calculation.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 1
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-004",
+          "locator": "Management data overview - income aggregation",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        },
+        {
+          "type": "api-contract",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-005",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-F5C7223EF81D"
+        }
+      ],
+      "statement": "Define “抵扣金扣减” amount as the total contract loss offset by deduction funds.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 1
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-005",
+          "locator": "Deduction-flow amount semantics",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        },
+        {
+          "type": "api-contract",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-006",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-CA795CD89CF2"
+        }
+      ],
+      "statement": "Add “抵扣金扣减” as an asset-flow type in audit.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 1
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-006",
+          "locator": "Audit asset-flow filters",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": true
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-007",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-E60CA495498C"
+        }
+      ],
+      "statement": "Associate the new audit flow type with the contract account and expose its records in audit results.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 1
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-007",
+          "locator": "Audit asset-flow results",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "api-contract",
+          "runtimeRequired": true
+        },
+        {
+          "type": "component-dom",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-008",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-4EB663D09960"
+        }
+      ],
+      "statement": "Acceptance must verify the deduction flow type can be displayed, queried and exported from the relevant flow view.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 3
+      },
+      "affectedSurfaces": [
+        {
+          "locator": "Management contract-account flow export UI",
+          "disposition": "implement",
+          "surfaceId": "S-008"
+        },
+        {
+          "locator": "Management contract-account flow export API",
+          "disposition": "implement",
+          "surfaceId": "S-009"
+        },
+        {
+          "locator": "Data-overview V2 scenario suite",
+          "disposition": "implement",
+          "surfaceId": "S-010"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "api-contract",
+          "runtimeRequired": true
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-009",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-E8B35AC68CD3"
+        }
+      ],
+      "statement": "Acceptance must verify audit can display, query and export “抵扣金扣减” flow records.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 3
+      },
+      "affectedSurfaces": [
+        {
+          "locator": "Audit deduction-flow export UI",
+          "disposition": "implement",
+          "surfaceId": "S-011"
+        },
+        {
+          "locator": "Audit deduction-flow export API",
+          "disposition": "implement",
+          "surfaceId": "S-012"
+        },
+        {
+          "locator": "Audit V2 scenario suite",
+          "disposition": "implement",
+          "surfaceId": "S-013"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "api-contract",
+          "runtimeRequired": true
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-010",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-9269994367CD"
+        }
+      ],
+      "statement": "Defer historical deduction-flow data cleaning until the exact dataset and migration rule are confirmed in a follow-up batch.",
+      "status": "deferred",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 1
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-014",
+          "locator": "Historical deduction-flow data maintenance",
+          "disposition": "deferred",
+          "reason": "Human scope decision on 2026-09-04: dataset and migration rules are not defined for this batch.",
+          "owner": "PR-02193 product/data owner",
+          "batch": "PR-02193 follow-up data-cleaning batch"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-011",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-4A939C5AE4E1"
+        }
+      ],
+      "statement": "Allow authorized risk-control, operations and customer-service users to query the backend deduction-fund flow.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 1
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-015",
+          "locator": "Management data-overview authorization",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "api-contract",
+          "runtimeRequired": true
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    }
+  ],
+  "coverageAudit": {
+    "sourceFingerprint": "6a8240bbab3167fa531c702fbcdc59a0a74cc1210ce93f97315b990ee18401cf",
+    "requirementsFingerprint": "e5e855320dfffda014998cc466d398104d1ee785a955c250ed9bca8d4660386f",
+    "reviewMode": "independent-cold-read",
+    "reviewRunId": "cold-review-approved-scope-PR-02193-20260904",
+    "reviewer": {
+      "kind": "model",
+      "id": "uniaix/gpt-5.6-terra-independent-approved-scope"
+    },
+    "completedAt": "2026-09-04T08:24:00Z",
+    "verdict": "pass",
+    "findings": [],
+    "unresolved": []
+  },
+  "routing": {
+    "scopeClass": "cross-boundary",
+    "riskSignals": [
+      "amount-semantics",
+      "contract-change",
+      "funds",
+      "new-api",
+      "permission"
+    ],
+    "verificationLevel": "V2",
+    "routerVersion": 1
+  },
+  "apiDependency": {
+    "mode": "pending-dependency",
+    "reason": "The new deduction flow type, aggregation, audit querying and export require backend contracts and fixture data, but no versioned API document is attached.",
+    "blockerId": "API-PR-02193-DEDUCTION-FLOW"
+  },
+  "scopeApproval": {
+    "confirmationKind": "human",
+    "confirmedBy": "aven.tong@mail.fameex.info",
+    "confirmedAt": "2026-09-04",
+    "fingerprint": "8453a55b0573882b2d7cbdd829e215e9fb0d56e6694ead7668ff2441bb23fd9e"
+  }
+}

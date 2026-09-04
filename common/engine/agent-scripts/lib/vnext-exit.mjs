@@ -1,0 +1,209 @@
+#!/usr/bin/env node
+// Pure vNext final-exit aggregation. PASS is derived from fresh facts; caller-supplied PASS is never trusted.
+
+import assert from 'node:assert/strict'
+import { fileURLToPath } from 'node:url'
+import { resolve } from 'node:path'
+import { stableFingerprint } from './vnext-work-item.mjs'
+
+export const EXIT_EVIDENCE_REQUIREMENTS = Object.freeze({
+  V0: Object.freeze(['touched-file-quality']),
+  V1: Object.freeze(['directed-tests', 'prd-to-diff-review']),
+  V2: Object.freeze(['contract-or-scenario-tests', 'directed-quality']),
+})
+
+const evidenceResults = new Set(['pass', 'fail', 'blocked', 'not-applicable'])
+const producerKinds = new Set(['command', 'human'])
+
+function check(code, problems, evidenceIds = []) {
+  return { code, ok: problems.length === 0, problems, evidenceIds }
+}
+
+function sameCodeState(left, right) {
+  return Boolean(left?.headSha && left?.dirtyHash && right?.headSha && right?.dirtyHash
+    && left.headSha === right.headSha && left.dirtyHash === right.dirtyHash)
+}
+
+function evidenceIntegrityProblems(evidence) {
+  const problems = []
+  const ids = (evidence?.facts || []).map((fact) => fact.evidenceId).filter(Boolean)
+  const duplicates = ids.filter((id, index) => ids.indexOf(id) !== index)
+  if (duplicates.length) problems.push(`duplicate evidence IDs: ${[...new Set(duplicates)].join(', ')}`)
+  if (!evidence?.runId?.trim()) problems.push('evidence runId is required')
+  if (!evidence?.capturedAt || Number.isNaN(Date.parse(evidence.capturedAt))) problems.push('evidence capturedAt must be an ISO timestamp')
+  if (!Array.isArray(evidence?.facts)) problems.push('evidence facts must be an array')
+
+  for (const fact of evidence?.facts || []) {
+    if (!fact.evidenceId?.trim() || !fact.kind?.trim()) problems.push('every evidence fact requires evidenceId and kind')
+    if (!evidenceResults.has(fact.result)) problems.push(`${fact.evidenceId || 'evidence'} has invalid result`)
+    if (!producerKinds.has(fact.producer?.kind)) problems.push(`${fact.evidenceId || 'evidence'} has invalid producer`)
+    if (!Array.isArray(fact.evidenceRefs) || !fact.evidenceRefs.length) problems.push(`${fact.evidenceId || 'evidence'} requires evidenceRefs`)
+    if (fact.producer?.kind === 'command') {
+      if (!fact.producer.command?.trim() || !Number.isInteger(fact.producer.exitCode)) problems.push(`${fact.evidenceId} command evidence requires command and exitCode`)
+      if (!fact.producer.startedAt || Number.isNaN(Date.parse(fact.producer.startedAt)) || !fact.producer.finishedAt || Number.isNaN(Date.parse(fact.producer.finishedAt))) {
+        problems.push(`${fact.evidenceId} command evidence requires valid timestamps`)
+      }
+      const derived = fact.producer.exitCode === 0 ? 'pass' : 'fail'
+      if (fact.result !== derived) problems.push(`${fact.evidenceId} claims ${fact.result} but exitCode derives ${derived}`)
+    }
+    if (fact.producer?.kind === 'human') {
+      if (!fact.producer.confirmedBy?.trim() || !fact.producer.confirmedAt || Number.isNaN(Date.parse(fact.producer.confirmedAt))) {
+        problems.push(`${fact.evidenceId} human evidence requires confirmer and timestamp`)
+      }
+    }
+    if (['blocked', 'not-applicable'].includes(fact.result) && !fact.reason?.trim()) problems.push(`${fact.evidenceId} ${fact.result} requires a reason`)
+  }
+  return problems
+}
+
+function evidenceFreshnessProblems(evidence, currentCodeState) {
+  const problems = []
+  if (!currentCodeState?.isGitRepo || !currentCodeState.headSha || !currentCodeState.dirtyHash) problems.push('current code state is not a valid Git fingerprint')
+  if (!sameCodeState(evidence?.codeFingerprint, currentCodeState)) problems.push('evidence bundle does not match current HEAD/dirty state')
+  for (const fact of evidence?.facts || []) {
+    if (!sameCodeState(fact.codeFingerprint, currentCodeState)) problems.push(`${fact.evidenceId || 'evidence'} does not match current HEAD/dirty state`)
+  }
+  return problems
+}
+
+function passingFacts(evidence) {
+  return (evidence?.facts || []).filter((fact) => fact.result === 'pass' && (fact.producer?.kind !== 'command' || fact.producer.exitCode === 0))
+}
+
+function requiredEvidenceProblems(level, evidence) {
+  const requiredKinds = EXIT_EVIDENCE_REQUIREMENTS[level]
+  if (!requiredKinds) return [`unknown level: ${level || 'missing'}`]
+  const passedKinds = new Set(passingFacts(evidence).map((fact) => fact.kind))
+  return requiredKinds.filter((kind) => !passedKinds.has(kind)).map((kind) => `${level} requires passing ${kind} evidence`)
+}
+
+function requirementEvidenceProblems(workItem, evidence) {
+  const facts = passingFacts(evidence)
+  const problems = []
+  for (const requirement of (workItem?.requirements || []).filter((item) => item.status === 'doing')) {
+    for (const plan of requirement.evidencePlan || []) {
+      const covered = facts.some((fact) => fact.kind === plan.type && (fact.requirementIds || []).includes(requirement.requirementId))
+      if (!covered) problems.push(`${requirement.requirementId} has no passing ${plan.type} evidence on current code state`)
+    }
+  }
+  return problems
+}
+
+function surfaceEvidenceProblems(workItem, evidence) {
+  const passed = passingFacts(evidence)
+  const problems = []
+  for (const requirement of workItem?.requirements || []) {
+    for (const surface of (requirement.affectedSurfaces || []).filter((item) => item.disposition === 'implement')) {
+      if (!passed.some((fact) => (fact.surfaceIds || []).includes(surface.surfaceId))) problems.push(`${surface.surfaceId} has no passing evidence on current code state`)
+    }
+  }
+  return problems
+}
+
+function blockerProblems(blockers) {
+  const problems = []
+  if (!Array.isArray(blockers)) return ['blockers must be an array (use [] when none are open)']
+  for (const blocker of blockers) {
+    if (!blocker.blockerId?.trim() || !['open', 'resolved'].includes(blocker.status) || !blocker.reason?.trim()) problems.push('every blocker requires blockerId, open/resolved status, and reason')
+    if (blocker.status === 'open' && !blocker.owner?.trim()) problems.push(`${blocker.blockerId || 'open blocker'} requires an owner`)
+  }
+  for (const blocker of blockers.filter((item) => item.status === 'open')) problems.push(`${blocker.blockerId}: ${blocker.reason}`)
+  return problems
+}
+
+function summarize(checks) {
+  return { total: checks.length, passed: checks.filter((item) => item.ok).length, failed: checks.filter((item) => !item.ok).length }
+}
+
+function resultBody(result) {
+  const { resultFingerprint, ...body } = result
+  return body
+}
+
+export function buildVNextExitResult({ workItem, preflightChecks = [], currentCodeState, evidence, blockers, generatedAt = new Date().toISOString() } = {}) {
+  const level = workItem?.routing?.verificationLevel
+  const integrityProblems = evidenceIntegrityProblems(evidence)
+  const freshnessProblems = evidenceFreshnessProblems(evidence, currentCodeState)
+  const requiredProblems = requiredEvidenceProblems(level, evidence)
+  const requirementProblems = requirementEvidenceProblems(workItem, evidence)
+  const surfaceProblems = surfaceEvidenceProblems(workItem, evidence)
+  const blockedProblems = blockerProblems(blockers)
+  const openBlockerIds = Array.isArray(blockers) ? blockers.filter((item) => item.status === 'open').map((item) => item.blockerId) : []
+  const blockedEvidenceIds = (evidence?.facts || []).filter((fact) => fact.result === 'blocked').map((fact) => fact.evidenceId)
+  for (const evidenceId of blockedEvidenceIds) blockedProblems.push(`${evidenceId}: evidence is blocked`)
+
+  const checks = [
+    ...preflightChecks,
+    check('CODE_STATE', !currentCodeState?.isGitRepo || !currentCodeState?.headSha || !currentCodeState?.dirtyHash ? ['current HEAD/dirty fingerprint is incomplete'] : []),
+    check('EVIDENCE_INTEGRITY', integrityProblems, (evidence?.facts || []).map((fact) => fact.evidenceId)),
+    check('EVIDENCE_FRESHNESS', freshnessProblems, (evidence?.facts || []).map((fact) => fact.evidenceId)),
+    check('REQUIRED_EVIDENCE', requiredProblems),
+    check('REQUIREMENT_EVIDENCE', requirementProblems),
+    check('SURFACE_EVIDENCE', surfaceProblems),
+    check('BLOCKERS', blockedProblems, [...openBlockerIds, ...blockedEvidenceIds]),
+  ]
+  const blockedBy = [...new Set([...openBlockerIds, ...blockedEvidenceIds])]
+  const ok = checks.every((item) => item.ok) && blockedBy.length === 0
+  const result = {
+    schemaVersion: 1,
+    workflowVersion: 2,
+    tool: 'vnext-verify.mjs',
+    mode: 'shadow',
+    runId: evidence?.runId?.trim() || `invalid-${stableFingerprint({ workItem, currentCodeState, evidence }).slice(0, 16)}`,
+    generatedAt,
+    projectId: workItem?.projectId,
+    level,
+    status: blockedBy.length ? 'blocked' : ok ? 'passed' : 'failed',
+    ok,
+    workItemFingerprint: stableFingerprint(workItem),
+    codeFingerprint: currentCodeState,
+    checks,
+    summary: summarize(checks),
+    blockedBy,
+  }
+  return { ...result, resultFingerprint: stableFingerprint(result) }
+}
+
+export function verifyExitResultIntegrity(result, workItem = null) {
+  const problems = []
+  const expectedOk = Array.isArray(result?.checks) && result.checks.every((item) => item.ok) && (result.blockedBy || []).length === 0
+  const expectedStatus = (result?.blockedBy || []).length ? 'blocked' : expectedOk ? 'passed' : 'failed'
+  const expectedSummary = summarize(result?.checks || [])
+  if (result?.ok !== expectedOk) problems.push(`ok must be derived as ${expectedOk}`)
+  if (result?.status !== expectedStatus) problems.push(`status must be derived as ${expectedStatus}`)
+  if (JSON.stringify(result?.summary) !== JSON.stringify(expectedSummary)) problems.push('summary does not match checks')
+  if (result?.resultFingerprint !== stableFingerprint(resultBody(result))) problems.push('result fingerprint does not match payload')
+  if (workItem && result?.workItemFingerprint !== stableFingerprint(workItem)) problems.push('result does not match work item')
+  return { ok: problems.length === 0, problems }
+}
+
+export function selfTest() {
+  const code = { headSha: 'abc1234', baseSha: 'base123', dirtyHash: 'dirty', dirtyFileCount: 1, untrackedFileCount: 0, isGitRepo: true }
+  const command = (evidenceId, kind, extra = {}) => ({
+    evidenceId, kind, result: 'pass', codeFingerprint: code, requirementIds: [], surfaceIds: [], evidenceRefs: [`logs/${evidenceId}.txt`],
+    producer: { kind: 'command', command: `test ${kind}`, exitCode: 0, startedAt: '2026-09-04T00:00:00Z', finishedAt: '2026-09-04T00:00:01Z' }, ...extra,
+  })
+  const workItem = {
+    projectId: 'PR-00001', routing: { verificationLevel: 'V1' },
+    requirements: [{ requirementId: 'R-001', status: 'doing', evidencePlan: [{ type: 'pure-logic' }], affectedSurfaces: [{ surfaceId: 'S-001', disposition: 'implement' }] }],
+  }
+  const evidence = {
+    runId: 'run-1', capturedAt: '2026-09-04T00:00:02Z', codeFingerprint: code,
+    facts: [
+      command('E-1', 'pure-logic', { requirementIds: ['R-001'], surfaceIds: ['S-001'] }),
+      command('E-2', 'directed-tests'),
+      { evidenceId: 'E-3', kind: 'prd-to-diff-review', result: 'pass', codeFingerprint: code, requirementIds: ['R-001'], surfaceIds: ['S-001'], evidenceRefs: ['review/1'], producer: { kind: 'human', confirmedBy: 'reviewer', confirmedAt: '2026-09-04T00:00:01Z' } },
+    ],
+  }
+  const passed = buildVNextExitResult({ workItem, preflightChecks: [{ code: 'SOURCE_FRESH', ok: true, problems: [] }], currentCodeState: code, evidence, blockers: [], generatedAt: '2026-09-04T00:00:03Z' })
+  assert.equal(passed.ok, true, JSON.stringify(passed))
+  assert.equal(verifyExitResultIntegrity(passed).ok, true)
+  const stale = buildVNextExitResult({ workItem, currentCodeState: { ...code, headSha: 'newhead' }, evidence, blockers: [], generatedAt: '2026-09-04T00:00:03Z' })
+  assert.equal(stale.checks.find((item) => item.code === 'EVIDENCE_FRESHNESS').ok, false)
+  const forged = structuredClone(passed)
+  forged.checks[0].ok = false
+  assert.equal(verifyExitResultIntegrity(forged).ok, false)
+  console.log('vnext-exit self-test passed')
+}
+
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url) && process.argv.includes('--self-test')) selfTest()

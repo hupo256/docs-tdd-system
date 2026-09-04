@@ -8,7 +8,7 @@ import { join } from 'node:path'
 import { spawnSync } from 'node:child_process'
 
 function gitValue(args, cwd, fallback = '') {
-  const result = spawnSync('git', args, { cwd, encoding: 'utf8', stdio: 'pipe' })
+  const result = spawnSync('git', args, { cwd, encoding: 'utf8', stdio: 'pipe', maxBuffer: 64 * 1024 * 1024 })
   return result.status === 0 ? result.stdout.trim() : fallback
 }
 
