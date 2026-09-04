@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "fingerprint": "aa5feb4354a3709423c6340bf02d5ded76f8c1e294ff42f9af0aa30b1ce9d68a",
-  "publishedAt": "2026-09-04T00:17:51.112Z",
+  "fingerprint": "7e6e9e4f48d98a93a4bad264ad558a8b0a49f143020a1649749b54c542b29aca",
+  "publishedAt": "2026-09-04T00:33:46.842Z",
   "l3RuleReleaseFingerprint": "7c0bb5cc64b318f8c3280528657995e0cdde5b3ded37bba1c6d4238f241cb9bf",
   "clientMatrix": {
     "codex": {
@@ -602,8 +602,8 @@
     ".cursor/rules/client-localstorage-schema.mdc": "0738c152763b6cff03cf88277cbdf228689f68a04c3be3cb2c4aee17d09619ca",
     ".cursor/rules/client-passive-event-listeners.mdc": "6b43af3a0be0b5cdf9a566073231e813c25d281d52e5677b1e93385396d9394e",
     ".cursor/rules/client-swr-dedup.mdc": "ffc1e83364f3e8e021cf5d6f39f568519e8d10e6846afe7d1c787aa4d5fd3677",
-    ".cursor/rules/definition-of-done.mdc": "0624241fd65b9bef2bdf0267b03c8b13653fabbcb17e0b713ae32e4f5b59c0fe",
-    ".cursor/rules/frontend-harness.mdc": "21b60de519025cae74e7434d5b94a930689739511cfa1e317434378004bbb1f4",
+    ".cursor/rules/definition-of-done.mdc": "e2940815dac8edc7a998c88e424337470d821057e01a6f375359338bc75e5b5b",
+    ".cursor/rules/frontend-harness.mdc": "9811c3ac51d4bef92ae63d7cd2df2d1d215cd5531ec7c5266359f907358fc0ae",
     ".cursor/rules/js-batch-dom-css.mdc": "070c9f7f317737d250054cf2f968e66377922c7540320cb754b4e35f1dacb3a7",
     ".cursor/rules/js-cache-function-results.mdc": "8699bc5a56c41ef621268013a22caca2c25e49c45c3e9d638b3bc8c0a7c44b95",
     ".cursor/rules/js-cache-property-access.mdc": "246aea1625350af13ad38315743b65fb7d8976cb23c2334d6a6c4f5cc9067c18",
@@ -681,7 +681,7 @@
     "~/.codex/AGENTS.md": "61f526d8ea0bc048e43564d96a6df119f1a17b2883160127e7b24b24516fada1",
     "~/.codex/hooks.json": "7e348df7fc3f38d464a46983b50a3cb74e50f9df211dafe9bd876f6b10bb4434",
     "~/.cursor/rules/fameex-local-governance.mdc": "1b34e1269caf928ae2c157970bb915c798824345fd883817a9343001f76f2b45",
-    "AGENTS.md": "d9808129875564e31de980ceb3793aa1a35cefc8ba910af381d1922c415feac7",
+    "AGENTS.md": "19872ea79acc1529581b123aae56646ab3512f69a06e4d9115b0e6e05715fc49",
     "CLAUDE.md": "e977e463d4123db2a9274bcc8b3ec10a25ae5d4722aa07f1df01e69d31423ce4",
     "common/engine/agent-scripts/lib/l2-rule-resolver.mjs": "0e75a40017003b653048cd4cf8c2950dea6a5c5571f4db43c4dca37ac13f2d99",
     "common/engine/agent-scripts/lib/rule-consumption.mjs": "011e89183fd8ca913755f4bf92d967cddc0f48288c725493d0bdf47057fad470",
