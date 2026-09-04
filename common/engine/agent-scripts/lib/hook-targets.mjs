@@ -11,19 +11,28 @@ function patchPaths(value) {
   return [...expanded.matchAll(/\*\*\* (?:Add|Update|Delete) File: ([^\r\n"']+)/g)].map((match) => match[1].trim())
 }
 
+// fd-dup 重定向（2>&1、>&2、1>&2）不是写文件，只是把一个 fd 指向另一个 fd。
+// 写目标检测前先剥掉它们，否则末尾 `>{1,2}` 会把 `2>&1` 误判成重定向写，
+// 让只读命令（git fetch/status、vitest、grep …）被 deny。
+export function stripFdDupRedirections(command) {
+  if (typeof command !== 'string') return command
+  return command.replace(/(^|[\s;|&])\d*>\s*&\s*\d+(?=$|[\s;|&])/g, '$1')
+}
+
 function shellTargets(command) {
   if (typeof command !== 'string') return []
-  const targets = [...patchPaths(command)]
-  for (const match of command.matchAll(/(?:^|[^>])>{1,2}\s*(["']?)([^\s"';&|]+)\1/g)) targets.push(match[2])
-  for (const match of command.matchAll(/\b(?:touch|rm|unlink)\s+(?:--\s+)?(["']?)([^\s"';&|]+)\1/g)) targets.push(match[2])
-  for (const match of command.matchAll(/\b(?:tee|truncate)\s+(?:-[^\s]+\s+)*(["']?)([^\s"';&|]+)\1/g)) targets.push(match[2])
-  for (const match of command.matchAll(/\b(?:cp|mv)\s+(?:-[^\s]+\s+)*(?:["']?[^\s"';&|]+["']?\s+)+(["']?)([^\s"';&|]+)\1(?=\s*(?:[;&|]|$))/g)) targets.push(match[2])
-  for (const match of command.matchAll(/\b(?:biome|prettier)\b[^\n;&|]*\s(?:--write|check\s+--write)[^\n;&|]*\s(["']?)([^\s"';&|]+)\1/g)) targets.push(match[2])
+  const normalized = stripFdDupRedirections(command)
+  const targets = [...patchPaths(normalized)]
+  for (const match of normalized.matchAll(/(?:^|[^>])>{1,2}\s*(["']?)([^\s"';&|]+)\1/g)) targets.push(match[2])
+  for (const match of normalized.matchAll(/\b(?:touch|rm|unlink)\s+(?:--\s+)?(["']?)([^\s"';&|]+)\1/g)) targets.push(match[2])
+  for (const match of normalized.matchAll(/\b(?:tee|truncate)\s+(?:-[^\s]+\s+)*(["']?)([^\s"';&|]+)\1/g)) targets.push(match[2])
+  for (const match of normalized.matchAll(/\b(?:cp|mv)\s+(?:-[^\s]+\s+)*(?:["']?[^\s"';&|]+["']?\s+)+(["']?)([^\s"';&|]+)\1(?=\s*(?:[;&|]|$))/g)) targets.push(match[2])
+  for (const match of normalized.matchAll(/\b(?:biome|prettier)\b[^\n;&|]*\s(?:--write|check\s+--write)[^\n;&|]*\s(["']?)([^\s"';&|]+)\1/g)) targets.push(match[2])
   return targets
 }
 
 function looksLikeUnresolvedWrite(command) {
-  return typeof command === 'string' && /(?:^|\s)(?:sed\s+-i|perl\s+-pi|cp\s|mv\s|tee\s|truncate\s|python\s+-c|node\s+-e)|>{1,2}/.test(command)
+  return typeof command === 'string' && /(?:^|\s)(?:sed\s+-i|perl\s+-pi|cp\s|mv\s|tee\s|truncate\s|python\s+-c|node\s+-e)|>{1,2}/.test(stripFdDupRedirections(command))
 }
 
 export function extractTargets(input) {
@@ -85,6 +94,10 @@ function selfTest() {
   const external = classifyTargets({ tool_input: { command: 'npm test > /dev/null 2>&1' } }, '/repo')
   assert.equal(external.repoTargets.length, 0)
   assert.deepEqual(external.externalTargets, ['/dev/null'])
+  assert.equal(classifyTargets({ tool_input: { command: 'git fetch origin pre 2>&1' } }, '/repo').unknownWrite, false)
+  assert.equal(classifyTargets({ tool_input: { command: 'git status 2>&1 | head' } }, '/repo').unknownWrite, false)
+  assert.equal(classifyTargets({ tool_input: { command: 'grep -c x file 2>&1' } }, '/repo').unknownWrite, false)
+  assert.deepEqual(extractTargets({ tool_input: { command: 'printf x > src/out.txt 2>&1' } }), ['src/out.txt'])
   assert.deepEqual(classifyTargets({ tool_input: { command: 'cp /tmp/a src/a.ts' } }, '/repo').repoTargets, ['src/a.ts'])
   assert.equal(classifyTargets({ tool_input: { command: "python -c 'open(\"src/a.ts\",\"w\").write(\"x\")' > /tmp/out" } }, '/repo').unknownWrite, true)
   assert.equal(classifyTargets({ tool_input: { command: 'printf x > "$TMPDIR/out"' } }, '/repo').unknownWrite, true)
