@@ -18,6 +18,7 @@
     "verification-division": { "source": "verification-division-of-labor.md" },
     "browser-operation": { "source": "browser-e2e-mcp.md" },
     "quality-review": { "source": "quality-checklist.md" },
+    "validation-tiering": { "source": "validation-tiering.md" },
     "change-scope": { "source": "change-scope-boundary.md" },
     "execution-evidence": { "source": "execution-evidence.md" },
     "collaboration": { "source": "collaboration-and-notifications.md" },

@@ -1,14 +1,14 @@
 {
   "version": 2,
-  "fingerprint": "fcd23491c42311b5322a89a6e911f3aaeac055ae6033ae1993970c17db495d83",
-  "publishedAt": "2026-09-03T03:17:47.885Z",
-  "l3RuleReleaseFingerprint": "21f3b0cdfaa4d92c28c68bd41f3f22ba8c6c5d20fdadfb55ee2add360f590fd9",
+  "fingerprint": "aa5feb4354a3709423c6340bf02d5ded76f8c1e294ff42f9af0aa30b1ce9d68a",
+  "publishedAt": "2026-09-04T00:17:51.112Z",
+  "l3RuleReleaseFingerprint": "7c0bb5cc64b318f8c3280528657995e0cdde5b3ded37bba1c6d4238f241cb9bf",
   "clientMatrix": {
     "codex": {
       "kind": "direct",
       "adapter": "~/.codex/AGENTS.md",
       "enforcement": "PreToolUse rule injection + PostToolUse receipt/code gate + changed/gate",
-      "sourceFingerprint": "8b529fda59c71484c78612627719b7f237b8c87ffe3cfd57edb0e2de028b4fdf",
+      "sourceFingerprint": "179f0d416978f56f51ee1e23f0f989a6bdf80e13b172b98a0d7857525366eee0",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -110,14 +110,14 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "21f3b0cdfaa4d92c28c68bd41f3f22ba8c6c5d20fdadfb55ee2add360f590fd9",
+      "l3Fingerprint": "7c0bb5cc64b318f8c3280528657995e0cdde5b3ded37bba1c6d4238f241cb9bf",
       "conflictOverrides": []
     },
     "claude": {
       "kind": "direct",
       "adapter": "~/.claude/CLAUDE.md",
       "enforcement": "PreToolUse rule injection + PostToolUse receipt + changed/gate",
-      "sourceFingerprint": "8b529fda59c71484c78612627719b7f237b8c87ffe3cfd57edb0e2de028b4fdf",
+      "sourceFingerprint": "179f0d416978f56f51ee1e23f0f989a6bdf80e13b172b98a0d7857525366eee0",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -219,14 +219,14 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "21f3b0cdfaa4d92c28c68bd41f3f22ba8c6c5d20fdadfb55ee2add360f590fd9",
+      "l3Fingerprint": "7c0bb5cc64b318f8c3280528657995e0cdde5b3ded37bba1c6d4238f241cb9bf",
       "conflictOverrides": []
     },
     "cursor": {
       "kind": "direct",
       "adapter": "~/.cursor/rules/fameex-local-governance.mdc",
       "enforcement": "native glob/alwaysApply + resolver conformance + changed/gate",
-      "sourceFingerprint": "8b529fda59c71484c78612627719b7f237b8c87ffe3cfd57edb0e2de028b4fdf",
+      "sourceFingerprint": "179f0d416978f56f51ee1e23f0f989a6bdf80e13b172b98a0d7857525366eee0",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -328,7 +328,7 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "21f3b0cdfaa4d92c28c68bd41f3f22ba8c6c5d20fdadfb55ee2add360f590fd9",
+      "l3Fingerprint": "7c0bb5cc64b318f8c3280528657995e0cdde5b3ded37bba1c6d4238f241cb9bf",
       "conflictOverrides": []
     },
     "lark-codex": {
@@ -336,7 +336,7 @@
       "delegatesTo": "codex",
       "adapter": "common/lark-bot/lib/lark-rule-context.mjs + common/lark-bot/lib/lark-worker-prompts.mjs + common/lark-bot/lib/lark-worker-run.mjs + common/engine/agent-scripts/rule-context-hook.mjs + common/engine/agent-scripts/rule-context.mjs + common/engine/agent-scripts/lib/l2-rule-resolver.mjs + common/engine/agent-scripts/lib/rule-consumption.mjs",
       "enforcement": "fresh effective rules + focused context + worker quality gate",
-      "sourceFingerprint": "8b529fda59c71484c78612627719b7f237b8c87ffe3cfd57edb0e2de028b4fdf",
+      "sourceFingerprint": "179f0d416978f56f51ee1e23f0f989a6bdf80e13b172b98a0d7857525366eee0",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -438,7 +438,7 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "21f3b0cdfaa4d92c28c68bd41f3f22ba8c6c5d20fdadfb55ee2add360f590fd9",
+      "l3Fingerprint": "7c0bb5cc64b318f8c3280528657995e0cdde5b3ded37bba1c6d4238f241cb9bf",
       "conflictOverrides": []
     },
     "lark-claude": {
@@ -446,7 +446,7 @@
       "delegatesTo": "claude",
       "adapter": "common/lark-bot/lib/lark-rule-context.mjs + common/lark-bot/lib/lark-worker-prompts.mjs + common/lark-bot/lib/lark-worker-run.mjs + common/engine/agent-scripts/rule-context-hook.mjs + common/engine/agent-scripts/rule-context.mjs + common/engine/agent-scripts/lib/l2-rule-resolver.mjs + common/engine/agent-scripts/lib/rule-consumption.mjs",
       "enforcement": "fresh effective rules + focused context + worker quality gate",
-      "sourceFingerprint": "8b529fda59c71484c78612627719b7f237b8c87ffe3cfd57edb0e2de028b4fdf",
+      "sourceFingerprint": "179f0d416978f56f51ee1e23f0f989a6bdf80e13b172b98a0d7857525366eee0",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -548,9 +548,31 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "21f3b0cdfaa4d92c28c68bd41f3f22ba8c6c5d20fdadfb55ee2add360f590fd9",
+      "l3Fingerprint": "7c0bb5cc64b318f8c3280528657995e0cdde5b3ded37bba1c6d4238f241cb9bf",
       "conflictOverrides": []
     }
+  },
+  "ruleInjectionPolicy": {
+    "blockingRuleGlobs": [
+      "001-guidelines.mdc",
+      "definition-of-done.mdc",
+      "frontend-harness.mdc"
+    ],
+    "advisoryRuleGlobs": [
+      "advanced-*.mdc",
+      "architecture-*.mdc",
+      "async-*.mdc",
+      "bundle-*.mdc",
+      "client-*.mdc",
+      "js-*.mdc",
+      "patterns-*.mdc",
+      "react19-*.mdc",
+      "rendering-*.mdc",
+      "rerender-*.mdc",
+      "server-*.mdc",
+      "state-*.mdc"
+    ],
+    "advisoryCatalogBudgetBytes": 16384
   },
   "fileCount": 108,
   "skillTargets": {
@@ -580,8 +602,8 @@
     ".cursor/rules/client-localstorage-schema.mdc": "0738c152763b6cff03cf88277cbdf228689f68a04c3be3cb2c4aee17d09619ca",
     ".cursor/rules/client-passive-event-listeners.mdc": "6b43af3a0be0b5cdf9a566073231e813c25d281d52e5677b1e93385396d9394e",
     ".cursor/rules/client-swr-dedup.mdc": "ffc1e83364f3e8e021cf5d6f39f568519e8d10e6846afe7d1c787aa4d5fd3677",
-    ".cursor/rules/definition-of-done.mdc": "a6048d28f37d617434beab157136189b7da7e8274214155dc8d69de59f95e0ce",
-    ".cursor/rules/frontend-harness.mdc": "8b48868647fdc351c1b1df79e1be98a8f76e6b28ec2099f6e760da4c613e51e1",
+    ".cursor/rules/definition-of-done.mdc": "0624241fd65b9bef2bdf0267b03c8b13653fabbcb17e0b713ae32e4f5b59c0fe",
+    ".cursor/rules/frontend-harness.mdc": "21b60de519025cae74e7434d5b94a930689739511cfa1e317434378004bbb1f4",
     ".cursor/rules/js-batch-dom-css.mdc": "070c9f7f317737d250054cf2f968e66377922c7540320cb754b4e35f1dacb3a7",
     ".cursor/rules/js-cache-function-results.mdc": "8699bc5a56c41ef621268013a22caca2c25e49c45c3e9d638b3bc8c0a7c44b95",
     ".cursor/rules/js-cache-property-access.mdc": "246aea1625350af13ad38315743b65fb7d8976cb23c2334d6a6c4f5cc9067c18",
@@ -637,7 +659,7 @@
     ".cursor/rules/state-context-interface.mdc": "cd3f3cf0da916c2315646c9d7b157391931ed2d6d2b6e6b756f87edf550b47c9",
     ".cursor/rules/state-decouple-implementation.mdc": "720aea501afbe5908f518ac8f072b2dfd5f4cfda6cf3cbee8b5c40ae8c109609",
     ".cursor/rules/state-lift-state.mdc": "98fd28e2f0c89a98ffb077ca5ba0a0b1777ebfffab2e4a13ea6a03b31282db8a",
-    "~/.ai-rules/AGENT.md": "be6c1226c97693b0c31c84a4548de6f5baa71e130c0b74673a46d0dedfd4712d",
+    "~/.ai-rules/AGENT.md": "61f526d8ea0bc048e43564d96a6df119f1a17b2883160127e7b24b24516fada1",
     "~/.ai-rules/skills/coding-quality/references/acceptance-evidence.md": "ba7b5c8e8c1ef133bdd9593d22764847784d507e091e5125fd32ff5bf7110788",
     "~/.ai-rules/skills/coding-quality/references/api-schema-mapper.md": "795fe9dc95e47489411a323e6a67639df0b6ae9c4a84fd9df34044bae3895053",
     "~/.ai-rules/skills/coding-quality/references/controlled-form-hooks.md": "43c6845aeff7e6af1640c3a51d4475dc586918ae7f9cbc62a427adfa552f90e3",
@@ -654,16 +676,16 @@
     "~/.ai-rules/skills/figma-read/scripts/figma-fetch.mjs": "4502e3284d3d8950dcdd81ea0527463820721f4d5022bf433127d22e488b4b71",
     "~/.ai-rules/skills/figma-read/scripts/figma-spec.mjs": "bd1b00cd243c00697549b12fa2ddb3dd4648fe953243519985f5023e0aa93994",
     "~/.ai-rules/skills/figma-read/SKILL.md": "17902f4f95ec0000075e1aa5e980a03e2a61e3e067b6d1b3773c5a440acfecce",
-    "~/.claude/CLAUDE.md": "be6c1226c97693b0c31c84a4548de6f5baa71e130c0b74673a46d0dedfd4712d",
+    "~/.claude/CLAUDE.md": "61f526d8ea0bc048e43564d96a6df119f1a17b2883160127e7b24b24516fada1",
     "~/.claude/settings.json": "1181474207363bb38ee88f1edf4d7307e033bd54011fe2c843f81ea7d0bd9f2a",
-    "~/.codex/AGENTS.md": "be6c1226c97693b0c31c84a4548de6f5baa71e130c0b74673a46d0dedfd4712d",
+    "~/.codex/AGENTS.md": "61f526d8ea0bc048e43564d96a6df119f1a17b2883160127e7b24b24516fada1",
     "~/.codex/hooks.json": "7e348df7fc3f38d464a46983b50a3cb74e50f9df211dafe9bd876f6b10bb4434",
     "~/.cursor/rules/fameex-local-governance.mdc": "1b34e1269caf928ae2c157970bb915c798824345fd883817a9343001f76f2b45",
-    "AGENTS.md": "392064b3caa6942371cdf5380c7c8b6e368e6ba36d5cae03753afc5d6001c480",
+    "AGENTS.md": "d9808129875564e31de980ceb3793aa1a35cefc8ba910af381d1922c415feac7",
     "CLAUDE.md": "e977e463d4123db2a9274bcc8b3ec10a25ae5d4722aa07f1df01e69d31423ce4",
-    "common/engine/agent-scripts/lib/l2-rule-resolver.mjs": "a921b4f23ad5ffccf42c9de069c2672e2f866c807c3ed1dadb875e14f72cc6ad",
+    "common/engine/agent-scripts/lib/l2-rule-resolver.mjs": "0e75a40017003b653048cd4cf8c2950dea6a5c5571f4db43c4dca37ac13f2d99",
     "common/engine/agent-scripts/lib/rule-consumption.mjs": "011e89183fd8ca913755f4bf92d967cddc0f48288c725493d0bdf47057fad470",
-    "common/engine/agent-scripts/rule-context-hook.mjs": "58f8e36fe1893971c8b7f24078c4073b672137315bf9ca6b5cfdfa1fa9a1660e",
+    "common/engine/agent-scripts/rule-context-hook.mjs": "555ffda61834b60ef6f121de1a50d2989e1b6ba0f520068618cf15f2f4f075fa",
     "common/engine/agent-scripts/rule-context.mjs": "923c19e9138d0f0aa45135aeb3c20272123d6b9a7ce91037d586bee589a1f8e2",
     "common/lark-bot/lib/lark-rule-context.mjs": "c74a8cbe46b5c3bae158a05ce4654482176d42244d59ab73f387a8c6360a5ef6",
     "common/lark-bot/lib/lark-worker-prompts.mjs": "1bfd848027ba91412fdee0d5e2cc23705936f93d9bc5325a76987c277413257b",

@@ -85,7 +85,7 @@ node apps/web/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-01
 | `pnpm exec biome ...` | 触达 JS/TS/JSON | PASS / FAIL / 未覆盖 | 若输出 `0 files`，必须补 `node --check` / 专项脚本作为 fallback |
 | `node apps/web/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --project PR-01234` | 本次改动文件 | PASS / FAIL | findings 已修 / 已登记豁免 |
 
-`0 files` 不是通过证据，只能说明 Biome 没覆盖到目标文件；ignored 文档或脚本场景必须记录 fallback 命令和结果。
+当所选档位要求 Biome 时，`0 files` 不是通过证据，只能说明 Biome 没覆盖到目标文件；MICRO 应记录 `not-required`，不得运行后再用 `0 files` 冒充通过。
 
 阶段切换或交付前同步恢复摘要：
 

@@ -11,9 +11,11 @@
 
 ## 2. 自动验证
 
-每次代码变更后：
+代码验证先执行 [validation-tiering.md](./validation-tiering.md)：编辑循环不跑验证；实现稳定后由 MICRO / FOCUSED / FULL 决定一次性最小可信检查。MICRO 的 Biome/typecheck/lint/test 为 `not-required`，不得伪装成 PASS 或 `skipped`。
 
-- 触达 JS/TS/JSON 跑 Biome。
+实现稳定后：
+
+- FOCUSED 对触达 JS/TS/JSON 跑一次定向 Biome；FULL 按阶段门禁执行；MICRO 只审最终 diff。
 - 机器静态规则跑 `node apps/web/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --project <PROJECT-ID>`（只检查新增/已改文件，内容类规则只看 diff 新增行）。
 - 已启用 `pilot.prdIntake` 的项目跑 `docs-tdd changed <PROJECT-ID>`；通过标准消费 [lark-doc-sync.md §8](./lark-doc-sync.md) 与 [prd-feature-inventory.md §3](./prd-feature-inventory.md)。
 - 需要浏览器才能证明的交互/集成行为必须真实执行 [browser-e2e-mcp.md](./browser-e2e-mcp.md)；能由 Vitest/DOM 契约证明的优先自动断言；纯视觉、手感与响应式默认交人工清单，分工以 [verification-division-of-labor.md](./verification-division-of-labor.md) 为准。
@@ -34,7 +36,7 @@ G6/交付前按「清单 → 场景 → 证据 → 残留风险」顺序自测�
 | 层级 | 必测内容 | 证据 |
 |------|----------|------|
 | 文档 | 每条「本期做」均有任务和验收结果；裁剪项有确认记录 | 清单勾选摘要 |
-| 静态质量 | Biome、类型检查、单测/相关测试 | 命令+结果；失败写阻塞原因 |
+| 静态质量 | 按验证档位执行 Biome、类型检查、单测/相关测试 | 档位+理由+命令结果；不适用写 `not-required` |
 | 业务逻辑 | mapper/排序/状态机/金额精度/跳转/权限/登录态 | 单测或手测步骤 |
 | 页面交互 | CTA/Tab/排序/分页/弹窗/FAQ/表单/空·错·loading·retry | Browser/Playwright 结论 |
 | 视觉响应式 | 桌面、390px H5、dark/light；**L2：与 Figma 并排走查清单全 pass（默认人工，Agent 供 DOM 契约比对）** | 文字报告：节点 ID + 模块 pass/fail（见 [component-reuse-and-visual-fidelity.md §3.0](./component-reuse-and-visual-fidelity.md)、[verification-division-of-labor.md](./verification-division-of-labor.md)） |
@@ -101,7 +103,7 @@ G7 是 test 提测前的用例预检与开发侧回归阶段，不是 AQ 在 tes
 - [ ] 用户切 light 后刷新/重进仍 light。
 - [ ] Figma token 映射无硬编码绕过；可由 `tailwind-preset.js` 表达的尺寸/圆角未写成 arbitrary class。
 - [ ] i18n 符合公共规则：`apps/web` 开发期只考虑中文，提测前收敛到 `zh-CN`；`apps/` 其他默认文字写死；无手动新增/复制/同步/占位其他语言目录；使用时优先静态全键 `t('ns:key')`，动态键须保留静态可 grep 前缀 + `Record` 收敛枚举。
-- [ ] 触达文件已跑 Biome。
+- [ ] 已按验证档位完成检查；MICRO 未机械执行 Biome/typecheck/lint/test，FOCUSED/FULL 只在稳定后执行一次所需命令。
 - [ ] 已跑 `verify-code-rules.mjs --project <PROJECT-ID>`（只检查新增/已改文件）；findings 已修或登记豁免。
 - [ ] **G6 已跑 `/code-review` skill 审本次 diff**，`agent/code-review.json` 记录 findings、处置、证据和 review HEAD；不能只写“已 review”。
 - [ ] 已完成 PRD bullet ↔ 原子需求 ↔ 单一 Task ↔ acceptance evidence 对账；每个所需证据类型都有匹配的 passed 项，纯 copy 断言未冒充 label/可见性/条件渲染证据。

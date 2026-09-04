@@ -2,7 +2,7 @@
 
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
-import { resolveRulePack, selectRuleInjectionBatch } from './lib/l2-rule-resolver.mjs'
+import { partitionRuleInjection, renderAdvisoryRuleCatalog, resolveRulePack, selectRuleInjectionBatch } from './lib/l2-rule-resolver.mjs'
 import { loadConfig } from './lib/roots.mjs'
 import { advanceContextEpoch, prepareLedger, recordInjection, recordPendingTool, recordPostTool, resolveGitWorktree } from './lib/rule-consumption.mjs'
 import { classifyTargets } from './lib/hook-targets.mjs'
@@ -99,19 +99,44 @@ try {
   const injected = new Set(state?.injectedRuleHashes || [])
   const delta = pack.matchedRules.filter((rule) => !injected.has(rule.sourceHash))
   if (delta.length) {
-    const { rendered, remainingCount } = selectRuleInjectionBatch(pack, { rules: delta })
+    const { blocking, advisory } = partitionRuleInjection(delta, config.ruleInjection)
+    const blockingBatch = blocking.length ? selectRuleInjectionBatch(pack, { rules: blocking }) : null
+    const advisoryCatalog = advisory.length
+      ? renderAdvisoryRuleCatalog(pack, { rules: advisory, maxBytes: config.ruleInjection?.advisoryCatalogBudgetBytes })
+      : null
+    const injectedHashes = [
+      ...(blockingBatch?.rendered.ruleHashes || []),
+      ...(advisoryCatalog?.ruleHashes || []),
+    ]
+    const context = [blockingBatch?.rendered.text, advisoryCatalog?.text].filter(Boolean).join('\n')
     recordInjection(id, {
-      ruleHashes: rendered.ruleHashes,
+      ruleHashes: injectedHashes,
       packFingerprint: pack.fingerprint,
       targets: pack.targets,
-      channel: `${client}:PreToolUse:deny-and-retry`,
-      byteLength: rendered.byteLength,
+      channel: blocking.length ? `${client}:PreToolUse:deny-and-retry` : `${client}:PreToolUse:advisory`,
+      byteLength: Buffer.byteLength(context),
     })
-    hookOutput('PreToolUse', {
-      permissionDecision: 'deny',
-      permissionDecisionReason: `Injected ${rendered.ruleCount} previously unseen rules (${rendered.byteLength} bytes)${remainingCount ? `; ${remainingCount} rules remain for the next retry` : ''}. Read the complete injected context, apply it, then retry the tool call.`,
-      additionalContext: rendered.text,
-    })
+    const remainingCount = (blockingBatch?.remainingCount || 0) + (advisoryCatalog?.remainingCount || 0)
+    if (blocking.length) {
+      hookOutput('PreToolUse', {
+        permissionDecision: 'deny',
+        permissionDecisionReason: `Injected ${blockingBatch.rendered.ruleCount} required rule bodies and ${advisoryCatalog?.ruleCount || 0} advisory summaries (${Buffer.byteLength(context)} bytes)${remainingCount ? `; ${remainingCount} rules remain for a later event` : ''}. Apply the required rules, then retry the tool call once.`,
+        additionalContext: context,
+      })
+    } else {
+      const perFile = Object.fromEntries(pack.targets.map((file) => [file, singleFileReceipt(worktree, file, conflictOverrides)]))
+      recordPendingTool(id, {
+        toolUseId: input.tool_use_id,
+        targets: pack.targets,
+        perFile,
+        packFingerprint: pack.fingerprint,
+      })
+      hookOutput('PreToolUse', {
+        permissionDecision: 'allow',
+        permissionDecisionReason: `Attached ${advisoryCatalog.ruleCount} relevant rule summaries without blocking the tool call.`,
+        additionalContext: context,
+      })
+    }
     process.exit(0)
   }
 

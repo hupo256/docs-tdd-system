@@ -41,6 +41,15 @@ export function stableSettingsInput(rawText) {
   }
 }
 
+export function stableRuleInjectionPolicy(policy = {}) {
+  const sortedStrings = (value) => (Array.isArray(value) ? value.filter((item) => typeof item === 'string').sort() : [])
+  return {
+    blockingRuleGlobs: sortedStrings(policy.blockingRuleGlobs),
+    advisoryRuleGlobs: sortedStrings(policy.advisoryRuleGlobs),
+    advisoryCatalogBudgetBytes: Number.isFinite(policy.advisoryCatalogBudgetBytes) ? policy.advisoryCatalogBudgetBytes : null,
+  }
+}
+
 export function readJson(file) {
   return JSON.parse(readFileSync(file, 'utf8'))
 }
@@ -103,6 +112,7 @@ export function createSnapshotter({ sources, label, collectL2Files, commonDir, m
       files,
       l3RuleReleaseFingerprint: l3?.fingerprint || null,
       clientMatrix,
+      ruleInjectionPolicy: stableRuleInjectionPolicy(config.ruleInjection),
       skillTargets: Object.fromEntries(sources.skillEntries.map((entry) => [label(entry), existsSync(entry) ? label(realpathSync(entry)) : null])),
     }
     return {
@@ -111,6 +121,7 @@ export function createSnapshotter({ sources, label, collectL2Files, commonDir, m
       files,
       l3RuleReleaseFingerprint: composition.l3RuleReleaseFingerprint,
       clientMatrix,
+      ruleInjectionPolicy: composition.ruleInjectionPolicy,
       skillTargets: composition.skillTargets,
       missing,
     }
@@ -138,6 +149,7 @@ export function createSnapshotter({ sources, label, collectL2Files, commonDir, m
         published.fileCount === current.fileCount &&
         published.l3RuleReleaseFingerprint === current.l3RuleReleaseFingerprint &&
         JSON.stringify(published.clientMatrix) === JSON.stringify(current.clientMatrix) &&
+        JSON.stringify(published.ruleInjectionPolicy) === JSON.stringify(current.ruleInjectionPolicy) &&
         JSON.stringify(published.skillTargets) === JSON.stringify(current.skillTargets) &&
         Object.values(diff).every((items) => items.length === 0),
     )
@@ -176,5 +188,6 @@ if (process.argv[1]?.endsWith('effective-snapshot.mjs') && process.argv.includes
   const hooksChanged = JSON.stringify({ hooks: { PostToolUse: [2] }, permissions: { allow: ['a'] } })
   assert.equal(stableSettingsInput(base), stableSettingsInput(permChanged))
   assert.notEqual(stableSettingsInput(base), stableSettingsInput(hooksChanged))
+  assert.deepEqual(stableRuleInjectionPolicy({ advisoryRuleGlobs: ['b', 'a'], blockingRuleGlobs: ['z'], advisoryCatalogBudgetBytes: 12 }), { blockingRuleGlobs: ['z'], advisoryRuleGlobs: ['a', 'b'], advisoryCatalogBudgetBytes: 12 })
   console.log('effective-snapshot self-test passed.')
 }

@@ -39,7 +39,9 @@ export function formatEvidenceRunId(generatedAt, gateName) {
 export function buildQualityCell(buildQuality) {
   if (!buildQuality?.required) return '本阶段不要求（G6 起强制）'
   if (buildQuality.skipped) return `已跳过：${escapeCell(buildQuality.reason || '未填理由')}`
-  return `${buildQuality.ok ? 'PASS' : 'FAIL'}（biome/tsc/vitest 实跑 ${buildQuality.checkCount ?? 0} 条结论）`
+  const tier = buildQuality.validationTier || 'FULL'
+  const notRequired = buildQuality.notRequiredCount || 0
+  return `${buildQuality.ok ? 'PASS' : 'FAIL'}（${tier}：${buildQuality.checkCount ?? 0} 条结论，not-required ${notRequired} 条）`
 }
 
 export function renderEvidence(payload, commands, reviewer) {

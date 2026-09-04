@@ -50,7 +50,7 @@ PreToolUse 证明编辑前已注入，PostToolUse 回执绑定本次写入；最
 1. **单一维护源**：同一规则只在一层维护正文；其他载体只保存触发器、指针或项目差异。脚本中的 Rule ID 必须回链台账，不再复制一份规则描述清单。
 2. **规则即测试**：每个机器规则至少有一个应命中、一个不应命中的自测；修复误报时先加入回归样例。无测试的正则不得直接从 warn 提升 error。
 3. **证据绑定状态**：机器证据至少绑定 ruleset、L3 发布指纹、effective rules 指纹、Git HEAD/base、dirty hash 和执行时间；代码或规则变化后必须重跑，不能复用旧 PASS。
-4. **失败默认可见**：脚本失败、未运行、输出 `0 files`、环境阻塞和跳过都不能写 PASS。跳过必须记录原因；G6-G8 跳过代码规则时原因进入 gate JSON/evidence。
+4. **失败默认可见**：脚本失败、未运行、输出 `0 files`、环境阻塞和跳过都不能写 PASS。按 [validation-tiering.md](./validation-tiering.md) 判定无需执行的项必须写 `not-required` + 档位 + 理由；跳过必须记录原因，二者不得混用。
 5. **豁免有生命周期**：豁免必须有 ruleId、reason、owner、expiresAt；过期或非法豁免不生效。高风险事实规则可设 non-waivable。
 6. **只拦本次新增债**：默认检查 changed files/added lines，存量问题单独登记 known debt；全量扫描只用于生产 mock 泄漏、密钥等少量上线风险。
 7. **定期删规则**：重复、失去触发场景、长期零命中或已被类型系统/框架替代的规则应合并或退役，避免 context 噪声降低真正硬规则的执行率。
@@ -90,11 +90,11 @@ PreToolUse 证明编辑前已注入，PostToolUse 回执绑定本次写入；最
 
 Rule ID 与严重度以 [rule-ids-and-gates.md](./rule-ids-and-gates.md) §3.5 为真值源；本节固化其执行契约（§1「落实标准」的具体实例）。
 
-- **Trigger**：`docs-tdd gate <PROJECT-ID> G6|G7|G8`；也可手动跑单个改动文件集。
+- **Trigger**：`docs-tdd gate <PROJECT-ID> G6|G7|G8`；也可手动跑单个改动文件集。验证档位先按 [validation-tiering.md](./validation-tiering.md) 判定。
 - **Source**：本脚本即 Executor，不存在「文档说跑过」这条通路。
 - **Loader**：G6 场景 `g6_verify` 加载 [quality-checklist.md](./quality-checklist.md) 与本节。
 - **Evidence**：命令、退出码、日志路径写入 `evidence/gate/**/README.md` 的 Command Evidence 与 Summary「机器事实层」行；完整输出落 `/tmp/docs-tdd-logs/<PROJECT-ID>/`。
-- **Failure**：`VERIFY-BIOME-001`/`VERIFY-TYPE-001`/`VERIFY-TEST-001`/`VERIFY-BUILD-001`（无理由跳过）阻断 gate，当场修或按 rule-ids-and-gates.md §4 登记有期限豁免；两条 warn 进 warn 台账。
+- **Failure**：FULL 所需的 `VERIFY-BIOME-001`/`VERIFY-TYPE-001`/`VERIFY-TEST-001`/`VERIFY-BUILD-001` 无理由跳过时阻断 gate；MICRO/FOCUSED 明确不要求的检查写结构化 `not-required`，不走豁免。
 
 ## 8. Golden run（回归 gate 机器自己）
 

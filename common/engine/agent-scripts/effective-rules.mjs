@@ -75,6 +75,7 @@ function publish() {
     publishedAt,
     l3RuleReleaseFingerprint: snapshot.l3RuleReleaseFingerprint,
     clientMatrix: snapshot.clientMatrix,
+    ruleInjectionPolicy: snapshot.ruleInjectionPolicy,
     fileCount: snapshot.fileCount,
     skillTargets: snapshot.skillTargets,
     files: snapshot.files,

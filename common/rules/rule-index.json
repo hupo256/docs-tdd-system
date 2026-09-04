@@ -82,6 +82,7 @@
       "execution-evidence.md"
     ],
     "g4_coding_worktree": [
+      { "file": "validation-tiering.md", "brief": "pointer" },
       {
         "file": "coding-worktree.md",
         "sections": "1-3"
@@ -108,6 +109,7 @@
       }
     ],
     "write_api": [
+      { "file": "validation-tiering.md", "brief": "pointer" },
       "api-and-mapper.md",
       {
         "file": "rule-ids-and-gates.md",
@@ -116,6 +118,7 @@
       }
     ],
     "write_mapper": [
+      { "file": "validation-tiering.md", "brief": "pointer" },
       "api-and-mapper.md",
       {
         "file": "rule-ids-and-gates.md",
@@ -128,6 +131,7 @@
       }
     ],
     "write_query_hook": [
+      { "file": "validation-tiering.md", "brief": "pointer" },
       "api-and-mapper.md",
       {
         "file": "architecture-and-state.md",
@@ -140,6 +144,7 @@
       }
     ],
     "write_state": [
+      { "file": "validation-tiering.md", "brief": "pointer" },
       {
         "file": "architecture-and-state.md",
         "sections": "4-7"
@@ -147,6 +152,7 @@
       "development-rules.md"
     ],
     "write_msw": [
+      { "file": "validation-tiering.md", "brief": "pointer" },
       "api-and-mapper.md",
       {
         "file": "architecture-and-state.md",
@@ -163,6 +169,7 @@
       }
     ],
     "legacy_mock": [
+      { "file": "validation-tiering.md", "brief": "pointer" },
       "mock-legacy-route-a.md",
       {
         "file": "architecture-and-state.md",
@@ -175,6 +182,7 @@
       }
     ],
     "write_ui": [
+      { "file": "validation-tiering.md", "brief": "pointer" },
       {
         "file": "architecture-and-state.md",
         "sections": "1-7"
@@ -187,6 +195,7 @@
       }
     ],
     "write_figma": [
+      { "file": "validation-tiering.md", "brief": "pointer" },
       {
         "file": "figma-mcp-read-workflow.md",
         "sections": "2-6"
@@ -309,6 +318,7 @@
       }
     ],
     "docs_tdd_maintenance": [
+      "validation-tiering.md",
       {
         "file": "rule-inheritance.md",
         "sections": "0-6"

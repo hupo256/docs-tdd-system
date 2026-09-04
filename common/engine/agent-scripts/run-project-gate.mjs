@@ -12,7 +12,7 @@ import { requireG6ContextSession } from './lib/g6-context-session.mjs'
 import { appendGateHistory, createFingerprint, gateCacheFingerprint } from './lib/gate-cache.mjs'
 import { formatEvidenceRunId, renderEvidence, summarizeCommand } from './lib/gate-evidence.mjs'
 import { resolvePartialRun } from './lib/gate-partial.mjs'
-import { buildQualityGuardCheck, derivePayloadOk, parseJsonOutput, selfTest, shouldUseGateCache, summarizeChecks, syncCommandSummary } from './lib/gate-payload.mjs'
+import { buildQualityGuardCheck, derivePayloadOk, parseJsonOutput, parseValidationTierOptions, selfTest, shouldUseGateCache, summarizeChecks, syncCommandSummary } from './lib/gate-payload.mjs'
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 import { verifyWorktreeConsumption } from './lib/rule-consumption.mjs'
 import { resolveRuleSessionClient } from './lib/rule-session.mjs'
@@ -56,6 +56,9 @@ const skipCodeRules = args.includes('--skip-code-rules')
 const skipCodeRulesReason = readOption('--skip-code-rules-reason').trim()
 const skipBuildQuality = args.includes('--skip-build-quality')
 const skipBuildQualityReason = readOption('--skip-build-quality-reason').trim()
+const validationTierOptions = parseValidationTierOptions(args)
+const validationTier = validationTierOptions.tier
+const validationTierReason = validationTierOptions.reason
 const codeRuleGates = ['G5', 'G6', 'G7', 'G8']
 const strictCodeRuleGates = ['G6', 'G7', 'G8']
 // 机器事实层（biome/tsc/vitest 真跑）从 G6「自动验收」起强制。G5 之前代码仍在联调中，
@@ -63,7 +66,7 @@ const strictCodeRuleGates = ['G6', 'G7', 'G8']
 const buildQualityGates = ['G6', 'G7', 'G8']
 
 function printHelp() {
-  console.log(`usage: run-project-gate.mjs <PR-01234> <G0-G8> [--write] [--no-cache] [--no-refresh-index] [--skip-code-rules --skip-code-rules-reason <reason>] [--skip-build-quality --skip-build-quality-reason <reason>] [--reviewer <name>] [--json] [--help]
+  console.log(`usage: run-project-gate.mjs <PR-01234> <G0-G8> [--write] [--no-cache] [--no-refresh-index] [--validation-tier <MICRO|FOCUSED|FULL> --validation-tier-reason <text>] [--skip-code-rules --skip-code-rules-reason <reason>] [--skip-build-quality --skip-build-quality-reason <reason>] [--reviewer <name>] [--json] [--help]
 
 Run a project gate, persist machine-readable results, and write a reviewable evidence README.
 G5+ automatically runs verify-code-rules unless --skip-code-rules is used.
@@ -78,6 +81,8 @@ Options:
   --skip-code-rules-reason        Reason recorded when skipping code rules
   --skip-build-quality            Skip the verify-build-quality sub-run (always needs a reason)
   --skip-build-quality-reason     Reason recorded when skipping biome/tsc/vitest execution
+  --validation-tier               Validation matrix; defaults to FULL
+  --validation-tier-reason        Required evidence for MICRO/FOCUSED
   --reviewer                      Reviewer name for evidence (default: $USER)
   --client                        Rule consumer identity: codex, claude, cursor, human
   --session-id                    Task/session identity used by G6 context completeness checks
@@ -117,6 +122,7 @@ if (args.includes('--self-test')) {
 }
 
 if (!new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(projectId || '') || !/^G[0-8]$/.test(gate)) usage()
+if (validationTierOptions.error) fail(validationTierOptions.error)
 const { partial, gateLabel, error: partialError } = resolvePartialRun({ gate, partial: partialRequested })
 if (partialError) fail(partialError)
 if (skipCodeRules && strictCodeRuleGates.includes(gate) && !skipCodeRulesReason) {
@@ -185,6 +191,8 @@ const fingerprintCtx = { projectId, gate, callerCwd, config, docsRoot }
 const cacheFingerprint = gateCacheFingerprint(projectDir, {
   ...fingerprintCtx,
   gate: gateLabel,
+  validationTier,
+  validationTierReason,
 })
 const cacheDir = join(tmpdir(), 'docs-tdd-gate-cache')
 const cacheFile = join(cacheDir, `${projectId}-${gateLabel}-${cacheFingerprint}.json`)
@@ -232,7 +240,14 @@ if (!skipCodeRules && codeRuleGates.includes(gate)) {
 let buildQualityRun = null
 let buildQualityResult = null
 if (!skipBuildQuality && buildQualityGates.includes(gate)) {
-  buildQualityRun = run([join(scriptDir, 'verify-build-quality.mjs'), '--project', projectId, '--json', ...(gate === 'G8' ? ['--production-build'] : [])])
+  buildQualityRun = run([
+    join(scriptDir, 'verify-build-quality.mjs'),
+    '--project', projectId,
+    '--json',
+    '--validation-tier', validationTier,
+    ...(validationTierReason ? ['--validation-tier-reason', validationTierReason] : []),
+    ...(gate === 'G8' ? ['--production-build'] : []),
+  ])
   persistRunLog('verify-build-quality', buildQualityRun)
   buildQualityResult = parseJsonOutput(buildQualityRun)
   commands.push({
@@ -279,6 +294,9 @@ const payload = {
     reason: skipBuildQuality ? skipBuildQualityReason : '',
     ok: buildQualityGuard ? buildQualityGuard.ok && buildQualityResult?.ok !== false : true,
     checkCount: buildQualityChecks.length,
+    validationTier: buildQualityResult?.validationTier || validationTier,
+    validationTierReason: buildQualityResult?.validationTierReason || validationTierReason,
+    notRequiredCount: buildQualityChecks.filter((check) => check.disposition === 'not-required').length,
     baselineFile: buildQualityResult?.baselineFile || null,
   },
   source: {
