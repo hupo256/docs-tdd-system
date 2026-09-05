@@ -7,6 +7,14 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-09-04（docs_tdd vNext Phase 0–6 shadow-only 落地）
+
+- **vNext 工作流（workflowVersion: 2）从流程门禁转向效率与质量**：用单一 `work-item.json` 承载「原始 PRD → 代码落点 → 当前 HEAD 验收证据」，默认产物从 253 个流程文件收敛到 3 个（4 项目组合 253 → 12，−95.26%），机器 context 字符代理从 v1 可复算口径 342592 → 2718（−99.21%），V0/V1 硬预算 ≤4K、V2 ≤8K。
+- **三个历史提测漏项（PR-02306 图片密码、PR-01930 集合落点、PR-02265 PRD 漂移）做成确定性回放夹具**：`vnext-replay.mjs` / `vnext-exit-replay.mjs` / `vnext-route-replay.mjs` 全部通过，漏项和假绿路径可机器复现，不是纸面承诺。
+- **Phase 0–6 核心模块完成**：source units、coverage review、risk route、single exit、persistence、context/artifact budget、MSW policy 已接入 `vnext-self-test.mjs`（18 脚本）并注册进 `check-doc-budget.mjs`（71 自测入口）。
+- **Phase 7 双轨灰度启动**：6 个样本已登记（V0/V1/V2 覆盖），当前 `decision: collecting`；`post-test observation`、PR-02233 剩余 App 批次、PR-02117/02133/02193 后端 API 契约依赖等待业务/人工推进。
+- **生效边界**：vNext 仍为 shadow-only，v1 Router / kickoff / 正式 Gate 零变化；默认产物和 context 预算数字只用于 `common/vnext/` 机器文件，不修改业务仓历史项目。
+
 ## 2026-09-03（常驻预算闭环与本地多客户端强制补齐）
 
 - L1 `~/.ai-rules/AGENT.md` 纳入 7000 字符硬闸，并新增 L1 + L3 + L2 `alwaysApply` 的 16000 字符首次编辑总预算；重复的通用质量细则下沉到按需 `coding-quality`。

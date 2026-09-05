@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "purpose": "v1 comparison baseline for docs_tdd vNext; null means the historical value was not recorded and must not be estimated",
-  "collectedAt": "2026-09-04T08:36:00.210Z",
-  "sourceCommit": "97a2cdfd67bdeb8b6caa4428b6d0eba4b3f69003",
+  "collectedAt": "2026-09-05T04:22:33.788Z",
+  "sourceCommit": "d4dbeed183c92fc10a73f0e349dabdf6326b21a0",
   "metricDefinitions": {
     "processFiles": "All files under the project except inbox/**; a reproducible proxy for docs_tdd-created persistent artifacts.",
     "gateRuns": "Entries present in agent/gate-history.json; absent historical logging is not reconstructed.",
