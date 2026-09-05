@@ -2,8 +2,8 @@
   "projectId": "PR-02233",
   "reviewedAt": "2026-09-04",
   "reviewer": "pending",
-  "confirmedBy": "",
-  "confirmedAt": "",
+  "confirmedBy": "aven",
+  "confirmedAt": "2026-09-05",
   "head": "0000000000000000000000000000000000000000",
   "findings": [
     {

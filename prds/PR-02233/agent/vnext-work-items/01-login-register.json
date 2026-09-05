@@ -4,11 +4,11 @@
   "projectId": "PR-02233",
   "sourceSnapshot": {
     "revision": "670",
-    "contentHash": "9e3a1b2104635c137a715800542084b42d9fd25424f56a25fca1643ba785b78e",
+    "contentHash": "8afd3b80fd9d5e795ef33237068139c7d4d73348091765b4f1792e6214ff0b94",
     "sources": [
       {
         "path": "https://qfglxo2m3dc.sg.larksuite.com/docx/QaBEditNroySaGxmywFl8CwXg6d",
-        "contentHash": "d8fa7940d84b9db4d7059d166dbf89e7499e5e32523d0801c1256aab77931ae2"
+        "contentHash": "a92a5c15949a2ef1ec9e427d6f0fcb133d1eb5c09140fa16273a755424dfdbbc"
       }
     ]
   },
@@ -18,7 +18,11 @@
       "sourceAnchors": [
         {
           "type": "text",
-          "sourceId": "SRC-18C0659FD48B"
+          "sourceId": "SRC-EA6D15434565"
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-617B29CEE7E6"
         }
       ],
       "statement": "On Web registration verification, replace “切换验证方式” with “没收到验证码？尝试邮箱注册”; clicking it returns to the first registration-information step and does not retain the entered verification code.",
@@ -131,12 +135,17 @@
       "status": "doing",
       "collectionSemantics": {
         "kind": "explicit-set",
-        "expectedCount": 1
+        "expectedCount": 2
       },
       "affectedSurfaces": [
         {
           "surfaceId": "S-025",
-          "locator": "Verification-method dialog",
+          "locator": "App login verification-method dialog",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-118",
+          "locator": "Web login verification-method dialog",
           "disposition": "implement"
         }
       ],
@@ -159,16 +168,21 @@
           "sourceId": "SRC-3E52376B5E22"
         }
       ],
-      "statement": "Order switch options GA, email, then phone; closing by X or backdrop keeps the current method unchanged.",
+      "statement": "Order login switch options GA, email, then phone.",
       "status": "doing",
       "collectionSemantics": {
         "kind": "explicit-set",
-        "expectedCount": 1
+        "expectedCount": 2
       },
       "affectedSurfaces": [
         {
           "surfaceId": "S-026",
-          "locator": "Verification-method dialog",
+          "locator": "App login verification-method dialog",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-119",
+          "locator": "Web login verification-method dialog",
           "disposition": "implement"
         }
       ],
@@ -178,7 +192,7 @@
           "runtimeRequired": false
         },
         {
-          "type": "browser-interaction",
+          "type": "component-dom",
           "runtimeRequired": true
         }
       ]
@@ -191,7 +205,7 @@
           "sourceId": "SRC-3E52376B5E22"
         }
       ],
-      "statement": "Selecting a method closes the dialog and changes the verification input; login initially chooses the highest-priority bound method.",
+      "statement": "Selecting a login verification method closes the dialog and changes the verification input to that bound method.",
       "status": "doing",
       "collectionSemantics": {
         "kind": "explicit-set",
@@ -232,12 +246,17 @@
       "status": "doing",
       "collectionSemantics": {
         "kind": "explicit-set",
-        "expectedCount": 1
+        "expectedCount": 2
       },
       "affectedSurfaces": [
         {
           "surfaceId": "S-029",
-          "locator": "Shared verification countdown state",
+          "locator": "App login verification countdown state",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-120",
+          "locator": "Web login verification countdown state",
           "disposition": "implement"
         }
       ],
@@ -264,12 +283,17 @@
       "status": "doing",
       "collectionSemantics": {
         "kind": "explicit-set",
-        "expectedCount": 1
+        "expectedCount": 2
       },
       "affectedSurfaces": [
         {
           "surfaceId": "S-030",
-          "locator": "Verification-method dialog",
+          "locator": "App login verification-method dialog",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-121",
+          "locator": "Web login verification-method dialog",
           "disposition": "implement"
         }
       ],
@@ -329,7 +353,7 @@
           "sourceId": "SRC-C7BEF9C7A8EF"
         }
       ],
-      "statement": "Login uses one method and defaults by GA > email > phone while allowing a switch among bound methods.",
+      "statement": "Login uses exactly one bound verification method at a time.",
       "status": "doing",
       "collectionSemantics": {
         "kind": "explicit-set",
@@ -357,20 +381,256 @@
           "runtimeRequired": true
         }
       ]
+    },
+    {
+      "requirementId": "R-030",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-EA6D15434565"
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-617B29CEE7E6"
+        }
+      ],
+      "statement": "Keep the existing App registration-method-switch guidance unchanged.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 1
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-097",
+          "locator": "App registration verification",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        },
+        {
+          "type": "visual",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-033",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-CBE388031A06"
+        }
+      ],
+      "statement": "Place the login switch-method entry below the verification-area Confirm button on both App and Web.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-100",
+          "locator": "App login verification",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-101",
+          "locator": "Web login verification",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        },
+        {
+          "type": "visual",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-042",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-3E52376B5E22"
+        }
+      ],
+      "statement": "Closing the login method dialog by X or backdrop keeps the current method unchanged.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-122",
+          "locator": "App login verification-method dialog",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-123",
+          "locator": "Web login verification-method dialog",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-043",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-3E52376B5E22"
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-C7BEF9C7A8EF"
+        }
+      ],
+      "statement": "Login initially selects the highest-priority bound method in GA, email, then phone order.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-124",
+          "locator": "App login verification",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-125",
+          "locator": "Web login verification",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-044",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-617B29CEE7E6"
+        }
+      ],
+      "statement": "After the interaction changes, login verification still completes both success and failure paths.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-126",
+          "locator": "App login regression flow",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-127",
+          "locator": "Web login regression flow",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-045",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-617B29CEE7E6"
+        }
+      ],
+      "statement": "After the interaction changes, registration verification still completes both success and failure paths.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-128",
+          "locator": "App registration regression flow",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-129",
+          "locator": "Web registration regression flow",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
     }
   ],
   "coverageAudit": {
-    "sourceFingerprint": "a4114cd9071758bb2bb1bf210e2b9ab13ebffd6e4a2ab98c6cb30b77857020af",
-    "requirementsFingerprint": "85c9f2e1b0a33ab9d2cf51eb07138942865025db6e5648688ff61f1a944772b9",
+    "sourceFingerprint": "3618c37f6f0c28c8de7ac40786952154e0366e792ac6406cdaf37ec5f7b1c1d5",
+    "requirementsFingerprint": "49ee1a46cce2b41b60c1f72cdef2967ea7105af42428df01a494f16caa4a2935",
     "reviewMode": "independent-cold-read",
-    "reviewRunId": "cold-review-remediation-PR-02233-20260904-subset-01-login-register",
+    "reviewRunId": "rr-PR-02233-b01-20260905-001",
     "reviewer": {
       "kind": "model",
-      "id": "uniaix/gpt-5.6-terra-independent-remediation"
+      "id": "openai/gpt-5.1-independent-cold-read"
     },
-    "completedAt": "2026-09-04T08:30:00Z",
+    "completedAt": "2026-09-05T00:00:00Z",
     "verdict": "pass",
-    "findings": [],
+    "findings": [
+      {
+        "findingId": "F-001",
+        "code": "other",
+        "message": "Requirements outside bounded batch 01, including non-login/register verification scenarios and cross-cutting guidance, countdown/error handling, App autofill, localization, and analytics work, are delegated and were not treated as omissions in this review.",
+        "sourceIds": [
+          "SRC-3D89DE00D037",
+          "SRC-E50CC78A923F",
+          "SRC-474E663FC648",
+          "SRC-7AD253D17754",
+          "SRC-EB2F5D11BEEF",
+          "SRC-DBDB92A9BA6E",
+          "SRC-0646CA3E450E"
+        ],
+        "disposition": "deferred",
+        "reason": "The review request explicitly bounds this run to the listed batch 01 requirements.",
+        "owner": "PR-02233 delivery owners",
+        "batch": "02-06 sibling batches"
+      }
+    ],
     "unresolved": []
   },
   "routing": {
@@ -400,6 +660,6 @@
     "confirmationKind": "human",
     "confirmedBy": "Aven",
     "confirmedAt": "2026-09-04",
-    "fingerprint": "c0cfef814945b182feaa28232057b4fc2817eebdaf5b134b6e91af42749e1d9c"
+    "fingerprint": "23dfef12517145d7f6a67e6bddd471160471f2ab36c036e428cb8c006cc52395"
   }
 }

@@ -8,6 +8,31 @@
     "schemaVersion": { "const": 1 },
     "workflowVersion": { "const": 2 },
     "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },
+    "deliveryScope": {
+      "type": "object",
+      "required": ["kind", "batchId", "includedRequirementIds", "deferred"],
+      "properties": {
+        "kind": { "const": "bounded-batch" },
+        "batchId": { "type": "string", "minLength": 1 },
+        "includedRequirementIds": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^R-\\d{3}$" }
+        },
+        "deferred": {
+          "type": "object",
+          "required": ["owner", "batch", "reason"],
+          "properties": {
+            "owner": { "type": "string", "minLength": 1 },
+            "batch": { "type": "string", "minLength": 1 },
+            "reason": { "type": "string", "minLength": 1 }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
     "sourceSnapshot": {
       "type": "object",
       "required": ["revision", "contentHash", "sources"],

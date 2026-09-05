@@ -56,7 +56,7 @@
       "id": "A11",
       "method": "POST",
       "path": "/fe-ex-api/v4/common/emailValidCode",
-      "apiStatus": "mock-required",
+      "apiStatus": "not-ready",
       "scenarios": [
         { "name": "normal", "status": "implemented", "reason": "PR02233_* account identity operationType" },
         { "name": "empty", "status": "not-applicable", "reason": "send response has no business collection" },
@@ -69,7 +69,7 @@
       "id": "A12-A14",
       "method": "POST",
       "path": "/fe-ex-api/user/{password_update|mobile_update|mobile_bind_save|email_update|email_bind_save_v4}",
-      "apiStatus": "mock-required",
+      "apiStatus": "not-ready",
       "scenarios": [
         { "name": "normal", "status": "implemented", "reason": "account-security-submit handlers" },
         { "name": "empty", "status": "not-applicable", "reason": "mutation response has no business collection" },

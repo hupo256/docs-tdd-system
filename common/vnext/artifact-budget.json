@@ -7,11 +7,11 @@
     "runs.jsonl"
   ],
   "comparison": {
-    "baselineProcessFiles": 263,
+    "baselineProcessFiles": 253,
     "projectCount": 4,
     "vnextFilesPerProject": 3,
     "projectedVNextFiles": 12,
-    "reductionPercent": 95.44,
+    "reductionPercent": 95.26,
     "targetReductionPercent": 80,
     "ok": true
   },

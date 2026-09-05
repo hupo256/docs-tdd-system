@@ -21,14 +21,14 @@
 | 4 产物收敛 | v2 scaffold、latest-result、runs.jsonl；处置与 V2 确认留在 work-item | 默认持久化文件数降低至少 80% | **完成（shadow）** |
 | 5 上下文压缩 | v2 最小 context + session delta | V0/V1 ≤4K 字符；V2 ≤8K 字符；可测 context 字符降低至少 60% | **完成（shadow）** |
 | 6 MSW 条件化 | no-request / real-api / mock-required / pending-dependency | 无请求或真实 API 可用时不建 MSW，且无需 waiver | **完成（shadow）** |
-| 7 灰度与退役决策 | V0/V1/V2 全覆盖，累计 5–10 个新需求 | 零漏项、零假绿且机器指标达标后，仅进入人工切换评审 | **进行中：6 个样本已登记；V0/V1 出口已 PASS，4 个 V2 仍 blocked/待拆分，全部等待提测后观察** |
+| 7 灰度与退役决策 | V0/V1/V2 全覆盖，累计 5–10 个新需求 | 零漏项、零假绿且机器指标达标后，仅进入人工切换评审 | **进行中：6 个样本已登记；V0/V1 出口已 PASS；3 个 V2 因依赖 blocked，PR-02233 已完成当前源重审并收敛到跨端/运行时证据缺口；全部等待提测后观察** |
 
 ## 当前已落地
 
 - `baseline-observations.json`：用户复盘中可确认的事故事实；与机器指标分离。
 - `baseline.json`：由 `vnext-baseline.mjs --write` 从四个历史项目重复生成。
 - `vnext-work-item.schema.json`：v2 单一业务事实载体的第一版 schema。
-- `lib/vnext-source-units.mjs`：将 Markdown 原始来源确定性正规化为 text/table/image units；source ID 不依赖行号。
+- `lib/vnext-source-units.mjs`：将 Markdown 原始来源确定性正规化为 text/table/image units；source ID 不依赖行号；同步时间、Lark 临时媒体 URL 和生成式图片 alt 变化不会制造伪漂移。
 - `lib/vnext-coverage-review.mjs` + `vnext-coverage-review.schema.json`：独立冷读审查的最小 I/O 契约；每条 finding 必须处置，过期 fingerprint 不可复用。
 - `lib/vnext-work-item.mjs`：`SOURCE_FRESH`、`REQUIREMENT_COVERAGE`、`SURFACE_COVERAGE` 的纯判定核心。
 - `fixtures/vnext-replay/`：PR-02306 图片需求漏抽取、PR-01930 集合落点漏实现、PR-02265 PRD 漂移三个确定性事故夹具及三个修复后 positive controls。
@@ -39,7 +39,7 @@
 - `lib/vnext-exit.mjs` + `vnext-exit-result.schema.json`：将覆盖、路由、当前 Git 状态、证据和 blockers 聚合为唯一出口结果；`ok/status/summary` 只能派生。
 - `fixtures/vnext-exit-cases.json` + `vnext-exit-replay.mjs`：旧 HEAD、开放依赖、命令假 PASS、缺定向证据和篡改结果五类禁假绿回放。
 - `lib/vnext-persistence.mjs`：三文件持久化、原子替换、追加式历史、runId 幂等、锁超时/陈旧锁恢复和中断续写。
-- `vnext-artifact-budget.mjs` + `artifact-budget.json`：以同一四项目组合对比 263 → 12 个默认流程文件，减少 95.44%。
+- `vnext-artifact-budget.mjs` + `artifact-budget.json`：以同一四项目组合对比 253 → 12 个默认流程文件，减少 95.26%。
 - `vnext-context.mjs` + `lib/vnext-context.mjs`：按 work-item 生成紧凑上下文；fingerprint 未变时只返回 delta/unchanged，不重载 v1 规则包。
 - `vnext-context-budget.mjs` + `context-budget.json`：V0/V1 4K、V2 8K 硬预算；四案例同口径字符代理减少 99.21%，历史 token 继续明确记为 null。
 - `lib/vnext-msw-policy.mjs`：按 API 依赖选择 no-request / real-api / mock-required / pending-dependency；无通用 MSW 仪式，也无 waiver 旁路。
@@ -49,7 +49,7 @@
 
 基线以 [baseline.json](./baseline.json) 为准。当前四项目合计：
 
-- 263 个流程文件（`inbox/**` 之外的项目持久化文件）；
+- 253 个流程文件（`inbox/**` 之外的项目持久化文件）；
 - 24 次有历史记录的 Gate；
 - 1,588 次重复/累计检查执行；
 - 3 次用户复盘确认的“提测后补 PRD 漏项”；
@@ -152,4 +152,4 @@ node common/engine/agent-scripts/vnext-context.mjs --project /path/to/v2/PR-0123
 2. 每个样本从三文件机器读取 level、出口完整性、context 字符数和文件数；提测后的漏项/假绿由负责人填写带姓名和观察截止时间的 observation。
 3. 样本少于 5 个、未覆盖 V0/V1/V2、任一样本未 PASS，均保持 `collecting`；任一漏项/假绿或 v1 入口耦合立即给出 `rollback`。
 4. 满足条件也只输出 `eligible-for-human-cutover-review`，`automaticCutover` 永远为 false；是否切换主流程必须另行人工决策。
-5. 当前 `pilot-report.json` 如实记录 6 个编码样本：PR-02074（V0）与 PR-02172（V1）最终出口已 PASS，但提测后 observation 仍待填写；4 个 V2 中 PR-02117/PR-02133/PR-02193 因 API `pending-dependency` 保持 blocked，PR-02233 还因完整 context 超过 8K 硬预算必须拆 work-item。PR-02118 作为“仅运营 SOP、无明确软件交付”的负向候选保留，不计入编码样本。
+5. 当前 `pilot-report.json` 如实记录 6 个编码样本：PR-02074（V0）与 PR-02172（V1）最终出口已 PASS，但提测后 observation 仍待填写；PR-02117/PR-02133/PR-02193 因 API `pending-dependency` 保持 blocked。PR-02233 已按批次拆分并降到 8K context 预算内；登录/注册切片已用稳定化后的当前 PRD 重新冷读审查，当前 HEAD 的 23 个定向测试及 MSW contract 均通过，出口只剩 App surfaces 与浏览器/视觉/全链路运行时证据未闭环。PR-02118 作为“仅运营 SOP、无明确软件交付”的负向候选保留，不计入编码样本。

@@ -3,17 +3,17 @@
   "workflowVersion": 2,
   "tool": "vnext-verify.mjs",
   "mode": "shadow",
-  "runId": "msw-ready-PR-02233-login-register-20260904",
-  "generatedAt": "2026-09-04T10:45:48.607Z",
+  "runId": "pr02233-b01-current-head-20260904-r2",
+  "generatedAt": "2026-09-04T15:36:46.254Z",
   "projectId": "PR-02233",
   "level": "V2",
   "status": "failed",
   "ok": false,
-  "workItemFingerprint": "e10b1979121def7a662bf10c052c86a5923ae54cdf722e933261056c8217b33a",
+  "workItemFingerprint": "d4047aa850d10c4ca20472c17673a7bc2cac1c17c168f3782da2a33a6c58ef42",
   "codeFingerprint": {
-    "headSha": "2a2cfa9afd7f08a1e1cc50e562b3364f5a15668c",
-    "baseSha": "2a2cfa9afd7f08a1e1cc50e562b3364f5a15668c",
-    "dirtyHash": "ee91fec5beef70258d3f4e44aecf6ef1a5b8611e240a82b4d77c17fe7172f806",
+    "headSha": "f5b305b884329ffc5b7dec01772606b546526c3f",
+    "baseSha": "d0c528ececbb62d4be604b7811531655ca4d9735",
+    "dirtyHash": "294dc2830d52fc1fe4738e7c075f5cfbb645b13618f2c229cf40509e92e9c8f8",
     "dirtyFileCount": 0,
     "untrackedFileCount": 0,
     "isGitRepo": true
@@ -33,21 +33,21 @@
       "code": "SURFACE_COVERAGE",
       "ok": false,
       "problems": [
-        "implementation/evidence does not cover S-020",
         "implementation/evidence does not cover S-021",
-        "implementation/evidence does not cover S-022",
         "implementation/evidence does not cover S-023",
-        "implementation/evidence does not cover S-024",
         "implementation/evidence does not cover S-025",
         "implementation/evidence does not cover S-026",
         "implementation/evidence does not cover S-027",
-        "implementation/evidence does not cover S-028",
         "implementation/evidence does not cover S-029",
         "implementation/evidence does not cover S-030",
         "implementation/evidence does not cover S-031",
-        "implementation/evidence does not cover S-032",
         "implementation/evidence does not cover S-033",
-        "implementation/evidence does not cover S-034"
+        "implementation/evidence does not cover S-097",
+        "implementation/evidence does not cover S-100",
+        "implementation/evidence does not cover S-122",
+        "implementation/evidence does not cover S-124",
+        "implementation/evidence does not cover S-126",
+        "implementation/evidence does not cover S-128"
       ]
     },
     {
@@ -62,14 +62,8 @@
     },
     {
       "code": "MSW_POLICY",
-      "ok": false,
-      "problems": [
-        "mock-required needs an integrated MSW worker",
-        "mock-required needs at least one handler",
-        "MSW does not cover contract AUTH-METHODS-V1",
-        "MSW does not cover contract AUTH-CHANNEL-SWITCH-V1",
-        "MSW does not cover contract VERIFY-COOLDOWN-V1"
-      ],
+      "ok": true,
+      "problems": [],
       "mode": "mock-required",
       "required": true,
       "blocked": false
@@ -84,47 +78,52 @@
       "code": "EVIDENCE_INTEGRITY",
       "ok": true,
       "problems": [],
-      "evidenceIds": []
+      "evidenceIds": [
+        "E-B01-CONTRACT",
+        "E-B01-QUALITY",
+        "E-B01-LOGIC",
+        "E-B01-COPY",
+        "E-B01-DOM"
+      ]
     },
     {
       "code": "EVIDENCE_FRESHNESS",
       "ok": true,
       "problems": [],
-      "evidenceIds": []
+      "evidenceIds": [
+        "E-B01-CONTRACT",
+        "E-B01-QUALITY",
+        "E-B01-LOGIC",
+        "E-B01-COPY",
+        "E-B01-DOM"
+      ]
     },
     {
       "code": "REQUIRED_EVIDENCE",
-      "ok": false,
-      "problems": [
-        "V2 requires passing contract-or-scenario-tests evidence",
-        "V2 requires passing directed-quality evidence"
-      ],
+      "ok": true,
+      "problems": [],
       "evidenceIds": []
     },
     {
       "code": "REQUIREMENT_EVIDENCE",
       "ok": false,
       "problems": [
-        "R-002 has no passing copy-literal evidence on current code state",
         "R-002 has no passing browser-interaction evidence on current code state",
         "R-003 has no passing browser-interaction evidence on current code state",
         "R-003 has no passing visual evidence on current code state",
-        "R-004 has no passing pure-logic evidence on current code state",
         "R-004 has no passing browser-interaction evidence on current code state",
-        "R-005 has no passing copy-literal evidence on current code state",
-        "R-005 has no passing component-dom evidence on current code state",
-        "R-006 has no passing pure-logic evidence on current code state",
-        "R-006 has no passing browser-interaction evidence on current code state",
-        "R-007 has no passing pure-logic evidence on current code state",
         "R-007 has no passing browser-interaction evidence on current code state",
-        "R-008 has no passing pure-logic evidence on current code state",
         "R-008 has no passing browser-interaction evidence on current code state",
-        "R-009 has no passing pure-logic evidence on current code state",
-        "R-009 has no passing component-dom evidence on current code state",
-        "R-010 has no passing pure-logic evidence on current code state",
         "R-010 has no passing browser-interaction evidence on current code state",
-        "R-011 has no passing pure-logic evidence on current code state",
-        "R-011 has no passing browser-interaction evidence on current code state"
+        "R-011 has no passing browser-interaction evidence on current code state",
+        "R-030 has no passing browser-interaction evidence on current code state",
+        "R-030 has no passing visual evidence on current code state",
+        "R-033 has no passing browser-interaction evidence on current code state",
+        "R-033 has no passing visual evidence on current code state",
+        "R-042 has no passing browser-interaction evidence on current code state",
+        "R-043 has no passing browser-interaction evidence on current code state",
+        "R-044 has no passing browser-interaction evidence on current code state",
+        "R-045 has no passing browser-interaction evidence on current code state"
       ],
       "evidenceIds": []
     },
@@ -132,21 +131,24 @@
       "code": "SURFACE_EVIDENCE",
       "ok": false,
       "problems": [
-        "S-020 has no passing evidence on current code state",
         "S-021 has no passing evidence on current code state",
-        "S-022 has no passing evidence on current code state",
         "S-023 has no passing evidence on current code state",
-        "S-024 has no passing evidence on current code state",
         "S-025 has no passing evidence on current code state",
         "S-026 has no passing evidence on current code state",
         "S-027 has no passing evidence on current code state",
-        "S-028 has no passing evidence on current code state",
         "S-029 has no passing evidence on current code state",
         "S-030 has no passing evidence on current code state",
         "S-031 has no passing evidence on current code state",
-        "S-032 has no passing evidence on current code state",
         "S-033 has no passing evidence on current code state",
-        "S-034 has no passing evidence on current code state"
+        "S-097 has no passing evidence on current code state",
+        "S-100 has no passing evidence on current code state",
+        "S-101 has no passing evidence on current code state",
+        "S-122 has no passing evidence on current code state",
+        "S-124 has no passing evidence on current code state",
+        "S-126 has no passing evidence on current code state",
+        "S-127 has no passing evidence on current code state",
+        "S-128 has no passing evidence on current code state",
+        "S-129 has no passing evidence on current code state"
       ],
       "evidenceIds": []
     },
@@ -159,9 +161,9 @@
   ],
   "summary": {
     "total": 13,
-    "passed": 8,
-    "failed": 5
+    "passed": 10,
+    "failed": 3
   },
   "blockedBy": [],
-  "resultFingerprint": "7c89a04eb41dbfbdd4f813b93fdd15cea3c89c9035d4d724837cbc6baa147362"
+  "resultFingerprint": "b270525f12556d1dd36428e32286f935073b026056e031fec8b3688db9005606"
 }

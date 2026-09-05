@@ -6,9 +6,23 @@ import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import { resolve } from 'node:path'
+import { canonicalizeLarkDocumentContent } from './lark-prd-drift.mjs'
 
 const sha256 = (value) => createHash('sha256').update(value).digest('hex')
-const normalizeText = (value) => String(value ?? '').replace(/\r\n?/g, '\n')
+const SYNC_FRONT_MATTER_RE = /^---\n([\s\S]*?)\n---(?:\n|$)/
+
+// Source snapshots must represent requirement content, not sync transport metadata.
+// Keep ordinary author-owned YAML front matter, but remove the read-only envelope emitted by
+// sync-lark-docs. Lark temporary media URLs and generated alt text are canonicalized by the
+// same helper used by v1 PRD drift checks, so re-fetching an unchanged document stays stable.
+export function canonicalizeSourceContent(value) {
+  let content = String(value ?? '').replace(/\r\n?/g, '\n')
+  const frontMatter = SYNC_FRONT_MATTER_RE.exec(content)
+  if (frontMatter && /(?:^|\n)syncedAt\s*:/m.test(frontMatter[1]) && /(?:^|\n)readOnly\s*:\s*true\s*$/m.test(frontMatter[1])) {
+    content = content.slice(frontMatter[0].length)
+  }
+  return canonicalizeLarkDocumentContent(content)
+}
 
 function tableDelimiter(line) {
   const cells = line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|')
@@ -50,7 +64,7 @@ function makeUnitFactory(path) {
 
 export function extractSourceUnits(document) {
   if (!document?.path || typeof document.content !== 'string') throw new Error('source document requires path and string content')
-  const content = normalizeText(document.content)
+  const content = canonicalizeSourceContent(document.content)
   const lines = content.split('\n')
   const unit = makeUnitFactory(document.path)
   const units = []
@@ -110,7 +124,7 @@ export function normalizeSourceDocuments(documents, { revision = 'unversioned' }
 
   const sources = ordered.map((document) => {
     if (!document?.path || typeof document.content !== 'string') throw new Error('source document requires path and string content')
-    const content = normalizeText(document.content)
+    const content = canonicalizeSourceContent(document.content)
     return { path: document.path, contentHash: sha256(content) }
   })
   const sourceUnits = ordered.flatMap(extractSourceUnits)
@@ -151,7 +165,24 @@ export function selfTest() {
   ])
   assert.deepEqual(reordered.sourceSnapshot.sources.map((item) => item.path), ['a.md', 'b.md'])
   assert.throws(() => normalizeSourceDocuments([{ path: 'a.md', content: 'A' }, { path: 'a.md', content: 'B' }]), /duplicate source paths/)
-  console.log('vnext-source-units self-test passed')
+
+  const syncEnvelope = (syncedAt, alt, code) => [
+    '---',
+    'sourceName: "PRD"',
+    `syncedAt: "${syncedAt}"`,
+    'readOnly: true',
+    '---',
+    '',
+    '# Stable requirement',
+    '',
+    `![${alt}](https://example.larksuite.com/space/api/box/stream/download/authcode/?code=${code})`,
+  ].join('\n')
+  const larkFirst = normalizeSourceDocuments([{ path: 'https://example.larksuite.com/docx/abc', content: syncEnvelope('2026-09-01T00:00:00Z', 'generated A', 'first') }], { revision: '9' })
+  const larkSecond = normalizeSourceDocuments([{ path: 'https://example.larksuite.com/docx/abc', content: syncEnvelope('2026-09-02T00:00:00Z', 'generated B', 'second') }], { revision: '9' })
+  assert.deepEqual(larkFirst, larkSecond)
+  assert.notDeepEqual(larkFirst, normalizeSourceDocuments([{ path: 'https://example.larksuite.com/docx/abc', content: syncEnvelope('2026-09-02T00:00:00Z', 'generated B', 'second').replace('Stable requirement', 'Changed requirement') }], { revision: '9' }))
+  assert.equal(canonicalizeSourceContent('---\ntitle: authored\n---\nRequirement'), '---\ntitle: authored\n---\nRequirement')
+  console.log('vnext-source-units self-test passed (including volatile Lark sync metadata stability)')
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url) && process.argv.includes('--self-test')) selfTest()

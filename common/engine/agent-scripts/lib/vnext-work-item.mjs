@@ -18,9 +18,16 @@ export function stableFingerprint(value) {
 }
 
 export function coverageFingerprints(workItem) {
+  const requirements = workItem?.requirements || []
+  // A bounded delivery batch is part of the reviewed requirement boundary. Keep the legacy
+  // fingerprint unchanged when no boundary is declared, but invalidate review/scope approval
+  // whenever a declared batch or its delegated remainder changes.
+  const reviewedRequirements = workItem?.deliveryScope
+    ? { requirements, deliveryScope: workItem.deliveryScope }
+    : requirements
   return {
     sourceFingerprint: stableFingerprint(workItem?.sourceSnapshot || null),
-    requirementsFingerprint: stableFingerprint(workItem?.requirements || []),
+    requirementsFingerprint: stableFingerprint(reviewedRequirements),
   }
 }
 

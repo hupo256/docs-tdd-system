@@ -18,7 +18,7 @@ larkEnabled: false
 | 字段 | 值 |
 |------|-----|
 | 当前阶段 | G4 P0/P1 已实现并完成专项自测；P2/P3 待推进 |
-| 最新通过门禁 | G4（57 项文档 + 6 项实现检查通过；PRD fingerprint `4523d7396057da62`） |
+| 最新通过门禁 | G4 |
 | 公共规则 | 继承 ../../common/README.md |
 | PRD 来源 | revision 670，本地快照 `inbox/lark-sync/prd-latest.extracted.md` |
 | 范围口径 | Web 本仓实施；App 需求移交 App owner |

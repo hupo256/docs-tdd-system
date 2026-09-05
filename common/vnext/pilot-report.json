@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "mode": "explicit-dual-track-shadow",
-  "generatedAt": "2026-09-04T10:46:19.104Z",
+  "generatedAt": "2026-09-04T15:36:56.122Z",
   "decision": "collecting",
   "automaticCutover": false,
   "summary": {
@@ -68,9 +68,9 @@
       "level": "V2",
       "root": "/Users/aven/github/docs_tdd/common/vnext/pilots/PR-02233",
       "latestStatus": "failed",
-      "runCount": 3,
+      "runCount": 5,
       "artifactCount": 3,
-      "contextChars": 3997,
+      "contextChars": 5881,
       "contextBudget": 8000,
       "omissionEscapes": null,
       "falseGreenEscapes": null,

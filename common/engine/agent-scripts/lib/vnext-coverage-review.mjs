@@ -22,9 +22,27 @@ function reviewRequirements(requirements = []) {
   }))
 }
 
+function deliveryScopeProblems(workItem) {
+  const scope = workItem?.deliveryScope
+  if (!scope) return []
+  const problems = []
+  if (scope.kind !== 'bounded-batch' || !scope.batchId?.trim()) problems.push('deliveryScope requires bounded-batch kind and batchId')
+  const actual = (workItem.requirements || []).map((item) => item.requirementId).sort()
+  const included = Array.isArray(scope.includedRequirementIds) ? [...scope.includedRequirementIds].sort() : []
+  if (new Set(included).size !== included.length || JSON.stringify(included) !== JSON.stringify(actual)) {
+    problems.push('deliveryScope.includedRequirementIds must exactly match current requirements')
+  }
+  if (!scope.deferred?.owner?.trim() || !scope.deferred?.batch?.trim() || !scope.deferred?.reason?.trim()) {
+    problems.push('bounded deliveryScope requires deferred owner, batch, and reason')
+  }
+  return problems
+}
+
 export function buildCoverageReviewRequest({ workItem, sourceUnits }) {
   if (!workItem?.projectId) throw new Error('review request requires a work item')
   if (!Array.isArray(sourceUnits) || !sourceUnits.length) throw new Error('review request requires normalized source units')
+  const scopeProblems = deliveryScopeProblems(workItem)
+  if (scopeProblems.length) throw new Error(`invalid delivery scope: ${scopeProblems.join('; ')}`)
   const sourceIds = sourceUnits.map((unit) => unit.sourceId)
   const duplicateSourceIds = sourceIds.filter((id, index) => sourceIds.indexOf(id) !== index)
   if (duplicateSourceIds.length) throw new Error(`duplicate source unit IDs: ${[...new Set(duplicateSourceIds)].join(', ')}`)
@@ -41,6 +59,7 @@ export function buildCoverageReviewRequest({ workItem, sourceUnits }) {
     checks: ['source-unit-to-requirement', 'collection-completeness', 'affected-surface-candidates'],
     ...fingerprints,
     sourceUnits,
+    deliveryScope: workItem.deliveryScope || { kind: 'whole-source' },
     candidateRequirements: reviewRequirements(workItem.requirements),
   }
 }
@@ -73,6 +92,11 @@ export function validateCoverageReviewResponse(workItem, response) {
   const duplicateIds = findingIds.filter((id, index) => findingIds.indexOf(id) !== index)
   if (duplicateIds.length) problems.push(`duplicate finding IDs: ${[...new Set(duplicateIds)].join(', ')}`)
   const open = findings.filter((finding) => finding.disposition === 'open')
+  if (workItem?.deliveryScope?.kind === 'bounded-batch') {
+    const expected = workItem.deliveryScope.deferred
+    const boundary = findings.find((finding) => finding.disposition === 'deferred' && finding.owner === expected.owner && finding.batch === expected.batch)
+    if (!boundary) problems.push(`bounded delivery scope requires a deferred finding for ${expected.batch}`)
+  }
   if (response?.verdict === 'pass' && open.length) problems.push('pass verdict cannot contain open findings')
   if (response?.verdict === 'changes-required' && !open.length) problems.push('changes-required verdict must contain an open finding')
   return problems
@@ -112,6 +136,7 @@ export function selfTest() {
   })
   assert.equal(request.protocol, REVIEW_PROTOCOL)
   assert.equal(request.candidateRequirements[0].evidencePlan, undefined)
+  assert.deepEqual(request.deliveryScope, { kind: 'whole-source' })
 
   const response = {
     schemaVersion: 1,
@@ -140,6 +165,21 @@ export function selfTest() {
     verdict: 'pass',
     findings: [{ findingId: 'F-1', code: 'MISSING', message: 'missing', disposition: 'open' }],
   }), /pass verdict cannot contain open findings/)
+
+  const bounded = {
+    ...workItem,
+    deliveryScope: {
+      kind: 'bounded-batch', batchId: 'batch-1', includedRequirementIds: ['R-001'],
+      deferred: { owner: 'other-owner', batch: 'batch-2', reason: 'separate delivery' },
+    },
+  }
+  const boundedRequest = buildCoverageReviewRequest({ workItem: bounded, sourceUnits: request.sourceUnits })
+  assert.equal(boundedRequest.deliveryScope.batchId, 'batch-1')
+  const boundedResponse = { ...response, sourceFingerprint: boundedRequest.sourceFingerprint, requirementsFingerprint: boundedRequest.requirementsFingerprint }
+  assert.throws(() => applyCoverageReview(bounded, boundedResponse), /requires a deferred finding/)
+  const boundaryFinding = { findingId: 'F-DEFER', code: 'other', message: 'remainder is delegated', sourceIds: [], disposition: 'deferred', reason: 'separate delivery', owner: 'other-owner', batch: 'batch-2' }
+  assert.equal(applyCoverageReview(bounded, { ...boundedResponse, findings: [boundaryFinding] }).coverageAudit.verdict, 'pass')
+  assert.throws(() => buildCoverageReviewRequest({ workItem: { ...bounded, deliveryScope: { ...bounded.deliveryScope, includedRequirementIds: [] } }, sourceUnits: request.sourceUnits }), /includedRequirementIds/)
   console.log('vnext-coverage-review self-test passed')
 }
 
