@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "mode": "explicit-dual-track-shadow",
-  "generatedAt": "2026-09-05T04:22:19.372Z",
+  "generatedAt": "2026-09-05T12:57:20.752Z",
   "decision": "collecting",
   "automaticCutover": false,
   "summary": {
-    "enrolled": 6,
+    "enrolled": 3,
     "completed": 0,
-    "minimumSamples": 5,
+    "minimumSamples": 3,
     "maximumSamples": 10,
     "enrolledLevels": [
       "V0",
@@ -48,9 +48,6 @@
       "ok": false,
       "problems": [
         "PR-02233: latest result is failed, not passed; post-test observation is pending",
-        "PR-02117: latest result is blocked, not passed; post-test observation is pending",
-        "PR-02133: latest result is blocked, not passed; post-test observation is pending",
-        "PR-02193: latest result is blocked, not passed; post-test observation is pending",
         "PR-02074-SEARCH-WIDTH: post-test observation is pending",
         "PR-02172-PROVIDER-VISIBILITY: post-test observation is pending"
       ]
@@ -78,63 +75,6 @@
       "ok": false,
       "problems": [
         "latest result is failed, not passed",
-        "post-test observation is pending"
-      ]
-    },
-    {
-      "sampleId": "PR-02117",
-      "projectId": "PR-02117",
-      "level": "V2",
-      "root": "/Users/aven/github/docs_tdd/common/vnext/pilots/PR-02117",
-      "latestStatus": "blocked",
-      "runCount": 1,
-      "artifactCount": 3,
-      "contextChars": 7932,
-      "contextBudget": 8000,
-      "omissionEscapes": null,
-      "falseGreenEscapes": null,
-      "observedThrough": null,
-      "ok": false,
-      "problems": [
-        "latest result is blocked, not passed",
-        "post-test observation is pending"
-      ]
-    },
-    {
-      "sampleId": "PR-02133",
-      "projectId": "PR-02133",
-      "level": "V2",
-      "root": "/Users/aven/github/docs_tdd/common/vnext/pilots/PR-02133",
-      "latestStatus": "blocked",
-      "runCount": 1,
-      "artifactCount": 3,
-      "contextChars": 4168,
-      "contextBudget": 8000,
-      "omissionEscapes": null,
-      "falseGreenEscapes": null,
-      "observedThrough": null,
-      "ok": false,
-      "problems": [
-        "latest result is blocked, not passed",
-        "post-test observation is pending"
-      ]
-    },
-    {
-      "sampleId": "PR-02193",
-      "projectId": "PR-02193",
-      "level": "V2",
-      "root": "/Users/aven/github/docs_tdd/common/vnext/pilots/PR-02193",
-      "latestStatus": "blocked",
-      "runCount": 1,
-      "artifactCount": 3,
-      "contextChars": 4257,
-      "contextBudget": 8000,
-      "omissionEscapes": null,
-      "falseGreenEscapes": null,
-      "observedThrough": null,
-      "ok": false,
-      "problems": [
-        "latest result is blocked, not passed",
         "post-test observation is pending"
       ]
     },

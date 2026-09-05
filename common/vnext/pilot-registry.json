@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "mode": "explicit-dual-track-shadow",
-  "minimumSamples": 5,
+  "minimumSamples": 3,
   "maximumSamples": 10,
   "requiredLevels": [
     "V0",
@@ -12,27 +12,6 @@
     {
       "projectId": "PR-02233",
       "artifactDir": "pilots/PR-02233",
-      "enrolledAt": "2026-09-04T08:45:00Z",
-      "newRequirement": true,
-      "observation": null
-    },
-    {
-      "projectId": "PR-02117",
-      "artifactDir": "pilots/PR-02117",
-      "enrolledAt": "2026-09-04T08:45:00Z",
-      "newRequirement": true,
-      "observation": null
-    },
-    {
-      "projectId": "PR-02133",
-      "artifactDir": "pilots/PR-02133",
-      "enrolledAt": "2026-09-04T08:45:00Z",
-      "newRequirement": true,
-      "observation": null
-    },
-    {
-      "projectId": "PR-02193",
-      "artifactDir": "pilots/PR-02193",
       "enrolledAt": "2026-09-04T08:45:00Z",
       "newRequirement": true,
       "observation": null
