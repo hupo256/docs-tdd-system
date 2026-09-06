@@ -5,6 +5,7 @@
 ## 不变量
 
 1. vNext 是 `workflowVersion: 2`，不是 v1 上的“快速模式”。
+   - 客户端责任边界：本仓只交付 Web 端，App 侧由兄弟团队交付。work-item 中 App surface 统一 `deferred`（owner + batch），纯 App 需求记录在 App 交接批次，不阻塞 Web 出口（规则本体见 `common/rules/change-scope-boundary.md` §1.2）。
 2. 覆盖能力完成并通过历史回放前，不删除或放宽旧 Gate。
 3. 只持久化直接服务于“原始 PRD → 代码落点 → 当前 HEAD 验收证据”的字段。
 4. 历史上没有记录的 token、首次落码和流程耗时保持 `null`，禁止估算成假基线。

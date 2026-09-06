@@ -24,6 +24,12 @@
 
 Agent 在 G4 编码前先确认白名单（首选读第 1 项,缺失则按第 2 项现推并回写第 1 项）,后续判「是否越界」一律对照这份白名单。
 
+### 1.2 客户端责任边界：docs_tdd 只交付 Web 端
+
+- docs_tdd 管理的需求默认只交付 `apps/web`；App（Native/RN）侧由兄弟团队交付，不在本仓实现，也不从本仓验收。
+- 类比 i18n 只考虑中文（quality-checklist.md）：本地开发与验收只覆盖 Web；App 侧 PRD 条目不丢弃、不默写，显式移交。
+- vNext work-item 中，locator 为 App 的 surface 一律标 `disposition: "deferred"` 并带 `reason` + `owner`（App owner）+ `batch`；纯 App 需求从 Web 批次移出、记入 App 交接批次，不阻塞 Web 出口。
+
 ## 2. 硬规则
 
 1. **默认收敛**:新增/修改功能原则上只改**责任模块**内文件。能在责任模块内解决的不外扩。

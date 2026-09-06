@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
   "mode": "explicit-dual-track-shadow",
-  "generatedAt": "2026-09-05T12:57:20.752Z",
+  "generatedAt": "2026-09-06T12:53:51.004Z",
   "decision": "collecting",
   "automaticCutover": false,
   "summary": {
     "enrolled": 3,
-    "completed": 0,
+    "completed": 2,
     "minimumSamples": 3,
     "maximumSamples": 10,
     "enrolledLevels": [
@@ -14,7 +14,10 @@
       "V1",
       "V2"
     ],
-    "completedLevels": [],
+    "completedLevels": [
+      "V0",
+      "V1"
+    ],
     "requiredLevels": [
       "V0",
       "V1",
@@ -38,8 +41,6 @@
       "code": "LEVEL_COVERAGE",
       "ok": false,
       "problems": [
-        "no completed V0 sample",
-        "no completed V1 sample",
         "no completed V2 sample"
       ]
     },
@@ -47,9 +48,7 @@
       "code": "SAMPLES_COMPLETE",
       "ok": false,
       "problems": [
-        "PR-02233: latest result is failed, not passed; post-test observation is pending",
-        "PR-02074-SEARCH-WIDTH: post-test observation is pending",
-        "PR-02172-PROVIDER-VISIBILITY: post-test observation is pending"
+        "PR-02233: latest result is invalid or stale: result does not match work item"
       ]
     },
     {
@@ -64,18 +63,9 @@
       "projectId": "PR-02233",
       "level": "V2",
       "root": "/Users/aven/github/docs_tdd/common/vnext/pilots/PR-02233",
-      "latestStatus": "failed",
-      "runCount": 5,
-      "artifactCount": 3,
-      "contextChars": 5881,
-      "contextBudget": 8000,
-      "omissionEscapes": null,
-      "falseGreenEscapes": null,
-      "observedThrough": null,
       "ok": false,
       "problems": [
-        "latest result is failed, not passed",
-        "post-test observation is pending"
+        "latest result is invalid or stale: result does not match work item"
       ]
     },
     {
@@ -88,13 +78,11 @@
       "artifactCount": 3,
       "contextChars": 1404,
       "contextBudget": 4000,
-      "omissionEscapes": null,
-      "falseGreenEscapes": null,
-      "observedThrough": null,
-      "ok": false,
-      "problems": [
-        "post-test observation is pending"
-      ]
+      "omissionEscapes": 0,
+      "falseGreenEscapes": 0,
+      "observedThrough": "2026-09-05T00:00:00.000Z",
+      "ok": true,
+      "problems": []
     },
     {
       "sampleId": "PR-02172-PROVIDER-VISIBILITY",
@@ -106,13 +94,11 @@
       "artifactCount": 3,
       "contextChars": 2847,
       "contextBudget": 4000,
-      "omissionEscapes": null,
-      "falseGreenEscapes": null,
-      "observedThrough": null,
-      "ok": false,
-      "problems": [
-        "post-test observation is pending"
-      ]
+      "omissionEscapes": 0,
+      "falseGreenEscapes": 0,
+      "observedThrough": "2026-09-05T00:00:00.000Z",
+      "ok": true,
+      "problems": []
     }
   ]
 }

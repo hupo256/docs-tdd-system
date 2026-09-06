@@ -22,7 +22,13 @@
       "artifactDir": "pilots/PR-02074-search-width",
       "enrolledAt": "2026-09-04T09:42:00Z",
       "newRequirement": true,
-      "observation": null
+      "observation": {
+        "confirmedBy": "aven",
+        "observedThrough": "2026-09-05T00:00:00.000Z",
+        "requirementOmissionEscapes": 0,
+        "falseGreenEscapes": 0,
+        "notes": "已提测，QA 阶段未发现 PRD 漏项；vNext 出口 PASS 与提测结果一致。"
+      }
     },
     {
       "sampleId": "PR-02172-PROVIDER-VISIBILITY",
@@ -30,7 +36,13 @@
       "artifactDir": "pilots/PR-02172-provider-visibility",
       "enrolledAt": "2026-09-04T09:42:00Z",
       "newRequirement": true,
-      "observation": null
+      "observation": {
+        "confirmedBy": "aven",
+        "observedThrough": "2026-09-05T00:00:00.000Z",
+        "requirementOmissionEscapes": 0,
+        "falseGreenEscapes": 0,
+        "notes": "已提测（临近 pre），QA 阶段未发现 PRD 漏项；vNext 出口 PASS 与提测结果一致。"
+      }
     }
   ],
   "candidateAssessments": [

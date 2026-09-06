@@ -67,7 +67,10 @@
         {
           "surfaceId": "S-021",
           "locator": "App login verification",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "reason": "App (Native) 端由兄弟团队交付，本仓只交付 Web 端（change-scope-boundary.md §1.2）；不从本仓实现或验收 App surface。",
+          "owner": "App 端交付团队（owner 由 PM 指认）",
+          "batch": "06-app-delegated"
         },
         {
           "surfaceId": "S-022",
@@ -104,7 +107,10 @@
         {
           "surfaceId": "S-023",
           "locator": "App login verification",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "reason": "App (Native) 端由兄弟团队交付，本仓只交付 Web 端（change-scope-boundary.md §1.2）；不从本仓实现或验收 App surface。",
+          "owner": "App 端交付团队（owner 由 PM 指认）",
+          "batch": "06-app-delegated"
         },
         {
           "surfaceId": "S-024",
@@ -141,7 +147,10 @@
         {
           "surfaceId": "S-025",
           "locator": "App login verification-method dialog",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "reason": "App (Native) 端由兄弟团队交付，本仓只交付 Web 端（change-scope-boundary.md §1.2）；不从本仓实现或验收 App surface。",
+          "owner": "App 端交付团队（owner 由 PM 指认）",
+          "batch": "06-app-delegated"
         },
         {
           "surfaceId": "S-118",
@@ -178,7 +187,10 @@
         {
           "surfaceId": "S-026",
           "locator": "App login verification-method dialog",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "reason": "App (Native) 端由兄弟团队交付，本仓只交付 Web 端（change-scope-boundary.md §1.2）；不从本仓实现或验收 App surface。",
+          "owner": "App 端交付团队（owner 由 PM 指认）",
+          "batch": "06-app-delegated"
         },
         {
           "surfaceId": "S-119",
@@ -215,7 +227,10 @@
         {
           "surfaceId": "S-027",
           "locator": "App login verification",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "reason": "App (Native) 端由兄弟团队交付，本仓只交付 Web 端（change-scope-boundary.md §1.2）；不从本仓实现或验收 App surface。",
+          "owner": "App 端交付团队（owner 由 PM 指认）",
+          "batch": "06-app-delegated"
         },
         {
           "surfaceId": "S-028",
@@ -252,7 +267,10 @@
         {
           "surfaceId": "S-029",
           "locator": "App login verification countdown state",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "reason": "App (Native) 端由兄弟团队交付，本仓只交付 Web 端（change-scope-boundary.md §1.2）；不从本仓实现或验收 App surface。",
+          "owner": "App 端交付团队（owner 由 PM 指认）",
+          "batch": "06-app-delegated"
         },
         {
           "surfaceId": "S-120",
@@ -289,7 +307,10 @@
         {
           "surfaceId": "S-030",
           "locator": "App login verification-method dialog",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "reason": "App (Native) 端由兄弟团队交付，本仓只交付 Web 端（change-scope-boundary.md §1.2）；不从本仓实现或验收 App surface。",
+          "owner": "App 端交付团队（owner 由 PM 指认）",
+          "batch": "06-app-delegated"
         },
         {
           "surfaceId": "S-121",
@@ -326,7 +347,10 @@
         {
           "surfaceId": "S-031",
           "locator": "App registration verification",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "reason": "App (Native) 端由兄弟团队交付，本仓只交付 Web 端（change-scope-boundary.md §1.2）；不从本仓实现或验收 App surface。",
+          "owner": "App 端交付团队（owner 由 PM 指认）",
+          "batch": "06-app-delegated"
         },
         {
           "surfaceId": "S-032",
@@ -363,7 +387,10 @@
         {
           "surfaceId": "S-033",
           "locator": "App login verification",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "reason": "App (Native) 端由兄弟团队交付，本仓只交付 Web 端（change-scope-boundary.md §1.2）；不从本仓实现或验收 App surface。",
+          "owner": "App 端交付团队（owner 由 PM 指认）",
+          "batch": "06-app-delegated"
         },
         {
           "surfaceId": "S-034",
@@ -378,42 +405,6 @@
         },
         {
           "type": "browser-interaction",
-          "runtimeRequired": true
-        }
-      ]
-    },
-    {
-      "requirementId": "R-030",
-      "sourceAnchors": [
-        {
-          "type": "text",
-          "sourceId": "SRC-EA6D15434565"
-        },
-        {
-          "type": "text",
-          "sourceId": "SRC-617B29CEE7E6"
-        }
-      ],
-      "statement": "Keep the existing App registration-method-switch guidance unchanged.",
-      "status": "doing",
-      "collectionSemantics": {
-        "kind": "explicit-set",
-        "expectedCount": 1
-      },
-      "affectedSurfaces": [
-        {
-          "surfaceId": "S-097",
-          "locator": "App registration verification",
-          "disposition": "implement"
-        }
-      ],
-      "evidencePlan": [
-        {
-          "type": "browser-interaction",
-          "runtimeRequired": true
-        },
-        {
-          "type": "visual",
           "runtimeRequired": true
         }
       ]
@@ -436,7 +427,10 @@
         {
           "surfaceId": "S-100",
           "locator": "App login verification",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "reason": "App (Native) 端由兄弟团队交付，本仓只交付 Web 端（change-scope-boundary.md §1.2）；不从本仓实现或验收 App surface。",
+          "owner": "App 端交付团队（owner 由 PM 指认）",
+          "batch": "06-app-delegated"
         },
         {
           "surfaceId": "S-101",
@@ -473,7 +467,10 @@
         {
           "surfaceId": "S-122",
           "locator": "App login verification-method dialog",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "reason": "App (Native) 端由兄弟团队交付，本仓只交付 Web 端（change-scope-boundary.md §1.2）；不从本仓实现或验收 App surface。",
+          "owner": "App 端交付团队（owner 由 PM 指认）",
+          "batch": "06-app-delegated"
         },
         {
           "surfaceId": "S-123",
@@ -514,7 +511,10 @@
         {
           "surfaceId": "S-124",
           "locator": "App login verification",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "reason": "App (Native) 端由兄弟团队交付，本仓只交付 Web 端（change-scope-boundary.md §1.2）；不从本仓实现或验收 App surface。",
+          "owner": "App 端交付团队（owner 由 PM 指认）",
+          "batch": "06-app-delegated"
         },
         {
           "surfaceId": "S-125",
@@ -551,7 +551,10 @@
         {
           "surfaceId": "S-126",
           "locator": "App login regression flow",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "reason": "App (Native) 端由兄弟团队交付，本仓只交付 Web 端（change-scope-boundary.md §1.2）；不从本仓实现或验收 App surface。",
+          "owner": "App 端交付团队（owner 由 PM 指认）",
+          "batch": "06-app-delegated"
         },
         {
           "surfaceId": "S-127",
@@ -584,7 +587,10 @@
         {
           "surfaceId": "S-128",
           "locator": "App registration regression flow",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "reason": "App (Native) 端由兄弟团队交付，本仓只交付 Web 端（change-scope-boundary.md §1.2）；不从本仓实现或验收 App surface。",
+          "owner": "App 端交付团队（owner 由 PM 指认）",
+          "batch": "06-app-delegated"
         },
         {
           "surfaceId": "S-129",
@@ -658,8 +664,8 @@
   },
   "scopeApproval": {
     "confirmationKind": "human",
-    "confirmedBy": "Aven",
-    "confirmedAt": "2026-09-04",
-    "fingerprint": "23dfef12517145d7f6a67e6bddd471160471f2ab36c036e428cb8c006cc52395"
+    "confirmedBy": "aven",
+    "confirmedAt": "2026-09-05",
+    "fingerprint": "109807388a697cb52a484857dc5fc4a18f75d59c554190a3e372bf9ab56b5c4a"
   }
 }
