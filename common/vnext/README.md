@@ -22,7 +22,7 @@
 | 4 产物收敛 | v2 scaffold、latest-result、runs.jsonl；处置与 V2 确认留在 work-item | 默认持久化文件数降低至少 80% | **完成（shadow）** |
 | 5 上下文压缩 | v2 最小 context + session delta | V0/V1 ≤4K 字符；V2 ≤8K 字符；可测 context 字符降低至少 60% | **完成（shadow）** |
 | 6 MSW 条件化 | no-request / real-api / mock-required / pending-dependency | 无请求或真实 API 可用时不建 MSW，且无需 waiver | **完成（shadow）** |
-| 7 灰度与退役决策 | V0/V1/V2 全覆盖，累计 5–10 个新需求 | 零漏项、零假绿且机器指标达标后，仅进入人工切换评审 | **进行中：6 个样本已登记；V0/V1 出口已 PASS；3 个 V2 因依赖 blocked，PR-02233 已完成当前源重审并收敛到跨端/运行时证据缺口；全部等待提测后观察** |
+| 7 灰度与退役决策 | V0/V1/V2 全覆盖，累计 5–10 个新需求 | 零漏项、零假绿且机器指标达标后，仅进入人工切换评审 | **进行中：3 个样本已登记（PR-02074 V0、PR-02172 V1、PR-02233 V2）；V0/V1 已 PASS，等待 observation；PR-02233 已重划范围并压到 8K 预算内，测试层/MSW/biome 已通过，仅剩浏览器运行时证据；PR-02117/02133/02193 因 API pending-dependency 已从灰度移除；PR-01930 worktree/branch 已退役** |
 
 ## 当前已落地
 
@@ -153,4 +153,4 @@ node common/engine/agent-scripts/vnext-context.mjs --project /path/to/v2/PR-0123
 2. 每个样本从三文件机器读取 level、出口完整性、context 字符数和文件数；提测后的漏项/假绿由负责人填写带姓名和观察截止时间的 observation。
 3. 样本少于 5 个、未覆盖 V0/V1/V2、任一样本未 PASS，均保持 `collecting`；任一漏项/假绿或 v1 入口耦合立即给出 `rollback`。
 4. 满足条件也只输出 `eligible-for-human-cutover-review`，`automaticCutover` 永远为 false；是否切换主流程必须另行人工决策。
-5. 当前 `pilot-report.json` 如实记录 6 个编码样本：PR-02074（V0）与 PR-02172（V1）最终出口已 PASS，但提测后 observation 仍待填写；PR-02117/PR-02133/PR-02193 因 API `pending-dependency` 保持 blocked。PR-02233 已按批次拆分并降到 8K context 预算内；登录/注册切片已用稳定化后的当前 PRD 重新冷读审查，当前 HEAD 的 23 个定向测试及 MSW contract 均通过，出口只剩 App surfaces 与浏览器/视觉/全链路运行时证据未闭环。PR-02118 作为“仅运营 SOP、无明确软件交付”的负向候选保留，不计入编码样本。
+5. 当前 `pilot-report.json` 仅保留 3 个编码样本：PR-02074（V0）与 PR-02172（V1）已 PASS、等待 observation；PR-02233（V2）已按 Web 端范围重新审查，15 个 App surface 全部 `deferred` 到批次 06（owner=App 团队），测试层/MSW/biome 证据已通过，仅剩浏览器运行时证据未闭环。PR-02117/PR-02133/PR-02193 因 API `pending-dependency` 已从 `pilot-registry` 中移除，不再作为切流依据。PR-02118 作为“仅运营 SOP、无明确软件交付”的负向候选保留，不计入编码样本。

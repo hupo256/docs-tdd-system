@@ -1,9 +1,9 @@
 ---
 projectId: PR-01930
-status: active
+status: retired
 stage: G8
 branch: feature/PR-01930
-worktree: /Users/aven/github/PR-01930
+worktree: ""
 port: "4108"
 visualFidelity: standard
 prdSource: "inbox/lark-sync/prd-latest.extracted.md（Lark revision 4103）+ inbox/prd-assets/ 真图"
