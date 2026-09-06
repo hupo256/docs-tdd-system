@@ -27,6 +27,10 @@ Phase 0–6 全绿；Phase 7 灰度 3 个样本中 **V0（PR-02074）、V1（PR-
 
 ## 下一步操作序列
 
+> **调试现场（2026-09-06 会话末）**：脚本已推进到「登录提交成功、等 谷歌验证 heading 超时」。
+> 关键教训：① 输入框要等 hydration 后再输入（goto 后 sleep 2s),`pressSequentially` 在该表单不生效,用 `click({force}) + keyboard.type`;② 旧 PID 占 4000 端口假死会造成 curl 000,起服务前先确认端口干净;③ 断点处见 `console-run*.txt` 和脚本 catch 里的 99-failure-state.png + 可见文本 dump。
+> 下一步排查方向：登录提交后可能 MSW worker 在 headless Chrome 内未成功启动（SW 注册静默失败逻辑见 `useMockWorker.ts` catch 分支），先 dump 失败时页面文本确认走到了哪一步。
+
 ### Step 1：起 dev server（注意两个坑）
 
 ```bash
