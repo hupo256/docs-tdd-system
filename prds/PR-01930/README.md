@@ -1,6 +1,6 @@
 ---
 projectId: PR-01930
-status: retired
+status: archived
 stage: G8
 branch: feature/PR-01930
 worktree: ""
