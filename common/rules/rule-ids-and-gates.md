@@ -1,5 +1,7 @@
 # Rule IDs And Machine Gates
 
+> **maintain-only(2026-09-06 起)**:v1 G 门禁链仅服务存量项目。除严重缺陷修复外,不再新增 v1 Rule ID / Gate / 模板层 / 流程分支;新项目默认走 vNext(`workflowVersion: 2`,见 common/vnext/README.md)。切换决策与偏差记录见 [../vnext/cutover-review-20260906.md](../vnext/cutover-review-20260906.md) 决策点 5。
+
 > AI 主用:把 `docs_tdd` 关键规则固定成可引用 ID,并定义哪些由机器 gate 执行,让规则出现在脚本输出、Lark 通知、交付报告、Review 结论里,而非只靠自然语言记忆。
 > 规则从触发到失败处理的完整执行契约见 [rule-execution-model.md](./rule-execution-model.md)；本文只维护 Rule ID、严重度和机器 gate 真值。
 

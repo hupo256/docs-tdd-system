@@ -7,6 +7,13 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-09-06（vNext 分级切流:v0/v1 默认生效,V2 暂 shadow)
+
+- **owner 决策(aven)切到分级切换**:`docs-tdd kickoff` 默认创建 vNext 项目(三文件骨架 + 真实 source snapshot 的 work-item stub;`--legacy` 回 v1);`rule-router.md` §0 把新需求默认路由到 vNext;V2 级出口在 PR-02233 提测闭环前只做 shadow 参考、不阻断交付。deviation 与决策点逐项结论见 `common/vnext/cutover-review-20260906.md`。
+- **V0/V1 灰度已实测闭环**:PR-02074-search-width / PR-02172-provider-visibility 提测后零漏项零假绿,pilot report 从 collecting 推进到 2/3 complete;V2 样本 PR-02233 批次 01 已按「本仓只交付 Web 端」重划范围(15 个 App surface deferred 到批次 06 + 重签 scope approval + 冷读 review response 持久化),仅剩浏览器运行时证据(`common/vnext/HANDOFF-phase7-pr02233.md`)。
+- **v1 冻结**:rule-ids-and-gates.md 标 maintain-only——不新增 v1 Rule ID/Gate/模板层,不删除不回溯;V2 转正与 v1 归档(移 archive/)等 pilot eligible 后另行评审。
+- **生效边界**:存量项目读不到新 router 行即无行为变化;`check-doc-budget`/`vnext-self-test`/三个 replay 全绿;kickoff 的 vNext 分支经 PR-99999 探针实测(source snapshot 真 hash、run-state nextAction `vnext_extract_requirements`)后已清理。
+
 ## 2026-09-04（docs_tdd vNext Phase 0–6 shadow-only 落地）
 
 - **vNext 工作流（workflowVersion: 2）从流程门禁转向效率与质量**：用单一 `work-item.json` 承载「原始 PRD → 代码落点 → 当前 HEAD 验收证据」，默认产物从 253 个流程文件收敛到 3 个（4 项目组合 253 → 12，−95.26%），机器 context 字符代理从 v1 可复算口径 342592 → 2718（−99.21%），V0/V1 硬预算 ≤4K、V2 ≤8K。

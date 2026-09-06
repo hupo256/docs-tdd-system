@@ -5,6 +5,7 @@
 
 ## 1. 启动协议
 
+0. **新需求路由（2026-09-06 起）**:全新项目/独立微变更默认走 **vNext**(`workflowVersion: 2`):初始化 `vnext-verify.mjs --init` 建 `work-item.json`,单一出口 `vnext-verify` 聚合 verify，默认产物三文件；规则与命令见 [../vnext/README.md](../vnext/README.md)。**V2 级出口在 PR-02233 闭环前为 shadow 参考判定，不阻断交付**(deviation 见 [../vnext/cutover-review-20260906.md](../vnext/cutover-review-20260906.md))。存量项目继续 v1；显式走 v1 须说明理由。
 1. 确认项目 ID/阶段；恢复项目先读 `<PROJECT>/agent/context-summary.md`。
 2. 执行 `docs-tdd context <PROJECT-ID> <SCENARIO>` 并读取 `/tmp/docs-tdd-context/...md`；模式由场景默认（常规为 compact，编码/G6 等高频场景为 brief），可显式用互斥的 `--brief|--compact|--full` 覆盖，歧义或失败调查才用 `--full`，不得自行全读规则。
    编码场景同时生成带 L1/L2/L3 fingerprint 的 `agent/rule-session.json`；G2 未通过、规则冲突或发布过期时不生成会话，也不得写业务代码。
@@ -19,6 +20,7 @@
 
 ## 2. 常驻硬规则
 
+- 新需求先路由等级:V0/V1 无门禁链，只留单一出口与最小证据矩阵;V2 保留完整矩阵与人签。**风险只升不降**,未知风险信号保守按 V2 处理，不许静默降档(路由约束见 [../vnext/README.md](../vnext/README.md))。
 - 先文档后代码；G2 未定稿不写业务代码。
 - G4 在 `feature/<PROJECT-ID>` worktree 开发，基线来自 `origin/online`；Git 只正向合环境分支。
 - 新功能 Mock 默认 MSW + 契约测试；service/hook/mapper/组件不写 mock 分支；例外先登记 waiver。

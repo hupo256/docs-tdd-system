@@ -6,6 +6,9 @@ import { dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 import { decideNext } from './lib/project-decision.mjs'
+import { sourceTypeFromPrd } from './lib/project-scaffold.mjs'
+import { normalizeSourceDocuments } from './lib/vnext-source-units.mjs'
+import { initializeVNextArtifacts } from './lib/vnext-persistence.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, config } = resolveRoots()
@@ -97,14 +100,66 @@ function syncAndInit(id) {
   return { ok: true, nextAction: 'complete_g0_g1_docs', syncedPath }
 }
 
+// vNext(workflowVersion 2)默认脚手架:kickoff 只建最小目录 + README frontmatter + Lark 同步配置,
+// 不再物化 v1 全套 product/engineering 文档。PRD 同步成功后用 normalizeSourceDocuments 生成
+// 带真实 source 锚点的 work-item stub(requirements 为空,verify 会诚实地 FAIL 到抽取完成为止)。
+// 显式 --legacy 才走 v1 全套(start-new-project.mjs)。
+function kickoffVNext(projectDir, prd, title) {
+  mkdirSync(join(projectDir, 'inbox/lark-sync'), { recursive: true })
+  mkdirSync(join(projectDir, 'agent'), { recursive: true })
+  const branchName = `${config.branchPrefix || 'feature/'}${projectId}`
+  writeFileSync(join(projectDir, 'README.md'), `---\nprojectId: ${projectId}\nstatus: active\nstage: G1\nbranch: ${branchName}\nworktree: ""\nport: ""\nvisualFidelity: standard\nprdSource: ${prd}\nfigmaNode: ""\nlarkEnabled: false\nworkflowVersion: 2\n---\n\n# ${projectId} ${title}\n\n> vNext(workflowVersion: 2)项目:无 v1 门禁链,工作事实载体是三文件(work-item.json / latest-result.json / runs.jsonl),出口见 common/vnext/README.md。\n\n## 下一步\n\n1. 从 PRD 抽取原子需求(带 sourceAnchor)并填充 work-item.json\n2. 独立冷读审查(vnext-verify --prepare-review → reviewResponse)\n3. 按等级补证据后 \`vnext-verify.mjs --input <input> --worktree <wt> --write --out <本目录>\`\n`)
+  const larkOutputDir = String(config.larkOutputDir || `apps/web/docs_tdd/prds/\${projectId}/inbox/lark-sync`).replaceAll('${projectId}', projectId)
+  writeFileSync(join(projectDir, 'agent/lark-sources.json'), JSON.stringify({
+    projectId,
+    outputDir: larkOutputDir,
+    sources: [{ type: sourceTypeFromPrd(prd), operation: 'read', name: '需求 PRD', url: prd, target: 'prd-latest.md', localizedTarget: 'prd-latest.extracted.md' }],
+  }, null, 2))
+}
+
+// PRD 同步成功后,用规范化 source snapshot 直接落 work-item stub(requirements 为空 →
+// 首次 verify 如实 FAIL,逼出「抽取 + 独立冷读审查」;riskSignals 置 unclassified → RISK_ROUTE
+// 强制显式分类,不允许静默当 V0)。
+function vnextInitWorkItem(projectDir) {
+  const manifest = readJson(join(projectDir, 'agent/prd-source-manifest.json'))
+  const syncedMd = join(projectDir, 'inbox/lark-sync/prd-latest.md')
+  if (!existsSync(syncedMd)) return false
+  const revision = manifest?.remoteSources?.[0]?.revisionId || '1'
+  const prdUrl = manifest?.remoteSources?.[0]?.url || readJson(join(projectDir, 'agent/lark-sources.json'))?.sources?.[0]?.url || 'prd-latest.md'
+  const { sourceSnapshot } = normalizeSourceDocuments([{ path: prdUrl, content: readFileSync(syncedMd, 'utf8') }], { revision })
+  const workItem = {
+    schemaVersion: 1,
+    workflowVersion: 2,
+    projectId,
+    sourceSnapshot,
+    requirements: [],
+    coverageAudit: {
+      sourceFingerprint: 'pending', requirementsFingerprint: 'pending', reviewMode: 'independent-cold-read',
+      reviewRunId: 'pending', reviewer: { kind: 'model', id: 'pending' },
+      completedAt: '2000-01-01T00:00:00Z', verdict: 'changes-required',
+      unresolved: ['kickoff stub: requirements not extracted from PRD yet'],
+    },
+    routing: { scopeClass: 'local', riskSignals: ['unclassified'], verificationLevel: 'V0', routerVersion: 1 },
+    apiDependency: { mode: 'no-request', reason: 'kickoff stub before intake; reassess after requirement extraction' },
+    scopeApproval: null,
+  }
+  initializeVNextArtifacts(projectDir, workItem)
+  return true
+}
+
 function kickoff() {
   const prd = option('--prd')
   const title = option('--title', projectId)
+  const legacy = args.includes('--legacy')
   if (!prd) throw new Error('kickoff requires --prd <Lark URL or local Markdown>')
   const projectDir = resolveProjectRoot(projectId)
   if (!existsSync(projectDir)) {
-    const scaffold = run('start-new-project.mjs', [projectId, '--prd', prd, '--title', title])
-    if (scaffold.status !== 0) throw new Error((scaffold.stderr || scaffold.stdout).trim())
+    if (legacy) {
+      const scaffold = run('start-new-project.mjs', [projectId, '--prd', prd, '--title', title])
+      if (scaffold.status !== 0) throw new Error((scaffold.stderr || scaffold.stdout).trim())
+    } else {
+      kickoffVNext(projectDir, prd, title)
+    }
   }
   let state = writeState(projectId, {
     status: 'active',
@@ -114,16 +169,17 @@ function kickoff() {
     source: prd,
   })
   const result = syncAndInit(projectId)
+  const vnextInitialized = !legacy && result.ok && vnextInitWorkItem(projectDir)
   state = writeState(projectId, {
     status: result.ok ? 'waiting_approval' : 'blocked',
     currentStage: result.ok ? 'G1' : 'G0',
     lastAction: result.ok ? 'initialize_prd_intake' : 'scaffold_project',
-    nextAction: result.nextAction,
+    nextAction: legacy ? result.nextAction : (vnextInitialized ? 'vnext_extract_requirements' : result.nextAction),
     blocker: result.error || '',
     syncedSource: result.syncedPath || '',
     attempts: [...(state.attempts || []), { at: new Date().toISOString(), action: 'sync_and_init', ok: result.ok }],
   })
-  print(state)
+  print({ ...state, workflowVersion: legacy ? 1 : 2, vnextWorkItemInitialized: Boolean(vnextInitialized) })
 }
 
 function status() {

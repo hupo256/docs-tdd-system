@@ -39,6 +39,10 @@
     },
     "larkEnabled": {
       "type": "boolean"
+    },
+    "workflowVersion": {
+      "type": "integer",
+      "enum": [1, 2]
     }
   },
   "additionalProperties": false
