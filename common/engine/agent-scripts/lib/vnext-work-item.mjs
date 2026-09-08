@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // docs_tdd vNext 的最小确定性闭环：source snapshot → atomic requirement → affected surfaces。
-// 这是 shadow-only 纯判定层；尚未接入 v1 gate，也不负责调用模型做需求抽取。
+// 这是 v2 正式出口的纯判定层；与 v1 Gate 隔离，也不负责调用模型做需求抽取。
 
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'

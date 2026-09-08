@@ -8,7 +8,7 @@
     "schemaVersion": { "const": 1 },
     "workflowVersion": { "const": 2 },
     "tool": { "const": "vnext-verify.mjs" },
-    "mode": { "const": "shadow" },
+    "mode": { "type": "string", "enum": ["enforced", "shadow"] },
     "runId": { "type": "string", "minLength": 1 },
     "generatedAt": { "type": "string", "format": "date-time" },
     "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },

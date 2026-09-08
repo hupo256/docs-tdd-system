@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Explicit dual-track pilot evaluator. It reports readiness but can never switch v1 Router/Gate.
+// Historical dual-track pilot evaluator. It reports sample quality; formal cutover is an explicit owner decision outside this script.
 
 import assert from 'node:assert/strict'
 import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs'
@@ -13,8 +13,8 @@ const scriptDir = dirname(fileURLToPath(import.meta.url))
 const defaultRegistry = join(scriptDir, '..', '..', 'vnext', 'pilot-registry.json')
 const defaultReport = join(scriptDir, '..', '..', 'vnext', 'pilot-report.json')
 const v1Entrypoints = [
-  'docs-tdd.mjs', 'project-orchestrator.mjs', 'start-new-project.mjs', 'run-project-gate.mjs',
-  'verify-project-gate.mjs', 'rule-context-hook.mjs', 'claude-posttooluse-gate.mjs',
+  'start-new-project.mjs', 'run-project-gate.mjs', 'verify-project-gate.mjs',
+  'rule-context-hook.mjs', 'claude-posttooluse-gate.mjs',
 ]
 
 function load(file) {

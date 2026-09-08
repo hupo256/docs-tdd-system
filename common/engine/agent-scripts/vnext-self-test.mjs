@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// One scalable self-test entry for all shadow-only vNext scripts.
+// One scalable self-test entry for the formal v2 workflow and its historical replay tools.
 
 import assert from 'node:assert/strict'
 import { readFileSync, readdirSync } from 'node:fs'

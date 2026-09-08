@@ -1,12 +1,12 @@
 # docs_tdd — 可移植的 AI 前端开发规则与门禁系统
 
-一套**独立**的 AI 前端开发操作系统：用「先文档后代码 + G0-G8 门禁 + 机器可验证证据」约束 Codex、Claude Code、Cursor、Lark-Codex、Lark-Claude 与人协作完成前端功能开发。引擎与业务仓库通过 `docs-tdd.config.json` + 一个软链解耦；**目前只在一个仓库（`@fameex/web`）真实验证过，移植到第二个仓库需要改动下列锚点**（见[可移植性的真实边界](#可移植性的真实边界)）。
+一套**独立**的 AI 前端开发操作系统：新需求默认使用 v2 的「原始需求 → 独立覆盖审查 → 风险分级 → 当前代码证据 → 单一正式出口」，存量项目兼容 v1 G0–G8 门禁；两条工作流都只认机器可验证证据。引擎与业务仓库通过 `docs-tdd.config.json` + 一个软链解耦；**目前只在一个仓库（`@fameex/web`）真实验证过，移植到第二个仓库需要改动下列锚点**（见[可移植性的真实边界](#可移植性的真实边界)）。
 
 > 本仓库是从某前端工程中沉淀、抽离出的独立系统，经多轮真实项目迭代。作为个人知识库独立版本管理，不含任何业务机密以外的通用方法论。
 
 ## 它解决什么
 
-AI 编码的两个顽疾：**跳过需求确认直接写码**、**规则散落导致每次重新解释**。docs_tdd 把开发拆成 G0-G8 阶段门禁，每阶段有机器可读的证据要求（gate 脚本实跑 biome/tsc/vitest、校验字段对账、阻塞登记、通知记录），AI「已读/已注意」不算数，只认执行契约产出的证据。
+AI 编码的两个顽疾：**跳过需求确认直接写码**、**规则散落导致每次重新解释**。docs_tdd v2 用 `work-item.json` 固定原始需求、覆盖审查、风险等级和证据，并由 `latest-result.json` 给出唯一正式结论；v1 的 G0–G8 仅作为存量兼容。AI「已读/已注意」不算数，只认执行契约产出的证据。
 
 规则本身遵循「**规则可变多，常驻恒定小**」：AI 开工只常驻读一个路由文件（`common/rules/rule-router.md`，≤5000 字符机器守），其余按场景加载，避免上下文膨胀。
 
@@ -24,11 +24,12 @@ AI 编码的两个顽疾：**跳过需求确认直接写码**、**规则散落�
 
 ```bash
 docs-tdd context <PROJECT-ID> <SCENARIO>   # 按场景生成默认 brief/compact 规则包；可显式覆盖模式
-docs-tdd kickoff <PROJECT-ID> --prd <src>  # 一句话幂等启动：骨架+同步+intake+run-state
+docs-tdd kickoff <PROJECT-ID> --prd <src>  # 默认创建正式 v2；显式 v1 加 --legacy
+docs-tdd verify  <PROJECT-ID> --input <json> # v2 唯一正式出口，非 PASS 阻断
 docs-tdd status|next|resume <PROJECT-ID>   # 状态、唯一下一步、断点恢复
 docs-tdd recommend <PROJECT-ID>            # 根据当前改动推荐场景
-docs-tdd changed <PROJECT-ID>              # 编辑后跑 code-rules / mock 校验
-docs-tdd gate    <PROJECT-ID> <Gx>         # 阶段交付门禁
+docs-tdd changed <PROJECT-ID>              # v1 编辑后增量校验；v2 项目拒绝执行
+docs-tdd gate    <PROJECT-ID> <Gx>         # v1 阶段交付门禁；v2 项目拒绝执行
 docs-tdd capability <PROJECT-ID>           # 查看 worktree、规则集与发布摘要
 docs-tdd doctor                            # 适配/冲突/发布状态自检
 docs-tdd check <PROJECT-ID>                # 校验文档、规则与脚本预算
@@ -105,21 +106,35 @@ node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs doctor
 
 ## 如何使用（Step by Step）
 
-以「用本系统跑一个新需求」为例的日常流程（首次接入见上一节）。命令统一走 `<mount>/common/engine/agent-scripts/docs-tdd.mjs`（下文简写 `docs-tdd`）。
+命令统一走 `<mount>/common/engine/agent-scripts/docs-tdd.mjs`（下文简写 `docs-tdd`）。
+
+### 默认：v2 正式工作流
+
+1. `docs-tdd kickoff PR-01234 --prd <source>` 创建 `workflowVersion: 2` 项目并初始化 source snapshot / work-item。
+2. 抽取原子需求与 surface，完成独立冷读 coverage review 和风险路由；V2 取得 human scope approval 后才写业务代码。
+3. 在编码 worktree 实现，并采集绑定当前 `headSha + dirtyHash` 的命令、运行时和人工证据。
+4. `docs-tdd verify PR-01234 --input <verify-input.json>` 强制写唯一正式出口。只有 `mode=enforced,status=passed,ok=true` 可交付；failed/blocked 命令返回非零。
+5. `docs-tdd status|next|resume|context` 自动按 v2 路由；不要运行 v1 的 `gate` 或 `changed`。
+
+详细契约见 [common/vnext/README.md](./common/vnext/README.md)。
+
+### 兼容：v1 存量或显式 legacy 项目
+
+以下 G0–G8 流程只适用于 README 标记 `workflowVersion: 1` 的存量项目，或用 `--legacy` 新建的项目。
 
 **0. 前置**：系统已挂载到消费仓库（软链 + `docs-tdd.config.json`），`docs-tdd doctor` 适配项全 PASS。
 
-**1. 启动新需求** — 对 AI 说启动口令：
+**1. 启动 v1 需求** — 对 AI 说启动口令并明确要求 legacy：
 ```text
 根据 docs_tdd 下的文档，开始新的需求 PR-01234，PRD 文档是：<PRD 链接或本地路径>。
 ```
-AI 会先读 `common/rules/rule-router.md`，再执行 `docs-tdd kickoff PR-01234 --prd <source>`。命令幂等创建项目、同步 PRD、初始化 intake 并写 `agent/run-state.json`；中断后用 `status/next/resume` 恢复。
+AI 会先读 `common/rules/rule-router.md`，再执行 `docs-tdd kickoff PR-01234 --prd <source> --legacy`。命令幂等创建 v1 项目、同步 PRD、初始化 intake 并写 `agent/run-state.json`；中断后用 `status/next/resume` 恢复。
 
 **2. G0 资料接收**：把 PRD / Figma / API 资料放进 `prds/PR-01234/inbox/`。含图片、表格、嵌入对象时先完成 `prd_intake`（`docs-tdd context PR-01234 prd_intake`），逐项读取分类，读不了即阻断，不猜。PRD 指纹会剥离每次同步变化的 `syncedAt`、临时媒体下载 URL 和图片 alt 描述，避免同一内容反复误报漂移；旧 manifest 可用 `prd-intake.mjs PR-01234 --remigrate` 就地迁移，不重新拉远端、不丢人工分类。
 
 **3. G1 文档生成**：AI 基于启动器生成的模板填写 PRD 全量功能清单、scope、技术方案初稿、任务与协作记录；G1 有独立机器出口，不与 G0 共用空骨架判定。`product/00-feature-inventory.md` 是「做 / 不做 / 延期」和 Scope 裁剪记录的唯一真相源，`01-scope-and-phases.md` 只写摘要，`04-frontend-tasks.md` 只保留本期做项，避免多份范围结论漂移。
 
-**4. 按场景加载规则**：`docs-tdd context PR-01234 <SCENARIO>` 只读命中场景的专题，不全读 `common/`。模式由场景选择默认 brief/compact，也可用互斥的 `--brief|--compact|--full` 显式覆盖；brief 只折叠索引中逐引用标记为安全指针的机器规则。传 `--session-id <task-id>`（或由客户端注入 session 环境变量）后，同一 project/client/session 的相同 pack 才返回 delta；无会话身份时不做跨任务去重。编码场景须先通过 G2，并签发绑定当前客户端、规则指纹、G2 输入与 HEAD 的 24 小时 rule session v2；`changed` 和 G5-G8 拒绝缺失、过期或由其他客户端签发的会话。Cursor 原生消费 `.cursor/rules` 的 glob/alwaysApply；Claude/Codex 的 PreToolUse hook 使用同一 Resolver，在首次编辑时 deny-and-retry 注入命中正文，并由 PostToolUse 生成消费回执供 `changed`/G5+ 校验。Cursor adapter 会自动带 `--client cursor`；纯人工终端使用 `--client human`，检测到 Codex/Claude 环境时不得伪装成其他客户端。Lark 两个入口不复用这份会话，而是在每个任务启动 AI 前读取当前规则章节并检查发布链；发布链 stale 会在 health / 日志告警，但不再把修 bug 任务整体挡下，必需常驻规则缺失仍 fail-closed。常用场景：`g0_g2_scope` `write_api` `write_mapper` `write_query_hook` `write_ui` `write_figma` `write_msw` `g6_verify`（全表见 `rule-router.md §3`）。其中 `g6_verify` 仅打印四维执行计划；实际依次加载 `g6_code_review`、`g6_contract`、`g6_visual`、`g6_delivery`，完整或 partial G6 门禁会机器校验四维均为当前代码/规则状态。
+**4. 按场景加载规则**：`docs-tdd context PR-01234 <SCENARIO>` 只读命中场景的专题，不全读 `common/`。模式由场景选择默认 brief/compact，也可用互斥的 `--brief|--compact|--full` 显式覆盖；brief 只折叠索引中逐引用标记为安全指针的机器规则。传 `--session-id <task-id>`（或由客户端注入 session 环境变量）后，同一 project/client/session 的相同 pack 才返回 delta；无会话身份时不做跨任务去重。编码场景须先通过 G2，并签发绑定当前客户端、规则指纹、G2 输入与 HEAD 的 24 小时 rule session v2；`changed` 和 G5-G8 拒绝缺失、过期或由其他客户端签发的会话。Cursor 原生消费 `.cursor/rules` 的 glob/alwaysApply；Claude/Codex 的 PreToolUse hook 使用同一 Resolver，在首次编辑时 deny-and-retry 注入命中正文，并由 PostToolUse 生成消费回执供 `changed`/G5+ 校验。Cursor adapter 会自动带 `--client cursor`；纯人工终端使用 `--client human`，检测到 Codex/Claude 环境时不得伪装成其他客户端。Lark Bot 无人值守入口不复用这份会话，而是在每个任务启动 AI 前读取当前规则章节并检查发布链；发布链 stale 会在 health / 日志告警，但不再把修 bug 任务整体挡下，必需常驻规则缺失仍 fail-closed。常用场景：`g0_g2_scope` `write_api` `write_mapper` `write_query_hook` `write_ui` `write_figma` `write_msw` `g6_verify`（全表见 `rule-router.md §3`）。其中 `g6_verify` 仅打印四维执行计划；实际依次加载 `g6_code_review`、`g6_contract`、`g6_visual`、`g6_delivery`，完整或 partial G6 门禁会机器校验四维均为当前代码/规则状态。
 
 **5. G2 方案定稿**：对功能清单逐条确认「做 / 不做 / 延期」，写完 `product/02-technical-design.md`（含复用盘点、PRD 路径核验）后**才允许写业务代码**。
 
@@ -164,7 +179,7 @@ node <mount>/common/engine/agent-scripts/decommission-worktree.mjs PR-01234
 | --- | --- |
 | [common/rules/](./common/rules/) | 跨项目复用的规则与场景路由 |
 | [common/engine/](./common/engine/) | CLI、门禁脚本、schema 与 golden 夹具 |
-| [common/vnext/](./common/vnext/) | vNext shadow 实施计划、基线与迁移状态；未接入 v1 正式 Gate |
+| [common/vnext/](./common/vnext/) | v2 正式工作流、单一出口、基线、历史灰度与切换决策 |
 | [common/lark-bot/](./common/lark-bot/) | 可选的消息接入与任务执行服务：合并话题上下文/图片、注入项目 scope、预取 Figma 规格、按项目路由 bug 回执并自动清理附件 |
 | [prds/](./prds/) | 各项目的文档、状态与证据 |
 | [common/rules/rule-router.md](./common/rules/rule-router.md) | **开工常驻入口**（渐进披露路由） |

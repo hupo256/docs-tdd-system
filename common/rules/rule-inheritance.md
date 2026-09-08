@@ -68,9 +68,9 @@ L1/L2 的具体落点:全局短规则与 `coding-quality`、`figma-read` 只在 
 
 ## 2. 新项目启动检查
 
-每个新需求进入 G0 时必须完成:
+每个新需求启动时必须完成（v2 在 kickoff/范围审查期，v1 在 G0）:
 
-1. 读 `common/rules/rule-router.md`，再通过 `docs-tdd.mjs context <PROJECT-ID> <SCENARIO>` 只加载命中专题；禁止全读 `common/`。
+1. 读 `common/rules/rule-router.md`，再通过对应版本的 `docs-tdd.mjs context <PROJECT-ID> <SCENARIO>` 只加载命中专题；禁止全读 `common/`。
 2. 读最近一个成熟项目的 `engineering/development-rules.md`。
 3. 对照是否有通用规则尚未进入 `common/`。
 4. 若有,先提炼到 `common/`,再写当前项目文档或代码。
@@ -154,9 +154,9 @@ L3 写规则时默认使用“触发 → 动作 → 证据 → 失败处理”�
 
 2026-06-16 复盘:Lark 消息格式已在公共规则定义,但部分历史项目仍用项目内复制的旧 `notify-lark.mjs`,导致字段名/顺序/编号规则可能漂移。已将通知脚本上移到 `common/engine/agent-scripts/notify-lark.mjs`,后续项目脚本必须改薄包装,不复制整份通知脚本。该原则扩展到所有公共规则:项目只保留差异,不复制公共规则全文。
 
-## 7. 新项目薄包装检查清单
+## 7. v1 新项目薄包装检查清单
 
-新项目 G0/G1 必须完成,并在项目 README 或 `engineering/development-rules.md` 记录结果:
+本节只适用于显式 `--legacy` 新建的 v1 项目；v2 使用最小三文件，不创建这套目录。v1 在 G0/G1 完成并记录结果:
 
 - [ ] 项目目录名为大写 `<PROJECT-ID>`,没用业务名或小写编号。
 - [ ] 项目 README 只写状态、文档地图、待确认项,已链接 `../common/README.md`。

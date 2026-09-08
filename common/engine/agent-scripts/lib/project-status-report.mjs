@@ -43,6 +43,9 @@ export function capability(id, { agentClient }) {
   const projectDir = id ? resolveProjectRoot(id) : ''
   const manifestFile = projectDir ? join(projectDir, 'agent/project-manifest.json') : ''
   const manifest = manifestFile && existsSync(manifestFile) ? readJson(manifestFile) : null
+  const projectReadme = projectDir && existsSync(join(projectDir, 'README.md')) ? readFileSync(join(projectDir, 'README.md'), 'utf8') : ''
+  const declaredWorkflow = projectReadme.match(/^workflowVersion:\s*(\d+)$/m)?.[1]
+  const workflowVersion = id ? Number(declaredWorkflow || (existsSync(join(projectDir, 'work-item.json')) ? 2 : 1)) : null
   const resolvedWorktree = resolveProjectWorktree(id)
   const ruleset = readJson(join(docsRoot, 'common/rules/ruleset.json'))
   const release = inspectRuleRelease()
@@ -51,6 +54,7 @@ export function capability(id, { agentClient }) {
 
   printReport([
     ['docs_tdd root', docsRoot],
+    ['project workflow', workflowVersion ? `v${workflowVersion}${workflowVersion === 2 ? ' (enforced exit)' : ' (legacy G0-G8)'}` : 'n/a'],
     ['agent client', agentClient],
     ['agent adapter', hook],
     ['automatic post-edit hook', ['claude', 'codex'].includes(agentClient) ? 'available' : 'unavailable'],

@@ -1,6 +1,6 @@
-# docs_tdd vNext 实施计划
+# docs_tdd v2 正式工作流
 
-> 状态：**shadow-only**。v1 继续服务存量项目；vNext 尚未接入 Router、kickoff 或正式 Gate。
+> 状态：**正式启用（enforced）**，自 2026-09-08 起作为新需求默认系统。v1 只服务存量 `workflowVersion: 1` 项目和显式 `--legacy` 项目；切换决策见 [cutover-decision-20260908.md](./cutover-decision-20260908.md)。
 
 ## 不变量
 
@@ -18,11 +18,12 @@
 | 0 基线 | 指标口径、四项目机器基线、人工事故观察 | 基线可重复生成；不可恢复值明确为 `null` | **完成** |
 | 1 原始 PRD 闭环 | work-item schema、source/requirement fingerprint、独立审查输入输出、collection/surface 判定、历史 replay | PR-02306/01930 稳定失败；PRD 漂移稳定失败；修复后恢复 PASS；同输入结果稳定 | **完成** |
 | 2 风险路由 | scope × risk 纯路由器、只升不降、V2 人工范围确认 | 四项目分类符合冻结结论；低风险样例不误升；未知风险不可降档 | **完成** |
-| 3 统一出口 | 单一 vNext verify 聚合结果，先 shadow、后续再接正式命令 | V0/V1 一个出口；V2 仅范围确认 + 最终出口；blocked/旧 HEAD/伪造 PASS 不可绿 | **完成（shadow）** |
-| 4 产物收敛 | v2 scaffold、latest-result、runs.jsonl；处置与 V2 确认留在 work-item | 默认持久化文件数降低至少 80% | **完成（shadow）** |
-| 5 上下文压缩 | v2 最小 context + session delta | V0/V1 ≤4K 字符；V2 ≤8K 字符；可测 context 字符降低至少 60% | **完成（shadow）** |
-| 6 MSW 条件化 | no-request / real-api / mock-required / pending-dependency | 无请求或真实 API 可用时不建 MSW，且无需 waiver | **完成（shadow）** |
-| 7 灰度与退役决策 | V0/V1/V2 全覆盖，累计 5–10 个新需求 | 零漏项、零假绿且机器指标达标后，仅进入人工切换评审 | **进行中：3 个样本已登记（PR-02074 V0、PR-02172 V1、PR-02233 V2）；V0/V1 已 PASS，等待 observation；PR-02233 已重划范围并压到 8K 预算内，测试层/MSW/biome 已通过，仅剩浏览器运行时证据；PR-02117/02133/02193 因 API pending-dependency 已从灰度移除；PR-01930 worktree/branch 已退役** |
+| 3 统一出口 | 单一 v2 verify 聚合结果并接入正式命令 | V0/V1/V2 共用一个出口；blocked/旧 HEAD/伪造 PASS 不可绿 | **完成（enforced）** |
+| 4 产物收敛 | v2 scaffold、latest-result、runs.jsonl；处置与 V2 确认留在 work-item | 默认持久化文件数降低至少 80% | **完成** |
+| 5 上下文压缩 | v2 最小 context + session delta | V0/V1 ≤4K 字符；V2 ≤8K 字符；可测 context 字符降低至少 60% | **完成** |
+| 6 MSW 条件化 | no-request / real-api / mock-required / pending-dependency | 无请求或真实 API 可用时不建 MSW，且无需 waiver | **完成** |
+| 7 灰度与退役决策 | 历史 V0/V1/V2 样本与回放 | 灰度结果只作回归观测，不自动切流 | **完成；正式切换由 owner 于 2026-09-08 显式批准** |
+| 8 正式切换 | Router、kickoff、CLI 版本路由、enforced 出口、v1 冻结 | 新项目默认 v2；v2 禁跑 v1 Gate；正式 verify 非 PASS 即非零 | **完成** |
 
 ## 当前已落地
 
@@ -34,7 +35,7 @@
 - `lib/vnext-work-item.mjs`：`SOURCE_FRESH`、`REQUIREMENT_COVERAGE`、`SURFACE_COVERAGE` 的纯判定核心。
 - `fixtures/vnext-replay/`：PR-02306 图片需求漏抽取、PR-01930 集合落点漏实现、PR-02265 PRD 漂移三个确定性事故夹具及三个修复后 positive controls。
 - `vnext-replay.mjs`：无模型、无业务仓依赖的稳定回放入口。
-- `vnext-verify.mjs`：显式输入、只读、shadow-only 的 source normalize / review request / verify CLI；不更新 v1 Gate。
+- `vnext-verify.mjs`：source normalize / review request / verify 内核；默认生成 `mode=enforced` 正式结果，不更新 v1 Gate。`--shadow` 只供历史回放/灰度复算。
 - `lib/vnext-risk-route.mjs`：scope × risk 纯路由、V0/V1/V2 最小验证矩阵与 V2 人工 scope approval fingerprint。
 - `fixtures/vnext-routing-cases.json` + `vnext-route-replay.mjs`：四个历史项目和一个低风险反例的确定性路由回放。
 - `lib/vnext-exit.mjs` + `vnext-exit-result.schema.json`：将覆盖、路由、当前 Git 状态、证据和 blockers 聚合为唯一出口结果；`ok/status/summary` 只能派生。
@@ -44,7 +45,7 @@
 - `vnext-context.mjs` + `lib/vnext-context.mjs`：按 work-item 生成紧凑上下文；fingerprint 未变时只返回 delta/unchanged，不重载 v1 规则包。
 - `vnext-context-budget.mjs` + `context-budget.json`：V0/V1 4K、V2 8K 硬预算；四案例同口径字符代理减少 99.21%，历史 token 继续明确记为 null。
 - `lib/vnext-msw-policy.mjs`：按 API 依赖选择 no-request / real-api / mock-required / pending-dependency；无通用 MSW 仪式，也无 waiver 旁路。
-- `vnext-pilot.mjs` + `pilot-registry.json` / `pilot-report.json`：显式双轨灰度登记与准入判定；静态检查 v1 入口隔离，真实样本不足时只报 collecting，永不自动切流。
+- `vnext-pilot.mjs` + `pilot-registry.json` / `pilot-report.json`：保留历史双轨样本与质量观察；它不再决定当前工作流，且永不自动切流。正式状态只由 owner 决策记录和 CLI 路由定义。
 
 ## 当前基线摘要
 
@@ -87,11 +88,11 @@ node common/engine/agent-scripts/vnext-verify.mjs --normalize-sources source-inp
 # 2. 生成交给独立 reviewer 的只读请求；命令自身不 spawn 模型
 node common/engine/agent-scripts/vnext-verify.mjs --prepare-review review-input.json
 
-# 3. 带 reviewer response、当前来源、代码搜索落点和实现事实做 shadow 验证（默认只读）
+# 3. 带 reviewer response、当前来源、代码搜索落点和实现事实做只读预检
 node common/engine/agent-scripts/vnext-verify.mjs --input verify-input.json --worktree /absolute/path/to/worktree
 
-# 4. 仅显式 --write 时写 v2 三文件；out 在 worktree 内时必须已被 Git ignore
-node common/engine/agent-scripts/vnext-verify.mjs --input verify-input.json --worktree /absolute/path/to/worktree --write --out /path/to/v2/PR-01234
+# 4. 正式出口：统一 CLI 强制 --write 到项目三文件，非 PASS 返回非零
+node common/engine/agent-scripts/docs-tdd.mjs verify PR-01234 --input verify-input.json --worktree /absolute/path/to/worktree
 ```
 
 `reviewResponse` 必须携带当前 source/requirements fingerprints、reviewer identity、完成时间、verdict 和逐条 finding disposition。`pass` 不允许存在 `open` finding；来源或需求变化后旧 response 自动失效。
@@ -115,7 +116,7 @@ node common/engine/agent-scripts/vnext-verify.mjs --input verify-input.json --wo
 
 ## 产物收敛约束
 
-默认项目目录只有：
+默认 v2 **工作流状态产物**只有以下三项（项目 README、原始来源与必要同步配置不计入状态产物）：
 
 ```text
 <project>/
@@ -147,10 +148,10 @@ node common/engine/agent-scripts/vnext-context.mjs --project /path/to/v2/PR-0123
 - `apiDependency.mode` 是 work-item 必填事实：无请求或真实 API 时禁止新增 vNext 范围 MSW；只有 `mock-required` 才要求 worker、handler 与 contract 覆盖；`pending-dependency` 必须绑定 open blocker，最终出口保持 blocked。
 - V2 scope approval fingerprint 包含 `apiDependency`，API/MSW 策略变更后旧的人签自动失效。
 
-## Phase 7 双轨灰度
+## 历史 Phase 7 灰度（非当前切流条件）
 
 1. 已有项目继续 v1；只有显式加入 `pilot-registry.json` 且 `newRequirement: true` 的新需求使用 v2。V0 可以是挂在现有项目下的一条独立微小变更，不要求为了灰度另建项目编号；registry 用可选 `sampleId` 区分同一项目内的多个微变更、沿用所属 `projectId`，但必须有可冻结的原始需求、独立 artifact 目录和可验证代码状态。
 2. 每个样本从三文件机器读取 level、出口完整性、context 字符数和文件数；提测后的漏项/假绿由负责人填写带姓名和观察截止时间的 observation。
 3. 样本少于 5 个、未覆盖 V0/V1/V2、任一样本未 PASS，均保持 `collecting`；任一漏项/假绿或 v1 入口耦合立即给出 `rollback`。
-4. 满足条件也只输出 `eligible-for-human-cutover-review`，`automaticCutover` 永远为 false；是否切换主流程必须另行人工决策。
+4. 满足条件也只输出 `eligible-for-human-cutover-review`，`automaticCutover` 永远为 false。owner 已于 2026-09-08 独立批准正式切换；pilot 继续作为历史质量观测，不控制 Router 或正式出口。
 5. 当前 `pilot-report.json` 仅保留 3 个编码样本：PR-02074（V0）与 PR-02172（V1）已 PASS、等待 observation；PR-02233（V2）已按 Web 端范围重新审查，15 个 App surface 全部 `deferred` 到批次 06（owner=App 团队），测试层/MSW/biome 证据已通过，仅剩浏览器运行时证据未闭环。PR-02117/PR-02133/PR-02193 因 API `pending-dependency` 已从 `pilot-registry` 中移除，不再作为切流依据。PR-02118 作为“仅运营 SOP、无明确软件交付”的负向候选保留，不计入编码样本。

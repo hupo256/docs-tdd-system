@@ -3,7 +3,7 @@
 
 # Feature Inventory — `<TICKET-ID> <需求名>`
 
-> **Agent 自动创建**：新需求 G0 前，由 Agent 从 [feature-inventory-template.md](../templates/feature-inventory-template.md) 复制到本路径，勿等负责人手动操作。  
+> **v1 legacy 模板**：仅 `workflowVersion: 1` 项目在 G0 前由 Agent 复制；v2 用 `work-item.json`，不得创建这份平行范围真值。
 > 规则：[common/rules/prd-feature-inventory.md](../common/rules/prd-feature-inventory.md) §3（G0 初稿 → G2 定稿 → 再写代码）。
 
 | 字段 | 值 |

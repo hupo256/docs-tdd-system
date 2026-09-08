@@ -120,7 +120,8 @@ function resultBody(result) {
   return body
 }
 
-export function buildVNextExitResult({ workItem, preflightChecks = [], currentCodeState, evidence, blockers, generatedAt = new Date().toISOString() } = {}) {
+export function buildVNextExitResult({ workItem, preflightChecks = [], currentCodeState, evidence, blockers, mode = 'enforced', generatedAt = new Date().toISOString() } = {}) {
+  if (!['enforced', 'shadow'].includes(mode)) throw new Error(`unknown vNext result mode: ${mode}`)
   const level = workItem?.routing?.verificationLevel
   const integrityProblems = evidenceIntegrityProblems(evidence)
   const freshnessProblems = evidenceFreshnessProblems(evidence, currentCodeState)
@@ -148,7 +149,7 @@ export function buildVNextExitResult({ workItem, preflightChecks = [], currentCo
     schemaVersion: 1,
     workflowVersion: 2,
     tool: 'vnext-verify.mjs',
-    mode: 'shadow',
+    mode,
     runId: evidence?.runId?.trim() || `invalid-${stableFingerprint({ workItem, currentCodeState, evidence }).slice(0, 16)}`,
     generatedAt,
     projectId: workItem?.projectId,
@@ -167,6 +168,8 @@ export function buildVNextExitResult({ workItem, preflightChecks = [], currentCo
 export function verifyExitResultIntegrity(result, workItem = null) {
   const problems = []
   const expectedOk = Array.isArray(result?.checks) && result.checks.every((item) => item.ok) && (result.blockedBy || []).length === 0
+  if (!['enforced', 'shadow'].includes(result?.mode)) problems.push('mode must be enforced or shadow')
+  if (result?.workflowVersion !== 2) problems.push('workflowVersion must be 2')
   const expectedStatus = (result?.blockedBy || []).length ? 'blocked' : expectedOk ? 'passed' : 'failed'
   const expectedSummary = summarize(result?.checks || [])
   if (result?.ok !== expectedOk) problems.push(`ok must be derived as ${expectedOk}`)
@@ -197,12 +200,18 @@ export function selfTest() {
   }
   const passed = buildVNextExitResult({ workItem, preflightChecks: [{ code: 'SOURCE_FRESH', ok: true, problems: [] }], currentCodeState: code, evidence, blockers: [], generatedAt: '2026-09-04T00:00:03Z' })
   assert.equal(passed.ok, true, JSON.stringify(passed))
+  assert.equal(passed.mode, 'enforced')
+  assert.equal(buildVNextExitResult({ workItem, currentCodeState: code, evidence, blockers: [], mode: 'shadow' }).mode, 'shadow')
+  assert.throws(() => buildVNextExitResult({ workItem, currentCodeState: code, evidence, blockers: [], mode: 'invalid' }), /unknown vNext result mode/)
   assert.equal(verifyExitResultIntegrity(passed).ok, true)
   const stale = buildVNextExitResult({ workItem, currentCodeState: { ...code, headSha: 'newhead' }, evidence, blockers: [], generatedAt: '2026-09-04T00:00:03Z' })
   assert.equal(stale.checks.find((item) => item.code === 'EVIDENCE_FRESHNESS').ok, false)
   const forged = structuredClone(passed)
   forged.checks[0].ok = false
   assert.equal(verifyExitResultIntegrity(forged).ok, false)
+  const invalidMode = { ...passed, mode: 'invalid' }
+  invalidMode.resultFingerprint = stableFingerprint(resultBody(invalidMode))
+  assert.equal(verifyExitResultIntegrity(invalidMode).ok, false)
   console.log('vnext-exit self-test passed')
 }
 

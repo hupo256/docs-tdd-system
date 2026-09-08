@@ -1,6 +1,6 @@
 # G0-G8 开发门禁流程
 
-> AI 主用。门禁防止 AI 从 PRD 直接跳到不受控编码。
+> **v1 maintain-only**：本流程只服务 `workflowVersion: 1` 存量项目和显式 `--legacy` 项目。v2 不运行 G0–G8，正式出口见 [../vnext/README.md](../vnext/README.md)。
 
 | 门禁 | 阶段 | AI 动作 | 人工动作 | 通知建议 |
 |------|------|---------|----------|----------|

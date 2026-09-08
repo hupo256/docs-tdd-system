@@ -1,7 +1,7 @@
 # PR-02233 登录/注册改造剩余 surface 与证据缺口追踪
 
-> 状态：批次 01 已收敛；02–05 待按业务节奏推进；06 为 App owner 外部依赖，不在本仓闭环。
-> 每完成一批后，镜像最新 work-item → 重新冷读审查 → 补定向/浏览器/视觉证据 → `vnext-verify --write`。
+> 历史 pilot 状态：批次 01 已收敛；02–05 待按业务节奏推进；06 为 App owner 外部依赖，不在本仓闭环。本目录不代表 PR-02233 已迁移为正式 v2。
+> 如继续复算历史样本，镜像最新 work-item → 重新冷读审查 → 补证据 → `vnext-verify --shadow --write`；正式 v2 项目必须走 `docs-tdd verify`。
 
 ## 当前失败项（来源 `latest-result.json`）
 

@@ -18,7 +18,7 @@ import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import { existsSync, readFileSync, readdirSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { recommendScenarios, runChanged } from './lib/changed-detection.mjs'
 import { printReport } from './lib/cli-report.mjs'
@@ -33,6 +33,7 @@ import { capability, resolveProjectWorktree } from './lib/project-status-report.
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 import { resolveRuleSessionClient } from './lib/rule-session.mjs'
 import { latestReleasePin, resolveRulePin, upgradeRulePin } from './lib/rule-pin.mjs'
+import { stableFingerprint } from './lib/vnext-work-item.mjs'
 import { CODING_SCENARIOS, requireRuleSession, verifyG2Ready, writeRuleSession } from './lib/rule-session-runtime.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
@@ -212,12 +213,80 @@ if (command === 'rules') {
 }
 
 if (!new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(projectId || '')) {
-  console.error('usage: docs-tdd.mjs <kickoff|status|resume|next|capability|doctor|release|golden|guard|rule-health|rules|explain|check|gate|context|changed|recommend> PR-01234 [G0-G8|scenario] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|human] [--session-id <id>]')
+  console.error('usage: docs-tdd.mjs <kickoff|status|resume|next|capability|doctor|release|golden|guard|rule-health|rules|explain|check|gate|verify|context|changed|recommend> PR-01234 [G0-G8|scenario] [--input verify-input.json] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|human] [--session-id <id>]')
   process.exit(1)
 }
 
 if (['kickoff', 'status', 'resume', 'next'].includes(command)) {
   process.exit(run([join(scriptDir, 'project-orchestrator.mjs'), command, projectId, ...cliArgs.slice(2)]))
+}
+
+function workflowVersion(id) {
+  const projectRoot = resolveProjectRoot(id)
+  const readmeFile = join(projectRoot, 'README.md')
+  if (existsSync(readmeFile)) {
+    const value = readFileSync(readmeFile, 'utf8').match(/^workflowVersion:\s*(\d+)$/m)?.[1]
+    if (value) return Number(value)
+  }
+  return existsSync(join(projectRoot, 'work-item.json')) ? 2 : 1
+}
+
+const projectWorkflowVersion = workflowVersion(projectId)
+if (projectWorkflowVersion === 2 && command === 'context') {
+  const session = commandArgs.indexOf('--session')
+  if (session >= 0 && !commandArgs[session + 1]) {
+    console.error('--session requires <session.json>')
+    process.exit(1)
+  }
+  process.exit(run([
+    join(scriptDir, 'vnext-context.mjs'), '--project', resolveProjectRoot(projectId),
+    ...(session >= 0 ? ['--session', resolve(commandArgs[session + 1])] : []),
+    ...(commandArgs.includes('--json') ? ['--json'] : []),
+  ]))
+}
+if (projectWorkflowVersion === 2 && command === 'verify') {
+  if (commandArgs.includes('--shadow')) {
+    console.error('docs-tdd verify is always enforced; --shadow is reserved for direct historical pilot replay')
+    process.exit(1)
+  }
+  const inputIndex = commandArgs.indexOf('--input')
+  if (inputIndex === -1 || !commandArgs[inputIndex + 1]) {
+    console.error('v2 verify requires --input <verify-input.json>')
+    process.exit(1)
+  }
+  const inputFile = resolve(commandArgs[inputIndex + 1])
+  const verifyInput = readJson(inputFile)
+  if (verifyInput?.workItem?.projectId !== projectId) {
+    console.error(`verify input projectId ${verifyInput?.workItem?.projectId || '(missing)'} does not match ${projectId}`)
+    process.exit(1)
+  }
+  const projectWorkItemFile = join(resolveProjectRoot(projectId), 'work-item.json')
+  if (!existsSync(projectWorkItemFile)) {
+    console.error(`canonical v2 work item is missing: ${projectWorkItemFile}`)
+    process.exit(1)
+  }
+  const projectWorkItem = readJson(projectWorkItemFile)
+  if (stableFingerprint(verifyInput.workItem) !== stableFingerprint(projectWorkItem)) {
+    console.error('verify input workItem differs from the canonical project work-item.json; refresh the input before verification')
+    process.exit(1)
+  }
+  const worktreeIndex = commandArgs.indexOf('--worktree')
+  const worktree = worktreeIndex >= 0 && commandArgs[worktreeIndex + 1]
+    ? resolve(commandArgs[worktreeIndex + 1])
+    : resolveProjectWorktree(projectId).worktree
+  process.exit(run([
+    join(scriptDir, 'vnext-verify.mjs'), '--input', inputFile,
+    '--worktree', worktree, '--write', '--out', resolveProjectRoot(projectId),
+    ...(commandArgs.includes('--json') ? ['--json'] : []),
+  ]))
+}
+if (projectWorkflowVersion === 2 && ['gate', 'changed'].includes(command)) {
+  console.error(`${command} is a v1-only command; ${projectId} uses workflowVersion 2. Use docs-tdd verify ${projectId} --input <verify-input.json>.`)
+  process.exit(1)
+}
+if (command === 'verify') {
+  console.error(`verify is a v2-only command; ${projectId} uses workflowVersion 1. Use docs-tdd gate ${projectId} <GATE>.`)
+  process.exit(1)
 }
 
 capability(projectId, { agentClient })

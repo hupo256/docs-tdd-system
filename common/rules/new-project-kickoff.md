@@ -1,6 +1,6 @@
 # 新项目一句话启动协议
 
-> 本文只定义启动编排。目录、PRD 读取、阶段门禁、MSW、视觉验收和通知细则分别消费对应专题，不在此复制。章节号 §2 被外链引用，勿改编号。
+> 本文只定义启动编排。v2 规则以 [../vnext/README.md](../vnext/README.md) 为准；v1 专题只服务 `workflowVersion: 1` 存量项目或显式 `--legacy` 项目。章节号 §2 被外链引用，勿改编号。
 
 ## 1. 启动口令
 
@@ -8,30 +8,26 @@
 根据 apps/web/docs_tdd 下的文档，开始新的需求 PR-01234，PRD 文档是：https://...
 ```
 
-可同时提供 Figma、API/YApi、QA、Lark 配置和两项 Lark 能力启用决策。只给项目号与 PRD 时也立即推进 G0/G1，缺料按专题规则登记，不静默猜测。
+可同时提供 Figma、API/YApi、QA、Lark 配置。只给项目号与 PRD 时也立即启动；缺料必须显式记录为 blocker，不静默猜测。
 
 ## 2. Agent 自动执行链路
 
-1. 读 [rule-router.md](./rule-router.md)，通过 `docs-tdd.mjs context <PROJECT-ID> new_project` 加载场景包；禁止全读 `common/`。
-2. 运行 `docs-tdd kickoff <PROJECT-ID> --prd <source> --title <title>`；它幂等创建骨架、登记来源、尝试只读同步与 PRD intake，并写 `agent/run-state.json`。
-3. 同步/intake 失败时用 `docs-tdd status/next/resume` 诊断和安全重试；不得用旧副本冒充最新。
-4. 按 [prd-feature-inventory.md §3](./prd-feature-inventory.md) 建 sourceId → Feature → Task 映射并完成 G2 批准；语义文档仍由 Agent 读取真实 PRD 后填写，编排器不猜需求。
-5. 运行 `update-project-index.mjs --write`；差异、缺料、假设和负责人确认写入 `product/06-collaboration.md`。
-6. G2 前不写业务代码；G2 通过后按 [coding-worktree.md](./coding-worktree.md) 准备项目 worktree。
-7. 后续只按 [workflow-gates.md](./workflow-gates.md) 推进 G3-G8。API 未 ready 消费 [architecture-and-state.md §8.4.1](./architecture-and-state.md)，验证消费 [quality-checklist.md](./quality-checklist.md) 与 [execution-evidence.md](./execution-evidence.md)。
+1. 读 [rule-router.md](./rule-router.md)，禁止全读 `common/`。
+2. 运行 `docs-tdd kickoff <PROJECT-ID> --prd <source> --title <title>`。默认创建 `workflowVersion: 2` 的最小项目、同步来源并初始化 `work-item.json`；只有用户明确要求 v1 时才加 `--legacy`。
+3. 同步失败时运行 `docs-tdd status/next/resume` 诊断和安全重试；不得用旧副本冒充最新来源。
+4. v2：从 source snapshot 抽取原子需求和 surface，执行独立冷读覆盖审查，完成风险路由；V2 还必须取得绑定当前 fingerprint 的 human scope approval。上述范围动作完成前不写业务代码。
+5. v2：实现后采集绑定当前 `headSha + dirtyHash` 的证据，运行 `docs-tdd verify <PROJECT-ID> --input <verify-input.json>`。它强制写入 `latest-result.json` / `runs.jsonl`；只有 `mode=enforced,status=passed,ok=true` 可交付。
+6. v1：继续按 [prd-feature-inventory.md §3](./prd-feature-inventory.md) 完成 G0–G2，G2 前不写业务代码，再按 [workflow-gates.md](./workflow-gates.md) 推进 G3–G8。
+7. 两种工作流进入编码前都按 [coding-worktree.md](./coding-worktree.md) 准备项目 worktree；不能把 v1 Gate 和 v2 verify 混用。
 
 ## 3. 缺资料处理
 
-缺 PRD/Figma/API/QA、权限、账号、环境、测试数据或 scope 确认时，继续完成不依赖缺项的 G0/G1 动作，并把阻塞写入 `product/06-collaboration.md`。是否及如何通知只消费 [collaboration-and-notifications.md](./collaboration-and-notifications.md)，本文不维护通知时机副本。
+v2 把缺 PRD/Figma/API/QA、权限、环境、测试数据或 scope 确认写入 work-item blocker；`pending-dependency` 的正式出口必须保持 `blocked`。v1 继续写入 `product/06-collaboration.md` 并按既有 Gate 规则处理。
 
-命中「API 已存在待更新 + UI/UX 低保真 + Figma/API 文档后补」时，按 [fast-track-incomplete-docs.md](./fast-track-incomplete-docs.md) 走快速通道：从 [fast-track-template.json](../../templates/fast-track-template.json) 建 `agent/fast-track.json`，在 G2 签认出口与临时业务契约；G0→G4 快速走完后按接口就绪度连续推进或停靠，不在此复制其编排。
-
-PRD 图片、表格、白板、删除线或引用文档不可完整读取时，严格执行 [lark-doc-sync.md §8](./lark-doc-sync.md)；影响 scope 的 unresolved 项阻断 G2。
+PRD 图片、表格、白板、删除线或引用文档不可完整读取时，严格执行 [lark-doc-sync.md §8](./lark-doc-sync.md)。影响 scope 的 unresolved 项在 v2 阻断 coverage/verify，在 v1 阻断 G2。
 
 ## 4. 启动完成判定
 
-不在本文维护产物清单或成功标准副本：
-
-- 目录完整性以 [project-doc-structure.md](./project-doc-structure.md) 和 `start-new-project.mjs` 为准。
-- 阶段准入准出以 [workflow-gates.md](./workflow-gates.md) 和项目 gate 结果为准。
-- 项目最少输入仅为 `<PROJECT-ID>` 与可读取的 PRD 链接或本地 Markdown；其他缺项进入协作记录。
+- v2：`work-item.json` 已基于当前来源建立；需求、surface、coverage review、routing 无未解决占位；如为 V2，scope approval 有效。
+- v1：目录与阶段准入分别以 [project-doc-structure.md](./project-doc-structure.md)、[workflow-gates.md](./workflow-gates.md) 为准。
+- 项目最少输入仅为 `<PROJECT-ID>` 与可读取的 PRD 链接或本地 Markdown；其他缺项进入对应工作流的 blocker。

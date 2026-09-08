@@ -1,6 +1,6 @@
 # PRD 功能清单（Feature Inventory）
 
-> AI 主用：新需求先建全量功能清单再写码。章节号 §3 被外链引用，勿改编号。来源：PR-01973 TradFi 漏做 5.5 / 合约入口复盘。
+> **v1 maintain-only**：本文只服务 `workflowVersion: 1` 存量/legacy 项目。v2 用 `work-item.json` 的原子 requirements + coverage review 防漏项，不复制本模板。章节号 §3 被 v1 文档外链引用，勿改编号。
 
 ## 1. 解决什么问题
 

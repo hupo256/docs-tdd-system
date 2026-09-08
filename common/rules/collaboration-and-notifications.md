@@ -2,7 +2,7 @@
 
 > AI 主用:协作/门禁/通知的策略层。配置/签名/卡片模板细节在 [lark-active-notification.md](./lark-active-notification.md);群内 @ 应用触发任务的运维手册在 [lark-bot 子系统文档](../lark-bot/docs/README.md)。安全边界「禁止同步」清单为硬性,勿删项。
 
-## 1. G0-G8 是协作边界
+## 1. v1：G0-G8 是协作边界
 
 门禁避免从 PRD 直接跳到不受控编码。详细阶段见 [workflow-gates.md](./workflow-gates.md)。硬规则:
 
@@ -96,9 +96,9 @@ Agent/Worker 在任意阶段遇需人工确认、需补资料、缺登录账号/
 
 ## 5. 新需求 Lark 配置
 
-新需求进 G0/G1 时必须先记录 Lark 协作能力启用决策。
+v1 项目进 G0/G1 时必须先记录 Lark 协作能力启用决策；v2 在 work-item/协作输入中按需记录，不为此新增 G 阶段。
 
-通过 [new-project-kickoff.md](./new-project-kickoff.md) 一句话启动协议进入时,Agent 默认先完成 G0/G1 文档和 PRD 同步;发现缺 PRD/Figma/API/QA/账号/测试环境/后台配置/验收数据时必须写入 `product/06-collaboration.md`。项目已启用主动发群则同时发群索取资料,不等用户追问。
+通过 [new-project-kickoff.md](./new-project-kickoff.md) 启动时，v2 默认同步来源并初始化 work-item，缺 PRD/Figma/API/QA/账号/测试环境/后台配置/验收数据时登记 blocker；v1 `--legacy` 才进入 G0/G1 并写 `product/06-collaboration.md`。项目已启用主动发群时同时发群索取资料，不等用户追问。
 
 | 能力 | 是否必需 | 决策问题 | 启用后做什么 |
 |------|----------|----------|--------------|

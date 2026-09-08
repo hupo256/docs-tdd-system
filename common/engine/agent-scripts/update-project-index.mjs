@@ -12,12 +12,15 @@ import {
   latestGateFocus,
   legacyAwareStatus,
   machineRowStatus,
+  parseFrontmatter,
   parseStatus,
   renderMarkdown,
   replaceFocusLine,
   selfTest,
   stripMd,
 } from './lib/project-index.mjs'
+import { codeFingerprint } from './lib/fingerprint.mjs'
+import { verifyExitResultIntegrity } from './lib/vnext-exit.mjs'
 
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, config } = resolveRoots()
 const args = process.argv.slice(2)
@@ -50,6 +53,10 @@ if (args.includes('--self-test')) {
 
 function read(file) {
   return existsSync(file) ? readFileSync(file, 'utf8') : ''
+}
+
+function readJsonFile(file) {
+  try { return JSON.parse(read(file) || 'null') } catch { return null }
 }
 
 // worktree 归属是运行时事实：直接从 `git worktree list` 派生，禁止手抄。返回 { branch: path }。
@@ -121,6 +128,9 @@ function projectInfo(name, byBranch) {
   const readme = read(join(dir, 'README.md'))
   const inventory = read(join(dir, 'product/00-feature-inventory.md'))
   const title = stripMd(firstMatch(readme, [/^#\s+(.+)$/m], name)) || name
+  const frontmatter = parseFrontmatter(readme)
+  const workflowVersion = Number(frontmatter.workflowVersion || (existsSync(join(dir, 'work-item.json')) ? 2 : 1))
+  const worktree = worktreePathFor(name, byBranch || {})
   // 优先级：表格机器行（gate 通过时脚本写入）> frontmatter stage（早期元数据兼容层）> 人工叙述行。
   const rawStatus = machineRowStatus(readme) || frontmatterStatus(readme) || parseStatus(readme)
   let history = null
@@ -129,7 +139,7 @@ function projectInfo(name, byBranch) {
   } catch {
     history = null
   }
-  const status = legacyAwareStatus(rawStatus, history, (evidence) => existsSync(join(dir, evidence)))
+  const status = workflowVersion === 1 ? legacyAwareStatus(rawStatus, history, (evidence) => existsSync(join(dir, evidence))) : rawStatus
   let stageStatusJson = null
   try {
     stageStatusJson = JSON.parse(read(join(dir, 'agent/stage-status.json')) || 'null')
@@ -145,17 +155,40 @@ function projectInfo(name, byBranch) {
   const g2 = stripMd(firstMatch(inventory, [/\|\s*G2 确认人 & 日期\s*\|\s*([^|]+)\|/], '未记录')) || '未记录'
   const modulePath = stripMd(firstMatch(inventory, [/\|\s*责任模块目录\s*\|\s*([^|]+)\|/], '未记录')) || '未记录'
   const gate = readGateSummary(dir)
+  if (workflowVersion === 2) {
+    const workItem = readJsonFile(join(dir, 'work-item.json'))
+    const latest = readJsonFile(join(dir, 'latest-result.json'))
+    const integrity = latest && workItem ? verifyExitResultIntegrity(latest, workItem) : { ok: false }
+    let fresh = false
+    if (latest?.codeFingerprint) {
+      try {
+        const current = codeFingerprint(worktree || repoRoot)
+        fresh = current.headSha === latest.codeFingerprint.headSha && current.baseSha === latest.codeFingerprint.baseSha && current.dirtyHash === latest.codeFingerprint.dirtyHash
+      } catch { fresh = false }
+    }
+    const complete = latest?.mode === 'enforced' && latest?.status === 'passed' && latest?.ok === true && integrity.ok && fresh
+    const v2Status = complete ? 'V2 complete' : latest ? `V2 ${latest.status}${latest.mode === 'shadow' ? ' (shadow/non-authoritative)' : !integrity.ok || !fresh ? ' (stale/invalid)' : ''}` : 'V2 review/evidence'
+    const approval = workItem?.scopeApproval ? `${workItem.scopeApproval.confirmedBy} / ${String(workItem.scopeApproval.confirmedAt || '').slice(0, 10)}` : workItem?.routing?.verificationLevel === 'V2' ? '缺失' : '不要求'
+    return {
+      id: name, title, workflow: 'v2', status: v2Status, prd, g2: approval,
+      modulePath: '见 work-item.json', worktree, evidenceCount: countEvidence(dir),
+      gate: latest ? `V2 ${latest.mode || 'unknown'} ${latest.status || 'invalid'}` : '未验证',
+      gateAt: latest?.generatedAt || '',
+      readme: relative(docsRoot, join(dir, 'README.md')),
+    }
+  }
   return {
     id: name,
     title,
+    workflow: 'v1',
     status: displayStatus,
     prd,
     g2,
     modulePath,
-    worktree: worktreePathFor(name, byBranch || {}),
+    worktree,
     evidenceCount: countEvidence(dir),
     gate: gate.text || '未生成',
-    // gateAt：CONTEXT.md 焦点行取「最近一次门禁活动」用（gate-results.json.generatedAt）。
+    // gateAt：CONTEXT.md 焦点行取「最近一次 Gate / v2 verify 活动」用。
     gateAt: gate.at,
     readme: existsSync(join(dir, 'README.md')) ? relative(docsRoot, join(dir, 'README.md')) : '',
   }

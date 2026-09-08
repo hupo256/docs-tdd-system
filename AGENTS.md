@@ -19,7 +19,7 @@
 1. 先读 [README.md](./README.md)（本目录职责与项目索引）。
 2. **读 [common/rules/rule-router.md](./common/rules/rule-router.md)——唯一常驻规则文件**：§1 硬规则 TL;DR（单一常驻源）+ §2 按场景命中才读的路由。
 3. 如需机器路由，读 [common/rules/rule-index.json](./common/rules/rule-index.json)，按场景取 2-4 篇专题，不是全量。
-4. 再读当前项目的 `agent/context-summary.md`（若存在）、`README.md`、`product/00-feature-inventory.md`、`product/06-collaboration.md`。
+4. 再按项目版本读取事实：v2 读 `README.md`、`work-item.json`、`latest-result.json`（若存在）；v1 读 `agent/context-summary.md`（若存在）、`README.md`、`product/00-feature-inventory.md`、`product/06-collaboration.md`。
 
 > 完整专题清单和触发条件见 [common/rules/rule-router.md](./common/rules/rule-router.md)；[common/README.md](./common/README.md) 保留专题全索引供查阅，但**开工路由以 rule-router 为准**。
 
@@ -39,34 +39,26 @@ Codex 侧编码规则入口不放在 `docs_tdd`：短硬规则常驻 `~/.codex/A
 
 ## 5. 新需求接入
 
-新需求进入时，**G0–G2 文档骨架由 Agent 自动执行**（不要求负责人手动复制模板）。完整流程见 [common/rules/prd-feature-inventory.md](./common/rules/prd-feature-inventory.md) §3。（此处"自动"限于 G0–G2 文档脚手架；G5–G8 联调/验收/QA 为人机协同，见 [README.md](./README.md) 步骤 8 的人机分界。）
+自 2026-09-08 起，新需求默认使用正式 v2；存量 `workflowVersion: 1` 项目继续使用 v1，不静默迁移。统一入口与完整步骤见 [common/rules/new-project-kickoff.md](./common/rules/new-project-kickoff.md) §2。
 
-### 5.1 Agent 自动三步（G0–G2 文档骨架，强制）
+### 5.1 v2 新项目（默认）
 
-| 步骤 | 门禁 | Agent 动作 | 完成标准 |
-|------|------|-----------|---------|
-| A | G0 前 | 复制 `templates/feature-inventory-template.md` → `<PROJECT-ID>/product/00-feature-inventory.md` | 文件存在 |
-| B | G0 | 读 `inbox/` PRD **含验收标准**，填清单初稿 + 验收对照 + Figma 未覆盖表 | 无「待填」占位 |
-| C | G2 | 每条标 **做/不做/延期**；填 G2 确认人 & 日期；「做」的项写入 `04-frontend-tasks.md` | G2 已确认 |
+1. 运行 `docs-tdd kickoff <PROJECT-ID> --prd <source> --title <title>`，创建最小项目并初始化 `work-item.json`。
+2. 从当前 source snapshot 抽取原子需求与 surface，完成独立冷读 coverage review 和风险路由；V2 必须取得绑定当前 fingerprint 的 human scope approval。
+3. 范围审查完成前禁止写业务代码；实现和证据必须绑定当前 `headSha + dirtyHash`。
+4. 运行 `docs-tdd verify <PROJECT-ID> --input <verify-input.json>` 写正式出口。只有 `mode=enforced,status=passed,ok=true` 可以交付；failed/blocked 一律阻断。
+5. v2 不运行 G0–G8 Gate；默认持久化事实仅为 `work-item.json`、`latest-result.json`、`runs.jsonl`（首次 verify 前可只有 work-item）。
 
-**G2 未定稿前禁止写业务代码**（`apps/web/src/**` 功能实现）。
+### 5.2 v1 存量与显式 legacy 项目
 
-### 5.2 项目目录初始化（与 5.1 并行）
+只有用户明确要求时，使用 `docs-tdd kickoff ... --legacy` 新建 v1。v1 继续执行 [common/rules/prd-feature-inventory.md](./common/rules/prd-feature-inventory.md) §3：G0 前建 feature inventory，G2 标记做/不做/延期并确认，G2 未定稿前不写业务代码；后续按 G0–G8 Gate 推进。
 
-1. 创建 `apps/web/docs_tdd/prds/<PROJECT-ID>/`，例如 `apps/web/docs_tdd/prds/PR-01234/`。
-2. 执行 **5.1 步骤 A–B**（创建并填写 `00-feature-inventory.md`）。
-3. 复制 [templates/feature-doc-checklist.md](./templates/feature-doc-checklist.md) 到项目 README 或任务跟踪处。
-4. 如需通知记录，复制 [templates/notification-log-template.md](./templates/notification-log-template.md) 到项目 `agent/notification-log.md`。
-5. 按 [common/rules/project-doc-structure.md](./common/rules/project-doc-structure.md) 建 `inbox/`、`product/`、`engineering/`、`agent/`。
-6. 原始 PRD / Figma / API / QA 只放项目 `inbox/`，不要放根目录。
-7. 新项目启动前必须做一次 **规则继承检查**：先读 `common/`，再检查最近一个成熟项目的 `engineering/development-rules.md` 是否有尚未进入 `common/` 的通用规则。
-8. 发现旧项目里有可复用规则但 `common/` 没有，先提炼进 `common/`，再写当前项目文档或代码。
-9. 项目中沉淀的通用经验，不只写在项目目录里；必须及时提炼进 `common/`，避免下一个项目漏继承。
-10. 项目文档和项目脚本必须通过薄包装检查；发现复制公共规则全文或复制公共脚本实现时，先改为公共入口 + 项目差异。
+### 5.3 共同约束
 
-### 5.3 已有项目补跑
-
-若 `<PROJECT-ID>/product/00-feature-inventory.md` 不存在，Agent 接手任意编码任务时 **必须先补跑 5.1**，再动代码。
+- 原始 PRD / Figma / API / QA 只放当前项目 `inbox/`，不要放根目录。
+- 新项目启动先做规则继承检查；发现旧项目可复用规则尚未进入 `common/`，先提炼公共规则。
+- 项目文档和脚本必须保持薄包装，不复制公共规则或公共脚本实现。
+- 接手存量项目时以 README `workflowVersion` 路由；缺字段按 v1 兼容，不因缺少 v1 清单而把 v2 项目降级。
 
 ## 6. 规则沉淀机制
 

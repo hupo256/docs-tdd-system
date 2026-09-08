@@ -5,12 +5,11 @@
 
 ## 1. 启动协议
 
-0. **新需求路由（2026-09-06 起）**:全新项目/独立微变更默认走 **vNext**(`workflowVersion: 2`):初始化 `vnext-verify.mjs --init` 建 `work-item.json`,单一出口 `vnext-verify` 聚合 verify，默认产物三文件；规则与命令见 [../vnext/README.md](../vnext/README.md)。**V2 级出口在 PR-02233 闭环前为 shadow 参考判定，不阻断交付**(deviation 见 [../vnext/cutover-review-20260906.md](../vnext/cutover-review-20260906.md))。存量项目继续 v1；显式走 v1 须说明理由。
-1. 确认项目 ID/阶段；恢复项目先读 `<PROJECT>/agent/context-summary.md`。
-2. 执行 `docs-tdd context <PROJECT-ID> <SCENARIO>` 并读取 `/tmp/docs-tdd-context/...md`；模式由场景默认（常规为 compact，编码/G6 等高频场景为 brief），可显式用互斥的 `--brief|--compact|--full` 覆盖，歧义或失败调查才用 `--full`，不得自行全读规则。
-   编码场景同时生成带 L1/L2/L3 fingerprint 的 `agent/rule-session.json`；G2 未通过、规则冲突或发布过期时不生成会话，也不得写业务代码。
-3. 编辑后执行 `docs-tdd changed <PROJECT-ID>`；阶段交付执行 `docs-tdd gate <PROJECT-ID> <Gx>`。缓存仅复用同输入 PASS，需强制实跑时加 `--no-cache`。
-4. 无自动 hook 时显式执行 changed/gate；适配、冲突和发布状态用 `docs-tdd doctor <PROJECT-ID>`，能力摘要用 `docs-tdd capability <PROJECT-ID>`。
+0. **新需求路由（2026-09-08 起正式生效）**：全新项目/独立微变更默认走 **v2**（`workflowVersion: 2`）。`docs-tdd kickoff` 建立最小三文件工作流，`docs-tdd verify <PROJECT-ID> --input <verify-input.json>` 写入并执行唯一正式出口；V0/V1/V2 的 failed/blocked 均阻断交付。存量 `workflowVersion: 1` 项目继续走 v1 G0–G8，不静默迁移；只有明确要求 `--legacy` 才新建 v1。切换记录见 [../vnext/cutover-decision-20260908.md](../vnext/cutover-decision-20260908.md)，操作规则见 [../vnext/README.md](../vnext/README.md)。
+1. 先读取 README `workflowVersion`。v2 恢复时读 `work-item.json` 与 `latest-result.json`（若存在）；v1 恢复时读 `agent/context-summary.md`。
+2. 执行 `docs-tdd context <PROJECT-ID> <SCENARIO>`：v2 返回最小 work-item context；v1 返回场景规则包并在编码场景签发 rule session。禁止自行全读规则。
+3. v2 编辑后把检查结果纳入 evidence，交付时执行 `docs-tdd verify <PROJECT-ID> --input <verify-input.json>`；v1 编辑后执行 `changed`，阶段交付执行 `gate`。CLI 会拒绝混用。
+4. 适配、冲突和发布状态用 `docs-tdd doctor <PROJECT-ID>`，能力摘要用 `docs-tdd capability <PROJECT-ID>`。
 
 规则落实以 [rule-execution-model.md](./rule-execution-model.md) 的执行契约判断；“已读/已注意”不算证据。
 
@@ -21,17 +20,17 @@
 ## 2. 常驻硬规则
 
 - 新需求先路由等级:V0/V1 无门禁链，只留单一出口与最小证据矩阵;V2 保留完整矩阵与人签。**风险只升不降**,未知风险信号保守按 V2 处理，不许静默降档(路由约束见 [../vnext/README.md](../vnext/README.md))。
-- 先文档后代码；G2 未定稿不写业务代码。
-- G4 在 `feature/<PROJECT-ID>` worktree 开发，基线来自 `origin/online`；Git 只正向合环境分支。
-- 新功能 Mock 默认 MSW + 契约测试；service/hook/mapper/组件不写 mock 分支；例外先登记 waiver。
+- 先明确范围后写代码：v2 先完成原子需求、独立覆盖审查与风险路由，V2 还必须有人签 scope approval；v1 仍以 G2 定稿为编码前置。
+- 编码必须在 `feature/<PROJECT-ID>` worktree；v1 于 G4 准备，v2 于范围审查完成后准备。基线来自 `origin/online`；Git 只正向合环境分支。
+- Mock：v2 按 `apiDependency` 条件化（仅 `mock-required` 要求 MSW）；v1 新功能默认 MSW + 契约测试。service/hook/mapper/组件不写 mock 分支。
 - DTO 先过 schema/mapper；单一来源 mapper 字段默认与 API 同名，仅跨来源统一或多字段派生允许改名并登记结构化理由。
-- PRD 含图片、表格或嵌入对象时先完成 `prd_intake`；G2 前每项须真实读取、分类并追踪到 Feature/Task，无法读取即阻断。
-- 共享数据、状态、规则和配置只设一个权威写入口；G4 技术方案登记所有权，必要副本必须登记同步/失效、owner 和验证证据。
+- PRD 含图片、表格或嵌入对象时必须真实读取：v2 归一化为 source units 并进入 coverage review；v1 走 `prd_intake` 且 G2 前追踪到 Feature/Task。无法读取即阻断。
+- 共享数据、状态、规则和配置只设一个权威写入口；编码前登记所有权，必要副本必须登记同步/失效、owner 和验证证据。
 - 新建前查复用；改动限责任模块，越界先记录并重点 review。
 - 固定文案逐字遵循 PRD/Figma 契约，apps/web 开发期只改 zh-CN。
-- PRD 验收下沉到原子 bullet：稳定 requirement ID ↔ 单一 Task ↔ 匹配类型 evidence；一个 ✅ 不得覆盖多个可独立失败的子点。
-- G6 必须 code review；findings 清零或登记。JS/TS/JSON touched files 跑 Biome，机器规则和项目 gate 必须通过。
-- 新功能 MSW 为强制标准路线（PR-01947 固化验证，since 模板 v4 硬阻断新项目）：按 manifest 验证 handler、fixture、schema、注册链、场景、假设和退出策略。
+- PRD 验收下沉到原子 requirement：v2 requirement 直接绑定 source/surface/evidence；v1 维持 requirement ID ↔ 单一 Task。一个 PASS 不得覆盖多个可独立失败的子点。
+- v2 的 coverage findings 必须处置且正式 verify 通过；v1 G6 必须 code review。JS/TS/JSON touched files 均须运行适用的质量检查。
+- v1 新功能 MSW 继续按 manifest 强制验证；v2 只有 `apiDependency.mode=mock-required` 时要求 handler/worker/contract 覆盖，其他模式禁止无必要新增 mock。
 
 ## 3. 场景
 

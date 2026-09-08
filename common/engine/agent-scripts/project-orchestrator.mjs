@@ -5,9 +5,12 @@ import { spawnSync } from 'node:child_process'
 import { dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
+import { resolveProjectWorktree } from './lib/project-status-report.mjs'
 import { decideNext } from './lib/project-decision.mjs'
+import { codeFingerprint } from './lib/fingerprint.mjs'
 import { sourceTypeFromPrd } from './lib/project-scaffold.mjs'
 import { normalizeSourceDocuments } from './lib/vnext-source-units.mjs'
+import { verifyExitResultIntegrity } from './lib/vnext-exit.mjs'
 import { initializeVNextArtifacts } from './lib/vnext-persistence.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
@@ -83,7 +86,7 @@ function loadDecisionInputs(id) {
   }
 }
 
-function syncAndInit(id) {
+function syncAndInit(id, { legacy = true } = {}) {
   const configFile = join(resolveProjectRoot(id), 'agent/lark-sources.json')
   const sources = readJson(configFile)
   if (!sources?.sources?.length) return { ok: false, nextAction: 'sync_prd', error: 'lark-sources.json 缺失或为空' }
@@ -93,6 +96,7 @@ function syncAndInit(id) {
   }
   const source = sources.sources[0]
   const syncedPath = join(sources.outputDir, source.target)
+  if (!legacy) return { ok: true, nextAction: 'vnext_init', syncedPath }
   const intake = run('prd-intake.mjs', [id, '--init', '--source', syncedPath])
   if (intake.status !== 0) {
     return { ok: false, nextAction: 'initialize_prd_intake', error: (intake.stderr || intake.stdout).trim().slice(0, 1200), syncedPath }
@@ -108,7 +112,7 @@ function kickoffVNext(projectDir, prd, title) {
   mkdirSync(join(projectDir, 'inbox/lark-sync'), { recursive: true })
   mkdirSync(join(projectDir, 'agent'), { recursive: true })
   const branchName = `${config.branchPrefix || 'feature/'}${projectId}`
-  writeFileSync(join(projectDir, 'README.md'), `---\nprojectId: ${projectId}\nstatus: active\nstage: G1\nbranch: ${branchName}\nworktree: ""\nport: ""\nvisualFidelity: standard\nprdSource: ${prd}\nfigmaNode: ""\nlarkEnabled: false\nworkflowVersion: 2\n---\n\n# ${projectId} ${title}\n\n> vNext(workflowVersion: 2)项目:无 v1 门禁链,工作事实载体是三文件(work-item.json / latest-result.json / runs.jsonl),出口见 common/vnext/README.md。\n\n## 下一步\n\n1. 从 PRD 抽取原子需求(带 sourceAnchor)并填充 work-item.json\n2. 独立冷读审查(vnext-verify --prepare-review → reviewResponse)\n3. 按等级补证据后 \`vnext-verify.mjs --input <input> --worktree <wt> --write --out <本目录>\`\n`)
+  writeFileSync(join(projectDir, 'README.md'), `---\nprojectId: ${projectId}\nstatus: active\nstage: G1\nbranch: ${branchName}\nworktree: ""\nport: ""\nvisualFidelity: standard\nprdSource: ${prd}\nfigmaNode: ""\nlarkEnabled: false\nworkflowVersion: 2\n---\n\n# ${projectId} ${title}\n\n> v2(workflowVersion: 2)正式项目:无 v1 门禁链,工作事实载体是三文件(work-item.json / latest-result.json / runs.jsonl),出口见 common/vnext/README.md。\n\n## 下一步\n\n1. 从 PRD 抽取原子需求(带 sourceAnchor)并填充 work-item.json\n2. 独立冷读审查(vnext-verify --prepare-review → reviewResponse)\n3. 按等级补证据后 \`docs-tdd verify ${projectId} --input <verify-input.json> --worktree <wt>\`\n`)
   const larkOutputDir = String(config.larkOutputDir || `apps/web/docs_tdd/prds/\${projectId}/inbox/lark-sync`).replaceAll('${projectId}', projectId)
   writeFileSync(join(projectDir, 'agent/lark-sources.json'), JSON.stringify({
     projectId,
@@ -150,9 +154,14 @@ function vnextInitWorkItem(projectDir) {
 function kickoff() {
   const prd = option('--prd')
   const title = option('--title', projectId)
-  const legacy = args.includes('--legacy')
+  let legacy = args.includes('--legacy')
   if (!prd) throw new Error('kickoff requires --prd <Lark URL or local Markdown>')
   const projectDir = resolveProjectRoot(projectId)
+  if (existsSync(projectDir)) {
+    const existingVersion = projectWorkflowVersion(projectId)
+    if (existingVersion === 2 && legacy) throw new Error(`${projectId} is already workflowVersion 2; refusing to downgrade it with --legacy`)
+    legacy = existingVersion === 1
+  }
   if (!existsSync(projectDir)) {
     if (legacy) {
       const scaffold = run('start-new-project.mjs', [projectId, '--prd', prd, '--title', title])
@@ -162,34 +171,105 @@ function kickoff() {
     }
   }
   let state = writeState(projectId, {
+    workflowVersion: legacy ? 1 : 2,
     status: 'active',
-    currentStage: 'G0',
+    currentStage: legacy ? 'G0' : 'V2-intake',
     lastAction: 'scaffold_project',
     nextAction: 'sync_prd',
     source: prd,
   })
-  const result = syncAndInit(projectId)
+  const result = syncAndInit(projectId, { legacy })
   const vnextInitialized = !legacy && result.ok && vnextInitWorkItem(projectDir)
+  const initialized = legacy ? result.ok : Boolean(vnextInitialized)
   state = writeState(projectId, {
-    status: result.ok ? 'waiting_approval' : 'blocked',
-    currentStage: result.ok ? 'G1' : 'G0',
-    lastAction: result.ok ? 'initialize_prd_intake' : 'scaffold_project',
+    status: initialized ? (legacy ? 'waiting_approval' : 'active') : 'blocked',
+    currentStage: initialized ? (legacy ? 'G1' : 'V2-review') : (legacy ? 'G0' : 'V2-intake'),
+    lastAction: initialized ? (legacy ? 'initialize_prd_intake' : 'initialize_vnext_work_item') : 'scaffold_project',
     nextAction: legacy ? result.nextAction : (vnextInitialized ? 'vnext_extract_requirements' : result.nextAction),
-    blocker: result.error || '',
+    blocker: result.error || (!legacy && !vnextInitialized ? 'v2 work-item initialization failed' : ''),
     syncedSource: result.syncedPath || '',
     attempts: [...(state.attempts || []), { at: new Date().toISOString(), action: 'sync_and_init', ok: result.ok }],
   })
   print({ ...state, workflowVersion: legacy ? 1 : 2, vnextWorkItemInitialized: Boolean(vnextInitialized) })
 }
 
+function projectWorkflowVersion(id) {
+  const projectDir = resolveProjectRoot(id)
+  const readmePath = join(projectDir, 'README.md')
+  const readme = existsSync(readmePath) ? readFileSync(readmePath, 'utf8') : ''
+  const declared = readme.match(/^workflowVersion:\s*(\d+)$/m)?.[1]
+  if (declared) return Number(declared)
+  return existsSync(join(projectDir, 'work-item.json')) ? 2 : 1
+}
+
+function inspectVNext(id) {
+  const projectDir = resolveProjectRoot(id)
+  const workItem = readJson(join(projectDir, 'work-item.json'))
+  const latest = readJson(join(projectDir, 'latest-result.json'))
+  if (!workItem) {
+    return { projectId: id, workflowVersion: 2, status: 'blocked', currentStage: 'V2-intake', nextAction: 'initialize_vnext_work_item', command: `docs-tdd resume ${id}` }
+  }
+  if (!latest) {
+    const reviewReady = workItem.coverageAudit?.verdict === 'pass' && !(workItem.coverageAudit?.unresolved || []).length
+    return {
+      projectId: id, workflowVersion: 2, verificationLevel: workItem.routing?.verificationLevel || 'unclassified', status: 'active',
+      currentStage: reviewReady ? 'V2-evidence' : 'V2-review', nextAction: reviewReady ? 'capture_current_code_evidence' : 'complete_independent_coverage_review',
+      command: `docs-tdd verify ${id} --input <verify-input.json>`,
+    }
+  }
+  const failedChecks = (latest.checks || []).filter((check) => !check.ok)
+  const integrity = verifyExitResultIntegrity(latest, workItem)
+  let codeStateFresh = false
+  let codeStateProblem = ''
+  try {
+    const current = codeFingerprint(resolveProjectWorktree(id).worktree)
+    codeStateFresh = current.headSha === latest.codeFingerprint?.headSha
+      && current.baseSha === latest.codeFingerprint?.baseSha
+      && current.dirtyHash === latest.codeFingerprint?.dirtyHash
+    if (!codeStateFresh) codeStateProblem = 'latest result is stale for the current worktree code state'
+  } catch (error) {
+    codeStateProblem = `cannot measure current worktree code state: ${error.message}`
+  }
+  const authoritativePass = latest.mode === 'enforced' && latest.status === 'passed' && latest.ok === true && integrity.ok && codeStateFresh
+  const shadowOnly = latest.mode !== 'enforced'
+  const resultInvalid = !integrity.ok || !codeStateFresh
+  return {
+    projectId: id, workflowVersion: 2, verificationLevel: latest.level || workItem.routing?.verificationLevel || 'unclassified',
+    status: authoritativePass ? 'complete' : latest.status === 'blocked' ? 'blocked' : 'active',
+    currentStage: authoritativePass ? 'V2-complete' : 'V2-verification',
+    nextAction: authoritativePass ? 'none' : shadowOnly ? 'run_enforced_verification' : resultInvalid ? 'refresh_stale_or_invalid_verification' : latest.status === 'blocked' ? 'resolve_blockers_and_reverify' : 'fix_failed_checks_and_reverify',
+    blockers: [...failedChecks.flatMap((check) => check.problems || [check.code]), ...integrity.problems, ...(codeStateProblem ? [codeStateProblem] : [])],
+    latestResult: { mode: latest.mode, status: latest.status, ok: latest.ok, integrity: integrity.ok, codeStateFresh, authoritative: authoritativePass, runId: latest.runId, generatedAt: latest.generatedAt },
+    command: authoritativePass ? '' : `docs-tdd verify ${id} --input <verify-input.json>`,
+  }
+}
+
 function status() {
+  if (projectWorkflowVersion(projectId) === 2) {
+    print({ ...inspectVNext(projectId), stateFile: relative(repoRoot, stateFile(projectId)) })
+    return
+  }
   const inputs = loadDecisionInputs(projectId)
   const decision = decideNext(inputs)
-  print({ ...decision, projectId, stateFile: relative(repoRoot, stateFile(projectId)) })
+  print({ ...decision, projectId, workflowVersion: 1, stateFile: relative(repoRoot, stateFile(projectId)) })
 }
 
 function resume() {
   const stored = readJson(stateFile(projectId))
+  if (projectWorkflowVersion(projectId) === 2) {
+    const projectDir = resolveProjectRoot(projectId)
+    if (!existsSync(join(projectDir, 'work-item.json'))) {
+      const result = syncAndInit(projectId, { legacy: false })
+      const initialized = result.ok && vnextInitWorkItem(projectDir)
+      writeState(projectId, {
+        workflowVersion: 2, status: initialized ? 'active' : 'blocked', currentStage: initialized ? 'V2-review' : 'V2-intake',
+        nextAction: initialized ? 'vnext_extract_requirements' : result.nextAction, blocker: result.error || '', syncedSource: result.syncedPath || '',
+        attempts: [...(stored?.attempts || []), { at: new Date().toISOString(), action: 'resume_vnext_sync_and_init', ok: Boolean(initialized) }],
+      })
+    }
+    print({ ...inspectVNext(projectId), stateFile: relative(repoRoot, stateFile(projectId)) })
+    return
+  }
   // 早期阶段（PRD 同步 / intake 初始化）：resume 能真正推进——重跑同步+建档。
   if (stored && ['sync_prd', 'initialize_prd_intake'].includes(stored.nextAction)) {
     const result = syncAndInit(projectId)

@@ -5,9 +5,10 @@
 ## 本地环境
 
 - 主仓库路径：`/Users/aven/github/fameex-web`（文档在此演进）
-- 当前工作重点：**PR-02233 【用户端】安全验证校验交互优化**——最近门禁 G4 PASS (fail=0, warn=0)（2026-09-04），worktree `/Users/aven/github/PR-02233`。本行由 `update-project-index.mjs --write` 从最近门禁活动派生，勿手改。
+- 当前工作重点：**PR-02233 【用户端】安全验证校验交互优化**——最近工作流结果 G4 PASS (fail=0, warn=0)（2026-09-04），worktree `/Users/aven/github/PR-02233`。本行由 `update-project-index.mjs --write` 从最近 Gate / verify 活动派生，勿手改。
 - 本地文档目录（唯一真实路径）：`/Users/aven/github/fameex-web/apps/web/docs_tdd/`
-- 文档跟踪：本目录被 `.git/info/exclude` 忽略，只在本机维护，不 commit、不 push。
+- 文档跟踪：本目录为独立本地 Git 仓库；业务仓挂载路径继续保持 ignore，不提交到业务仓。
+- 当前工作流：2026-09-08 起新需求默认正式 v2；存量项目按 README `workflowVersion` 继续 v1。
 
 ## Worktree 与文档 symlink
 
@@ -47,7 +48,7 @@
 冷启动只需三件事：
 
 1. 读 [common/rules/rule-router.md](./common/rules/rule-router.md)（唯一常驻规则文件）。
-2. 读当前项目的 `agent/context-summary.md`（机器版，含阶段真值）。
-3. 按任务场景跑 `docs-tdd context <PROJECT-ID> <SCENARIO>`，只加载命中的专题。
+2. 读 README `workflowVersion`：v2 读 `work-item.json` / `latest-result.json`，v1 读 `agent/context-summary.md`。
+3. 跑 `docs-tdd context <PROJECT-ID> <SCENARIO>`；CLI 自动按版本返回对应 context。
 
 不要自动回到其他项目；除非用户明确切换项目。

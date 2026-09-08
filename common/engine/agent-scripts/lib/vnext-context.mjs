@@ -20,6 +20,7 @@ function short(value) {
 function resultState(result) {
   if (!result) return null
   return {
+    mode: result.mode,
     status: result.status,
     ok: result.ok,
     codeFingerprint: result.codeFingerprint,
@@ -30,7 +31,8 @@ function resultState(result) {
 
 function renderResult(result) {
   if (!result) return ['Latest: none; run the final verifier before claiming completion.']
-  const lines = [`Latest: ${result.status}; run=${result.runId}; HEAD=${short(result.codeFingerprint?.headSha)}; dirty=${short(result.codeFingerprint?.dirtyHash)}`]
+  const authority = result.mode === 'enforced' ? 'authoritative' : 'NON-AUTHORITATIVE historical shadow'
+  const lines = [`Latest: ${result.status}; mode=${result.mode}; ${authority}; run=${result.runId}; HEAD=${short(result.codeFingerprint?.headSha)}; dirty=${short(result.codeFingerprint?.dirtyHash)}`]
   for (const item of result.checks.filter((check) => !check.ok)) {
     const problems = item.problems.map(oneLine)
     const detail = problems.length <= 3 ? problems.join('; ') : `${problems.length} problems; full list: latest-result.json`
@@ -64,7 +66,7 @@ function renderFull(workItem, result) {
   const findings = workItem.coverageAudit.findings || []
   lines.push('', `Coverage review: ${workItem.coverageAudit.verdict}; ${workItem.coverageAudit.reviewer.kind}:${oneLine(workItem.coverageAudit.reviewer.id)}; findings=${findings.length}`)
   for (const finding of findings) lines.push(`- ${finding.findingId}[${finding.disposition}] ${oneLine(finding.message)}${finding.reason ? `; ${oneLine(finding.reason)}` : ''}`)
-  lines.push('', ...renderResult(result), '', 'Exit: vnext-verify.mjs --input <input.json> --worktree <path> [--write --out <v2-dir>]')
+  lines.push('', ...renderResult(result), '', `Exit: docs-tdd verify ${workItem.projectId} --input <verify-input.json> --worktree <path>`)
   return `${lines.join('\n')}\n`
 }
 

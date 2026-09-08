@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Shadow-only vNext verifier. It reads one explicit JSON input, emits a result, and never mutates v1 state.
+// Formal vNext verifier. It reads one explicit JSON input and emits the authoritative v2 delivery result without mutating v1 state.
 
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
@@ -34,7 +34,7 @@ export function prepareReview(input) {
   return buildCoverageReviewRequest({ workItem: input.workItem, sourceUnits: normalized.sourceUnits })
 }
 
-export function runShadowVerification(input, { currentCodeState, generatedAt } = {}) {
+export function runVNextVerification(input, { currentCodeState, generatedAt, mode = 'enforced' } = {}) {
   if (!input?.workItem) throw new Error('verification input requires workItem')
   if (!input?.reviewResponse) throw new Error('verification input requires independent reviewResponse')
   if (!Array.isArray(input.sourceDocuments)) throw new Error('verification input requires sourceDocuments')
@@ -61,6 +61,7 @@ export function runShadowVerification(input, { currentCodeState, generatedAt } =
     currentCodeState,
     evidence: input.evidence,
     blockers: input.blockers,
+    mode,
     generatedAt,
   })
 }
@@ -89,7 +90,7 @@ function printResult(result, asJson) {
     console.log(JSON.stringify(result, null, 2))
     return
   }
-  console.log(`${result.ok ? 'PASS' : 'FAIL'} ${result.projectId} (vNext shadow)`)
+  console.log(`${result.ok ? 'PASS' : 'FAIL'} ${result.projectId} (vNext ${result.mode})`)
   for (const check of result.checks) {
     console.log(`  ${check.ok ? 'PASS' : 'FAIL'} ${check.code}`)
     for (const problem of check.problems) console.log(`    - ${problem}`)
@@ -101,7 +102,7 @@ function usage() {
   vnext-verify.mjs --normalize-sources <input.json>
   vnext-verify.mjs --prepare-review <input.json>
   vnext-verify.mjs --init <work-item.json> --out <v2-project-dir>
-  vnext-verify.mjs --input <verified-input.json> --worktree <path> [--write --out <v2-project-dir>] [--json]
+  vnext-verify.mjs --input <verified-input.json> --worktree <path> [--write --out <v2-project-dir>] [--json] [--shadow]
 
 normalize-sources input: { currentRevision, sourceDocuments }
 prepare-review input:   { workItem, currentRevision, sourceDocuments }
@@ -161,22 +162,25 @@ export function selfTest() {
     }],
   }
   const verifyInput = { workItem, currentRevision: '1', sourceDocuments, reviewResponse, discoveredSurfaces: [], implementation: { coveredSurfaceIds: [] }, evidence, blockers: [] }
-  const pass = runShadowVerification(verifyInput, { currentCodeState: code, generatedAt: '2026-09-04T00:00:03Z' })
+  const pass = runVNextVerification(verifyInput, { currentCodeState: code, generatedAt: '2026-09-04T00:00:03Z' })
   assert.equal(pass.ok, true, JSON.stringify(pass))
-  const stale = runShadowVerification({ ...verifyInput, currentRevision: '2' }, { currentCodeState: code, generatedAt: '2026-09-04T00:00:03Z' })
+  assert.equal(pass.mode, 'enforced')
+  const stale = runVNextVerification({ ...verifyInput, currentRevision: '2' }, { currentCodeState: code, generatedAt: '2026-09-04T00:00:03Z' })
   assert.equal(stale.ok, false)
   assert.equal(stale.checks.find((item) => item.code === 'SOURCE_FRESH').ok, false)
   const pendingInput = structuredClone(verifyInput)
   pendingInput.workItem.apiDependency = { mode: 'pending-dependency', reason: 'backend contract pending', blockerId: 'DEP-1' }
   pendingInput.blockers = [{ blockerId: 'DEP-1', status: 'open', reason: 'backend contract pending' }]
-  const pending = runShadowVerification(pendingInput, { currentCodeState: code, generatedAt: '2026-09-04T00:00:03Z' })
+  const pending = runVNextVerification(pendingInput, { currentCodeState: code, generatedAt: '2026-09-04T00:00:03Z' })
   assert.equal(pending.status, 'blocked')
   assert.equal(pending.checks.find((item) => item.code === 'MSW_POLICY').ok, true)
   const needlessMockInput = structuredClone(verifyInput)
   needlessMockInput.implementation.msw = { handlerIds: ['unused-handler'] }
-  const needlessMock = runShadowVerification(needlessMockInput, { currentCodeState: code, generatedAt: '2026-09-04T00:00:03Z' })
+  const needlessMock = runVNextVerification(needlessMockInput, { currentCodeState: code, generatedAt: '2026-09-04T00:00:03Z' })
   assert.equal(needlessMock.checks.find((item) => item.code === 'MSW_POLICY').ok, false)
-  assert.throws(() => runShadowVerification({ ...verifyInput, reviewResponse: null }, { currentCodeState: code }), /reviewResponse/)
+  const shadow = runVNextVerification(verifyInput, { currentCodeState: code, mode: 'shadow', generatedAt: '2026-09-04T00:00:03Z' })
+  assert.equal(shadow.mode, 'shadow')
+  assert.throws(() => runVNextVerification({ ...verifyInput, reviewResponse: null }, { currentCodeState: code }), /reviewResponse/)
   console.log('vnext-verify self-test passed')
 }
 
@@ -201,7 +205,8 @@ if (process.argv.includes('--self-test')) {
       const worktreePath = argumentValue('--worktree')
       if (!worktreePath) throw new Error('--worktree is required so current HEAD/dirty state is measured, not trusted from JSON')
       const input = loadInput(inputPath)
-      const result = runShadowVerification(input, { currentCodeState: codeFingerprint(resolve(worktreePath)) })
+      const mode = process.argv.includes('--shadow') ? 'shadow' : 'enforced'
+      const result = runVNextVerification(input, { currentCodeState: codeFingerprint(resolve(worktreePath)), mode })
       if (process.argv.includes('--write')) {
         if (!outDir) throw new Error('--write requires --out')
         assertSafeArtifactOutput(worktreePath, outDir)
@@ -216,7 +221,7 @@ if (process.argv.includes('--self-test')) {
       process.exitCode = 2
     }
   } catch (error) {
-    console.error(`vNext shadow verification failed: ${error.message}`)
+    console.error(`vNext verification failed: ${error.message}`)
     process.exitCode = 2
   }
 }

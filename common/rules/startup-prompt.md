@@ -8,7 +8,7 @@
 根据 apps/web/docs_tdd 下的文档，开始新的需求 <PROJECT-ID>，PRD 文档是：<PRD 链接或本地路径>。
 
 请先读取 apps/web/docs_tdd/common/rules/rule-router.md，只按命中场景读取专题文档，不要一次性读取整个 common。
-新项目默认走 vNext(kickoff 建 work-item.json 三文件,单一出口 vnext-verify;抽需求→独立冷读审查→补证据→verify 写出口)。V2 级出口在 PR-02233 闭环前只做 shadow 参考;存量项目继续 v1,显式回 v1 用 --legacy。
+新项目默认走正式 v2（kickoff 建最小项目与 work-item；抽需求→独立冷读审查→补当前代码证据→docs-tdd verify 写唯一正式出口）。V0/V1/V2 的 failed/blocked 都阻断交付；存量 workflowVersion: 1 项目继续 v1，显式新建 v1 才用 --legacy。
 代码静态扫描只 review 新增或已修改文件。
 ```
 
@@ -30,8 +30,8 @@ QA：<链接>
 
 ```bash
 node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs kickoff <PROJECT-ID> --prd <PRD> --title <项目短名>
-# vNext 项目接下来:抽取原子需求(带 sourceAnchor)→ vnext-verify --prepare-review 冷读审查 → 补证据 → vnext-verify --write
+# v2 项目接下来：抽取原子需求（带 sourceAnchor）→ vnext-verify --prepare-review 冷读审查 → 补证据 → docs-tdd verify <PROJECT-ID> --input <verify-input.json>
 ```
 
 4. 中断或换会话先运行 `docs-tdd status <PROJECT-ID>` 与 `docs-tdd next <PROJECT-ID>`；可安全重试的同步/intake 用 `docs-tdd resume <PROJECT-ID>`。
-5. **v1 项目**:G2 / G5 / G6 / G7 / G8 前运行 `docs-tdd.mjs gate <PROJECT-ID> <GATE>`；代码变更后运行 `verify-code-rules.mjs --project <PROJECT-ID>`。只读 verifier 用于排障，不能代替正式 gate 写成功历史和推进阶段。**vNext 项目**不跑 G 门禁链，以 `vnext-verify.mjs --write` 的 latest-result 为唯一出口。
+5. **v1 项目**：G2 / G5 / G6 / G7 / G8 前运行 `docs-tdd.mjs gate <PROJECT-ID> <GATE>`；代码变更后运行 `verify-code-rules.mjs --project <PROJECT-ID>`。**v2 项目**禁止跑 G 门禁链，以 `docs-tdd.mjs verify <PROJECT-ID> --input <verify-input.json>` 生成的 `mode=enforced` latest-result 为唯一正式出口；只有历史回放/灰度复算才允许直接传 `vnext-verify.mjs --shadow`。
