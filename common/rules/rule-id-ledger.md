@@ -115,7 +115,7 @@
 | `VERIFY-RULE-001` | 会话启动 / `doctor` | Codex、Claude Code、Cursor、Lark-Codex、Lark-Claude 的 L1/L2/L3 source matrix 指向同一 canonical source fingerprint | error |
 | `VERIFY-RULE-002` | `changed`、G5-G8 | 编码 rule session v2 存在，且客户端、规则发布、G2 输入、HEAD 与 24 小时有效期均未漂移；一个客户端不能复用另一个客户端的会话 | error |
 | `VERIFY-RULE-003` | `doctor` | 固定入口全集完整且无多余项：五个入口均登记 adapter、enforcement 与 source fingerprint | error |
-| `VERIFY-RULE-004` | Lark 每次启动 AI 前 | 本次路由的**常驻必需**规则文件与章节都存在（缺一即 fail-closed）；两层发布 stale 只记 warning 继续执行（d533eb4），辅助章节缺失只降级 | error（仅缺常驻必需规则时） |
+| `VERIFY-RULE-004` | Lark 每次启动 AI 前 | 本次路由的**常驻必需**规则文件与章节都存在（缺一即 fail-closed）；辅助章节缺失只降级记 warning。发布层 stale 检测已下线（规则消费改 pin-based，见 CHANGELOG），本 ID 只覆盖缺失常驻必需规则 | error（仅缺常驻必需规则时） |
 | `VERIFY-RULE-005` | G6 / G6-partial | 四个 G6 context 维度均由当前客户端在同一 task/session、同一代码与规则指纹下生成；任一缺失或陈旧均阻断 | error（不可豁免） |
 | `DOC-BLOCK-001` | G0+（`lib/blockers.mjs`） | `agent/blockers.json` 结构合法：字段合规、id 唯一、resolved 带 resolution+resolvedAt；缺文件不发 check | error（不可豁免） |
 | `DOC-BLOCK-002` | G0+（`lib/blockers.mjs`） | 无 `open` 且 `blocksGate ≤ 当前 gate` 的阻塞/变更未解除 | error（可豁免） |

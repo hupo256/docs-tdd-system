@@ -24,7 +24,7 @@
 | 时点 | 执行动作 | 落实机制 |
 |------|----------|----------|
 | 会话启动/恢复 | Codex、Claude Code、Cursor 的 adapter 先读 `rule-router.md`，再执行 `docs-tdd context <PROJECT-ID> <SCENARIO>` | 入口先验证 L3 与 effective 两层发布指纹，再由 `rule-index.json` 按场景生成 context pack；编码场景须先过 G2，并写带客户端、三层 fingerprint、G2 输入与 HEAD 的 24 小时 `rule-session.json` v2；编辑中的未发布规则或其他客户端的旧会话不能被消费 |
-| Lark 无人值守执行 | Lark-Codex / Lark-Claude 在每次启动 AI 前检查发布链，再按任务语义抽取规则章节 | **常驻必需**规则文件或章节缺失以 `VERIFY-RULE-004` 阻断（缺了等于裸跑）；L3/effective stale 与辅助章节缺失只记 warning 并带已发布规则继续（d533eb4：消费仓分支切换会让 stale 成为常态，fail-closed 会让所有修复任务全红），warning 浮现到结果卡、审计与 `/lark/health`；上下文仍绑定两层发布指纹 |
+| Lark 无人值守执行 | Lark-Codex / Lark-Claude 在每次启动 AI 前抽取任务语义对应的规则章节 | **常驻必需**规则文件或章节缺失以 `VERIFY-RULE-004` 阻断（缺了等于裸跑）；辅助章节缺失只记 warning 并浮现到结果卡、审计与 `/lark/health`。发布层 stale 检测已下线（规则消费改 pin-based，`docs-tdd rules status` 才是主动查询发布落后的入口）；上下文仍绑定两层发布指纹用于审计 |
 | 编码前/首次编辑 | 按变更类型加载 L1、L2 `.cursor/rules` 和 routed L3 专题 | Cursor 原生消费 L2；Claude/Codex 的 PreToolUse 共用 Resolver，首次命中时 deny-and-retry 注入正文；合计超 96 KiB 分批注入，单条超限则阻断并要求拆分 |
 | 编辑后 | Claude/Codex PostToolUse 写入按 session、文件与规则指纹绑定的累计回执，并对本次单文件/多文件改动立即执行代码检查 | `changed` 与 G5+ 校验本会话全部 touched files；PreCompact/HEAD 变化只轮换注入 epoch，不清审计基线、receipt 或 taint。绕过 hook、规则或内容过期即阻断 |
 | 阶段出口 | 执行 `docs-tdd gate <PROJECT-ID> <Gx>`，G5+ 聚合代码扫描 | `error` 退出码阻断；G6/G8 用 `--write` 生成机器结果和 evidence，规则或工作树变化后旧证据失效 |

@@ -7,6 +7,13 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-09-10（下线发布层 stale 检测，彻底靠 pin-based）
+
+- **移除 `ruleChainFresh` / stale 告警**：lark 自动执行路径（worker `runAI`、`/lark/health`、`lark-bot status` CLI）不再判「published L3/effective vs 当前源」是否 stale。该检测早已 note-only 不阻断（d533eb4），且因消费仓 `fameex-web` 的 `AGENTS.md` 随分支漂移而频繁假 stale，退化成刷屏噪音。规则消费已切 pin-based（项目钉 `policyFingerprint`），发布层落后于源对在飞任务无影响。
+- **指纹链路保留**：`rule-chain-runtime.mjs` 新增 `readRuleFingerprints`（无条件取当前两层 `currentFingerprint`，不判 fresh、不抛错），替换 `inspectRuleChain`/`assertFreshRuleChain`（已删）。两层发布指纹仍注入 AI 上下文与审计。
+- **`VERIFY-RULE-004` 语义收敛**：只保留「缺失常驻必需规则文件/章节」的 fail-closed（`lark-rule-context.mjs`），"stale rule chain" 含义退休。
+- **主动查询不变**：`docs-tdd rules status|upgrade`（`rule-pin.mjs`）仍是查看/采纳发布层落后的入口，输出 "newer rules available"。
+
 ## 2026-09-08（v2 正式启用：新需求默认 + 全等级 enforced）
 
 - **owner 决策立即正式切换**：新需求默认 `workflowVersion: 2`，V0/V1/V2 共用正式出口；不再等待历史 pilot 样本数或 PR-02233 闭环。接受的偏差与不豁免原则见 `common/vnext/cutover-decision-20260908.md`。

@@ -102,6 +102,7 @@ node common/engine/agent-scripts/docs-tdd.mjs verify PR-01234 --input verify-inp
 - scope floor：`local=V0`、`multi-surface=V1`、`cross-boundary=V2`。
 - password / authentication-surface / multiple-entry-points / shared-component / contract-change 至少 V1。
 - funds / trading / permission / irreversible / new-api / cross-app / fee/amount semantics 强制 V2。
+- `shared-component` 的边界：仅当改动触及被 ≥2 处复用的组件的 **prop / 行为 / 契约**（存在跨消费方爆炸半径）时才打此信号；**只改组件自身的视觉 token**（间距 / 颜色 / 圆角等 className，且无 prop、无行为、无契约变更）爆炸半径封闭在自身 render 内，不打任何风险信号 → 落 `local=V0`。是否属于后者由作者显式判断、并经独立冷读审查复核，不允许「因为文件是共享组件」就一律升 V1。
 - 未识别风险信号保守派生为 V2，同时 `RISK_ROUTE` 失败，必须先显式分类，不能静默放行。
 - V2 的 scope approval 必须是 human confirmation，且 fingerprint 绑定 source、requirements 和 routing；任一变化都会失效。
 
