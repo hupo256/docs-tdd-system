@@ -106,7 +106,7 @@ function changedFingerprint(id, worktree, effectiveFingerprint) {
 // 返回退出码：任一子检非 0 即非 0。noCache=true 跳过读写缓存（强制实跑）。
 export function runChanged(id, worktree, effectiveFingerprint, { noCache = false, client = 'human', sessionId = null } = {}) {
   const started = Date.now()
-  if (client === 'codex' || client === 'claude') {
+  if (client === 'codex' || client === 'claude' || client === 'pi') {
     const consumption = verifyWorktreeConsumption({
       worktree,
       sessionId,

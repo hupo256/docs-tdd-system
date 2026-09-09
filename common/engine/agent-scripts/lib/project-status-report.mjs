@@ -49,14 +49,14 @@ export function capability(id, { agentClient }) {
   const ruleset = readJson(join(docsRoot, 'common/rules/ruleset.json'))
   const release = inspectRuleRelease()
   const effectiveRules = inspectEffectiveRules()
-  const hook = ['claude', 'codex'].includes(agentClient) ? `${agentClient}-posttooluse` : agentClient === 'cursor' ? 'cursor-native-plus-changed' : 'human-cli'
+  const hook = ['claude', 'codex', 'pi'].includes(agentClient) ? `${agentClient}-posttooluse` : agentClient === 'cursor' ? 'cursor-native-plus-changed' : 'human-cli'
 
   printReport([
     ['docs_tdd root', docsRoot],
     ['project workflow', workflowVersion ? `v${workflowVersion}${workflowVersion === 2 ? ' (enforced exit)' : ' (legacy G0-G8)'}` : 'n/a'],
     ['agent client', agentClient],
     ['agent adapter', hook],
-    ['automatic post-edit hook', ['claude', 'codex'].includes(agentClient) ? 'available' : 'unavailable'],
+    ['automatic post-edit hook', ['claude', 'codex', 'pi'].includes(agentClient) ? 'available' : 'unavailable'],
     ['fallback', `run docs-tdd changed ${id || '<PROJECT-ID>'} before completion`],
     ['ruleset', `${manifest?.rulesetVersion || ruleset.version} (${ruleset.maturity})`],
     ['rule release', `${release.status || 'invalid'} (${(release.currentFingerprint || 'unknown').slice(0, 12)})`],

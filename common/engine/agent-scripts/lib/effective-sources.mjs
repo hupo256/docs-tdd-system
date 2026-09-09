@@ -9,6 +9,7 @@
 
 import { existsSync, readdirSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
+import { PI_EXTENSION_RELPATH } from './pi-adapter.mjs'
 
 export function walkFiles(root) {
   if (!existsSync(root)) return []
@@ -29,7 +30,7 @@ export function createSourceLens({ docsSystemRoot, ruleConsumerRoot, repoRoot, h
   const canonicalSkillRoots = ['coding-quality', 'figma-read'].map((skill) => join(g.aiRules, 'skills', skill))
   const sources = {
     l1: [join(g.aiRules, 'AGENT.md'), ...canonicalSkillRoots.flatMap(walkFiles)],
-    adapters: [join(g.codex, 'AGENTS.md'), join(g.claude, 'CLAUDE.md'), g.cursorLocalGovernance, join(g.claude, 'settings.json'), join(g.codex, 'hooks.json')],
+    adapters: [join(g.codex, 'AGENTS.md'), join(g.claude, 'CLAUDE.md'), g.cursorLocalGovernance, join(g.claude, 'settings.json'), join(g.codex, 'hooks.json'), join(g.pi, 'AGENTS.md'), join(g.pi, PI_EXTENSION_RELPATH)],
     runtimeAdapters: [
       join(docsSystemRoot, 'common/lark-bot/lib/lark-rule-context.mjs'),
       join(docsSystemRoot, 'common/lark-bot/lib/lark-worker-prompts.mjs'),
@@ -76,7 +77,7 @@ if (process.argv[1]?.endsWith('effective-sources.mjs') && process.argv.includes(
     assert.deepEqual(walkFiles(join(fixture, 'nope')), []) // 不存在 → []
 
     // label 优先级：docs 根 > consumer 根 > repo 根 > ~。
-    const g = { aiRules: join(fixture, 'ai'), codex: join(fixture, 'codex'), claude: join(fixture, 'claude'), cursorLocalGovernance: join(fixture, 'gov.mdc') }
+    const g = { aiRules: join(fixture, 'ai'), codex: join(fixture, 'codex'), claude: join(fixture, 'claude'), pi: join(fixture, 'pi'), cursorLocalGovernance: join(fixture, 'gov.mdc') }
     const config = { ruleSurfaces: { agents: ['AGENTS.md'], claude: ['CLAUDE.md'], cursorRulesDir: '.cursor/rules' } }
     const lens = createSourceLens({ docsSystemRoot: '/docs', ruleConsumerRoot: '/repo/wt', repoRoot: '/repo', home: '/home/u', g, config })
     assert.equal(lens.label('/docs/common/rules/x.md'), 'common/rules/x.md')
@@ -84,6 +85,8 @@ if (process.argv[1]?.endsWith('effective-sources.mjs') && process.argv.includes(
     assert.equal(lens.label('/repo/apps/y.ts'), 'apps/y.ts')
     assert.equal(lens.label('/home/u/.ai-rules/AGENT.md'), '~/.ai-rules/AGENT.md')
     assert.equal(lens.sources.adapters[2], g.cursorLocalGovernance)
+    assert.equal(lens.sources.adapters[5], join(g.pi, 'AGENTS.md'))
+    assert.equal(lens.sources.adapters[6], join(g.pi, 'extensions/docs-tdd-rules.ts'))
     assert.ok(lens.sources.runtimeAdapters.length === 7)
     console.log('effective-sources self-test passed.')
   } finally {

@@ -47,7 +47,7 @@ const [command, projectId] = cliArgs
 const commandArgs = cliArgs.slice(2)
 const clientIndex = commandArgs.indexOf('--client')
 if (clientIndex >= 0 && !commandArgs[clientIndex + 1]) {
-  console.error('--client requires one of: codex, claude, cursor, human')
+  console.error('--client requires one of: codex, claude, cursor, pi, human')
   process.exit(1)
 }
 const sessionIndex = commandArgs.indexOf('--session-id')
@@ -214,7 +214,7 @@ if (command === 'rules') {
 }
 
 if (!new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(projectId || '')) {
-  console.error('usage: docs-tdd.mjs <kickoff|status|resume|next|capability|doctor|release|golden|guard|rule-health|rules|explain|check|gate|verify|context|changed|recommend> PR-01234 [G0-G8|scenario] [--input verify-input.json] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|human] [--session-id <id>]')
+  console.error('usage: docs-tdd.mjs <kickoff|status|resume|next|capability|doctor|release|golden|guard|rule-health|rules|explain|check|gate|verify|context|changed|recommend> PR-01234 [G0-G8|scenario] [--input verify-input.json] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|pi|human] [--session-id <id>]')
   process.exit(1)
 }
 

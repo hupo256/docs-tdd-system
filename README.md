@@ -40,7 +40,7 @@ docs-tdd guard --strict                    # 再把本地可修的 doctor warnin
 docs-tdd rule-health                       # 规则体检：命中分布、warn 台账年龄、待退休、零命中清单
 ```
 
-统一审计入口是 `docs-tdd doctor`：它检查五个 AI 入口是否一个不少、没有未登记入口，是否引用同一组 L1/L2/L3 source fingerprint，以及软链、adapter、Lark runtime 和发布清单是否漂移。需要连门禁回归一起检查时运行 `docs-tdd guard`；任一项失败都不是 PASS。
+统一审计入口是 `docs-tdd doctor`：它检查六个 AI 入口是否一个不少、没有未登记入口，是否引用同一组 L1/L2/L3 source fingerprint，以及软链、adapter、Lark runtime 和发布清单是否漂移。需要连门禁回归一起检查时运行 `docs-tdd guard`；任一项失败都不是 PASS。
 
 ## 首次接入一个项目
 
@@ -86,7 +86,7 @@ node apps/web/docs_tdd/common/engine/agent-scripts/lib/roots.mjs --self-test
 node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs doctor
 ```
 
-第一条最后显示 `roots: OK`，表示脚本已从当前目录找到三件事：规则系统放在哪里、哪个仓库在使用它、当前命令属于哪个 worktree。第二条检查五个 AI 入口、规则适配、冲突、本地隔离和发布状态。失败时按输出修配置；日常使用只需要维护 `docs-tdd.config.json` 和挂载软链，不需要理解内部变量或手工拼路径。
+第一条最后显示 `roots: OK`，表示脚本已从当前目录找到三件事：规则系统放在哪里、哪个仓库在使用它、当前命令属于哪个 worktree。第二条检查六个 AI 入口、规则适配、冲突、本地隔离和发布状态。失败时按输出修配置；日常使用只需要维护 `docs-tdd.config.json` 和挂载软链，不需要理解内部变量或手工拼路径。
 
 后续由 `prepare-coding-worktree.mjs` 创建的功能 worktree 会复用同一套配置，并自动挂载这份文档系统。
 

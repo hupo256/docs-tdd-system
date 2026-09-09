@@ -100,7 +100,7 @@ async function selfTest() {
   assert.equal(createCursorAdapter({ sharedRoot: '/shared', repoRoot: '/repo' }).includes('/common/rules/rule-router.md'), true)
   const matrix = createAgentClientMatrix({
     canonicalSources: { l1: ['a'], l2: ['b'], l3Router: 'r', l3Fingerprint: 'l3', conflictOverrides: [] },
-    adapterLabels: { codex: 'c', claude: 'cl', cursor: 'cu', lark: 'la' },
+    adapterLabels: { codex: 'c', claude: 'cl', cursor: 'cu', pi: 'p', lark: 'la' },
   })
   assert.deepEqual(Object.keys(matrix), REQUIRED_AGENT_CLIENT_IDS)
   assert.equal(validateAgentClientMatrix(matrix).ok, true)

@@ -23,7 +23,7 @@ export const HUMAN_JUDGED_METHODS = ['manual', 'manual-visual', 'browser']
 // 只匹配独立词，避免误伤 "Cursor 组的 aichen" 之类真人名（子串匹配会假阳性）。
 const AGENT_WORDS = new Set([
   'ai', 'agent', 'bot', 'assistant', 'automation', 'ci', 'system', 'auto',
-  'codex', 'claude', 'cursor', 'copilot', 'gpt', 'gemini', 'devin', 'aider',
+  'codex', 'claude', 'cursor', 'pi', 'copilot', 'gpt', 'gemini', 'devin', 'aider',
   'lark-codex', 'lark-claude', 'claude-code', 'docs-tdd', 'tbd', 'n/a', 'unknown',
 ])
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/

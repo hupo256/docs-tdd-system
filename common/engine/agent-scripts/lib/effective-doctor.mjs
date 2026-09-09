@@ -10,6 +10,7 @@ import { existsSync, lstatSync, readdirSync, readFileSync, realpathSync } from '
 import { join } from 'node:path'
 import { REQUIRED_AGENT_CLIENT_IDS, validateAgentClientMatrix, validateRuntimeClientConformance } from './agent-clients.mjs'
 import { createClaudeHookSpecs, createCodexHookSpecs, validateHookContract } from './hook-contract.mjs'
+import { PI_EXTENSION_MARKERS } from './pi-adapter.mjs'
 import { findL2Conflicts, findRepoEntryDuplicates, resolveL2Conflicts } from './l2-conflict-detect.mjs'
 import { isCanonicalL1Symlink } from './rule-surface-visibility.mjs'
 
@@ -55,7 +56,7 @@ function findHiddenRuleEntries({ ruleConsumerRoot, config, g }) {
 }
 
 function findDiscoverableSkillBackups(g) {
-  return [join(g.codex, 'skills'), join(g.claude, 'skills')].flatMap((skillsDir) => {
+  return [join(g.codex, 'skills'), join(g.claude, 'skills'), join(g.pi, 'skills')].flatMap((skillsDir) => {
     if (!existsSync(skillsDir)) return []
     return readdirSync(skillsDir)
       .filter((name) => name.includes('.backup-'))
@@ -103,15 +104,16 @@ export function runDoctor(deps) {
   for (const skill of ['coding-quality', 'figma-read']) {
     const codex = join(home, `.codex/skills/${skill}`)
     const claude = join(home, `.claude/skills/${skill}`)
+    const pi = join(home, `.pi/agent/skills/${skill}`)
     const canonical = join(home, `.ai-rules/skills/${skill}`)
-    const same = pathsResolveToCanonical([codex, claude], canonical)
+    const same = pathsResolveToCanonical([codex, claude, pi], canonical)
     add('L1-SINGLE-SOURCE', same, 'error', `${skill} ${same ? 'resolves to one shared source' : 'does not resolve to the shared source'}`, label(canonical))
   }
   const discoverableSkillBackups = findDiscoverableSkillBackups(g)
-  add('SKILL-DISCOVERY-CLEAN', discoverableSkillBackups.length === 0, 'error', discoverableSkillBackups.length ? `backup skills remain discoverable: ${discoverableSkillBackups.map(label).join(', ')}` : 'no backup skills are exposed through Codex or Claude skill discovery', '~/.ai-rules/backups')
-  // 顶层 L1 入口也必须同源：codex/claude 的规则入口须 realpath 到 canonical AGENT.md，把「读同一套」焊到字节级。
+  add('SKILL-DISCOVERY-CLEAN', discoverableSkillBackups.length === 0, 'error', discoverableSkillBackups.length ? `backup skills remain discoverable: ${discoverableSkillBackups.map(label).join(', ')}` : 'no backup skills are exposed through Codex, Claude, or Pi skill discovery', '~/.ai-rules/backups')
+  // 顶层 L1 入口也必须同源：codex/claude/pi 的规则入口须 realpath 到 canonical AGENT.md，把「读同一套」焊到字节级。
   const canonicalL1 = sources.l1[0]
-  for (const adapter of [sources.adapters[0], sources.adapters[1]]) {
+  for (const adapter of [sources.adapters[0], sources.adapters[1], sources.adapters[5]]) {
     const same = pathsResolveToCanonical([adapter], canonicalL1)
     add('L1-TOPLEVEL-SINGLE-SOURCE', same, 'error', `${label(adapter)} ${same ? 'resolves to the shared L1 source' : `does not resolve to shared L1 (${label(canonicalL1)}); replace with symlink via install-local-agent-rules.mjs`}`, label(adapter))
   }
@@ -136,6 +138,16 @@ export function runDoctor(deps) {
   }
   add('CODEX-HOOK', codexHookIssues.length === 0, 'error', codexHookIssues.length === 0 ? 'Codex rule injection, receipt, and immediate code-gate hooks match the required contract' : `Codex rule hook contract is invalid: ${codexHookIssues.join('; ')}`, label(sources.adapters[4]))
 
+  // Pi 直连 agent：全局 AGENTS.md 软链充当 L1+adapter，扩展布线 tool_call/tool_result 到共享 hook。
+  const piAdapter = sources.adapters[5]
+  const piExtension = sources.adapters[6]
+  add('ADAPTER-EXISTS', existsSync(piAdapter), 'error', `${label(piAdapter)} ${existsSync(piAdapter) ? 'exists' : 'is missing'}`, label(piAdapter))
+  add('ADAPTER-PROTOCOL', containsProtocol(piAdapter), 'error', `${label(piAdapter)} ${containsProtocol(piAdapter) ? 'declares' : 'does not declare'} router/context/changed/gate`, label(piAdapter))
+  const piExtensionText = existsSync(piExtension) ? readFileSync(piExtension, 'utf8') : ''
+  const piHookMissing = PI_EXTENSION_MARKERS.filter((marker) => !piExtensionText.includes(marker))
+  const piHook = existsSync(piExtension) && piHookMissing.length === 0
+  add('PI-HOOK', piHook, 'error', piHook ? 'Pi extension wires tool_call rule injection and tool_result code gate to the shared hook scripts' : existsSync(piExtension) ? `Pi extension is missing bridge markers: ${piHookMissing.join(', ')}` : `Pi extension is missing: ${label(piExtension)}; run install-local-agent-rules.mjs`, label(piExtension))
+
   const adapterProtocol = sources.adapters.slice(0, 3).map(containsProtocol)
   const l1Shared = sources.adapters.slice(0, 2).map((adapter) => pathsResolveToCanonical([adapter], canonicalL1))
   const runtimeAdaptersReady = sources.runtimeAdapters.every(existsSync)
@@ -143,6 +155,7 @@ export function runDoctor(deps) {
     codex: { l1: l1Shared[0], adapterProtocol: adapterProtocol[0], preToolRuleInjection: codexHookIssues.length === 0, postToolReceipt: codexHookIssues.length === 0, postToolCodeGate: codexHookIssues.length === 0 },
     claude: { l1: l1Shared[1], adapterProtocol: adapterProtocol[1], preToolRuleInjection: claudeHook, postToolReceipt: claudeHook, postToolCodeGate: claudeHook },
     cursor: { l1: cursorExact, adapterProtocol: adapterProtocol[2], nativeL2Rules: collectL2Files().length > 0, changedGateFallback: expectedCursorAdapter.includes('docs-tdd.mjs changed') },
+    pi: { l1: pathsResolveToCanonical([piAdapter], canonicalL1), adapterProtocol: containsProtocol(piAdapter), preToolRuleInjection: piHook, postToolReceipt: piHook, postToolCodeGate: piHook },
     'lark-codex': { runtimeAdapter: runtimeAdaptersReady, focusedContext: runtimeAdaptersReady, workerQualityGate: runtimeAdaptersReady },
     'lark-claude': { runtimeAdapter: runtimeAdaptersReady, focusedContext: runtimeAdaptersReady, workerQualityGate: runtimeAdaptersReady },
   })
@@ -150,7 +163,7 @@ export function runDoctor(deps) {
     'CLIENT-RUNTIME-CONFORMANCE',
     conformance.ok,
     'error',
-    conformance.ok ? 'all five clients have independently observed loader/executor capabilities' : `client enforcement gaps: ${Object.entries(conformance.missing).map(([client, missing]) => `${client}=[${missing.join(',')}]`).join(' ')}`,
+    conformance.ok ? `all ${REQUIRED_AGENT_CLIENT_IDS.length} clients have independently observed loader/executor capabilities` : `client enforcement gaps: ${Object.entries(conformance.missing).map(([client, missing]) => `${client}=[${missing.join(',')}]`).join(' ')}`,
     label(manifestFile),
   )
 

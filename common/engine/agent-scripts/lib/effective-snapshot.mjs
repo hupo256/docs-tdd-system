@@ -75,6 +75,7 @@ export function createSnapshotter({ sources, label, collectL2Files, commonDir, m
         codex: label(sources.adapters[0]),
         claude: label(sources.adapters[1]),
         cursor: label(sources.adapters[2]),
+        pi: label(sources.adapters[5]),
         lark: sources.runtimeAdapters.map(label).join(' + '),
       },
     })

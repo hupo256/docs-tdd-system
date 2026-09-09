@@ -6,6 +6,7 @@ import { homedir } from 'node:os'
 import { basename, dirname, join, relative, resolve } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { createCursorAdapter } from './lib/agent-rule-adapters.mjs'
+import { createPiExtension, PI_EXTENSION_RELPATH } from './lib/pi-adapter.mjs'
 import { resolveRoots } from './lib/roots.mjs'
 
 const { docsSystemRoot, consumerRoot: repoRoot, config } = resolveRoots()
@@ -69,6 +70,20 @@ function writeCursorAdapter() {
   console.log(`adapter: ${file}`)
 }
 
+function writePiExtension() {
+  const file = join(home, '.pi/agent', PI_EXTENSION_RELPATH)
+  mkdirSync(dirname(file), { recursive: true })
+  const content = createPiExtension({ docsSystemRoot })
+  if (existsSync(file) && readFileSync(file, 'utf8') === content) return
+  if (existsSync(file)) {
+    const backup = `${file}.backup-${timestamp}`
+    copyFileSync(file, backup)
+    console.log(`backup: ${backup}`)
+  }
+  writeFileSync(file, content)
+  console.log(`extension: ${file}`)
+}
+
 const ruleContextHook = join(docsSystemRoot, 'common/engine/agent-scripts/rule-context-hook.mjs')
 
 function addHook(settings, event, matcher, hook) {
@@ -106,10 +121,13 @@ function removeHooksMatching(settings, event, predicate) {
 }
 
 function moveDiscoverableSkillBackups() {
-  for (const agent of ['.codex', '.claude']) {
-    const skillsDir = join(home, agent, 'skills')
+  for (const [skillsDir, backupLabel] of [
+    [join(home, '.codex/skills'), 'codex'],
+    [join(home, '.claude/skills'), 'claude'],
+    [join(home, '.pi/agent/skills'), 'pi'],
+  ]) {
     if (!existsSync(skillsDir)) continue
-    const backupDir = join(sharedRoot, 'backups', agent.slice(1), 'skills')
+    const backupDir = join(sharedRoot, 'backups', backupLabel, 'skills')
     for (const entry of readdirSync(skillsDir).filter((name) => name.includes('.backup-'))) {
       mkdirSync(backupDir, { recursive: true })
       const source = join(skillsDir, entry)
@@ -262,13 +280,18 @@ function install() {
 
   backupAndLink(join(home, '.codex/AGENTS.md'), sharedAgent)
   backupAndLink(join(home, '.claude/CLAUDE.md'), sharedAgent)
+  backupAndLink(join(home, '.pi/agent/AGENTS.md'), sharedAgent)
   moveDiscoverableSkillBackups()
   for (const agent of ['.codex', '.claude']) {
     for (const skill of ['coding-quality', 'figma-read']) {
       backupAndLink(join(home, `${agent}/skills/${skill}`), join(sharedRoot, `skills/${skill}`), join(sharedRoot, 'backups', agent.slice(1), 'skills'))
     }
   }
+  for (const skill of ['coding-quality', 'figma-read']) {
+    backupAndLink(join(home, `.pi/agent/skills/${skill}`), join(sharedRoot, `skills/${skill}`), join(sharedRoot, 'backups', 'pi', 'skills'))
+  }
   writeCursorAdapter()
+  writePiExtension()
   mergeClaudeHooks()
   mergeCodexHooks()
   installLocalPrecommit()

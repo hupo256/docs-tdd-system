@@ -20,6 +20,7 @@
     "aiRules": "~/.ai-rules",
     "codex": "~/.codex",
     "claude": "~/.claude",
+    "pi": "~/.pi/agent",
     "cursorLocalGovernance": "~/.cursor/rules/local-governance.mdc"
   },
   "enforcementWiring": {

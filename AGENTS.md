@@ -10,7 +10,7 @@
 - 每个需求放一个独立项目目录，目录名必须是大写项目编号，例如 `PR-01685/`、`PR-01973/`。
 - 不同项目的 PRD、Figma、API、QA、任务和实现规则必须分开维护。
 - 旧项目的有效经验需要提炼到 `common/`，而不是散落在单个项目里。
-- 通用代码质量和代码规范不在本目录展开：Codex 侧入口是 `~/.codex/AGENTS.md` 与按需 skill，Claude 侧入口是 `~/.claude/CLAUDE.md` 与按需 skill，FameEX 编码锚点入口是仓库 `.cursor/rules/*.mdc`。
+- 通用代码质量和代码规范不在本目录展开：Codex 侧入口是 `~/.codex/AGENTS.md` 与按需 skill，Claude 侧入口是 `~/.claude/CLAUDE.md` 与按需 skill，Pi 侧入口是 `~/.pi/agent/AGENTS.md` 与 `~/.pi/agent/skills/*`（均软链同一份 `~/.ai-rules/AGENT.md` + `~/.ai-rules/skills/*`，三工具同源），FameEX 编码锚点入口是仓库 `.cursor/rules/*.mdc`。
 
 ## 2. 必读顺序（渐进披露）
 
@@ -23,7 +23,7 @@
 
 > 完整专题清单和触发条件见 [common/rules/rule-router.md](./common/rules/rule-router.md)；[common/README.md](./common/README.md) 保留专题全索引供查阅，但**开工路由以 rule-router 为准**。
 
-Codex 侧编码规则入口不放在 `docs_tdd`：短硬规则常驻 `~/.codex/AGENTS.md`；长清单按需读 `~/.codex/skills/coding-quality/SKILL.md`、`~/.codex/skills/figma-read/SKILL.md`；FameEX 锚定编码规则按主题读仓库 `.cursor/rules/*.mdc`。本目录只保留项目、流程、门禁、边界与项目事实。
+Codex/Claude/Pi 侧编码规则入口不放在 `docs_tdd`：短硬规则常驻 `~/.ai-rules/AGENT.md`（`~/.codex/AGENTS.md`、`~/.claude/CLAUDE.md`、`~/.pi/agent/AGENTS.md` 均软链至此，三工具读同一份文件，禁止分叉编辑）；长清单按需读 `~/.ai-rules/skills/coding-quality/SKILL.md`、`~/.ai-rules/skills/figma-read/SKILL.md`（三工具的 `skills/coding-quality`、`skills/figma-read` 同样软链至此）；FameEX 锚定编码规则按主题读仓库 `.cursor/rules/*.mdc`。本目录只保留项目、流程、门禁、边界与项目事实。
 
 新 chat 一句话启动新需求时，优先使用 [common/rules/startup-prompt.md](./common/rules/startup-prompt.md) 的启动口令，并执行 [common/rules/new-project-kickoff.md](./common/rules/new-project-kickoff.md) §2 的自动链路。
 

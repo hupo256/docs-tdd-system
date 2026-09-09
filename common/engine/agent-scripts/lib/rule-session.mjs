@@ -7,7 +7,7 @@ import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 export const CODING_SCENARIOS = new Set(['g4_coding_worktree', 'write_api', 'write_mapper', 'write_query_hook', 'write_state', 'write_msw', 'legacy_mock', 'write_ui', 'write_figma'])
-export const RULE_SESSION_CLIENTS = new Set(['codex', 'claude', 'cursor', 'human'])
+export const RULE_SESSION_CLIENTS = new Set(['codex', 'claude', 'cursor', 'pi', 'human'])
 
 function detectedAiClient(env) {
   if (env.CLAUDE_PROJECT_DIR) return 'claude'

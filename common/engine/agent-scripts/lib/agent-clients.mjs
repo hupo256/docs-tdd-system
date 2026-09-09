@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-export const REQUIRED_AGENT_CLIENT_IDS = Object.freeze(['codex', 'claude', 'cursor', 'lark-codex', 'lark-claude'])
+export const REQUIRED_AGENT_CLIENT_IDS = Object.freeze(['codex', 'claude', 'cursor', 'pi', 'lark-codex', 'lark-claude'])
 
 const CLIENT_DEFINITIONS = Object.freeze([
   {
@@ -25,6 +25,12 @@ const CLIENT_DEFINITIONS = Object.freeze([
     kind: 'direct',
     adapter: 'cursor',
     enforcement: 'native glob/alwaysApply + resolver conformance + changed/gate',
+  },
+  {
+    id: 'pi',
+    kind: 'direct',
+    adapter: 'pi',
+    enforcement: 'extension tool_call rule injection + tool_result receipt/code gate + changed/gate',
   },
   {
     id: 'lark-codex',
@@ -82,6 +88,7 @@ const RUNTIME_REQUIREMENTS = Object.freeze({
   codex: ['l1', 'adapterProtocol', 'preToolRuleInjection', 'postToolReceipt', 'postToolCodeGate'],
   claude: ['l1', 'adapterProtocol', 'preToolRuleInjection', 'postToolReceipt', 'postToolCodeGate'],
   cursor: ['l1', 'adapterProtocol', 'nativeL2Rules', 'changedGateFallback'],
+  pi: ['l1', 'adapterProtocol', 'preToolRuleInjection', 'postToolReceipt', 'postToolCodeGate'],
   'lark-codex': ['runtimeAdapter', 'focusedContext', 'workerQualityGate'],
   'lark-claude': ['runtimeAdapter', 'focusedContext', 'workerQualityGate'],
 })
@@ -108,6 +115,7 @@ function selfTest() {
       codex: '/codex',
       claude: '/claude',
       cursor: '/cursor',
+      pi: '/pi',
       lark: '/lark',
     },
   })
