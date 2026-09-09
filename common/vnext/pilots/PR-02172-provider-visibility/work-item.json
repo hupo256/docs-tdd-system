@@ -303,6 +303,10 @@
       ]
     }
   ],
+  "requirementsAuthor": {
+    "kind": "model",
+    "id": "pi/gpt-5.4-requirements-extractor"
+  },
   "coverageAudit": {
     "sourceFingerprint": "86cc30314e7cb5ad14ab4617129375c711a0cf9dcfb977491da8e67d3380ce69",
     "requirementsFingerprint": "d37f56ff6f2eaf7a775398c5d808e362fe4bfdd1d03f856e15ee65c7665aca69",

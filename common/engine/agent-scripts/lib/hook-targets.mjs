@@ -31,8 +31,37 @@ function shellTargets(command) {
   return targets
 }
 
+function extractQuotedArg(command, prefixRe) {
+  const re = new RegExp(`(?:^|\\s)(?:${prefixRe.source})\\s+(["'"])((?:\\\\\\1|[^\\1])*)\\1`)
+  const match = command.match(re)
+  return match ? match[2] : null
+}
+
+function scriptContainsWriteApi(code) {
+  if (typeof code !== 'string') return false
+  return /(?:writeFile(?:Sync)?|appendFile(?:Sync)?|createWriteStream|open\s*\([^)]*["']w)/i.test(code)
+}
+
+function hasOpaqueInlineWrite(command) {
+  if (typeof command !== 'string') return false
+  const normalized = stripFdDupRedirections(command)
+  if (/(?:^|\s)(?:sed\s+-i|perl\s+-pi)(?:\s|$)/.test(normalized)) return true
+  const nodeScript = extractQuotedArg(normalized, /node\s+-e/)
+  if (nodeScript) return scriptContainsWriteApi(nodeScript)
+  const pythonScript = extractQuotedArg(normalized, /python(?:\d+)?\s+-c/)
+  if (pythonScript) return scriptContainsWriteApi(pythonScript)
+  return false
+}
+
 function looksLikeUnresolvedWrite(command) {
-  return typeof command === 'string' && /(?:^|\s)(?:sed\s+-i|perl\s+-pi|cp\s|mv\s|tee\s|truncate\s|python\s+-c|node\s+-e)|>{1,2}/.test(stripFdDupRedirections(command))
+  if (typeof command !== 'string') return false
+  const normalized = stripFdDupRedirections(command)
+  if (/(?:^|\s)(?:sed\s+-i|perl\s+-pi|cp\s|mv\s|tee\s|truncate\s)|>{1,2}/.test(normalized)) return true
+  const nodeScript = extractQuotedArg(normalized, /node\s+-e/)
+  if (nodeScript) return scriptContainsWriteApi(nodeScript)
+  const pythonScript = extractQuotedArg(normalized, /python(?:\d+)?\s+-c/)
+  if (pythonScript) return scriptContainsWriteApi(pythonScript)
+  return false
 }
 
 export function extractTargets(input) {
@@ -76,7 +105,7 @@ export function classifyTargets(input, worktree) {
   }
   const toolInput = input?.tool_input && typeof input.tool_input === 'object' ? input.tool_input : {}
   const commands = [toolInput.command, toolInput.cmd].filter((value) => typeof value === 'string')
-  const opaqueWrite = commands.some((command) => /(?:^|\s)(?:sed\s+-i|perl\s+-pi|python\s+-c|node\s+-e)(?:\s|$)/.test(command))
+  const opaqueWrite = commands.some((command) => hasOpaqueInlineWrite(command))
     || (typeof toolInput.code === 'string' && /tools\.(?:apply_patch|exec_command)\s*\(/.test(toolInput.code) && repoTargets.length === 0)
   return {
     repoTargets: [...new Set(repoTargets)],
@@ -100,7 +129,8 @@ function selfTest() {
   assert.deepEqual(extractTargets({ tool_input: { command: 'printf x > src/out.txt 2>&1' } }), ['src/out.txt'])
   assert.deepEqual(classifyTargets({ tool_input: { command: 'cp /tmp/a src/a.ts' } }, '/repo').repoTargets, ['src/a.ts'])
   assert.equal(classifyTargets({ tool_input: { command: "python -c 'open(\"src/a.ts\",\"w\").write(\"x\")' > /tmp/out" } }, '/repo').unknownWrite, true)
-  assert.equal(classifyTargets({ tool_input: { command: 'printf x > "$TMPDIR/out"' } }, '/repo').unknownWrite, true)
+  assert.equal(classifyTargets({ tool_input: { command: 'node -e "console.log(JSON.stringify({stats: 1}))"' } }, '/repo').unknownWrite, false, 'read-only node -e is not an opaque write')
+  assert.equal(classifyTargets({ tool_input: { command: 'node -e "require(\'fs\').writeFileSync(\'src/a.ts\', \'x\')"' } }, '/repo').unknownWrite, true, 'node -e with write API is an opaque write')
   console.log('PASS hook-targets (single/multi-file and shell target extraction)')
 }
 

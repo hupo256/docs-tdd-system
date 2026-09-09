@@ -34,6 +34,7 @@ import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 import { resolveRuleSessionClient } from './lib/rule-session.mjs'
 import { latestReleasePin, resolveRulePin, upgradeRulePin } from './lib/rule-pin.mjs'
 import { stableFingerprint } from './lib/vnext-work-item.mjs'
+import { workflowVersionForProject } from './lib/workflow-version.mjs'
 import { CODING_SCENARIOS, requireRuleSession, verifyG2Ready, writeRuleSession } from './lib/rule-session-runtime.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
@@ -221,17 +222,7 @@ if (['kickoff', 'status', 'resume', 'next'].includes(command)) {
   process.exit(run([join(scriptDir, 'project-orchestrator.mjs'), command, projectId, ...cliArgs.slice(2)]))
 }
 
-function workflowVersion(id) {
-  const projectRoot = resolveProjectRoot(id)
-  const readmeFile = join(projectRoot, 'README.md')
-  if (existsSync(readmeFile)) {
-    const value = readFileSync(readmeFile, 'utf8').match(/^workflowVersion:\s*(\d+)$/m)?.[1]
-    if (value) return Number(value)
-  }
-  return existsSync(join(projectRoot, 'work-item.json')) ? 2 : 1
-}
-
-const projectWorkflowVersion = workflowVersion(projectId)
+const projectWorkflowVersion = workflowVersionForProject(projectId, { resolveProjectRoot })
 if (projectWorkflowVersion === 2 && command === 'context') {
   const session = commandArgs.indexOf('--session')
   if (session >= 0 && !commandArgs[session + 1]) {

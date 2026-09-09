@@ -30,7 +30,7 @@ QA：<链接>
 
 ```bash
 node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs kickoff <PROJECT-ID> --prd <PRD> --title <项目短名>
-# v2 项目接下来：抽取原子需求（带 sourceAnchor）→ vnext-verify --prepare-review 冷读审查 → 补证据 → docs-tdd verify <PROJECT-ID> --input <verify-input.json>
+# v2 项目接下来：抽取原子需求（带 sourceAnchor）→ vnext-verify --prepare-review 冷读审查 → 补证据 → 用 vnext-verify --scaffold-input 生成 verify-input.json 骨架 → docs-tdd verify <PROJECT-ID> --input <verify-input.json>
 ```
 
 4. 中断或换会话先运行 `docs-tdd status <PROJECT-ID>` 与 `docs-tdd next <PROJECT-ID>`；可安全重试的同步/intake 用 `docs-tdd resume <PROJECT-ID>`。

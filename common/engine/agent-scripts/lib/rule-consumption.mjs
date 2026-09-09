@@ -142,11 +142,11 @@ function migrateState(state, worktree) {
   return state
 }
 
-function resetEpochState(state, { reason, head = state.head, previousHead = state.head }) {
+function resetEpochState(state, { reason, head = state.head, previousHead = state.head, preserveInjectedRuleHashes = false }) {
   migrateState(state)
   state.head = head
   state.contextEpoch += 1
-  state.injectedRuleHashes = []
+  if (!preserveInjectedRuleHashes) state.injectedRuleHashes = []
   state.pendingTools = {}
   state.injectionEvents.push({
     type: 'epoch',
@@ -159,10 +159,11 @@ function resetEpochState(state, { reason, head = state.head, previousHead = stat
   return state
 }
 
-function resetForHeadChange(state, worktree, head) {
+function resetForHeadChange(state, head, { preserveInjectedRuleHashes = false } = {}) {
   return resetEpochState(state, {
     reason: 'HEAD changed',
     head,
+    preserveInjectedRuleHashes,
   })
 }
 
@@ -253,20 +254,21 @@ function acquireLedgerLock(lock, identity) {
   throw new Error(`rule-consumption ledger remained busy for ${LOCK_WAIT_TIMEOUT_MS}ms: ${lock.replace(/\.lock$/, '')}`)
 }
 
-export function updateLedger({ worktree, sessionId, client }, update) {
+export function updateLedger({ worktree, sessionId, client, workflowVersion }, update) {
   const file = ledgerPath(worktree, sessionId)
   mkdirSync(dirname(file), { recursive: true })
   const lock = `${file}.lock`
-  let descriptor = acquireLedgerLock(lock, { worktree, sessionId, client })
+  const descriptor = acquireLedgerLock(lock, { worktree, sessionId, client })
   try {
     const existing = existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : initialState({ worktree, sessionId, client })
     migrateState(existing, worktree)
     if (existing.worktree !== resolve(worktree)) throw new Error('session ledger belongs to a different worktree')
     if (existing.client !== client) throw new Error('session ledger belongs to a different client')
     const head = currentHead(worktree)
+    const preserveInjectedRuleHashes = workflowVersion === 2
     if (existing.head !== head) {
       recordHeadChangeAudit(existing, worktree, existing.head, head)
-      resetForHeadChange(existing, worktree, head)
+      resetForHeadChange(existing, head, { preserveInjectedRuleHashes })
     }
     const next = update(existing) || existing
     next.updatedAt = now()
@@ -510,6 +512,18 @@ function selfTest() {
     prepareLedger(identity)
     const afterCommit = verifyConsumption({ ...identity, resolveFile })
     assert(afterCommit.ok && afterCommit.files.join(',') === 'a.txt', 'HEAD changes preserve the full-session audit')
+
+    const v2Identity = { worktree: auditRepo, sessionId: 'v2-persist', client: 'self-test', workflowVersion: 2 }
+    recordInjection(v2Identity, { ruleHashes: ['rule-a', 'rule-b'], packFingerprint: 'pack', targets: ['a.txt'], channel: 'test', byteLength: 100 })
+    recordPendingTool(v2Identity, { toolUseId: 'v2-edit', targets: ['a.txt'], perFile: { 'a.txt': { packFingerprint: 'pack', ruleHashes: ['rule-a', 'rule-b'] } }, packFingerprint: 'pack' })
+    writeFileSync(join(auditRepo, 'a.txt'), 'v2\n')
+    recordPostTool(v2Identity, { toolUseId: 'v2-edit' })
+    spawnSync('git', ['add', 'a.txt'], { cwd: auditRepo })
+    spawnSync('git', ['commit', '-qm', 'v2 change'], { cwd: auditRepo })
+    const v2State = prepareLedger(v2Identity)
+    assert(JSON.stringify(v2State.injectedRuleHashes) === JSON.stringify(['rule-a', 'rule-b']), 'v2 HEAD change preserves injected rule hashes')
+    assert(v2State.contextEpoch === 1, 'v2 HEAD change still advances context epoch')
+
     writeFileSync(join(auditRepo, 'a.txt'), 'uncovered\n')
     recordPostTool(identity, { toolUseId: 'missing-pre-tool' })
     assert(!verifyConsumption({ ...identity, resolveFile }).ok, 'an uncovered write taints the file')

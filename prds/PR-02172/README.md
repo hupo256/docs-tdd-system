@@ -9,6 +9,7 @@ visualFidelity: standard
 prdSource: https://qfglxo2m3dc.sg.larksuite.com/docx/Zj7Dd8cdIorON3xmYSdlI94qg1c
 figmaNode: "19782:4920"
 larkEnabled: false
+workflowVersion: 2
 ---
 
 # PR-02172 【登录注册】增加第三方（tg、facebook）

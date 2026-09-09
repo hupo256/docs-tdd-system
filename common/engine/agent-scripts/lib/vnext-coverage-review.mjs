@@ -51,6 +51,14 @@ export function buildCoverageReviewRequest({ workItem, sourceUnits }) {
     .filter((anchor) => !sourceIdSet.has(anchor.sourceId))
     .map((anchor) => `${requirement.requirementId}:${anchor.sourceId}`))
   if (unknownAnchors.length) throw new Error(`requirement anchors are absent from source units: ${unknownAnchors.join(', ')}`)
+  const anchoredSourceIds = new Set((workItem.requirements || []).flatMap((requirement) => (requirement.sourceAnchors || []).map((anchor) => anchor.sourceId)))
+  const dispositionBySourceId = new Map((workItem.sourceUnitDispositions || []).map((d) => [d.sourceId, d]))
+  const unattributed = sourceUnits.filter((unit) => {
+    if (anchoredSourceIds.has(unit.sourceId)) return false
+    const disposition = dispositionBySourceId.get(unit.sourceId)
+    return disposition?.disposition !== 'not-a-requirement'
+  })
+  if (unattributed.length) throw new Error(`source units have no requirement attribution: ${unattributed.map((unit) => unit.sourceId).join(', ')}`)
   const fingerprints = coverageFingerprints(workItem)
   return {
     schemaVersion: 1,
@@ -75,6 +83,7 @@ export function validateCoverageReviewResponse(workItem, response) {
   if (!response?.reviewRunId?.trim()) problems.push('reviewRunId is required')
   if (!response?.completedAt || Number.isNaN(Date.parse(response.completedAt))) problems.push('completedAt must be an ISO timestamp')
   if (!['human', 'model'].includes(response?.reviewer?.kind) || !response?.reviewer?.id?.trim()) problems.push('reviewer kind and id are required')
+  if (workItem?.requirementsAuthor?.id === response?.reviewer?.id) problems.push('reviewer must not be the same entity as the requirements author')
   if (!['pass', 'changes-required'].includes(response?.verdict)) problems.push('verdict must be pass or changes-required')
   if (!Array.isArray(response?.findings)) problems.push('findings must be an array')
 

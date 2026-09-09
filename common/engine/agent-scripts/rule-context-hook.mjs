@@ -2,8 +2,9 @@
 
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
-import { resolveRulePack, selectRuleInjectionBatch } from './lib/l2-rule-resolver.mjs'
-import { loadConfig } from './lib/roots.mjs'
+import { partitionRuleInjection, renderAdvisoryRuleCatalog, resolveRulePack, selectRuleInjectionBatch } from './lib/l2-rule-resolver.mjs'
+import { loadConfig, resolveProjectRoot } from './lib/roots.mjs'
+import { workflowVersionForWorktree } from './lib/workflow-version.mjs'
 import { advanceContextEpoch, prepareLedger, recordInjection, recordPendingTool, recordPostTool, resolveGitWorktree } from './lib/rule-consumption.mjs'
 import { classifyTargets } from './lib/hook-targets.mjs'
 
@@ -21,8 +22,8 @@ function hookOutput(eventName, fields = {}) {
   )
 }
 
-function identity(input, worktree) {
-  return { worktree, sessionId: input.session_id, client }
+function identity(input, worktree, workflowVersion) {
+  return { worktree, sessionId: input.session_id, client, workflowVersion }
 }
 
 function singleFileReceipt(worktree, file, conflictOverrides) {
@@ -52,8 +53,9 @@ try {
     hookOutput(eventName)
     process.exit(0)
   }
-  const id = identity(input, worktree)
   const { config } = loadConfig({ cwd: input.cwd, consumerWorktree: worktree })
+  const workflowVersion = workflowVersionForWorktree(worktree, config, { resolveProjectRoot })
+  const id = identity(input, worktree, workflowVersion)
   const conflictOverrides = config.ruleConflictOverrides || []
 
   if (eventName === 'SessionStart' || eventName === 'PreCompact') {
@@ -99,18 +101,48 @@ try {
   const injected = new Set(state?.injectedRuleHashes || [])
   const delta = pack.matchedRules.filter((rule) => !injected.has(rule.sourceHash))
   if (delta.length) {
-    const { rendered, remainingCount } = selectRuleInjectionBatch(pack, { rules: delta })
+    if (workflowVersion === 1) {
+      const { rendered, remainingCount } = selectRuleInjectionBatch(pack, { rules: delta })
+      recordInjection(id, {
+        ruleHashes: rendered.ruleHashes,
+        packFingerprint: pack.fingerprint,
+        targets: pack.targets,
+        channel: `${client}:PreToolUse:deny-and-retry`,
+        byteLength: rendered.byteLength,
+      })
+      hookOutput('PreToolUse', {
+        permissionDecision: 'deny',
+        permissionDecisionReason: `Injected ${rendered.ruleCount} previously unseen rules (${rendered.byteLength} bytes)${remainingCount ? `; ${remainingCount} rules remain for the next retry` : ''}. Read the complete injected context, apply it, then retry the tool call.`,
+        additionalContext: rendered.text,
+      })
+      process.exit(0)
+    }
+
+    const { blocking, advisory } = partitionRuleInjection(delta, config.ruleInjection)
+    const { rendered: blockingRendered, remainingCount: blockingRemaining } = selectRuleInjectionBatch(pack, { rules: blocking })
+    const advisoryCatalog = renderAdvisoryRuleCatalog(pack, { rules: advisory, maxBytes: config.ruleInjection?.advisoryCatalogBudgetBytes })
+    const combinedText = `${blockingRendered.text}\n${advisoryCatalog.text}`
+    const combinedByteLength = blockingRendered.byteLength + advisoryCatalog.byteLength
+    const combinedRuleCount = blockingRendered.ruleCount + advisoryCatalog.ruleCount
+    const combinedRuleHashes = [...new Set([...blockingRendered.ruleHashes, ...advisoryCatalog.ruleHashes])].sort()
     recordInjection(id, {
-      ruleHashes: rendered.ruleHashes,
+      ruleHashes: combinedRuleHashes,
       packFingerprint: pack.fingerprint,
       targets: pack.targets,
-      channel: `${client}:PreToolUse:deny-and-retry`,
-      byteLength: rendered.byteLength,
+      channel: `${client}:PreToolUse:v2-advisory`,
+      byteLength: combinedByteLength,
+    })
+    const perFile = Object.fromEntries(pack.targets.map((file) => [file, singleFileReceipt(worktree, file, conflictOverrides)]))
+    recordPendingTool(id, {
+      toolUseId: input.tool_use_id,
+      targets: pack.targets,
+      perFile,
+      packFingerprint: pack.fingerprint,
     })
     hookOutput('PreToolUse', {
-      permissionDecision: 'deny',
-      permissionDecisionReason: `Injected ${rendered.ruleCount} previously unseen rules (${rendered.byteLength} bytes)${remainingCount ? `; ${remainingCount} rules remain for the next retry` : ''}. Read the complete injected context, apply it, then retry the tool call.`,
-      additionalContext: rendered.text,
+      permissionDecision: 'allow',
+      permissionDecisionReason: `Injected ${combinedRuleCount} rules (${combinedByteLength} bytes)${blockingRemaining ? `; ${blockingRemaining} blocking rules remain for the next batch` : ''}.`,
+      additionalContext: combinedText,
     })
     process.exit(0)
   }

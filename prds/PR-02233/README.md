@@ -9,6 +9,7 @@ visualFidelity: standard
 prdSource: https://qfglxo2m3dc.sg.larksuite.com/docx/QaBEditNroySaGxmywFl8CwXg6d
 figmaNode: ""
 larkEnabled: false
+workflowVersion: 2
 ---
 
 # PR-02233 【用户端】安全验证校验交互优化

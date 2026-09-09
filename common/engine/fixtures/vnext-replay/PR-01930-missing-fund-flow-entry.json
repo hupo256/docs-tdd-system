@@ -105,6 +105,10 @@
         ]
       }
     ],
+    "requirementsAuthor": {
+      "kind": "model",
+      "id": "pi/gpt-5.4-requirements-extractor"
+    },
     "coverageAudit": {
       "sourceFingerprint": "sealed-by-replay",
       "requirementsFingerprint": "sealed-by-replay",

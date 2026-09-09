@@ -136,6 +136,57 @@ export function resolveRulePack({ worktree, targetFiles, rulesDir = join(worktre
   }
 }
 
+function matchesAnyRuleGlob(rule, globs) {
+  return globs.some((glob) => minimatch(rule.relativePath, glob, { dot: true, nocase: false, nocomment: true, nonegate: true, matchBase: false, platform: 'linux' }))
+}
+
+// 把命中的 L2 规则拆成「必须全文送达」与「只报目录、按需自取」两层。
+// 未被任何 glob 命中的规则默认落 blocking：分类缺失时保守送全文，不静默降级成一行摘要。
+export function partitionRuleInjection(rules, policy = {}) {
+  const advisoryGlobs = Array.isArray(policy.advisoryRuleGlobs) ? policy.advisoryRuleGlobs : []
+  const blockingGlobs = Array.isArray(policy.blockingRuleGlobs) ? policy.blockingRuleGlobs : []
+  const blocking = []
+  const advisory = []
+  for (const rule of rules) {
+    const explicitlyBlocking = matchesAnyRuleGlob(rule, blockingGlobs)
+    const explicitlyAdvisory = matchesAnyRuleGlob(rule, advisoryGlobs)
+    if (explicitlyAdvisory && !explicitlyBlocking) advisory.push(rule)
+    else blocking.push(rule)
+  }
+  return { blocking, advisory }
+}
+
+// advisory 层只渲染「文件名 + description」目录：宽 glob 规则（js-*/rerender-*/rendering-* 等）
+// 对单次改动大多不适用，全文送达是纯浪费。目录超预算就截断并报 remainingCount，不无限重注入。
+export function renderAdvisoryRuleCatalog(pack, { rules, maxBytes = 16 * 1024 } = {}) {
+  const budget = Number.isFinite(maxBytes) ? Math.max(maxBytes, 1024) : 16 * 1024
+  const header = [
+    '# Advisory Cursor rule catalogue',
+    '',
+    `Targets: ${pack.targets.join(', ')}`,
+    'These broad-glob rules are not unconditional requirements. Read a full rule only when its description matches the actual change; do not load every listed rule.',
+    '',
+  ]
+  const selected = []
+  for (const rule of rules || []) {
+    const line = `- ${rule.relativePath}: ${rule.description || '(no description)'}`
+    if (Buffer.byteLength(`${[...header, ...selected, line].join('\n')}\n`) > budget) {
+      if (!selected.length) selected.push(`- ${rule.relativePath}: (description omitted to fit catalogue budget)`)
+      break
+    }
+    selected.push(line)
+  }
+  const selectedRules = (rules || []).slice(0, selected.length)
+  const text = `${[...header, ...selected].join('\n')}\n`
+  return {
+    text,
+    byteLength: Buffer.byteLength(text),
+    ruleCount: selectedRules.length,
+    ruleHashes: selectedRules.map((rule) => rule.sourceHash),
+    remainingCount: (rules || []).length - selectedRules.length,
+  }
+}
+
 export function renderRuleContext(pack, { rules = pack.matchedRules, maxBytes = DEFAULT_EVENT_BUDGET_BYTES } = {}) {
   const selectedHashes = new Set(rules.map((rule) => rule.sourceHash))
   const selected = pack.matchedRules.filter((rule) => selectedHashes.has(rule.sourceHash))
@@ -216,6 +267,17 @@ function selfTest() {
     oversizedRule = error?.code === 'RULE_CONTEXT_SINGLE_RULE_TOO_LARGE' && error?.rulePath === 'a.mdc'
   }
   assert(oversizedRule, 'a single oversized rule reports an actionable error')
+  const partitioned = partitionRuleInjection(syntheticPack.matchedRules, {
+    advisoryRuleGlobs: ['b.mdc'],
+    blockingRuleGlobs: ['a.mdc'],
+  })
+  assert(partitioned.blocking[0]?.relativePath === 'a.mdc' && partitioned.advisory[0]?.relativePath === 'b.mdc', 'injection policy partitions exact rule globs')
+  const unclassified = partitionRuleInjection(syntheticPack.matchedRules, {})
+  assert(unclassified.blocking.length === 2 && unclassified.advisory.length === 0, 'unclassified rules default to blocking rather than silently downgrading')
+  const catalog = renderAdvisoryRuleCatalog(syntheticPack, { rules: partitioned.advisory })
+  assert(catalog.ruleHashes.join(',') === 'b' && catalog.text.includes('b.mdc'), 'advisory rules render as a compact catalogue')
+  const tinyBudgetCatalog = renderAdvisoryRuleCatalog(syntheticPack, { rules: partitioned.advisory, maxBytes: 1 })
+  assert(tinyBudgetCatalog.ruleCount === 1, 'advisory catalogue clamps an unusably small budget instead of reinjecting forever')
   console.log('PASS l2-rule-resolver (path normalization and injection batching)')
 }
 

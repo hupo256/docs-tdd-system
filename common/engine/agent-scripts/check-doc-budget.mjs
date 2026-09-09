@@ -102,6 +102,7 @@ const SELF_TEST_SCRIPTS = [
   ['lib/rule-pin.mjs', '--self-test'],
   ['lib/waiver-policy.mjs', '--self-test'],
   ['lib/warn-retirement.mjs', '--self-test'],
+  ['lib/workflow-version.mjs', '--self-test'],
   ['lib/confirmation.mjs', '--self-test'],
   ['install-local-agent-rules.mjs', '--self-test'],
   ['prd-intake.mjs', '--self-test'],
@@ -640,7 +641,7 @@ const docFilesForScriptRefs = [
 
 // 默认绑定配置的核心键必须至少有一个运行时消费者，防止“配置看似可移植，脚本仍硬编码”。
 {
-  const coreConfigKeys = ['appSubpath', 'docsMountPath', 'baseRef', 'projectIdPattern', 'branchPrefix', 'defaultPort', 'portRangeStart', 'verifyPath', 'typecheckRoots', 'productionBuild', 'moduleImportAliases', 'larkOutputDir']
+  const coreConfigKeys = ['appSubpath', 'docsMountPath', 'baseRef', 'projectIdPattern', 'branchPrefix', 'defaultPort', 'portRangeStart', 'verifyPath', 'typecheckRoots', 'productionBuild', 'moduleImportAliases', 'larkOutputDir', 'ruleInjection']
   if (!existsSync(DEFAULT_CONFIG_FILE)) {
     errors.push('❌ 缺少 docs-tdd.config.default.json。')
   } else {

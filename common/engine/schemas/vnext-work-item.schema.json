@@ -203,6 +203,34 @@
       ],
       "additionalProperties": false
     },
+    "sourceUnitDispositions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["sourceId", "disposition"],
+        "properties": {
+          "sourceId": { "type": "string", "minLength": 1 },
+          "disposition": { "type": "string", "enum": ["anchored", "not-a-requirement"] },
+          "reason": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": { "properties": { "disposition": { "const": "not-a-requirement" } } },
+            "then": { "required": ["reason"] }
+          }
+        ]
+      }
+    },
+    "requirementsAuthor": {
+      "type": "object",
+      "required": ["kind", "id"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["human", "model"] },
+        "id": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
     "scopeApproval": {
       "type": ["object", "null"],
       "required": ["confirmationKind", "confirmedBy", "confirmedAt", "fingerprint"],

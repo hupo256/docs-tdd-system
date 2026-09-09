@@ -4,7 +4,8 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
-import { isAbsolute, relative, resolve, sep } from 'node:path'
+import { isAbsolute, join, relative, resolve, sep } from 'node:path'
+import { docsSystemRoot } from './lib/roots.mjs'
 import { buildCoverageReviewRequest, applyCoverageReview, REVIEW_PROTOCOL } from './lib/vnext-coverage-review.mjs'
 import { buildVNextExitResult } from './lib/vnext-exit.mjs'
 import { codeFingerprint } from './lib/fingerprint.mjs'
@@ -17,6 +18,44 @@ import { coverageFingerprints, verifyVNextCoverage } from './lib/vnext-work-item
 function normalizeCurrentSources(workItem, sourceDocuments, revision) {
   if (!revision?.trim()) throw new Error('currentRevision is required')
   return normalizeSourceDocuments(sourceDocuments, { revision })
+}
+
+export function scaffoldVerifyInput({ projectDir, worktreePath }) {
+  if (!projectDir) throw new Error('--project is required for scaffold-input')
+  if (!worktreePath) throw new Error('--worktree is required for scaffold-input')
+  const workItemPath = resolve(projectDir, 'work-item.json')
+  const workItem = JSON.parse(readFileSync(workItemPath, 'utf8'))
+  const sourceDocuments = (workItem.sourceSnapshot?.sources || []).map((source) => {
+    const fullPath = isAbsolute(source.path) ? source.path : join(docsSystemRoot, source.path)
+    return { path: source.path, content: readFileSync(fullPath, 'utf8') }
+  })
+  const code = codeFingerprint(resolve(worktreePath))
+  return {
+    workItem,
+    currentRevision: workItem.sourceSnapshot?.revision || 'TODO: current revision',
+    sourceDocuments,
+    reviewResponse: {
+      schemaVersion: 1,
+      protocol: REVIEW_PROTOCOL,
+      projectId: workItem.projectId,
+      sourceFingerprint: 'TODO: from prepare-review',
+      requirementsFingerprint: 'TODO: from prepare-review',
+      reviewRunId: 'TODO: run id',
+      completedAt: 'TODO: ISO 8601 timestamp',
+      reviewer: { kind: 'TODO: human|model', id: 'TODO: reviewer id' },
+      verdict: 'TODO: pass|changes-required',
+      findings: [],
+    },
+    discoveredSurfaces: [],
+    implementation: { coveredSurfaceIds: [] },
+    evidence: {
+      runId: 'TODO: run id',
+      capturedAt: 'TODO: ISO 8601 timestamp',
+      codeFingerprint: code,
+      facts: [],
+    },
+    blockers: [],
+  }
 }
 
 export function normalizeSourceInput(input) {
@@ -49,6 +88,7 @@ export function runVNextVerification(input, { currentCodeState, generatedAt, mod
   const coverage = verifyVNextCoverage({
     workItem: reviewedWorkItem,
     currentSourceSnapshot: normalized.sourceSnapshot,
+    sourceUnits: normalized.sourceUnits,
     sourceOracle: input.sourceOracle,
     discoveredSurfaces: input.discoveredSurfaces,
     implementation: input.implementation,
@@ -103,9 +143,11 @@ function usage() {
   vnext-verify.mjs --prepare-review <input.json>
   vnext-verify.mjs --init <work-item.json> --out <v2-project-dir>
   vnext-verify.mjs --input <verified-input.json> --worktree <path> [--write --out <v2-project-dir>] [--json] [--shadow]
+  vnext-verify.mjs --scaffold-input --project <v2-project-dir> --worktree <path>
 
 normalize-sources input: { currentRevision, sourceDocuments }
 prepare-review input:   { workItem, currentRevision, sourceDocuments }
+scaffold-input:         prints a verify-input.json skeleton for a v2 project
 verification input:     { workItem, currentRevision, sourceDocuments, reviewResponse, discoveredSurfaces, implementation, evidence, blockers, sourceOracle? }
 
 Verification is read-only unless --write is explicit. --write persists only work-item.json, latest-result.json, and runs.jsonl in --out; it never updates v1 Gate state.`)
@@ -195,6 +237,12 @@ if (process.argv.includes('--self-test')) {
     const initPath = argumentValue('--init')
     const inputPath = argumentValue('--input')
     const outDir = argumentValue('--out')
+    if (process.argv.includes('--scaffold-input')) {
+      const projectDir = argumentValue('--project')
+      const worktreePath = argumentValue('--worktree')
+      console.log(JSON.stringify(scaffoldVerifyInput({ projectDir, worktreePath }), null, 2))
+      process.exit(0)
+    }
     if (normalizePath) console.log(JSON.stringify(normalizeSourceInput(loadInput(normalizePath)), null, 2))
     else if (preparePath) console.log(JSON.stringify(prepareReview(loadInput(preparePath)), null, 2))
     else if (initPath) {

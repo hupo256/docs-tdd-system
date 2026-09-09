@@ -8,7 +8,7 @@
 0. **新需求路由（2026-09-08 起正式生效）**：全新项目/独立微变更默认走 **v2**（`workflowVersion: 2`）。`docs-tdd kickoff` 建立最小三文件工作流，`docs-tdd verify <PROJECT-ID> --input <verify-input.json>` 写入并执行唯一正式出口；V0/V1/V2 的 failed/blocked 均阻断交付。存量 `workflowVersion: 1` 项目继续走 v1 G0–G8，不静默迁移；只有明确要求 `--legacy` 才新建 v1。切换记录见 [../vnext/cutover-decision-20260908.md](../vnext/cutover-decision-20260908.md)，操作规则见 [../vnext/README.md](../vnext/README.md)。
 1. 先读取 README `workflowVersion`。v2 恢复时读 `work-item.json` 与 `latest-result.json`（若存在）；v1 恢复时读 `agent/context-summary.md`。
 2. 执行 `docs-tdd context <PROJECT-ID> <SCENARIO>`：v2 返回最小 work-item context；v1 返回场景规则包并在编码场景签发 rule session。禁止自行全读规则。
-3. v2 编辑后把检查结果纳入 evidence，交付时执行 `docs-tdd verify <PROJECT-ID> --input <verify-input.json>`；v1 编辑后执行 `changed`，阶段交付执行 `gate`。CLI 会拒绝混用。
+3. v2 编辑后把检查结果纳入 evidence，交付时执行 `docs-tdd verify <PROJECT-ID> --input <verify-input.json>`；可用 `node apps/web/docs_tdd/common/engine/agent-scripts/vnext-verify.mjs --scaffold-input --project <v2-project-dir> --worktree <worktree>` 生成该文件骨架。v1 编辑后执行 `changed`，阶段交付执行 `gate`。CLI 会拒绝混用。
 4. 适配、冲突和发布状态用 `docs-tdd doctor <PROJECT-ID>`，能力摘要用 `docs-tdd capability <PROJECT-ID>`。
 
 规则落实以 [rule-execution-model.md](./rule-execution-model.md) 的执行契约判断；“已读/已注意”不算证据。

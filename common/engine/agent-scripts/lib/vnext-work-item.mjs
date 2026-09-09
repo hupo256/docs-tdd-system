@@ -23,8 +23,10 @@ export function coverageFingerprints(workItem) {
   // fingerprint unchanged when no boundary is declared, but invalidate review/scope approval
   // whenever a declared batch or its delegated remainder changes.
   const reviewedRequirements = workItem?.deliveryScope
-    ? { requirements, deliveryScope: workItem.deliveryScope }
-    : requirements
+    ? { requirements, deliveryScope: workItem.deliveryScope, sourceUnitDispositions: workItem?.sourceUnitDispositions }
+    : workItem?.sourceUnitDispositions
+      ? { requirements, sourceUnitDispositions: workItem.sourceUnitDispositions }
+      : requirements
   return {
     sourceFingerprint: stableFingerprint(workItem?.sourceSnapshot || null),
     requirementsFingerprint: stableFingerprint(reviewedRequirements),
@@ -57,7 +59,7 @@ function sourceAnchorIds(requirement) {
   return new Set((requirement.sourceAnchors || []).map((anchor) => anchor.sourceId).filter(Boolean))
 }
 
-function requirementCoverageProblems(workItem, sourceOracle) {
+function requirementCoverageProblems(workItem, sourceUnits, sourceOracle) {
   const requirements = workItem.requirements || []
   const problems = []
   const ids = requirements.map((item) => item.requirementId).filter(Boolean)
@@ -78,6 +80,24 @@ function requirementCoverageProblems(workItem, sourceOracle) {
   if (!workItem.coverageAudit?.completedAt || Number.isNaN(Date.parse(workItem.coverageAudit.completedAt))) problems.push('coverage audit has no valid completion time')
   if (workItem.coverageAudit?.verdict !== 'pass') problems.push('coverage audit verdict is not pass')
   if (workItem.coverageAudit?.unresolved?.length) problems.push(`coverage audit has unresolved findings: ${workItem.coverageAudit.unresolved.join(', ')}`)
+
+  const anchoredSourceIds = new Set()
+  for (const requirement of requirements) {
+    for (const sourceId of sourceAnchorIds(requirement)) anchoredSourceIds.add(sourceId)
+  }
+  const dispositionBySourceId = new Map((workItem.sourceUnitDispositions || []).map((d) => [d.sourceId, d]))
+  const sourceUnitIds = new Set((sourceUnits || []).map((unit) => unit.sourceId))
+  for (const unit of sourceUnits || []) {
+    if (anchoredSourceIds.has(unit.sourceId)) continue
+    const disposition = dispositionBySourceId.get(unit.sourceId)
+    if (disposition?.disposition !== 'not-a-requirement') {
+      problems.push(`source unit ${unit.sourceId} is not anchored to any requirement and has no not-a-requirement disposition`)
+    }
+  }
+  for (const disposition of workItem.sourceUnitDispositions || []) {
+    if (!sourceUnitIds.has(disposition.sourceId)) problems.push(`sourceUnitDisposition references unknown source unit: ${disposition.sourceId}`)
+    if (disposition.disposition === 'not-a-requirement' && !disposition.reason?.trim()) problems.push(`not-a-requirement disposition for ${disposition.sourceId} requires a reason`)
+  }
 
   for (const unit of sourceOracle?.requiredUnits || []) {
     const mapped = requirements.filter((requirement) => {
@@ -122,7 +142,7 @@ function surfaceCoverageProblems(workItem, discoveredSurfaces, implementation) {
   return problems
 }
 
-export function verifyVNextCoverage({ workItem, currentSourceSnapshot, sourceOracle, discoveredSurfaces = [], implementation } = {}) {
+export function verifyVNextCoverage({ workItem, currentSourceSnapshot, sourceUnits, sourceOracle, discoveredSurfaces = [], implementation } = {}) {
   const expectedSource = coverageFingerprints(workItem).sourceFingerprint
   const actualSource = stableFingerprint(currentSourceSnapshot || workItem?.sourceSnapshot || null)
   const sourceProblems = []
@@ -131,7 +151,7 @@ export function verifyVNextCoverage({ workItem, currentSourceSnapshot, sourceOra
   if (actualSource !== expectedSource) sourceProblems.push('current source snapshot differs from work item')
   if (workItem?.coverageAudit?.sourceFingerprint !== expectedSource) sourceProblems.push('coverage audit does not match current source snapshot')
 
-  const requirementProblems = requirementCoverageProblems(workItem || {}, sourceOracle)
+  const requirementProblems = requirementCoverageProblems(workItem || {}, sourceUnits, sourceOracle)
   const surfaceProblems = surfaceCoverageProblems(workItem || {}, discoveredSurfaces, implementation)
   const checks = [
     { code: 'SOURCE_FRESH', ok: sourceProblems.length === 0, problems: sourceProblems },

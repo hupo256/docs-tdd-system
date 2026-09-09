@@ -14,6 +14,7 @@ import { join, resolve } from 'node:path'
 import { resolveProjectRoot, resolveRoots } from './roots.mjs'
 import { inspectEffectiveRules, inspectRuleRelease } from './context-pack.mjs'
 import { printReport, printWarnings } from './cli-report.mjs'
+import { workflowVersionForProject } from './workflow-version.mjs'
 
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, consumerWorktree } = resolveRoots()
 const readJson = (file) => JSON.parse(readFileSync(file, 'utf8'))
@@ -43,9 +44,7 @@ export function capability(id, { agentClient }) {
   const projectDir = id ? resolveProjectRoot(id) : ''
   const manifestFile = projectDir ? join(projectDir, 'agent/project-manifest.json') : ''
   const manifest = manifestFile && existsSync(manifestFile) ? readJson(manifestFile) : null
-  const projectReadme = projectDir && existsSync(join(projectDir, 'README.md')) ? readFileSync(join(projectDir, 'README.md'), 'utf8') : ''
-  const declaredWorkflow = projectReadme.match(/^workflowVersion:\s*(\d+)$/m)?.[1]
-  const workflowVersion = id ? Number(declaredWorkflow || (existsSync(join(projectDir, 'work-item.json')) ? 2 : 1)) : null
+  const workflowVersion = id ? workflowVersionForProject(id, { resolveProjectRoot }) : null
   const resolvedWorktree = resolveProjectWorktree(id)
   const ruleset = readJson(join(docsRoot, 'common/rules/ruleset.json'))
   const release = inspectRuleRelease()

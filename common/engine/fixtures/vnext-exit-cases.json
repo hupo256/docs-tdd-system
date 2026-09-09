@@ -27,7 +27,11 @@
       ],
       "apiDependency": {
         "mode": "no-request",
-        "reason": "Pure logic fixture makes no request."
+        "reason": "Pure logic fixture makes no network request."
+      },
+      "requirementsAuthor": {
+        "kind": "model",
+        "id": "pi/gpt-5.4-requirements-extractor"
       }
     },
     "preflightChecks": [
