@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "workflowVersion": 2,
+  "projectId": "PR-99997",
+  "sourceSnapshot": {
+    "revision": "1",
+    "contentHash": "83decef276e9692ea073777c4c7e347060846a21b52e0ed274ff3c10ab9445a6",
+    "sources": [
+      {
+        "path": "common/vnext/sentinel/PR-99997-prd.md",
+        "contentHash": "6817bf45712767f9a753c9bb900cdcab2f500afa9de6516bc93029d69544bd7e"
+      }
+    ]
+  },
+  "requirements": [
+    {
+      "requirementId": "R-001",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-CC972D79DC0F",
+          "path": "common/vnext/sentinel/PR-99997-prd.md",
+          "lineStart": 9,
+          "lineEnd": 9
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-9F76949E74A2",
+          "path": "common/vnext/sentinel/PR-99997-prd.md",
+          "lineStart": 13,
+          "lineEnd": 15
+        }
+      ],
+      "statement": "搜索联想弹窗结果行中，币种图标与标题文字之间的横向间距减少一半：gap-7(28px) 改为 gap-3.5(14px)；不改动图标尺寸、标题字号、右侧占比列、行高与悬停态。",
+      "status": "doing",
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-001",
+          "locator": "apps/web/src/apps/Prediction/components/SearchBox/SearchPopup.tsx 结果行 <button> className 的图标↔标题间距",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-002",
+          "locator": "apps/web-next/src/apps/Prediction/components/SearchPopup.tsx 同名组件（gap-4 另一实现）",
+          "disposition": "not-applicable",
+          "reason": "PRD 明确本需求仅覆盖 apps/web；web-next 为另一实现且间距值不同，不在范围内。"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        }
+      ]
+    }
+  ],
+  "coverageAudit": {
+    "sourceFingerprint": "c1ce9bc36795a086f36e42299f5e6fc2220e9e2927d976f2ba00504cf59b5971",
+    "requirementsFingerprint": "85c1da1ed28a767199582b34b3ae648a862657fc5139f20751ac411f7b6bf8e1",
+    "reviewMode": "independent-cold-read",
+    "reviewRunId": "sentinel-coldread-2026-09-10",
+    "reviewer": {
+      "kind": "model",
+      "id": "claude-opus-4-8:sentinel-reviewer"
+    },
+    "completedAt": "2026-09-10T00:00:00Z",
+    "verdict": "pass",
+    "findings": [],
+    "unresolved": []
+  },
+  "routing": {
+    "scopeClass": "local",
+    "riskSignals": [],
+    "verificationLevel": "V0",
+    "routerVersion": 1
+  },
+  "apiDependency": {
+    "mode": "no-request",
+    "reason": "纯样式间距调整，无接口依赖。"
+  },
+  "sourceUnitDispositions": [
+    {
+      "sourceId": "SRC-D54FB13042B1",
+      "disposition": "not-a-requirement",
+      "reason": "文档标题，非可交付需求。"
+    },
+    {
+      "sourceId": "SRC-406ACBCDD75E",
+      "disposition": "not-a-requirement",
+      "reason": "章节标题「背景」。"
+    },
+    {
+      "sourceId": "SRC-18753C6696DC",
+      "disposition": "not-a-requirement",
+      "reason": "背景描述，说明弹窗结构，非可交付需求。"
+    },
+    {
+      "sourceId": "SRC-4D16480C42E1",
+      "disposition": "not-a-requirement",
+      "reason": "章节标题「需求」。"
+    },
+    {
+      "sourceId": "SRC-CC972D79DC0F",
+      "disposition": "anchored"
+    },
+    {
+      "sourceId": "SRC-C536629CD90D",
+      "disposition": "not-a-requirement",
+      "reason": "章节标题「范围与验收」。"
+    },
+    {
+      "sourceId": "SRC-9F76949E74A2",
+      "disposition": "anchored"
+    }
+  ],
+  "requirementsAuthor": {
+    "kind": "model",
+    "id": "claude-opus-4-8:sentinel-author"
+  },
+  "scopeApproval": null
+}

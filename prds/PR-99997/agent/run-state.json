@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "projectId": "PR-99997",
+  "attempts": [
+    {
+      "at": "2026-09-09T15:35:44.433Z",
+      "action": "sync_and_init",
+      "ok": true
+    }
+  ],
+  "workflowVersion": 2,
+  "status": "active",
+  "currentStage": "V2-review",
+  "lastAction": "initialize_vnext_work_item",
+  "nextAction": "vnext_extract_requirements",
+  "source": "common/vnext/sentinel/PR-99997-prd.md",
+  "updatedAt": "2026-09-09T15:35:44.433Z",
+  "blocker": "",
+  "syncedSource": "apps/web/docs_tdd/prds/PR-99997/inbox/lark-sync/prd-latest.md"
+}

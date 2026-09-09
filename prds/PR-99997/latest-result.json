@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "workflowVersion": 2,
+  "tool": "vnext-verify.mjs",
+  "mode": "enforced",
+  "runId": "sentinel-verify-2026-09-10-v0",
+  "generatedAt": "2026-09-09T18:32:15.663Z",
+  "projectId": "PR-99997",
+  "level": "V0",
+  "status": "passed",
+  "ok": true,
+  "workItemFingerprint": "5ed0d8a45e32a1d156f075c3102540c4249da238ffe59d4f9bfe09f1a5eb54bf",
+  "codeFingerprint": {
+    "headSha": "a679f74d85612043cc27294a014bb070f2e70861",
+    "baseSha": "c0079d5e591e9ef2308a5ef26f2efee707addf22",
+    "dirtyHash": "fab7caa53bc99c935bb80cfd284549db763cf3444f3e5d4ad3d585fa2ff91bc6",
+    "dirtyFileCount": 1,
+    "untrackedFileCount": 0,
+    "isGitRepo": true
+  },
+  "checks": [
+    {
+      "code": "SOURCE_FRESH",
+      "ok": true,
+      "problems": []
+    },
+    {
+      "code": "REQUIREMENT_COVERAGE",
+      "ok": true,
+      "problems": []
+    },
+    {
+      "code": "SURFACE_COVERAGE",
+      "ok": true,
+      "problems": []
+    },
+    {
+      "code": "RISK_ROUTE",
+      "ok": true,
+      "problems": []
+    },
+    {
+      "code": "SCOPE_APPROVAL",
+      "ok": true,
+      "problems": []
+    },
+    {
+      "code": "MSW_POLICY",
+      "ok": true,
+      "problems": [],
+      "mode": "no-request",
+      "required": false,
+      "blocked": false
+    },
+    {
+      "code": "CODE_STATE",
+      "ok": true,
+      "problems": [],
+      "evidenceIds": []
+    },
+    {
+      "code": "EVIDENCE_INTEGRITY",
+      "ok": true,
+      "problems": [],
+      "evidenceIds": [
+        "E-1",
+        "E-2"
+      ]
+    },
+    {
+      "code": "EVIDENCE_FRESHNESS",
+      "ok": true,
+      "problems": [],
+      "evidenceIds": [
+        "E-1",
+        "E-2"
+      ]
+    },
+    {
+      "code": "REQUIRED_EVIDENCE",
+      "ok": true,
+      "problems": [],
+      "evidenceIds": []
+    },
+    {
+      "code": "REQUIREMENT_EVIDENCE",
+      "ok": true,
+      "problems": [],
+      "evidenceIds": []
+    },
+    {
+      "code": "SURFACE_EVIDENCE",
+      "ok": true,
+      "problems": [],
+      "evidenceIds": []
+    },
+    {
+      "code": "BLOCKERS",
+      "ok": true,
+      "problems": [],
+      "evidenceIds": []
+    }
+  ],
+  "summary": {
+    "total": 13,
+    "passed": 13,
+    "failed": 0
+  },
+  "blockedBy": [],
+  "resultFingerprint": "91bbbb7598d9f9eadff3dbf43da4da434defe83d9dbe0f75200b8975266db052"
+}

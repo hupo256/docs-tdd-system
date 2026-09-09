@@ -9,7 +9,7 @@ visualFidelity: standard
 prdSource: https://qfglxo2m3dc.sg.larksuite.com/wiki/G7DYwcDijiUnYbkMuiilT8y8gch
 figmaNode: ""
 larkEnabled: false
-workflowVersion: 2
+workflowVersion: 1
 ---
 
 # PR-02074 预测市场三期

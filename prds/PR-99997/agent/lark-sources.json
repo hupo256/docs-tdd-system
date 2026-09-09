@@ -1,0 +1,14 @@
+{
+  "projectId": "PR-99997",
+  "outputDir": "apps/web/docs_tdd/prds/PR-99997/inbox/lark-sync",
+  "sources": [
+    {
+      "type": "markdown",
+      "operation": "read",
+      "name": "需求 PRD",
+      "url": "common/vnext/sentinel/PR-99997-prd.md",
+      "target": "prd-latest.md",
+      "localizedTarget": "prd-latest.extracted.md"
+    }
+  ]
+}
