@@ -26,65 +26,37 @@ function runJsonCheck(script, cwd) {
   }
 }
 
-/** Fail closed unless both published rule layers still match their current sources. */
-export function assertFreshRuleChain({ check = runJsonCheck, cwd } = {}) {
+// 只读取「当前源」的规则指纹，供审计与 AI 上下文注入用。
+// 不再判 stale/fresh：规则消费已切 pin-based（项目钉 policyFingerprint），发布层是否 == 源
+// 对在飞任务无影响，旧的 stale 检测退化成 fameex-web AGENTS.md 漂移导致的狼来了噪音，已下线。
+// `--check --json` 无论 fresh 与否都输出 currentFingerprint，故这里直接取、不看 fresh、不抛错。
+// 缺失常驻硬规则的真 fail-closed 仍在 lark-rule-context.mjs（VERIFY-RULE-004），与此无关。
+export function readRuleFingerprints({ check = runJsonCheck, cwd } = {}) {
   const { consumerRoot } = resolveRoots()
   const workdir = cwd || consumerRoot
   const l3 = check('rule-release.mjs', workdir)
   const effective = check('effective-rules.mjs', workdir)
-  const failures = [
-    !l3.fresh ? `L3 release is ${l3.status || 'invalid'}` : null,
-    !effective.fresh ? `effective rules are ${effective.status || 'invalid'}` : null,
-  ].filter(Boolean)
-  if (failures.length) throw new Error(`[VERIFY-RULE-004] stale rule chain: ${failures.join('; ')}`)
   return {
-    ruleReleaseFingerprint: l3.currentFingerprint,
-    effectiveRulesFingerprint: effective.currentFingerprint,
-  }
-}
-
-// 非抛错版：给 /lark/health 之类的探活/诊断用——只报告 { fresh, failures }，不阻断。
-// 带 TTL 缓存：health 可能被频繁探活，两次 spawnSync 子进程校验不该每请求都跑（默认 60s）。
-let ruleChainCache = null
-export function inspectRuleChain({ check = runJsonCheck, cwd, ttlMs = 60_000, now = Date.now } = {}) {
-  const at = now()
-  if (ruleChainCache && at - ruleChainCache.at < ttlMs) return ruleChainCache.value
-  try {
-    const fingerprints = assertFreshRuleChain({ check, cwd })
-    const value = { fresh: true, failures: [], ...fingerprints }
-    ruleChainCache = { at, value }
-    return value
-  } catch (error) {
-    const value = { fresh: false, failures: [String(error.message || error)] }
-    ruleChainCache = { at, value }
-    return value
+    ruleReleaseFingerprint: l3.currentFingerprint || null,
+    effectiveRulesFingerprint: effective.currentFingerprint || null,
   }
 }
 
 function selfTest() {
-  const freshCheck = (script) =>
+  const check = (script) =>
     script === 'rule-release.mjs'
       ? { fresh: true, currentFingerprint: 'l3' }
-      : { fresh: true, currentFingerprint: 'effective' }
-  assert.deepEqual(assertFreshRuleChain({ check: freshCheck, cwd: '/tmp' }), {
+      : { fresh: false, status: 'stale', currentFingerprint: 'effective' }
+  // 即便 effective 报 stale，也照样取到 currentFingerprint（stale 判定已退休）。
+  assert.deepEqual(readRuleFingerprints({ check, cwd: '/tmp' }), {
     ruleReleaseFingerprint: 'l3',
     effectiveRulesFingerprint: 'effective',
   })
-  assert.throws(
-    () =>
-      assertFreshRuleChain({
-        check: () => ({ fresh: false, status: 'stale' }),
-        cwd: '/tmp',
-      }),
-    /VERIFY-RULE-004.*stale rule chain/,
-  )
-  // inspectRuleChain 永不抛：stale 时返回 { fresh:false, failures:[...] }。用递增 now 绕过 TTL 缓存。
-  let clock = 0
-  const tick = () => (clock += 100_000)
-  assert.equal(inspectRuleChain({ check: freshCheck, cwd: '/tmp', now: tick }).fresh, true)
-  const stale = inspectRuleChain({ check: () => ({ fresh: false, status: 'stale' }), cwd: '/tmp', now: tick })
-  assert.equal(stale.fresh, false)
-  assert.ok(stale.failures.length > 0)
+  // 无 currentFingerprint 时回落到 null，不抛错。
+  assert.deepEqual(readRuleFingerprints({ check: () => ({}), cwd: '/tmp' }), {
+    ruleReleaseFingerprint: null,
+    effectiveRulesFingerprint: null,
+  })
   console.log('rule-chain-runtime self-test passed.')
 }
 
