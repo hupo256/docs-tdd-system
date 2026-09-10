@@ -79,7 +79,7 @@ try {
   console.error(error.message)
   process.exit(1)
 }
-const valueOptions = new Set(['--client', '--session-id', '--target', '--model', '--input', '--plan', '--out', '--worktree', '--session'])
+const valueOptions = new Set(['--client', '--session-id', '--target', '--model', '--input', '--plan', '--out', '--worktree', '--session', '--evidence', '--surfaces'])
 const positional = commandArgs.filter((arg, index) => !arg.startsWith('--') && !valueOptions.has(commandArgs[index - 1]))
 const detail = positional[0]
 const noCache = cliArgs.includes('--no-cache')
@@ -237,7 +237,7 @@ if (command === 'rules') {
 }
 
 if (!new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(projectId || '')) {
-  console.error('usage: docs-tdd.mjs <kickoff|status|resume|next|capability|probe|doctor|release|golden|guard|rule-health|rules|explain|check|gate|review|evidence|verify|context|changed|recommend> PR-01234 [G0-G8|scenario] [--input verify-input.json] [--plan evidence-plan.json] [--out evidence.json] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|pi|human] [--session-id <id>] [--target path] [--model <name>]')
+  console.error('usage: docs-tdd.mjs <kickoff|status|resume|next|capability|probe|doctor|release|golden|guard|rule-health|rules|explain|check|gate|review|evidence|verify|context|changed|recommend> PR-01234 [G0-G8|scenario] [--input verify-input.json] [--evidence evidence.json] [--surfaces surfaces.json] [--plan evidence-plan.json] [--out evidence.json] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|pi|human] [--session-id <id>] [--target path] [--model <name>]')
   process.exit(1)
 }
 

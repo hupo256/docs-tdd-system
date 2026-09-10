@@ -15,6 +15,7 @@
 - **证据诚实性与 freshness**：调用方 evidence 固定披露 `assuranceMode=assisted-pilot`、`evidenceTrust=caller-supplied`；代码 freshness 改按 effective content hash 判定，同字节 commit 不再误杀。真实代码内容变化进入 `revalidate_current_code_evidence`，只重验代码证据，work-item/source 未变时复用已签名需求审查。
 - **V0-micro 安全瘦身**：Markdown 标题、分隔线和纯注释由 intake 确定性识别为结构节点，不再要求逐条写 `sourceUnitDispositions`；其他未引用语义内容继续阻断。V0 同时强制单 doing requirement、单 implement surface、local/no-risk/no-request、无集合与富媒体、无 runtime evidence，不满足即升级而非静默放行。
 - **受信 command evidence runner**：新增 `docs-tdd evidence <ID>`，以无 shell 的 argv 执行经独立 review 冻结在 work-item 的 `evidenceCommands`，绑定 work-item / plan / effective code / 输出 hash 并签发本机 receipt；机器拒绝明显 no-op/shell 计划与覆盖不全，验签成功的纯命令证据升级为 `autonomous / cli-attested`，手填或 human evidence 继续诚实标记为 assisted。
+- **verify 组装模式（去手工衫接）**：`docs-tdd verify <ID> --evidence <evidence.json> [--surfaces <report.json>]` 从 canonical `work-item.json` 自动组装 workItem/sourceDocuments/currentRevision 并注入签名 evidence bundle，消除手工拼 `verify-input.json` 与粘贴 evidence 导致的验签失败；仅 `discoveredSurfaces`/`coveredSurfaceIds` 由 agent 实现后报告（不可推导，否则关掉 surface 漂移与漏实现校验）。新增端到端 autonomous 回归：evidence 按磁盘 work-item 签名、verify 经 `applyCoverageReview` 重建后验签，锁定单元级测试共享对象时漏掉的指纹往返一致性。
 
 ## 2026-09-10（下线发布层 stale 检测，彻底靠 pin-based）
 

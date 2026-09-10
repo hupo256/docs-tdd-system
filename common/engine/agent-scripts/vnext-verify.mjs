@@ -7,12 +7,13 @@ import { spawnSync } from 'node:child_process'
 import { isAbsolute, join, relative, resolve, sep } from 'node:path'
 import { docsSystemRoot } from './lib/roots.mjs'
 import { buildCoverageReviewRequest, applyCoverageReview, coverageReviewResponseFromAudit, REVIEW_PROTOCOL } from './lib/vnext-coverage-review.mjs'
-import { buildVNextExitResult } from './lib/vnext-exit.mjs'
+import { buildVNextExitResult, verifyExitResultIntegrity } from './lib/vnext-exit.mjs'
 import { codeFingerprint } from './lib/fingerprint.mjs'
 import { initializeVNextArtifacts, persistVNextRun, VNEXT_ARTIFACT_FILES } from './lib/vnext-persistence.mjs'
 import { evaluateVNextMswPolicy } from './lib/vnext-msw-policy.mjs'
 import { normalizeSourceDocuments, readLocalSourceAsset } from './lib/vnext-source-units.mjs'
 import { verifyVNextRouting } from './lib/vnext-risk-route.mjs'
+import { signEvidenceBundle } from './lib/vnext-evidence-receipt.mjs'
 import { coverageFingerprints, verifyVNextCoverage } from './lib/vnext-work-item.mjs'
 
 function normalizeCurrentSources(workItem, sourceDocuments, revision) {
@@ -46,6 +47,32 @@ export function scaffoldVerifyInput({ projectDir, worktreePath }) {
       facts: [],
     },
     blockers: [],
+  }
+}
+
+// Assemble a full verification input from the reviewed work item, the measured worktree, and the
+// signed evidence bundle. Only the two fields that MUST come from real implementation work are
+// caller-supplied: discoveredSurfaces (what code search actually found) and coveredSurfaceIds
+// (what was actually implemented). Deriving those from the plan would silently disable the
+// surface-drift and missing-implementation checks, so they stay agent-reported.
+export function assembleVerifyInput({ projectDir, worktreePath, evidence, surfacesReport = {} }) {
+  if (!projectDir) throw new Error('--project is required to assemble verification input')
+  if (!worktreePath) throw new Error('--worktree is required to assemble verification input')
+  if (!evidence || typeof evidence !== 'object') throw new Error('--evidence <evidence.json> is required to assemble verification input')
+  const workItem = JSON.parse(readFileSync(resolve(projectDir, 'work-item.json'), 'utf8'))
+  const sourceDocuments = (workItem.sourceSnapshot?.sources || []).map((source) => {
+    const fullPath = isAbsolute(source.path) ? source.path : join(docsSystemRoot, source.path)
+    return { path: source.path, content: readFileSync(fullPath, 'utf8') }
+  })
+  const { discoveredSurfaces = [], coveredSurfaceIds = [], msw, blockers = [] } = surfacesReport
+  return {
+    workItem,
+    currentRevision: workItem.sourceSnapshot?.revision,
+    sourceDocuments,
+    discoveredSurfaces,
+    implementation: { coveredSurfaceIds, ...(msw ? { msw } : {}) },
+    evidence,
+    blockers,
   }
 }
 
@@ -139,6 +166,7 @@ function usage() {
   vnext-verify.mjs --prepare-review <input.json>
   vnext-verify.mjs --init <work-item.json> --out <v2-project-dir>
   vnext-verify.mjs --input <verified-input.json> --worktree <path> [--write --out <v2-project-dir>] [--json] [--shadow]
+  vnext-verify.mjs --evidence <evidence.json> [--surfaces <surfaces-report.json>] --project <v2-project-dir> --worktree <path> [--write --out <v2-project-dir>] [--json]
   vnext-verify.mjs --scaffold-input --project <v2-project-dir> --worktree <path>
 
 normalize-sources input: { currentRevision, sourceDocuments }
@@ -146,6 +174,8 @@ prepare-review input:   { workItem, currentRevision, sourceDocuments }
 scaffold-input:         prints a verify-input.json skeleton for a v2 project
 verification input:     { workItem, currentRevision, sourceDocuments, discoveredSurfaces, implementation, evidence, blockers }
                         reviewResponse is accepted only for legacy V0 fixtures; V1/V2 uses the signed audit written by docs-tdd review.
+surfaces report:        { discoveredSurfaces, coveredSurfaceIds, msw?, blockers? } — the only fields --evidence mode cannot derive, because
+                        they are the agent's real "which surfaces did code discovery find and implementation cover" report.
 
 sourceOracle is not accepted from callers; source coverage authority comes from the independently signed review response.
 
@@ -224,6 +254,35 @@ export function selfTest() {
   assert.equal(shadow.mode, 'shadow')
   assert.throws(() => runVNextVerification({ ...verifyInput, reviewResponse: null }, { currentCodeState: code }), /signed independent review/)
   assert.throws(() => runVNextVerification({ ...verifyInput, sourceOracle: { requiredUnits: [] } }, { currentCodeState: code }), /sourceOracle is reviewer-owned/)
+
+  // End-to-end autonomous seam: sign the evidence bundle against the work item exactly as review
+  // seals it to disk, then let runVNextVerification independently rebuild that work item via
+  // applyCoverageReview before verifying the receipt. Unit-level exit tests share one workItem
+  // object between signer and verifier, so they never catch a round-trip fingerprint drift; this does.
+  const e2eKeyPath = resolve(`.vnext-verify-e2e-key-${process.pid}`)
+  const previousKey = process.env.DOCS_TDD_EVIDENCE_KEY_FILE
+  try {
+    process.env.DOCS_TDD_EVIDENCE_KEY_FILE = e2eKeyPath
+    const attestedCode = { ...code, contentHash: 'e'.repeat(64) }
+    const sealedWorkItem = applyCoverageReview(workItem, reviewResponse, { request })
+    const commandFacts = evidence.facts.map((fact) => ({ ...fact, codeFingerprint: attestedCode }))
+    const signedEvidence = signEvidenceBundle(
+      { runId: 'e2e-autonomous', capturedAt: '2026-09-04T00:00:02Z', assuranceMode: 'autonomous', evidenceTrust: 'cli-attested', codeFingerprint: attestedCode, facts: commandFacts },
+      { workItem: sealedWorkItem, plan: { schemaVersion: 1, projectId: workItem.projectId, commands: workItem.evidenceCommands || [] }, startedAt: '2026-09-04T00:00:00Z', completedAt: '2026-09-04T00:00:02Z' },
+    )
+    const autonomous = runVNextVerification({ ...verifyInput, workItem: sealedWorkItem, evidence: signedEvidence }, { currentCodeState: attestedCode, generatedAt: '2026-09-04T00:00:03Z' })
+    assert.equal(autonomous.assuranceMode, 'autonomous', JSON.stringify(autonomous))
+    assert.equal(autonomous.evidenceTrust, 'cli-attested')
+    assert.equal(autonomous.ok, true)
+    assert.equal(verifyExitResultIntegrity(autonomous).ok, true)
+    // A tampered post-sign code hash must break the receipt and drop back to a non-authoritative result.
+    const tampered = runVNextVerification({ ...verifyInput, workItem: sealedWorkItem, evidence: signedEvidence }, { currentCodeState: { ...attestedCode, contentHash: 'f'.repeat(64) }, generatedAt: '2026-09-04T00:00:03Z' })
+    assert.notEqual(tampered.assuranceMode, 'autonomous')
+  } finally {
+    if (previousKey === undefined) delete process.env.DOCS_TDD_EVIDENCE_KEY_FILE
+    else process.env.DOCS_TDD_EVIDENCE_KEY_FILE = previousKey
+    try { unlinkSync(e2eKeyPath) } catch { /* no-op */ }
+  }
   console.log('vnext-verify self-test passed')
 }
 
@@ -250,10 +309,22 @@ if (process.argv.includes('--self-test')) {
       if (!outDir) throw new Error('--init requires --out')
       const initialized = initializeVNextArtifacts(outDir, loadInput(initPath))
       console.log(JSON.stringify(initialized, null, 2))
-    } else if (inputPath) {
+    } else if (inputPath || argumentValue('--evidence')) {
       const worktreePath = argumentValue('--worktree')
       if (!worktreePath) throw new Error('--worktree is required so current effective code state is measured, not trusted from JSON')
-      const input = loadInput(inputPath)
+      const evidencePath = argumentValue('--evidence')
+      let input
+      if (evidencePath) {
+        const surfacesPath = argumentValue('--surfaces')
+        input = assembleVerifyInput({
+          projectDir: argumentValue('--project') || outDir,
+          worktreePath,
+          evidence: loadInput(evidencePath),
+          surfacesReport: surfacesPath ? loadInput(surfacesPath) : {},
+        })
+      } else {
+        input = loadInput(inputPath)
+      }
       const mode = process.argv.includes('--shadow') ? 'shadow' : 'enforced'
       const result = runVNextVerification(input, { currentCodeState: codeFingerprint(resolve(worktreePath)), mode })
       if (process.argv.includes('--write')) {

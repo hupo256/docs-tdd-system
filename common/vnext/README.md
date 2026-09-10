@@ -94,11 +94,12 @@ node common/engine/agent-scripts/docs-tdd.mjs review PR-01234 --client pi
 node common/engine/agent-scripts/docs-tdd.mjs evidence PR-01234 --worktree /absolute/path/to/worktree --out /tmp/evidence.json
 # --plan <evidence-plan.json> 仅作兼容/显式输入保留；若提供，必须与 work-item.evidenceCommands 完全一致，否则 fail-closed
 
-# 4. 将 /tmp/evidence.json 作为 verify-input.json 的 evidence 字段；reviewResponse 无需手填
-node common/engine/agent-scripts/vnext-verify.mjs --input verify-input.json --worktree /absolute/path/to/worktree
+# 4. 组装并跑正式出口：--evidence 自动注入签名 bundle，--surfaces 只提供 agent 实现后无法推导的落点报告
+#    （discoveredSurfaces = 代码搜索实到的落点；coveredSurfaceIds = 实际实现覆盖的）。workItem/sourceDocuments 由 CLI 从 work-item.json 自动组装。
+node common/engine/agent-scripts/docs-tdd.mjs verify PR-01234 --evidence /tmp/evidence.json --surfaces /tmp/surfaces.json --worktree /absolute/path/to/worktree
 
-# 5. 正式出口：统一 CLI 强制 --write 到项目三文件，非 PASS 返回非零
-node common/engine/agent-scripts/docs-tdd.mjs verify PR-01234 --input verify-input.json --worktree /absolute/path/to/worktree
+# 兼容：仍可手工拼 verify-input.json 走 --input（V0 legacy fixture 或需要显式 reviewResponse 时）
+node common/engine/agent-scripts/vnext-verify.mjs --input verify-input.json --worktree /absolute/path/to/worktree
 ```
 
 `docs-tdd review` 只向子进程提供规范化 source units、候选 requirements 和图片附件，不提供代码仓或工具。含图片的审查当前必须使用 `--client pi`（Claude CLI 路径暂只支持纯文本 packet）。运行前，需求抽取者必须在 work-item 写入 `requirementsAuthor`；模型作者记录 `{ kind, id, client, sessionId }`（Pi 可取 `PI_SESSION_ID`），人工作者记录 `{ kind: "human", id }`。CLI receipt 绑定请求 fingerprint、reviewer client/session、时间和全部图片 hash；相同模型也必须使用不同 session，`pass` 不允许存在 `open` finding。来源、图片字节或需求变化后旧 response 自动失效。`--prepare-review` 仅保留为调试/协议查看入口，不能替代签名审查。
@@ -116,6 +117,7 @@ node common/engine/agent-scripts/docs-tdd.mjs verify PR-01234 --input verify-inp
 ## 单一出口约束
 
 - CLI 必须通过 `--worktree` 实测 Git effective content hash，同时保留 `headSha + dirtyHash` 作诊断；不接受输入 JSON 自报当前代码状态。
+- `docs-tdd verify` 默认走组装模式：`--evidence <evidence.json>` 自动注入签名 bundle（杆绝手工粘贴导致验签失败），workItem / sourceDocuments / currentRevision 由 CLI 从 canonical `work-item.json` 自动组装。只有两个字段必须由实现后的 agent 提供（`--surfaces` 报告的 `discoveredSurfaces` 与 `coveredSurfaceIds`），因为把计划落点当作“已发现/已实现”会静默关掉 surface 漂移与漏实现校验。手工拼 `verify-input.json` 走 `--input` 仅作兼容或 V0 legacy fixture。组装模式要求 work-item 已携带签名 review receipt（`docs-tdd review` 产出）；无 receipt 的 V0 legacy fixture 必须用 `--input` 显式传 reviewResponse。
 - 每条 evidence 都绑定同一个 effective content hash；代码或未跟踪文件字节变化会进入 `revalidate_current_code_evidence`，但只要 work-item/source fingerprint 未变，已签名 coverage review 继续复用，不重走需求审查；单纯把相同字节提交成新 HEAD 不会误杀绿灯。
 - `docs-tdd evidence` 只接受 `argv: string[]`（`shell=false`），在 CLI 实测的 worktree 中运行命令，并绑定 work-item fingerprint、effective content hash、plan hash、输出 hash与时间；任一命令改写有效代码内容时拒绝签发 receipt。纯 command bundle 验签成功才输出 `assuranceMode=autonomous` 与 `evidenceTrust=cli-attested`。
 - 命令计划默认直接来自已审查的 `work-item.json.evidenceCommands`，不需要额外的 evidence plan 文件；标准命令是 `docs-tdd evidence <PROJECT-ID> --out <evidence.json>`。`--plan <evidence-plan.json>` 仅作兼容/显式输入保留，形如 `{ "schemaVersion": 1, "projectId": "PR-01234", "commands": [{ "evidenceId": "E-1", "kind": "directed-tests", "argv": ["pnpm", "test", "path/to/test"], "requirementIds": ["R-001"], "surfaceIds": ["S-001"] }] }`；若提供，其 `commands` 必须与 work-item 的 `evidenceCommands` 完全一致，不能绕过独立 review，否则 fail-closed。该字段属于 requirements fingerprint，新增或改命令后必须重跑独立 review。reviewer 会拒绝 `true`、`echo`、version probe、shell eval、kind/argv 不相称或覆盖不全的计划，runner 也机器阻断明显 no-op/shell 命令。required level、requirement evidence plan 和 implement surfaces 还会由 runner 与最终 verify 双重交叉校验。
