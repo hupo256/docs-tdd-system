@@ -326,6 +326,47 @@
               "items": { "type": "string", "minLength": 1 },
               "uniqueItems": true
             },
+            "discoveredSurfaces": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["surfaceId", "locator"],
+                "properties": {
+                  "surfaceId": { "type": "string", "minLength": 1 },
+                  "locator": { "type": "string", "minLength": 1 }
+                },
+                "additionalProperties": false
+              }
+            },
+            "coveredSurfaceIds": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 },
+              "uniqueItems": true
+            },
+            "msw": {
+              "type": "object",
+              "required": ["workerIntegrated", "handlerIds", "coveredContractIds"],
+              "properties": {
+                "workerIntegrated": { "type": "boolean" },
+                "handlerIds": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+                "coveredContractIds": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true }
+              },
+              "additionalProperties": false
+            },
+            "blockers": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["blockerId", "status", "reason"],
+                "properties": {
+                  "blockerId": { "type": "string", "minLength": 1 },
+                  "status": { "enum": ["open", "resolved"] },
+                  "reason": { "type": "string", "minLength": 1 },
+                  "owner": { "type": "string", "minLength": 1 }
+                },
+                "additionalProperties": false
+              }
+            },
             "completedAt": { "type": "string", "format": "date-time" }
           },
           "additionalProperties": false

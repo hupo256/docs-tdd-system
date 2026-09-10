@@ -94,6 +94,15 @@ node common/engine/agent-scripts/docs-tdd.mjs run PR-01234
 
 Figma/API 缺失不会在 intake 阶段形成全局阻塞。CLI 输出的 action packet 是客户端无关协议；Claude、Codex、Pi、Cursor 都按 `action`、`reason`、`constraints` 执行，不从 Markdown 阶段文字猜状态。
 
+实现动作完成后，Agent 将 action packet 的 `actionId`、真实 `changedPaths`、代码搜索得到的 `discoveredSurfaces` 与实际覆盖的 `coveredSurfaceIds` 写入临时 checkpoint JSON，再调用：
+
+```bash
+node common/engine/agent-scripts/docs-tdd.mjs checkpoint PR-01234 --input /tmp/checkpoint.json
+node common/engine/agent-scripts/docs-tdd.mjs run PR-01234
+```
+
+第二条命令会自动执行已审查的 evidence command plan，并自动组装 surfaces report 跑 enforced verify。证据保存在 `~/.cache/docs-tdd/evidence/<PROJECT-ID>/`，不会增加项目状态文件。连续两次代码修复仍失败会输出 `escalate-repair-failure`，禁止无限自动重试。
+
 ## 独立审查调用边界
 
 ```bash

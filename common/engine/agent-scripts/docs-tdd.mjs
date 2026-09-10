@@ -237,11 +237,11 @@ if (command === 'rules') {
 }
 
 if (!new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(projectId || '')) {
-  console.error('usage: docs-tdd.mjs <run|kickoff|status|resume|next|capability|probe|doctor|release|golden|guard|rule-health|rules|explain|check|gate|review|evidence|verify|context|changed|recommend> PR-01234 [G0-G8|scenario] [--input verify-input.json] [--evidence evidence.json] [--surfaces surfaces.json] [--plan evidence-plan.json] [--out evidence.json] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|pi|human] [--session-id <id>] [--target path] [--model <name>]')
+  console.error('usage: docs-tdd.mjs <run|kickoff|status|resume|next|checkpoint|capability|probe|doctor|release|golden|guard|rule-health|rules|explain|check|gate|review|evidence|verify|context|changed|recommend> PR-01234 [G0-G8|scenario] [--input verify-input.json] [--evidence evidence.json] [--surfaces surfaces.json] [--plan evidence-plan.json] [--out evidence.json] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|pi|human] [--session-id <id>] [--target path] [--model <name>]')
   process.exit(1)
 }
 
-if (['run', 'kickoff', 'status', 'resume', 'next'].includes(command)) {
+if (['run', 'kickoff', 'status', 'resume', 'next', 'checkpoint'].includes(command)) {
   process.exit(run([join(scriptDir, 'project-orchestrator.mjs'), command, projectId, ...cliArgs.slice(2)]))
 }
 

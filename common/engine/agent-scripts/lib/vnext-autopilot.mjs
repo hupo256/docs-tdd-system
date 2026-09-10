@@ -23,8 +23,8 @@ export const AUTOPILOT_ACTIONS = Object.freeze([
   'collect-scope-approval',
   'implement-current-scope',
   'capture-cli-evidence',
-  'run-enforced-verification',
   'repair-failed-checks',
+  'escalate-repair-failure',
   'resolve-blockers',
   'refresh-invalid-verification',
   'revalidate-current-code-evidence',
@@ -47,7 +47,7 @@ function implementationState(workItem, latestResult) {
   return latestResult ? { status: 'completed', changedPaths: [] } : { status: 'pending', changedPaths: [] }
 }
 
-function actionPacket(workItem, { action, phase, reason, command = '', status = 'active', constraints = [] }) {
+function actionPacket(workItem, { action, phase, reason, command = '', status = 'active', constraints = [], checkpoint = null }) {
   const projectId = workItem?.projectId || ''
   return {
     schemaVersion: 1,
@@ -60,6 +60,7 @@ function actionPacket(workItem, { action, phase, reason, command = '', status = 
     reason,
     command,
     constraints,
+    ...(checkpoint ? { checkpoint } : {}),
   }
 }
 
@@ -115,6 +116,10 @@ export function deriveAutopilotAction({
       phase: 'implementing',
       reason: 'The reviewed scope has not been marked implementation-complete.',
       constraints: ['implement-only-reviewed-scope', 'checkpoint-real-changed-paths', 'do-not-claim-late-sources-as-final-contracts'],
+      checkpoint: {
+        command: `docs-tdd checkpoint ${projectId} --input <checkpoint.json>`,
+        requiredFields: ['actionId', 'outcome', 'changedPaths', 'discoveredSurfaces', 'coveredSurfaceIds'],
+      },
     })
   }
   if (!latestResult) {
@@ -159,10 +164,24 @@ export function deriveAutopilotAction({
     })
   }
   if (latestResult.status !== 'passed' || latestResult.ok !== true) {
+    if ((workItem.autopilot?.repairAttempts?.code || 0) >= 2) {
+      return actionPacket(workItem, {
+        action: 'escalate-repair-failure',
+        phase: 'blocked',
+        status: 'blocked',
+        reason: 'Two automatic code repair attempts failed; human diagnosis is required.',
+        constraints: ['do-not-loop', 'report-last-failed-checks'],
+      })
+    }
     return actionPacket(workItem, {
       action: 'repair-failed-checks',
       phase: 'validating',
       reason: 'The latest enforced verification contains failed checks.',
+      constraints: ['maximum-two-automatic-code-repairs'],
+      checkpoint: {
+        command: `docs-tdd checkpoint ${projectId} --input <checkpoint.json>`,
+        requiredFields: ['actionId', 'outcome', 'changedPaths'],
+      },
     })
   }
   return actionPacket(workItem, {
@@ -171,6 +190,50 @@ export function deriveAutopilotAction({
     status: 'complete',
     reason: 'The current work item has an authoritative PASS bound to the current effective code state.',
   })
+}
+
+export function applyAutopilotCheckpoint(workItem, checkpoint, { latestResult = null, generatedAt = new Date().toISOString() } = {}) {
+  if (!checkpoint || !['in-progress', 'completed'].includes(checkpoint.outcome)) throw new Error('checkpoint outcome must be in-progress or completed')
+  const expected = deriveAutopilotAction({ workItem, latestResult })
+  if (checkpoint.actionId !== expected.actionId) throw new Error('checkpoint actionId is stale or does not match the current Autopilot action')
+  if (!['implement-current-scope', 'repair-failed-checks'].includes(expected.action)) throw new Error(`action ${expected.action} does not accept an implementation checkpoint`)
+  if (expected.action === 'repair-failed-checks' && checkpoint.outcome !== 'completed') throw new Error('repair checkpoint must be completed')
+
+  const next = structuredClone(workItem)
+  const previous = implementationState(next, latestResult)
+  const changedPaths = [...new Set([...(previous.changedPaths || []), ...(checkpoint.changedPaths || [])])].sort()
+  if (checkpoint.outcome === 'completed' && expected.action === 'implement-current-scope' && !changedPaths.length) {
+    throw new Error('completed implementation checkpoint requires at least one real changed path')
+  }
+  if (checkpoint.outcome === 'completed' && expected.action === 'implement-current-scope') {
+    if (!Array.isArray(checkpoint.discoveredSurfaces) || !Array.isArray(checkpoint.coveredSurfaceIds)) {
+      throw new Error('completed implementation checkpoint requires discoveredSurfaces and coveredSurfaceIds arrays')
+    }
+  }
+
+  next.autopilot = {
+    ...initialAutopilotState(generatedAt),
+    ...(next.autopilot || {}),
+    phase: checkpoint.outcome === 'completed' ? 'validating' : 'implementing',
+    implementation: {
+      ...previous,
+      status: expected.action === 'repair-failed-checks' ? 'completed' : checkpoint.outcome,
+      changedPaths,
+      ...(checkpoint.discoveredSurfaces ? { discoveredSurfaces: checkpoint.discoveredSurfaces } : {}),
+      ...(checkpoint.coveredSurfaceIds ? { coveredSurfaceIds: checkpoint.coveredSurfaceIds } : {}),
+      ...(checkpoint.msw ? { msw: checkpoint.msw } : {}),
+      ...(checkpoint.blockers ? { blockers: checkpoint.blockers } : {}),
+      ...(checkpoint.outcome === 'completed' ? { completedAt: generatedAt } : {}),
+    },
+    repairAttempts: {
+      ...(next.autopilot?.repairAttempts || { code: 0, browser: 0 }),
+      ...(expected.action === 'repair-failed-checks' && checkpoint.outcome === 'completed'
+        ? { code: (next.autopilot?.repairAttempts?.code || 0) + 1 }
+        : {}),
+    },
+    lastCheckpointAt: generatedAt,
+  }
+  return next
 }
 
 export function selfTest() {
@@ -195,8 +258,16 @@ export function selfTest() {
   const reviewed = { ...needsReview, coverageAudit: { verdict: 'pass', unresolved: [] } }
   assert.equal(deriveAutopilotAction({ workItem: reviewed }).action, 'implement-current-scope')
 
-  const implemented = { ...reviewed, autopilot: { ...base.autopilot, implementation: { status: 'completed', changedPaths: ['src/x.ts'] } } }
+  const implementAction = deriveAutopilotAction({ workItem: reviewed })
+  const implemented = applyAutopilotCheckpoint(reviewed, {
+    actionId: implementAction.actionId,
+    outcome: 'completed',
+    changedPaths: ['src/x.ts'],
+    discoveredSurfaces: [{ surfaceId: 'S-001', locator: 'src/x.ts' }],
+    coveredSurfaceIds: ['S-001'],
+  }, { generatedAt: '2026-09-08T00:01:00Z' })
   assert.equal(deriveAutopilotAction({ workItem: implemented }).action, 'capture-cli-evidence')
+  assert.throws(() => applyAutopilotCheckpoint(reviewed, { actionId: 'stale', outcome: 'completed' }), /actionId is stale/)
 
   const passed = { mode: 'enforced', status: 'passed', ok: true }
   const { autopilot: _legacyMissingAutopilot, ...legacyReviewed } = reviewed
@@ -204,7 +275,13 @@ export function selfTest() {
   assert.equal(deriveAutopilotAction({ workItem: implemented, latestResult: passed, assuranceTrusted: false }).action, 'capture-cli-evidence')
   assert.equal(deriveAutopilotAction({ workItem: implemented, latestResult: passed, assuranceTrusted: true }).action, 'complete')
   assert.equal(deriveAutopilotAction({ workItem: implemented, latestResult: { status: 'blocked', ok: false } }).action, 'resolve-blockers')
-  assert.equal(deriveAutopilotAction({ workItem: implemented, latestResult: { status: 'failed', ok: false } }).action, 'repair-failed-checks')
+  const failed = { status: 'failed', ok: false }
+  const repairAction = deriveAutopilotAction({ workItem: implemented, latestResult: failed })
+  assert.equal(repairAction.action, 'repair-failed-checks')
+  const repairedOnce = applyAutopilotCheckpoint(implemented, { actionId: repairAction.actionId, outcome: 'completed', changedPaths: ['src/x.ts'] }, { latestResult: failed })
+  const secondRepairAction = deriveAutopilotAction({ workItem: repairedOnce, latestResult: failed })
+  const repairedTwice = applyAutopilotCheckpoint(repairedOnce, { actionId: secondRepairAction.actionId, outcome: 'completed', changedPaths: ['src/x.ts'] }, { latestResult: failed })
+  assert.equal(deriveAutopilotAction({ workItem: repairedTwice, latestResult: failed }).action, 'escalate-repair-failure')
   assert.equal(deriveAutopilotAction({ workItem: implemented, latestResult: passed, resultIntegrityOk: false }).action, 'refresh-invalid-verification')
   assert.equal(deriveAutopilotAction({ workItem: implemented, latestResult: passed, codeStateFresh: false }).action, 'revalidate-current-code-evidence')
 

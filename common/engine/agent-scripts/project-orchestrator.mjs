@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { dirname, join, relative } from 'node:path'
+import { homedir } from 'node:os'
 import { fileURLToPath } from 'node:url'
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 import { resolveProjectWorktree } from './lib/project-status-report.mjs'
@@ -11,8 +12,8 @@ import { codeFingerprint, matchesEffectiveCodeState } from './lib/fingerprint.mj
 import { sourceTypeFromPrd } from './lib/project-scaffold.mjs'
 import { normalizeSourceDocuments, readLocalSourceAsset } from './lib/vnext-source-units.mjs'
 import { verifyExitResultIntegrity } from './lib/vnext-exit.mjs'
-import { initializeVNextArtifacts } from './lib/vnext-persistence.mjs'
-import { deriveAutopilotAction, initialAutopilotState } from './lib/vnext-autopilot.mjs'
+import { initializeVNextArtifacts, persistVNextWorkItem } from './lib/vnext-persistence.mjs'
+import { applyAutopilotCheckpoint, deriveAutopilotAction, initialAutopilotState } from './lib/vnext-autopilot.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, config } = resolveRoots()
@@ -363,12 +364,94 @@ function resume() {
   print({ ...decision, projectId, note, stateFile: relative(repoRoot, stateFile(projectId)) })
 }
 
+function checkpoint() {
+  if (projectWorkflowVersion(projectId) !== 2) throw new Error('checkpoint is a v2-only command')
+  const inputFile = option('--input')
+  if (!inputFile) throw new Error('checkpoint requires --input <checkpoint.json>')
+  const projectDir = resolveProjectRoot(projectId)
+  const workItem = readJson(join(projectDir, 'work-item.json'))
+  if (!workItem) throw new Error(`canonical v2 work item is missing: ${join(projectDir, 'work-item.json')}`)
+  const latestResult = readJson(join(projectDir, 'latest-result.json'))
+  const next = applyAutopilotCheckpoint(workItem, readJson(inputFile), { latestResult })
+  persistVNextWorkItem(projectDir, next)
+  print(inspectVNext(projectId))
+}
+
+function runAutonomousValidation(id) {
+  const projectDir = resolveProjectRoot(id)
+  const workItem = readJson(join(projectDir, 'work-item.json'))
+  const implementation = workItem?.autopilot?.implementation
+  if (!implementation || implementation.status !== 'completed') {
+    return { ok: false, step: 'preflight', error: 'implementation checkpoint is not complete' }
+  }
+  let worktree
+  try {
+    worktree = resolveProjectWorktree(id).worktree
+  } catch (error) {
+    return { ok: false, step: 'worktree', error: error.message }
+  }
+
+  const evidenceRoot = join(homedir(), '.cache/docs-tdd/evidence', id)
+  mkdirSync(evidenceRoot, { recursive: true })
+  const runDir = mkdtempSync(join(evidenceRoot, 'run-'))
+  const evidenceFile = join(runDir, 'evidence.json')
+  const surfacesFile = join(runDir, 'surfaces.json')
+  writeFileSync(surfacesFile, `${JSON.stringify({
+    discoveredSurfaces: implementation.discoveredSurfaces || [],
+    coveredSurfaceIds: implementation.coveredSurfaceIds || [],
+    ...(implementation.msw ? { msw: implementation.msw } : {}),
+    blockers: implementation.blockers || [],
+  }, null, 2)}\n`)
+
+  const evidence = executeScript('vnext-evidence.mjs', [
+    '--project', projectDir,
+    '--worktree', worktree,
+    '--out', evidenceFile,
+  ])
+  if (evidence.status !== 0) {
+    return {
+      ok: false,
+      step: 'evidence',
+      evidenceDir: runDir,
+      error: (evidence.stderr || evidence.stdout).trim().slice(0, 2000),
+    }
+  }
+
+  const verify = executeScript('vnext-verify.mjs', [
+    '--evidence', evidenceFile,
+    '--surfaces', surfacesFile,
+    '--project', projectDir,
+    '--worktree', worktree,
+    '--write',
+    '--out', projectDir,
+  ])
+  return {
+    ok: verify.status === 0,
+    step: 'verify',
+    evidenceDir: runDir,
+    output: (verify.stdout || '').trim().slice(0, 4000),
+    error: verify.status === 0 ? '' : (verify.stderr || verify.stdout).trim().slice(0, 2000),
+  }
+}
+
 function autopilotRun() {
-  if (!existsSync(resolveProjectRoot(projectId))) {
+  const projectDir = resolveProjectRoot(projectId)
+  if (!existsSync(projectDir)) {
     kickoff()
     return
   }
-  resume()
+  if (projectWorkflowVersion(projectId) !== 2 || !existsSync(join(projectDir, 'work-item.json'))) {
+    resume()
+    return
+  }
+  const before = inspectVNext(projectId)
+  if (!['capture-cli-evidence', 'revalidate-current-code-evidence', 'refresh-invalid-verification'].includes(before.nextAction)) {
+    print(before)
+    return
+  }
+  const automation = runAutonomousValidation(projectId)
+  const after = inspectVNext(projectId)
+  print({ ...after, automation })
 }
 
 function selfTest() {
@@ -395,7 +478,7 @@ function selfTest() {
 
 if (args.includes('--self-test')) selfTest()
 else if (!new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(projectId || '')) {
-  console.error('usage: project-orchestrator.mjs <run|kickoff|status|resume|next> PR-01234 [--prd <source>] [--title <name>]')
+  console.error('usage: project-orchestrator.mjs <run|kickoff|status|resume|next|checkpoint> PR-01234 [--prd <source>] [--title <name>] [--input <checkpoint.json>]')
   process.exit(1)
 } else {
   try {
@@ -403,6 +486,7 @@ else if (!new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(pro
     else if (command === 'kickoff') kickoff()
     else if (command === 'status' || command === 'next') status()
     else if (command === 'resume') resume()
+    else if (command === 'checkpoint') checkpoint()
     else throw new Error(`unknown orchestrator command: ${command}`)
   } catch (error) {
     console.error(error.message)
