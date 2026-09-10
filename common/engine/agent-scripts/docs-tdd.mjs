@@ -237,11 +237,11 @@ if (command === 'rules') {
 }
 
 if (!new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(projectId || '')) {
-  console.error('usage: docs-tdd.mjs <kickoff|status|resume|next|capability|probe|doctor|release|golden|guard|rule-health|rules|explain|check|gate|review|evidence|verify|context|changed|recommend> PR-01234 [G0-G8|scenario] [--input verify-input.json] [--evidence evidence.json] [--surfaces surfaces.json] [--plan evidence-plan.json] [--out evidence.json] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|pi|human] [--session-id <id>] [--target path] [--model <name>]')
+  console.error('usage: docs-tdd.mjs <run|kickoff|status|resume|next|capability|probe|doctor|release|golden|guard|rule-health|rules|explain|check|gate|review|evidence|verify|context|changed|recommend> PR-01234 [G0-G8|scenario] [--input verify-input.json] [--evidence evidence.json] [--surfaces surfaces.json] [--plan evidence-plan.json] [--out evidence.json] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|pi|human] [--session-id <id>] [--target path] [--model <name>]')
   process.exit(1)
 }
 
-if (['kickoff', 'status', 'resume', 'next'].includes(command)) {
+if (['run', 'kickoff', 'status', 'resume', 'next'].includes(command)) {
   process.exit(run([join(scriptDir, 'project-orchestrator.mjs'), command, projectId, ...cliArgs.slice(2)]))
 }
 
@@ -296,35 +296,55 @@ if (projectWorkflowVersion === 2 && command === 'verify') {
     process.exit(1)
   }
   const inputIndex = commandArgs.indexOf('--input')
-  if (inputIndex === -1 || !commandArgs[inputIndex + 1]) {
-    console.error('v2 verify requires --input <verify-input.json>')
+  const evidenceIndex = commandArgs.indexOf('--evidence')
+  const hasInput = inputIndex >= 0 && Boolean(commandArgs[inputIndex + 1])
+  const hasEvidence = evidenceIndex >= 0 && Boolean(commandArgs[evidenceIndex + 1])
+  if (hasInput === hasEvidence) {
+    console.error('v2 verify requires exactly one of --input <verify-input.json> or --evidence <evidence.json>')
     process.exit(1)
   }
-  const inputFile = resolve(commandArgs[inputIndex + 1])
-  const verifyInput = readJson(inputFile)
-  if (verifyInput?.workItem?.projectId !== projectId) {
-    console.error(`verify input projectId ${verifyInput?.workItem?.projectId || '(missing)'} does not match ${projectId}`)
-    process.exit(1)
-  }
-  const projectWorkItemFile = join(resolveProjectRoot(projectId), 'work-item.json')
+  const projectDir = resolveProjectRoot(projectId)
+  const projectWorkItemFile = join(projectDir, 'work-item.json')
   if (!existsSync(projectWorkItemFile)) {
     console.error(`canonical v2 work item is missing: ${projectWorkItemFile}`)
-    process.exit(1)
-  }
-  const projectWorkItem = readJson(projectWorkItemFile)
-  if (stableFingerprint(verifyInput.workItem) !== stableFingerprint(projectWorkItem)) {
-    console.error('verify input workItem differs from the canonical project work-item.json; refresh the input before verification')
     process.exit(1)
   }
   const worktreeIndex = commandArgs.indexOf('--worktree')
   const worktree = worktreeIndex >= 0 && commandArgs[worktreeIndex + 1]
     ? resolve(commandArgs[worktreeIndex + 1])
     : resolveProjectWorktree(projectId).worktree
-  process.exit(run([
-    join(scriptDir, 'vnext-verify.mjs'), '--input', inputFile,
-    '--worktree', worktree, '--write', '--out', resolveProjectRoot(projectId),
+  const verifyArgs = [join(scriptDir, 'vnext-verify.mjs')]
+  if (hasInput) {
+    const inputFile = resolve(commandArgs[inputIndex + 1])
+    const verifyInput = readJson(inputFile)
+    if (verifyInput?.workItem?.projectId !== projectId) {
+      console.error(`verify input projectId ${verifyInput?.workItem?.projectId || '(missing)'} does not match ${projectId}`)
+      process.exit(1)
+    }
+    const projectWorkItem = readJson(projectWorkItemFile)
+    if (stableFingerprint(verifyInput.workItem) !== stableFingerprint(projectWorkItem)) {
+      console.error('verify input workItem differs from the canonical project work-item.json; refresh the input before verification')
+      process.exit(1)
+    }
+    verifyArgs.push('--input', inputFile)
+  } else {
+    const surfacesIndex = commandArgs.indexOf('--surfaces')
+    if (surfacesIndex >= 0 && !commandArgs[surfacesIndex + 1]) {
+      console.error('--surfaces requires <surfaces.json>')
+      process.exit(1)
+    }
+    verifyArgs.push(
+      '--evidence', resolve(commandArgs[evidenceIndex + 1]),
+      '--project', projectDir,
+      ...(surfacesIndex >= 0 ? ['--surfaces', resolve(commandArgs[surfacesIndex + 1])] : []),
+    )
+  }
+  verifyArgs.push(
+    '--worktree', worktree,
+    '--write', '--out', projectDir,
     ...(commandArgs.includes('--json') ? ['--json'] : []),
-  ]))
+  )
+  process.exit(run(verifyArgs))
 }
 if (projectWorkflowVersion === 2 && ['gate', 'changed'].includes(command)) {
   console.error(`${command} is a v1-only command; ${projectId} uses workflowVersion 2. Use docs-tdd verify ${projectId} --input <verify-input.json>.`)

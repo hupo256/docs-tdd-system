@@ -27,6 +27,7 @@
 
 ## 当前已落地
 
+- `docs-tdd run <PROJECT-ID> --prd <source>` + `lib/vnext-autopilot.mjs`：PRD-only 新建/恢复入口与纯状态机；`status/next/resume/run` 返回同一个 client-neutral action packet。v2 不再把 `agent/run-state.json` 当作第二状态源。
 - `baseline-observations.json`：用户复盘中可确认的事故事实；与机器指标分离。
 - `baseline.json`：由 `vnext-baseline.mjs --write` 从四个历史项目重复生成。
 - `vnext-work-item.schema.json`：v2 单一业务事实载体的第一版 schema。
@@ -80,6 +81,18 @@ node common/engine/agent-scripts/lib/vnext-coverage-review.mjs --self-test
 node common/engine/agent-scripts/lib/vnext-work-item.mjs --self-test
 node common/engine/agent-scripts/lib/vnext-metrics.mjs --self-test
 ```
+
+## Autopilot 入口
+
+```bash
+# 新项目：PRD 是唯一必需输入
+node common/engine/agent-scripts/docs-tdd.mjs run PR-01234 --prd <source>
+
+# 中断恢复：重复同一命令即可；status/next/resume 返回相同的下一动作判定
+node common/engine/agent-scripts/docs-tdd.mjs run PR-01234
+```
+
+Figma/API 缺失不会在 intake 阶段形成全局阻塞。CLI 输出的 action packet 是客户端无关协议；Claude、Codex、Pi、Cursor 都按 `action`、`reason`、`constraints` 执行，不从 Markdown 阶段文字猜状态。
 
 ## 独立审查调用边界
 

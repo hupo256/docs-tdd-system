@@ -308,6 +308,40 @@
         "fingerprint": { "type": "string", "minLength": 1 }
       },
       "additionalProperties": false
+    },
+    "autopilot": {
+      "type": "object",
+      "required": ["phase", "implementation", "repairAttempts", "lastCheckpointAt"],
+      "properties": {
+        "phase": {
+          "enum": ["intake", "planning", "implementing", "validating", "ready-to-test", "blocked"]
+        },
+        "implementation": {
+          "type": "object",
+          "required": ["status", "changedPaths"],
+          "properties": {
+            "status": { "enum": ["pending", "in-progress", "completed"] },
+            "changedPaths": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 },
+              "uniqueItems": true
+            },
+            "completedAt": { "type": "string", "format": "date-time" }
+          },
+          "additionalProperties": false
+        },
+        "repairAttempts": {
+          "type": "object",
+          "required": ["code", "browser"],
+          "properties": {
+            "code": { "type": "integer", "minimum": 0 },
+            "browser": { "type": "integer", "minimum": 0 }
+          },
+          "additionalProperties": false
+        },
+        "lastCheckpointAt": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false
