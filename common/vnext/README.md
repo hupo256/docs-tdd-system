@@ -132,6 +132,17 @@ node common/engine/agent-scripts/docs-tdd.mjs source-update PR-01234 --input /tm
 
 CLI 自己读取并计算内容指纹，不接受调用方伪造 hash。到达新版本后输出 `reconcile-late-sources`；Agent 只处理该增量，API 从 mock 切换到 real contract 时必须同时报告最终 MSW 状态。对齐 checkpoint 把 source fingerprint 标为 integrated，之后才恢复 evidence/verify。
 
+### 证据与代码状态绑定
+
+CLI 执行 evidence 前后仍比较整棵有效代码树，测试命令若改写代码或生成未忽略文件会立即失败；持久化的证据身份则冻结为 `path-set-v1`：当前分支相对基线的真实 changed paths，加上实现 checkpoint 报告的路径。checkpoint 路径也会由 Git 机械核验，不能用不存在或未变更的文件凑数。
+
+因此：
+
+- 仅执行 `git commit`、HEAD 改变但相关文件字节不变：证据仍有效；
+- 后续修改无关路径：证据仍有效；
+- 修改、删除、改权限或改软链目标，只要位于冻结路径集合：证据失效并自动重验；
+- 旧结果没有 `scopeMode=path-set-v1` 时继续采用整仓 `contentHash`，不静默放宽历史证据。
+
 ## 独立审查调用边界
 
 ```bash

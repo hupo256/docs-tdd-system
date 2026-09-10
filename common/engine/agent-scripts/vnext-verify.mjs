@@ -2,7 +2,7 @@
 // Formal vNext verifier. It reads one explicit JSON input and emits the authoritative v2 delivery result without mutating v1 state.
 
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { readFileSync, unlinkSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { isAbsolute, join, relative, resolve, sep } from 'node:path'
 import { docsSystemRoot } from './lib/roots.mjs'
@@ -336,7 +336,13 @@ if (process.argv.includes('--self-test')) {
         input = loadInput(inputPath)
       }
       const mode = process.argv.includes('--shadow') ? 'shadow' : 'enforced'
-      const result = runVNextVerification(input, { currentCodeState: codeFingerprint(resolve(worktreePath)), mode })
+      const scopePaths = input.evidence?.codeFingerprint?.scopeMode === 'path-set-v1'
+        ? input.evidence.codeFingerprint.scopePaths
+        : null
+      const result = runVNextVerification(input, {
+        currentCodeState: codeFingerprint(resolve(worktreePath), undefined, { scopePaths }),
+        mode,
+      })
       if (process.argv.includes('--write')) {
         if (!outDir) throw new Error('--write requires --out')
         assertSafeArtifactOutput(worktreePath, outDir)

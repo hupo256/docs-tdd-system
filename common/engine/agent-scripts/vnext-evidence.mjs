@@ -9,7 +9,7 @@ import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs'
 import { dirname, isAbsolute, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { codeFingerprint, matchesEffectiveCodeState } from './lib/fingerprint.mjs'
+import { changedCodePaths, codeFingerprint, matchesEffectiveCodeState } from './lib/fingerprint.mjs'
 import { evidencePlanFingerprint, signEvidenceBundle, verifyEvidenceReceipt } from './lib/vnext-evidence-receipt.mjs'
 import { EXIT_EVIDENCE_REQUIREMENTS } from './lib/vnext-exit.mjs'
 
@@ -107,6 +107,13 @@ function executeCommand(spec, worktree) {
   return { startedAt, finishedAt, stdout, stderr, exitCode, signal: result.signal || '' }
 }
 
+export function verificationScopePaths(workItem, worktree) {
+  return [...new Set([
+    ...changedCodePaths(worktree),
+    ...(workItem?.autopilot?.implementation?.changedPaths || []),
+  ])].sort()
+}
+
 export function runEvidencePlan({ plan, workItem, worktree, keyPath, dependencies = {} } = {}) {
   const problems = evidencePlanProblems(plan, workItem)
   if (problems.length) throw new Error(`invalid evidence plan:\n- ${problems.join('\n- ')}`)
@@ -146,14 +153,22 @@ export function runEvidencePlan({ plan, workItem, worktree, keyPath, dependencie
   }
   const after = measure(worktree)
   if (!matchesEffectiveCodeState(before, after)) throw new Error('evidence command changed effective code content; inspect the worktree and rerun from the final code state')
+  // The full-tree fingerprints above are a mutation guard around command execution. The persisted
+  // identity is narrower: freeze the feature's actual changed paths so an unrelated later edit does
+  // not invalidate green evidence, while any byte/mode/deletion change inside this set still does.
+  const scopePaths = dependencies.measure ? [] : verificationScopePaths(workItem, worktree)
+  if (!dependencies.measure && !scopePaths.length) throw new Error('path-scoped evidence requires at least one changed or implementation-reported path')
+  const attestedCodeState = dependencies.measure
+    ? after
+    : codeFingerprint(worktree, undefined, { scopePaths })
   const completedAt = now()
   const bundle = {
     runId: `evidence-${completedAt.replace(/[^0-9]/g, '').slice(0, 14)}-${evidencePlanFingerprint(plan).slice(0, 8)}`,
     capturedAt: completedAt,
     assuranceMode: 'autonomous',
     evidenceTrust: 'cli-attested',
-    codeFingerprint: after,
-    facts: facts.map((fact) => ({ ...fact, codeFingerprint: after })),
+    codeFingerprint: attestedCodeState,
+    facts: facts.map((fact) => ({ ...fact, codeFingerprint: attestedCodeState })),
   }
   return signEvidenceBundle(bundle, { workItem, plan, startedAt, completedAt, keyPath })
 }
@@ -193,6 +208,9 @@ export function selfTest() {
     assert.deepEqual(verifyEvidenceReceipt(bundle, { workItem, currentCodeState: code, keyPath }), [])
     assert.match(evidencePlanProblems({ ...plan, commands: [...plan.commands, plan.commands[0]] }, workItem).join(' '), /duplicate/)
     assert.match(evidencePlanProblems({ ...plan, commands: [{ ...plan.commands[0], argv: ['echo ok'] }] }, workItem).join(' '), /argv/)
+    const scoped = { ...code, scopeMode: 'path-set-v1', scopePaths: ['src/x.ts'], contentHash: 'b'.repeat(64) }
+    assert.equal(matchesEffectiveCodeState({ ...scoped, headSha: 'new-commit', dirtyHash: 'unrelated' }, scoped), true)
+    assert.equal(matchesEffectiveCodeState({ ...scoped, contentHash: 'c'.repeat(64) }, scoped), false)
     console.log('vnext-evidence self-test passed')
   } finally {
     try { unlinkSync(keyPath) } catch { /* no-op */ }

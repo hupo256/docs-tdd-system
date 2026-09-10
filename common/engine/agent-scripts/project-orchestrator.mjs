@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url'
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 import { resolveProjectWorktree } from './lib/project-status-report.mjs'
 import { decideNext } from './lib/project-decision.mjs'
-import { codeFingerprint, matchesEffectiveCodeState } from './lib/fingerprint.mjs'
+import { changedCodePaths, codeFingerprint, matchesEffectiveCodeState } from './lib/fingerprint.mjs'
 import { sourceTypeFromPrd } from './lib/project-scaffold.mjs'
 import { normalizeSourceDocuments, readLocalSourceAsset } from './lib/vnext-source-units.mjs'
 import { verifyExitResultIntegrity } from './lib/vnext-exit.mjs'
@@ -261,7 +261,8 @@ function inspectVNext(id) {
   let codeStateProblem = ''
   if (latest) {
     try {
-      const current = codeFingerprint(resolveProjectWorktree(id).worktree)
+      const scopePaths = latest.codeFingerprint?.scopeMode === 'path-set-v1' ? latest.codeFingerprint.scopePaths : null
+      const current = codeFingerprint(resolveProjectWorktree(id).worktree, undefined, { scopePaths })
       codeStateFresh = matchesEffectiveCodeState(current, latest.codeFingerprint)
       if (!codeStateFresh) codeStateProblem = 'code content changed; revalidate evidence only (the signed source review remains reusable while the work item is unchanged)'
     } catch (error) {
@@ -405,7 +406,14 @@ function checkpoint() {
   const workItem = readJson(join(projectDir, 'work-item.json'))
   if (!workItem) throw new Error(`canonical v2 work item is missing: ${join(projectDir, 'work-item.json')}`)
   const latestResult = readJson(join(projectDir, 'latest-result.json'))
-  const next = applyAutopilotCheckpoint(workItem, readJson(inputFile), { latestResult })
+  const checkpointInput = readJson(inputFile)
+  if (!checkpointInput) throw new Error(`cannot read checkpoint: ${inputFile}`)
+  if (checkpointInput.outcome === 'completed') {
+    const actualChangedPaths = new Set(changedCodePaths(resolveProjectWorktree(projectId).worktree, config.baseRef || 'origin/online'))
+    const unverifiedPaths = (checkpointInput.changedPaths || []).filter((path) => !actualChangedPaths.has(path))
+    if (unverifiedPaths.length) throw new Error(`checkpoint paths are not changed from ${config.baseRef || 'origin/online'}: ${unverifiedPaths.join(', ')}`)
+  }
+  const next = applyAutopilotCheckpoint(workItem, checkpointInput, { latestResult })
   persistVNextWorkItem(projectDir, next)
   print(inspectVNext(projectId))
 }
