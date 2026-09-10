@@ -7,6 +7,13 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-09-10（Hook 止血 + v2 intake/review 防假绿）
+
+- **先探针后切流**：新增 Codex/Claude/Pi capability/probe、统一 16 KiB 组合预算和注入 telemetry；验证通过的客户端改为 allow-with-context，规则消费 ledger 按规则内容 hash 增量复用，commit 不再导致相同规则重复注入，opaque write 仍 fail-closed。
+- **图片进入 source truth**：v2 source normalization 读取本地图片字节并绑定 `assetHash/status/mediaType`，同步时间与 Lark 临时图片 URL 不再制造漂移；缺失、远程或未读图片直接阻断 review。PR-02306 原始图片样本进入回归自测。
+- **独立 reviewer 机器化**：新增 `docs-tdd review <ID> --client pi|claude`，以无工具、无项目 context、独立 session 子进程冷读 source packet；本机 HMAC receipt 绑定请求、图片 hash、client/session 与时间，V1/V2 缺 receipt、伪造或同作者身份均不能通过 verify。
+- **证据诚实性与 freshness**：调用方 evidence 固定披露 `assuranceMode=assisted-pilot`、`evidenceTrust=caller-supplied`；代码 freshness 改按 effective content hash 判定，同字节 commit 不再误杀，真实代码内容变化仍使旧证据失效。
+
 ## 2026-09-10（下线发布层 stale 检测，彻底靠 pin-based）
 
 - **移除 `ruleChainFresh` / stale 告警**：lark 自动执行路径（worker `runAI`、`/lark/health`、`lark-bot status` CLI）不再判「published L3/effective vs 当前源」是否 stale。该检测早已 note-only 不阻断（d533eb4），且因消费仓 `fameex-web` 的 `AGENTS.md` 随分支漂移而频繁假 stale，退化成刷屏噪音。规则消费已切 pin-based（项目钉 `policyFingerprint`），发布层落后于源对在飞任务无影响。

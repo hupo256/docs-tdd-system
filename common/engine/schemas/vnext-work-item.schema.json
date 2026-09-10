@@ -3,7 +3,7 @@
   "$id": "vnext-work-item.schema.json",
   "title": "docs_tdd vNext Work Item",
   "type": "object",
-  "required": ["schemaVersion", "workflowVersion", "projectId", "sourceSnapshot", "requirements", "coverageAudit", "routing", "apiDependency"],
+  "required": ["schemaVersion", "workflowVersion", "projectId", "sourceSnapshot", "requirements", "requirementsAuthor", "coverageAudit", "routing", "apiDependency"],
   "properties": {
     "schemaVersion": { "const": 1 },
     "workflowVersion": { "const": 2 },
@@ -48,6 +48,21 @@
             "properties": {
               "path": { "type": "string", "minLength": 1 },
               "contentHash": { "type": "string", "minLength": 1 }
+            },
+            "additionalProperties": false
+          }
+        },
+        "assets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["sourceId", "path", "assetHash", "assetStatus", "mediaType"],
+            "properties": {
+              "sourceId": { "type": "string", "minLength": 1 },
+              "path": { "type": "string", "minLength": 1 },
+              "assetHash": { "type": "string", "pattern": "^$|^[a-f0-9]{64}$" },
+              "assetStatus": { "type": "string", "enum": ["local", "embedded", "remote", "missing", "unread", "embedded-unread", "outside-root"] },
+              "mediaType": { "type": "string", "pattern": "^image/" }
             },
             "additionalProperties": false
           }
@@ -160,6 +175,33 @@
             "additionalProperties": false
           }
         },
+        "receipt": {
+          "type": "object",
+          "required": ["issuedBy", "client", "sessionId", "sourceIsolation", "requestFingerprint", "reviewedAssets", "startedAt", "completedAt", "signature"],
+          "properties": {
+            "issuedBy": { "const": "docs-tdd-review-v1" },
+            "client": { "type": "string", "enum": ["pi", "claude"] },
+            "sessionId": { "type": "string", "minLength": 1 },
+            "sourceIsolation": { "const": "source-only-no-code" },
+            "requestFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+            "reviewedAssets": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["sourceId", "assetHash"],
+                "properties": {
+                  "sourceId": { "type": "string", "minLength": 1 },
+                  "assetHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+                },
+                "additionalProperties": false
+              }
+            },
+            "startedAt": { "type": "string", "format": "date-time" },
+            "completedAt": { "type": "string", "format": "date-time" },
+            "signature": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+          },
+          "additionalProperties": false
+        },
         "unresolved": { "type": "array", "items": { "type": "string", "minLength": 1 } }
       },
       "additionalProperties": false
@@ -227,9 +269,17 @@
       "required": ["kind", "id"],
       "properties": {
         "kind": { "type": "string", "enum": ["human", "model"] },
-        "id": { "type": "string", "minLength": 1 }
+        "id": { "type": "string", "minLength": 1 },
+        "client": { "type": "string", "minLength": 1 },
+        "sessionId": { "type": "string", "minLength": 1 }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "model" } }, "required": ["kind"] },
+          "then": { "required": ["client", "sessionId"] }
+        }
+      ]
     },
     "scopeApproval": {
       "type": ["object", "null"],

@@ -93,6 +93,8 @@ function initialState({ worktree, sessionId, client }) {
     auditBaselineHead: head,
     auditBaselineSnapshot: snapshot,
     contextEpoch: 0,
+    firstEditAt: null,
+    editAttemptCount: 0,
     injectedRuleHashes: [],
     injectionEvents: [],
     pendingTools: {},
@@ -103,6 +105,7 @@ function initialState({ worktree, sessionId, client }) {
     baselineSnapshot: snapshot,
     lastSnapshot: snapshot,
     createdAt: now(),
+    epochStartedAt: now(),
     updatedAt: now(),
   }
 }
@@ -119,6 +122,9 @@ function migrateState(state, worktree) {
   state.pendingTools ||= {}
   state.injectedRuleHashes ||= []
   state.injectionEvents ||= []
+  state.epochStartedAt ||= state.createdAt || now()
+  state.firstEditAt ||= null
+  state.editAttemptCount ||= 0
   if (legacy && worktree) {
     const current = changedFileSnapshot(worktree)
     for (const file of changedBetween(state.auditBaselineSnapshot, current)) {
@@ -146,6 +152,9 @@ function resetEpochState(state, { reason, head = state.head, previousHead = stat
   migrateState(state)
   state.head = head
   state.contextEpoch += 1
+  state.epochStartedAt = now()
+  state.firstEditAt = null
+  state.editAttemptCount = 0
   if (!preserveInjectedRuleHashes) state.injectedRuleHashes = []
   state.pendingTools = {}
   state.injectionEvents.push({
@@ -265,7 +274,9 @@ export function updateLedger({ worktree, sessionId, client, workflowVersion }, u
     if (existing.worktree !== resolve(worktree)) throw new Error('session ledger belongs to a different worktree')
     if (existing.client !== client) throw new Error('session ledger belongs to a different client')
     const head = currentHead(worktree)
-    const preserveInjectedRuleHashes = workflowVersion === 2
+    // 注入新鲜度绑定规则 sourceHash，而不是 HEAD：业务提交不会让未变化规则反复占用上下文；
+    // SessionStart/PreCompact 仍通过 advanceContextEpoch 显式清空，规则正文变化则自然产生新 hash。
+    const preserveInjectedRuleHashes = true
     if (existing.head !== head) {
       recordHeadChangeAudit(existing, worktree, existing.head, head)
       resetForHeadChange(existing, head, { preserveInjectedRuleHashes })
@@ -287,6 +298,14 @@ export function advanceContextEpoch(identity, reason) {
     return resetEpochState(state, {
       reason,
     })
+  })
+}
+
+export function recordEditObservation(identity) {
+  return updateLedger(identity, (state) => {
+    state.editAttemptCount += 1
+    state.firstEditAt ||= now()
+    return state
   })
 }
 
@@ -494,8 +513,8 @@ function selfTest() {
     assert(!legacyVerdict.ok && legacyVerdict.files.join(',') === 'a.txt', 'v2 migration backfills and taints uncovered edits')
     writeFileSync(join(auditRepo, 'a.txt'), 'before\n')
 
-    const identity = { worktree: auditRepo, sessionId: 'audit-session', client: 'self-test' }
-    prepareLedger(identity)
+    const identity = { worktree: auditRepo, sessionId: 'audit-session', client: 'self-test', workflowVersion: 1 }
+    recordInjection(identity, { ruleHashes: ['v1-rule'], packFingerprint: 'pack', targets: ['a.txt'], channel: 'test', byteLength: 50 })
     recordPendingTool(identity, {
       toolUseId: 'edit-1',
       targets: ['a.txt'],
@@ -505,14 +524,15 @@ function selfTest() {
     writeFileSync(join(auditRepo, 'a.txt'), 'after\n')
     recordPostTool(identity, { toolUseId: 'edit-1' })
     advanceContextEpoch(identity, 'PreCompact')
+    recordInjection(identity, { ruleHashes: ['v1-rule'], packFingerprint: 'pack', targets: ['a.txt'], channel: 'test-after-compact', byteLength: 50 })
     const resolveFile = () => ({ packFingerprint: 'pack', ruleHashes: ['rule'] })
     assert(verifyConsumption({ ...identity, resolveFile }).ok, 'PreCompact preserves receipts and touched files')
     spawnSync('git', ['add', 'a.txt'], { cwd: auditRepo })
     spawnSync('git', ['commit', '-qm', 'change'], { cwd: auditRepo })
-    prepareLedger(identity)
+    const v1State = prepareLedger(identity)
     const afterCommit = verifyConsumption({ ...identity, resolveFile })
     assert(afterCommit.ok && afterCommit.files.join(',') === 'a.txt', 'HEAD changes preserve the full-session audit')
-
+    assert(JSON.stringify(v1State.injectedRuleHashes) === JSON.stringify(['v1-rule']), 'v1 HEAD change preserves source-hash freshness')
     const v2Identity = { worktree: auditRepo, sessionId: 'v2-persist', client: 'self-test', workflowVersion: 2 }
     recordInjection(v2Identity, { ruleHashes: ['rule-a', 'rule-b'], packFingerprint: 'pack', targets: ['a.txt'], channel: 'test', byteLength: 100 })
     recordPendingTool(v2Identity, { toolUseId: 'v2-edit', targets: ['a.txt'], perFile: { 'a.txt': { packFingerprint: 'pack', ruleHashes: ['rule-a', 'rule-b'] } }, packFingerprint: 'pack' })

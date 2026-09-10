@@ -6,6 +6,7 @@ import assert from 'node:assert/strict'
 import { fileURLToPath } from 'node:url'
 import { resolve } from 'node:path'
 import { coverageFingerprints, verifyVNextCoverage } from './vnext-work-item.mjs'
+import { reviewRequestFingerprint, verifyReviewReceipt } from './vnext-review-receipt.mjs'
 
 export const REVIEW_PROTOCOL = 'vnext-independent-coverage-review-v1'
 const allowedDispositions = new Set(['resolved', 'not-applicable', 'deferred', 'open'])
@@ -59,20 +60,31 @@ export function buildCoverageReviewRequest({ workItem, sourceUnits }) {
     return disposition?.disposition !== 'not-a-requirement'
   })
   if (unattributed.length) throw new Error(`source units have no requirement attribution: ${unattributed.map((unit) => unit.sourceId).join(', ')}`)
+  const sourceAssets = sourceUnits.filter((unit) => unit.type === 'image').map((unit) => ({
+    sourceId: unit.sourceId,
+    assetPath: unit.assetPath,
+    assetHash: unit.assetHash,
+    assetStatus: unit.assetStatus,
+    mediaType: unit.mediaType,
+  }))
+  const unreadAssets = sourceAssets.filter((asset) => !asset.assetHash || !['local', 'embedded'].includes(asset.assetStatus))
+  if (unreadAssets.length) throw new Error(`image assets are not locally readable: ${unreadAssets.map((asset) => `${asset.sourceId}:${asset.assetStatus}`).join(', ')}`)
   const fingerprints = coverageFingerprints(workItem)
-  return {
+  const request = {
     schemaVersion: 1,
     protocol: REVIEW_PROTOCOL,
     projectId: workItem.projectId,
     checks: ['source-unit-to-requirement', 'collection-completeness', 'affected-surface-candidates'],
     ...fingerprints,
     sourceUnits,
+    sourceAssets,
     deliveryScope: workItem.deliveryScope || { kind: 'whole-source' },
     candidateRequirements: reviewRequirements(workItem.requirements),
   }
+  return { ...request, requestFingerprint: reviewRequestFingerprint(request) }
 }
 
-export function validateCoverageReviewResponse(workItem, response) {
+export function validateCoverageReviewResponse(workItem, response, { request = null, receiptKeyPath } = {}) {
   const problems = []
   const expected = coverageFingerprints(workItem)
   if (response?.schemaVersion !== 1) problems.push('schemaVersion must be 1')
@@ -83,17 +95,26 @@ export function validateCoverageReviewResponse(workItem, response) {
   if (!response?.reviewRunId?.trim()) problems.push('reviewRunId is required')
   if (!response?.completedAt || Number.isNaN(Date.parse(response.completedAt))) problems.push('completedAt must be an ISO timestamp')
   if (!['human', 'model'].includes(response?.reviewer?.kind) || !response?.reviewer?.id?.trim()) problems.push('reviewer kind and id are required')
-  if (workItem?.requirementsAuthor?.id === response?.reviewer?.id) problems.push('reviewer must not be the same entity as the requirements author')
+  if (!['human', 'model'].includes(workItem?.requirementsAuthor?.kind) || !workItem?.requirementsAuthor?.id?.trim()) problems.push('requirementsAuthor is required')
+  const sameReviewerIdentity = workItem?.requirementsAuthor?.id === response?.reviewer?.id
+  const independentlySessionedModel = workItem?.requirementsAuthor?.kind === 'model'
+    && response?.reviewer?.kind === 'model'
+    && workItem?.requirementsAuthor?.sessionId
+    && response?.receipt?.sessionId
+    && workItem.requirementsAuthor.sessionId !== response.receipt.sessionId
+  if (sameReviewerIdentity && !independentlySessionedModel) problems.push('reviewer must not be the same entity/session as the requirements author')
   if (!['pass', 'changes-required'].includes(response?.verdict)) problems.push('verdict must be pass or changes-required')
   if (!Array.isArray(response?.findings)) problems.push('findings must be an array')
 
   const findings = Array.isArray(response?.findings) ? response.findings : []
+  const sourceIds = new Set(request?.sourceUnits?.map((unit) => unit.sourceId) || [])
   const findingIds = []
   for (const finding of findings) {
     if (!finding?.findingId?.trim() || !finding?.code?.trim() || !finding?.message?.trim()) problems.push('every finding requires findingId, code, and message')
     if (finding?.findingId) findingIds.push(finding.findingId)
     if (!allowedFindingCodes.has(finding?.code)) problems.push(`${finding?.findingId || 'finding'} has invalid code`)
     if (!Array.isArray(finding?.sourceIds)) problems.push(`${finding?.findingId || 'finding'} requires sourceIds`)
+    else if (sourceIds.size && finding.sourceIds.some((sourceId) => !sourceIds.has(sourceId))) problems.push(`${finding?.findingId || 'finding'} references an unknown sourceId`)
     if (!allowedDispositions.has(finding?.disposition)) problems.push(`${finding?.findingId || 'finding'} has invalid disposition`)
     if (['not-applicable', 'deferred'].includes(finding?.disposition) && !finding?.reason?.trim()) problems.push(`${finding.findingId} ${finding.disposition} requires a reason`)
     if (finding?.disposition === 'deferred' && (!finding?.owner?.trim() || !finding?.batch?.trim())) problems.push(`${finding.findingId} deferred requires owner and batch`)
@@ -108,11 +129,39 @@ export function validateCoverageReviewResponse(workItem, response) {
   }
   if (response?.verdict === 'pass' && open.length) problems.push('pass verdict cannot contain open findings')
   if (response?.verdict === 'changes-required' && !open.length) problems.push('changes-required verdict must contain an open finding')
+
+  const sourceAssets = request?.sourceAssets || workItem?.sourceSnapshot?.assets || []
+  const receiptRequired = workItem?.routing?.verificationLevel !== 'V0' || sourceAssets.length > 0
+  if (receiptRequired) {
+    if (!request) problems.push('current normalized review request is required to validate the receipt')
+    else problems.push(...verifyReviewReceipt(response, { requestFingerprint: reviewRequestFingerprint(request), sourceAssets, keyPath: receiptKeyPath }))
+    if (workItem?.requirementsAuthor?.kind === 'model' && !workItem.requirementsAuthor.client?.trim()) problems.push('requirementsAuthor.client is required for independent model review')
+    if (workItem?.requirementsAuthor?.kind === 'model' && !workItem.requirementsAuthor.sessionId?.trim()) problems.push('requirementsAuthor.sessionId is required for independent model review')
+    if (workItem?.requirementsAuthor?.sessionId && workItem.requirementsAuthor.sessionId === response?.receipt?.sessionId) problems.push('reviewer session must differ from requirements author session')
+  }
   return problems
 }
 
-export function applyCoverageReview(workItem, response) {
-  const problems = validateCoverageReviewResponse(workItem, response)
+export function coverageReviewResponseFromAudit(workItem) {
+  const audit = workItem?.coverageAudit
+  if (!audit?.receipt || !audit?.reviewRunId || !audit?.reviewer || !audit?.verdict) return null
+  return {
+    schemaVersion: 1,
+    protocol: REVIEW_PROTOCOL,
+    projectId: workItem.projectId,
+    sourceFingerprint: audit.sourceFingerprint,
+    requirementsFingerprint: audit.requirementsFingerprint,
+    reviewRunId: audit.reviewRunId,
+    completedAt: audit.completedAt,
+    reviewer: structuredClone(audit.reviewer),
+    verdict: audit.verdict,
+    findings: structuredClone(audit.findings || []),
+    receipt: structuredClone(audit.receipt),
+  }
+}
+
+export function applyCoverageReview(workItem, response, options = {}) {
+  const problems = validateCoverageReviewResponse(workItem, response, options)
   if (problems.length) throw new Error(`invalid coverage review: ${problems.join('; ')}`)
   const unresolved = response.findings.filter((finding) => finding.disposition === 'open').map((finding) => `${finding.findingId}: ${finding.message}`)
   return {
@@ -126,6 +175,7 @@ export function applyCoverageReview(workItem, response) {
       completedAt: response.completedAt,
       verdict: response.verdict,
       findings: structuredClone(response.findings),
+      ...(response.receipt ? { receipt: structuredClone(response.receipt) } : {}),
       unresolved,
     },
   }
@@ -137,6 +187,8 @@ export function selfTest() {
     projectId: 'PR-00001',
     sourceSnapshot: { revision: '1', contentHash: 'a', sources: [{ path: 'prd.md', contentHash: 'a' }] },
     requirements: [{ requirementId: 'R-001', sourceAnchors: [{ sourceId: 'SRC-1' }], statement: 'A', affectedSurfaces: [] }],
+    requirementsAuthor: { kind: 'human', id: 'author@example.com' },
+    routing: { verificationLevel: 'V0' },
     coverageAudit: {},
   }
   const request = buildCoverageReviewRequest({

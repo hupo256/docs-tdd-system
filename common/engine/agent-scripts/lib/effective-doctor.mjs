@@ -138,7 +138,24 @@ export function runDoctor(deps) {
   }
   add('CODEX-HOOK', codexHookIssues.length === 0, 'error', codexHookIssues.length === 0 ? 'Codex rule injection, receipt, and immediate code-gate hooks match the required contract' : `Codex rule hook contract is invalid: ${codexHookIssues.join('; ')}`, label(sources.adapters[4]))
 
-  // Pi 直连 agent：全局 AGENTS.md 软链充当 L1+adapter，扩展布线 tool_call/tool_result 到共享 hook。
+  const injection = config.ruleInjection || {}
+  const expectedDeliveryModes = { codex: 'preflight', claude: 'preflight', pi: 'preflight' }
+  const deliveryModesValid = Object.entries(expectedDeliveryModes).every(([client, mode]) => injection.deliveryModes?.[client] === mode)
+  const budgetsValid = injection.blockingBudgetBytes === 8192
+    && injection.advisoryCatalogBudgetBytes === 4096
+    && injection.combinedBudgetBytes === 16384
+    && injection.blockingBudgetBytes + injection.advisoryCatalogBudgetBytes <= injection.combinedBudgetBytes
+  add(
+    'RULE-INJECTION-POLICY',
+    deliveryModesValid && budgetsValid,
+    'error',
+    deliveryModesValid && budgetsValid
+      ? 'Codex/Claude/Pi use before-agent preflight and 8KB/4KB/16KB budgets are enforced'
+      : 'ruleInjection must configure codex+claude+pi=preflight and blocking/advisory/combined budgets of 8192/4096/16384 bytes',
+    'docs-tdd.config.json',
+  )
+
+  // Pi 直连 agent：全局 AGENTS.md 软链充当 L1+adapter，扩展在 before_agent_start 预送规则，tool_call/tool_result 只做写入收据与门禁。
   const piAdapter = sources.adapters[5]
   const piExtension = sources.adapters[6]
   add('ADAPTER-EXISTS', existsSync(piAdapter), 'error', `${label(piAdapter)} ${existsSync(piAdapter) ? 'exists' : 'is missing'}`, label(piAdapter))
@@ -146,7 +163,7 @@ export function runDoctor(deps) {
   const piExtensionText = existsSync(piExtension) ? readFileSync(piExtension, 'utf8') : ''
   const piHookMissing = PI_EXTENSION_MARKERS.filter((marker) => !piExtensionText.includes(marker))
   const piHook = existsSync(piExtension) && piHookMissing.length === 0
-  add('PI-HOOK', piHook, 'error', piHook ? 'Pi extension wires tool_call rule injection and tool_result code gate to the shared hook scripts' : existsSync(piExtension) ? `Pi extension is missing bridge markers: ${piHookMissing.join(', ')}` : `Pi extension is missing: ${label(piExtension)}; run install-local-agent-rules.mjs`, label(piExtension))
+  add('PI-HOOK', piHook, 'error', piHook ? 'Pi extension wires before_agent_start preflight, tool receipts, and the code gate to shared scripts' : existsSync(piExtension) ? `Pi extension is missing bridge markers: ${piHookMissing.join(', ')}` : `Pi extension is missing: ${label(piExtension)}; run install-local-agent-rules.mjs`, label(piExtension))
 
   const adapterProtocol = sources.adapters.slice(0, 3).map(containsProtocol)
   const l1Shared = sources.adapters.slice(0, 2).map((adapter) => pathsResolveToCanonical([adapter], canonicalL1))
@@ -163,7 +180,7 @@ export function runDoctor(deps) {
     'CLIENT-RUNTIME-CONFORMANCE',
     conformance.ok,
     'error',
-    conformance.ok ? `all ${REQUIRED_AGENT_CLIENT_IDS.length} clients have independently observed loader/executor capabilities` : `client enforcement gaps: ${Object.entries(conformance.missing).map(([client, missing]) => `${client}=[${missing.join(',')}]`).join(' ')}`,
+    conformance.ok ? `all ${REQUIRED_AGENT_CLIENT_IDS.length} clients have installed loader/executor contracts; run docs-tdd probe for delivery evidence` : `client enforcement gaps: ${Object.entries(conformance.missing).map(([client, missing]) => `${client}=[${missing.join(',')}]`).join(' ')}`,
     label(manifestFile),
   )
 

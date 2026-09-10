@@ -6,18 +6,21 @@ import { readFileSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { isAbsolute, join, relative, resolve, sep } from 'node:path'
 import { docsSystemRoot } from './lib/roots.mjs'
-import { buildCoverageReviewRequest, applyCoverageReview, REVIEW_PROTOCOL } from './lib/vnext-coverage-review.mjs'
+import { buildCoverageReviewRequest, applyCoverageReview, coverageReviewResponseFromAudit, REVIEW_PROTOCOL } from './lib/vnext-coverage-review.mjs'
 import { buildVNextExitResult } from './lib/vnext-exit.mjs'
 import { codeFingerprint } from './lib/fingerprint.mjs'
 import { initializeVNextArtifacts, persistVNextRun, VNEXT_ARTIFACT_FILES } from './lib/vnext-persistence.mjs'
 import { evaluateVNextMswPolicy } from './lib/vnext-msw-policy.mjs'
-import { normalizeSourceDocuments } from './lib/vnext-source-units.mjs'
+import { normalizeSourceDocuments, readLocalSourceAsset } from './lib/vnext-source-units.mjs'
 import { verifyVNextRouting } from './lib/vnext-risk-route.mjs'
 import { coverageFingerprints, verifyVNextCoverage } from './lib/vnext-work-item.mjs'
 
 function normalizeCurrentSources(workItem, sourceDocuments, revision) {
   if (!revision?.trim()) throw new Error('currentRevision is required')
-  return normalizeSourceDocuments(sourceDocuments, { revision })
+  return normalizeSourceDocuments(sourceDocuments, {
+    revision,
+    readAsset: (asset) => readLocalSourceAsset(asset, { root: docsSystemRoot }),
+  })
 }
 
 export function scaffoldVerifyInput({ projectDir, worktreePath }) {
@@ -34,18 +37,6 @@ export function scaffoldVerifyInput({ projectDir, worktreePath }) {
     workItem,
     currentRevision: workItem.sourceSnapshot?.revision || 'TODO: current revision',
     sourceDocuments,
-    reviewResponse: {
-      schemaVersion: 1,
-      protocol: REVIEW_PROTOCOL,
-      projectId: workItem.projectId,
-      sourceFingerprint: 'TODO: from prepare-review',
-      requirementsFingerprint: 'TODO: from prepare-review',
-      reviewRunId: 'TODO: run id',
-      completedAt: 'TODO: ISO 8601 timestamp',
-      reviewer: { kind: 'TODO: human|model', id: 'TODO: reviewer id' },
-      verdict: 'TODO: pass|changes-required',
-      findings: [],
-    },
     discoveredSurfaces: [],
     implementation: { coveredSurfaceIds: [] },
     evidence: {
@@ -61,7 +52,10 @@ export function scaffoldVerifyInput({ projectDir, worktreePath }) {
 export function normalizeSourceInput(input) {
   if (!Array.isArray(input?.sourceDocuments)) throw new Error('normalize-sources input requires sourceDocuments')
   if (!input.currentRevision?.trim()) throw new Error('normalize-sources input requires currentRevision')
-  return normalizeSourceDocuments(input.sourceDocuments, { revision: input.currentRevision })
+  return normalizeSourceDocuments(input.sourceDocuments, {
+    revision: input.currentRevision,
+    readAsset: (asset) => readLocalSourceAsset(asset, { root: docsSystemRoot }),
+  })
 }
 
 export function prepareReview(input) {
@@ -75,7 +69,9 @@ export function prepareReview(input) {
 
 export function runVNextVerification(input, { currentCodeState, generatedAt, mode = 'enforced' } = {}) {
   if (!input?.workItem) throw new Error('verification input requires workItem')
-  if (!input?.reviewResponse) throw new Error('verification input requires independent reviewResponse')
+  const reviewResponse = input.reviewResponse || coverageReviewResponseFromAudit(input.workItem)
+  if (!reviewResponse) throw new Error('verification requires a signed independent review; run docs-tdd review first')
+  if (Object.hasOwn(input, 'sourceOracle')) throw new Error('sourceOracle is reviewer-owned and cannot be supplied by verification input')
   if (!Array.isArray(input.sourceDocuments)) throw new Error('verification input requires sourceDocuments')
   if (!Array.isArray(input.discoveredSurfaces)) throw new Error('verification input requires discoveredSurfaces (use [] when the search found none)')
   if (!input.implementation || !Array.isArray(input.implementation.coveredSurfaceIds)) throw new Error('verification input requires implementation.coveredSurfaceIds')
@@ -84,12 +80,12 @@ export function runVNextVerification(input, { currentCodeState, generatedAt, mod
   if (!currentCodeState) throw new Error('verification requires a code fingerprint measured by the CLI')
 
   const normalized = normalizeCurrentSources(input.workItem, input.sourceDocuments, input.currentRevision)
-  const reviewedWorkItem = applyCoverageReview(input.workItem, input.reviewResponse)
+  const reviewRequest = buildCoverageReviewRequest({ workItem: input.workItem, sourceUnits: normalized.sourceUnits })
+  const reviewedWorkItem = applyCoverageReview(input.workItem, reviewResponse, { request: reviewRequest })
   const coverage = verifyVNextCoverage({
     workItem: reviewedWorkItem,
     currentSourceSnapshot: normalized.sourceSnapshot,
     sourceUnits: normalized.sourceUnits,
-    sourceOracle: input.sourceOracle,
     discoveredSurfaces: input.discoveredSurfaces,
     implementation: input.implementation,
   })
@@ -148,7 +144,10 @@ function usage() {
 normalize-sources input: { currentRevision, sourceDocuments }
 prepare-review input:   { workItem, currentRevision, sourceDocuments }
 scaffold-input:         prints a verify-input.json skeleton for a v2 project
-verification input:     { workItem, currentRevision, sourceDocuments, reviewResponse, discoveredSurfaces, implementation, evidence, blockers, sourceOracle? }
+verification input:     { workItem, currentRevision, sourceDocuments, discoveredSurfaces, implementation, evidence, blockers }
+                        reviewResponse is accepted only for legacy V0 fixtures; V1/V2 uses the signed audit written by docs-tdd review.
+
+sourceOracle is not accepted from callers; source coverage authority comes from the independently signed review response.
 
 Verification is read-only unless --write is explicit. --write persists only work-item.json, latest-result.json, and runs.jsonl in --out; it never updates v1 Gate state.`)
 }
@@ -170,6 +169,7 @@ export function selfTest() {
       affectedSurfaces: [],
       evidencePlan: [{ type: 'copy-literal', runtimeRequired: false }],
     }],
+    requirementsAuthor: { kind: 'human', id: 'self-test-author' },
     coverageAudit: {
       sourceFingerprint: 'pending', requirementsFingerprint: 'pending', reviewMode: 'independent-cold-read', reviewRunId: 'pending',
       reviewer: { kind: 'model', id: 'pending' }, completedAt: '2000-01-01T00:00:00Z', verdict: 'changes-required', unresolved: ['pending'],
@@ -222,7 +222,8 @@ export function selfTest() {
   assert.equal(needlessMock.checks.find((item) => item.code === 'MSW_POLICY').ok, false)
   const shadow = runVNextVerification(verifyInput, { currentCodeState: code, mode: 'shadow', generatedAt: '2026-09-04T00:00:03Z' })
   assert.equal(shadow.mode, 'shadow')
-  assert.throws(() => runVNextVerification({ ...verifyInput, reviewResponse: null }, { currentCodeState: code }), /reviewResponse/)
+  assert.throws(() => runVNextVerification({ ...verifyInput, reviewResponse: null }, { currentCodeState: code }), /signed independent review/)
+  assert.throws(() => runVNextVerification({ ...verifyInput, sourceOracle: { requiredUnits: [] } }, { currentCodeState: code }), /sourceOracle is reviewer-owned/)
   console.log('vnext-verify self-test passed')
 }
 
@@ -251,14 +252,17 @@ if (process.argv.includes('--self-test')) {
       console.log(JSON.stringify(initialized, null, 2))
     } else if (inputPath) {
       const worktreePath = argumentValue('--worktree')
-      if (!worktreePath) throw new Error('--worktree is required so current HEAD/dirty state is measured, not trusted from JSON')
+      if (!worktreePath) throw new Error('--worktree is required so current effective code state is measured, not trusted from JSON')
       const input = loadInput(inputPath)
       const mode = process.argv.includes('--shadow') ? 'shadow' : 'enforced'
       const result = runVNextVerification(input, { currentCodeState: codeFingerprint(resolve(worktreePath)), mode })
       if (process.argv.includes('--write')) {
         if (!outDir) throw new Error('--write requires --out')
         assertSafeArtifactOutput(worktreePath, outDir)
-        const workItem = applyCoverageReview(input.workItem, input.reviewResponse)
+        const normalized = normalizeCurrentSources(input.workItem, input.sourceDocuments, input.currentRevision)
+        const reviewRequest = buildCoverageReviewRequest({ workItem: input.workItem, sourceUnits: normalized.sourceUnits })
+        const reviewResponse = input.reviewResponse || coverageReviewResponseFromAudit(input.workItem)
+        const workItem = applyCoverageReview(input.workItem, reviewResponse, { request: reviewRequest })
         const persisted = persistVNextRun(outDir, { workItem, result })
         console.error(`vNext artifacts: ${persisted.idempotent ? 'idempotent' : 'written'} (${persisted.runCount} run${persisted.runCount === 1 ? '' : 's'})`)
       }

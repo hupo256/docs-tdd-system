@@ -15,6 +15,35 @@
   },
   "protectedRuleSurfaces": ["AGENTS.md", "CLAUDE.md", ".cursor", ".claude", ".husky", "package.json"],
   "ruleConflictOverrides": [],
+  "ruleInjection": {
+    "blockingRuleGlobs": [
+      "001-guidelines.mdc",
+      "definition-of-done.mdc",
+      "frontend-harness.mdc"
+    ],
+    "advisoryRuleGlobs": [
+      "advanced-*.mdc",
+      "architecture-*.mdc",
+      "async-*.mdc",
+      "bundle-*.mdc",
+      "client-*.mdc",
+      "js-*.mdc",
+      "patterns-*.mdc",
+      "react19-*.mdc",
+      "rendering-*.mdc",
+      "rerender-*.mdc",
+      "server-*.mdc",
+      "state-*.mdc"
+    ],
+    "blockingBudgetBytes": 8192,
+    "advisoryCatalogBudgetBytes": 4096,
+    "combinedBudgetBytes": 16384,
+    "deliveryModes": {
+      "codex": "preflight",
+      "claude": "preflight",
+      "pi": "preflight"
+    }
+  },
   "repoEntryDuplicates": [],
   "globalAdapters": {
     "aiRules": "~/.ai-rules",

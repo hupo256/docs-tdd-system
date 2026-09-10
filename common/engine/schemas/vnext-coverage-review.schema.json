@@ -39,6 +39,33 @@
         },
         "additionalProperties": false
       }
+    },
+    "receipt": {
+      "type": "object",
+      "required": ["issuedBy", "client", "sessionId", "sourceIsolation", "requestFingerprint", "reviewedAssets", "startedAt", "completedAt", "signature"],
+      "properties": {
+        "issuedBy": { "const": "docs-tdd-review-v1" },
+        "client": { "type": "string", "enum": ["pi", "claude"] },
+        "sessionId": { "type": "string", "minLength": 1 },
+        "sourceIsolation": { "const": "source-only-no-code" },
+        "requestFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "reviewedAssets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["sourceId", "assetHash"],
+            "properties": {
+              "sourceId": { "type": "string", "minLength": 1 },
+              "assetHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "startedAt": { "type": "string", "format": "date-time" },
+        "completedAt": { "type": "string", "format": "date-time" },
+        "signature": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false

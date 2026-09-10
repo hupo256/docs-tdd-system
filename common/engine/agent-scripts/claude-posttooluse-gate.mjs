@@ -11,6 +11,9 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
 import { classifyTargets } from './lib/hook-targets.mjs'
+import { appendInjectionTelemetry } from './lib/rule-injection-telemetry.mjs'
+import { loadConfig, resolveProjectRoot } from './lib/roots.mjs'
+import { projectIdForWorktree, workflowVersionForProject } from './lib/workflow-version.mjs'
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url))
 const T = 18000
 
@@ -92,6 +95,30 @@ function main() {
       else if (r.status !== 0) gateErrors.push('check-doc-budget: ' + spawnReason(r))
     }
   }
+  const telemetryClient = process.env.CODEX_THREAD_ID ? 'codex' : process.env.CLAUDE_SESSION_ID ? 'claude' : process.env.PI_SESSION_ID ? 'pi' : 'hook'
+  let projectId = process.env.DOCS_TDD_PROJECT_ID || null
+  let workflowVersion = 1
+  try {
+    const { config } = loadConfig({ cwd: root, consumerWorktree: root })
+    projectId ||= projectIdForWorktree(root, config)
+    workflowVersion = workflowVersionForProject(projectId, { resolveProjectRoot })
+  } catch {
+    // Telemetry enrichment is best-effort; the quality result remains authoritative.
+  }
+  appendInjectionTelemetry(
+    { worktree: root, sessionId: payload.session_id || `${telemetryClient}-unknown`, client: telemetryClient, workflowVersion },
+    {
+      event: 'quality-gate',
+      projectId,
+      targetClasses: [...new Set(targets.map((file) => file.match(/\.[^.\/]+$/)?.[0]?.toLowerCase() || 'extensionless'))].sort(),
+      injectedBytes: 0,
+      retryCount: violations.length ? 1 : 0,
+      manualIntervention: 'not-observed',
+      qualityOutcome: violations.length ? 'issues-found' : gateErrors.length ? 'unknown-infrastructure-error' : 'pass',
+      qualityIssueCount: violations.length,
+      qualityGateErrorCount: gateErrors.length,
+    },
+  )
   if (violations.length) {
     process.stderr.write('machine gate blocked (' + (targets.join(', ') || 'changed files') + '): fix before continuing:\n' + violations.map(v => '  - ' + v).join('\n') + '\n')
     process.exit(2)

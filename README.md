@@ -31,6 +31,7 @@ docs-tdd recommend <PROJECT-ID>            # 根据当前改动推荐场景
 docs-tdd changed <PROJECT-ID>              # v1 编辑后增量校验；v2 项目拒绝执行
 docs-tdd gate    <PROJECT-ID> <Gx>         # v1 阶段交付门禁；v2 项目拒绝执行
 docs-tdd capability <PROJECT-ID>           # 查看 worktree、规则集与发布摘要
+docs-tdd probe <PROJECT-ID> --client pi    # 验证规则上下文产出、预算与同会话去重
 docs-tdd doctor                            # 适配/冲突/发布状态自检
 docs-tdd check <PROJECT-ID>                # 校验文档、规则与脚本预算
 docs-tdd release <PROJECT-ID> --scenario X # 原子发布 L3/effective + doctor/golden/context smoke

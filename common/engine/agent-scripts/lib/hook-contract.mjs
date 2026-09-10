@@ -18,7 +18,7 @@ export function createCodexHookSpecs(command, gateCommand) {
         command,
         async: false,
         timeout: 20,
-        additionalContextLimit: 0,
+        additionalContextLimit: 16384,
       },
     },
     {
@@ -49,6 +49,7 @@ export function createCodexHookSpecs(command, gateCommand) {
 
 export function createClaudeHookSpecs(command, gateCommand) {
   return [
+    { event: 'UserPromptSubmit', matcher: null, hook: { type: 'command', command, timeout: 20 } },
     { event: 'PreToolUse', matcher: CLAUDE_CONTEXT_MATCHER, hook: { type: 'command', command, timeout: 20 } },
     { event: 'PostToolUse', matcher: CLAUDE_CONTEXT_MATCHER, hook: { type: 'command', command, timeout: 20 } },
     { event: 'SessionStart', matcher: null, hook: { type: 'command', command, timeout: 10 } },
@@ -95,7 +96,7 @@ function selfTest() {
     true,
   )
   const claudeSpecs = createClaudeHookSpecs('node /rules/rule-context-hook.mjs --client claude', gateCommand)
-  assert.equal(claudeSpecs.length, 5)
+  assert.equal(claudeSpecs.length, 6)
   assert.equal(claudeSpecs.filter((spec) => spec.event === 'PostToolUse').length, 2)
   console.log('PASS hook-contract (Codex events, fields, and duplicates)')
 }

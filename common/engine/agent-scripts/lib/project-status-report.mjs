@@ -16,7 +16,7 @@ import { inspectEffectiveRules, inspectRuleRelease } from './context-pack.mjs'
 import { printReport, printWarnings } from './cli-report.mjs'
 import { workflowVersionForProject } from './workflow-version.mjs'
 
-const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, consumerWorktree } = resolveRoots()
+const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, consumerWorktree, config } = resolveRoots()
 const readJson = (file) => JSON.parse(readFileSync(file, 'utf8'))
 
 // 解析项目编码 worktree：优先 README frontmatter `worktree:`（相对项目目录解析成绝对路径），
@@ -49,15 +49,30 @@ export function capability(id, { agentClient }) {
   const ruleset = readJson(join(docsRoot, 'common/rules/ruleset.json'))
   const release = inspectRuleRelease()
   const effectiveRules = inspectEffectiveRules()
-  const hook = ['claude', 'codex', 'pi'].includes(agentClient) ? `${agentClient}-posttooluse` : agentClient === 'cursor' ? 'cursor-native-plus-changed' : 'human-cli'
+  const hook = agentClient === 'pi'
+    ? 'pi-before-agent-start-preflight-plus-tool-receipt'
+    : agentClient === 'claude'
+      ? 'claude-user-prompt-preflight-plus-tool-receipt'
+      : agentClient === 'codex'
+        ? 'codex-session-start-preflight-plus-tool-receipt'
+        : agentClient === 'cursor'
+          ? 'cursor-native-plus-changed'
+          : 'human-cli'
+  const injection = config.ruleInjection || {}
+  const deliveryMode = injection.deliveryModes?.[agentClient] || (['claude', 'codex', 'pi'].includes(agentClient) ? 'preflight' : 'n/a')
+  const fallback = workflowVersion === 2
+    ? `run docs-tdd verify ${id || '<PROJECT-ID>'} --input <verify-input.json>`
+    : `run docs-tdd changed ${id || '<PROJECT-ID>'} before completion`
 
   printReport([
     ['docs_tdd root', docsRoot],
     ['project workflow', workflowVersion ? `v${workflowVersion}${workflowVersion === 2 ? ' (enforced exit)' : ' (legacy G0-G8)'}` : 'n/a'],
     ['agent client', agentClient],
     ['agent adapter', hook],
-    ['automatic post-edit hook', ['claude', 'codex', 'pi'].includes(agentClient) ? 'available' : 'unavailable'],
-    ['fallback', `run docs-tdd changed ${id || '<PROJECT-ID>'} before completion`],
+    ['automatic pre-edit rule delivery', ['claude', 'codex', 'pi'].includes(agentClient) ? `${deliveryMode} (available)` : 'unavailable'],
+    ['injection budgets', `${injection.blockingBudgetBytes || 8192} blocking + ${injection.advisoryCatalogBudgetBytes || 4096} advisory <= ${injection.combinedBudgetBytes || 16384} bytes`],
+    ['automatic post-edit receipt', ['claude', 'codex', 'pi'].includes(agentClient) ? 'available' : 'unavailable'],
+    ['fallback', fallback],
     ['ruleset', `${manifest?.rulesetVersion || ruleset.version} (${ruleset.maturity})`],
     ['rule release', `${release.status || 'invalid'} (${(release.currentFingerprint || 'unknown').slice(0, 12)})`],
     ['effective rules', `${effectiveRules.status || 'invalid'} (${(effectiveRules.currentFingerprint || 'unknown').slice(0, 12)})`],

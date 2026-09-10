@@ -7,9 +7,9 @@ import { fileURLToPath } from 'node:url'
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 import { resolveProjectWorktree } from './lib/project-status-report.mjs'
 import { decideNext } from './lib/project-decision.mjs'
-import { codeFingerprint } from './lib/fingerprint.mjs'
+import { codeFingerprint, matchesEffectiveCodeState } from './lib/fingerprint.mjs'
 import { sourceTypeFromPrd } from './lib/project-scaffold.mjs'
-import { normalizeSourceDocuments } from './lib/vnext-source-units.mjs'
+import { normalizeSourceDocuments, readLocalSourceAsset } from './lib/vnext-source-units.mjs'
 import { verifyExitResultIntegrity } from './lib/vnext-exit.mjs'
 import { initializeVNextArtifacts } from './lib/vnext-persistence.mjs'
 
@@ -112,7 +112,7 @@ function kickoffVNext(projectDir, prd, title) {
   mkdirSync(join(projectDir, 'inbox/lark-sync'), { recursive: true })
   mkdirSync(join(projectDir, 'agent'), { recursive: true })
   const branchName = `${config.branchPrefix || 'feature/'}${projectId}`
-  writeFileSync(join(projectDir, 'README.md'), `---\nprojectId: ${projectId}\nstatus: active\nstage: G1\nbranch: ${branchName}\nworktree: ""\nport: ""\nvisualFidelity: standard\nprdSource: ${prd}\nfigmaNode: ""\nlarkEnabled: false\nworkflowVersion: 2\n---\n\n# ${projectId} ${title}\n\n> v2(workflowVersion: 2)正式项目:无 v1 门禁链,工作事实载体是三文件(work-item.json / latest-result.json / runs.jsonl),出口见 common/vnext/README.md。\n\n## 下一步\n\n1. 从 PRD 抽取原子需求(带 sourceAnchor)并填充 work-item.json\n2. 独立冷读审查(vnext-verify --prepare-review → reviewResponse)\n3. 按等级补证据后 \`docs-tdd verify ${projectId} --input <verify-input.json> --worktree <wt>\`\n`)
+  writeFileSync(join(projectDir, 'README.md'), `---\nprojectId: ${projectId}\nstatus: active\nstage: G1\nbranch: ${branchName}\nworktree: ""\nport: ""\nvisualFidelity: standard\nprdSource: ${prd}\nfigmaNode: ""\nlarkEnabled: false\nworkflowVersion: 2\n---\n\n# ${projectId} ${title}\n\n> v2(workflowVersion: 2)正式项目:无 v1 门禁链,工作事实载体是三文件(work-item.json / latest-result.json / runs.jsonl),出口见 common/vnext/README.md。\n\n## 下一步\n\n1. 从 PRD 抽取原子需求(带 sourceAnchor)并填充 work-item.json\n2. 记录 requirementsAuthor 后运行 \`docs-tdd review ${projectId} --client pi\`（独立 source-only session）\n3. 按等级补证据后 \`docs-tdd verify ${projectId} --input <verify-input.json> --worktree <wt>\`\n`)
   const larkOutputDir = String(config.larkOutputDir || `apps/web/docs_tdd/prds/\${projectId}/inbox/lark-sync`).replaceAll('${projectId}', projectId)
   writeFileSync(join(projectDir, 'agent/lark-sources.json'), JSON.stringify({
     projectId,
@@ -126,11 +126,16 @@ function kickoffVNext(projectDir, prd, title) {
 // 强制显式分类,不允许静默当 V0)。
 function vnextInitWorkItem(projectDir) {
   const manifest = readJson(join(projectDir, 'agent/prd-source-manifest.json'))
-  const syncedMd = join(projectDir, 'inbox/lark-sync/prd-latest.md')
+  const rawSyncedMd = join(projectDir, 'inbox/lark-sync/prd-latest.md')
+  const localizedSyncedMd = join(projectDir, 'inbox/lark-sync/prd-latest.extracted.md')
+  const syncedMd = existsSync(localizedSyncedMd) ? localizedSyncedMd : rawSyncedMd
   if (!existsSync(syncedMd)) return false
   const revision = manifest?.remoteSources?.[0]?.revisionId || '1'
-  const prdUrl = manifest?.remoteSources?.[0]?.url || readJson(join(projectDir, 'agent/lark-sources.json'))?.sources?.[0]?.url || 'prd-latest.md'
-  const { sourceSnapshot } = normalizeSourceDocuments([{ path: prdUrl, content: readFileSync(syncedMd, 'utf8') }], { revision })
+  const sourcePath = relative(docsRoot, syncedMd)
+  const { sourceSnapshot } = normalizeSourceDocuments([{ path: sourcePath, content: readFileSync(syncedMd, 'utf8') }], {
+    revision,
+    readAsset: (asset) => readLocalSourceAsset(asset, { root: docsRoot }),
+  })
   const workItem = {
     schemaVersion: 1,
     workflowVersion: 2,
@@ -214,7 +219,7 @@ function inspectVNext(id) {
     return {
       projectId: id, workflowVersion: 2, verificationLevel: workItem.routing?.verificationLevel || 'unclassified', status: 'active',
       currentStage: reviewReady ? 'V2-evidence' : 'V2-review', nextAction: reviewReady ? 'capture_current_code_evidence' : 'complete_independent_coverage_review',
-      command: `docs-tdd verify ${id} --input <verify-input.json>`,
+      command: reviewReady ? `docs-tdd verify ${id} --input <verify-input.json>` : `docs-tdd review ${id} --client pi`,
     }
   }
   const failedChecks = (latest.checks || []).filter((check) => !check.ok)
@@ -223,9 +228,7 @@ function inspectVNext(id) {
   let codeStateProblem = ''
   try {
     const current = codeFingerprint(resolveProjectWorktree(id).worktree)
-    codeStateFresh = current.headSha === latest.codeFingerprint?.headSha
-      && current.baseSha === latest.codeFingerprint?.baseSha
-      && current.dirtyHash === latest.codeFingerprint?.dirtyHash
+    codeStateFresh = matchesEffectiveCodeState(current, latest.codeFingerprint)
     if (!codeStateFresh) codeStateProblem = 'latest result is stale for the current worktree code state'
   } catch (error) {
     codeStateProblem = `cannot measure current worktree code state: ${error.message}`

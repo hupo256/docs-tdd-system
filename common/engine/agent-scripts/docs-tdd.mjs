@@ -36,6 +36,7 @@ import { latestReleasePin, resolveRulePin, upgradeRulePin } from './lib/rule-pin
 import { stableFingerprint } from './lib/vnext-work-item.mjs'
 import { workflowVersionForProject } from './lib/workflow-version.mjs'
 import { CODING_SCENARIOS, requireRuleSession, verifyG2Ready, writeRuleSession } from './lib/rule-session-runtime.mjs'
+import { runRuleContextProbe } from './rule-context-probe.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, consumerWorktree, config } = resolveRoots()
@@ -53,6 +54,11 @@ if (clientIndex >= 0 && !commandArgs[clientIndex + 1]) {
 const sessionIndex = commandArgs.indexOf('--session-id')
 if (sessionIndex >= 0 && !commandArgs[sessionIndex + 1]) {
   console.error('--session-id requires a non-empty task/session identifier')
+  process.exit(1)
+}
+const modelIndex = commandArgs.indexOf('--model')
+if (modelIndex >= 0 && !commandArgs[modelIndex + 1]) {
+  console.error('--model requires a model name')
   process.exit(1)
 }
 let agentClient
@@ -73,7 +79,7 @@ try {
   console.error(error.message)
   process.exit(1)
 }
-const valueOptions = new Set(['--client', '--session-id'])
+const valueOptions = new Set(['--client', '--session-id', '--target', '--model'])
 const positional = commandArgs.filter((arg, index) => !arg.startsWith('--') && !valueOptions.has(commandArgs[index - 1]))
 const detail = positional[0]
 const noCache = cliArgs.includes('--no-cache')
@@ -107,6 +113,23 @@ if (process.argv.includes('--self-test')) {
 if (command === 'capability') {
   capability(projectId, { agentClient })
   process.exit(0)
+}
+
+if (command === 'probe') {
+  if (!projectId || !/^PR-\d+$/.test(projectId)) {
+    console.error('Usage: docs-tdd probe PR-XXXXX --client codex|claude|pi [--target path]')
+    process.exit(1)
+  }
+  if (!['codex', 'claude', 'pi'].includes(agentClient)) {
+    console.error('probe requires --client codex, claude, or pi')
+    process.exit(1)
+  }
+  const targetIndex = commandArgs.indexOf('--target')
+  const target = targetIndex >= 0 ? commandArgs[targetIndex + 1] : undefined
+  const { worktree } = resolveProjectWorktree(projectId)
+  const result = runRuleContextProbe({ client: agentClient, worktree, ...(target ? { target } : {}) })
+  console.log(JSON.stringify(result, null, 2))
+  process.exit(result.ok ? 0 : 1)
 }
 
 if (command === 'doctor') {
@@ -214,7 +237,7 @@ if (command === 'rules') {
 }
 
 if (!new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(projectId || '')) {
-  console.error('usage: docs-tdd.mjs <kickoff|status|resume|next|capability|doctor|release|golden|guard|rule-health|rules|explain|check|gate|verify|context|changed|recommend> PR-01234 [G0-G8|scenario] [--input verify-input.json] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|pi|human] [--session-id <id>]')
+  console.error('usage: docs-tdd.mjs <kickoff|status|resume|next|capability|probe|doctor|release|golden|guard|rule-health|rules|explain|check|gate|review|verify|context|changed|recommend> PR-01234 [G0-G8|scenario] [--input verify-input.json] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|pi|human] [--session-id <id>] [--target path] [--model <name>]')
   process.exit(1)
 }
 
@@ -234,6 +257,17 @@ if (projectWorkflowVersion === 2 && command === 'context') {
     ...(session >= 0 ? ['--session', resolve(commandArgs[session + 1])] : []),
     ...(commandArgs.includes('--json') ? ['--json'] : []),
   ]))
+}
+if (projectWorkflowVersion === 2 && command === 'review') {
+  if (!['pi', 'claude'].includes(agentClient)) {
+    console.error('v2 review requires --client pi or --client claude')
+    process.exit(1)
+  }
+  const model = modelIndex >= 0 ? commandArgs[modelIndex + 1] : ''
+  process.exit(run([
+    join(scriptDir, 'vnext-review.mjs'), '--project', resolveProjectRoot(projectId), '--client', agentClient,
+    ...(model ? ['--model', model] : []),
+  ], docsRoot))
 }
 if (projectWorkflowVersion === 2 && command === 'verify') {
   if (commandArgs.includes('--shadow')) {
@@ -275,8 +309,8 @@ if (projectWorkflowVersion === 2 && ['gate', 'changed'].includes(command)) {
   console.error(`${command} is a v1-only command; ${projectId} uses workflowVersion 2. Use docs-tdd verify ${projectId} --input <verify-input.json>.`)
   process.exit(1)
 }
-if (command === 'verify') {
-  console.error(`verify is a v2-only command; ${projectId} uses workflowVersion 1. Use docs-tdd gate ${projectId} <GATE>.`)
+if (['review', 'verify'].includes(command)) {
+  console.error(`${command} is a v2-only command; ${projectId} uses workflowVersion 1. Use docs-tdd gate ${projectId} <GATE>.`)
   process.exit(1)
 }
 

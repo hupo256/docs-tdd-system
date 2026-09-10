@@ -3,12 +3,14 @@
   "$id": "vnext-exit-result.schema.json",
   "title": "docs_tdd vNext Final Exit Result",
   "type": "object",
-  "required": ["schemaVersion", "workflowVersion", "tool", "mode", "runId", "generatedAt", "projectId", "level", "status", "ok", "workItemFingerprint", "codeFingerprint", "checks", "summary", "blockedBy", "resultFingerprint"],
+  "required": ["schemaVersion", "workflowVersion", "tool", "mode", "assuranceMode", "evidenceTrust", "runId", "generatedAt", "projectId", "level", "status", "ok", "workItemFingerprint", "codeFingerprint", "checks", "summary", "blockedBy", "resultFingerprint"],
   "properties": {
     "schemaVersion": { "const": 1 },
     "workflowVersion": { "const": 2 },
     "tool": { "const": "vnext-verify.mjs" },
     "mode": { "type": "string", "enum": ["enforced", "shadow"] },
+    "assuranceMode": { "const": "assisted-pilot" },
+    "evidenceTrust": { "const": "caller-supplied" },
     "runId": { "type": "string", "minLength": 1 },
     "generatedAt": { "type": "string", "format": "date-time" },
     "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },
@@ -18,10 +20,11 @@
     "workItemFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
     "codeFingerprint": {
       "type": "object",
-      "required": ["headSha", "baseSha", "dirtyHash", "dirtyFileCount", "untrackedFileCount", "isGitRepo"],
+      "required": ["headSha", "baseSha", "contentHash", "dirtyHash", "dirtyFileCount", "untrackedFileCount", "isGitRepo"],
       "properties": {
         "headSha": { "type": "string" },
         "baseSha": { "type": "string" },
+        "contentHash": { "type": "string" },
         "dirtyHash": { "type": "string" },
         "dirtyFileCount": { "type": "integer", "minimum": 0 },
         "untrackedFileCount": { "type": "integer", "minimum": 0 },

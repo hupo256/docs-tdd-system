@@ -155,6 +155,11 @@ function mergeClaudeHooks() {
   const settingsFile = join(home, '.claude/settings.json')
   const settings = existsSync(settingsFile) ? JSON.parse(readFileSync(settingsFile, 'utf8')) : {}
   const contextCommand = `node ${ruleContextHook} --client claude`
+  addHook(settings, 'UserPromptSubmit', null, {
+    type: 'command',
+    command: contextCommand,
+    timeout: 20,
+  })
   addHook(settings, 'PreToolUse', 'Edit|Write|MultiEdit|NotebookEdit|Bash', {
     type: 'command',
     command: contextCommand,
@@ -195,7 +200,7 @@ function mergeCodexHooks() {
     command,
     async: false,
     timeout: 20,
-    additionalContextLimit: 0,
+    additionalContextLimit: 16384,
   })
   addHook(settings, 'PostToolUse', matcher, {
     type: 'command',

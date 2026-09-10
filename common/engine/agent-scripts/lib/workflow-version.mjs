@@ -46,11 +46,15 @@ export function workflowVersionForProject(projectId, { resolveProjectRoot }) {
   return existsSync(join(projectRoot, 'work-item.json')) ? 2 : 1
 }
 
+export function projectIdForWorktree(worktree, config) {
+  if (!worktree) return null
+  const branch = git(['rev-parse', '--abbrev-ref', 'HEAD'], worktree)
+  return projectIdFromBranch(branch, config)
+}
+
 // 从 worktree 的当前分支剥出 projectId，再判定其 workflowVersion。判定不出来一律返回 1。
 export function workflowVersionForWorktree(worktree, config, { resolveProjectRoot }) {
-  if (!worktree) return 1
-  const branch = git(['rev-parse', '--abbrev-ref', 'HEAD'], worktree)
-  const projectId = projectIdFromBranch(branch, config)
+  const projectId = projectIdForWorktree(worktree, config)
   if (!projectId) return 1
   return workflowVersionForProject(projectId, { resolveProjectRoot })
 }

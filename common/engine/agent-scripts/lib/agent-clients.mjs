@@ -12,13 +12,13 @@ const CLIENT_DEFINITIONS = Object.freeze([
     id: 'codex',
     kind: 'direct',
     adapter: 'codex',
-    enforcement: 'PreToolUse rule injection + PostToolUse receipt/code gate + changed/gate',
+    enforcement: 'SessionStart rule preflight + Pre/PostToolUse receipt/code gate + changed/gate',
   },
   {
     id: 'claude',
     kind: 'direct',
     adapter: 'claude',
-    enforcement: 'PreToolUse rule injection + PostToolUse receipt + changed/gate',
+    enforcement: 'UserPromptSubmit rule preflight + Pre/PostToolUse receipt + changed/gate',
   },
   {
     id: 'cursor',
@@ -30,7 +30,7 @@ const CLIENT_DEFINITIONS = Object.freeze([
     id: 'pi',
     kind: 'direct',
     adapter: 'pi',
-    enforcement: 'extension tool_call rule injection + tool_result receipt/code gate + changed/gate',
+    enforcement: 'extension before_agent_start rule preflight + tool_call receipt + tool_result code gate + changed/gate',
   },
   {
     id: 'lark-codex',

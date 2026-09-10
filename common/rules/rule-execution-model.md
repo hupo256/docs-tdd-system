@@ -25,13 +25,13 @@
 |------|----------|----------|
 | 会话启动/恢复 | Codex、Claude Code、Cursor 的 adapter 先读 `rule-router.md`，再执行 `docs-tdd context <PROJECT-ID> <SCENARIO>` | 入口先验证 L3 与 effective 两层发布指纹，再由 `rule-index.json` 按场景生成 context pack；编码场景须先过 G2，并写带客户端、三层 fingerprint、G2 输入与 HEAD 的 24 小时 `rule-session.json` v2；编辑中的未发布规则或其他客户端的旧会话不能被消费 |
 | Lark 无人值守执行 | Lark-Codex / Lark-Claude 在每次启动 AI 前抽取任务语义对应的规则章节 | **常驻必需**规则文件或章节缺失以 `VERIFY-RULE-004` 阻断（缺了等于裸跑）；辅助章节缺失只记 warning 并浮现到结果卡、审计与 `/lark/health`。发布层 stale 检测已下线（规则消费改 pin-based，`docs-tdd rules status` 才是主动查询发布落后的入口）；上下文仍绑定两层发布指纹用于审计 |
-| 编码前/首次编辑 | 按变更类型加载 L1、L2 `.cursor/rules` 和 routed L3 专题 | Cursor 原生消费 L2；Claude/Codex 的 PreToolUse 共用 Resolver，首次命中时 deny-and-retry 注入正文；合计超 96 KiB 分批注入，单条超限则阻断并要求拆分 |
+| 编码前/首次编辑 | 按变更类型加载 L1、L2 `.cursor/rules` 和 routed L3 专题 | Cursor 原生消费 L2；Claude `UserPromptSubmit`、Codex `SessionStart`、Pi `before_agent_start` 首轮前预送 blocking 全文与 advisory 目录，PreToolUse/tool_call 只做覆盖确认/回执。blocking/advisory/单事件预算分别为 8/4/16 KiB；单条 blocking 超限直接阻断并要求拆分 |
 | 编辑后 | Claude/Codex PostToolUse 写入按 session、文件与规则指纹绑定的累计回执，并对本次单文件/多文件改动立即执行代码检查 | `changed` 与 G5+ 校验本会话全部 touched files；PreCompact/HEAD 变化只轮换注入 epoch，不清审计基线、receipt 或 taint。绕过 hook、规则或内容过期即阻断 |
 | 阶段出口 | 执行 `docs-tdd gate <PROJECT-ID> <Gx>`，G5+ 聚合代码扫描 | `error` 退出码阻断；G6/G8 用 `--write` 生成机器结果和 evidence，规则或工作树变化后旧证据失效 |
 | 判断型验收 | G6 `/code-review` + Browser/Playwright + 必要人工视觉/语义确认 | 处理静态规则无法可靠判断的复用、架构、业务语义和视觉手感；findings 必须逐项已修、豁免或阻塞 |
 | 规则维护 | 更新权威正文、适配器、场景路由、Rule ID/gate、自测和 CHANGELOG | 先发布 L3，再执行 `effective-rules.mjs --write` 发布 L1+direct adapter+Lark runtime adapter+L2+L3 组合指纹；五个入口只消费两层都 fresh 的版本 |
 
-PreToolUse 证明编辑前已注入，PostToolUse 回执绑定本次写入；最终边界仍是 `changed`/阶段 gate。安装器优先保留已接入相同 gate 的团队 Husky；仅在缺失时才以个人 `core.hooksPath` 追加 pre-commit 兜底并链回既有 hook。Cursor 无可信 PostToolUse 时仍须显式运行 `changed`；未检测到 CI 时不得宣称团队 CI 已承接。
+预送事件证明模型规划前已收到规则，PreToolUse/tool_call 证明当前文件的 blocking hash 已覆盖，PostToolUse/tool_result 回执绑定本次写入；规则新鲜度绑定 sourceHash，普通 HEAD 变化不重复灌入，SessionStart/PreCompact 或规则正文变化才重置。每次真实注入追加不含 prompt/正文的 NDJSON 指标（客户端、工作流、目标类别、字节数、首改耗时、重试/人工介入观测位）；最终边界仍是 `changed`/阶段 gate。安装器优先保留已接入相同 gate 的团队 Husky；仅在缺失时才以个人 `core.hooksPath` 追加 pre-commit 兜底并链回既有 hook。Cursor 无可信 PostToolUse 时仍须显式运行 `changed`；未检测到 CI 时不得宣称团队 CI 已承接。
 
 ## 3. 执行强度
 

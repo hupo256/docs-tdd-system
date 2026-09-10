@@ -68,7 +68,7 @@ if (process.argv.includes('--self-test')) {
   const replay = runExitReplay()
   if (process.argv.includes('--json')) console.log(JSON.stringify({ ok: replay.positive.ok && replay.cases.every((item) => item.ok), ...replay }, null, 2))
   else {
-    console.log(`${replay.positive.ok ? 'PASS' : 'FAIL'} positive control: complete V1 evidence on current HEAD`)
+    console.log(`${replay.positive.ok ? 'PASS' : 'FAIL'} positive control: complete V1 evidence on current code content`)
     for (const item of replay.cases) console.log(`${item.ok ? 'PASS' : 'FAIL'} ${item.name}: expected [${item.expectedFailures.join(', ')}], got [${item.actualFailures.join(', ')}], status=${item.derivedStatus}`)
   }
   process.exitCode = replay.positive.ok && replay.cases.every((item) => item.ok) ? 0 : 1

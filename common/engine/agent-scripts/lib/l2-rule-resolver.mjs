@@ -7,7 +7,12 @@ import { fileURLToPath } from 'node:url'
 import { minimatch } from 'minimatch'
 import YAML from 'yaml'
 
+// Full-pack diagnostics may render up to 96KB; runtime injection uses the separate
+// 8KB/4KB/16KB tiered budgets below.
 export const DEFAULT_EVENT_BUDGET_BYTES = 96 * 1024
+export const DEFAULT_BLOCKING_BUDGET_BYTES = 8 * 1024
+export const DEFAULT_ADVISORY_BUDGET_BYTES = 4 * 1024
+export const DEFAULT_COMBINED_BUDGET_BYTES = 16 * 1024
 
 const sha256 = (value) => createHash('sha256').update(value).digest('hex')
 const posix = (value) => value.split(sep).join('/')
@@ -136,6 +141,31 @@ export function resolveRulePack({ worktree, targetFiles, rulesDir = join(worktre
   }
 }
 
+// Pi 没有能在 tool_call 当下把 additionalContext 送回模型的 API，因此在
+// before_agent_start 预送：blocking 全文 + advisory 目录。这里显式把所有已作用域规则
+// 做成一个稳定 pack；未带 alwaysApply/globs 的手工规则不自动注入。
+export function resolveRulePreflightPack({ worktree, rulesDir = join(worktree, '.cursor/rules'), conflictOverrides = [] }) {
+  const overrides = normalizeOverrides(conflictOverrides)
+  const matchedRules = loadCursorRules(rulesDir)
+    .filter((rule) => rule.alwaysApply || rule.globs.length > 0)
+    .map((rule) => ({ ...rule, matches: [{ target: '<preflight>', reason: 'preflight-catalogue' }] }))
+  const identity = {
+    targets: ['<preflight>'],
+    rules: matchedRules.map((rule) => ({ path: rule.relativePath, sourceHash: rule.sourceHash })),
+    conflictOverrides: overrides,
+  }
+  return {
+    version: 1,
+    worktree: resolve(worktree),
+    rulesDir: resolve(rulesDir),
+    targets: ['<preflight>'],
+    matchedRules,
+    unscopedRules: [],
+    conflictOverrides: overrides,
+    fingerprint: sha256(stableJson(identity)),
+  }
+}
+
 function matchesAnyRuleGlob(rule, globs) {
   return globs.some((glob) => minimatch(rule.relativePath, glob, { dot: true, nocase: false, nocomment: true, nonegate: true, matchBase: false, platform: 'linux' }))
 }
@@ -158,8 +188,8 @@ export function partitionRuleInjection(rules, policy = {}) {
 
 // advisory 层只渲染「文件名 + description」目录：宽 glob 规则（js-*/rerender-*/rendering-* 等）
 // 对单次改动大多不适用，全文送达是纯浪费。目录超预算就截断并报 remainingCount，不无限重注入。
-export function renderAdvisoryRuleCatalog(pack, { rules, maxBytes = 16 * 1024 } = {}) {
-  const budget = Number.isFinite(maxBytes) ? Math.max(maxBytes, 1024) : 16 * 1024
+export function renderAdvisoryRuleCatalog(pack, { rules, maxBytes = DEFAULT_ADVISORY_BUDGET_BYTES } = {}) {
+  const budget = Number.isFinite(maxBytes) ? Math.max(maxBytes, 1024) : DEFAULT_ADVISORY_BUDGET_BYTES
   const header = [
     '# Advisory Cursor rule catalogue',
     '',
@@ -210,6 +240,35 @@ export function renderRuleContext(pack, { rules = pack.matchedRules, maxBytes = 
     byteLength,
     ruleCount: selected.length,
     ruleHashes: selected.map((rule) => rule.sourceHash),
+  }
+}
+
+export function composeRuleInjectionContext(pack, { blocking = [], advisory = [], blockingBudgetBytes = DEFAULT_BLOCKING_BUDGET_BYTES, advisoryBudgetBytes = DEFAULT_ADVISORY_BUDGET_BYTES, combinedBudgetBytes = DEFAULT_COMBINED_BUDGET_BYTES } = {}) {
+  const blockingRendered = blocking.length
+    ? renderRuleContext(pack, { rules: blocking, maxBytes: blockingBudgetBytes })
+    : { text: '', byteLength: 0, ruleCount: 0, ruleHashes: [] }
+  const advisoryCatalog = advisory.length
+    ? renderAdvisoryRuleCatalog(pack, { rules: advisory, maxBytes: advisoryBudgetBytes })
+    : { text: '', byteLength: 0, ruleCount: 0, ruleHashes: [], remainingCount: 0 }
+  const text = [blockingRendered.text, advisoryCatalog.text].filter(Boolean).join('\n')
+  const byteLength = Buffer.byteLength(text)
+  if (byteLength > combinedBudgetBytes) {
+    const error = new Error(`combined rule context is ${byteLength} bytes, exceeding the ${combinedBudgetBytes}-byte event budget`)
+    error.code = 'RULE_CONTEXT_COMBINED_BUDGET_EXCEEDED'
+    error.byteLength = byteLength
+    error.maxBytes = combinedBudgetBytes
+    throw error
+  }
+  return {
+    text,
+    byteLength,
+    ruleCount: blockingRendered.ruleCount + advisoryCatalog.ruleCount,
+    ruleHashes: [...new Set([...blockingRendered.ruleHashes, ...advisoryCatalog.ruleHashes])].sort(),
+    blockingByteLength: blockingRendered.byteLength,
+    advisoryByteLength: advisoryCatalog.byteLength,
+    blockingRuleCount: blockingRendered.ruleCount,
+    advisoryRuleCount: advisoryCatalog.ruleCount,
+    advisoryRemainingCount: advisoryCatalog.remainingCount,
   }
 }
 
@@ -276,9 +335,18 @@ function selfTest() {
   assert(unclassified.blocking.length === 2 && unclassified.advisory.length === 0, 'unclassified rules default to blocking rather than silently downgrading')
   const catalog = renderAdvisoryRuleCatalog(syntheticPack, { rules: partitioned.advisory })
   assert(catalog.ruleHashes.join(',') === 'b' && catalog.text.includes('b.mdc'), 'advisory rules render as a compact catalogue')
+  const composed = composeRuleInjectionContext(syntheticPack, { blocking: partitioned.blocking, advisory: partitioned.advisory })
+  assert(composed.blockingRuleCount === 1 && composed.advisoryRuleCount === 1, 'blocking bodies and advisory catalogue compose into one bounded context')
+  let combinedOverflow = false
+  try {
+    composeRuleInjectionContext(syntheticPack, { blocking: partitioned.blocking, advisory: partitioned.advisory, combinedBudgetBytes: composed.byteLength - 1 })
+  } catch (error) {
+    combinedOverflow = error?.code === 'RULE_CONTEXT_COMBINED_BUDGET_EXCEEDED'
+  }
+  assert(combinedOverflow, 'combined context has an independent hard budget')
   const tinyBudgetCatalog = renderAdvisoryRuleCatalog(syntheticPack, { rules: partitioned.advisory, maxBytes: 1 })
   assert(tinyBudgetCatalog.ruleCount === 1, 'advisory catalogue clamps an unusably small budget instead of reinjecting forever')
-  console.log('PASS l2-rule-resolver (path normalization and injection batching)')
+  console.log('PASS l2-rule-resolver (path normalization and bounded tiered injection)')
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1]) && process.argv.includes('--self-test')) selfTest()

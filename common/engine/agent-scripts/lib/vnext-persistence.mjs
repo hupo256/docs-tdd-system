@@ -140,6 +140,22 @@ function assertWorkItem(workItem) {
   }
 }
 
+export function persistVNextWorkItem(outDir, workItem, lockOptions = {}) {
+  assertWorkItem(workItem)
+  const absolute = resolve(outDir)
+  const release = acquireLock(absolute, lockOptions)
+  try {
+    const workFile = join(absolute, 'work-item.json')
+    if (existsSync(workFile) && stableFingerprint(readJson(workFile)) === stableFingerprint(workItem)) {
+      return { written: false, idempotent: true, files: readdirSync(absolute).filter((name) => name !== lockName).sort() }
+    }
+    atomicWrite(workFile, json(workItem))
+    return { written: true, idempotent: false, files: readdirSync(absolute).filter((name) => name !== lockName).sort() }
+  } finally {
+    release()
+  }
+}
+
 export function initializeVNextArtifacts(outDir, workItem, lockOptions = {}) {
   assertWorkItem(workItem)
   const absolute = resolve(outDir)
@@ -219,6 +235,8 @@ export async function selfTest() {
     const first = sample('run-1')
     assert.deepEqual(initializeVNextArtifacts(basic, first.workItem).files, ['work-item.json'])
     assert.equal(initializeVNextArtifacts(basic, first.workItem).idempotent, true)
+    assert.equal(persistVNextWorkItem(basic, { ...first.workItem, apiDependency: { mode: 'no-request', reason: 'updated' } }).written, true)
+    persistVNextWorkItem(basic, first.workItem)
     assert.equal(persistVNextRun(basic, first).written, true)
     assert.equal(persistVNextRun(basic, first).idempotent, true)
     assert.deepEqual(readdirSync(basic).sort(), [...VNEXT_ARTIFACT_FILES].sort())

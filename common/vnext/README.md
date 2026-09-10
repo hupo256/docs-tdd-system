@@ -7,7 +7,7 @@
 1. vNext 是 `workflowVersion: 2`，不是 v1 上的“快速模式”。
    - 客户端责任边界：本仓只交付 Web 端，App 侧由兄弟团队交付。work-item 中 App surface 统一 `deferred`（owner + batch），纯 App 需求记录在 App 交接批次，不阻塞 Web 出口（规则本体见 `common/rules/change-scope-boundary.md` §1.2）。
 2. 覆盖能力完成并通过历史回放前，不删除或放宽旧 Gate。
-3. 只持久化直接服务于“原始 PRD → 代码落点 → 当前 HEAD 验收证据”的字段。
+3. 只持久化直接服务于“原始 PRD → 代码落点 → 当前 effective code state 验收证据”的字段。
 4. 历史上没有记录的 token、首次落码和流程耗时保持 `null`，禁止估算成假基线。
 5. v1 冻结扩张：除严重缺陷外，不再新增 Rule ID、Gate、模板层或流程分支。
 
@@ -18,7 +18,7 @@
 | 0 基线 | 指标口径、四项目机器基线、人工事故观察 | 基线可重复生成；不可恢复值明确为 `null` | **完成** |
 | 1 原始 PRD 闭环 | work-item schema、source/requirement fingerprint、独立审查输入输出、collection/surface 判定、历史 replay | PR-02306/01930 稳定失败；PRD 漂移稳定失败；修复后恢复 PASS；同输入结果稳定 | **完成** |
 | 2 风险路由 | scope × risk 纯路由器、只升不降、V2 人工范围确认 | 四项目分类符合冻结结论；低风险样例不误升；未知风险不可降档 | **完成** |
-| 3 统一出口 | 单一 v2 verify 聚合结果并接入正式命令 | V0/V1/V2 共用一个出口；blocked/旧 HEAD/伪造 PASS 不可绿 | **完成（enforced）** |
+| 3 统一出口 | 单一 v2 verify 聚合结果并接入正式命令 | V0/V1/V2 共用一个出口；blocked/旧代码内容/伪造 PASS 不可绿 | **完成（enforced）** |
 | 4 产物收敛 | v2 scaffold、latest-result、runs.jsonl；处置与 V2 确认留在 work-item | 默认持久化文件数降低至少 80% | **完成** |
 | 5 上下文压缩 | v2 最小 context + session delta | V0/V1 ≤4K 字符；V2 ≤8K 字符；可测 context 字符降低至少 60% | **完成** |
 | 6 MSW 条件化 | no-request / real-api / mock-required / pending-dependency | 无请求或真实 API 可用时不建 MSW，且无需 waiver | **完成** |
@@ -30,15 +30,16 @@
 - `baseline-observations.json`：用户复盘中可确认的事故事实；与机器指标分离。
 - `baseline.json`：由 `vnext-baseline.mjs --write` 从四个历史项目重复生成。
 - `vnext-work-item.schema.json`：v2 单一业务事实载体的第一版 schema。
-- `lib/vnext-source-units.mjs`：将 Markdown 原始来源确定性正规化为 text/table/image units；source ID 不依赖行号；同步时间、Lark 临时媒体 URL 和生成式图片 alt 变化不会制造伪漂移。
-- `lib/vnext-coverage-review.mjs` + `vnext-coverage-review.schema.json`：独立冷读审查的最小 I/O 契约；每条 finding 必须处置，过期 fingerprint 不可复用。
+- `lib/vnext-source-units.mjs`：将 Markdown 原始来源确定性正规化为 text/table/image units；source ID 不依赖行号；图片描述原文进入 reviewer 输入，本地图片字节以 SHA-256 绑定，未下载/不可读图片阻断审查；同步时间和 Lark 临时媒体 URL 不制造伪漂移。
+- `vnext-review.mjs` + `lib/vnext-review-receipt.mjs`：由 `docs-tdd review` 真正启动无工具、无代码上下文的独立 client/session，图片以附件传入；输出经本机 HMAC 签名后写回 work-item，手写 reviewer JSON 不能形成 V1/V2 有效审查。
+- `lib/vnext-coverage-review.mjs` + `vnext-coverage-review.schema.json`：独立冷读审查 I/O 契约；作者 identity/session 必填且不能与 reviewer 相同，每条 finding 必须处置，过期 fingerprint 不可复用。
 - `lib/vnext-work-item.mjs`：`SOURCE_FRESH`、`REQUIREMENT_COVERAGE`、`SURFACE_COVERAGE` 的纯判定核心。
 - `fixtures/vnext-replay/`：PR-02306 图片需求漏抽取、PR-01930 集合落点漏实现、PR-02265 PRD 漂移三个确定性事故夹具及三个修复后 positive controls。
 - `vnext-replay.mjs`：无模型、无业务仓依赖的稳定回放入口。
 - `vnext-verify.mjs`：source normalize / review request / verify 内核；默认生成 `mode=enforced` 正式结果，不更新 v1 Gate。`--shadow` 只供历史回放/灰度复算。
 - `lib/vnext-risk-route.mjs`：scope × risk 纯路由、V0/V1/V2 最小验证矩阵与 V2 人工 scope approval fingerprint。
 - `fixtures/vnext-routing-cases.json` + `vnext-route-replay.mjs`：四个历史项目和一个低风险反例的确定性路由回放。
-- `lib/vnext-exit.mjs` + `vnext-exit-result.schema.json`：将覆盖、路由、当前 Git 状态、证据和 blockers 聚合为唯一出口结果；`ok/status/summary` 只能派生。
+- `lib/vnext-exit.mjs` + `vnext-exit-result.schema.json`：将覆盖、路由、当前 Git 状态、证据和 blockers 聚合为唯一出口结果；证据绑定 effective content hash（提交但文件字节不变时不作废）；`ok/status/summary` 只能派生。当前外部证据明确标记为 `assisted-pilot`，不宣称 autonomous PASS。
 - `fixtures/vnext-exit-cases.json` + `vnext-exit-replay.mjs`：旧 HEAD、开放依赖、命令假 PASS、缺定向证据和篡改结果五类禁假绿回放。
 - `lib/vnext-persistence.mjs`：三文件持久化、原子替换、追加式历史、runId 幂等、锁超时/陈旧锁恢复和中断续写。
 - `vnext-artifact-budget.mjs` + `artifact-budget.json`：以同一四项目组合对比 253 → 12 个默认流程文件，减少 95.26%。
@@ -85,17 +86,17 @@ node common/engine/agent-scripts/lib/vnext-metrics.mjs --self-test
 # 1. 原始来源 → 稳定 source snapshot + source units
 node common/engine/agent-scripts/vnext-verify.mjs --normalize-sources source-input.json
 
-# 2. 生成交给独立 reviewer 的只读请求；命令自身不 spawn 模型
-node common/engine/agent-scripts/vnext-verify.mjs --prepare-review review-input.json
+# 2. 在 requirementsAuthor 已记录后启动真正独立的 source-only reviewer；V1/V2 必须走此入口
+node common/engine/agent-scripts/docs-tdd.mjs review PR-01234 --client pi
 
-# 3. 带 reviewer response、当前来源、代码搜索落点和实现事实做只读预检
+# 3. reviewer 的签名 audit 已写回 work-item；做只读预检时无需手填 reviewResponse
 node common/engine/agent-scripts/vnext-verify.mjs --input verify-input.json --worktree /absolute/path/to/worktree
 
 # 4. 正式出口：统一 CLI 强制 --write 到项目三文件，非 PASS 返回非零
 node common/engine/agent-scripts/docs-tdd.mjs verify PR-01234 --input verify-input.json --worktree /absolute/path/to/worktree
 ```
 
-`reviewResponse` 必须携带当前 source/requirements fingerprints、reviewer identity、完成时间、verdict 和逐条 finding disposition。`pass` 不允许存在 `open` finding；来源或需求变化后旧 response 自动失效。
+`docs-tdd review` 只向子进程提供规范化 source units、候选 requirements 和图片附件，不提供代码仓或工具。含图片的审查当前必须使用 `--client pi`（Claude CLI 路径暂只支持纯文本 packet）。运行前，需求抽取者必须在 work-item 写入 `requirementsAuthor`；模型作者记录 `{ kind, id, client, sessionId }`（Pi 可取 `PI_SESSION_ID`），人工作者记录 `{ kind: "human", id }`。CLI receipt 绑定请求 fingerprint、reviewer client/session、时间和全部图片 hash；相同模型也必须使用不同 session，`pass` 不允许存在 `open` finding。来源、图片字节或需求变化后旧 response 自动失效。`--prepare-review` 仅保留为调试/协议查看入口，不能替代签名审查。
 
 ## 风险路由约束
 
@@ -108,9 +109,9 @@ node common/engine/agent-scripts/docs-tdd.mjs verify PR-01234 --input verify-inp
 
 ## 单一出口约束
 
-- CLI 必须通过 `--worktree` 实测 Git `headSha + dirtyHash`，不接受输入 JSON 自报当前 HEAD。
-- 每条 evidence 都绑定同一个代码 fingerprint；任何代码或未跟踪文件变化都会让旧证据失效。
-- command evidence 的 PASS 从 `exitCode=0` 派生；`result=pass + exitCode!=0` 直接失败。
+- CLI 必须通过 `--worktree` 实测 Git effective content hash，同时保留 `headSha + dirtyHash` 作诊断；不接受输入 JSON 自报当前代码状态。
+- 每条 evidence 都绑定同一个 effective content hash；代码或未跟踪文件字节变化会让旧证据失效，单纯把相同字节提交成新 HEAD 不会误杀绿灯。
+- command evidence 的 PASS 从 `exitCode=0` 派生；`result=pass + exitCode!=0` 直接失败。Phase 2A 尚未引入受信 evidence runner，因此外部传入证据统一输出 `assuranceMode=assisted-pilot` 与 `evidenceTrust=caller-supplied`，不能宣称 autonomous PASS。
 - 每个 doing requirement 的 evidence plan、每个 implement surface、以及 level 最小证据矩阵都必须被当前代码证据覆盖。
 - open blocker 输出 `status=blocked`；缺证据/旧证据输出 `status=failed`，均不允许 `ok=true`。
 - 最终结果带 `resultFingerprint`；手工把 failed 改成 PASS 会被完整性检查识别。

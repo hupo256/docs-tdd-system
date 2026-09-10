@@ -4,6 +4,7 @@
 import assert from 'node:assert/strict'
 import { fileURLToPath } from 'node:url'
 import { resolve } from 'node:path'
+import { matchesEffectiveCodeState } from './fingerprint.mjs'
 import { stableFingerprint } from './vnext-work-item.mjs'
 
 export const EXIT_EVIDENCE_REQUIREMENTS = Object.freeze({
@@ -19,10 +20,7 @@ function check(code, problems, evidenceIds = []) {
   return { code, ok: problems.length === 0, problems, evidenceIds }
 }
 
-function sameCodeState(left, right) {
-  return Boolean(left?.headSha && left?.dirtyHash && right?.headSha && right?.dirtyHash
-    && left.headSha === right.headSha && left.dirtyHash === right.dirtyHash)
-}
+const sameCodeState = matchesEffectiveCodeState
 
 function evidenceIntegrityProblems(evidence) {
   const problems = []
@@ -32,6 +30,7 @@ function evidenceIntegrityProblems(evidence) {
   if (!evidence?.runId?.trim()) problems.push('evidence runId is required')
   if (!evidence?.capturedAt || Number.isNaN(Date.parse(evidence.capturedAt))) problems.push('evidence capturedAt must be an ISO timestamp')
   if (!Array.isArray(evidence?.facts)) problems.push('evidence facts must be an array')
+  if (evidence?.assuranceMode && evidence.assuranceMode !== 'assisted-pilot') problems.push('autonomous evidence requires a CLI attestation receipt; only assisted-pilot is currently accepted')
 
   for (const fact of evidence?.facts || []) {
     if (!fact.evidenceId?.trim() || !fact.kind?.trim()) problems.push('every evidence fact requires evidenceId and kind')
@@ -58,10 +57,10 @@ function evidenceIntegrityProblems(evidence) {
 
 function evidenceFreshnessProblems(evidence, currentCodeState) {
   const problems = []
-  if (!currentCodeState?.isGitRepo || !currentCodeState.headSha || !currentCodeState.dirtyHash) problems.push('current code state is not a valid Git fingerprint')
-  if (!sameCodeState(evidence?.codeFingerprint, currentCodeState)) problems.push('evidence bundle does not match current HEAD/dirty state')
+  if (!currentCodeState?.isGitRepo || !currentCodeState.headSha || (!currentCodeState.contentHash && !currentCodeState.dirtyHash)) problems.push('current code state is not a valid Git fingerprint')
+  if (!sameCodeState(evidence?.codeFingerprint, currentCodeState)) problems.push('evidence bundle does not match current effective code state')
   for (const fact of evidence?.facts || []) {
-    if (!sameCodeState(fact.codeFingerprint, currentCodeState)) problems.push(`${fact.evidenceId || 'evidence'} does not match current HEAD/dirty state`)
+    if (!sameCodeState(fact.codeFingerprint, currentCodeState)) problems.push(`${fact.evidenceId || 'evidence'} does not match current effective code state`)
   }
   return problems
 }
@@ -135,7 +134,7 @@ export function buildVNextExitResult({ workItem, preflightChecks = [], currentCo
 
   const checks = [
     ...preflightChecks,
-    check('CODE_STATE', !currentCodeState?.isGitRepo || !currentCodeState?.headSha || !currentCodeState?.dirtyHash ? ['current HEAD/dirty fingerprint is incomplete'] : []),
+    check('CODE_STATE', !currentCodeState?.isGitRepo || !currentCodeState?.headSha || (!currentCodeState?.contentHash && !currentCodeState?.dirtyHash) ? ['current effective code fingerprint is incomplete'] : []),
     check('EVIDENCE_INTEGRITY', integrityProblems, (evidence?.facts || []).map((fact) => fact.evidenceId)),
     check('EVIDENCE_FRESHNESS', freshnessProblems, (evidence?.facts || []).map((fact) => fact.evidenceId)),
     check('REQUIRED_EVIDENCE', requiredProblems),
@@ -150,6 +149,8 @@ export function buildVNextExitResult({ workItem, preflightChecks = [], currentCo
     workflowVersion: 2,
     tool: 'vnext-verify.mjs',
     mode,
+    assuranceMode: 'assisted-pilot',
+    evidenceTrust: 'caller-supplied',
     runId: evidence?.runId?.trim() || `invalid-${stableFingerprint({ workItem, currentCodeState, evidence }).slice(0, 16)}`,
     generatedAt,
     projectId: workItem?.projectId,
@@ -169,6 +170,8 @@ export function verifyExitResultIntegrity(result, workItem = null) {
   const problems = []
   const expectedOk = Array.isArray(result?.checks) && result.checks.every((item) => item.ok) && (result.blockedBy || []).length === 0
   if (!['enforced', 'shadow'].includes(result?.mode)) problems.push('mode must be enforced or shadow')
+  if (result?.assuranceMode !== 'assisted-pilot') problems.push('assuranceMode must be assisted-pilot until CLI evidence receipts are implemented')
+  if (result?.evidenceTrust !== 'caller-supplied') problems.push('evidenceTrust must disclose caller-supplied evidence until CLI evidence receipts are implemented')
   if (result?.workflowVersion !== 2) problems.push('workflowVersion must be 2')
   const expectedStatus = (result?.blockedBy || []).length ? 'blocked' : expectedOk ? 'passed' : 'failed'
   const expectedSummary = summarize(result?.checks || [])
@@ -181,7 +184,7 @@ export function verifyExitResultIntegrity(result, workItem = null) {
 }
 
 export function selfTest() {
-  const code = { headSha: 'abc1234', baseSha: 'base123', dirtyHash: 'dirty', dirtyFileCount: 1, untrackedFileCount: 0, isGitRepo: true }
+  const code = { headSha: 'abc1234', baseSha: 'base123', contentHash: 'content-v1', dirtyHash: 'dirty', dirtyFileCount: 1, untrackedFileCount: 0, isGitRepo: true }
   const command = (evidenceId, kind, extra = {}) => ({
     evidenceId, kind, result: 'pass', codeFingerprint: code, requirementIds: [], surfaceIds: [], evidenceRefs: [`logs/${evidenceId}.txt`],
     producer: { kind: 'command', command: `test ${kind}`, exitCode: 0, startedAt: '2026-09-04T00:00:00Z', finishedAt: '2026-09-04T00:00:01Z' }, ...extra,
@@ -205,7 +208,9 @@ export function selfTest() {
   assert.throws(() => buildVNextExitResult({ workItem, currentCodeState: code, evidence, blockers: [], mode: 'invalid' }), /unknown vNext result mode/)
   assert.equal(verifyExitResultIntegrity(passed).ok, true)
   const stale = buildVNextExitResult({ workItem, currentCodeState: { ...code, headSha: 'newhead' }, evidence, blockers: [], generatedAt: '2026-09-04T00:00:03Z' })
-  assert.equal(stale.checks.find((item) => item.code === 'EVIDENCE_FRESHNESS').ok, false)
+  assert.equal(stale.checks.find((item) => item.code === 'EVIDENCE_FRESHNESS').ok, true, 'same effective content survives a metadata-only commit')
+  const changed = buildVNextExitResult({ workItem, currentCodeState: { ...code, headSha: 'newhead', contentHash: 'content-v2' }, evidence, blockers: [], generatedAt: '2026-09-04T00:00:03Z' })
+  assert.equal(changed.checks.find((item) => item.code === 'EVIDENCE_FRESHNESS').ok, false)
   const forged = structuredClone(passed)
   forged.checks[0].ok = false
   assert.equal(verifyExitResultIntegrity(forged).ok, false)
