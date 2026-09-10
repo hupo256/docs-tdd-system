@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
 import { spawnSync } from 'node:child_process'
-import { dirname, join, relative } from 'node:path'
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
 import { homedir } from 'node:os'
 import { fileURLToPath } from 'node:url'
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
@@ -14,6 +15,7 @@ import { normalizeSourceDocuments, readLocalSourceAsset } from './lib/vnext-sour
 import { verifyExitResultIntegrity } from './lib/vnext-exit.mjs'
 import { initializeVNextArtifacts, persistVNextWorkItem } from './lib/vnext-persistence.mjs'
 import { applyAutopilotCheckpoint, deriveAutopilotAction, initialAutopilotState } from './lib/vnext-autopilot.mjs'
+import { applySourceUpdate, initialSourceReadiness } from './lib/vnext-source-readiness.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, config } = resolveRoots()
@@ -152,6 +154,7 @@ function vnextInitWorkItem(projectDir) {
     },
     routing: { scopeClass: 'local', riskSignals: ['unclassified'], verificationLevel: 'V0', routerVersion: 1 },
     apiDependency: { mode: 'no-request', reason: 'kickoff stub before intake; reassess after requirement extraction' },
+    sourceReadiness: initialSourceReadiness(),
     scopeApproval: null,
     autopilot: initialAutopilotState(),
   }
@@ -364,6 +367,36 @@ function resume() {
   print({ ...decision, projectId, note, stateFile: relative(repoRoot, stateFile(projectId)) })
 }
 
+function sourceUpdate() {
+  if (projectWorkflowVersion(projectId) !== 2) throw new Error('source-update is a v2-only command')
+  const inputFile = option('--input')
+  if (!inputFile) throw new Error('source-update requires --input <source-update.json>')
+  const update = readJson(inputFile)
+  if (!update) throw new Error(`cannot read source update: ${inputFile}`)
+  const projectDir = resolveProjectRoot(projectId)
+  const workItem = readJson(join(projectDir, 'work-item.json'))
+  if (!workItem) throw new Error(`canonical v2 work item is missing: ${join(projectDir, 'work-item.json')}`)
+
+  let fingerprint = ''
+  let storedPath = ''
+  if (['available', 'integrated'].includes(update.status)) {
+    if (!update.path?.trim()) throw new Error(`${update.status} source update requires path`)
+    const sourcePath = isAbsolute(update.path) ? resolve(update.path) : resolve(repoRoot, update.path)
+    const inbox = resolve(projectDir, 'inbox')
+    const inboxRelative = relative(inbox, sourcePath)
+    if (!inboxRelative || inboxRelative === '..' || inboxRelative.startsWith('../') || isAbsolute(inboxRelative)) {
+      throw new Error(`late source must be a file inside ${inbox}`)
+    }
+    const content = readFileSync(sourcePath)
+    fingerprint = createHash('sha256').update(content).digest('hex')
+    storedPath = relative(docsRoot, sourcePath)
+  }
+
+  const next = applySourceUpdate(workItem, update, { fingerprint, storedPath })
+  persistVNextWorkItem(projectDir, next)
+  print(inspectVNext(projectId))
+}
+
 function checkpoint() {
   if (projectWorkflowVersion(projectId) !== 2) throw new Error('checkpoint is a v2-only command')
   const inputFile = option('--input')
@@ -478,7 +511,7 @@ function selfTest() {
 
 if (args.includes('--self-test')) selfTest()
 else if (!new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(projectId || '')) {
-  console.error('usage: project-orchestrator.mjs <run|kickoff|status|resume|next|checkpoint> PR-01234 [--prd <source>] [--title <name>] [--input <checkpoint.json>]')
+  console.error('usage: project-orchestrator.mjs <run|kickoff|status|resume|next|source-update|checkpoint> PR-01234 [--prd <source>] [--title <name>] [--input <json>]')
   process.exit(1)
 } else {
   try {
@@ -486,6 +519,7 @@ else if (!new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(pro
     else if (command === 'kickoff') kickoff()
     else if (command === 'status' || command === 'next') status()
     else if (command === 'resume') resume()
+    else if (command === 'source-update') sourceUpdate()
     else if (command === 'checkpoint') checkpoint()
     else throw new Error(`unknown orchestrator command: ${command}`)
   } catch (error) {

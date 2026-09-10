@@ -103,6 +103,35 @@ node common/engine/agent-scripts/docs-tdd.mjs run PR-01234
 
 第二条命令会自动执行已审查的 evidence command plan，并自动组装 surfaces report 跑 enforced verify。证据保存在 `~/.cache/docs-tdd/evidence/<PROJECT-ID>/`，不会增加项目状态文件。连续两次代码修复仍失败会输出 `escalate-repair-failure`，禁止无限自动重试。
 
+### Figma / API 晚到
+
+新项目在 intake 时将 Figma 和 API 标记为 `unknown + pending`。需求抽取时必须分别分类为：
+
+- `not-required + not-required`：本需求不依赖该资料；
+- `required + pending`：资料尚未到达；不阻断 PRD-first 实现；
+- `required + available/integrated`：资料已被 CLI 指纹化，并需要/已经完成代码对齐。
+
+API 未到但存在已批准场景时，`apiDependency.mode=mock-required`，MSW 只把状态推进到 `implementation-ready`；真实 API 契约尚未到达时，`SOURCE_READINESS` 禁止最终 `ready-to-test`。API/Figma 到达后先把文件放在当前项目 `inbox/`，再运行：
+
+```bash
+node common/engine/agent-scripts/docs-tdd.mjs source-update PR-01234 --input /tmp/source-update.json
+```
+
+`source-update.json` 示例：
+
+```json
+{
+  "kind": "api",
+  "requirement": "required",
+  "status": "available",
+  "reason": "backend contract v3 arrived",
+  "revision": "v3",
+  "path": "apps/web/docs_tdd/prds/PR-01234/inbox/api-v3.md"
+}
+```
+
+CLI 自己读取并计算内容指纹，不接受调用方伪造 hash。到达新版本后输出 `reconcile-late-sources`；Agent 只处理该增量，API 从 mock 切换到 real contract 时必须同时报告最终 MSW 状态。对齐 checkpoint 把 source fingerprint 标为 integrated，之后才恢复 evidence/verify。
+
 ## 独立审查调用边界
 
 ```bash

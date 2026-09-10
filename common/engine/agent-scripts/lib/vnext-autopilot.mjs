@@ -6,11 +6,14 @@ import assert from 'node:assert/strict'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { stableFingerprint } from './vnext-work-item.mjs'
+import { scopeApprovalFingerprint } from './vnext-risk-route.mjs'
+import { evaluateSourceReadiness, reconcileAvailableSources } from './vnext-source-readiness.mjs'
 
 export const AUTOPILOT_PHASES = Object.freeze([
   'intake',
   'planning',
   'implementing',
+  'implementation-ready',
   'validating',
   'ready-to-test',
   'blocked',
@@ -22,6 +25,8 @@ export const AUTOPILOT_ACTIONS = Object.freeze([
   'complete-independent-review',
   'collect-scope-approval',
   'implement-current-scope',
+  'await-late-dependencies',
+  'reconcile-late-sources',
   'capture-cli-evidence',
   'repair-failed-checks',
   'escalate-repair-failure',
@@ -76,6 +81,7 @@ export function deriveAutopilotAction({
   const requirements = Array.isArray(workItem.requirements) ? workItem.requirements : []
   const doing = requirements.filter((requirement) => requirement.status === 'doing')
   const coverage = workItem.coverageAudit
+  const sourceReadiness = evaluateSourceReadiness(workItem)
 
   if (!doing.length) {
     return actionPacket(workItem, {
@@ -85,7 +91,7 @@ export function deriveAutopilotAction({
       constraints: ['prd-is-the-only-required-start-input', 'do-not-invent-missing-business-semantics'],
     })
   }
-  if (!workItem.routing || workItem.routing.riskSignals?.includes('unclassified')) {
+  if (!workItem.routing || workItem.routing.riskSignals?.includes('unclassified') || sourceReadiness.unknownKinds.length) {
     return actionPacket(workItem, {
       action: 'classify-scope-and-risk',
       phase: 'planning',
@@ -102,7 +108,8 @@ export function deriveAutopilotAction({
       constraints: ['source-only-review', 'review-session-must-differ-from-author-session'],
     })
   }
-  if (workItem.routing.verificationLevel === 'V2' && !workItem.scopeApproval) {
+  const scopeApprovalIsCurrent = workItem.scopeApproval?.fingerprint === scopeApprovalFingerprint(workItem)
+  if (workItem.routing.verificationLevel === 'V2' && !scopeApprovalIsCurrent) {
     return actionPacket(workItem, {
       action: 'collect-scope-approval',
       phase: 'planning',
@@ -119,7 +126,29 @@ export function deriveAutopilotAction({
       checkpoint: {
         command: `docs-tdd checkpoint ${projectId} --input <checkpoint.json>`,
         requiredFields: ['actionId', 'outcome', 'changedPaths', 'discoveredSurfaces', 'coveredSurfaceIds'],
+        optionalFields: ['integratedSourceKinds', 'msw', 'blockers'],
       },
+    })
+  }
+  if (sourceReadiness.reconciliationKinds.length) {
+    return actionPacket(workItem, {
+      action: 'reconcile-late-sources',
+      phase: 'implementing',
+      reason: `Late source content is available and must be reconciled: ${sourceReadiness.reconciliationKinds.join(', ')}.`,
+      constraints: ['reconcile-only-arrived-source-deltas', 'reclassify-risk-before-checkpoint', 'replace-mock-assumptions-with-measured-contracts'],
+      checkpoint: {
+        command: `docs-tdd checkpoint ${projectId} --input <checkpoint.json>`,
+        requiredFields: ['actionId', 'outcome', 'changedPaths', 'integratedSourceKinds'],
+      },
+    })
+  }
+  if (sourceReadiness.pendingRequiredKinds.length) {
+    return actionPacket(workItem, {
+      action: 'await-late-dependencies',
+      phase: 'implementation-ready',
+      status: 'waiting',
+      reason: `PRD-first implementation is complete; ready-to-test waits for: ${sourceReadiness.pendingRequiredKinds.join(', ')}.`,
+      constraints: ['do-not-claim-ready-to-test', 'continue-unrelated-work', 'resume-on-source-update'],
     })
   }
   if (!latestResult) {
@@ -196,10 +225,25 @@ export function applyAutopilotCheckpoint(workItem, checkpoint, { latestResult = 
   if (!checkpoint || !['in-progress', 'completed'].includes(checkpoint.outcome)) throw new Error('checkpoint outcome must be in-progress or completed')
   const expected = deriveAutopilotAction({ workItem, latestResult })
   if (checkpoint.actionId !== expected.actionId) throw new Error('checkpoint actionId is stale or does not match the current Autopilot action')
-  if (!['implement-current-scope', 'repair-failed-checks'].includes(expected.action)) throw new Error(`action ${expected.action} does not accept an implementation checkpoint`)
-  if (expected.action === 'repair-failed-checks' && checkpoint.outcome !== 'completed') throw new Error('repair checkpoint must be completed')
+  if (!['implement-current-scope', 'reconcile-late-sources', 'repair-failed-checks'].includes(expected.action)) throw new Error(`action ${expected.action} does not accept an implementation checkpoint`)
+  if (['reconcile-late-sources', 'repair-failed-checks'].includes(expected.action) && checkpoint.outcome !== 'completed') throw new Error(`${expected.action} checkpoint must be completed`)
 
-  const next = structuredClone(workItem)
+  let next = structuredClone(workItem)
+  const integratedSourceKinds = checkpoint.integratedSourceKinds || []
+  if (expected.action === 'reconcile-late-sources') {
+    if (!Array.isArray(integratedSourceKinds) || !integratedSourceKinds.length) throw new Error('source reconciliation checkpoint requires integratedSourceKinds')
+    if (!(checkpoint.changedPaths || []).length) throw new Error('source reconciliation checkpoint requires at least one real changed path')
+  }
+  if (integratedSourceKinds.length && !['implement-current-scope', 'reconcile-late-sources'].includes(expected.action)) {
+    throw new Error(`${expected.action} cannot reconcile late sources`)
+  }
+  if (integratedSourceKinds.length) {
+    const existingMswHandlers = workItem.autopilot?.implementation?.msw?.handlerIds || []
+    if (integratedSourceKinds.includes('api') && existingMswHandlers.length && !checkpoint.msw) {
+      throw new Error('API reconciliation with existing mock handlers must report the resulting MSW state')
+    }
+    next = reconcileAvailableSources(next, integratedSourceKinds, generatedAt)
+  }
   const previous = implementationState(next, latestResult)
   const changedPaths = [...new Set([...(previous.changedPaths || []), ...(checkpoint.changedPaths || [])])].sort()
   if (checkpoint.outcome === 'completed' && expected.action === 'implement-current-scope' && !changedPaths.length) {
@@ -217,7 +261,7 @@ export function applyAutopilotCheckpoint(workItem, checkpoint, { latestResult = 
     phase: checkpoint.outcome === 'completed' ? 'validating' : 'implementing',
     implementation: {
       ...previous,
-      status: expected.action === 'repair-failed-checks' ? 'completed' : checkpoint.outcome,
+      status: ['reconcile-late-sources', 'repair-failed-checks'].includes(expected.action) ? 'completed' : checkpoint.outcome,
       changedPaths,
       ...(checkpoint.discoveredSurfaces ? { discoveredSurfaces: checkpoint.discoveredSurfaces } : {}),
       ...(checkpoint.coveredSurfaceIds ? { coveredSurfaceIds: checkpoint.coveredSurfaceIds } : {}),
@@ -230,6 +274,7 @@ export function applyAutopilotCheckpoint(workItem, checkpoint, { latestResult = 
       ...(expected.action === 'repair-failed-checks' && checkpoint.outcome === 'completed'
         ? { code: (next.autopilot?.repairAttempts?.code || 0) + 1 }
         : {}),
+      ...(expected.action === 'reconcile-late-sources' ? { code: 0 } : {}),
     },
     lastCheckpointAt: generatedAt,
   }
@@ -268,6 +313,31 @@ export function selfTest() {
   }, { generatedAt: '2026-09-08T00:01:00Z' })
   assert.equal(deriveAutopilotAction({ workItem: implemented }).action, 'capture-cli-evidence')
   assert.throws(() => applyAutopilotCheckpoint(reviewed, { actionId: 'stale', outcome: 'completed' }), /actionId is stale/)
+
+  const waitingForApi = structuredClone(implemented)
+  waitingForApi.apiDependency = { mode: 'mock-required', reason: 'approved scenarios while API is pending', contractIds: ['C-1'] }
+  waitingForApi.sourceReadiness = {
+    figma: { requirement: 'not-required', status: 'not-required', reason: 'no visual dependency' },
+    api: { requirement: 'required', status: 'pending', reason: 'API contract pending' },
+  }
+  assert.equal(deriveAutopilotAction({ workItem: waitingForApi }).action, 'await-late-dependencies')
+  const apiAvailable = structuredClone(waitingForApi)
+  apiAvailable.sourceReadiness.api = {
+    requirement: 'required', status: 'available', reason: 'API contract arrived',
+    source: { path: 'inbox/api.md', revision: 'v1', fingerprint: 'a'.repeat(64) },
+  }
+  const reconcileAction = deriveAutopilotAction({ workItem: apiAvailable })
+  assert.equal(reconcileAction.action, 'reconcile-late-sources')
+  const reconciled = applyAutopilotCheckpoint(apiAvailable, {
+    actionId: reconcileAction.actionId,
+    outcome: 'completed',
+    changedPaths: ['src/api.ts'],
+    integratedSourceKinds: ['api'],
+    msw: { workerIntegrated: false, handlerIds: [], coveredContractIds: [] },
+  })
+  assert.equal(reconciled.sourceReadiness.api.status, 'integrated')
+  assert.equal(reconciled.apiDependency.mode, 'real-api')
+  assert.equal(deriveAutopilotAction({ workItem: reconciled }).action, 'capture-cli-evidence')
 
   const passed = { mode: 'enforced', status: 'passed', ok: true }
   const { autopilot: _legacyMissingAutopilot, ...legacyReviewed } = reviewed

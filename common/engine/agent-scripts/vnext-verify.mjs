@@ -15,6 +15,7 @@ import { normalizeSourceDocuments, readLocalSourceAsset } from './lib/vnext-sour
 import { verifyVNextRouting } from './lib/vnext-risk-route.mjs'
 import { signEvidenceBundle } from './lib/vnext-evidence-receipt.mjs'
 import { coverageFingerprints, verifyVNextCoverage } from './lib/vnext-work-item.mjs'
+import { evaluateSourceReadiness } from './lib/vnext-source-readiness.mjs'
 
 function normalizeCurrentSources(workItem, sourceDocuments, revision) {
   if (!revision?.trim()) throw new Error('currentRevision is required')
@@ -118,9 +119,10 @@ export function runVNextVerification(input, { currentCodeState, generatedAt, mod
   })
   const routing = verifyVNextRouting(reviewedWorkItem)
   const mswPolicy = evaluateVNextMswPolicy({ workItem: reviewedWorkItem, implementation: input.implementation, blockers: input.blockers })
+  const sourceReadiness = evaluateSourceReadiness(reviewedWorkItem)
   return buildVNextExitResult({
     workItem: reviewedWorkItem,
-    preflightChecks: [...coverage.checks, ...routing.checks, mswPolicy],
+    preflightChecks: [...coverage.checks, ...routing.checks, mswPolicy, sourceReadiness],
     currentCodeState,
     evidence: input.evidence,
     blockers: input.blockers,
@@ -246,6 +248,14 @@ export function selfTest() {
   const pending = runVNextVerification(pendingInput, { currentCodeState: code, generatedAt: '2026-09-04T00:00:03Z' })
   assert.equal(pending.status, 'blocked')
   assert.equal(pending.checks.find((item) => item.code === 'MSW_POLICY').ok, true)
+  const lateApiInput = structuredClone(verifyInput)
+  lateApiInput.workItem.sourceReadiness = {
+    figma: { requirement: 'not-required', status: 'not-required', reason: 'no visual dependency' },
+    api: { requirement: 'required', status: 'pending', reason: 'contract pending' },
+  }
+  const lateApi = runVNextVerification(lateApiInput, { currentCodeState: code, generatedAt: '2026-09-04T00:00:03Z' })
+  assert.equal(lateApi.ok, false)
+  assert.equal(lateApi.checks.find((item) => item.code === 'SOURCE_READINESS').ok, false)
   const needlessMockInput = structuredClone(verifyInput)
   needlessMockInput.implementation.msw = { handlerIds: ['unused-handler'] }
   const needlessMock = runVNextVerification(needlessMockInput, { currentCodeState: code, generatedAt: '2026-09-04T00:00:03Z' })
