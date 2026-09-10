@@ -9,18 +9,19 @@ import { coverageFingerprints, verifyVNextCoverage } from './vnext-work-item.mjs
 import { reviewRequestFingerprint, verifyReviewReceipt } from './vnext-review-receipt.mjs'
 import { isStructuralSourceUnit } from './vnext-source-units.mjs'
 
-export const REVIEW_PROTOCOL = 'vnext-independent-coverage-review-v1'
+export const REVIEW_PROTOCOL = 'vnext-independent-coverage-review-v2'
 const allowedDispositions = new Set(['resolved', 'not-applicable', 'deferred', 'open'])
-const allowedFindingCodes = new Set(['missing-requirement', 'merged-requirement', 'ambiguous-collection', 'missing-surface', 'other'])
+const allowedFindingCodes = new Set(['missing-requirement', 'merged-requirement', 'ambiguous-collection', 'missing-surface', 'inadequate-evidence-command', 'other'])
 
 function reviewRequirements(requirements = []) {
-  return requirements.map(({ requirementId, sourceAnchors, statement, status, collectionSemantics, affectedSurfaces }) => ({
+  return requirements.map(({ requirementId, sourceAnchors, statement, status, collectionSemantics, affectedSurfaces, evidencePlan }) => ({
     requirementId,
     sourceAnchors,
     statement,
     status,
     collectionSemantics,
     affectedSurfaces,
+    evidencePlan,
   }))
 }
 
@@ -75,12 +76,13 @@ export function buildCoverageReviewRequest({ workItem, sourceUnits }) {
     schemaVersion: 1,
     protocol: REVIEW_PROTOCOL,
     projectId: workItem.projectId,
-    checks: ['source-unit-to-requirement', 'collection-completeness', 'affected-surface-candidates'],
+    checks: ['source-unit-to-requirement', 'collection-completeness', 'affected-surface-candidates', 'evidence-command-adequacy'],
     ...fingerprints,
     sourceUnits,
     sourceAssets,
     deliveryScope: workItem.deliveryScope || { kind: 'whole-source' },
     candidateRequirements: reviewRequirements(workItem.requirements),
+    candidateEvidenceCommands: workItem.evidenceCommands || [],
   }
   return { ...request, requestFingerprint: reviewRequestFingerprint(request) }
 }
@@ -201,7 +203,8 @@ export function selfTest() {
     ],
   })
   assert.equal(request.protocol, REVIEW_PROTOCOL)
-  assert.equal(request.candidateRequirements[0].evidencePlan, undefined)
+  assert.deepEqual(request.candidateRequirements[0].evidencePlan, [{ type: 'copy-literal', runtimeRequired: false }])
+  assert.deepEqual(request.candidateEvidenceCommands, [])
   assert.deepEqual(request.deliveryScope, { kind: 'whole-source' })
 
   const response = {

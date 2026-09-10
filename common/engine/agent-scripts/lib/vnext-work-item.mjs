@@ -23,11 +23,14 @@ export function coverageFingerprints(workItem) {
   // A bounded delivery batch is part of the reviewed requirement boundary. Keep the legacy
   // fingerprint unchanged when no boundary is declared, but invalidate review/scope approval
   // whenever a declared batch or its delegated remainder changes.
-  const reviewedRequirements = workItem?.deliveryScope
-    ? { requirements, deliveryScope: workItem.deliveryScope, sourceUnitDispositions: workItem?.sourceUnitDispositions }
-    : workItem?.sourceUnitDispositions
-      ? { requirements, sourceUnitDispositions: workItem.sourceUnitDispositions }
-      : requirements
+  const reviewedRequirements = workItem?.deliveryScope || workItem?.sourceUnitDispositions || workItem?.evidenceCommands
+    ? {
+        requirements,
+        ...(workItem?.deliveryScope ? { deliveryScope: workItem.deliveryScope } : {}),
+        ...(workItem?.sourceUnitDispositions ? { sourceUnitDispositions: workItem.sourceUnitDispositions } : {}),
+        ...(workItem?.evidenceCommands ? { evidenceCommands: workItem.evidenceCommands } : {}),
+      }
+    : requirements
   return {
     sourceFingerprint: stableFingerprint(workItem?.sourceSnapshot || null),
     requirementsFingerprint: stableFingerprint(reviewedRequirements),
@@ -205,6 +208,9 @@ export function selfTest() {
     apiDependency: { mode: 'no-request', reason: 'fixture has no network request' },
     scopeApproval: null,
   }
+  const commandBound = { ...base, evidenceCommands: [{ evidenceId: 'E-1', kind: 'directed-tests', argv: ['pnpm', 'test'] }] }
+  const commandChanged = { ...base, evidenceCommands: [{ evidenceId: 'E-1', kind: 'directed-tests', argv: ['pnpm', 'test', 'other'] }] }
+  assert.notEqual(coverageFingerprints(commandBound).requirementsFingerprint, coverageFingerprints(commandChanged).requirementsFingerprint)
   const sealed = sealCoverageAuditForFixture(base)
   const valid = verifyVNextCoverage({
     workItem: sealed,

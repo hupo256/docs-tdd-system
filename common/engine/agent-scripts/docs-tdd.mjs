@@ -79,7 +79,7 @@ try {
   console.error(error.message)
   process.exit(1)
 }
-const valueOptions = new Set(['--client', '--session-id', '--target', '--model'])
+const valueOptions = new Set(['--client', '--session-id', '--target', '--model', '--input', '--plan', '--out', '--worktree', '--session'])
 const positional = commandArgs.filter((arg, index) => !arg.startsWith('--') && !valueOptions.has(commandArgs[index - 1]))
 const detail = positional[0]
 const noCache = cliArgs.includes('--no-cache')
@@ -237,7 +237,7 @@ if (command === 'rules') {
 }
 
 if (!new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(projectId || '')) {
-  console.error('usage: docs-tdd.mjs <kickoff|status|resume|next|capability|probe|doctor|release|golden|guard|rule-health|rules|explain|check|gate|review|verify|context|changed|recommend> PR-01234 [G0-G8|scenario] [--input verify-input.json] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|pi|human] [--session-id <id>] [--target path] [--model <name>]')
+  console.error('usage: docs-tdd.mjs <kickoff|status|resume|next|capability|probe|doctor|release|golden|guard|rule-health|rules|explain|check|gate|review|evidence|verify|context|changed|recommend> PR-01234 [G0-G8|scenario] [--input verify-input.json] [--plan evidence-plan.json] [--out evidence.json] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|pi|human] [--session-id <id>] [--target path] [--model <name>]')
   process.exit(1)
 }
 
@@ -267,6 +267,27 @@ if (projectWorkflowVersion === 2 && command === 'review') {
   process.exit(run([
     join(scriptDir, 'vnext-review.mjs'), '--project', resolveProjectRoot(projectId), '--client', agentClient,
     ...(model ? ['--model', model] : []),
+  ], docsRoot))
+}
+if (projectWorkflowVersion === 2 && command === 'evidence') {
+  const planIndex = commandArgs.indexOf('--plan')
+  if (planIndex >= 0 && !commandArgs[planIndex + 1]) {
+    console.error('--plan requires <evidence-plan.json>')
+    process.exit(1)
+  }
+  const outputIndex = commandArgs.indexOf('--out')
+  if (outputIndex >= 0 && !commandArgs[outputIndex + 1]) {
+    console.error('--out requires <evidence.json>')
+    process.exit(1)
+  }
+  const worktreeIndex = commandArgs.indexOf('--worktree')
+  const worktree = worktreeIndex >= 0 && commandArgs[worktreeIndex + 1]
+    ? resolve(commandArgs[worktreeIndex + 1])
+    : resolveProjectWorktree(projectId).worktree
+  process.exit(run([
+    join(scriptDir, 'vnext-evidence.mjs'), '--project', resolveProjectRoot(projectId), '--worktree', worktree,
+    ...(planIndex >= 0 ? ['--plan', resolve(commandArgs[planIndex + 1])] : []),
+    ...(outputIndex >= 0 ? ['--out', resolve(commandArgs[outputIndex + 1])] : []),
   ], docsRoot))
 }
 if (projectWorkflowVersion === 2 && command === 'verify') {
@@ -309,7 +330,7 @@ if (projectWorkflowVersion === 2 && ['gate', 'changed'].includes(command)) {
   console.error(`${command} is a v1-only command; ${projectId} uses workflowVersion 2. Use docs-tdd verify ${projectId} --input <verify-input.json>.`)
   process.exit(1)
 }
-if (['review', 'verify'].includes(command)) {
+if (['review', 'evidence', 'verify'].includes(command)) {
   console.error(`${command} is a v2-only command; ${projectId} uses workflowVersion 1. Use docs-tdd gate ${projectId} <GATE>.`)
   process.exit(1)
 }

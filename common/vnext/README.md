@@ -39,7 +39,8 @@
 - `vnext-verify.mjs`：source normalize / review request / verify 内核；默认生成 `mode=enforced` 正式结果，不更新 v1 Gate。`--shadow` 只供历史回放/灰度复算。
 - `lib/vnext-risk-route.mjs`：scope × risk 纯路由、V0/V1/V2 最小验证矩阵与 V2 人工 scope approval fingerprint。
 - `fixtures/vnext-routing-cases.json` + `vnext-route-replay.mjs`：四个历史项目和一个低风险反例的确定性路由回放。
-- `lib/vnext-exit.mjs` + `vnext-exit-result.schema.json`：将覆盖、路由、当前 Git 状态、证据和 blockers 聚合为唯一出口结果；证据绑定 effective content hash（提交但文件字节不变时不作废）；`ok/status/summary` 只能派生。当前外部证据明确标记为 `assisted-pilot`，不宣称 autonomous PASS。
+- `vnext-evidence.mjs` + `lib/vnext-evidence-receipt.mjs`：执行 work-item 已审查冻结的 argv command plan；签名绑定 work-item、plan、代码与输出 hash，代码被命令改写即拒签。
+- `lib/vnext-exit.mjs` + `vnext-exit-result.schema.json`：将覆盖、路由、当前 Git 状态、证据和 blockers 聚合为唯一出口结果；证据绑定 effective content hash（提交但文件字节不变时不作废）；`ok/status/summary` 只能派生。验签成功输出 `autonomous / cli-attested`，外部或人工证据保持 `assisted-pilot / caller-supplied`。
 - `fixtures/vnext-exit-cases.json` + `vnext-exit-replay.mjs`：旧 HEAD、开放依赖、命令假 PASS、缺定向证据和篡改结果五类禁假绿回放。
 - `lib/vnext-persistence.mjs`：三文件持久化、原子替换、追加式历史、runId 幂等、锁超时/陈旧锁恢复和中断续写。
 - `vnext-artifact-budget.mjs` + `artifact-budget.json`：以同一四项目组合对比 253 → 12 个默认流程文件，减少 95.26%。
@@ -89,10 +90,14 @@ node common/engine/agent-scripts/vnext-verify.mjs --normalize-sources source-inp
 # 2. 在 requirementsAuthor 已记录后启动真正独立的 source-only reviewer；V1/V2 必须走此入口
 node common/engine/agent-scripts/docs-tdd.mjs review PR-01234 --client pi
 
-# 3. reviewer 的签名 audit 已写回 work-item；做只读预检时无需手填 reviewResponse
+# 3. 运行受信 command evidence；命令计划默认取自已审查的 work-item.json evidenceCommands，输出放在被测 worktree 外
+node common/engine/agent-scripts/docs-tdd.mjs evidence PR-01234 --worktree /absolute/path/to/worktree --out /tmp/evidence.json
+# --plan <evidence-plan.json> 仅作兼容/显式输入保留；若提供，必须与 work-item.evidenceCommands 完全一致，否则 fail-closed
+
+# 4. 将 /tmp/evidence.json 作为 verify-input.json 的 evidence 字段；reviewResponse 无需手填
 node common/engine/agent-scripts/vnext-verify.mjs --input verify-input.json --worktree /absolute/path/to/worktree
 
-# 4. 正式出口：统一 CLI 强制 --write 到项目三文件，非 PASS 返回非零
+# 5. 正式出口：统一 CLI 强制 --write 到项目三文件，非 PASS 返回非零
 node common/engine/agent-scripts/docs-tdd.mjs verify PR-01234 --input verify-input.json --worktree /absolute/path/to/worktree
 ```
 
@@ -112,7 +117,9 @@ node common/engine/agent-scripts/docs-tdd.mjs verify PR-01234 --input verify-inp
 
 - CLI 必须通过 `--worktree` 实测 Git effective content hash，同时保留 `headSha + dirtyHash` 作诊断；不接受输入 JSON 自报当前代码状态。
 - 每条 evidence 都绑定同一个 effective content hash；代码或未跟踪文件字节变化会进入 `revalidate_current_code_evidence`，但只要 work-item/source fingerprint 未变，已签名 coverage review 继续复用，不重走需求审查；单纯把相同字节提交成新 HEAD 不会误杀绿灯。
-- command evidence 的 PASS 从 `exitCode=0` 派生；`result=pass + exitCode!=0` 直接失败。Phase 2A 尚未引入受信 evidence runner，因此外部传入证据统一输出 `assuranceMode=assisted-pilot` 与 `evidenceTrust=caller-supplied`，不能宣称 autonomous PASS。
+- `docs-tdd evidence` 只接受 `argv: string[]`（`shell=false`），在 CLI 实测的 worktree 中运行命令，并绑定 work-item fingerprint、effective content hash、plan hash、输出 hash与时间；任一命令改写有效代码内容时拒绝签发 receipt。纯 command bundle 验签成功才输出 `assuranceMode=autonomous` 与 `evidenceTrust=cli-attested`。
+- 命令计划默认直接来自已审查的 `work-item.json.evidenceCommands`，不需要额外的 evidence plan 文件；标准命令是 `docs-tdd evidence <PROJECT-ID> --out <evidence.json>`。`--plan <evidence-plan.json>` 仅作兼容/显式输入保留，形如 `{ "schemaVersion": 1, "projectId": "PR-01234", "commands": [{ "evidenceId": "E-1", "kind": "directed-tests", "argv": ["pnpm", "test", "path/to/test"], "requirementIds": ["R-001"], "surfaceIds": ["S-001"] }] }`；若提供，其 `commands` 必须与 work-item 的 `evidenceCommands` 完全一致，不能绕过独立 review，否则 fail-closed。该字段属于 requirements fingerprint，新增或改命令后必须重跑独立 review。reviewer 会拒绝 `true`、`echo`、version probe、shell eval、kind/argv 不相称或覆盖不全的计划，runner 也机器阻断明显 no-op/shell 命令。required level、requirement evidence plan 和 implement surfaces 还会由 runner 与最终 verify 双重交叉校验。
+- 外部手填或含 human producer 的 evidence 仍只能是 `assisted-pilot / caller-supplied`；不得追加或修改已签 bundle（签名会失效）。command evidence 的 PASS 始终从 `exitCode=0` 派生，`result=pass + exitCode!=0` 直接失败。assisted 结果即使 checks 全绿也只作诊断结果；项目状态与 context 只有在 `mode=enforced + status=passed + ok=true + autonomous/cli-attested` 时才标记 authoritative/complete。
 - 每个 doing requirement 的 evidence plan、每个 implement surface、以及 level 最小证据矩阵都必须被当前代码证据覆盖。
 - open blocker 输出 `status=blocked`；缺证据/旧证据输出 `status=failed`，均不允许 `ok=true`。
 - 最终结果带 `resultFingerprint`；手工把 failed 改成 PASS 会被完整性检查识别。

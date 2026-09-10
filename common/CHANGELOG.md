@@ -14,6 +14,7 @@
 - **独立 reviewer 机器化**：新增 `docs-tdd review <ID> --client pi|claude`，以无工具、无项目 context、独立 session 子进程冷读 source packet；本机 HMAC receipt 绑定请求、图片 hash、client/session 与时间，V1/V2 缺 receipt、伪造或同作者身份均不能通过 verify。
 - **证据诚实性与 freshness**：调用方 evidence 固定披露 `assuranceMode=assisted-pilot`、`evidenceTrust=caller-supplied`；代码 freshness 改按 effective content hash 判定，同字节 commit 不再误杀。真实代码内容变化进入 `revalidate_current_code_evidence`，只重验代码证据，work-item/source 未变时复用已签名需求审查。
 - **V0-micro 安全瘦身**：Markdown 标题、分隔线和纯注释由 intake 确定性识别为结构节点，不再要求逐条写 `sourceUnitDispositions`；其他未引用语义内容继续阻断。V0 同时强制单 doing requirement、单 implement surface、local/no-risk/no-request、无集合与富媒体、无 runtime evidence，不满足即升级而非静默放行。
+- **受信 command evidence runner**：新增 `docs-tdd evidence <ID>`，以无 shell 的 argv 执行经独立 review 冻结在 work-item 的 `evidenceCommands`，绑定 work-item / plan / effective code / 输出 hash 并签发本机 receipt；机器拒绝明显 no-op/shell 计划与覆盖不全，验签成功的纯命令证据升级为 `autonomous / cli-attested`，手填或 human evidence 继续诚实标记为 assisted。
 
 ## 2026-09-10（下线发布层 stale 检测，彻底靠 pin-based）
 

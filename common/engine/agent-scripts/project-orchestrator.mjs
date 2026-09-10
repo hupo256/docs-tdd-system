@@ -112,7 +112,7 @@ function kickoffVNext(projectDir, prd, title) {
   mkdirSync(join(projectDir, 'inbox/lark-sync'), { recursive: true })
   mkdirSync(join(projectDir, 'agent'), { recursive: true })
   const branchName = `${config.branchPrefix || 'feature/'}${projectId}`
-  writeFileSync(join(projectDir, 'README.md'), `---\nprojectId: ${projectId}\nstatus: active\nstage: G1\nbranch: ${branchName}\nworktree: ""\nport: ""\nvisualFidelity: standard\nprdSource: ${prd}\nfigmaNode: ""\nlarkEnabled: false\nworkflowVersion: 2\n---\n\n# ${projectId} ${title}\n\n> v2(workflowVersion: 2)正式项目:无 v1 门禁链,工作事实载体是三文件(work-item.json / latest-result.json / runs.jsonl),出口见 common/vnext/README.md。\n\n## 下一步\n\n1. 从 PRD 抽取原子需求(带 sourceAnchor)并填充 work-item.json\n2. 记录 requirementsAuthor 后运行 \`docs-tdd review ${projectId} --client pi\`（独立 source-only session）\n3. 按等级补证据后 \`docs-tdd verify ${projectId} --input <verify-input.json> --worktree <wt>\`\n`)
+  writeFileSync(join(projectDir, 'README.md'), `---\nprojectId: ${projectId}\nstatus: active\nstage: G1\nbranch: ${branchName}\nworktree: ""\nport: ""\nvisualFidelity: standard\nprdSource: ${prd}\nfigmaNode: ""\nlarkEnabled: false\nworkflowVersion: 2\n---\n\n# ${projectId} ${title}\n\n> v2(workflowVersion: 2)正式项目:无 v1 门禁链,工作事实载体是三文件(work-item.json / latest-result.json / runs.jsonl),出口见 common/vnext/README.md。\n\n## 下一步\n\n1. 从 PRD 抽取原子需求(带 sourceAnchor)并填充 work-item.json\n2. 记录 requirementsAuthor 与 evidenceCommands 后运行 \`docs-tdd review ${projectId} --client pi\`（独立 source-only session）\n3. 运行 \`docs-tdd evidence ${projectId} --out <evidence.json>\`（命令计划取自 work-item.json 中已 review 的 evidenceCommands）\n4. 将签名 evidence 放入输入后运行 \`docs-tdd verify ${projectId} --input <verify-input.json> --worktree <wt>\`\n`)
   const larkOutputDir = String(config.larkOutputDir || `apps/web/docs_tdd/prds/\${projectId}/inbox/lark-sync`).replaceAll('${projectId}', projectId)
   writeFileSync(join(projectDir, 'agent/lark-sources.json'), JSON.stringify({
     projectId,
@@ -207,12 +207,13 @@ function projectWorkflowVersion(id) {
   return existsSync(join(projectDir, 'work-item.json')) ? 2 : 1
 }
 
-export function vnextVerificationNextAction({ authoritativePass, shadowOnly, integrityOk, codeStateFresh, status }) {
+export function vnextVerificationNextAction({ authoritativePass, shadowOnly, integrityOk, codeStateFresh, assuranceTrusted, status }) {
   if (authoritativePass) return 'none'
   if (shadowOnly) return 'run_enforced_verification'
   if (!integrityOk) return 'refresh_invalid_verification'
   if (!codeStateFresh) return 'revalidate_current_code_evidence'
   if (status === 'blocked') return 'resolve_blockers_and_reverify'
+  if (status === 'passed' && !assuranceTrusted) return 'capture_cli_attested_evidence'
   return 'fix_failed_checks_and_reverify'
 }
 
@@ -228,7 +229,7 @@ function inspectVNext(id) {
     return {
       projectId: id, workflowVersion: 2, verificationLevel: workItem.routing?.verificationLevel || 'unclassified', status: 'active',
       currentStage: reviewReady ? 'V2-evidence' : 'V2-review', nextAction: reviewReady ? 'capture_current_code_evidence' : 'complete_independent_coverage_review',
-      command: reviewReady ? `docs-tdd verify ${id} --input <verify-input.json>` : `docs-tdd review ${id} --client pi`,
+      command: reviewReady ? `docs-tdd evidence ${id} --out <evidence.json>` : `docs-tdd review ${id} --client pi`,
     }
   }
   const failedChecks = (latest.checks || []).filter((check) => !check.ok)
@@ -242,17 +243,22 @@ function inspectVNext(id) {
   } catch (error) {
     codeStateProblem = `cannot measure current worktree code state: ${error.message}`
   }
-  const authoritativePass = latest.mode === 'enforced' && latest.status === 'passed' && latest.ok === true && integrity.ok && codeStateFresh
+  const assuranceTrusted = latest.assuranceMode === 'autonomous' && latest.evidenceTrust === 'cli-attested'
+  const authoritativePass = latest.mode === 'enforced' && latest.status === 'passed' && latest.ok === true && integrity.ok && codeStateFresh && assuranceTrusted
   const shadowOnly = latest.mode !== 'enforced'
-  const nextAction = vnextVerificationNextAction({ authoritativePass, shadowOnly, integrityOk: integrity.ok, codeStateFresh, status: latest.status })
+  const nextAction = vnextVerificationNextAction({ authoritativePass, shadowOnly, integrityOk: integrity.ok, codeStateFresh, assuranceTrusted, status: latest.status })
   return {
     projectId: id, workflowVersion: 2, verificationLevel: latest.level || workItem.routing?.verificationLevel || 'unclassified',
     status: authoritativePass ? 'complete' : latest.status === 'blocked' ? 'blocked' : 'active',
     currentStage: authoritativePass ? 'V2-complete' : 'V2-verification',
     nextAction,
     blockers: [...failedChecks.flatMap((check) => check.problems || [check.code]), ...integrity.problems, ...(codeStateProblem ? [codeStateProblem] : [])],
-    latestResult: { mode: latest.mode, status: latest.status, ok: latest.ok, integrity: integrity.ok, codeStateFresh, authoritative: authoritativePass, runId: latest.runId, generatedAt: latest.generatedAt },
-    command: authoritativePass ? '' : `docs-tdd verify ${id} --input <verify-input.json>`,
+    latestResult: { mode: latest.mode, assuranceMode: latest.assuranceMode, evidenceTrust: latest.evidenceTrust, assuranceTrusted, status: latest.status, ok: latest.ok, integrity: integrity.ok, codeStateFresh, authoritative: authoritativePass, runId: latest.runId, generatedAt: latest.generatedAt },
+    command: authoritativePass
+      ? ''
+      : ['capture_cli_attested_evidence', 'revalidate_current_code_evidence'].includes(nextAction)
+        ? `docs-tdd evidence ${id} --out <evidence.json>`
+        : `docs-tdd verify ${id} --input <verify-input.json>`,
   }
 }
 
@@ -326,7 +332,8 @@ function selfTest() {
     || decision.command !== 'docs-tdd gate PR-00001 G5'
     || decision.blockers.length !== 1
     || vnextVerificationNextAction({ authoritativePass: false, shadowOnly: false, integrityOk: true, codeStateFresh: false, status: 'passed' }) !== 'revalidate_current_code_evidence'
-    || vnextVerificationNextAction({ authoritativePass: false, shadowOnly: false, integrityOk: false, codeStateFresh: false, status: 'passed' }) !== 'refresh_invalid_verification'
+    || vnextVerificationNextAction({ authoritativePass: false, shadowOnly: false, integrityOk: false, codeStateFresh: false, assuranceTrusted: false, status: 'passed' }) !== 'refresh_invalid_verification'
+    || vnextVerificationNextAction({ authoritativePass: false, shadowOnly: false, integrityOk: true, codeStateFresh: true, assuranceTrusted: false, status: 'passed' }) !== 'capture_cli_attested_evidence'
   ) process.exit(1)
   console.log('project-orchestrator self-test passed (structured inferState + decideNext wiring)')
 }

@@ -3,9 +3,11 @@
 
 import assert from 'node:assert/strict'
 import { fileURLToPath } from 'node:url'
+import { unlinkSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { matchesEffectiveCodeState } from './fingerprint.mjs'
 import { stableFingerprint } from './vnext-work-item.mjs'
+import { evidenceBundleFingerprint, signEvidenceBundle, verifyEvidenceAttestation, verifyEvidenceReceipt } from './vnext-evidence-receipt.mjs'
 
 export const EXIT_EVIDENCE_REQUIREMENTS = Object.freeze({
   V0: Object.freeze(['touched-file-quality']),
@@ -22,7 +24,7 @@ function check(code, problems, evidenceIds = []) {
 
 const sameCodeState = matchesEffectiveCodeState
 
-function evidenceIntegrityProblems(evidence) {
+function evidenceIntegrityProblems(evidence, attestationProblems = []) {
   const problems = []
   const ids = (evidence?.facts || []).map((fact) => fact.evidenceId).filter(Boolean)
   const duplicates = ids.filter((id, index) => ids.indexOf(id) !== index)
@@ -30,7 +32,13 @@ function evidenceIntegrityProblems(evidence) {
   if (!evidence?.runId?.trim()) problems.push('evidence runId is required')
   if (!evidence?.capturedAt || Number.isNaN(Date.parse(evidence.capturedAt))) problems.push('evidence capturedAt must be an ISO timestamp')
   if (!Array.isArray(evidence?.facts)) problems.push('evidence facts must be an array')
-  if (evidence?.assuranceMode && evidence.assuranceMode !== 'assisted-pilot') problems.push('autonomous evidence requires a CLI attestation receipt; only assisted-pilot is currently accepted')
+  const hasReceipt = Boolean(evidence?.receipt)
+  if (hasReceipt) {
+    if (evidence?.assuranceMode !== 'autonomous' || evidence?.evidenceTrust !== 'cli-attested') problems.push('receipt-backed evidence must declare autonomous / cli-attested')
+    problems.push(...attestationProblems)
+  } else if ((evidence?.assuranceMode && evidence.assuranceMode !== 'assisted-pilot') || (evidence?.evidenceTrust && evidence.evidenceTrust !== 'caller-supplied')) {
+    problems.push('evidence without a CLI receipt must remain assisted-pilot / caller-supplied')
+  }
 
   for (const fact of evidence?.facts || []) {
     if (!fact.evidenceId?.trim() || !fact.kind?.trim()) problems.push('every evidence fact requires evidenceId and kind')
@@ -122,7 +130,9 @@ function resultBody(result) {
 export function buildVNextExitResult({ workItem, preflightChecks = [], currentCodeState, evidence, blockers, mode = 'enforced', generatedAt = new Date().toISOString() } = {}) {
   if (!['enforced', 'shadow'].includes(mode)) throw new Error(`unknown vNext result mode: ${mode}`)
   const level = workItem?.routing?.verificationLevel
-  const integrityProblems = evidenceIntegrityProblems(evidence)
+  const attestationProblems = evidence?.receipt ? verifyEvidenceReceipt(evidence, { workItem, currentCodeState }) : []
+  const integrityProblems = evidenceIntegrityProblems(evidence, attestationProblems)
+  const trustedEvidence = Boolean(evidence?.receipt) && attestationProblems.length === 0
   const freshnessProblems = evidenceFreshnessProblems(evidence, currentCodeState)
   const requiredProblems = requiredEvidenceProblems(level, evidence)
   const requirementProblems = requirementEvidenceProblems(workItem, evidence)
@@ -149,8 +159,8 @@ export function buildVNextExitResult({ workItem, preflightChecks = [], currentCo
     workflowVersion: 2,
     tool: 'vnext-verify.mjs',
     mode,
-    assuranceMode: 'assisted-pilot',
-    evidenceTrust: 'caller-supplied',
+    assuranceMode: trustedEvidence ? 'autonomous' : 'assisted-pilot',
+    evidenceTrust: trustedEvidence ? 'cli-attested' : 'caller-supplied',
     runId: evidence?.runId?.trim() || `invalid-${stableFingerprint({ workItem, currentCodeState, evidence }).slice(0, 16)}`,
     generatedAt,
     projectId: workItem?.projectId,
@@ -162,6 +172,7 @@ export function buildVNextExitResult({ workItem, preflightChecks = [], currentCo
     checks,
     summary: summarize(checks),
     blockedBy,
+    ...(trustedEvidence ? { evidenceAttestation: { ...evidence.receipt, bundleFingerprint: evidenceBundleFingerprint(evidence) } } : {}),
   }
   return { ...result, resultFingerprint: stableFingerprint(result) }
 }
@@ -170,8 +181,18 @@ export function verifyExitResultIntegrity(result, workItem = null) {
   const problems = []
   const expectedOk = Array.isArray(result?.checks) && result.checks.every((item) => item.ok) && (result.blockedBy || []).length === 0
   if (!['enforced', 'shadow'].includes(result?.mode)) problems.push('mode must be enforced or shadow')
-  if (result?.assuranceMode !== 'assisted-pilot') problems.push('assuranceMode must be assisted-pilot until CLI evidence receipts are implemented')
-  if (result?.evidenceTrust !== 'caller-supplied') problems.push('evidenceTrust must disclose caller-supplied evidence until CLI evidence receipts are implemented')
+  const autonomous = result?.assuranceMode === 'autonomous' && result?.evidenceTrust === 'cli-attested'
+  const assisted = result?.assuranceMode === 'assisted-pilot' && result?.evidenceTrust === 'caller-supplied'
+  if (!autonomous && !assisted) problems.push('assuranceMode/evidenceTrust must be autonomous/cli-attested or assisted-pilot/caller-supplied')
+  if (autonomous) {
+    problems.push(...verifyEvidenceAttestation(result.evidenceAttestation, {
+      expectedBundleFingerprint: result.evidenceAttestation?.bundleFingerprint,
+      expectedProjectId: result.projectId,
+      expectedWorkItemFingerprint: result.workItemFingerprint,
+      expectedCodeContentHash: result.codeFingerprint?.contentHash,
+      expectedRunId: result.runId,
+    }))
+  } else if (result?.evidenceAttestation) problems.push('assisted result must not claim an evidence attestation')
   if (result?.workflowVersion !== 2) problems.push('workflowVersion must be 2')
   const expectedStatus = (result?.blockedBy || []).length ? 'blocked' : expectedOk ? 'passed' : 'failed'
   const expectedSummary = summarize(result?.checks || [])
@@ -207,6 +228,30 @@ export function selfTest() {
   assert.equal(buildVNextExitResult({ workItem, currentCodeState: code, evidence, blockers: [], mode: 'shadow' }).mode, 'shadow')
   assert.throws(() => buildVNextExitResult({ workItem, currentCodeState: code, evidence, blockers: [], mode: 'invalid' }), /unknown vNext result mode/)
   assert.equal(verifyExitResultIntegrity(passed).ok, true)
+  const keyPath = resolve(`.vnext-exit-evidence-key-${process.pid}`)
+  const previousKeyPath = process.env.DOCS_TDD_EVIDENCE_KEY_FILE
+  try {
+    process.env.DOCS_TDD_EVIDENCE_KEY_FILE = keyPath
+    const autonomousBody = {
+      ...evidence,
+      assuranceMode: 'autonomous',
+      evidenceTrust: 'cli-attested',
+      facts: evidence.facts.map((fact) => fact.producer.kind === 'human' ? command(fact.evidenceId, fact.kind, { requirementIds: fact.requirementIds, surfaceIds: fact.surfaceIds }) : fact),
+    }
+    const autonomousEvidence = signEvidenceBundle(autonomousBody, {
+      workItem,
+      plan: { schemaVersion: 1, projectId: workItem.projectId, commands: [] },
+      startedAt: '2026-09-04T00:00:00Z',
+      completedAt: autonomousBody.capturedAt,
+    })
+    const autonomous = buildVNextExitResult({ workItem, currentCodeState: code, evidence: autonomousEvidence, blockers: [] })
+    assert.equal(autonomous.assuranceMode, 'autonomous', JSON.stringify(autonomous))
+    assert.equal(verifyExitResultIntegrity(autonomous).ok, true)
+  } finally {
+    if (previousKeyPath === undefined) delete process.env.DOCS_TDD_EVIDENCE_KEY_FILE
+    else process.env.DOCS_TDD_EVIDENCE_KEY_FILE = previousKeyPath
+    try { unlinkSync(keyPath) } catch { /* no-op */ }
+  }
   const stale = buildVNextExitResult({ workItem, currentCodeState: { ...code, headSha: 'newhead' }, evidence, blockers: [], generatedAt: '2026-09-04T00:00:03Z' })
   assert.equal(stale.checks.find((item) => item.code === 'EVIDENCE_FRESHNESS').ok, true, 'same effective content survives a metadata-only commit')
   const changed = buildVNextExitResult({ workItem, currentCodeState: { ...code, headSha: 'newhead', contentHash: 'content-v2' }, evidence, blockers: [], generatedAt: '2026-09-04T00:00:03Z' })

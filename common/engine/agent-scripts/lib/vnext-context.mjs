@@ -21,6 +21,8 @@ function resultState(result) {
   if (!result) return null
   return {
     mode: result.mode,
+    assuranceMode: result.assuranceMode,
+    evidenceTrust: result.evidenceTrust,
     status: result.status,
     ok: result.ok,
     codeFingerprint: result.codeFingerprint,
@@ -31,8 +33,10 @@ function resultState(result) {
 
 function renderResult(result) {
   if (!result) return ['Latest: none; run the final verifier before claiming completion.']
-  const authority = result.mode === 'enforced' ? 'authoritative' : 'NON-AUTHORITATIVE historical shadow'
-  const lines = [`Latest: ${result.status}; mode=${result.mode}; ${authority}; run=${result.runId}; HEAD=${short(result.codeFingerprint?.headSha)}; dirty=${short(result.codeFingerprint?.dirtyHash)}`]
+  const authority = result.mode === 'enforced' && result.assuranceMode === 'autonomous' && result.evidenceTrust === 'cli-attested'
+    ? 'authoritative'
+    : `NON-AUTHORITATIVE ${result.mode === 'shadow' ? 'historical shadow' : 'assisted evidence'}`
+  const lines = [`Latest: ${result.status}; mode=${result.mode}; assurance=${result.assuranceMode}/${result.evidenceTrust}; ${authority}; run=${result.runId}; HEAD=${short(result.codeFingerprint?.headSha)}; dirty=${short(result.codeFingerprint?.dirtyHash)}`]
   for (const item of result.checks.filter((check) => !check.ok)) {
     const problems = item.problems.map(oneLine)
     const detail = problems.length <= 3 ? problems.join('; ') : `${problems.length} problems; full list: latest-result.json`

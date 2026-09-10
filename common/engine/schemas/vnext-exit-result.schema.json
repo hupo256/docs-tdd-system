@@ -9,8 +9,8 @@
     "workflowVersion": { "const": 2 },
     "tool": { "const": "vnext-verify.mjs" },
     "mode": { "type": "string", "enum": ["enforced", "shadow"] },
-    "assuranceMode": { "const": "assisted-pilot" },
-    "evidenceTrust": { "const": "caller-supplied" },
+    "assuranceMode": { "type": "string", "enum": ["assisted-pilot", "autonomous"] },
+    "evidenceTrust": { "type": "string", "enum": ["caller-supplied", "cli-attested"] },
     "runId": { "type": "string", "minLength": 1 },
     "generatedAt": { "type": "string", "format": "date-time" },
     "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },
@@ -58,7 +58,34 @@
       "additionalProperties": false
     },
     "blockedBy": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "evidenceAttestation": {
+      "type": "object",
+      "required": ["issuedBy", "projectId", "workItemFingerprint", "codeContentHash", "planFingerprint", "runId", "startedAt", "completedAt", "signature", "bundleFingerprint"],
+      "properties": {
+        "issuedBy": { "const": "docs-tdd-evidence-v1" },
+        "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },
+        "workItemFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "codeContentHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "planFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "runId": { "type": "string", "minLength": 1 },
+        "startedAt": { "type": "string", "format": "date-time" },
+        "completedAt": { "type": "string", "format": "date-time" },
+        "signature": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "bundleFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      },
+      "additionalProperties": false
+    },
     "resultFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
   },
+  "allOf": [
+    {
+      "if": { "properties": { "assuranceMode": { "const": "autonomous" } }, "required": ["assuranceMode"] },
+      "then": { "required": ["evidenceAttestation"], "properties": { "evidenceTrust": { "const": "cli-attested" } } }
+    },
+    {
+      "if": { "properties": { "assuranceMode": { "const": "assisted-pilot" } }, "required": ["assuranceMode"] },
+      "then": { "properties": { "evidenceTrust": { "const": "caller-supplied" } } }
+    }
+  ],
   "additionalProperties": false
 }
