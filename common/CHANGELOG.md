@@ -12,7 +12,7 @@
 - **先探针后切流**：新增 Codex/Claude/Pi capability/probe、统一 16 KiB 组合预算和注入 telemetry；验证通过的客户端改为 allow-with-context，规则消费 ledger 按规则内容 hash 增量复用，commit 不再导致相同规则重复注入，opaque write 仍 fail-closed。
 - **图片进入 source truth**：v2 source normalization 读取本地图片字节并绑定 `assetHash/status/mediaType`，同步时间与 Lark 临时图片 URL 不再制造漂移；缺失、远程或未读图片直接阻断 review。PR-02306 原始图片样本进入回归自测。
 - **独立 reviewer 机器化**：新增 `docs-tdd review <ID> --client pi|claude`，以无工具、无项目 context、独立 session 子进程冷读 source packet；本机 HMAC receipt 绑定请求、图片 hash、client/session 与时间，V1/V2 缺 receipt、伪造或同作者身份均不能通过 verify。
-- **证据诚实性与 freshness**：调用方 evidence 固定披露 `assuranceMode=assisted-pilot`、`evidenceTrust=caller-supplied`；代码 freshness 改按 effective content hash 判定，同字节 commit 不再误杀，真实代码内容变化仍使旧证据失效。
+- **证据诚实性与 freshness**：调用方 evidence 固定披露 `assuranceMode=assisted-pilot`、`evidenceTrust=caller-supplied`；代码 freshness 改按 effective content hash 判定，同字节 commit 不再误杀。真实代码内容变化进入 `revalidate_current_code_evidence`，只重验代码证据，work-item/source 未变时复用已签名需求审查。
 - **V0-micro 安全瘦身**：Markdown 标题、分隔线和纯注释由 intake 确定性识别为结构节点，不再要求逐条写 `sourceUnitDispositions`；其他未引用语义内容继续阻断。V0 同时强制单 doing requirement、单 implement surface、local/no-risk/no-request、无集合与富媒体、无 runtime evidence，不满足即升级而非静默放行。
 
 ## 2026-09-10（下线发布层 stale 检测，彻底靠 pin-based）

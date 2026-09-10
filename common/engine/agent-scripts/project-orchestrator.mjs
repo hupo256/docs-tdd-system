@@ -207,6 +207,15 @@ function projectWorkflowVersion(id) {
   return existsSync(join(projectDir, 'work-item.json')) ? 2 : 1
 }
 
+export function vnextVerificationNextAction({ authoritativePass, shadowOnly, integrityOk, codeStateFresh, status }) {
+  if (authoritativePass) return 'none'
+  if (shadowOnly) return 'run_enforced_verification'
+  if (!integrityOk) return 'refresh_invalid_verification'
+  if (!codeStateFresh) return 'revalidate_current_code_evidence'
+  if (status === 'blocked') return 'resolve_blockers_and_reverify'
+  return 'fix_failed_checks_and_reverify'
+}
+
 function inspectVNext(id) {
   const projectDir = resolveProjectRoot(id)
   const workItem = readJson(join(projectDir, 'work-item.json'))
@@ -229,18 +238,18 @@ function inspectVNext(id) {
   try {
     const current = codeFingerprint(resolveProjectWorktree(id).worktree)
     codeStateFresh = matchesEffectiveCodeState(current, latest.codeFingerprint)
-    if (!codeStateFresh) codeStateProblem = 'latest result is stale for the current worktree code state'
+    if (!codeStateFresh) codeStateProblem = 'code content changed; revalidate evidence only (the signed source review remains reusable while the work item is unchanged)'
   } catch (error) {
     codeStateProblem = `cannot measure current worktree code state: ${error.message}`
   }
   const authoritativePass = latest.mode === 'enforced' && latest.status === 'passed' && latest.ok === true && integrity.ok && codeStateFresh
   const shadowOnly = latest.mode !== 'enforced'
-  const resultInvalid = !integrity.ok || !codeStateFresh
+  const nextAction = vnextVerificationNextAction({ authoritativePass, shadowOnly, integrityOk: integrity.ok, codeStateFresh, status: latest.status })
   return {
     projectId: id, workflowVersion: 2, verificationLevel: latest.level || workItem.routing?.verificationLevel || 'unclassified',
     status: authoritativePass ? 'complete' : latest.status === 'blocked' ? 'blocked' : 'active',
     currentStage: authoritativePass ? 'V2-complete' : 'V2-verification',
-    nextAction: authoritativePass ? 'none' : shadowOnly ? 'run_enforced_verification' : resultInvalid ? 'refresh_stale_or_invalid_verification' : latest.status === 'blocked' ? 'resolve_blockers_and_reverify' : 'fix_failed_checks_and_reverify',
+    nextAction,
     blockers: [...failedChecks.flatMap((check) => check.problems || [check.code]), ...integrity.problems, ...(codeStateProblem ? [codeStateProblem] : [])],
     latestResult: { mode: latest.mode, status: latest.status, ok: latest.ok, integrity: integrity.ok, codeStateFresh, authoritative: authoritativePass, runId: latest.runId, generatedAt: latest.generatedAt },
     command: authoritativePass ? '' : `docs-tdd verify ${id} --input <verify-input.json>`,
@@ -316,6 +325,8 @@ function selfTest() {
     || complete.status !== 'complete'
     || decision.command !== 'docs-tdd gate PR-00001 G5'
     || decision.blockers.length !== 1
+    || vnextVerificationNextAction({ authoritativePass: false, shadowOnly: false, integrityOk: true, codeStateFresh: false, status: 'passed' }) !== 'revalidate_current_code_evidence'
+    || vnextVerificationNextAction({ authoritativePass: false, shadowOnly: false, integrityOk: false, codeStateFresh: false, status: 'passed' }) !== 'refresh_invalid_verification'
   ) process.exit(1)
   console.log('project-orchestrator self-test passed (structured inferState + decideNext wiring)')
 }

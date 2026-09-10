@@ -1,14 +1,14 @@
 {
   "version": 2,
-  "fingerprint": "9299aa638e6a39a6e2ebf012bab7295c204990a9291021a03c589e106689caf8",
-  "publishedAt": "2026-09-10T06:26:30.399Z",
-  "l3RuleReleaseFingerprint": "1ac18a8a35136a6ce26cb9899e61ab33d2602488edd7363bb8834ba23b6f4ab8",
+  "fingerprint": "299c044e3bcd433649885761676b74d94ae7a3befa3e383aa858cb4dba74c2e5",
+  "publishedAt": "2026-09-10T06:28:09.760Z",
+  "l3RuleReleaseFingerprint": "efe4acf77a70c1175e094717642d7578378f2176c5735314e6110874e0265df9",
   "clientMatrix": {
     "codex": {
       "kind": "direct",
       "adapter": "~/.codex/AGENTS.md",
       "enforcement": "SessionStart rule preflight + Pre/PostToolUse receipt/code gate + changed/gate",
-      "sourceFingerprint": "424ae33968879d1f2f1457f05f3e94df45b1e6295100c4a8fa320c9e0091f896",
+      "sourceFingerprint": "cd90746ce703661261049e354437f4f98bc4c2e6e8e5b7cbdf190f331bd8a810",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -110,14 +110,14 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "1ac18a8a35136a6ce26cb9899e61ab33d2602488edd7363bb8834ba23b6f4ab8",
+      "l3Fingerprint": "efe4acf77a70c1175e094717642d7578378f2176c5735314e6110874e0265df9",
       "conflictOverrides": []
     },
     "claude": {
       "kind": "direct",
       "adapter": "~/.claude/CLAUDE.md",
       "enforcement": "UserPromptSubmit rule preflight + Pre/PostToolUse receipt + changed/gate",
-      "sourceFingerprint": "424ae33968879d1f2f1457f05f3e94df45b1e6295100c4a8fa320c9e0091f896",
+      "sourceFingerprint": "cd90746ce703661261049e354437f4f98bc4c2e6e8e5b7cbdf190f331bd8a810",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -219,14 +219,14 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "1ac18a8a35136a6ce26cb9899e61ab33d2602488edd7363bb8834ba23b6f4ab8",
+      "l3Fingerprint": "efe4acf77a70c1175e094717642d7578378f2176c5735314e6110874e0265df9",
       "conflictOverrides": []
     },
     "cursor": {
       "kind": "direct",
       "adapter": "~/.cursor/rules/fameex-local-governance.mdc",
       "enforcement": "native glob/alwaysApply + resolver conformance + changed/gate",
-      "sourceFingerprint": "424ae33968879d1f2f1457f05f3e94df45b1e6295100c4a8fa320c9e0091f896",
+      "sourceFingerprint": "cd90746ce703661261049e354437f4f98bc4c2e6e8e5b7cbdf190f331bd8a810",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -328,14 +328,14 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "1ac18a8a35136a6ce26cb9899e61ab33d2602488edd7363bb8834ba23b6f4ab8",
+      "l3Fingerprint": "efe4acf77a70c1175e094717642d7578378f2176c5735314e6110874e0265df9",
       "conflictOverrides": []
     },
     "pi": {
       "kind": "direct",
       "adapter": "~/.pi/agent/AGENTS.md",
       "enforcement": "extension before_agent_start rule preflight + tool_call receipt + tool_result code gate + changed/gate",
-      "sourceFingerprint": "424ae33968879d1f2f1457f05f3e94df45b1e6295100c4a8fa320c9e0091f896",
+      "sourceFingerprint": "cd90746ce703661261049e354437f4f98bc4c2e6e8e5b7cbdf190f331bd8a810",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -437,7 +437,7 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "1ac18a8a35136a6ce26cb9899e61ab33d2602488edd7363bb8834ba23b6f4ab8",
+      "l3Fingerprint": "efe4acf77a70c1175e094717642d7578378f2176c5735314e6110874e0265df9",
       "conflictOverrides": []
     },
     "lark-codex": {
@@ -445,7 +445,7 @@
       "delegatesTo": "codex",
       "adapter": "common/lark-bot/lib/lark-rule-context.mjs + common/lark-bot/lib/lark-worker-prompts.mjs + common/lark-bot/lib/lark-worker-run.mjs + common/engine/agent-scripts/rule-context-hook.mjs + common/engine/agent-scripts/rule-context.mjs + common/engine/agent-scripts/lib/l2-rule-resolver.mjs + common/engine/agent-scripts/lib/rule-consumption.mjs",
       "enforcement": "fresh effective rules + focused context + worker quality gate",
-      "sourceFingerprint": "424ae33968879d1f2f1457f05f3e94df45b1e6295100c4a8fa320c9e0091f896",
+      "sourceFingerprint": "cd90746ce703661261049e354437f4f98bc4c2e6e8e5b7cbdf190f331bd8a810",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -547,7 +547,7 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "1ac18a8a35136a6ce26cb9899e61ab33d2602488edd7363bb8834ba23b6f4ab8",
+      "l3Fingerprint": "efe4acf77a70c1175e094717642d7578378f2176c5735314e6110874e0265df9",
       "conflictOverrides": []
     },
     "lark-claude": {
@@ -555,7 +555,7 @@
       "delegatesTo": "claude",
       "adapter": "common/lark-bot/lib/lark-rule-context.mjs + common/lark-bot/lib/lark-worker-prompts.mjs + common/lark-bot/lib/lark-worker-run.mjs + common/engine/agent-scripts/rule-context-hook.mjs + common/engine/agent-scripts/rule-context.mjs + common/engine/agent-scripts/lib/l2-rule-resolver.mjs + common/engine/agent-scripts/lib/rule-consumption.mjs",
       "enforcement": "fresh effective rules + focused context + worker quality gate",
-      "sourceFingerprint": "424ae33968879d1f2f1457f05f3e94df45b1e6295100c4a8fa320c9e0091f896",
+      "sourceFingerprint": "cd90746ce703661261049e354437f4f98bc4c2e6e8e5b7cbdf190f331bd8a810",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -657,7 +657,7 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "1ac18a8a35136a6ce26cb9899e61ab33d2602488edd7363bb8834ba23b6f4ab8",
+      "l3Fingerprint": "efe4acf77a70c1175e094717642d7578378f2176c5735314e6110874e0265df9",
       "conflictOverrides": []
     }
   },

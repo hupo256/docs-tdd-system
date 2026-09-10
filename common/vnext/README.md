@@ -111,7 +111,7 @@ node common/engine/agent-scripts/docs-tdd.mjs verify PR-01234 --input verify-inp
 ## 单一出口约束
 
 - CLI 必须通过 `--worktree` 实测 Git effective content hash，同时保留 `headSha + dirtyHash` 作诊断；不接受输入 JSON 自报当前代码状态。
-- 每条 evidence 都绑定同一个 effective content hash；代码或未跟踪文件字节变化会让旧证据失效，单纯把相同字节提交成新 HEAD 不会误杀绿灯。
+- 每条 evidence 都绑定同一个 effective content hash；代码或未跟踪文件字节变化会进入 `revalidate_current_code_evidence`，但只要 work-item/source fingerprint 未变，已签名 coverage review 继续复用，不重走需求审查；单纯把相同字节提交成新 HEAD 不会误杀绿灯。
 - command evidence 的 PASS 从 `exitCode=0` 派生；`result=pass + exitCode!=0` 直接失败。Phase 2A 尚未引入受信 evidence runner，因此外部传入证据统一输出 `assuranceMode=assisted-pilot` 与 `evidenceTrust=caller-supplied`，不能宣称 autonomous PASS。
 - 每个 doing requirement 的 evidence plan、每个 implement surface、以及 level 最小证据矩阵都必须被当前代码证据覆盖。
 - open blocker 输出 `status=blocked`；缺证据/旧证据输出 `status=failed`，均不允许 `ok=true`。
