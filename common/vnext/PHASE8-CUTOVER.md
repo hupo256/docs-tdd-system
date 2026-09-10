@@ -18,7 +18,7 @@ node common/engine/agent-scripts/docs-tdd.mjs verify <PROJECT-ID> --input <verif
 
 ## 采用的风险处置
 
-切换时 pilot 尚未满足原预案中的样本数量/观察周期，且 PR-02233 仍有项目自身未闭环项。owner 接受这一切换风险，但没有豁免任何项目验收：对应 v2 项目仍会得到 failed/blocked，不能伪绿。决定详见 [cutover-decision-20260908.md](./cutover-decision-20260908.md)。
+切换时 pilot 尚未满足原预案中的样本数量/观察周期。owner 接受这一切换风险，但没有豁免任何项目验收：未闭环的 v2 项目仍会得到 failed/blocked，不能伪绿。决定详见 [cutover-decision-20260908.md](./cutover-decision-20260908.md)。
 
 ## 回退
 

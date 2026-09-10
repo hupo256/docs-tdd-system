@@ -1,23 +1,19 @@
 {
   "schemaVersion": 1,
   "mode": "explicit-dual-track-shadow",
-  "generatedAt": "2026-09-08T14:07:23.111Z",
+  "generatedAt": "2026-09-10T03:47:40.508Z",
   "decision": "collecting",
   "automaticCutover": false,
   "summary": {
-    "enrolled": 3,
-    "completed": 2,
+    "enrolled": 2,
+    "completed": 0,
     "minimumSamples": 3,
     "maximumSamples": 10,
     "enrolledLevels": [
       "V0",
-      "V1",
-      "V2"
-    ],
-    "completedLevels": [
-      "V0",
       "V1"
     ],
+    "completedLevels": [],
     "requiredLevels": [
       "V0",
       "V1",
@@ -34,13 +30,17 @@
     },
     {
       "code": "SAMPLE_COUNT",
-      "ok": true,
-      "problems": []
+      "ok": false,
+      "problems": [
+        "need 3–10 samples, got 2"
+      ]
     },
     {
       "code": "LEVEL_COVERAGE",
       "ok": false,
       "problems": [
+        "no completed V0 sample",
+        "no completed V1 sample",
         "no completed V2 sample"
       ]
     },
@@ -48,7 +48,8 @@
       "code": "SAMPLES_COMPLETE",
       "ok": false,
       "problems": [
-        "PR-02233: latest result is invalid or stale: result does not match work item"
+        "PR-02074-SEARCH-WIDTH: latest result is invalid or stale: result does not match work item",
+        "PR-02172-PROVIDER-VISIBILITY: latest result is invalid or stale: result does not match work item"
       ]
     },
     {
@@ -59,46 +60,24 @@
   ],
   "samples": [
     {
-      "sampleId": "PR-02233",
-      "projectId": "PR-02233",
-      "level": "V2",
-      "root": "/Users/aven/github/docs_tdd/common/vnext/pilots/PR-02233",
+      "sampleId": "PR-02074-SEARCH-WIDTH",
+      "projectId": "PR-02074",
+      "level": "V0",
+      "root": "/Users/aven/github/docs_tdd/common/vnext/pilots/PR-02074-search-width",
       "ok": false,
       "problems": [
         "latest result is invalid or stale: result does not match work item"
       ]
     },
     {
-      "sampleId": "PR-02074-SEARCH-WIDTH",
-      "projectId": "PR-02074",
-      "level": "V0",
-      "root": "/Users/aven/github/docs_tdd/common/vnext/pilots/PR-02074-search-width",
-      "latestStatus": "passed",
-      "runCount": 1,
-      "artifactCount": 3,
-      "contextChars": 1404,
-      "contextBudget": 4000,
-      "omissionEscapes": 0,
-      "falseGreenEscapes": 0,
-      "observedThrough": "2026-09-05T00:00:00.000Z",
-      "ok": true,
-      "problems": []
-    },
-    {
       "sampleId": "PR-02172-PROVIDER-VISIBILITY",
       "projectId": "PR-02172",
       "level": "V1",
       "root": "/Users/aven/github/docs_tdd/common/vnext/pilots/PR-02172-provider-visibility",
-      "latestStatus": "passed",
-      "runCount": 4,
-      "artifactCount": 3,
-      "contextChars": 2847,
-      "contextBudget": 4000,
-      "omissionEscapes": 0,
-      "falseGreenEscapes": 0,
-      "observedThrough": "2026-09-05T00:00:00.000Z",
-      "ok": true,
-      "problems": []
+      "ok": false,
+      "problems": [
+        "latest result is invalid or stale: result does not match work item"
+      ]
     }
   ]
 }

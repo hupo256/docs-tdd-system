@@ -16,15 +16,15 @@
 
 ## 2026-09-08（v2 正式启用：新需求默认 + 全等级 enforced）
 
-- **owner 决策立即正式切换**：新需求默认 `workflowVersion: 2`，V0/V1/V2 共用正式出口；不再等待历史 pilot 样本数或 PR-02233 闭环。接受的偏差与不豁免原则见 `common/vnext/cutover-decision-20260908.md`。
+- **owner 决策立即正式切换**：新需求默认 `workflowVersion: 2`，V0/V1/V2 共用正式出口；不再等待历史 pilot 样本数或全部样本闭环。接受的偏差与不豁免原则见 `common/vnext/cutover-decision-20260908.md`。
 - **机器硬路由**：`docs-tdd verify` 强制对 v2 写 `mode=enforced` 的 `latest-result.json` / `runs.jsonl`，failed/blocked 返回非零；v2 拒绝 `gate`/`changed`，v1 拒绝 `verify`；`status/next/resume/context` 按 `workflowVersion` 路由。
 - **兼容边界**：存量 v1 不迁移，继续 G0–G8；显式 `--legacy` 才新建 v1。历史 shadow 样本和 pilot 保留作回归观测，但不再控制正式切流，`automaticCutover` 仍为 false。
-- **文档收敛**：Router、startup、kickoff、AGENTS、根/公共 README、Phase 8 与旧评审统一为同一口径；PR-02233 未闭环仍按项目自身结果失败，系统切换不构成豁免。
+- **文档收敛**：Router、startup、kickoff、AGENTS、根/公共 README、Phase 8 与旧评审统一为同一口径；未闭环项目仍按自身结果失败，系统切换不构成豁免。
 
 ## 2026-09-06（历史：vNext 分级切流，已由 2026-09-08 决策取代）
 
 - **历史事实（当时的分级决策）**：`docs-tdd kickoff` 默认创建 vNext 项目；当时 V2 仅作非阻断观察。该临时边界已被 2026-09-08 正式切换取代，历史摘要见 `common/vnext/cutover-review-20260906.md`。
-- **V0/V1 灰度已实测闭环**:PR-02074-search-width / PR-02172-provider-visibility 提测后零漏项零假绿,pilot report 从 collecting 推进到 2/3 complete;V2 样本 PR-02233 批次 01 已按「本仓只交付 Web 端」重划范围(15 个 App surface deferred 到批次 06 + 重签 scope approval + 冷读 review response 持久化),仅剩浏览器运行时证据(`common/vnext/HANDOFF-phase7-pr02233.md`)。
+- **V0/V1 灰度已实测闭环**：PR-02074-search-width / PR-02172-provider-visibility 提测后零漏项零假绿；pilot report 的已完成样本均保持零逃逸。
 - **v1 冻结**:rule-ids-and-gates.md 标 maintain-only——不新增 v1 Rule ID/Gate/模板层,不删除不回溯;V2 转正与 v1 归档(移 archive/)等 pilot eligible 后另行评审。
 - **生效边界**:存量项目读不到新 router 行即无行为变化;`check-doc-budget`/`vnext-self-test`/三个 replay 全绿;kickoff 的 vNext 分支经 PR-99999 探针实测(source snapshot 真 hash、run-state nextAction `vnext_extract_requirements`)后已清理。
 
@@ -33,7 +33,7 @@
 - **vNext 工作流（workflowVersion: 2）从流程门禁转向效率与质量**：用单一 `work-item.json` 承载「原始 PRD → 代码落点 → 当前 HEAD 验收证据」，默认产物从 253 个流程文件收敛到 3 个（4 项目组合 253 → 12，−95.26%），机器 context 字符代理从 v1 可复算口径 342592 → 2718（−99.21%），V0/V1 硬预算 ≤4K、V2 ≤8K。
 - **三个历史提测漏项（PR-02306 图片密码、PR-01930 集合落点、PR-02265 PRD 漂移）做成确定性回放夹具**：`vnext-replay.mjs` / `vnext-exit-replay.mjs` / `vnext-route-replay.mjs` 全部通过，漏项和假绿路径可机器复现，不是纸面承诺。
 - **Phase 0–6 核心模块完成**：source units、coverage review、risk route、single exit、persistence、context/artifact budget、MSW policy 已接入 `vnext-self-test.mjs`（18 脚本）并注册进 `check-doc-budget.mjs`（71 自测入口）。
-- **Phase 7 双轨灰度启动**：6 个样本已登记（V0/V1/V2 覆盖），当前 `decision: collecting`；`post-test observation`、PR-02233 剩余 App 批次、PR-02117/02133/02193 后端 API 契约依赖等待业务/人工推进。
+- **Phase 7 双轨灰度启动**：样本按 V0/V1/V2 分级登记，当前 `decision: collecting`；`post-test observation` 与部分后端 API 契约依赖等待业务/人工推进。
 - **当时的生效边界**：2026-09-04 尚为 shadow-only；该状态已被 2026-09-08 正式切换取代。
 
 ## 2026-09-03（常驻预算闭环与本地多客户端强制补齐）

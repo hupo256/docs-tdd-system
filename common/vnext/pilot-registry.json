@@ -10,13 +10,6 @@
   ],
   "entries": [
     {
-      "projectId": "PR-02233",
-      "artifactDir": "pilots/PR-02233",
-      "enrolledAt": "2026-09-04T08:45:00Z",
-      "newRequirement": true,
-      "observation": null
-    },
-    {
       "sampleId": "PR-02074-SEARCH-WIDTH",
       "projectId": "PR-02074",
       "artifactDir": "pilots/PR-02074-search-width",

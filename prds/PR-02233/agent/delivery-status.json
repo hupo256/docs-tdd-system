@@ -1,9 +1,0 @@
-{
-  "projectId": "PR-02233",
-  "mode": "local",
-  "branch": "feature/PR-02233",
-  "headSha": "",
-  "pullRequestUrl": "",
-  "evidence": [],
-  "note": "G8 前至少更新为 pushed；gate 会用 Git 实际状态复核。G8 PASS 表示可发布 test 提交 AQ，不代表 test/pre/online 已通过。"
-}
