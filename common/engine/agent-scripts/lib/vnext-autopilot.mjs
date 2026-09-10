@@ -33,6 +33,7 @@ export const AUTOPILOT_ACTIONS = Object.freeze([
   'resolve-blockers',
   'refresh-invalid-verification',
   'revalidate-current-code-evidence',
+  'commit-ready-change',
   'complete',
 ])
 
@@ -69,12 +70,18 @@ function actionPacket(workItem, { action, phase, reason, command = '', status = 
   }
 }
 
+function failedDomains(latestResult) {
+  const domains = latestResult?.failureDomains
+  return Array.isArray(domains) && domains.length ? [...new Set(domains)] : ['code']
+}
+
 export function deriveAutopilotAction({
   workItem,
   latestResult = null,
   resultIntegrityOk = true,
   codeStateFresh = true,
   assuranceTrusted = false,
+  deliveryCommitted = false,
 } = {}) {
   if (workItem?.workflowVersion !== 2 || !workItem?.projectId) throw new Error('Autopilot requires a workflowVersion=2 work item')
   const projectId = workItem.projectId
@@ -193,24 +200,36 @@ export function deriveAutopilotAction({
     })
   }
   if (latestResult.status !== 'passed' || latestResult.ok !== true) {
-    if ((workItem.autopilot?.repairAttempts?.code || 0) >= 2) {
+    const domains = failedDomains(latestResult)
+    const attempts = workItem.autopilot?.repairAttempts || { code: 0, browser: 0 }
+    const exhausted = domains.filter((domain) => (attempts[domain] || 0) >= 2)
+    if (exhausted.length) {
       return actionPacket(workItem, {
         action: 'escalate-repair-failure',
         phase: 'blocked',
         status: 'blocked',
-        reason: 'Two automatic code repair attempts failed; human diagnosis is required.',
+        reason: `Two automatic repair attempts failed for: ${exhausted.join(', ')}; human diagnosis is required.`,
         constraints: ['do-not-loop', 'report-last-failed-checks'],
       })
     }
     return actionPacket(workItem, {
       action: 'repair-failed-checks',
       phase: 'validating',
-      reason: 'The latest enforced verification contains failed checks.',
-      constraints: ['maximum-two-automatic-code-repairs'],
+      reason: `The latest enforced verification contains failed ${domains.join(' + ')} checks.`,
+      constraints: domains.map((domain) => `maximum-two-automatic-${domain}-repairs`),
       checkpoint: {
         command: `docs-tdd checkpoint ${projectId} --input <checkpoint.json>`,
         requiredFields: ['actionId', 'outcome', 'changedPaths'],
       },
+    })
+  }
+  if (!deliveryCommitted) {
+    return actionPacket(workItem, {
+      action: 'commit-ready-change',
+      phase: 'validating',
+      reason: 'Authoritative checks passed; commit only the evidence-scoped paths before handoff.',
+      command: `docs-tdd run ${projectId}`,
+      constraints: ['stage-only-evidence-scoped-paths', 'do-not-push'],
     })
   }
   return actionPacket(workItem, {
@@ -272,9 +291,9 @@ export function applyAutopilotCheckpoint(workItem, checkpoint, { latestResult = 
     repairAttempts: {
       ...(next.autopilot?.repairAttempts || { code: 0, browser: 0 }),
       ...(expected.action === 'repair-failed-checks' && checkpoint.outcome === 'completed'
-        ? { code: (next.autopilot?.repairAttempts?.code || 0) + 1 }
+        ? Object.fromEntries(failedDomains(latestResult).map((domain) => [domain, (next.autopilot?.repairAttempts?.[domain] || 0) + 1]))
         : {}),
-      ...(expected.action === 'reconcile-late-sources' ? { code: 0 } : {}),
+      ...(expected.action === 'reconcile-late-sources' ? { code: 0, browser: 0 } : {}),
     },
     lastCheckpointAt: generatedAt,
   }
@@ -341,17 +360,22 @@ export function selfTest() {
 
   const passed = { mode: 'enforced', status: 'passed', ok: true }
   const { autopilot: _legacyMissingAutopilot, ...legacyReviewed } = reviewed
-  assert.equal(deriveAutopilotAction({ workItem: legacyReviewed, latestResult: passed, assuranceTrusted: true }).action, 'complete')
+  assert.equal(deriveAutopilotAction({ workItem: legacyReviewed, latestResult: passed, assuranceTrusted: true, deliveryCommitted: true }).action, 'complete')
   assert.equal(deriveAutopilotAction({ workItem: implemented, latestResult: passed, assuranceTrusted: false }).action, 'capture-cli-evidence')
-  assert.equal(deriveAutopilotAction({ workItem: implemented, latestResult: passed, assuranceTrusted: true }).action, 'complete')
+  assert.equal(deriveAutopilotAction({ workItem: implemented, latestResult: passed, assuranceTrusted: true }).action, 'commit-ready-change')
+  assert.equal(deriveAutopilotAction({ workItem: implemented, latestResult: passed, assuranceTrusted: true, deliveryCommitted: true }).action, 'complete')
   assert.equal(deriveAutopilotAction({ workItem: implemented, latestResult: { status: 'blocked', ok: false } }).action, 'resolve-blockers')
-  const failed = { status: 'failed', ok: false }
+  const failed = { status: 'failed', ok: false, failureDomains: ['code'] }
   const repairAction = deriveAutopilotAction({ workItem: implemented, latestResult: failed })
   assert.equal(repairAction.action, 'repair-failed-checks')
   const repairedOnce = applyAutopilotCheckpoint(implemented, { actionId: repairAction.actionId, outcome: 'completed', changedPaths: ['src/x.ts'] }, { latestResult: failed })
   const secondRepairAction = deriveAutopilotAction({ workItem: repairedOnce, latestResult: failed })
   const repairedTwice = applyAutopilotCheckpoint(repairedOnce, { actionId: secondRepairAction.actionId, outcome: 'completed', changedPaths: ['src/x.ts'] }, { latestResult: failed })
   assert.equal(deriveAutopilotAction({ workItem: repairedTwice, latestResult: failed }).action, 'escalate-repair-failure')
+  const browserFailed = { status: 'failed', ok: false, failureDomains: ['browser'] }
+  const browserRepair = deriveAutopilotAction({ workItem: implemented, latestResult: browserFailed })
+  const browserRepaired = applyAutopilotCheckpoint(implemented, { actionId: browserRepair.actionId, outcome: 'completed', changedPaths: ['src/x.ts'] }, { latestResult: browserFailed })
+  assert.deepEqual(browserRepaired.autopilot.repairAttempts, { code: 0, browser: 1 })
   assert.equal(deriveAutopilotAction({ workItem: implemented, latestResult: passed, resultIntegrityOk: false }).action, 'refresh-invalid-verification')
   assert.equal(deriveAutopilotAction({ workItem: implemented, latestResult: passed, codeStateFresh: false }).action, 'revalidate-current-code-evidence')
 

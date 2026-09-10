@@ -71,6 +71,11 @@
       "additionalProperties": false
     },
     "blockedBy": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "failureDomains": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "enum": ["code", "browser"] }
+    },
     "evidenceAttestation": {
       "type": "object",
       "required": ["issuedBy", "projectId", "workItemFingerprint", "codeContentHash", "planFingerprint", "runId", "startedAt", "completedAt", "signature", "bundleFingerprint"],

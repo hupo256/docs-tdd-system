@@ -39,6 +39,17 @@ function readJson(file) {
   try { return JSON.parse(readFileSync(file, 'utf8')) } catch { return null }
 }
 
+function runGit(worktree, gitArgs, spawn = spawnSync) {
+  const result = spawn('git', gitArgs, { cwd: worktree, encoding: 'utf8', stdio: 'pipe' })
+  if (result.status !== 0) throw new Error((result.stderr || result.stdout || `git ${gitArgs.join(' ')} failed`).trim())
+  return result.stdout || ''
+}
+
+export function scopedDeliveryCommitted(worktree, codeState, spawn = spawnSync) {
+  if (codeState?.scopeMode !== 'path-set-v1' || !codeState.scopePaths?.length) return true
+  return runGit(worktree, ['status', '--porcelain=v1', '-z', '--', ...codeState.scopePaths], spawn).length === 0
+}
+
 function stateFile(id) {
   return join(resolveProjectRoot(id), 'agent/run-state.json')
 }
@@ -259,11 +270,13 @@ function inspectVNext(id) {
   const integrity = latest ? verifyExitResultIntegrity(latest, workItem) : { ok: true, problems: [] }
   let codeStateFresh = true
   let codeStateProblem = ''
+  let deliveryCommitted = true
   if (latest) {
     try {
       const scopePaths = latest.codeFingerprint?.scopeMode === 'path-set-v1' ? latest.codeFingerprint.scopePaths : null
       const current = codeFingerprint(resolveProjectWorktree(id).worktree, undefined, { scopePaths })
       codeStateFresh = matchesEffectiveCodeState(current, latest.codeFingerprint)
+      deliveryCommitted = scopedDeliveryCommitted(resolveProjectWorktree(id).worktree, latest.codeFingerprint)
       if (!codeStateFresh) codeStateProblem = 'code content changed; revalidate evidence only (the signed source review remains reusable while the work item is unchanged)'
     } catch (error) {
       codeStateFresh = false
@@ -279,6 +292,7 @@ function inspectVNext(id) {
     resultIntegrityOk: integrity.ok,
     codeStateFresh,
     assuranceTrusted,
+    deliveryCommitted,
   })
   return {
     projectId: id,
@@ -301,6 +315,7 @@ function inspectVNext(id) {
         integrity: integrity.ok,
         codeStateFresh,
         authoritative: actionPacket.action === 'complete',
+        deliveryCommitted,
         runId: latest.runId,
         generatedAt: latest.generatedAt,
       },
@@ -449,7 +464,9 @@ function runAutonomousValidation(id) {
     '--worktree', worktree,
     '--out', evidenceFile,
   ])
-  if (evidence.status !== 0) {
+  // Exit 1 means commands ran and produced an attested failing bundle. Feed it into verify so the
+  // persisted result can drive the bounded repair loop. Exit 2 is a runner/protocol failure.
+  if (evidence.status !== 0 && evidence.status !== 1) {
     return {
       ok: false,
       step: 'evidence',
@@ -469,10 +486,30 @@ function runAutonomousValidation(id) {
   return {
     ok: verify.status === 0,
     step: 'verify',
+    evidenceExitCode: evidence.status,
     evidenceDir: runDir,
     output: (verify.stdout || '').trim().slice(0, 4000),
     error: verify.status === 0 ? '' : (verify.stderr || verify.stdout).trim().slice(0, 2000),
   }
+}
+
+export function commitScopedPaths(worktree, id, paths, spawn = spawnSync) {
+  if (!paths?.length) return { ok: false, step: 'commit', error: 'automatic commit requires path-set-v1 evidence scope' }
+  try {
+    runGit(worktree, ['add', '--', ...paths], spawn)
+    runGit(worktree, ['commit', '--only', '-m', `feat: implement ${id}`, '--', ...paths], spawn)
+    const commitSha = runGit(worktree, ['rev-parse', 'HEAD'], spawn).trim()
+    return { ok: true, step: 'commit', commitSha, paths, pushed: false }
+  } catch (error) {
+    return { ok: false, step: 'commit', error: error.message, paths, pushed: false }
+  }
+}
+
+function commitEvidenceScope(id) {
+  const projectDir = resolveProjectRoot(id)
+  const latest = readJson(join(projectDir, 'latest-result.json'))
+  const paths = latest?.codeFingerprint?.scopeMode === 'path-set-v1' ? latest.codeFingerprint.scopePaths : []
+  return commitScopedPaths(resolveProjectWorktree(id).worktree, id, paths)
 }
 
 function autopilotRun() {
@@ -486,6 +523,12 @@ function autopilotRun() {
     return
   }
   const before = inspectVNext(projectId)
+  if (before.nextAction === 'commit-ready-change') {
+    const automation = commitEvidenceScope(projectId)
+    const after = inspectVNext(projectId)
+    print({ ...after, automation })
+    return
+  }
   if (!['capture-cli-evidence', 'revalidate-current-code-evidence', 'refresh-invalid-verification'].includes(before.nextAction)) {
     print(before)
     return
@@ -503,6 +546,11 @@ function selfTest() {
   const advance = inferState({ projectExists: true, gateResult: { gate: 'G5', ok: true } })
   const complete = inferState({ projectExists: true, gateResult: { gate: 'G8', ok: true } })
   const decision = decideNext({ projectId: 'PR-00001', projectExists: true, gateResult: { gate: 'G5', ok: false, checks: [{ ruleId: 'DOC-G5-003', ok: false, severity: 'error', message: 'x' }] } })
+  const gitCalls = []
+  const commit = commitScopedPaths('/tmp/worktree', 'PR-00001', ['src/a.ts'], (_command, gitArgs) => {
+    gitCalls.push(gitArgs)
+    return { status: 0, stdout: gitArgs[0] === 'rev-parse' ? 'abc123\n' : '', stderr: '' }
+  })
   if (
     a.nextAction !== 'scaffold_project'
     || blocked.nextAction !== 'fix_gate_failures'
@@ -513,6 +561,12 @@ function selfTest() {
     || vnextVerificationNextAction({ authoritativePass: false, shadowOnly: false, integrityOk: true, codeStateFresh: false, status: 'passed' }) !== 'revalidate_current_code_evidence'
     || vnextVerificationNextAction({ authoritativePass: false, shadowOnly: false, integrityOk: false, codeStateFresh: false, assuranceTrusted: false, status: 'passed' }) !== 'refresh_invalid_verification'
     || vnextVerificationNextAction({ authoritativePass: false, shadowOnly: false, integrityOk: true, codeStateFresh: true, assuranceTrusted: false, status: 'passed' }) !== 'capture_cli_attested_evidence'
+    || !scopedDeliveryCommitted('/tmp/worktree', { scopeMode: 'path-set-v1', scopePaths: ['src/a.ts'] }, () => ({ status: 0, stdout: '', stderr: '' }))
+    || scopedDeliveryCommitted('/tmp/worktree', { scopeMode: 'path-set-v1', scopePaths: ['src/a.ts'] }, () => ({ status: 0, stdout: ' M src/a.ts', stderr: '' }))
+    || !commit.ok
+    || commit.commitSha !== 'abc123'
+    || gitCalls.some((gitArgs) => gitArgs[0] === 'push')
+    || !gitCalls.some((gitArgs) => gitArgs[0] === 'commit' && gitArgs.includes('--only'))
   ) process.exit(1)
   console.log('project-orchestrator self-test passed (structured inferState + decideNext wiring)')
 }

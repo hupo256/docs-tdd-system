@@ -101,7 +101,11 @@ node common/engine/agent-scripts/docs-tdd.mjs checkpoint PR-01234 --input /tmp/c
 node common/engine/agent-scripts/docs-tdd.mjs run PR-01234
 ```
 
-第二条命令会自动执行已审查的 evidence command plan，并自动组装 surfaces report 跑 enforced verify。证据保存在 `~/.cache/docs-tdd/evidence/<PROJECT-ID>/`，不会增加项目状态文件。连续两次代码修复仍失败会输出 `escalate-repair-failure`，禁止无限自动重试。
+第二条命令会自动执行已审查的 evidence command plan，并自动组装 surfaces report 跑 enforced verify。证据保存在 `~/.cache/docs-tdd/evidence/<PROJECT-ID>/`，不会增加项目状态文件。命令退出 1 时仍会把 CLI 签名的失败证据送入 verify，使 Autopilot 真正进入修复分支；只有 runner/协议错误才中断。代码检查与 browser 检查分别最多自动修复两轮，任一域耗尽即输出 `escalate-repair-failure`，禁止无限重试。
+
+`evidencePlan[].runtimeRequired=true` 不是注释字段：同一 requirement 必须另有受审查的 `browser-interaction` argv 命令，runner 与最终出口都会双重检查，普通 Vitest/文案命令不能冒充 runtime evidence。浏览器命令仍遵守 [browser-e2e-mcp.md](../rules/browser-e2e-mcp.md) 的边界：不向业务仓安装 Playwright/Puppeteer；优先把可回归逻辑固化为定向测试，只对确需真实运行时的集成行为使用已有外部 browser adapter。
+
+取得 authoritative PASS 后，`run` 只 `git add`/`git commit --only` 当前 `path-set-v1` 冻结路径；其他已暂存或未暂存文件不会被带入。commit hook 若改写相关字节，状态会回到重验而不是沿用旧绿灯。Autopilot 永不执行 `git push`。
 
 ### Figma / API 晚到
 

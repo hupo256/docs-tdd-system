@@ -23,7 +23,7 @@ AI 编码的两个顽疾：**跳过需求确认直接写码**、**规则散落�
 核心命令统一走 `<mount>/common/engine/agent-scripts/docs-tdd.mjs`。下表中的 `docs-tdd` 是 `node <mount>/common/engine/agent-scripts/docs-tdd.mjs` 的阅读简写：
 
 ```bash
-docs-tdd run <PROJECT-ID> --prd <src>      # v2 Autopilot：新建或从断点继续，并返回唯一下一动作
+docs-tdd run <PROJECT-ID> --prd <src>      # v2 Autopilot：断点续跑、自动验证/限次修复、按证据路径 commit（不 push）
 docs-tdd context <PROJECT-ID> <SCENARIO>   # 按场景生成默认 brief/compact 规则包；可显式覆盖模式
 docs-tdd kickoff <PROJECT-ID> --prd <src>  # 兼容入口：默认创建 v2；显式 v1 加 --legacy
 docs-tdd verify  <PROJECT-ID> --input <json> # v2 唯一正式出口，非 PASS 阻断

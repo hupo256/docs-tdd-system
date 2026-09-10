@@ -69,6 +69,9 @@ export function evidencePlanProblems(plan, workItem) {
   for (const requirement of (workItem?.requirements || []).filter((item) => item.status === 'doing')) {
     for (const evidence of requirement.evidencePlan || []) {
       if (!commands.some((command) => command.kind === evidence.type && (command.requirementIds || []).includes(requirement.requirementId))) problems.push(`evidence plan does not cover ${requirement.requirementId}:${evidence.type}`)
+      if (evidence.runtimeRequired && !commands.some((command) => command.kind === 'browser-interaction' && (command.requirementIds || []).includes(requirement.requirementId))) {
+        problems.push(`evidence plan does not cover runtime-required ${requirement.requirementId}:${evidence.type} with browser-interaction`)
+      }
     }
     for (const surface of (requirement.affectedSurfaces || []).filter((item) => item.disposition === 'implement')) {
       if (!commands.some((command) => (command.surfaceIds || []).includes(surface.surfaceId))) problems.push(`evidence plan does not cover ${surface.surfaceId}`)
@@ -208,6 +211,10 @@ export function selfTest() {
     assert.deepEqual(verifyEvidenceReceipt(bundle, { workItem, currentCodeState: code, keyPath }), [])
     assert.match(evidencePlanProblems({ ...plan, commands: [...plan.commands, plan.commands[0]] }, workItem).join(' '), /duplicate/)
     assert.match(evidencePlanProblems({ ...plan, commands: [{ ...plan.commands[0], argv: ['echo ok'] }] }, workItem).join(' '), /argv/)
+    const runtimeWorkItem = structuredClone(workItem)
+    runtimeWorkItem.requirements[0].status = 'doing'
+    runtimeWorkItem.requirements[0].evidencePlan = [{ type: 'pure-logic', runtimeRequired: true }]
+    assert.match(evidencePlanProblems(plan, runtimeWorkItem).join(' '), /runtime-required.*browser-interaction/)
     const scoped = { ...code, scopeMode: 'path-set-v1', scopePaths: ['src/x.ts'], contentHash: 'b'.repeat(64) }
     assert.equal(matchesEffectiveCodeState({ ...scoped, headSha: 'new-commit', dirtyHash: 'unrelated' }, scoped), true)
     assert.equal(matchesEffectiveCodeState({ ...scoped, contentHash: 'c'.repeat(64) }, scoped), false)
