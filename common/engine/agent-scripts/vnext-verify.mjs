@@ -166,7 +166,7 @@ export function selfTest() {
       statement: 'All password entries use the same copy.',
       status: 'doing',
       collectionSemantics: { kind: 'none', expectedCount: 0 },
-      affectedSurfaces: [],
+      affectedSurfaces: [{ surfaceId: 'S-001', locator: 'src/password.ts', disposition: 'implement' }],
       evidencePlan: [{ type: 'copy-literal', runtimeRequired: false }],
     }],
     requirementsAuthor: { kind: 'human', id: 'self-test-author' },
@@ -199,11 +199,11 @@ export function selfTest() {
       evidenceId: 'E-1', kind: 'touched-file-quality', result: 'pass', codeFingerprint: code, requirementIds: [], surfaceIds: [], evidenceRefs: ['logs/quality.txt'],
       producer: { kind: 'command', command: 'test touched files', exitCode: 0, startedAt: '2026-09-04T00:00:00Z', finishedAt: '2026-09-04T00:00:01Z' },
     }, {
-      evidenceId: 'E-2', kind: 'copy-literal', result: 'pass', codeFingerprint: code, requirementIds: ['R-001'], surfaceIds: [], evidenceRefs: ['logs/copy.txt'],
+      evidenceId: 'E-2', kind: 'copy-literal', result: 'pass', codeFingerprint: code, requirementIds: ['R-001'], surfaceIds: ['S-001'], evidenceRefs: ['logs/copy.txt'],
       producer: { kind: 'command', command: 'test copy', exitCode: 0, startedAt: '2026-09-04T00:00:00Z', finishedAt: '2026-09-04T00:00:01Z' },
     }],
   }
-  const verifyInput = { workItem, currentRevision: '1', sourceDocuments, reviewResponse, discoveredSurfaces: [], implementation: { coveredSurfaceIds: [] }, evidence, blockers: [] }
+  const verifyInput = { workItem, currentRevision: '1', sourceDocuments, reviewResponse, discoveredSurfaces: [{ surfaceId: 'S-001', locator: 'src/password.ts' }], implementation: { coveredSurfaceIds: ['S-001'] }, evidence, blockers: [] }
   const pass = runVNextVerification(verifyInput, { currentCodeState: code, generatedAt: '2026-09-04T00:00:03Z' })
   assert.equal(pass.ok, true, JSON.stringify(pass))
   assert.equal(pass.mode, 'enforced')

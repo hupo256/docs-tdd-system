@@ -4,6 +4,7 @@
 
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
+import { isStructuralSourceUnit } from './vnext-source-units.mjs'
 
 function canonicalize(value) {
   if (Array.isArray(value)) return value.map(canonicalize)
@@ -59,6 +60,24 @@ function sourceAnchorIds(requirement) {
   return new Set((requirement.sourceAnchors || []).map((anchor) => anchor.sourceId).filter(Boolean))
 }
 
+export function v0MicroProblems(workItem, sourceUnits = []) {
+  if (workItem?.routing?.verificationLevel !== 'V0') return []
+  const problems = []
+  const requirements = workItem.requirements || []
+  const implementingSurfaces = requirements.flatMap((requirement) => requirement.affectedSurfaces || []).filter((surface) => surface.disposition === 'implement')
+  const richUnits = sourceUnits.filter((unit) => ['table', 'image', 'embed'].includes(unit.type))
+  if (requirements.length !== 1 || requirements[0]?.status !== 'doing') problems.push('V0-micro requires exactly one doing requirement')
+  if (implementingSurfaces.length !== 1) problems.push('V0-micro requires exactly one implement surface')
+  if (workItem?.routing?.scopeClass !== 'local' || workItem.routing.riskSignals?.length) problems.push('V0-micro requires local scope with no risk signals')
+  if (workItem?.apiDependency?.mode !== 'no-request') problems.push('V0-micro requires apiDependency.mode=no-request')
+  if (workItem?.deliveryScope) problems.push('V0-micro cannot use a bounded delivery scope')
+  if (richUnits.length || workItem?.sourceSnapshot?.assets?.length) problems.push('V0-micro cannot contain table, image, or embedded source units')
+  const collection = requirements[0]?.collectionSemantics
+  if (collection && (collection.kind !== 'none' || collection.expectedCount !== 0)) problems.push('V0-micro cannot contain collection semantics')
+  if ((requirements[0]?.evidencePlan || []).some((item) => item.runtimeRequired)) problems.push('V0-micro cannot require runtime evidence')
+  return problems
+}
+
 function requirementCoverageProblems(workItem, sourceUnits, sourceOracle) {
   const requirements = workItem.requirements || []
   const problems = []
@@ -88,7 +107,7 @@ function requirementCoverageProblems(workItem, sourceUnits, sourceOracle) {
   const dispositionBySourceId = new Map((workItem.sourceUnitDispositions || []).map((d) => [d.sourceId, d]))
   const sourceUnitIds = new Set((sourceUnits || []).map((unit) => unit.sourceId))
   for (const unit of sourceUnits || []) {
-    if (anchoredSourceIds.has(unit.sourceId)) continue
+    if (anchoredSourceIds.has(unit.sourceId) || isStructuralSourceUnit(unit)) continue
     const disposition = dispositionBySourceId.get(unit.sourceId)
     if (disposition?.disposition !== 'not-a-requirement') {
       problems.push(`source unit ${unit.sourceId} is not anchored to any requirement and has no not-a-requirement disposition`)
@@ -98,6 +117,8 @@ function requirementCoverageProblems(workItem, sourceUnits, sourceOracle) {
     if (!sourceUnitIds.has(disposition.sourceId)) problems.push(`sourceUnitDisposition references unknown source unit: ${disposition.sourceId}`)
     if (disposition.disposition === 'not-a-requirement' && !disposition.reason?.trim()) problems.push(`not-a-requirement disposition for ${disposition.sourceId} requires a reason`)
   }
+
+  problems.push(...v0MicroProblems(workItem, sourceUnits))
 
   for (const unit of sourceOracle?.requiredUnits || []) {
     const mapped = requirements.filter((requirement) => {
@@ -204,6 +225,24 @@ export function selfTest() {
   })
   assert.equal(missed.checks.find((check) => check.code === 'REQUIREMENT_COVERAGE').ok, false)
   assert.equal(missed.checks.find((check) => check.code === 'SURFACE_COVERAGE').ok, false)
+
+  const v0 = {
+    ...base,
+    routing: { scopeClass: 'local', riskSignals: [], verificationLevel: 'V0', routerVersion: 1 },
+    requirements: [{
+      ...base.requirements[0],
+      collectionSemantics: { kind: 'none', expectedCount: 0 },
+      affectedSurfaces: [{ surfaceId: 'S-001', locator: 'page-a', disposition: 'implement' }],
+      evidencePlan: [{ type: 'component-dom', runtimeRequired: false }],
+    }],
+  }
+  const v0Sealed = sealCoverageAuditForFixture(v0)
+  const structuralUnit = { sourceId: 'SRC-HEADING', type: 'text', content: '## Requirement' }
+  const semanticUnit = { sourceId: 'SRC-001', type: 'text', content: 'Two entries show the same copy.' }
+  assert.equal(verifyVNextCoverage({ workItem: v0Sealed, sourceUnits: [structuralUnit, semanticUnit] }).checks.find((item) => item.code === 'REQUIREMENT_COVERAGE').ok, true)
+  const extraSemantic = { sourceId: 'SRC-EXTRA', type: 'text', content: 'Also change the mobile entry.' }
+  assert.equal(verifyVNextCoverage({ workItem: v0Sealed, sourceUnits: [structuralUnit, semanticUnit, extraSemantic] }).checks.find((item) => item.code === 'REQUIREMENT_COVERAGE').ok, false)
+  assert.match(v0MicroProblems(v0Sealed, [{ sourceId: 'SRC-TABLE', type: 'table', content: '| A |' }]).join(' '), /cannot contain table/)
   console.log('vnext-work-item self-test passed')
 }
 

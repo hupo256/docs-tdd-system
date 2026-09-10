@@ -76,6 +76,13 @@ function tableStart(lines, index) {
   return lines[index]?.includes('|') && index + 1 < lines.length && tableDelimiter(lines[index + 1])
 }
 
+export function isStructuralSourceUnit(unit) {
+  if (unit?.type !== 'text') return false
+  const lines = String(unit.content || '').split('\n').map((line) => line.trim()).filter(Boolean)
+  if (!lines.length) return true
+  return lines.every((line) => /^(?:#{1,6}\s+.+|(?:-{3,}|\*{3,}|_{3,})|<!--(?:[\s\S]*?)-->)$/.test(line))
+}
+
 function imageMatches(line) {
   const matches = []
   const pattern = /!\[([^\]]*)\]\(([^)]+)\)|<img\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/gi
@@ -231,6 +238,9 @@ export function selfTest() {
   assert.equal(first.sourceSnapshot.assets[0].assetStatus, 'local')
   assert.equal(first.sourceSnapshot.assets[0].assetHash, sha256(Buffer.from('reset-image')))
   assert.match(first.sourceUnits.find((item) => item.type === 'image').content, /reset password/)
+  assert.equal(isStructuralSourceUnit(first.sourceUnits[0]), true)
+  assert.equal(isStructuralSourceUnit(first.sourceUnits[1]), false)
+  assert.equal(isStructuralSourceUnit(first.sourceUnits.find((item) => item.type === 'table')), false)
 
   const reordered = normalizeSourceDocuments([
     { path: 'b.md', content: 'B' },

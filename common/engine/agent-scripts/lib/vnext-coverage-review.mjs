@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url'
 import { resolve } from 'node:path'
 import { coverageFingerprints, verifyVNextCoverage } from './vnext-work-item.mjs'
 import { reviewRequestFingerprint, verifyReviewReceipt } from './vnext-review-receipt.mjs'
+import { isStructuralSourceUnit } from './vnext-source-units.mjs'
 
 export const REVIEW_PROTOCOL = 'vnext-independent-coverage-review-v1'
 const allowedDispositions = new Set(['resolved', 'not-applicable', 'deferred', 'open'])
@@ -55,7 +56,7 @@ export function buildCoverageReviewRequest({ workItem, sourceUnits }) {
   const anchoredSourceIds = new Set((workItem.requirements || []).flatMap((requirement) => (requirement.sourceAnchors || []).map((anchor) => anchor.sourceId)))
   const dispositionBySourceId = new Map((workItem.sourceUnitDispositions || []).map((d) => [d.sourceId, d]))
   const unattributed = sourceUnits.filter((unit) => {
-    if (anchoredSourceIds.has(unit.sourceId)) return false
+    if (anchoredSourceIds.has(unit.sourceId) || isStructuralSourceUnit(unit)) return false
     const disposition = dispositionBySourceId.get(unit.sourceId)
     return disposition?.disposition !== 'not-a-requirement'
   })
@@ -186,14 +187,18 @@ export function selfTest() {
     workflowVersion: 2,
     projectId: 'PR-00001',
     sourceSnapshot: { revision: '1', contentHash: 'a', sources: [{ path: 'prd.md', contentHash: 'a' }] },
-    requirements: [{ requirementId: 'R-001', sourceAnchors: [{ sourceId: 'SRC-1' }], statement: 'A', affectedSurfaces: [] }],
+    requirements: [{ requirementId: 'R-001', sourceAnchors: [{ sourceId: 'SRC-1' }], statement: 'A', status: 'doing', affectedSurfaces: [{ surfaceId: 'S-001', locator: 'src/a.ts', disposition: 'implement' }], evidencePlan: [{ type: 'copy-literal', runtimeRequired: false }] }],
     requirementsAuthor: { kind: 'human', id: 'author@example.com' },
-    routing: { verificationLevel: 'V0' },
+    routing: { scopeClass: 'local', riskSignals: [], verificationLevel: 'V0' },
+    apiDependency: { mode: 'no-request', reason: 'fixture' },
     coverageAudit: {},
   }
   const request = buildCoverageReviewRequest({
     workItem,
-    sourceUnits: [{ sourceId: 'SRC-1', type: 'text', path: 'prd.md', lineStart: 1, lineEnd: 1, content: 'A', contentHash: 'a' }],
+    sourceUnits: [
+      { sourceId: 'SRC-HEADING', type: 'text', path: 'prd.md', lineStart: 1, lineEnd: 1, content: '# Requirement', contentHash: 'heading' },
+      { sourceId: 'SRC-1', type: 'text', path: 'prd.md', lineStart: 2, lineEnd: 2, content: 'A', contentHash: 'a' },
+    ],
   })
   assert.equal(request.protocol, REVIEW_PROTOCOL)
   assert.equal(request.candidateRequirements[0].evidencePlan, undefined)

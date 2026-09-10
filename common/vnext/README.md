@@ -101,6 +101,7 @@ node common/engine/agent-scripts/docs-tdd.mjs verify PR-01234 --input verify-inp
 ## 风险路由约束
 
 - scope floor：`local=V0`、`multi-surface=V1`、`cross-boundary=V2`。
+- V0 按 micro-change 硬约束：恰好一个 doing requirement、一个 implement surface、无风险信号、无 API 请求、无集合语义、无 runtime evidence、无图片/表格/embed；任一条件不满足必须升级。Markdown 标题、分隔线和纯注释由 intake 确定性识别为结构节点，不要求逐条填写 `sourceUnitDispositions`；其他未引用语义 unit 仍然阻断，绝不默认放行。
 - password / authentication-surface / multiple-entry-points / shared-component / contract-change 至少 V1。
 - funds / trading / permission / irreversible / new-api / cross-app / fee/amount semantics 强制 V2。
 - `shared-component` 的边界：仅当改动触及被 ≥2 处复用的组件的 **prop / 行为 / 契约**（存在跨消费方爆炸半径）时才打此信号；**只改组件自身的视觉 token**（间距 / 颜色 / 圆角等 className，且无 prop、无行为、无契约变更）爆炸半径封闭在自身 render 内，不打任何风险信号 → 落 `local=V0`。是否属于后者由作者显式判断、并经独立冷读审查复核，不允许「因为文件是共享组件」就一律升 V1。
