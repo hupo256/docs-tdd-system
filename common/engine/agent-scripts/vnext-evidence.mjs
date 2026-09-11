@@ -110,26 +110,26 @@ function executeCommand(spec, worktree) {
   return { startedAt, finishedAt, stdout, stderr, exitCode, signal: result.signal || '' }
 }
 
-export function verificationScopePaths(workItem, worktree) {
+export function verificationScopePaths(workItem, worktree, baseRef = 'origin/online') {
   return [...new Set([
-    ...changedCodePaths(worktree),
+    ...changedCodePaths(worktree, baseRef),
     ...(workItem?.autopilot?.implementation?.changedPaths || []),
   ])].sort()
 }
 
-export function runEvidencePlan({ plan, workItem, worktree, keyPath, dependencies = {} } = {}) {
+export function runEvidencePlan({ plan, workItem, worktree, baseRef = 'origin/online', keyPath, dependencies = {} } = {}) {
   const problems = evidencePlanProblems(plan, workItem)
   if (problems.length) throw new Error(`invalid evidence plan:\n- ${problems.join('\n- ')}`)
   const measure = dependencies.measure || codeFingerprint
   const execute = dependencies.execute || executeCommand
   const now = dependencies.now || (() => new Date().toISOString())
-  const before = measure(worktree)
+  const before = measure(worktree, baseRef)
   if (!before?.isGitRepo || !before.headSha || !before.contentHash) throw new Error('evidence runner requires a valid Git worktree fingerprint')
   const startedAt = now()
   const facts = []
   for (const spec of plan.commands) {
     const execution = execute(spec, worktree)
-    const afterCommand = measure(worktree)
+    const afterCommand = measure(worktree, baseRef)
     if (!matchesEffectiveCodeState(before, afterCommand)) throw new Error(`${spec.evidenceId} changed effective code content; inspect the worktree and rerun from the final code state`)
     const digest = outputHash({ argv: spec.argv, status: execution.exitCode, signal: execution.signal, stdout: execution.stdout, stderr: execution.stderr })
     facts.push({
@@ -154,16 +154,16 @@ export function runEvidencePlan({ plan, workItem, worktree, keyPath, dependencie
       },
     })
   }
-  const after = measure(worktree)
+  const after = measure(worktree, baseRef)
   if (!matchesEffectiveCodeState(before, after)) throw new Error('evidence command changed effective code content; inspect the worktree and rerun from the final code state')
   // The full-tree fingerprints above are a mutation guard around command execution. The persisted
   // identity is narrower: freeze the feature's actual changed paths so an unrelated later edit does
   // not invalidate green evidence, while any byte/mode/deletion change inside this set still does.
-  const scopePaths = dependencies.measure ? [] : verificationScopePaths(workItem, worktree)
+  const scopePaths = dependencies.measure ? [] : verificationScopePaths(workItem, worktree, baseRef)
   if (!dependencies.measure && !scopePaths.length) throw new Error('path-scoped evidence requires at least one changed or implementation-reported path')
   const attestedCodeState = dependencies.measure
     ? after
-    : codeFingerprint(worktree, undefined, { scopePaths })
+    : codeFingerprint(worktree, baseRef, { scopePaths })
   const completedAt = now()
   const bundle = {
     runId: `evidence-${completedAt.replace(/[^0-9]/g, '').slice(0, 14)}-${evidencePlanFingerprint(plan).slice(0, 8)}`,
@@ -226,7 +226,7 @@ export function selfTest() {
 
 if (process.argv.includes('--self-test')) selfTest()
 else if (process.argv.includes('--help')) {
-  console.log('usage: vnext-evidence.mjs --project <v2-dir> --worktree <path> [--plan <evidence-plan.json>] [--out <evidence.json>]')
+  console.log('usage: vnext-evidence.mjs --project <v2-dir> --worktree <path> [--base <ref>] [--plan <evidence-plan.json>] [--out <evidence.json>]')
 } else if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
     const projectValue = argumentValue('--project')
@@ -243,7 +243,7 @@ else if (process.argv.includes('--help')) {
       : { schemaVersion: 1, projectId: workItem.projectId, commands: workItem.evidenceCommands || [] }
     const output = argumentValue('--out')
     if (output && outputIsInsideWorktree(output, worktree)) throw new Error('--out must be outside the measured worktree so writing evidence cannot invalidate its own receipt')
-    const bundle = runEvidencePlan({ plan, workItem, worktree })
+    const bundle = runEvidencePlan({ plan, workItem, worktree, baseRef: argumentValue('--base') || 'origin/online' })
     if (output) {
       mkdirSync(dirname(resolve(output)), { recursive: true })
       writeFileSync(resolve(output), `${JSON.stringify(bundle, null, 2)}\n`)

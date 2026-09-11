@@ -102,6 +102,7 @@ const SELF_TEST_SCRIPTS = [
   ['lib/rule-injection-telemetry.mjs', '--self-test'],
   ['lib/rule-consumption-regression.mjs', '--self-test'],
   ['lib/pinned-source.mjs', '--self-test'],
+  ['lib/precommit-wiring.mjs', '--self-test'],
   ['lib/rule-pin.mjs', '--self-test'],
   ['lib/waiver-policy.mjs', '--self-test'],
   ['lib/warn-retirement.mjs', '--self-test'],

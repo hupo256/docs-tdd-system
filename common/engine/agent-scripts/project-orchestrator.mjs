@@ -274,7 +274,7 @@ function inspectVNext(id) {
   if (latest) {
     try {
       const scopePaths = latest.codeFingerprint?.scopeMode === 'path-set-v1' ? latest.codeFingerprint.scopePaths : null
-      const current = codeFingerprint(resolveProjectWorktree(id).worktree, undefined, { scopePaths })
+      const current = codeFingerprint(resolveProjectWorktree(id).worktree, config.baseRef || 'origin/online', { scopePaths })
       codeStateFresh = matchesEffectiveCodeState(current, latest.codeFingerprint)
       deliveryCommitted = scopedDeliveryCommitted(resolveProjectWorktree(id).worktree, latest.codeFingerprint)
       if (!codeStateFresh) codeStateProblem = 'code content changed; revalidate evidence only (the signed source review remains reusable while the work item is unchanged)'
@@ -462,6 +462,7 @@ function runAutonomousValidation(id) {
   const evidence = executeScript('vnext-evidence.mjs', [
     '--project', projectDir,
     '--worktree', worktree,
+    '--base', config.baseRef || 'origin/online',
     '--out', evidenceFile,
   ])
   // Exit 1 means commands ran and produced an attested failing bundle. Feed it into verify so the
@@ -480,6 +481,7 @@ function runAutonomousValidation(id) {
     '--surfaces', surfacesFile,
     '--project', projectDir,
     '--worktree', worktree,
+    '--base', config.baseRef || 'origin/online',
     '--write',
     '--out', projectDir,
   ])

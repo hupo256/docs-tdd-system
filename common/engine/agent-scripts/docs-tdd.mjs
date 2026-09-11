@@ -285,7 +285,7 @@ if (projectWorkflowVersion === 2 && command === 'evidence') {
     ? resolve(commandArgs[worktreeIndex + 1])
     : resolveProjectWorktree(projectId).worktree
   process.exit(run([
-    join(scriptDir, 'vnext-evidence.mjs'), '--project', resolveProjectRoot(projectId), '--worktree', worktree,
+    join(scriptDir, 'vnext-evidence.mjs'), '--project', resolveProjectRoot(projectId), '--worktree', worktree, '--base', config.baseRef || 'origin/online',
     ...(planIndex >= 0 ? ['--plan', resolve(commandArgs[planIndex + 1])] : []),
     ...(outputIndex >= 0 ? ['--out', resolve(commandArgs[outputIndex + 1])] : []),
   ], docsRoot))
@@ -341,6 +341,7 @@ if (projectWorkflowVersion === 2 && command === 'verify') {
   }
   verifyArgs.push(
     '--worktree', worktree,
+    '--base', config.baseRef || 'origin/online',
     '--write', '--out', projectDir,
     ...(commandArgs.includes('--json') ? ['--json'] : []),
   )

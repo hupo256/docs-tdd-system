@@ -27,6 +27,7 @@ docs-tdd run <PROJECT-ID> --prd <src>      # v2 Autopilot：断点续跑、自�
 docs-tdd context <PROJECT-ID> <SCENARIO>   # 按场景生成默认 brief/compact 规则包；可显式覆盖模式
 docs-tdd kickoff <PROJECT-ID> --prd <src>  # 兼容入口：默认创建 v2；显式 v1 加 --legacy
 docs-tdd verify  <PROJECT-ID> --input <json> # v2 唯一正式出口，非 PASS 阻断
+vnext-delivery-guard.mjs --project <ID> ... # pre-commit/CI 只读校验 PASS、指纹与完整改动集合
 docs-tdd status|next|resume <PROJECT-ID>   # 状态、唯一下一步、断点恢复
 docs-tdd source-update <PROJECT-ID> --input X # 登记后到的 Figma/API 快照并触发增量对齐
 docs-tdd checkpoint <PROJECT-ID> --input X    # Agent 回写实现/修复 checkpoint；非日常人工操作

@@ -25,7 +25,7 @@ function normalizeCurrentSources(workItem, sourceDocuments, revision) {
   })
 }
 
-export function scaffoldVerifyInput({ projectDir, worktreePath }) {
+export function scaffoldVerifyInput({ projectDir, worktreePath, baseRef = 'origin/online' }) {
   if (!projectDir) throw new Error('--project is required for scaffold-input')
   if (!worktreePath) throw new Error('--worktree is required for scaffold-input')
   const workItemPath = resolve(projectDir, 'work-item.json')
@@ -34,7 +34,7 @@ export function scaffoldVerifyInput({ projectDir, worktreePath }) {
     const fullPath = isAbsolute(source.path) ? source.path : join(docsSystemRoot, source.path)
     return { path: source.path, content: readFileSync(fullPath, 'utf8') }
   })
-  const code = codeFingerprint(resolve(worktreePath))
+  const code = codeFingerprint(resolve(worktreePath), baseRef)
   return {
     workItem,
     currentRevision: workItem.sourceSnapshot?.revision || 'TODO: current revision',
@@ -167,9 +167,9 @@ function usage() {
   vnext-verify.mjs --normalize-sources <input.json>
   vnext-verify.mjs --prepare-review <input.json>
   vnext-verify.mjs --init <work-item.json> --out <v2-project-dir>
-  vnext-verify.mjs --input <verified-input.json> --worktree <path> [--write --out <v2-project-dir>] [--json] [--shadow]
-  vnext-verify.mjs --evidence <evidence.json> [--surfaces <surfaces-report.json>] --project <v2-project-dir> --worktree <path> [--write --out <v2-project-dir>] [--json]
-  vnext-verify.mjs --scaffold-input --project <v2-project-dir> --worktree <path>
+  vnext-verify.mjs --input <verified-input.json> --worktree <path> [--base <ref>] [--write --out <v2-project-dir>] [--json] [--shadow]
+  vnext-verify.mjs --evidence <evidence.json> [--surfaces <surfaces-report.json>] --project <v2-project-dir> --worktree <path> [--base <ref>] [--write --out <v2-project-dir>] [--json]
+  vnext-verify.mjs --scaffold-input --project <v2-project-dir> --worktree <path> [--base <ref>]
 
 normalize-sources input: { currentRevision, sourceDocuments }
 prepare-review input:   { workItem, currentRevision, sourceDocuments }
@@ -310,7 +310,7 @@ if (process.argv.includes('--self-test')) {
     if (process.argv.includes('--scaffold-input')) {
       const projectDir = argumentValue('--project')
       const worktreePath = argumentValue('--worktree')
-      console.log(JSON.stringify(scaffoldVerifyInput({ projectDir, worktreePath }), null, 2))
+      console.log(JSON.stringify(scaffoldVerifyInput({ projectDir, worktreePath, baseRef: argumentValue('--base') || 'origin/online' }), null, 2))
       process.exit(0)
     }
     if (normalizePath) console.log(JSON.stringify(normalizeSourceInput(loadInput(normalizePath)), null, 2))
@@ -340,7 +340,7 @@ if (process.argv.includes('--self-test')) {
         ? input.evidence.codeFingerprint.scopePaths
         : null
       const result = runVNextVerification(input, {
-        currentCodeState: codeFingerprint(resolve(worktreePath), undefined, { scopePaths }),
+        currentCodeState: codeFingerprint(resolve(worktreePath), argumentValue('--base') || 'origin/online', { scopePaths }),
         mode,
       })
       if (process.argv.includes('--write')) {

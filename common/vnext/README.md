@@ -107,6 +107,15 @@ node common/engine/agent-scripts/docs-tdd.mjs run PR-01234
 
 取得 authoritative PASS 后，`run` 只 `git add`/`git commit --only` 当前 `path-set-v1` 冻结路径；其他已暂存或未暂存文件不会被带入。commit hook 若改写相关字节，状态会回到重验而不是沿用旧绿灯。Autopilot 永不执行 `git push`。
 
+本地安装器生成的 pre-commit 会在 `verify-code-rules` 后自动执行 v2 delivery guard。若团队 hook 只通过 JS/TS glob 的 lint-staged 调 wrapper，安装器不会误判为完整接线，而会保留团队 hook并追加无条件的个人兜底。CI 需同时显式接入：
+
+```bash
+node <docs-root>/common/engine/agent-scripts/verify-code-rules.mjs --project "$DOCS_TDD_PROJECT_ID"
+node <docs-root>/common/engine/agent-scripts/vnext-delivery-guard.mjs --project "$DOCS_TDD_PROJECT_ID" --worktree "$CI_PROJECT_DIR" --base "$CI_MERGE_REQUEST_DIFF_BASE_SHA"
+```
+
+Guard 只读且 fail-closed；它核验 `enforced PASS`、work-item/result 完整性、CLI-attested evidence 与当前内容指纹。pre-commit 使用 `--changed-source staged`，只要求本次提交集合等于冻结路径，不会因工作区中未提交的无关改动误杀；CI 默认使用相对 base 的完整分支改动集合。非 v2 分支自动不适用。`doctor` 只有在 CI 配置同时出现两个 guard marker 时才报告 CI 已接线。
+
 ### Figma / API 晚到
 
 新项目在 intake 时将 Figma 和 API 标记为 `unknown + pending`。需求抽取时必须分别分类为：
