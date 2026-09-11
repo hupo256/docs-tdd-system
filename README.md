@@ -117,15 +117,77 @@ node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs doctor
 
 ### 默认：v3.1 正式工作流
 
-v3.1 对外作为当前产品版本；下列项目文件继续使用 `workflowVersion: 2` 作为第二代协议的稳定兼容标识。
+v3.1 是当前产品版本；项目文件继续使用 `workflowVersion: 2` 作为第二代协议的稳定兼容标识。风险等级 `V0/V1/V2` 也不是产品版本：V0 是严格受限的局部微改，V1 是多影响面或中等风险，V2 是资金、权限、新 API、跨应用等高风险变更并要求人工确认范围。
 
-1. `docs-tdd run PR-01234 --prd <source>` 创建 `workflowVersion: 2` 项目；项目存在时同一命令从当前事实恢复。
-2. CLI 返回带稳定 `actionId` 的唯一 action packet；Agent 执行需求抽取、风险分类、独立审查、实现或验证，不要求用户手工选择 Gate。
-3. 状态只落在 `work-item.json`、`latest-result.json`、`runs.jsonl`；旧 `status|next|resume` 仍可用并返回同一判定。
-4. 正式出口仍只认 `mode=enforced,status=passed,ok=true` 且 `autonomous/cli-attested`；failed/blocked 不可交付。
-5. v2 不运行 v1 的 `gate` 或 `changed`。
+```text
+输入 PRD
+  → 建立 work-item 并规范化文本、表格、图片等来源
+  → 抽取原子需求、实现 surface 和验收命令
+  → 启动隔离的 source-only 子会话做独立覆盖审查
+  → 按 scope × risk 路由 V0 / V1 / V2
+  → Agent 在 feature worktree 实现并登记 checkpoint
+  → CLI 执行已审查的 evidence command plan
+  → enforced verify 单一出口
+     ├─ failed：有界自动修复后重新验证
+     ├─ blocked：等待资料或人工决策
+     └─ passed：只提交冻结路径，永不自动 push
+```
 
-详细契约见 [common/vnext/README.md](./common/vnext/README.md)。
+#### 1. PRD-only 启动与断点恢复
+
+```bash
+docs-tdd run PR-01234 --prd <source> # 新项目，PRD 是唯一必需输入
+docs-tdd run PR-01234                # 中断后重复运行，按当前事实恢复
+```
+
+CLI 始终返回带稳定 `actionId` 的唯一 action packet；Agent 只按 `action`、`reason`、`constraints` 执行下一步，不让用户手工选择 Gate，也不从 Markdown 阶段描述猜状态。第二代项目禁止运行第一代的 `gate` 或 `changed`。
+
+#### 2. 结构化需求与机器独立审查
+
+PRD 被确定性转换为 source units，再形成带来源锚点的 requirements、surfaces、Figma/API 依赖和 `evidenceCommands`。需求作者登记身份后，`docs-tdd review` 真正启动另一个 client/session；reviewer 只收到规范化 PRD、候选需求和图片，不得到代码或工具。审查结果由 CLI 本机签名，手写 reviewer JSON、复用同一 session、未处置 finding 或来源漂移都不能形成有效审查。
+
+#### 3. 实现与真实覆盖登记
+
+范围审查通过后，Agent 在 `feature/<PROJECT-ID>` worktree 实现，并通过 checkpoint 回写当前 `actionId`、真实 `changedPaths`、代码搜索得到的 `discoveredSurfaces` 和实际完成的 `coveredSurfaceIds`。CLI 使用 Git 机械核验路径，不接受不存在或未变化的文件凑数。
+
+```bash
+docs-tdd checkpoint PR-01234 --input /tmp/checkpoint.json
+docs-tdd run PR-01234
+```
+
+#### 4. CLI-attested evidence 与单一出口
+
+`run` 会执行独立审查冻结的 argv command plan，并自动组装 surface report 进入 enforced verify。命令假 PASS、shell/no-op 命令、测试期间改写代码、漏覆盖 requirement/surface，或用普通测试冒充必需的 browser runtime evidence，都会 fail-closed。
+
+证据按 `path-set-v1` 绑定相关路径的有效内容，而不是脆弱地只绑定 HEAD：仅提交相同字节或修改无关路径不会使绿灯作废；修改、删除、改权限或改软链目标，只要命中冻结路径，就会自动重新验证。
+
+正式交付必须同时满足：
+
+```text
+mode=enforced
+status=passed
+ok=true
+assuranceMode=autonomous
+evidenceTrust=cli-attested
+```
+
+`failed` 或 `blocked` 均不可交付；外部手填证据只能得到 `assisted-pilot / caller-supplied`，不能成为正式绿灯。代码检查和 browser 检查分别最多自动修复两轮，耗尽后明确升级人工处理，不无限循环。
+
+#### 5. 晚到资料与精确提交
+
+Figma/API 在 intake 阶段可以是 `required + pending`，不阻止 PRD-first 实现；若最终验收依赖它们，则 unresolved 状态不能进入 ready-to-test。资料到达后运行 `docs-tdd source-update`，只处理受影响的增量并重新对齐证据。
+
+取得 authoritative PASS 后，Autopilot 只 `git add` / `git commit --only` 当前冻结路径，不带入其他工作区改动，且永不执行 `git push`。pre-commit delivery guard 会再次校验 PASS、签名、内容指纹和提交集合；远端 CI 仍需在消费仓显式接入同一 guard。
+
+默认工作流状态只持久化三个文件：
+
+```text
+work-item.json       # 当前需求、范围、审查、路由和 blocker
+latest-result.json   # 唯一当前正式结论
+runs.jsonl           # 追加式历史
+```
+
+完整协议、命令和失败条件见 [common/vnext/README.md](./common/vnext/README.md)。
 
 ### 兼容：v1 存量或显式 legacy 项目
 
