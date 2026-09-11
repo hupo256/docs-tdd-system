@@ -216,7 +216,7 @@
           "uniqueItems": true,
           "items": {
             "type": "string",
-            "enum": ["password", "authentication-surface", "multiple-entry-points", "shared-component", "contract-change", "funds", "trading", "permission", "irreversible", "new-api", "cross-app", "fee-semantics", "amount-semantics"]
+            "enum": ["unclassified", "password", "authentication-surface", "multiple-entry-points", "shared-component", "contract-change", "funds", "trading", "permission", "irreversible", "new-api", "cross-app", "fee-semantics", "amount-semantics"]
           }
         },
         "verificationLevel": { "type": "string", "enum": ["V0", "V1", "V2"] },
@@ -243,6 +243,15 @@
           "then": { "required": ["blockerId"] }
         }
       ],
+      "additionalProperties": false
+    },
+    "sourceReadiness": {
+      "type": "object",
+      "required": ["figma", "api"],
+      "properties": {
+        "figma": { "$ref": "#/definitions/lateSource" },
+        "api": { "$ref": "#/definitions/lateSource" }
+      },
       "additionalProperties": false
     },
     "evidenceCommands": {
@@ -306,6 +315,106 @@
         "confirmedBy": { "type": "string", "minLength": 1 },
         "confirmedAt": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
         "fingerprint": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "autopilot": {
+      "type": "object",
+      "required": ["phase", "implementation", "repairAttempts", "lastCheckpointAt"],
+      "properties": {
+        "phase": {
+          "enum": ["intake", "planning", "implementing", "implementation-ready", "validating", "ready-to-test", "blocked"]
+        },
+        "implementation": {
+          "type": "object",
+          "required": ["status", "changedPaths"],
+          "properties": {
+            "status": { "enum": ["pending", "in-progress", "completed"] },
+            "changedPaths": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 },
+              "uniqueItems": true
+            },
+            "discoveredSurfaces": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["surfaceId", "locator"],
+                "properties": {
+                  "surfaceId": { "type": "string", "minLength": 1 },
+                  "locator": { "type": "string", "minLength": 1 }
+                },
+                "additionalProperties": false
+              }
+            },
+            "coveredSurfaceIds": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 },
+              "uniqueItems": true
+            },
+            "msw": {
+              "type": "object",
+              "required": ["workerIntegrated", "handlerIds", "coveredContractIds"],
+              "properties": {
+                "workerIntegrated": { "type": "boolean" },
+                "handlerIds": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+                "coveredContractIds": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true }
+              },
+              "additionalProperties": false
+            },
+            "blockers": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["blockerId", "status", "reason"],
+                "properties": {
+                  "blockerId": { "type": "string", "minLength": 1 },
+                  "status": { "enum": ["open", "resolved"] },
+                  "reason": { "type": "string", "minLength": 1 },
+                  "owner": { "type": "string", "minLength": 1 }
+                },
+                "additionalProperties": false
+              }
+            },
+            "completedAt": { "type": "string", "format": "date-time" }
+          },
+          "additionalProperties": false
+        },
+        "repairAttempts": {
+          "type": "object",
+          "required": ["code", "browser"],
+          "properties": {
+            "code": { "type": "integer", "minimum": 0 },
+            "browser": { "type": "integer", "minimum": 0 }
+          },
+          "additionalProperties": false
+        },
+        "lastCheckpointAt": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "definitions": {
+    "lateSource": {
+      "type": "object",
+      "required": ["requirement", "status", "reason"],
+      "properties": {
+        "requirement": { "enum": ["unknown", "required", "not-required"] },
+        "status": { "enum": ["pending", "available", "integrated", "not-required"] },
+        "reason": { "type": "string", "minLength": 1 },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "source": {
+          "type": "object",
+          "required": ["path", "revision", "fingerprint"],
+          "properties": {
+            "path": { "type": "string", "minLength": 1 },
+            "revision": { "type": "string", "minLength": 1 },
+            "fingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+          },
+          "additionalProperties": false
+        },
+        "integratedFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "integratedAt": { "type": "string", "format": "date-time" }
       },
       "additionalProperties": false
     }

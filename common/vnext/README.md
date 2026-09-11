@@ -27,6 +27,7 @@
 
 ## 当前已落地
 
+- `docs-tdd run <PROJECT-ID> --prd <source>` + `lib/vnext-autopilot.mjs`：PRD-only 新建/恢复入口与纯状态机；`status/next/resume/run` 返回同一个 client-neutral action packet。v2 不再把 `agent/run-state.json` 当作第二状态源。
 - `baseline-observations.json`：用户复盘中可确认的事故事实；与机器指标分离。
 - `baseline.json`：由 `vnext-baseline.mjs --write` 从四个历史项目重复生成。
 - `vnext-work-item.schema.json`：v2 单一业务事实载体的第一版 schema。
@@ -80,6 +81,80 @@ node common/engine/agent-scripts/lib/vnext-coverage-review.mjs --self-test
 node common/engine/agent-scripts/lib/vnext-work-item.mjs --self-test
 node common/engine/agent-scripts/lib/vnext-metrics.mjs --self-test
 ```
+
+## Autopilot 入口
+
+```bash
+# 新项目：PRD 是唯一必需输入
+node common/engine/agent-scripts/docs-tdd.mjs run PR-01234 --prd <source>
+
+# 中断恢复：重复同一命令即可；status/next/resume 返回相同的下一动作判定
+node common/engine/agent-scripts/docs-tdd.mjs run PR-01234
+```
+
+Figma/API 缺失不会在 intake 阶段形成全局阻塞。CLI 输出的 action packet 是客户端无关协议；Claude、Codex、Pi、Cursor 都按 `action`、`reason`、`constraints` 执行，不从 Markdown 阶段文字猜状态。
+
+实现动作完成后，Agent 将 action packet 的 `actionId`、真实 `changedPaths`、代码搜索得到的 `discoveredSurfaces` 与实际覆盖的 `coveredSurfaceIds` 写入临时 checkpoint JSON，再调用：
+
+```bash
+node common/engine/agent-scripts/docs-tdd.mjs checkpoint PR-01234 --input /tmp/checkpoint.json
+node common/engine/agent-scripts/docs-tdd.mjs run PR-01234
+```
+
+第二条命令会自动执行已审查的 evidence command plan，并自动组装 surfaces report 跑 enforced verify。证据保存在 `~/.cache/docs-tdd/evidence/<PROJECT-ID>/`，不会增加项目状态文件。命令退出 1 时仍会把 CLI 签名的失败证据送入 verify，使 Autopilot 真正进入修复分支；只有 runner/协议错误才中断。代码检查与 browser 检查分别最多自动修复两轮，任一域耗尽即输出 `escalate-repair-failure`，禁止无限重试。
+
+`evidencePlan[].runtimeRequired=true` 不是注释字段：同一 requirement 必须另有受审查的 `browser-interaction` argv 命令，runner 与最终出口都会双重检查，普通 Vitest/文案命令不能冒充 runtime evidence。浏览器命令仍遵守 [browser-e2e-mcp.md](../rules/browser-e2e-mcp.md) 的边界：不向业务仓安装 Playwright/Puppeteer；优先把可回归逻辑固化为定向测试，只对确需真实运行时的集成行为使用已有外部 browser adapter。
+
+取得 authoritative PASS 后，`run` 只 `git add`/`git commit --only` 当前 `path-set-v1` 冻结路径；其他已暂存或未暂存文件不会被带入。commit hook 若改写相关字节，状态会回到重验而不是沿用旧绿灯。Autopilot 永不执行 `git push`。
+
+本地安装器生成的 pre-commit 会在 `verify-code-rules` 后自动执行 v2 delivery guard。若团队 hook 只通过 JS/TS glob 的 lint-staged 调 wrapper，安装器不会误判为完整接线，而会保留团队 hook并追加无条件的个人兜底。CI 需同时显式接入：
+
+```bash
+node <docs-root>/common/engine/agent-scripts/verify-code-rules.mjs --project "$DOCS_TDD_PROJECT_ID"
+node <docs-root>/common/engine/agent-scripts/vnext-delivery-guard.mjs --project "$DOCS_TDD_PROJECT_ID" --worktree "$CI_PROJECT_DIR" --base "$CI_MERGE_REQUEST_DIFF_BASE_SHA"
+```
+
+Guard 只读且 fail-closed；它核验 `enforced PASS`、work-item/result 完整性、CLI-attested evidence 与当前内容指纹。pre-commit 使用 `--changed-source staged`，只要求本次提交集合等于冻结路径，不会因工作区中未提交的无关改动误杀；CI 默认使用相对 base 的完整分支改动集合。非 v2 分支自动不适用。`doctor` 只有在 CI 配置同时出现两个 guard marker 时才报告 CI 已接线。
+
+### Figma / API 晚到
+
+新项目在 intake 时将 Figma 和 API 标记为 `unknown + pending`。需求抽取时必须分别分类为：
+
+- `not-required + not-required`：本需求不依赖该资料；
+- `required + pending`：资料尚未到达；不阻断 PRD-first 实现；
+- `required + available/integrated`：资料已被 CLI 指纹化，并需要/已经完成代码对齐。
+
+API 未到但存在已批准场景时，`apiDependency.mode=mock-required`，MSW 只把状态推进到 `implementation-ready`；真实 API 契约尚未到达时，`SOURCE_READINESS` 禁止最终 `ready-to-test`。API/Figma 到达后先把文件放在当前项目 `inbox/`，再运行：
+
+```bash
+node common/engine/agent-scripts/docs-tdd.mjs source-update PR-01234 --input /tmp/source-update.json
+```
+
+`source-update.json` 示例：
+
+```json
+{
+  "kind": "api",
+  "requirement": "required",
+  "status": "available",
+  "reason": "backend contract v3 arrived",
+  "revision": "v3",
+  "path": "apps/web/docs_tdd/prds/PR-01234/inbox/api-v3.md"
+}
+```
+
+CLI 自己读取并计算内容指纹，不接受调用方伪造 hash。到达新版本后输出 `reconcile-late-sources`；Agent 只处理该增量，API 从 mock 切换到 real contract 时必须同时报告最终 MSW 状态。对齐 checkpoint 把 source fingerprint 标为 integrated，之后才恢复 evidence/verify。
+
+### 证据与代码状态绑定
+
+CLI 执行 evidence 前后仍比较整棵有效代码树，测试命令若改写代码或生成未忽略文件会立即失败；持久化的证据身份则冻结为 `path-set-v1`：当前分支相对基线的真实 changed paths，加上实现 checkpoint 报告的路径。checkpoint 路径也会由 Git 机械核验，不能用不存在或未变更的文件凑数。
+
+因此：
+
+- 仅执行 `git commit`、HEAD 改变但相关文件字节不变：证据仍有效；
+- 后续修改无关路径：证据仍有效；
+- 修改、删除、改权限或改软链目标，只要位于冻结路径集合：证据失效并自动重验；
+- 旧结果没有 `scopeMode=path-set-v1` 时继续采用整仓 `contentHash`，不静默放宽历史证据。
 
 ## 独立审查调用边界
 

@@ -11,6 +11,7 @@ import { join } from 'node:path'
 import { REQUIRED_AGENT_CLIENT_IDS, validateAgentClientMatrix, validateRuntimeClientConformance } from './agent-clients.mjs'
 import { createClaudeHookSpecs, createCodexHookSpecs, validateHookContract } from './hook-contract.mjs'
 import { PI_EXTENSION_MARKERS } from './pi-adapter.mjs'
+import { hasUnconditionalTeamPrecommit } from './precommit-wiring.mjs'
 import { findL2Conflicts, findRepoEntryDuplicates, resolveL2Conflicts } from './l2-conflict-detect.mjs'
 import { isCanonicalL1Symlink } from './rule-surface-visibility.mjs'
 
@@ -186,7 +187,7 @@ export function runDoctor(deps) {
 
   // Cursor 没有可信的 PostToolUse hook，非交互写入也可能绕过 Agent hook；CI / pre-commit 是最终兜底。
   const wiring = config.enforcementWiring || {}
-  const ciMarker = wiring.ciMarker || 'verify-code-rules.mjs'
+  const ciMarkers = [...new Set([wiring.ciMarker || 'verify-code-rules.mjs', 'vnext-delivery-guard.mjs'])]
   const ciCandidates = Array.isArray(wiring.ciConfigCandidates) ? wiring.ciConfigCandidates : ['.gitlab-ci.yml', '.github/workflows']
   const ciFiles = []
   for (const candidate of ciCandidates) {
@@ -198,26 +199,32 @@ export function runDoctor(deps) {
       ciFiles.push(abs)
     }
   }
-  const ciWired = ciFiles.some((file) => {
+  const ciContents = ciFiles.flatMap((file) => {
     try {
-      return lstatSync(file).isFile() && readFileSync(file, 'utf8').includes(ciMarker)
+      return lstatSync(file).isFile() ? [readFileSync(file, 'utf8')] : []
     } catch {
-      return false
+      return []
     }
-  })
+  }).join('\n')
+  const missingCiMarkers = ciMarkers.filter((marker) => !ciContents.includes(marker))
+  const ciWired = ciFiles.length > 0 && missingCiMarkers.length === 0
   add(
     'CI-GATE',
     ciWired,
     'warn',
-    ciFiles.length === 0 ? `no CI config found (${ciCandidates.join(', ')}); verify-code-rules CI gate cannot be confirmed` : ciWired ? 'verify-code-rules CI gate is wired' : `CI config present but verify-code-rules gate not wired (expected "${ciMarker}"); Cursor and non-hook commits can bypass the machine rule gate`,
+    ciFiles.length === 0 ? `no CI config found (${ciCandidates.join(', ')}); code-rules + v2 delivery CI guards cannot be confirmed` : ciWired ? 'code-rules + v2 delivery CI guards are wired' : `CI config is missing guard marker(s): ${missingCiMarkers.join(', ')}; Cursor and non-hook commits can bypass a machine gate`,
     ciCandidates[0],
   )
 
   const precommitConfigName = wiring.precommitConfig || 'package.json'
   const precommitMarker = wiring.precommitMarker || 'precommit-verify-code-rules.mjs'
+  const deliveryMarker = wiring.deliveryGuardMarker || 'vnext-delivery-guard.mjs'
   const precommitConfigPath = join(ruleConsumerRoot, precommitConfigName)
   const precommitConfigExists = existsSync(precommitConfigPath)
-  const teamPrecommitWired = precommitConfigExists && readFileSync(precommitConfigPath, 'utf8').includes(precommitMarker)
+  const teamConfigContent = precommitConfigExists ? readFileSync(precommitConfigPath, 'utf8') : ''
+  const trackedPrecommitPath = join(ruleConsumerRoot, '.husky', 'pre-commit')
+  const trackedHookContent = existsSync(trackedPrecommitPath) ? readFileSync(trackedPrecommitPath, 'utf8') : ''
+  const teamPrecommitWired = hasUnconditionalTeamPrecommit({ teamConfigContent, trackedHookContent, teamMarker: precommitMarker, deliveryMarker })
   const hooksPathResult = spawnSync('git', ['config', '--local', '--get', 'core.hooksPath'], { cwd: ruleConsumerRoot, encoding: 'utf8', stdio: 'pipe' })
   const hooksPath = hooksPathResult.status === 0 ? hooksPathResult.stdout.trim() : ''
   const localPrecommitPath = hooksPath ? join(hooksPath.startsWith('/') ? hooksPath : join(ruleConsumerRoot, hooksPath), 'pre-commit') : ''
@@ -228,10 +235,10 @@ export function runDoctor(deps) {
     precommitWired,
     'warn',
     !precommitConfigExists
-      ? `no ${precommitConfigName} found; verify-code-rules pre-commit gate cannot be confirmed`
+      ? `no ${precommitConfigName} found; code-rules + v2 delivery pre-commit guards cannot be confirmed`
       : precommitWired
-        ? `verify-code-rules pre-commit gate is wired (${teamPrecommitWired ? 'team config' : 'personal core.hooksPath'})`
-        : `${precommitConfigName} present but pre-commit gate not wired (expected "${precommitMarker}"); local commits bypass the machine rule gate`,
+        ? `code-rules + v2 delivery pre-commit guards are wired (${teamPrecommitWired ? 'unconditional team hook' : 'personal core.hooksPath'})`
+        : `${precommitConfigName} has the code gate, but the hook does not invoke "${precommitMarker}" or "${deliveryMarker}" unconditionally; deletion/non-JS commits can bypass the v2 delivery guard`,
     localPrecommitWired ? localPrecommitPath : precommitConfigName,
   )
 

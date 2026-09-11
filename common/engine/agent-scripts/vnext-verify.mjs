@@ -2,7 +2,7 @@
 // Formal vNext verifier. It reads one explicit JSON input and emits the authoritative v2 delivery result without mutating v1 state.
 
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { readFileSync, unlinkSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { isAbsolute, join, relative, resolve, sep } from 'node:path'
 import { docsSystemRoot } from './lib/roots.mjs'
@@ -15,6 +15,7 @@ import { normalizeSourceDocuments, readLocalSourceAsset } from './lib/vnext-sour
 import { verifyVNextRouting } from './lib/vnext-risk-route.mjs'
 import { signEvidenceBundle } from './lib/vnext-evidence-receipt.mjs'
 import { coverageFingerprints, verifyVNextCoverage } from './lib/vnext-work-item.mjs'
+import { evaluateSourceReadiness } from './lib/vnext-source-readiness.mjs'
 
 function normalizeCurrentSources(workItem, sourceDocuments, revision) {
   if (!revision?.trim()) throw new Error('currentRevision is required')
@@ -24,7 +25,7 @@ function normalizeCurrentSources(workItem, sourceDocuments, revision) {
   })
 }
 
-export function scaffoldVerifyInput({ projectDir, worktreePath }) {
+export function scaffoldVerifyInput({ projectDir, worktreePath, baseRef = 'origin/online' }) {
   if (!projectDir) throw new Error('--project is required for scaffold-input')
   if (!worktreePath) throw new Error('--worktree is required for scaffold-input')
   const workItemPath = resolve(projectDir, 'work-item.json')
@@ -33,7 +34,7 @@ export function scaffoldVerifyInput({ projectDir, worktreePath }) {
     const fullPath = isAbsolute(source.path) ? source.path : join(docsSystemRoot, source.path)
     return { path: source.path, content: readFileSync(fullPath, 'utf8') }
   })
-  const code = codeFingerprint(resolve(worktreePath))
+  const code = codeFingerprint(resolve(worktreePath), baseRef)
   return {
     workItem,
     currentRevision: workItem.sourceSnapshot?.revision || 'TODO: current revision',
@@ -118,9 +119,10 @@ export function runVNextVerification(input, { currentCodeState, generatedAt, mod
   })
   const routing = verifyVNextRouting(reviewedWorkItem)
   const mswPolicy = evaluateVNextMswPolicy({ workItem: reviewedWorkItem, implementation: input.implementation, blockers: input.blockers })
+  const sourceReadiness = evaluateSourceReadiness(reviewedWorkItem)
   return buildVNextExitResult({
     workItem: reviewedWorkItem,
-    preflightChecks: [...coverage.checks, ...routing.checks, mswPolicy],
+    preflightChecks: [...coverage.checks, ...routing.checks, mswPolicy, sourceReadiness],
     currentCodeState,
     evidence: input.evidence,
     blockers: input.blockers,
@@ -165,9 +167,9 @@ function usage() {
   vnext-verify.mjs --normalize-sources <input.json>
   vnext-verify.mjs --prepare-review <input.json>
   vnext-verify.mjs --init <work-item.json> --out <v2-project-dir>
-  vnext-verify.mjs --input <verified-input.json> --worktree <path> [--write --out <v2-project-dir>] [--json] [--shadow]
-  vnext-verify.mjs --evidence <evidence.json> [--surfaces <surfaces-report.json>] --project <v2-project-dir> --worktree <path> [--write --out <v2-project-dir>] [--json]
-  vnext-verify.mjs --scaffold-input --project <v2-project-dir> --worktree <path>
+  vnext-verify.mjs --input <verified-input.json> --worktree <path> [--base <ref>] [--write --out <v2-project-dir>] [--json] [--shadow]
+  vnext-verify.mjs --evidence <evidence.json> [--surfaces <surfaces-report.json>] --project <v2-project-dir> --worktree <path> [--base <ref>] [--write --out <v2-project-dir>] [--json]
+  vnext-verify.mjs --scaffold-input --project <v2-project-dir> --worktree <path> [--base <ref>]
 
 normalize-sources input: { currentRevision, sourceDocuments }
 prepare-review input:   { workItem, currentRevision, sourceDocuments }
@@ -246,6 +248,14 @@ export function selfTest() {
   const pending = runVNextVerification(pendingInput, { currentCodeState: code, generatedAt: '2026-09-04T00:00:03Z' })
   assert.equal(pending.status, 'blocked')
   assert.equal(pending.checks.find((item) => item.code === 'MSW_POLICY').ok, true)
+  const lateApiInput = structuredClone(verifyInput)
+  lateApiInput.workItem.sourceReadiness = {
+    figma: { requirement: 'not-required', status: 'not-required', reason: 'no visual dependency' },
+    api: { requirement: 'required', status: 'pending', reason: 'contract pending' },
+  }
+  const lateApi = runVNextVerification(lateApiInput, { currentCodeState: code, generatedAt: '2026-09-04T00:00:03Z' })
+  assert.equal(lateApi.ok, false)
+  assert.equal(lateApi.checks.find((item) => item.code === 'SOURCE_READINESS').ok, false)
   const needlessMockInput = structuredClone(verifyInput)
   needlessMockInput.implementation.msw = { handlerIds: ['unused-handler'] }
   const needlessMock = runVNextVerification(needlessMockInput, { currentCodeState: code, generatedAt: '2026-09-04T00:00:03Z' })
@@ -300,7 +310,7 @@ if (process.argv.includes('--self-test')) {
     if (process.argv.includes('--scaffold-input')) {
       const projectDir = argumentValue('--project')
       const worktreePath = argumentValue('--worktree')
-      console.log(JSON.stringify(scaffoldVerifyInput({ projectDir, worktreePath }), null, 2))
+      console.log(JSON.stringify(scaffoldVerifyInput({ projectDir, worktreePath, baseRef: argumentValue('--base') || 'origin/online' }), null, 2))
       process.exit(0)
     }
     if (normalizePath) console.log(JSON.stringify(normalizeSourceInput(loadInput(normalizePath)), null, 2))
@@ -326,7 +336,13 @@ if (process.argv.includes('--self-test')) {
         input = loadInput(inputPath)
       }
       const mode = process.argv.includes('--shadow') ? 'shadow' : 'enforced'
-      const result = runVNextVerification(input, { currentCodeState: codeFingerprint(resolve(worktreePath)), mode })
+      const scopePaths = input.evidence?.codeFingerprint?.scopeMode === 'path-set-v1'
+        ? input.evidence.codeFingerprint.scopePaths
+        : null
+      const result = runVNextVerification(input, {
+        currentCodeState: codeFingerprint(resolve(worktreePath), argumentValue('--base') || 'origin/online', { scopePaths }),
+        mode,
+      })
       if (process.argv.includes('--write')) {
         if (!outDir) throw new Error('--write requires --out')
         assertSafeArtifactOutput(worktreePath, outDir)

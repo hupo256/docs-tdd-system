@@ -17,6 +17,7 @@ export const EXIT_EVIDENCE_REQUIREMENTS = Object.freeze({
 
 const evidenceResults = new Set(['pass', 'fail', 'blocked', 'not-applicable'])
 const producerKinds = new Set(['command', 'human'])
+const browserEvidenceKinds = new Set(['browser-interaction'])
 
 function check(code, problems, evidenceIds = []) {
   return { code, ok: problems.length === 0, problems, evidenceIds }
@@ -91,9 +92,20 @@ function requirementEvidenceProblems(workItem, evidence) {
     for (const plan of requirement.evidencePlan || []) {
       const covered = facts.some((fact) => fact.kind === plan.type && (fact.requirementIds || []).includes(requirement.requirementId))
       if (!covered) problems.push(`${requirement.requirementId} has no passing ${plan.type} evidence on current code state`)
+      if (plan.runtimeRequired && !facts.some((fact) => fact.kind === 'browser-interaction' && (fact.requirementIds || []).includes(requirement.requirementId))) {
+        problems.push(`${requirement.requirementId}:${plan.type} requires passing browser-interaction evidence`)
+      }
     }
   }
   return problems
+}
+
+function failureDomainsFor(evidence, ok, blockedBy) {
+  if (ok || blockedBy.length) return []
+  const failedFacts = (evidence?.facts || []).filter((fact) => fact.result === 'fail')
+  if (!failedFacts.length) return ['code']
+  const domains = new Set(failedFacts.map((fact) => browserEvidenceKinds.has(fact.kind) ? 'browser' : 'code'))
+  return [...domains].sort()
 }
 
 function surfaceEvidenceProblems(workItem, evidence) {
@@ -154,6 +166,7 @@ export function buildVNextExitResult({ workItem, preflightChecks = [], currentCo
   ]
   const blockedBy = [...new Set([...openBlockerIds, ...blockedEvidenceIds])]
   const ok = checks.every((item) => item.ok) && blockedBy.length === 0
+  const failureDomains = failureDomainsFor(evidence, ok, blockedBy)
   const result = {
     schemaVersion: 1,
     workflowVersion: 2,
@@ -172,6 +185,7 @@ export function buildVNextExitResult({ workItem, preflightChecks = [], currentCo
     checks,
     summary: summarize(checks),
     blockedBy,
+    failureDomains,
     ...(trustedEvidence ? { evidenceAttestation: { ...evidence.receipt, bundleFingerprint: evidenceBundleFingerprint(evidence) } } : {}),
   }
   return { ...result, resultFingerprint: stableFingerprint(result) }
@@ -199,6 +213,14 @@ export function verifyExitResultIntegrity(result, workItem = null) {
   if (result?.ok !== expectedOk) problems.push(`ok must be derived as ${expectedOk}`)
   if (result?.status !== expectedStatus) problems.push(`status must be derived as ${expectedStatus}`)
   if (JSON.stringify(result?.summary) !== JSON.stringify(expectedSummary)) problems.push('summary does not match checks')
+  if (result?.failureDomains !== undefined) {
+    const validDomains = Array.isArray(result.failureDomains)
+      && new Set(result.failureDomains).size === result.failureDomains.length
+      && result.failureDomains.every((domain) => ['code', 'browser'].includes(domain))
+    if (!validDomains) problems.push('failureDomains must contain unique code/browser values')
+    if (result.status === 'passed' && result.failureDomains.length) problems.push('passed result cannot have failureDomains')
+    if (result.status === 'failed' && !result.failureDomains.length) problems.push('failed result requires at least one failureDomain')
+  }
   if (result?.resultFingerprint !== stableFingerprint(resultBody(result))) problems.push('result fingerprint does not match payload')
   if (workItem && result?.workItemFingerprint !== stableFingerprint(workItem)) problems.push('result does not match work item')
   return { ok: problems.length === 0, problems }
@@ -256,6 +278,17 @@ export function selfTest() {
   assert.equal(stale.checks.find((item) => item.code === 'EVIDENCE_FRESHNESS').ok, true, 'same effective content survives a metadata-only commit')
   const changed = buildVNextExitResult({ workItem, currentCodeState: { ...code, headSha: 'newhead', contentHash: 'content-v2' }, evidence, blockers: [], generatedAt: '2026-09-04T00:00:03Z' })
   assert.equal(changed.checks.find((item) => item.code === 'EVIDENCE_FRESHNESS').ok, false)
+  assert.deepEqual(changed.failureDomains, ['code'])
+  const browserEvidence = structuredClone(evidence)
+  browserEvidence.facts = browserEvidence.facts.map((fact, index) => index === 0
+    ? { ...fact, kind: 'browser-interaction', result: 'fail', producer: { ...fact.producer, exitCode: 1 } }
+    : fact)
+  const browserFailure = buildVNextExitResult({ workItem, currentCodeState: code, evidence: browserEvidence, blockers: [] })
+  assert.deepEqual(browserFailure.failureDomains, ['browser'])
+  const runtimeWorkItem = structuredClone(workItem)
+  runtimeWorkItem.requirements[0].evidencePlan = [{ type: 'pure-logic', runtimeRequired: true }]
+  const runtimeMissing = buildVNextExitResult({ workItem: runtimeWorkItem, currentCodeState: code, evidence, blockers: [] })
+  assert.match(runtimeMissing.checks.find((item) => item.code === 'REQUIREMENT_EVIDENCE').problems.join(' '), /browser-interaction/)
   const forged = structuredClone(passed)
   forged.checks[0].ok = false
   assert.equal(verifyExitResultIntegrity(forged).ok, false)

@@ -9,7 +9,7 @@ import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs'
 import { dirname, isAbsolute, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { codeFingerprint, matchesEffectiveCodeState } from './lib/fingerprint.mjs'
+import { changedCodePaths, codeFingerprint, matchesEffectiveCodeState } from './lib/fingerprint.mjs'
 import { evidencePlanFingerprint, signEvidenceBundle, verifyEvidenceReceipt } from './lib/vnext-evidence-receipt.mjs'
 import { EXIT_EVIDENCE_REQUIREMENTS } from './lib/vnext-exit.mjs'
 
@@ -69,6 +69,9 @@ export function evidencePlanProblems(plan, workItem) {
   for (const requirement of (workItem?.requirements || []).filter((item) => item.status === 'doing')) {
     for (const evidence of requirement.evidencePlan || []) {
       if (!commands.some((command) => command.kind === evidence.type && (command.requirementIds || []).includes(requirement.requirementId))) problems.push(`evidence plan does not cover ${requirement.requirementId}:${evidence.type}`)
+      if (evidence.runtimeRequired && !commands.some((command) => command.kind === 'browser-interaction' && (command.requirementIds || []).includes(requirement.requirementId))) {
+        problems.push(`evidence plan does not cover runtime-required ${requirement.requirementId}:${evidence.type} with browser-interaction`)
+      }
     }
     for (const surface of (requirement.affectedSurfaces || []).filter((item) => item.disposition === 'implement')) {
       if (!commands.some((command) => (command.surfaceIds || []).includes(surface.surfaceId))) problems.push(`evidence plan does not cover ${surface.surfaceId}`)
@@ -107,19 +110,26 @@ function executeCommand(spec, worktree) {
   return { startedAt, finishedAt, stdout, stderr, exitCode, signal: result.signal || '' }
 }
 
-export function runEvidencePlan({ plan, workItem, worktree, keyPath, dependencies = {} } = {}) {
+export function verificationScopePaths(workItem, worktree, baseRef = 'origin/online') {
+  return [...new Set([
+    ...changedCodePaths(worktree, baseRef),
+    ...(workItem?.autopilot?.implementation?.changedPaths || []),
+  ])].sort()
+}
+
+export function runEvidencePlan({ plan, workItem, worktree, baseRef = 'origin/online', keyPath, dependencies = {} } = {}) {
   const problems = evidencePlanProblems(plan, workItem)
   if (problems.length) throw new Error(`invalid evidence plan:\n- ${problems.join('\n- ')}`)
   const measure = dependencies.measure || codeFingerprint
   const execute = dependencies.execute || executeCommand
   const now = dependencies.now || (() => new Date().toISOString())
-  const before = measure(worktree)
+  const before = measure(worktree, baseRef)
   if (!before?.isGitRepo || !before.headSha || !before.contentHash) throw new Error('evidence runner requires a valid Git worktree fingerprint')
   const startedAt = now()
   const facts = []
   for (const spec of plan.commands) {
     const execution = execute(spec, worktree)
-    const afterCommand = measure(worktree)
+    const afterCommand = measure(worktree, baseRef)
     if (!matchesEffectiveCodeState(before, afterCommand)) throw new Error(`${spec.evidenceId} changed effective code content; inspect the worktree and rerun from the final code state`)
     const digest = outputHash({ argv: spec.argv, status: execution.exitCode, signal: execution.signal, stdout: execution.stdout, stderr: execution.stderr })
     facts.push({
@@ -144,16 +154,24 @@ export function runEvidencePlan({ plan, workItem, worktree, keyPath, dependencie
       },
     })
   }
-  const after = measure(worktree)
+  const after = measure(worktree, baseRef)
   if (!matchesEffectiveCodeState(before, after)) throw new Error('evidence command changed effective code content; inspect the worktree and rerun from the final code state')
+  // The full-tree fingerprints above are a mutation guard around command execution. The persisted
+  // identity is narrower: freeze the feature's actual changed paths so an unrelated later edit does
+  // not invalidate green evidence, while any byte/mode/deletion change inside this set still does.
+  const scopePaths = dependencies.measure ? [] : verificationScopePaths(workItem, worktree, baseRef)
+  if (!dependencies.measure && !scopePaths.length) throw new Error('path-scoped evidence requires at least one changed or implementation-reported path')
+  const attestedCodeState = dependencies.measure
+    ? after
+    : codeFingerprint(worktree, baseRef, { scopePaths })
   const completedAt = now()
   const bundle = {
     runId: `evidence-${completedAt.replace(/[^0-9]/g, '').slice(0, 14)}-${evidencePlanFingerprint(plan).slice(0, 8)}`,
     capturedAt: completedAt,
     assuranceMode: 'autonomous',
     evidenceTrust: 'cli-attested',
-    codeFingerprint: after,
-    facts: facts.map((fact) => ({ ...fact, codeFingerprint: after })),
+    codeFingerprint: attestedCodeState,
+    facts: facts.map((fact) => ({ ...fact, codeFingerprint: attestedCodeState })),
   }
   return signEvidenceBundle(bundle, { workItem, plan, startedAt, completedAt, keyPath })
 }
@@ -193,6 +211,13 @@ export function selfTest() {
     assert.deepEqual(verifyEvidenceReceipt(bundle, { workItem, currentCodeState: code, keyPath }), [])
     assert.match(evidencePlanProblems({ ...plan, commands: [...plan.commands, plan.commands[0]] }, workItem).join(' '), /duplicate/)
     assert.match(evidencePlanProblems({ ...plan, commands: [{ ...plan.commands[0], argv: ['echo ok'] }] }, workItem).join(' '), /argv/)
+    const runtimeWorkItem = structuredClone(workItem)
+    runtimeWorkItem.requirements[0].status = 'doing'
+    runtimeWorkItem.requirements[0].evidencePlan = [{ type: 'pure-logic', runtimeRequired: true }]
+    assert.match(evidencePlanProblems(plan, runtimeWorkItem).join(' '), /runtime-required.*browser-interaction/)
+    const scoped = { ...code, scopeMode: 'path-set-v1', scopePaths: ['src/x.ts'], contentHash: 'b'.repeat(64) }
+    assert.equal(matchesEffectiveCodeState({ ...scoped, headSha: 'new-commit', dirtyHash: 'unrelated' }, scoped), true)
+    assert.equal(matchesEffectiveCodeState({ ...scoped, contentHash: 'c'.repeat(64) }, scoped), false)
     console.log('vnext-evidence self-test passed')
   } finally {
     try { unlinkSync(keyPath) } catch { /* no-op */ }
@@ -201,7 +226,7 @@ export function selfTest() {
 
 if (process.argv.includes('--self-test')) selfTest()
 else if (process.argv.includes('--help')) {
-  console.log('usage: vnext-evidence.mjs --project <v2-dir> --worktree <path> [--plan <evidence-plan.json>] [--out <evidence.json>]')
+  console.log('usage: vnext-evidence.mjs --project <v2-dir> --worktree <path> [--base <ref>] [--plan <evidence-plan.json>] [--out <evidence.json>]')
 } else if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
     const projectValue = argumentValue('--project')
@@ -218,7 +243,7 @@ else if (process.argv.includes('--help')) {
       : { schemaVersion: 1, projectId: workItem.projectId, commands: workItem.evidenceCommands || [] }
     const output = argumentValue('--out')
     if (output && outputIsInsideWorktree(output, worktree)) throw new Error('--out must be outside the measured worktree so writing evidence cannot invalidate its own receipt')
-    const bundle = runEvidencePlan({ plan, workItem, worktree })
+    const bundle = runEvidencePlan({ plan, workItem, worktree, baseRef: argumentValue('--base') || 'origin/online' })
     if (output) {
       mkdirSync(dirname(resolve(output)), { recursive: true })
       writeFileSync(resolve(output), `${JSON.stringify(bundle, null, 2)}\n`)

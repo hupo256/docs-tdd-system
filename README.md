@@ -23,10 +23,14 @@ AI 编码的两个顽疾：**跳过需求确认直接写码**、**规则散落�
 核心命令统一走 `<mount>/common/engine/agent-scripts/docs-tdd.mjs`。下表中的 `docs-tdd` 是 `node <mount>/common/engine/agent-scripts/docs-tdd.mjs` 的阅读简写：
 
 ```bash
+docs-tdd run <PROJECT-ID> --prd <src>      # v2 Autopilot：断点续跑、自动验证/限次修复、按证据路径 commit（不 push）
 docs-tdd context <PROJECT-ID> <SCENARIO>   # 按场景生成默认 brief/compact 规则包；可显式覆盖模式
-docs-tdd kickoff <PROJECT-ID> --prd <src>  # 默认创建正式 v2；显式 v1 加 --legacy
+docs-tdd kickoff <PROJECT-ID> --prd <src>  # 兼容入口：默认创建 v2；显式 v1 加 --legacy
 docs-tdd verify  <PROJECT-ID> --input <json> # v2 唯一正式出口，非 PASS 阻断
+vnext-delivery-guard.mjs --project <ID> ... # pre-commit/CI 只读校验 PASS、指纹与完整改动集合
 docs-tdd status|next|resume <PROJECT-ID>   # 状态、唯一下一步、断点恢复
+docs-tdd source-update <PROJECT-ID> --input X # 登记后到的 Figma/API 快照并触发增量对齐
+docs-tdd checkpoint <PROJECT-ID> --input X    # Agent 回写实现/修复 checkpoint；非日常人工操作
 docs-tdd recommend <PROJECT-ID>            # 根据当前改动推荐场景
 docs-tdd changed <PROJECT-ID>              # v1 编辑后增量校验；v2 项目拒绝执行
 docs-tdd gate    <PROJECT-ID> <Gx>         # v1 阶段交付门禁；v2 项目拒绝执行
@@ -111,11 +115,11 @@ node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs doctor
 
 ### 默认：v2 正式工作流
 
-1. `docs-tdd kickoff PR-01234 --prd <source>` 创建 `workflowVersion: 2` 项目并初始化 source snapshot / work-item。
-2. 抽取原子需求与 surface，完成独立冷读 coverage review 和风险路由；V2 取得 human scope approval 后才写业务代码。
-3. 在编码 worktree 实现，并采集绑定当前 `headSha + dirtyHash` 的命令、运行时和人工证据。
-4. `docs-tdd verify PR-01234 --input <verify-input.json>` 强制写唯一正式出口。只有 `mode=enforced,status=passed,ok=true` 可交付；failed/blocked 命令返回非零。
-5. `docs-tdd status|next|resume|context` 自动按 v2 路由；不要运行 v1 的 `gate` 或 `changed`。
+1. `docs-tdd run PR-01234 --prd <source>` 创建 `workflowVersion: 2` 项目；项目存在时同一命令从当前事实恢复。
+2. CLI 返回带稳定 `actionId` 的唯一 action packet；Agent 执行需求抽取、风险分类、独立审查、实现或验证，不要求用户手工选择 Gate。
+3. 状态只落在 `work-item.json`、`latest-result.json`、`runs.jsonl`；旧 `status|next|resume` 仍可用并返回同一判定。
+4. 正式出口仍只认 `mode=enforced,status=passed,ok=true` 且 `autonomous/cli-attested`；failed/blocked 不可交付。
+5. v2 不运行 v1 的 `gate` 或 `changed`。
 
 详细契约见 [common/vnext/README.md](./common/vnext/README.md)。
 

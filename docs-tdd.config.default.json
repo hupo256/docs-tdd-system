@@ -56,7 +56,8 @@
     "ciConfigCandidates": [".gitlab-ci.yml", ".github/workflows"],
     "ciMarker": "verify-code-rules.mjs",
     "precommitConfig": "package.json",
-    "precommitMarker": "precommit-verify-code-rules.mjs"
+    "precommitMarker": "precommit-verify-code-rules.mjs",
+    "deliveryGuardMarker": "vnext-delivery-guard.mjs"
   },
   "typecheckRoots": [],
   "productionBuild": [],

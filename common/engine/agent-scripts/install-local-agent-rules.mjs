@@ -7,6 +7,7 @@ import { basename, dirname, join, relative, resolve } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { createCursorAdapter } from './lib/agent-rule-adapters.mjs'
 import { createPiExtension, PI_EXTENSION_RELPATH } from './lib/pi-adapter.mjs'
+import { hasUnconditionalTeamPrecommit } from './lib/precommit-wiring.mjs'
 import { resolveRoots } from './lib/roots.mjs'
 
 const { docsSystemRoot, consumerRoot: repoRoot, config } = resolveRoots()
@@ -244,14 +245,20 @@ function installLocalPrecommit() {
   const wiring = config.enforcementWiring || {}
   const teamConfig = join(repoRoot, wiring.precommitConfig || 'package.json')
   const teamMarker = wiring.precommitMarker || 'precommit-verify-code-rules.mjs'
-  const teamGateWired = existsSync(teamConfig) && readFileSync(teamConfig, 'utf8').includes(teamMarker)
+  const deliveryMarker = wiring.deliveryGuardMarker || 'vnext-delivery-guard.mjs'
   const trackedHuskyHook = join(repoRoot, '.husky', 'pre-commit')
-  if (teamGateWired && existsSync(trackedHuskyHook)) {
+  const trackedHookContent = existsSync(trackedHuskyHook) ? readFileSync(trackedHuskyHook, 'utf8') : ''
+  const teamConfigContent = existsSync(teamConfig) ? readFileSync(teamConfig, 'utf8') : ''
+  // A lint-staged entry can be scoped to TS/JS globs and therefore never run for deletions or other
+  // delivery paths. Trust the team hook only when its unconditional hook body names the wrapper (or
+  // the delivery guard directly); otherwise install a personal outer hook that always runs it.
+  const teamGateWired = hasUnconditionalTeamPrecommit({ teamConfigContent, trackedHookContent, teamMarker, deliveryMarker })
+  if (teamGateWired) {
     if (resolve(repoRoot, priorHooksPath || '.husky') === resolve(hookDir)) {
       const restore = spawnSync('git', ['config', '--local', 'core.hooksPath', '.husky'], { cwd: repoRoot, encoding: 'utf8' })
       if (restore.status !== 0) throw new Error(`cannot restore team core.hooksPath: ${restore.stderr.trim()}`)
     }
-    console.log('local pre-commit: existing team Husky/lint-staged gate retained')
+    console.log('local pre-commit: existing unconditional team code + delivery gate retained')
     return
   }
   const priorHook = existsSync(trackedHuskyHook)

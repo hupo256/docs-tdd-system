@@ -1,17 +1,21 @@
 #!/usr/bin/env node
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
 import { spawnSync } from 'node:child_process'
-import { dirname, join, relative } from 'node:path'
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
+import { homedir } from 'node:os'
 import { fileURLToPath } from 'node:url'
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 import { resolveProjectWorktree } from './lib/project-status-report.mjs'
 import { decideNext } from './lib/project-decision.mjs'
-import { codeFingerprint, matchesEffectiveCodeState } from './lib/fingerprint.mjs'
+import { changedCodePaths, codeFingerprint, matchesEffectiveCodeState } from './lib/fingerprint.mjs'
 import { sourceTypeFromPrd } from './lib/project-scaffold.mjs'
 import { normalizeSourceDocuments, readLocalSourceAsset } from './lib/vnext-source-units.mjs'
 import { verifyExitResultIntegrity } from './lib/vnext-exit.mjs'
-import { initializeVNextArtifacts } from './lib/vnext-persistence.mjs'
+import { initializeVNextArtifacts, persistVNextWorkItem } from './lib/vnext-persistence.mjs'
+import { applyAutopilotCheckpoint, deriveAutopilotAction, initialAutopilotState } from './lib/vnext-autopilot.mjs'
+import { applySourceUpdate, initialSourceReadiness } from './lib/vnext-source-readiness.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, config } = resolveRoots()
@@ -23,7 +27,7 @@ function option(name, fallback = '') {
   return index === -1 ? fallback : (args[index + 1] ?? fallback)
 }
 
-function run(script, scriptArgs) {
+function executeScript(script, scriptArgs) {
   return spawnSync(process.execPath, [join(scriptDir, script), ...scriptArgs], {
     cwd: repoRoot,
     encoding: 'utf8',
@@ -33,6 +37,17 @@ function run(script, scriptArgs) {
 
 function readJson(file) {
   try { return JSON.parse(readFileSync(file, 'utf8')) } catch { return null }
+}
+
+function runGit(worktree, gitArgs, spawn = spawnSync) {
+  const result = spawn('git', gitArgs, { cwd: worktree, encoding: 'utf8', stdio: 'pipe' })
+  if (result.status !== 0) throw new Error((result.stderr || result.stdout || `git ${gitArgs.join(' ')} failed`).trim())
+  return result.stdout || ''
+}
+
+export function scopedDeliveryCommitted(worktree, codeState, spawn = spawnSync) {
+  if (codeState?.scopeMode !== 'path-set-v1' || !codeState.scopePaths?.length) return true
+  return runGit(worktree, ['status', '--porcelain=v1', '-z', '--', ...codeState.scopePaths], spawn).length === 0
 }
 
 function stateFile(id) {
@@ -90,14 +105,14 @@ function syncAndInit(id, { legacy = true } = {}) {
   const configFile = join(resolveProjectRoot(id), 'agent/lark-sources.json')
   const sources = readJson(configFile)
   if (!sources?.sources?.length) return { ok: false, nextAction: 'sync_prd', error: 'lark-sources.json 缺失或为空' }
-  const sync = run('sync-lark-docs.mjs', ['--config', configFile])
+  const sync = executeScript('sync-lark-docs.mjs', ['--config', configFile])
   if (sync.status !== 0) {
     return { ok: false, nextAction: 'sync_prd', error: (sync.stderr || sync.stdout).trim().slice(0, 1200) }
   }
   const source = sources.sources[0]
   const syncedPath = join(sources.outputDir, source.target)
   if (!legacy) return { ok: true, nextAction: 'vnext_init', syncedPath }
-  const intake = run('prd-intake.mjs', [id, '--init', '--source', syncedPath])
+  const intake = executeScript('prd-intake.mjs', [id, '--init', '--source', syncedPath])
   if (intake.status !== 0) {
     return { ok: false, nextAction: 'initialize_prd_intake', error: (intake.stderr || intake.stdout).trim().slice(0, 1200), syncedPath }
   }
@@ -112,7 +127,7 @@ function kickoffVNext(projectDir, prd, title) {
   mkdirSync(join(projectDir, 'inbox/lark-sync'), { recursive: true })
   mkdirSync(join(projectDir, 'agent'), { recursive: true })
   const branchName = `${config.branchPrefix || 'feature/'}${projectId}`
-  writeFileSync(join(projectDir, 'README.md'), `---\nprojectId: ${projectId}\nstatus: active\nstage: G1\nbranch: ${branchName}\nworktree: ""\nport: ""\nvisualFidelity: standard\nprdSource: ${prd}\nfigmaNode: ""\nlarkEnabled: false\nworkflowVersion: 2\n---\n\n# ${projectId} ${title}\n\n> v2(workflowVersion: 2)正式项目:无 v1 门禁链,工作事实载体是三文件(work-item.json / latest-result.json / runs.jsonl),出口见 common/vnext/README.md。\n\n## 下一步\n\n1. 从 PRD 抽取原子需求(带 sourceAnchor)并填充 work-item.json\n2. 记录 requirementsAuthor 与 evidenceCommands 后运行 \`docs-tdd review ${projectId} --client pi\`（独立 source-only session）\n3. 运行 \`docs-tdd evidence ${projectId} --out <evidence.json>\`（命令计划取自 work-item.json 中已 review 的 evidenceCommands）\n4. 将签名 evidence 放入输入后运行 \`docs-tdd verify ${projectId} --input <verify-input.json> --worktree <wt>\`\n`)
+  writeFileSync(join(projectDir, 'README.md'), `---\nprojectId: ${projectId}\nstatus: active\nstage: G1\nbranch: ${branchName}\nworktree: ""\nport: ""\nvisualFidelity: standard\nprdSource: ${prd}\nfigmaNode: ""\nlarkEnabled: false\nworkflowVersion: 2\n---\n\n# ${projectId} ${title}\n\n> v2 Autopilot 项目：PRD 是唯一必需的开工输入；Figma/API 可后续增量接入。工作事实只保存在 work-item.json、latest-result.json、runs.jsonl。\n\n## 继续开发\n\n运行 \`docs-tdd run ${projectId}\`。CLI 会根据当前事实返回唯一下一动作；正常路径无需手工选择 Gate 或拼装验证输入。\n`)
   const larkOutputDir = String(config.larkOutputDir || `apps/web/docs_tdd/prds/\${projectId}/inbox/lark-sync`).replaceAll('${projectId}', projectId)
   writeFileSync(join(projectDir, 'agent/lark-sources.json'), JSON.stringify({
     projectId,
@@ -150,7 +165,9 @@ function vnextInitWorkItem(projectDir) {
     },
     routing: { scopeClass: 'local', riskSignals: ['unclassified'], verificationLevel: 'V0', routerVersion: 1 },
     apiDependency: { mode: 'no-request', reason: 'kickoff stub before intake; reassess after requirement extraction' },
+    sourceReadiness: initialSourceReadiness(),
     scopeApproval: null,
+    autopilot: initialAutopilotState(),
   }
   initializeVNextArtifacts(projectDir, workItem)
   return true
@@ -169,33 +186,50 @@ function kickoff() {
   }
   if (!existsSync(projectDir)) {
     if (legacy) {
-      const scaffold = run('start-new-project.mjs', [projectId, '--prd', prd, '--title', title])
+      const scaffold = executeScript('start-new-project.mjs', [projectId, '--prd', prd, '--title', title])
       if (scaffold.status !== 0) throw new Error((scaffold.stderr || scaffold.stdout).trim())
     } else {
       kickoffVNext(projectDir, prd, title)
     }
   }
+
+  const result = syncAndInit(projectId, { legacy })
+  if (!legacy) {
+    const initialized = result.ok && vnextInitWorkItem(projectDir)
+    if (!initialized) {
+      print({
+        projectId,
+        workflowVersion: 2,
+        status: 'blocked',
+        currentStage: 'V2-intake',
+        nextAction: result.nextAction,
+        blocker: result.error || 'v2 work-item initialization failed',
+        syncedSource: result.syncedPath || '',
+      })
+      return
+    }
+    print({ ...inspectVNext(projectId), initialized: true, syncedSource: result.syncedPath || '' })
+    return
+  }
+
   let state = writeState(projectId, {
-    workflowVersion: legacy ? 1 : 2,
+    workflowVersion: 1,
     status: 'active',
-    currentStage: legacy ? 'G0' : 'V2-intake',
+    currentStage: 'G0',
     lastAction: 'scaffold_project',
     nextAction: 'sync_prd',
     source: prd,
   })
-  const result = syncAndInit(projectId, { legacy })
-  const vnextInitialized = !legacy && result.ok && vnextInitWorkItem(projectDir)
-  const initialized = legacy ? result.ok : Boolean(vnextInitialized)
   state = writeState(projectId, {
-    status: initialized ? (legacy ? 'waiting_approval' : 'active') : 'blocked',
-    currentStage: initialized ? (legacy ? 'G1' : 'V2-review') : (legacy ? 'G0' : 'V2-intake'),
-    lastAction: initialized ? (legacy ? 'initialize_prd_intake' : 'initialize_vnext_work_item') : 'scaffold_project',
-    nextAction: legacy ? result.nextAction : (vnextInitialized ? 'vnext_extract_requirements' : result.nextAction),
-    blocker: result.error || (!legacy && !vnextInitialized ? 'v2 work-item initialization failed' : ''),
+    status: result.ok ? 'waiting_approval' : 'blocked',
+    currentStage: result.ok ? 'G1' : 'G0',
+    lastAction: result.ok ? 'initialize_prd_intake' : 'scaffold_project',
+    nextAction: result.nextAction,
+    blocker: result.error || '',
     syncedSource: result.syncedPath || '',
     attempts: [...(state.attempts || []), { at: new Date().toISOString(), action: 'sync_and_init', ok: result.ok }],
   })
-  print({ ...state, workflowVersion: legacy ? 1 : 2, vnextWorkItemInitialized: Boolean(vnextInitialized) })
+  print({ ...state, workflowVersion: 1 })
 }
 
 function projectWorkflowVersion(id) {
@@ -222,49 +256,76 @@ function inspectVNext(id) {
   const workItem = readJson(join(projectDir, 'work-item.json'))
   const latest = readJson(join(projectDir, 'latest-result.json'))
   if (!workItem) {
-    return { projectId: id, workflowVersion: 2, status: 'blocked', currentStage: 'V2-intake', nextAction: 'initialize_vnext_work_item', command: `docs-tdd resume ${id}` }
-  }
-  if (!latest) {
-    const reviewReady = workItem.coverageAudit?.verdict === 'pass' && !(workItem.coverageAudit?.unresolved || []).length
     return {
-      projectId: id, workflowVersion: 2, verificationLevel: workItem.routing?.verificationLevel || 'unclassified', status: 'active',
-      currentStage: reviewReady ? 'V2-evidence' : 'V2-review', nextAction: reviewReady ? 'capture_current_code_evidence' : 'complete_independent_coverage_review',
-      command: reviewReady ? `docs-tdd evidence ${id} --out <evidence.json>` : `docs-tdd review ${id} --client pi`,
+      projectId: id,
+      workflowVersion: 2,
+      status: 'blocked',
+      currentStage: 'V2-intake',
+      nextAction: 'initialize-vnext-work-item',
+      command: `docs-tdd run ${id}`,
     }
   }
-  const failedChecks = (latest.checks || []).filter((check) => !check.ok)
-  const integrity = verifyExitResultIntegrity(latest, workItem)
-  let codeStateFresh = false
+
+  const failedChecks = (latest?.checks || []).filter((check) => !check.ok)
+  const integrity = latest ? verifyExitResultIntegrity(latest, workItem) : { ok: true, problems: [] }
+  let codeStateFresh = true
   let codeStateProblem = ''
-  try {
-    const current = codeFingerprint(resolveProjectWorktree(id).worktree)
-    codeStateFresh = matchesEffectiveCodeState(current, latest.codeFingerprint)
-    if (!codeStateFresh) codeStateProblem = 'code content changed; revalidate evidence only (the signed source review remains reusable while the work item is unchanged)'
-  } catch (error) {
-    codeStateProblem = `cannot measure current worktree code state: ${error.message}`
+  let deliveryCommitted = true
+  if (latest) {
+    try {
+      const scopePaths = latest.codeFingerprint?.scopeMode === 'path-set-v1' ? latest.codeFingerprint.scopePaths : null
+      const current = codeFingerprint(resolveProjectWorktree(id).worktree, config.baseRef || 'origin/online', { scopePaths })
+      codeStateFresh = matchesEffectiveCodeState(current, latest.codeFingerprint)
+      deliveryCommitted = scopedDeliveryCommitted(resolveProjectWorktree(id).worktree, latest.codeFingerprint)
+      if (!codeStateFresh) codeStateProblem = 'code content changed; revalidate evidence only (the signed source review remains reusable while the work item is unchanged)'
+    } catch (error) {
+      codeStateFresh = false
+      codeStateProblem = `cannot measure current worktree code state: ${error.message}`
+    }
   }
-  const assuranceTrusted = latest.assuranceMode === 'autonomous' && latest.evidenceTrust === 'cli-attested'
-  const authoritativePass = latest.mode === 'enforced' && latest.status === 'passed' && latest.ok === true && integrity.ok && codeStateFresh && assuranceTrusted
-  const shadowOnly = latest.mode !== 'enforced'
-  const nextAction = vnextVerificationNextAction({ authoritativePass, shadowOnly, integrityOk: integrity.ok, codeStateFresh, assuranceTrusted, status: latest.status })
+  const assuranceTrusted = latest?.mode === 'enforced'
+    && latest?.assuranceMode === 'autonomous'
+    && latest?.evidenceTrust === 'cli-attested'
+  const actionPacket = deriveAutopilotAction({
+    workItem,
+    latestResult: latest,
+    resultIntegrityOk: integrity.ok,
+    codeStateFresh,
+    assuranceTrusted,
+    deliveryCommitted,
+  })
   return {
-    projectId: id, workflowVersion: 2, verificationLevel: latest.level || workItem.routing?.verificationLevel || 'unclassified',
-    status: authoritativePass ? 'complete' : latest.status === 'blocked' ? 'blocked' : 'active',
-    currentStage: authoritativePass ? 'V2-complete' : 'V2-verification',
-    nextAction,
+    projectId: id,
+    workflowVersion: 2,
+    verificationLevel: latest?.level || workItem.routing?.verificationLevel || 'unclassified',
+    status: actionPacket.status,
+    currentStage: `V2-${actionPacket.phase}`,
+    nextAction: actionPacket.action,
+    command: actionPacket.command,
     blockers: [...failedChecks.flatMap((check) => check.problems || [check.code]), ...integrity.problems, ...(codeStateProblem ? [codeStateProblem] : [])],
-    latestResult: { mode: latest.mode, assuranceMode: latest.assuranceMode, evidenceTrust: latest.evidenceTrust, assuranceTrusted, status: latest.status, ok: latest.ok, integrity: integrity.ok, codeStateFresh, authoritative: authoritativePass, runId: latest.runId, generatedAt: latest.generatedAt },
-    command: authoritativePass
-      ? ''
-      : ['capture_cli_attested_evidence', 'revalidate_current_code_evidence'].includes(nextAction)
-        ? `docs-tdd evidence ${id} --out <evidence.json>`
-        : `docs-tdd verify ${id} --input <verify-input.json>`,
+    actionPacket,
+    ...(latest ? {
+      latestResult: {
+        mode: latest.mode,
+        assuranceMode: latest.assuranceMode,
+        evidenceTrust: latest.evidenceTrust,
+        assuranceTrusted,
+        status: latest.status,
+        ok: latest.ok,
+        integrity: integrity.ok,
+        codeStateFresh,
+        authoritative: actionPacket.action === 'complete',
+        deliveryCommitted,
+        runId: latest.runId,
+        generatedAt: latest.generatedAt,
+      },
+    } : {}),
   }
 }
 
 function status() {
   if (projectWorkflowVersion(projectId) === 2) {
-    print({ ...inspectVNext(projectId), stateFile: relative(repoRoot, stateFile(projectId)) })
+    print(inspectVNext(projectId))
     return
   }
   const inputs = loadDecisionInputs(projectId)
@@ -273,21 +334,27 @@ function status() {
 }
 
 function resume() {
-  const stored = readJson(stateFile(projectId))
   if (projectWorkflowVersion(projectId) === 2) {
     const projectDir = resolveProjectRoot(projectId)
     if (!existsSync(join(projectDir, 'work-item.json'))) {
       const result = syncAndInit(projectId, { legacy: false })
       const initialized = result.ok && vnextInitWorkItem(projectDir)
-      writeState(projectId, {
-        workflowVersion: 2, status: initialized ? 'active' : 'blocked', currentStage: initialized ? 'V2-review' : 'V2-intake',
-        nextAction: initialized ? 'vnext_extract_requirements' : result.nextAction, blocker: result.error || '', syncedSource: result.syncedPath || '',
-        attempts: [...(stored?.attempts || []), { at: new Date().toISOString(), action: 'resume_vnext_sync_and_init', ok: Boolean(initialized) }],
-      })
+      if (!initialized) {
+        print({
+          projectId,
+          workflowVersion: 2,
+          status: 'blocked',
+          currentStage: 'V2-intake',
+          nextAction: result.nextAction,
+          blocker: result.error || 'v2 work-item initialization failed',
+        })
+        return
+      }
     }
-    print({ ...inspectVNext(projectId), stateFile: relative(repoRoot, stateFile(projectId)) })
+    print(inspectVNext(projectId))
     return
   }
+  const stored = readJson(stateFile(projectId))
   // 早期阶段（PRD 同步 / intake 初始化）：resume 能真正推进——重跑同步+建档。
   if (stored && ['sync_prd', 'initialize_prd_intake'].includes(stored.nextAction)) {
     const result = syncAndInit(projectId)
@@ -316,6 +383,163 @@ function resume() {
   print({ ...decision, projectId, note, stateFile: relative(repoRoot, stateFile(projectId)) })
 }
 
+function sourceUpdate() {
+  if (projectWorkflowVersion(projectId) !== 2) throw new Error('source-update is a v2-only command')
+  const inputFile = option('--input')
+  if (!inputFile) throw new Error('source-update requires --input <source-update.json>')
+  const update = readJson(inputFile)
+  if (!update) throw new Error(`cannot read source update: ${inputFile}`)
+  const projectDir = resolveProjectRoot(projectId)
+  const workItem = readJson(join(projectDir, 'work-item.json'))
+  if (!workItem) throw new Error(`canonical v2 work item is missing: ${join(projectDir, 'work-item.json')}`)
+
+  let fingerprint = ''
+  let storedPath = ''
+  if (['available', 'integrated'].includes(update.status)) {
+    if (!update.path?.trim()) throw new Error(`${update.status} source update requires path`)
+    const sourcePath = isAbsolute(update.path) ? resolve(update.path) : resolve(repoRoot, update.path)
+    const inbox = resolve(projectDir, 'inbox')
+    const inboxRelative = relative(inbox, sourcePath)
+    if (!inboxRelative || inboxRelative === '..' || inboxRelative.startsWith('../') || isAbsolute(inboxRelative)) {
+      throw new Error(`late source must be a file inside ${inbox}`)
+    }
+    const content = readFileSync(sourcePath)
+    fingerprint = createHash('sha256').update(content).digest('hex')
+    storedPath = relative(docsRoot, sourcePath)
+  }
+
+  const next = applySourceUpdate(workItem, update, { fingerprint, storedPath })
+  persistVNextWorkItem(projectDir, next)
+  print(inspectVNext(projectId))
+}
+
+function checkpoint() {
+  if (projectWorkflowVersion(projectId) !== 2) throw new Error('checkpoint is a v2-only command')
+  const inputFile = option('--input')
+  if (!inputFile) throw new Error('checkpoint requires --input <checkpoint.json>')
+  const projectDir = resolveProjectRoot(projectId)
+  const workItem = readJson(join(projectDir, 'work-item.json'))
+  if (!workItem) throw new Error(`canonical v2 work item is missing: ${join(projectDir, 'work-item.json')}`)
+  const latestResult = readJson(join(projectDir, 'latest-result.json'))
+  const checkpointInput = readJson(inputFile)
+  if (!checkpointInput) throw new Error(`cannot read checkpoint: ${inputFile}`)
+  if (checkpointInput.outcome === 'completed') {
+    const actualChangedPaths = new Set(changedCodePaths(resolveProjectWorktree(projectId).worktree, config.baseRef || 'origin/online'))
+    const unverifiedPaths = (checkpointInput.changedPaths || []).filter((path) => !actualChangedPaths.has(path))
+    if (unverifiedPaths.length) throw new Error(`checkpoint paths are not changed from ${config.baseRef || 'origin/online'}: ${unverifiedPaths.join(', ')}`)
+  }
+  const next = applyAutopilotCheckpoint(workItem, checkpointInput, { latestResult })
+  persistVNextWorkItem(projectDir, next)
+  print(inspectVNext(projectId))
+}
+
+function runAutonomousValidation(id) {
+  const projectDir = resolveProjectRoot(id)
+  const workItem = readJson(join(projectDir, 'work-item.json'))
+  const implementation = workItem?.autopilot?.implementation
+  if (!implementation || implementation.status !== 'completed') {
+    return { ok: false, step: 'preflight', error: 'implementation checkpoint is not complete' }
+  }
+  let worktree
+  try {
+    worktree = resolveProjectWorktree(id).worktree
+  } catch (error) {
+    return { ok: false, step: 'worktree', error: error.message }
+  }
+
+  const evidenceRoot = join(homedir(), '.cache/docs-tdd/evidence', id)
+  mkdirSync(evidenceRoot, { recursive: true })
+  const runDir = mkdtempSync(join(evidenceRoot, 'run-'))
+  const evidenceFile = join(runDir, 'evidence.json')
+  const surfacesFile = join(runDir, 'surfaces.json')
+  writeFileSync(surfacesFile, `${JSON.stringify({
+    discoveredSurfaces: implementation.discoveredSurfaces || [],
+    coveredSurfaceIds: implementation.coveredSurfaceIds || [],
+    ...(implementation.msw ? { msw: implementation.msw } : {}),
+    blockers: implementation.blockers || [],
+  }, null, 2)}\n`)
+
+  const evidence = executeScript('vnext-evidence.mjs', [
+    '--project', projectDir,
+    '--worktree', worktree,
+    '--base', config.baseRef || 'origin/online',
+    '--out', evidenceFile,
+  ])
+  // Exit 1 means commands ran and produced an attested failing bundle. Feed it into verify so the
+  // persisted result can drive the bounded repair loop. Exit 2 is a runner/protocol failure.
+  if (evidence.status !== 0 && evidence.status !== 1) {
+    return {
+      ok: false,
+      step: 'evidence',
+      evidenceDir: runDir,
+      error: (evidence.stderr || evidence.stdout).trim().slice(0, 2000),
+    }
+  }
+
+  const verify = executeScript('vnext-verify.mjs', [
+    '--evidence', evidenceFile,
+    '--surfaces', surfacesFile,
+    '--project', projectDir,
+    '--worktree', worktree,
+    '--base', config.baseRef || 'origin/online',
+    '--write',
+    '--out', projectDir,
+  ])
+  return {
+    ok: verify.status === 0,
+    step: 'verify',
+    evidenceExitCode: evidence.status,
+    evidenceDir: runDir,
+    output: (verify.stdout || '').trim().slice(0, 4000),
+    error: verify.status === 0 ? '' : (verify.stderr || verify.stdout).trim().slice(0, 2000),
+  }
+}
+
+export function commitScopedPaths(worktree, id, paths, spawn = spawnSync) {
+  if (!paths?.length) return { ok: false, step: 'commit', error: 'automatic commit requires path-set-v1 evidence scope' }
+  try {
+    runGit(worktree, ['add', '--', ...paths], spawn)
+    runGit(worktree, ['commit', '--only', '-m', `feat: implement ${id}`, '--', ...paths], spawn)
+    const commitSha = runGit(worktree, ['rev-parse', 'HEAD'], spawn).trim()
+    return { ok: true, step: 'commit', commitSha, paths, pushed: false }
+  } catch (error) {
+    return { ok: false, step: 'commit', error: error.message, paths, pushed: false }
+  }
+}
+
+function commitEvidenceScope(id) {
+  const projectDir = resolveProjectRoot(id)
+  const latest = readJson(join(projectDir, 'latest-result.json'))
+  const paths = latest?.codeFingerprint?.scopeMode === 'path-set-v1' ? latest.codeFingerprint.scopePaths : []
+  return commitScopedPaths(resolveProjectWorktree(id).worktree, id, paths)
+}
+
+function autopilotRun() {
+  const projectDir = resolveProjectRoot(projectId)
+  if (!existsSync(projectDir)) {
+    kickoff()
+    return
+  }
+  if (projectWorkflowVersion(projectId) !== 2 || !existsSync(join(projectDir, 'work-item.json'))) {
+    resume()
+    return
+  }
+  const before = inspectVNext(projectId)
+  if (before.nextAction === 'commit-ready-change') {
+    const automation = commitEvidenceScope(projectId)
+    const after = inspectVNext(projectId)
+    print({ ...after, automation })
+    return
+  }
+  if (!['capture-cli-evidence', 'revalidate-current-code-evidence', 'refresh-invalid-verification'].includes(before.nextAction)) {
+    print(before)
+    return
+  }
+  const automation = runAutonomousValidation(projectId)
+  const after = inspectVNext(projectId)
+  print({ ...after, automation })
+}
+
 function selfTest() {
   // 阶段/阻塞判定的完整用例在 lib/project-decision.mjs --self-test；这里只验编排层的结构化装配：
   // inferState 只吃 JSON（不再有 markdown 分支），且 decideNext 能从最小结构化输入产出决策。
@@ -324,6 +548,11 @@ function selfTest() {
   const advance = inferState({ projectExists: true, gateResult: { gate: 'G5', ok: true } })
   const complete = inferState({ projectExists: true, gateResult: { gate: 'G8', ok: true } })
   const decision = decideNext({ projectId: 'PR-00001', projectExists: true, gateResult: { gate: 'G5', ok: false, checks: [{ ruleId: 'DOC-G5-003', ok: false, severity: 'error', message: 'x' }] } })
+  const gitCalls = []
+  const commit = commitScopedPaths('/tmp/worktree', 'PR-00001', ['src/a.ts'], (_command, gitArgs) => {
+    gitCalls.push(gitArgs)
+    return { status: 0, stdout: gitArgs[0] === 'rev-parse' ? 'abc123\n' : '', stderr: '' }
+  })
   if (
     a.nextAction !== 'scaffold_project'
     || blocked.nextAction !== 'fix_gate_failures'
@@ -334,19 +563,28 @@ function selfTest() {
     || vnextVerificationNextAction({ authoritativePass: false, shadowOnly: false, integrityOk: true, codeStateFresh: false, status: 'passed' }) !== 'revalidate_current_code_evidence'
     || vnextVerificationNextAction({ authoritativePass: false, shadowOnly: false, integrityOk: false, codeStateFresh: false, assuranceTrusted: false, status: 'passed' }) !== 'refresh_invalid_verification'
     || vnextVerificationNextAction({ authoritativePass: false, shadowOnly: false, integrityOk: true, codeStateFresh: true, assuranceTrusted: false, status: 'passed' }) !== 'capture_cli_attested_evidence'
+    || !scopedDeliveryCommitted('/tmp/worktree', { scopeMode: 'path-set-v1', scopePaths: ['src/a.ts'] }, () => ({ status: 0, stdout: '', stderr: '' }))
+    || scopedDeliveryCommitted('/tmp/worktree', { scopeMode: 'path-set-v1', scopePaths: ['src/a.ts'] }, () => ({ status: 0, stdout: ' M src/a.ts', stderr: '' }))
+    || !commit.ok
+    || commit.commitSha !== 'abc123'
+    || gitCalls.some((gitArgs) => gitArgs[0] === 'push')
+    || !gitCalls.some((gitArgs) => gitArgs[0] === 'commit' && gitArgs.includes('--only'))
   ) process.exit(1)
   console.log('project-orchestrator self-test passed (structured inferState + decideNext wiring)')
 }
 
 if (args.includes('--self-test')) selfTest()
 else if (!new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(projectId || '')) {
-  console.error('usage: project-orchestrator.mjs <kickoff|status|resume|next> PR-01234 [--prd <source>] [--title <name>]')
+  console.error('usage: project-orchestrator.mjs <run|kickoff|status|resume|next|source-update|checkpoint> PR-01234 [--prd <source>] [--title <name>] [--input <json>]')
   process.exit(1)
 } else {
   try {
-    if (command === 'kickoff') kickoff()
+    if (command === 'run') autopilotRun()
+    else if (command === 'kickoff') kickoff()
     else if (command === 'status' || command === 'next') status()
     else if (command === 'resume') resume()
+    else if (command === 'source-update') sourceUpdate()
+    else if (command === 'checkpoint') checkpoint()
     else throw new Error(`unknown orchestrator command: ${command}`)
   } catch (error) {
     console.error(error.message)

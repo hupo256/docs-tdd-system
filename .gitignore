@@ -9,6 +9,7 @@ node_modules/
 # never commit secrets if any script config lands here
 .env
 .env.*
+.vnext-*-key-*
 
 # Lark bot local secret configs (webhookUrl/secret/appToken/chat_id) — machine-local only.
 # Singleton runtime config now lives under common/lark-bot/runtime/; legacy per-project path kept for safety.

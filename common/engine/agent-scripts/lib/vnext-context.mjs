@@ -52,6 +52,7 @@ function renderFull(workItem, result) {
     `Source: revision=${oneLine(workItem.sourceSnapshot.revision)} fingerprint=${short(workItem.coverageAudit.sourceFingerprint)}`,
     `Route: scope=${workItem.routing.scopeClass}; risks=${workItem.routing.riskSignals.join(',') || 'none'}; evidence=${EXIT_EVIDENCE_REQUIREMENTS[level].join(',')}`,
     `API/MSW: ${workItem.apiDependency?.mode || 'UNDECLARED'} — ${oneLine(workItem.apiDependency?.reason || 'must be classified')}`,
+    `Late sources: figma=${workItem.sourceReadiness?.figma?.status || 'legacy'}; api=${workItem.sourceReadiness?.api?.status || 'legacy'}`,
   ]
   if (level === 'V2') {
     const approval = workItem.scopeApproval
