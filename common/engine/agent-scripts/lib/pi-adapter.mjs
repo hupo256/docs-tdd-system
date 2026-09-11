@@ -23,6 +23,8 @@ export const PI_EXTENSION_MARKERS = Object.freeze([
   'before_agent_start',
   'tool_call',
   'tool_result',
+  // 只读 shell 命令的快速路径：证明扩展不会为纯读命令冷启 Node hook。
+  'isReadOnlyShellCommand',
 ])
 
 /**
@@ -38,6 +40,11 @@ export function createPiExtension({ docsSystemRoot }) {
 // that can add an LLM-visible message), then bridges tool events to the shared receipt/code gate.
 // Writes fail closed when the preflight hook did not complete, because tool_call cannot add
 // context to the model request that already happened.
+//
+// Read-only shell commands (git status/diff/log, ls, grep, cat, find, ...) skip the hook
+// subprocess entirely: the shared hook resolves zero write targets for them and returns a
+// plain allow, so skipping is behaviour-identical while removing the Node cold start that
+// otherwise runs on every single bash call.
 import { spawnSync } from "node:child_process";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
@@ -46,50 +53,108 @@ const GATE_SCRIPT = ${JSON.stringify(gateScript)};
 // docs-tdd rule consumer identity: --client pi
 const CLIENT_ARGS = ["--client", "pi"];
 const WRITE_TOOLS = new Set(["edit", "write", "multiedit", "notebookedit", "apply_patch", "bash", "powershell"]);
-let preflightReady = false;
+const readySessions = new Set<string>();
+const preflightFailures = new Map<string, string>();
 
 function sessionId(ctx: { sessionManager: { getSessionFile(): string | undefined } }): string {
   return process.env.PI_SESSION_ID || ctx.sessionManager.getSessionFile() || "pi-session";
 }
 
-function runHook(script: string, payload: unknown, extraArgs: string[] = []): { ok: boolean; stdout: string } {
+function resetPreflight(key: string): void {
+  readySessions.delete(key);
+  preflightFailures.delete(key);
+}
+
+function runHook(script: string, payload: unknown, extraArgs: string[] = []): { ok: boolean; stdout: string; error: string } {
   try {
-    const result = spawnSync("node", [script, ...extraArgs], {
+    const result = spawnSync(process.execPath, [script, ...extraArgs], {
       input: JSON.stringify(payload),
       encoding: "utf8",
       timeout: 20000,
     });
-    return { ok: result.status === 0, stdout: result.stdout || "" };
-  } catch {
-    return { ok: false, stdout: "" };
+    const stderr = (result.stderr || "").trim();
+    const error = result.error instanceof Error
+      ? result.error.message
+      : stderr || (result.status === 0 ? "" : "hook exited with status " + String(result.status));
+    return { ok: result.status === 0 && !result.error, stdout: result.stdout || "", error };
+  } catch (error) {
+    return { ok: false, stdout: "", error: error instanceof Error ? error.message : String(error) };
   }
+}
+
+const READONLY_SHELL_TOOLS = new Set(["bash", "powershell"]);
+
+// fd-dup redirections (2>&1, >&2) point one descriptor at another and are not file writes;
+// strip them before scanning so reads like 'git status 2>&1 | head' still fast-path.
+function stripFdDup(command: string): string {
+  return command.replace(/(^|[\\s;|&])\\d*>\\s*&\\s*\\d+(?=$|[\\s;|&])/g, "$1");
+}
+
+// Conservative superset of the shared hook's write signals (hook-targets.mjs). When none match,
+// the PreToolUse hook resolves zero targets and no unknownWrite — i.e. a plain allow with no
+// injection — so skipping the subprocess is behaviour-identical. Any doubt keeps the signal,
+// which only means "still spawn the hook"; it can never let an actual write skip enforcement.
+const SHELL_WRITE_SIGNALS: RegExp[] = [
+  />{1,2}/,
+  /\\b(?:touch|rm|unlink|tee|truncate|cp|mv)\\b/,
+  /\\bsed\\s+-i\\b/,
+  /\\bperl\\s+-p?i\\b/,
+  /\\b(?:node|deno|bun)\\s+-e\\b/,
+  /\\bpython\\d*\\s+-c\\b/,
+  /\\bruby\\s+-e\\b/,
+  /--write\\b/,
+  /\\*\\*\\* (?:Add|Update|Delete) File:/,
+];
+
+function isReadOnlyShellCommand(command: unknown): boolean {
+  if (typeof command !== "string" || !command.trim()) return false;
+  const normalized = stripFdDup(command);
+  return !SHELL_WRITE_SIGNALS.some((re) => re.test(normalized));
+}
+
+function shellCommandOf(input: unknown): string {
+  if (!input || typeof input !== "object") return "";
+  const record = input as { command?: unknown; cmd?: unknown };
+  if (typeof record.command === "string") return record.command;
+  if (typeof record.cmd === "string") return record.cmd;
+  return "";
 }
 
 export default function (pi: ExtensionAPI) {
   pi.on("session_start", async (_event, ctx) => {
-    preflightReady = false;
+    const key = sessionId(ctx);
+    resetPreflight(key);
     runHook(RULE_HOOK, {
       hook_event_name: "SessionStart",
-      session_id: sessionId(ctx),
+      session_id: key,
       cwd: ctx.cwd,
     }, CLIENT_ARGS);
   });
 
   pi.on("before_agent_start", async (_event, ctx) => {
-    preflightReady = false;
-    const { ok, stdout } = runHook(RULE_HOOK, {
+    const key = sessionId(ctx);
+    resetPreflight(key);
+    const { ok, stdout, error } = runHook(RULE_HOOK, {
       hook_event_name: "BeforeAgentStart",
-      session_id: sessionId(ctx),
+      session_id: key,
       cwd: ctx.cwd,
     }, CLIENT_ARGS);
-    if (!ok || !stdout.trim()) return;
-    let parsed: { hookSpecificOutput?: { additionalContext?: string } };
-    try {
-      parsed = JSON.parse(stdout);
-    } catch {
+    if (!ok) {
+      preflightFailures.set(key, error || "unknown hook failure");
       return;
     }
-    preflightReady = true;
+    let parsed: { hookSpecificOutput?: { additionalContext?: string } };
+    if (stdout.trim()) {
+      try {
+        parsed = JSON.parse(stdout);
+      } catch {
+        preflightFailures.set(key, "rule preflight returned invalid JSON");
+        return;
+      }
+    } else {
+      parsed = {};
+    }
+    readySessions.add(key);
     const context = parsed.hookSpecificOutput?.additionalContext;
     if (!context) return;
     return {
@@ -102,10 +167,11 @@ export default function (pi: ExtensionAPI) {
   });
 
   pi.on("session_compact", async (_event, ctx) => {
-    preflightReady = false;
+    const key = sessionId(ctx);
+    resetPreflight(key);
     runHook(RULE_HOOK, {
       hook_event_name: "PreCompact",
-      session_id: sessionId(ctx),
+      session_id: key,
       cwd: ctx.cwd,
     }, CLIENT_ARGS);
   });
@@ -113,37 +179,52 @@ export default function (pi: ExtensionAPI) {
   pi.on("tool_call", async (event, ctx) => {
     const toolName = String(event.toolName || "").toLowerCase();
     if (!WRITE_TOOLS.has(toolName)) return;
-    if (!preflightReady) return { block: true, reason: "docs_tdd L2 preflight did not complete before this turn. Retry the user turn or reload the extension." };
+    // Read-only shell commands never write repo files; the hook would allow them with no
+    // injection, so skip the Node cold start instead of round-tripping the shared hook.
+    if (READONLY_SHELL_TOOLS.has(toolName) && isReadOnlyShellCommand(shellCommandOf(event.input))) return;
+    const key = sessionId(ctx);
+    const preflightWasReady = readySessions.has(key);
+    const preflightFailure = preflightFailures.get(key);
     const payload = {
       hook_event_name: "PreToolUse",
-      session_id: sessionId(ctx),
+      session_id: key,
       cwd: ctx.cwd,
       tool_use_id: (event as { toolCallId?: string }).toolCallId ?? "",
       tool_name: event.toolName,
       tool_input: event.input ?? {},
     };
-    const { ok, stdout } = runHook(RULE_HOOK, payload, CLIENT_ARGS);
-    if (!ok) return { block: true, reason: "docs_tdd L2 rule hook failed before this write." };
-    if (!stdout.trim()) return;
+    const { ok, stdout, error } = runHook(RULE_HOOK, payload, CLIENT_ARGS);
+    if (!ok) {
+      const detail = error || preflightFailure;
+      return { block: true, reason: "docs_tdd L2 rule hook failed before this write." + (detail ? " Hook failure: " + detail : "") };
+    }
+    if (!stdout.trim()) return { block: true, reason: "docs_tdd L2 rule hook returned empty output before this write." };
     let parsed: { hookSpecificOutput?: { permissionDecision?: string; permissionDecisionReason?: string; additionalContext?: string } };
     try {
       parsed = JSON.parse(stdout);
     } catch {
-      return;
+      return { block: true, reason: "docs_tdd L2 rule hook returned invalid JSON before this write." };
     }
     const out = parsed.hookSpecificOutput;
-    if (!out) return;
+    if (!out) return { block: true, reason: "docs_tdd L2 rule hook returned no decision before this write." };
     if (out.permissionDecision === "deny") {
       return { block: true, reason: out.permissionDecisionReason || "docs_tdd L2 rules require re-reading injected context before this edit." };
     }
     if (out.additionalContext) {
       return { block: true, reason: "docs_tdd discovered rule context after Pi's preflight window. Retry the user turn so the context is visible before editing." };
     }
+    if (!preflightWasReady) {
+      readySessions.add(key);
+      preflightFailures.delete(key);
+    }
   });
 
   pi.on("tool_result", async (event, ctx) => {
     const toolName = String((event as { toolName?: string }).toolName || "").toLowerCase();
     if (!WRITE_TOOLS.has(toolName)) return;
+    // Mirror the tool_call fast-path: a read-only command changed nothing, so the receipt
+    // record and code gate have nothing to reconcile — skip both subprocesses.
+    if (READONLY_SHELL_TOOLS.has(toolName) && isReadOnlyShellCommand(shellCommandOf((event as { input?: unknown }).input))) return;
     const payload = {
       hook_event_name: "PostToolUse",
       session_id: sessionId(ctx),
@@ -172,9 +253,30 @@ function selfTest() {
   assert.ok(ext.includes('/docs/common/engine/agent-scripts/rule-context-hook.mjs'), 'absolute rule hook path')
   assert.ok(ext.includes('/docs/common/engine/agent-scripts/claude-posttooluse-gate.mjs'), 'absolute gate path')
   assert.ok(ext.includes('pi.on("before_agent_start"'), 'injects context before the agent turn')
+  assert.ok(ext.includes('const readySessions = new Set<string>()'), 'isolates preflight readiness by Pi session')
+  assert.ok(ext.includes('readySessions.add(key)'), 'marks successful empty preflight output as ready')
+  assert.ok(!ext.includes('let preflightReady = false'), 'does not share one readiness flag across Pi sessions')
+  assert.ok(ext.includes('spawnSync(process.execPath'), 'runs hooks with the same Node runtime as Pi')
+  assert.ok(ext.includes('const preflightWasReady = readySessions.has(key)'), 'revalidates missing preflight at tool time')
+  assert.ok(ext.includes('rule hook returned empty output before this write'), 'fails closed on empty tool hook output')
   assert.ok(ext.includes('customType: "docs-tdd-rule-context"'), 'returns an LLM-visible preflight message')
   assert.ok(ext.includes('pi.on("tool_call"'), 'wires tool_call')
   assert.ok(ext.includes('pi.on("tool_result"'), 'wires tool_result')
+  assert.ok(ext.includes('const READONLY_SHELL_TOOLS = new Set(["bash", "powershell"])'), 'declares the read-only shell fast-path tool set')
+  assert.ok(ext.includes('function isReadOnlyShellCommand'), 'defines the read-only shell detector')
+  assert.ok(/if \(READONLY_SHELL_TOOLS\.has\(toolName\) && isReadOnlyShellCommand\(shellCommandOf\(event\.input\)\)\) return;/.test(ext), 'tool_call skips the hook for read-only shell commands')
+  assert.ok(/if \(READONLY_SHELL_TOOLS\.has\(toolName\) && isReadOnlyShellCommand\(shellCommandOf\(\(event as \{ input\?: unknown \}\)\.input\)\)\) return;/.test(ext), 'tool_result skips receipt+gate for read-only shell commands')
+  // The generated detector must actually classify common reads as skippable and real writes as not.
+  const detectorSource = ext.slice(ext.indexOf('const SHELL_WRITE_SIGNALS'), ext.indexOf('function isReadOnlyShellCommand'))
+  const stripFdDupSource = ext.slice(ext.indexOf('function stripFdDup'), ext.indexOf('const SHELL_WRITE_SIGNALS'))
+  const asJs = (source) => source.replace(/: RegExp\[\]/g, '').replace(/\(command: string\): string/g, '(command)')
+  const isReadOnly = new Function(`${asJs(stripFdDupSource)}\n${asJs(detectorSource)}\nreturn function isReadOnlyShellCommand(command){ if (typeof command !== 'string' || !command.trim()) return false; const normalized = stripFdDup(command); return !SHELL_WRITE_SIGNALS.some((re) => re.test(normalized)); }`)()
+  for (const readOnly of ['git status --short', 'git diff origin/dev', 'ls -la', 'grep -rn foo src', 'git status 2>&1 | head', 'cat package.json', 'pnpm install']) {
+    assert.ok(isReadOnly(readOnly), `read-only command should fast-path: ${readOnly}`)
+  }
+  for (const write of ['echo x > src/a.ts', 'printf y >> log', 'sed -i s/a/b/ f', 'rm src/a.ts', 'cp /tmp/a src/b.ts', 'node -e "require(\'fs\').writeFileSync(\'a\',\'x\')"', 'biome check --write src']) {
+    assert.ok(!isReadOnly(write), `write command must still spawn the hook: ${write}`)
+  }
   assert.throws(() => createPiExtension({}), /docsSystemRoot is required/)
   assert.equal(PI_EXTENSION_RELPATH, 'extensions/docs-tdd-rules.ts')
   console.log('pi-adapter self-test passed.')
