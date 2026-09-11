@@ -49,6 +49,10 @@ docs-tdd rule-health                       # 规则体检：命中分布、warn 
 
 统一审计入口是 `docs-tdd doctor`：它检查六个 AI 入口是否一个不少、没有未登记入口，是否引用同一组 L1/L2/L3 source fingerprint，以及软链、adapter、Lark runtime 和发布清单是否漂移。需要连门禁回归一起检查时运行 `docs-tdd guard`；任一项失败都不是 PASS。
 
+### 可选 Lark 自动修复链的边界
+
+`common/lark-bot/` 保留独立的消息任务、AI 分析、轻量质量闸和本地提交链，**不接入 v3.1 状态机**。它的 `done` 仅表示候选修复已通过 Worker 最终 diff/Biome 复验并本地提交，审计固定为 `assuranceMode=lark-lightweight`、`deliveryAuthority=false`；高风险改动仍须另取项目级 v3.1 authoritative PASS 才能正式交付。这样既不让群内小修复承担完整项目流程，也不把 Lark 结果误当正式绿灯。
+
 ## 首次接入一个项目
 
 系统可以放在任意绝对路径。接入只需要**一份本地配置 + 一个软链**，不需要理解内部路径解析逻辑。下面以默认挂载位置 `apps/web/docs_tdd` 为例；如果项目结构不同，同时修改软链位置和 `docsMountPath`。

@@ -7,6 +7,12 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-09-11（Lark 轻量闭环与正式交付权分离）
+
+- **不并入 v3.1 状态机**：Lark 保留适合群反馈的独立任务/提交链；`done` 定义为本地候选修复，审计显式写 `assuranceMode=lark-lightweight`、`deliveryAuthority=false`。L2 高风险改动提示项目级 authoritative PASS，但不因此阻断 Lark 候选修复。
+- **Worker 最终回执**：AI 与规范纠正结束后，由 Worker 对最终工作树实跑 diff-check 与触达文件 Biome，回执绑定 `HEAD + diffHash + changedFiles`；失败不提交、不回 done，AI 自报 checks 不再是唯一证据。
+- **路由/提交防串线**：新增任务项目、cwd、hotfix branch 一致性校验，并在开工、终检、提交前锁定真实 git root/branch/HEAD；中途切分支或 AI 自行 commit 会 fail-closed。提交模式、身份回执与结果进入任务审计。
+
 ## 2026-09-11（v3.1 正式定版）
 
 - **版本身份**：当前框架与规则集正式定名为 **docs_tdd v3.1**；`common/rules/ruleset.json` 是机器可读版本源，发布清单随规则链重新生成。项目内 `workflowVersion: 2` 继续作为第二代 work-item 协议的兼容路由标识，不等同于产品版本，也不回写历史项目。
