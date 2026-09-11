@@ -1,12 +1,14 @@
-# docs_tdd — 可移植的 AI 前端开发规则与门禁系统
+# docs_tdd v3.1 — 可移植的 AI 前端开发规则与门禁系统
 
-一套**独立**的 AI 前端开发操作系统：新需求默认使用 v2 的「原始需求 → 独立覆盖审查 → 风险分级 → 当前代码证据 → 单一正式出口」，存量项目兼容 v1 G0–G8 门禁；两条工作流都只认机器可验证证据。引擎与业务仓库通过 `docs-tdd.config.json` + 一个软链解耦；**目前只在一个仓库（`@fameex/web`）真实验证过，移植到第二个仓库需要改动下列锚点**（见[可移植性的真实边界](#可移植性的真实边界)）。
+> 当前正式发布版本：**v3.1**。v3.1 使用第二代 work-item 工作流协议；项目文件中的兼容路由标识仍为 `workflowVersion: 2`，它不是产品发布版本。
+
+一套**独立**的 AI 前端开发操作系统：新需求默认使用第二代 work-item 流程的「原始需求 → 独立覆盖审查 → 风险分级 → 当前代码证据 → 单一正式出口」，存量项目兼容第一代 G0–G8 门禁；两条工作流都只认机器可验证证据。引擎与业务仓库通过 `docs-tdd.config.json` + 一个软链解耦；**目前只在一个仓库（`@fameex/web`）真实验证过，移植到第二个仓库需要改动下列锚点**（见[可移植性的真实边界](#可移植性的真实边界)）。
 
 > 本仓库是从某前端工程中沉淀、抽离出的独立系统，经多轮真实项目迭代。作为个人知识库独立版本管理，不含任何业务机密以外的通用方法论。
 
 ## 它解决什么
 
-AI 编码的两个顽疾：**跳过需求确认直接写码**、**规则散落导致每次重新解释**。docs_tdd v2 用 `work-item.json` 固定原始需求、覆盖审查、风险等级和证据，并由 `latest-result.json` 给出唯一正式结论；v1 的 G0–G8 仅作为存量兼容。AI「已读/已注意」不算数，只认执行契约产出的证据。
+AI 编码的两个顽疾：**跳过需求确认直接写码**、**规则散落导致每次重新解释**。docs_tdd v3.1 用 `work-item.json` 固定原始需求、覆盖审查、风险等级和证据，并由 `latest-result.json` 给出唯一正式结论；第一代 G0–G8 仅作为存量兼容。AI「已读/已注意」不算数，只认执行契约产出的证据。
 
 规则本身遵循「**规则可变多，常驻恒定小**」：AI 开工只常驻读一个路由文件（`common/rules/rule-router.md`，≤5000 字符机器守），其余按场景加载，避免上下文膨胀。
 
@@ -23,10 +25,10 @@ AI 编码的两个顽疾：**跳过需求确认直接写码**、**规则散落�
 核心命令统一走 `<mount>/common/engine/agent-scripts/docs-tdd.mjs`。下表中的 `docs-tdd` 是 `node <mount>/common/engine/agent-scripts/docs-tdd.mjs` 的阅读简写：
 
 ```bash
-docs-tdd run <PROJECT-ID> --prd <src>      # v2 Autopilot：断点续跑、自动验证/限次修复、按证据路径 commit（不 push）
+docs-tdd run <PROJECT-ID> --prd <src>      # v3.1 Autopilot：断点续跑、自动验证/限次修复、按证据路径 commit（不 push）
 docs-tdd context <PROJECT-ID> <SCENARIO>   # 按场景生成默认 brief/compact 规则包；可显式覆盖模式
-docs-tdd kickoff <PROJECT-ID> --prd <src>  # 兼容入口：默认创建 v2；显式 v1 加 --legacy
-docs-tdd verify  <PROJECT-ID> --input <json> # v2 唯一正式出口，非 PASS 阻断
+docs-tdd kickoff <PROJECT-ID> --prd <src>  # 兼容入口：默认创建 workflowVersion 2；显式 v1 加 --legacy
+docs-tdd verify  <PROJECT-ID> --input <json> # 第二代协议唯一正式出口，非 PASS 阻断
 vnext-delivery-guard.mjs --project <ID> ... # pre-commit/CI 只读校验 PASS、指纹与完整改动集合
 docs-tdd status|next|resume <PROJECT-ID>   # 状态、唯一下一步、断点恢复
 docs-tdd source-update <PROJECT-ID> --input X # 登记后到的 Figma/API 快照并触发增量对齐
@@ -113,7 +115,9 @@ node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs doctor
 
 命令统一走 `<mount>/common/engine/agent-scripts/docs-tdd.mjs`（下文简写 `docs-tdd`）。
 
-### 默认：v2 正式工作流
+### 默认：v3.1 正式工作流
+
+v3.1 对外作为当前产品版本；下列项目文件继续使用 `workflowVersion: 2` 作为第二代协议的稳定兼容标识。
 
 1. `docs-tdd run PR-01234 --prd <source>` 创建 `workflowVersion: 2` 项目；项目存在时同一命令从当前事实恢复。
 2. CLI 返回带稳定 `actionId` 的唯一 action packet；Agent 执行需求抽取、风险分类、独立审查、实现或验证，不要求用户手工选择 Gate。
@@ -184,7 +188,7 @@ node <mount>/common/engine/agent-scripts/decommission-worktree.mjs PR-01234
 | --- | --- |
 | [common/rules/](./common/rules/) | 跨项目复用的规则与场景路由 |
 | [common/engine/](./common/engine/) | CLI、门禁脚本、schema 与 golden 夹具 |
-| [common/vnext/](./common/vnext/) | v2 正式工作流、单一出口、基线、历史灰度与切换决策 |
+| [common/vnext/](./common/vnext/) | v3.1 正式工作流、单一出口、基线、历史灰度与切换决策 |
 | [common/lark-bot/](./common/lark-bot/) | 可选的消息接入与任务执行服务：合并话题上下文/图片、注入项目 scope、预取 Figma 规格、按项目路由 bug 回执并自动清理附件 |
 | [prds/](./prds/) | 各项目的文档、状态与证据 |
 | [common/rules/rule-router.md](./common/rules/rule-router.md) | **开工常驻入口**（渐进披露路由） |

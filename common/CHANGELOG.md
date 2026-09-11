@@ -7,6 +7,12 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-09-11（v3.1 正式定版）
+
+- **版本身份**：当前框架与规则集正式定名为 **docs_tdd v3.1**；`common/rules/ruleset.json` 是机器可读版本源，发布清单随规则链重新生成。项目内 `workflowVersion: 2` 继续作为第二代 work-item 协议的兼容路由标识，不等同于产品版本，也不回写历史项目。
+- **正式能力集合**：v3.1 收录 PRD-only Autopilot、隔离子会话审查、CLI-attested evidence、相关路径内容绑定、code/browser 有界修复、后到 Figma/API 增量对齐，以及 authoritative PASS 后按冻结路径提交且永不自动 push。当前契约与操作入口见 [vnext/README.md](./vnext/README.md)。
+- **交付强制边界**：本机 pre-commit 已无条件串联 code-rules 与 `vnext-delivery-guard`；业务仓尚无可识别的远端 CI gate，因此 `--no-verify`、未安装本地 hook 的其他机器或远端直接修改仍缺少服务器侧二次拦截。该限制不伪装成已闭环。
+
 ## 2026-09-10（Hook 止血 + v2 intake/review 防假绿）
 
 - **先探针后切流**：新增 Codex/Claude/Pi capability/probe、统一 16 KiB 组合预算和注入 telemetry；验证通过的客户端改为 allow-with-context，规则消费 ledger 按规则内容 hash 增量复用，commit 不再导致相同规则重复注入，opaque write 仍 fail-closed。

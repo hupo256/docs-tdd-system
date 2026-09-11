@@ -8,7 +8,7 @@
 - 当前工作重点：**PR-99997 搜索弹窗图标间距减半（哨兵）**——最近工作流结果 V2 enforced passed（2026-09-09）。本行由 `update-project-index.mjs --write` 从最近 Gate / verify 活动派生，勿手改。
 - 本地文档目录（唯一真实路径）：`/Users/aven/github/fameex-web/apps/web/docs_tdd/`
 - 文档跟踪：本目录为独立本地 Git 仓库；业务仓挂载路径继续保持 ignore，不提交到业务仓。
-- 当前工作流：2026-09-08 起新需求默认正式 v2；存量项目按 README `workflowVersion` 继续 v1。
+- 当前框架：docs_tdd v3.1；新需求默认使用第二代 work-item 协议（`workflowVersion: 2`），存量项目按 README `workflowVersion` 继续第一代流程。
 
 ## Worktree 与文档 symlink
 

@@ -98,7 +98,7 @@ Agent/Worker 在任意阶段遇需人工确认、需补资料、缺登录账号/
 
 v1 项目进 G0/G1 时必须先记录 Lark 协作能力启用决策；v2 在 work-item/协作输入中按需记录，不为此新增 G 阶段。
 
-通过 [new-project-kickoff.md](./new-project-kickoff.md) 启动时，v2 默认同步来源并初始化 work-item，缺 PRD/Figma/API/QA/账号/测试环境/后台配置/验收数据时登记 blocker；v1 `--legacy` 才进入 G0/G1 并写 `product/06-collaboration.md`。项目已启用主动发群时同时发群索取资料，不等用户追问。
+通过 [new-project-kickoff.md](./new-project-kickoff.md) 启动时，v3.1 默认按 `workflowVersion: 2` 同步来源并初始化 work-item，缺 PRD/Figma/API/QA/账号/测试环境/后台配置/验收数据时登记 blocker；第一代 `--legacy` 项目才进入 G0/G1 并写 `product/06-collaboration.md`。项目已启用主动发群时同时发群索取资料，不等用户追问。
 
 | 能力 | 是否必需 | 决策问题 | 启用后做什么 |
 |------|----------|----------|--------------|

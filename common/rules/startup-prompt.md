@@ -8,7 +8,7 @@
 根据 apps/web/docs_tdd 下的文档，开始新的需求 <PROJECT-ID>，PRD 文档是：<PRD 链接或本地路径>。
 
 请先读取 apps/web/docs_tdd/common/rules/rule-router.md，只按命中场景读取专题文档，不要一次性读取整个 common。
-新项目默认走正式 v2（kickoff 建最小项目与 work-item；抽需求→独立冷读审查→补当前代码证据→docs-tdd verify 写唯一正式出口）。V0/V1/V2 的 failed/blocked 都阻断交付；存量 workflowVersion: 1 项目继续 v1，显式新建 v1 才用 --legacy。
+新项目默认走 docs_tdd v3.1 正式流程（内部兼容标识 `workflowVersion: 2`；kickoff 建最小项目与 work-item；抽需求→独立冷读审查→补当前代码证据→docs-tdd verify 写唯一正式出口）。V0/V1/V2 的 failed/blocked 都阻断交付；存量 `workflowVersion: 1` 项目继续第一代流程，显式新建第一代项目才用 `--legacy`。
 代码静态扫描只 review 新增或已修改文件。
 ```
 
@@ -26,7 +26,7 @@ QA：<链接>
 
 1. 读取 `common/rules/rule-router.md`。
 2. 如需机器路由，读取 `common/rules/rule-index.json` 中的 `new_project` 场景。
-3. 执行统一编排入口（默认 vNext;`--legacy` 回 v1 门禁链）:
+3. 执行统一编排入口（默认 v3.1 第二代协议；`--legacy` 回第一代门禁链）：
 
 ```bash
 node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs kickoff <PROJECT-ID> --prd <PRD> --title <项目短名>

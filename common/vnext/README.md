@@ -1,10 +1,16 @@
-# docs_tdd v2 正式工作流
+# docs_tdd v3.1 正式工作流
 
-> 状态：**正式启用（enforced）**，自 2026-09-08 起作为新需求默认系统。v1 只服务存量 `workflowVersion: 1` 项目和显式 `--legacy` 项目；切换决策见 [cutover-decision-20260908.md](./cutover-decision-20260908.md)。
+> 状态：**正式启用（enforced）**。当前框架发布版本为 **v3.1**，使用第二代 work-item 协议；项目文件中的稳定兼容标识仍为 `workflowVersion: 2`。自 2026-09-08 起，该协议作为新需求默认系统；第一代流程只服务存量 `workflowVersion: 1` 项目和显式 `--legacy` 项目。历史切换决策见 [cutover-decision-20260908.md](./cutover-decision-20260908.md)。
+
+## 版本边界
+
+- **产品发布版本**：v3.1，表示当前整体能力集合。
+- **项目协议标识**：`workflowVersion: 2`，只负责区分第二代 work-item 项目与第一代 G0–G8 项目。
+- v3.1 没有引入不兼容的第三代项目数据模型，因此不伪造 `workflowVersion: 3`，也不迁移或重写历史项目。
 
 ## 不变量
 
-1. vNext 是 `workflowVersion: 2`，不是 v1 上的“快速模式”。
+1. 当前正式流程使用 `workflowVersion: 2`，不是第一代流程上的“快速模式”。
    - 客户端责任边界：本仓只交付 Web 端，App 侧由兄弟团队交付。work-item 中 App surface 统一 `deferred`（owner + batch），纯 App 需求记录在 App 交接批次，不阻塞 Web 出口（规则本体见 `common/rules/change-scope-boundary.md` §1.2）。
 2. 覆盖能力完成并通过历史回放前，不删除或放宽旧 Gate。
 3. 只持久化直接服务于“原始 PRD → 代码落点 → 当前 effective code state 验收证据”的字段。
