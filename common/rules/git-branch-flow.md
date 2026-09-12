@@ -5,11 +5,34 @@
 ## 1. 分支模型
 
 ```
-online ──┬─> feature/<PROJECT-ID>   （新需求，功能分支）
-         └─> fix/<PROJECT-ID>       （bug 修复分支）
+origin/online ──┬─> feature/<PROJECT-ID>              新需求功能分支（人 / 交互 agent）
+                ├─> fix/<PROJECT-ID | 简述>           计划内 bug 修复（人 / 交互 agent），走正常测试发布节奏
+                └─> hotfix/<PROJECT-ID | adhoc>-<id>  lark-bot 专用隔离临时工作分支（bot 自动开）
 ```
 
-- 开新需求/修 bug:一律从**最新 `origin/online`** 切出。功能 `feature/<PROJECT-ID>`（如 `feature/PR-01685`）;修复 `fix/<PROJECT-ID>`。
+### 1.1 三类前缀口径（唯一 taxonomy，防命名漂移）
+
+| 前缀 | 归属 | 语义 | 基线 | 后续 |
+|---|---|---|---|---|
+| `feature/<PROJECT-ID>` | 人 / 交互 agent | 新需求功能分支 | 最新 `origin/online` | 分别合入 dev/test/pre/online |
+| `fix/<PROJECT-ID>`（无项目号时 `fix/<简述>`） | 人 / 交互 agent | **计划内 bug 修复** | 最新 `origin/online` | 同上，走正常测试发布节奏 |
+| `hotfix/<PROJECT-ID\|adhoc>-<id>` | **lark-bot 专用** | bot 无人类 worktree 时开的隔离临时工作分支：**从不自动 push / merge**，落盘待人工 review / 挑拣 | 最新 `origin/online` | 人工 review 后再决定去向 |
+
+- `hotfix/*` 是 lark-bot 的**受认可**前缀（`common/lark-bot/lib/lark-work-context.mjs` 的 `tempWorktreeContextFor`），不是漂移；它与人类 `fix/<ID>` 是**两个不同概念**（bot 隔离草稿分支 vs 人类计划内修复），刻意不同名，禁止互相 rename 对齐。
+- 无「紧急生产热修」的既有实践；真出现紧急线上修复，仍从最新 `origin/online` 切 `fix/<简述>`，不新造流程。
+
+### 1.2 开工前置门（人 / 交互 agent 强制，防误在环境分支直接改）
+
+**改任何业务代码前，先确认工作分支**——这是与 lark-bot `resolveWorkContext` 对等的开工前置检查，交互式链路必须人肉执行：
+
+```bash
+git branch --show-current   # 绝不能是 online / pre / test / dev
+```
+
+- 若当前在 `online / pre / test / dev`（任一环境分支）：**禁止改动**。先 `git fetch origin online`，再从 `origin/online` 切 `feature/<PROJECT-ID>`（新需求）或 `fix/<PROJECT-ID|简述>`（bug）。
+- 切完立即校验基线（见下）。**在环境分支上 `git add`/`commit` 永远是错的**，无论改动多小、多紧急。
+
+- 开新需求/修 bug：一律从**最新 `origin/online`** 切出。功能 `feature/<PROJECT-ID>`（如 `feature/PR-01685`）；修复 `fix/<PROJECT-ID>`（无项目号用 `fix/<简述>`，如 `fix/hichat-redirect-url`）。
 - 切分支前先 `git fetch origin online`,基于 `origin/online` 创建,保证起点最新。
 - **切完立即校验基线**:`git merge-base --is-ancestor origin/online HEAD`,退出码非 0 说明切错基线,必须重切,不得开始编码。（判据方向:`origin/online` 必须是 HEAD 的祖先——即 HEAD 基于最新 online;写反成 `HEAD origin/online` 会在「从陈旧本地 online 切出」这一唯一要拦的场景反而误判通过。gate `verify-project-gate.mjs` GIT-G4-002 用的就是此正确方向。）
 
