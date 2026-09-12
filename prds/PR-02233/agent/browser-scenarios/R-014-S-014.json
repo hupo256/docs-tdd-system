@@ -1,0 +1,9 @@
+{
+  "note": "页面刷新后倒计时从后端冷却截止时间戳恢复的运行时验证计划草稿；实现后按真实选择器/URL 完善。",
+  "steps": [
+    { "tool": "browser_navigate", "arguments": { "url": "${BASE_URL}/zh-CN/account/security" }, "assert": { "contains": "security" } },
+    { "tool": "browser_click", "arguments": { "element": "获取验证码", "ref": "TBD-实现后回填" }, "assert": { "notContains": "错误" } },
+    { "tool": "browser_navigate", "arguments": { "url": "${BASE_URL}/zh-CN/account/security" }, "assert": { "contains": "security" } },
+    { "tool": "browser_snapshot", "arguments": {}, "assert": { "contains": "重新发送" } }
+  ]
+}

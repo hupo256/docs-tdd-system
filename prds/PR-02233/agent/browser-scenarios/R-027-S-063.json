@@ -1,0 +1,7 @@
+{
+  "note": "安全设置 全链路回归场景计划草稿；实现后按真实选择器/URL 完善。",
+  "steps": [
+    { "tool": "browser_navigate", "arguments": { "url": "${BASE_URL}/zh-CN/account" }, "assert": { "contains": "account" } },
+    { "tool": "browser_snapshot", "arguments": {}, "assert": { "contains": "TBD" } }
+  ]
+}

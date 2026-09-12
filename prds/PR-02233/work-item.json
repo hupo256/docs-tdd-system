@@ -1,0 +1,3336 @@
+{
+  "schemaVersion": 1,
+  "workflowVersion": 2,
+  "projectId": "PR-02233",
+  "sourceSnapshot": {
+    "revision": "671",
+    "contentHash": "fa425b96dc8ba5e4d4353c3fbdd67b82471a3915e6627170f8893f8b231a95f1",
+    "sources": [
+      {
+        "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+        "contentHash": "8fae91112803b0affb3d5e9ff56bb844b87d22047f61fe3df3470b68b1609c6a"
+      }
+    ],
+    "assets": [
+      {
+        "sourceId": "SRC-E9340E359735",
+        "path": "prds/PR-02233/inbox/lark-sync/assets/img-001.png",
+        "assetHash": "1e2dc37779c55d4f44fd09d09abb00ca59cbfe06a29844c08b4093d12c02bb8b",
+        "assetStatus": "local",
+        "mediaType": "image/png"
+      },
+      {
+        "sourceId": "SRC-88AE784CEEE0",
+        "path": "prds/PR-02233/inbox/lark-sync/assets/img-002.png",
+        "assetHash": "fe4b12ee82fafe443db222b0374330978a5f59db6983df2b20327a10850af983",
+        "assetStatus": "local",
+        "mediaType": "image/png"
+      },
+      {
+        "sourceId": "SRC-4E02866959D4",
+        "path": "prds/PR-02233/inbox/lark-sync/assets/img-003.png",
+        "assetHash": "f0ba206aa93815de2b0928aed89f1397632c56e600b418e421e6547a739b19be",
+        "assetStatus": "local",
+        "mediaType": "image/png"
+      },
+      {
+        "sourceId": "SRC-0CC76D6FFA98",
+        "path": "prds/PR-02233/inbox/lark-sync/assets/img-004.png",
+        "assetHash": "9b1b92f88281ecd36ff5c17f7311c3e5c307c40a55975d9b3b607731d296c022",
+        "assetStatus": "local",
+        "mediaType": "image/png"
+      },
+      {
+        "sourceId": "SRC-064CB027CFB3",
+        "path": "prds/PR-02233/inbox/lark-sync/assets/img-005.png",
+        "assetHash": "8d20e4e9a374a29331e604d2e3ac3018a349e03a0883a53942363525c2a8a62b",
+        "assetStatus": "local",
+        "mediaType": "image/png"
+      },
+      {
+        "sourceId": "SRC-CB7B1EE252FC",
+        "path": "prds/PR-02233/inbox/lark-sync/assets/img-006.png",
+        "assetHash": "379806e79bcf3f03139cc46f02bf87cb2e2e6ee9d49a8079b25ea8a93fd94a77",
+        "assetStatus": "local",
+        "mediaType": "image/png"
+      },
+      {
+        "sourceId": "SRC-38BD411AB7FA",
+        "path": "prds/PR-02233/inbox/lark-sync/assets/img-007.png",
+        "assetHash": "c99967dd7a026e691cf5149bfccdd36c0732cf735a2b94d86f0c5404ba4d3d3b",
+        "assetStatus": "local",
+        "mediaType": "image/png"
+      },
+      {
+        "sourceId": "SRC-E4376240B527",
+        "path": "prds/PR-02233/inbox/lark-sync/assets/img-008.png",
+        "assetHash": "719bbda98fa6b3cd11ef6427822404c2b338a65a1057a6012bfed0f665da3506",
+        "assetStatus": "local",
+        "mediaType": "image/png"
+      },
+      {
+        "sourceId": "SRC-384DA8CDFDA5",
+        "path": "prds/PR-02233/inbox/lark-sync/assets/img-009.png",
+        "assetHash": "16f9e29157c0aae3189fc14f9047fef4edb32a2ce7c483f1219e65f6c9cb8bb4",
+        "assetStatus": "local",
+        "mediaType": "image/png"
+      },
+      {
+        "sourceId": "SRC-41A6E5ADEDB7",
+        "path": "prds/PR-02233/inbox/lark-sync/assets/img-010.png",
+        "assetHash": "b2bb7d5e4492fdc3a9483dda13b5050db07961c46fd1a44b5d60d6abce5972b7",
+        "assetStatus": "local",
+        "mediaType": "image/png"
+      },
+      {
+        "sourceId": "SRC-EFAA92690017",
+        "path": "prds/PR-02233/inbox/lark-sync/assets/img-011.png",
+        "assetHash": "5816502a8f9ac0bb05e56672546cb252354cfdded9de512fba73f62242aa7f28",
+        "assetStatus": "local",
+        "mediaType": "image/png"
+      },
+      {
+        "sourceId": "SRC-10609BC6D905",
+        "path": "prds/PR-02233/inbox/lark-sync/assets/img-012.png",
+        "assetHash": "f1442bd9de2d487aba71c2ba3b3b5263179ebb9c10d276900bd8b69f28255d92",
+        "assetStatus": "local",
+        "mediaType": "image/png"
+      },
+      {
+        "sourceId": "SRC-4C392AEEDDA4",
+        "path": "prds/PR-02233/inbox/lark-sync/assets/img-013.png",
+        "assetHash": "10aa9baab044e323548cc5b6df7dd33f94f37b6269e59d1460cbbe67b35084df",
+        "assetStatus": "local",
+        "mediaType": "image/png"
+      },
+      {
+        "sourceId": "SRC-8DF0199AEEF6",
+        "path": "prds/PR-02233/inbox/lark-sync/assets/img-014.png",
+        "assetHash": "ffa3b993c9f95a6a90787c167ab4da9643d32619e9a5405aeb783b2b5aa1c77c",
+        "assetStatus": "local",
+        "mediaType": "image/png"
+      },
+      {
+        "sourceId": "SRC-B6FE06D4DAD0",
+        "path": "prds/PR-02233/inbox/lark-sync/assets/img-015.png",
+        "assetHash": "9dc1948d91c58ce85ecb03ab8e2bb89219cfd59f73e58972674809d56d1ca0b8",
+        "assetStatus": "local",
+        "mediaType": "image/png"
+      },
+      {
+        "sourceId": "SRC-ED9295E2DD4D",
+        "path": "prds/PR-02233/inbox/lark-sync/assets/img-016.png",
+        "assetHash": "ed5e76e737e4562b6eef899a4429e42e236a14c7cd0b1a5c309b21df6b667a99",
+        "assetStatus": "local",
+        "mediaType": "image/png"
+      },
+      {
+        "sourceId": "SRC-85551C5A7606",
+        "path": "prds/PR-02233/inbox/lark-sync/assets/img-017.png",
+        "assetHash": "42413d9c76bba547048071ce0d86735d0930a7ef573b2cc4b5410b2c3cf75784",
+        "assetStatus": "local",
+        "mediaType": "image/png"
+      },
+      {
+        "sourceId": "SRC-2CE1D6D045D6",
+        "path": "prds/PR-02233/inbox/lark-sync/assets/img-018.png",
+        "assetHash": "c4685732ce3e67fc4607e729206c20c8069f8d681f010e49fe0562b53ef2cda2",
+        "assetStatus": "local",
+        "mediaType": "image/png"
+      },
+      {
+        "sourceId": "SRC-7F0D479471E2",
+        "path": "prds/PR-02233/inbox/lark-sync/assets/img-019.png",
+        "assetHash": "a02fc14b9ab07a82abcb77c1c1ee9cb34322001ae8f3a4913ff1b13334dc90fc",
+        "assetStatus": "local",
+        "mediaType": "image/png"
+      },
+      {
+        "sourceId": "SRC-CBBB8578D775",
+        "path": "prds/PR-02233/inbox/lark-sync/assets/img-020.png",
+        "assetHash": "fe504f4763f12d6237f2aaa371f4ec86f230b1d59b56a9426df00d7326d6d61f",
+        "assetStatus": "local",
+        "mediaType": "image/png"
+      },
+      {
+        "sourceId": "SRC-F11347F738C9",
+        "path": "prds/PR-02233/inbox/lark-sync/assets/img-021.png",
+        "assetHash": "4fc21639a0a8be16b615ba4fdc783fdb894543d543066194f245df3e504443e2",
+        "assetStatus": "local",
+        "mediaType": "image/png"
+      },
+      {
+        "sourceId": "SRC-92A84661A698",
+        "path": "prds/PR-02233/inbox/lark-sync/assets/img-022.png",
+        "assetHash": "46ba6dde9770d4164c0b519700c87490e95d08d70465174b0f353223a8ec67b6",
+        "assetStatus": "local",
+        "mediaType": "image/png"
+      },
+      {
+        "sourceId": "SRC-88D08D558049",
+        "path": "prds/PR-02233/inbox/lark-sync/assets/img-023.png",
+        "assetHash": "017a5c79dc668b8517278cd1ffa1a83586af739af3ec9bbb22c1ac7ae9a998b0",
+        "assetStatus": "local",
+        "mediaType": "image/png"
+      },
+      {
+        "sourceId": "SRC-2D8E58E20C07",
+        "path": "prds/PR-02233/inbox/lark-sync/assets/img-024.png",
+        "assetHash": "591f8458969671183cc31208977e90b2007249fc4b838de8dbd69ed843b6e0e5",
+        "assetStatus": "local",
+        "mediaType": "image/png"
+      },
+      {
+        "sourceId": "SRC-FB35C5272486",
+        "path": "prds/PR-02233/inbox/lark-sync/assets/img-025.png",
+        "assetHash": "881b541eceb281ad5fcb1ae8e3ac724595cc556e64b8ac041e6543553d560a29",
+        "assetStatus": "local",
+        "mediaType": "image/png"
+      },
+      {
+        "sourceId": "SRC-88BBE9AC8B14",
+        "path": "prds/PR-02233/inbox/lark-sync/assets/img-026.png",
+        "assetHash": "b22be9d1163f52f9d9c12c4069e51800ae7f1b3a0a1a64ede2e6ee1fe9f217f4",
+        "assetStatus": "local",
+        "mediaType": "image/png"
+      },
+      {
+        "sourceId": "SRC-00EDCEFE08AC",
+        "path": "prds/PR-02233/inbox/lark-sync/assets/img-027.png",
+        "assetHash": "8aa78a1c51a29ec6b6415c594e53bab48854ec4f46c16230af4d335480e0da86",
+        "assetStatus": "local",
+        "mediaType": "image/png"
+      }
+    ]
+  },
+  "requirements": [
+    {
+      "requirementId": "R-001",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-4CBCA7640099",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 64,
+          "lineEnd": 64
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-976BC1717B44",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 77,
+          "lineEnd": 78
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-A10EDBB3130B",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 80,
+          "lineEnd": 81
+        },
+        {
+          "type": "image",
+          "sourceId": "SRC-E9340E359735",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 68,
+          "lineEnd": 68
+        },
+        {
+          "type": "image",
+          "sourceId": "SRC-88AE784CEEE0",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 71,
+          "lineEnd": 71
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-75E1670AD34B",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 268,
+          "lineEnd": 329
+        }
+      ],
+      "statement": "Web 注册校验页「切换验证方式」文案改为「没收到验证码？尝试邮箱注册」，点击回到注册页第一步且不保留已填验证码；App 保持现有切换注册方式引导不变。该引导文案需在所有支持语言下正确展示，无 hardcode 中文。",
+      "status": "doing",
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-001",
+          "locator": "apps/Register/RegisterV2 校验步骤「切换验证方式」入口",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "copy-literal",
+          "runtimeRequired": false
+        },
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-002",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-069875091668",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 89,
+          "lineEnd": 89
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-15FEF963C1CB",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 93,
+          "lineEnd": 93
+        },
+        {
+          "type": "image",
+          "sourceId": "SRC-4E02866959D4",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 85,
+          "lineEnd": 85
+        }
+      ],
+      "statement": "Web 登录校验页移除旧「切换验证方式」入口（原点击仅跳回登录页、无效）。本项仅移除入口，不新增任何前端文案。",
+      "status": "doing",
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-002",
+          "locator": "apps/Login/LoginForm + VerifyInputs 登录校验区旧入口",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-003",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-766B6B55EA75",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 99,
+          "lineEnd": 101
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-A3D32D48F59C",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 112,
+          "lineEnd": 113
+        }
+      ],
+      "statement": "登录校验区【确认】按钮下方新增【切换验证方式】入口，仅当用户绑定 ≥2 种方式时展示，单一方式隐藏。该入口按钮文案需在所有支持语言下正确展示，无 hardcode 中文。",
+      "status": "doing",
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-003",
+          "locator": "apps/web VerifyInputs 登录校验区【切换验证方式】入口(展示条件)",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-067",
+          "locator": "App 对应新建「切换验证方式」入口(App 交接批次)",
+          "disposition": "deferred",
+          "owner": "App 团队",
+          "batch": "App 交接批次"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        },
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        },
+        {
+          "type": "copy-literal",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-004",
+      "sourceAnchors": [
+        {
+          "type": "image",
+          "sourceId": "SRC-0CC76D6FFA98",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 97,
+          "lineEnd": 97
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-D1C2FCC8327C",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 103,
+          "lineEnd": 108
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-ACF9FEEB80B5",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 115,
+          "lineEnd": 117
+        }
+      ],
+      "statement": "点击【切换验证方式】弹出弹窗：标题「切换验证方式」/副标题「选择一种已绑定的验证方式完成登录」；列表项含图标+方式名称+说明(邮箱/手机脱敏；GA 显示\"30秒自动更新,无需发送\")+当前方式标【当前】；排序 GA→邮箱→手机；✕或点遮罩关闭且不改当前方式。列表仅展示用户已绑定的方式，不展示未绑定的方式。弹窗内所有新增文案(标题/副标题/列表项说明/GA 说明)需在所有支持语言下正确展示，无 hardcode 中文。",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 3
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-004",
+          "locator": "apps/web 新组件 SwitchVerifyMethodDialog",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-066",
+          "locator": "apps/web SwitchVerifyMethodDialog 列表不展示未绑定方式(边界)",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-087",
+          "locator": "App 对应新建「切换验证方式」弹窗本身(App 交接批次)",
+          "disposition": "deferred",
+          "owner": "App 团队",
+          "batch": "App 交接批次"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "copy-literal",
+          "runtimeRequired": false
+        },
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-005",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-32BB33C415FE",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 95,
+          "lineEnd": 95
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-2C809FE54A7D",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 110,
+          "lineEnd": 110
+        }
+      ],
+      "statement": "在切换弹窗选择某方式后弹窗关闭、校验区切换为所选方式输入样式；进入登录默认取最高优先级(GA>邮箱>手机)，切换是用户主动改用其他已绑定方式。",
+      "status": "doing",
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-005",
+          "locator": "apps/web VerifyInputs 方式切换后的输入区状态",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-068",
+          "locator": "App 对应切换后校验区状态变化(App 交接批次)",
+          "disposition": "deferred",
+          "owner": "App 团队",
+          "batch": "App 交接批次"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        },
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-006",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-F3D6C645F528",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 121,
+          "lineEnd": 126
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-75E1670AD34B",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 268,
+          "lineEnd": 329
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-1F4191526DB8",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 43,
+          "lineEnd": 48
+        }
+      ],
+      "statement": "验证方式默认优先级规则解析：注册=单一(注册所选手机/邮箱)；登录=单一可切换 GA>邮箱>手机；提币/改密等强制双重取已绑定前两位(GA+邮箱>GA+手机>邮箱+手机)；其他敏感操作单绑单一、双绑及以上双重。边界：提币/双重校验场景若用户仅绑定一种验证方式，需提示用户需绑定至少两种验证方式方可提币(或走现有业务兜底策略)。修改密码场景与提币共用同一条边界规则：仅绑定一种验证方式时同样需提示需绑定至少两种验证方式方可继续(或走现有业务兜底策略)。提示文案需在所有支持语言下正确展示，无 hardcode 中文。",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 4
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-006",
+          "locator": "apps/web 新增验证方式优先级 resolver(util/hook)",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-007",
+          "locator": "apps/Balance/Trade 提币仅绑定一种方式时的提示(边界)",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-086",
+          "locator": "apps/Account 修改密码仅绑定一种方式时的提示(边界)",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-069",
+          "locator": "App 对应验证方式优先级 resolver 复用(App 交接批次)",
+          "disposition": "deferred",
+          "owner": "App 团队",
+          "batch": "App 交接批次"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        },
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        },
+        {
+          "type": "copy-literal",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-007",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-BEC8EFD0E36A",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 137,
+          "lineEnd": 140
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-55D95BA8AC0B",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 132,
+          "lineEnd": 133
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-E714C1CABE9F",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 142,
+          "lineEnd": 142
+        },
+        {
+          "type": "image",
+          "sourceId": "SRC-064CB027CFB3",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 142,
+          "lineEnd": 142
+        },
+        {
+          "type": "image",
+          "sourceId": "SRC-CB7B1EE252FC",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 142,
+          "lineEnd": 142
+        },
+        {
+          "type": "image",
+          "sourceId": "SRC-38BD411AB7FA",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 142,
+          "lineEnd": 142
+        },
+        {
+          "type": "image",
+          "sourceId": "SRC-E4376240B527",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 142,
+          "lineEnd": 142
+        },
+        {
+          "type": "image",
+          "sourceId": "SRC-384DA8CDFDA5",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 142,
+          "lineEnd": 142
+        },
+        {
+          "type": "image",
+          "sourceId": "SRC-41A6E5ADEDB7",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 142,
+          "lineEnd": 142
+        },
+        {
+          "type": "image",
+          "sourceId": "SRC-EFAA92690017",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 142,
+          "lineEnd": 142
+        },
+        {
+          "type": "image",
+          "sourceId": "SRC-10609BC6D905",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 142,
+          "lineEnd": 142
+        },
+        {
+          "type": "image",
+          "sourceId": "SRC-4C392AEEDDA4",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 142,
+          "lineEnd": 142
+        },
+        {
+          "type": "image",
+          "sourceId": "SRC-8DF0199AEEF6",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 142,
+          "lineEnd": 142
+        },
+        {
+          "type": "image",
+          "sourceId": "SRC-B6FE06D4DAD0",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 142,
+          "lineEnd": 142
+        },
+        {
+          "type": "image",
+          "sourceId": "SRC-ED9295E2DD4D",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 142,
+          "lineEnd": 142
+        },
+        {
+          "type": "image",
+          "sourceId": "SRC-85551C5A7606",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 142,
+          "lineEnd": 142
+        },
+        {
+          "type": "image",
+          "sourceId": "SRC-2CE1D6D045D6",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 142,
+          "lineEnd": 142
+        },
+        {
+          "type": "image",
+          "sourceId": "SRC-7F0D479471E2",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 142,
+          "lineEnd": 142
+        },
+        {
+          "type": "image",
+          "sourceId": "SRC-CBBB8578D775",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 142,
+          "lineEnd": 142
+        },
+        {
+          "type": "image",
+          "sourceId": "SRC-F11347F738C9",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 142,
+          "lineEnd": 142
+        }
+      ],
+      "statement": "除登录/注册保留页面形式外，其余所有校验场景统一优化为弹窗模式（逐场景实现，防漏）。",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 15
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-030",
+          "locator": "apps/Balance/Trade/components/SecurityVerificationModal.tsx#提币(含内部)",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-031",
+          "locator": "apps/Account 修改密码/设置密码 校验弹窗",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-032",
+          "locator": "apps/Account 修改邮箱/设置邮箱 提交后校验弹窗",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-033",
+          "locator": "apps/Account 修改手机/设置手机 提交后校验弹窗",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-034",
+          "locator": "apps/Account 绑定/解绑第三方 校验弹窗",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-035",
+          "locator": "apps/BindGoogle 关闭谷歌验证 校验弹窗",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-036",
+          "locator": "apps/Account 关闭手机验证 校验弹窗",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-037",
+          "locator": "apps/Account 提币白名单开启/关闭 校验弹窗",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-038",
+          "locator": "apps/AddressManagement 添加/修改地址(含内部) 校验弹窗",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-039",
+          "locator": "apps/DeleteAccount 注销账号 校验弹窗",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-040",
+          "locator": "apps/ApiManagement 创建API 校验弹窗",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-043",
+          "locator": "apps/ApiUpdate 修改API 校验弹窗",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-041",
+          "locator": "apps/ApiManagementView 查看API 校验弹窗",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-042",
+          "locator": "apps/BuyCrypto 买币三板块出售购买 校验弹窗",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-077",
+          "locator": "App 对应校验场景弹窗化评估(App 交接批次)",
+          "disposition": "deferred",
+          "owner": "App 团队",
+          "batch": "App 交接批次"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-008",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-76838D100679",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 146,
+          "lineEnd": 146
+        },
+        {
+          "type": "image",
+          "sourceId": "SRC-92A84661A698",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 146,
+          "lineEnd": 146
+        },
+        {
+          "type": "image",
+          "sourceId": "SRC-88D08D558049",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 146,
+          "lineEnd": 146
+        },
+        {
+          "type": "image",
+          "sourceId": "SRC-2D8E58E20C07",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 146,
+          "lineEnd": 146
+        },
+        {
+          "type": "image",
+          "sourceId": "SRC-FB35C5272486",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 146,
+          "lineEnd": 146
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-75E1670AD34B",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 268,
+          "lineEnd": 329
+        }
+      ],
+      "statement": "改/绑邮箱手机表单页只验证\"新绑定目标\"(新邮箱/手机输入+验证码四态)；账户身份安全校验移到提交通过后的弹窗，弹窗方式按优先级：改邮箱/手机(有旧联系方式)=GA+邮箱/手机可切换；首次绑手机(仅有邮箱)=邮箱单一固定；首次绑邮箱(有手机+GA)=GA+手机固定。流系与回退：表单校验通过→关闭表单→弹出安全校验弹窗→弹窗内校验通过→修改/绑定生效；弹窗内取消或校验失败→修改/绑定操作不生效，可重新发起。",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 6
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-050",
+          "locator": "apps/BindEmail 首次绑邮箱表单→提交后弹窗(GA+手机固定)",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-051",
+          "locator": "apps/Account 修改邮箱表单→提交后弹窗(GA+邮箱/手机可切换)",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-052",
+          "locator": "apps/Account 修改手机表单→提交后弹窗(GA+邮箱/手机可切换)",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-053",
+          "locator": "apps/Account 首次绑手机(仅邮箱)表单→提交后弹窗(邮箱单一固定)",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-054",
+          "locator": "表单→弹窗流系与取消/校验失败回退(适用于 S-050~S-053)",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-077",
+          "locator": "App 对应校验场景弹窗化评估(App 交接批次)",
+          "disposition": "deferred",
+          "owner": "App 团队",
+          "batch": "App 交接批次"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        },
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-009",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-D02ADA9DD1B7",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 161,
+          "lineEnd": 162
+        }
+      ],
+      "statement": "【没有收到验证码？】入口固定展示在验证码输入区域下方，一个验证场景只出现一次(双重校验两个验证码框也只展示一个入口)。",
+      "status": "doing",
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-009",
+          "locator": "apps/web VerifyInputs/CodeVerifyDialog 没收到验证码入口位置",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-078",
+          "locator": "App 对应没收到验证码入口(App 交接批次)",
+          "disposition": "deferred",
+          "owner": "App 团队",
+          "batch": "App 交接批次"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-010",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-08A9C49EE710",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 166,
+          "lineEnd": 166
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-D02ADA9DD1B7",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 161,
+          "lineEnd": 162
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-D45835AF504D",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 190,
+          "lineEnd": 190
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-F0DD46F2CF92",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 192,
+          "lineEnd": 194
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-803C0C33923D",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 200,
+          "lineEnd": 200
+        },
+        {
+          "type": "image",
+          "sourceId": "SRC-88BBE9AC8B14",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 152,
+          "lineEnd": 152
+        },
+        {
+          "type": "image",
+          "sourceId": "SRC-00EDCEFE08AC",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 155,
+          "lineEnd": 155
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-30B0E6B1EF50",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 164,
+          "lineEnd": 164
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-E7C249802078",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 159,
+          "lineEnd": 159
+        }
+      ],
+      "statement": "点击【没有收到验证码？】弹出引导弹窗：标题固定；邮箱/手机双 Tab 恒显；默认 Tab 按当前请求验证码类型定位(邮箱+手机场景默认邮箱)；底部左客服 icon 右已知晓；点 Tab 仅切换正文不影响背后表单；点客服打开客服；点已知晓关闭。弹窗内所有文案(标题/Tab/正文/客服icon/已知晓按钮)需在所有支持语言下正确展示，无 hardcode 中文。",
+      "status": "doing",
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-010",
+          "locator": "apps/web 新组件 NoCodeGuideDialog",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-079",
+          "locator": "App 对应没收到验证码引导弹窗(App 交接批次)",
+          "disposition": "deferred",
+          "owner": "App 团队",
+          "batch": "App 交接批次"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        },
+        {
+          "type": "copy-literal",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-011",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-DD654CA0800F",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 168,
+          "lineEnd": 168
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-C7F19E38BEF0",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 170,
+          "lineEnd": 170
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-F4D864E9F7B6",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 172,
+          "lineEnd": 172
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-D468D1439B42",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 174,
+          "lineEnd": 176
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-AB80A4AE2880",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 178,
+          "lineEnd": 178
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-BB45F7C18D26",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 180,
+          "lineEnd": 180
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-95016299905F",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 182,
+          "lineEnd": 186
+        }
+      ],
+      "statement": "「没有收到验证码？」弹窗邮箱 Tab / 手机 Tab 排查文案按 PRD 逐字实现；Web 业务开发只维护 zh-CN 并使用 i18n key、禁止 hardcode，其他语言由国际化团队补齐。",
+      "status": "doing",
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-011",
+          "locator": "apps/web i18n codeVerify.json + NoCodeGuideDialog 文案",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-080",
+          "locator": "App 对应引导弹窗文案复用(App 交接批次)",
+          "disposition": "deferred",
+          "owner": "App 团队",
+          "batch": "App 交接批次"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "copy-literal",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-012",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-CA76DF87391B",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 210,
+          "lineEnd": 210
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-F1E335E224CA",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 214,
+          "lineEnd": 215
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-D64833C649BF",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 206,
+          "lineEnd": 206
+        }
+      ],
+      "statement": "获取验证码按钮四态：初始(获取验证码,可点)→加载(三跳动圆点,禁用)→已发送(倒计时+icon,禁用)→重新发送(可点)；加载态与已发送态在代码层禁用 onclick 防重复触发。",
+      "status": "doing",
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-012",
+          "locator": "apps/web VerifyInputs 获取验证码按钮四态 + useCountdown",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-081",
+          "locator": "App 对应获取验证码四态按钮(App 交接批次)",
+          "disposition": "deferred",
+          "owner": "App 团队",
+          "batch": "App 交接批次"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        },
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-013",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-F1E335E224CA",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 214,
+          "lineEnd": 215
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-7668A8B65525",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 217,
+          "lineEnd": 219
+        }
+      ],
+      "statement": "已发送态 icon tooltip 文案「{n}秒后可重新发送验证码，有效期为10分钟」，{n} 每秒动态刷新；Web 端鼠标悬浮 icon 显示、移出隐藏。该 tooltip 文案需在所有支持语言下正确展示，无 hardcode 中文。",
+      "status": "doing",
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-013",
+          "locator": "apps/web VerifyInputs 已发送态 icon tooltip(Web 悬浮)",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "copy-literal",
+          "runtimeRequired": false
+        },
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-014",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-E16FF335C138",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 238,
+          "lineEnd": 239
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-A3D32D48F59C",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 112,
+          "lineEnd": 113
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-ACF9FEEB80B5",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 115,
+          "lineEnd": 117
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-1589EBCDCC66",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 236,
+          "lineEnd": 236
+        }
+      ],
+      "statement": "邮箱/手机可切换场景各方式倒计时各自独立、切回保留原倒计时不重置；页面刷新或离开重进时前端依据后端返回的冷却截止时间戳计算剩余秒数并恢复已发送态。",
+      "status": "doing",
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-014",
+          "locator": "apps/web VerifyInputs/useCountdown 多方式独立倒计时 + 冷却时间戳恢复",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-082",
+          "locator": "App 对应倒计时独立与恢复(App 交接批次)",
+          "disposition": "deferred",
+          "owner": "App 团队",
+          "batch": "App 交接批次"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        },
+        {
+          "type": "payload-contract",
+          "runtimeRequired": false
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-015",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-31EE6F0F4EA3",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 245,
+          "lineEnd": 246
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-728F13C27762",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 243,
+          "lineEnd": 243
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-75E1670AD34B",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 268,
+          "lineEnd": 329
+        }
+      ],
+      "statement": "限频类失败：命中频繁/上限时先 Toast 提示原因并对按钮做冷却禁用；禁用期间再次点击由前端拦截不发起后端请求并再次 Toast 告知，冷却时长/截止时间以后端返回为准。IP 限频/UID 限频/60秒限频需有区分性提示（前端根据后端返回的限频类型渲染对应文案，使用户和客服能看懂被拦截原因；限频类型本体的判定/错误码由 PR-02235 交付，本 PR 仅负责前端区分性渲染）。",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 3
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-015",
+          "locator": "apps/web VerifyInputs + useSmsErrorBar 限频拦截与冷却",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-088",
+          "locator": "apps/web IP/UID/60秒限频类型区分性提示渲染(回归)",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-083",
+          "locator": "App 对应限频失败拦截(App 交接批次)",
+          "disposition": "deferred",
+          "owner": "App 团队",
+          "batch": "App 交接批次"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        },
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-016",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-84C804D128DD",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 252,
+          "lineEnd": 252
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-281C56C3C654",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 256,
+          "lineEnd": 258
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-F4B85BAE1FC7",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 250,
+          "lineEnd": 250
+        }
+      ],
+      "statement": "服务异常(网络异常/服务端异常)时按钮从加载态回退到初始态或重新发送态并 Toast 提示错误码，不进入 60 秒倒计时、可立即重试。错误码/错误信息文案由后端返回，前端不新增固定文案，仅透传展示。",
+      "status": "doing",
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-016",
+          "locator": "apps/web VerifyInputs 服务异常回退处理",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-084",
+          "locator": "App 对应异常回退(App 交接批次)",
+          "disposition": "deferred",
+          "owner": "App 团队",
+          "batch": "App 交接批次"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        },
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-017",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-9920F59580C2",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 264,
+          "lineEnd": 264
+        }
+      ],
+      "statement": "验证交互全事件埋点上报，8 个结构不同的事件各自独立触发时机与参数契约：verification_scene_view(interaction_type/verify_methods) / click_get_code(method/button_state/attempt_count) / code_send_result(method/result/fail_reason/fail_code/duration_ms) / hit_rate_limit(method/limit_type/cooldown_seconds) / switch_channel(from_method/to_method) / view_no_code_guide(current_method) / code_verify_submit(method) / code_verify_result(method/verify_mode/result/fail_reason)。",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 9
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-017",
+          "locator": "posthog: verification_scene_view",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-070",
+          "locator": "posthog: click_get_code",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-071",
+          "locator": "posthog: code_send_result",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-072",
+          "locator": "posthog: hit_rate_limit",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-073",
+          "locator": "posthog: switch_channel",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-074",
+          "locator": "posthog: view_no_code_guide",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-075",
+          "locator": "posthog: code_verify_submit",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-076",
+          "locator": "posthog: code_verify_result",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-085",
+          "locator": "App 对应验证交互埋点(App 交接批次)",
+          "disposition": "deferred",
+          "owner": "App 团队",
+          "batch": "App 交接批次"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        },
+        {
+          "type": "payload-contract",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-018",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-E4A700D2F82D",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 223,
+          "lineEnd": 223
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-73D64CB69F5F",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 225,
+          "lineEnd": 228
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-83AF8F66B3E0",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 230,
+          "lineEnd": 232
+        }
+      ],
+      "statement": "[App] 短信验证码「快捷填充」重复填入(如 12341234)修复：填充为替换而非追加、只填一次、位数正确可校验。",
+      "status": "deferred",
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-018",
+          "locator": "App 短信验证码输入框自动填充逻辑",
+          "disposition": "deferred",
+          "owner": "App 团队",
+          "batch": "App 交接批次"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-019",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-0F9AE3D66A9B",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 60,
+          "lineEnd": 60
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-7668A8B65525",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 217,
+          "lineEnd": 219
+        }
+      ],
+      "statement": "[App] 登录切换验证方式入口新增、App 端 tooltip 点击显示/再次点击或点其他区域关闭、App 端切换注册方式引导保持不变——均由 App 侧交付。",
+      "status": "deferred",
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-019",
+          "locator": "App 登录/校验交互(切换入口 + tooltip 点击)",
+          "disposition": "deferred",
+          "owner": "App 团队",
+          "batch": "App 交接批次"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-020",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-F5646D2E67BA",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 254,
+          "lineEnd": 254
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-75E1670AD34B",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 268,
+          "lineEnd": 329
+        }
+      ],
+      "statement": "[他 PR] 限频策略本体、错误码文案、以及限频类型区分性展示(IP限频/UID限频/60秒限频的可辨识提示)均由 PR-02235 交付；本 PR 仅前端消费其返回的限频类型/文案。",
+      "status": "not-doing",
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-020",
+          "locator": "PR-02235 限频策略/错误码/类型区分文案(不在本 PR)",
+          "disposition": "not-applicable",
+          "reason": "[他 PR] 限频策略本体、错误码文案、以及限频类型区分性展示(IP限频/UID限频/60秒限频的可辨识提示)均由 PR-02235 交付；本 PR 仅前端消费其返回的限频类型/文案。"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-021",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-DA5AFF0BA7C8",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 39,
+          "lineEnd": 39
+        }
+      ],
+      "statement": "[他 PR] 短信下发渠道优化/有效期10分钟/多渠道自动降级/后台状态由 PR-02189 交付。",
+      "status": "not-doing",
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-021",
+          "locator": "PR-02189 短信后台(不在本 PR)",
+          "disposition": "not-applicable",
+          "reason": "[他 PR] 短信下发渠道优化/有效期10分钟/多渠道自动降级/后台状态由 PR-02189 交付。"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-026",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-DA5AFF0BA7C8",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 39,
+          "lineEnd": 39
+        }
+      ],
+      "statement": "[他 PR] 通行密钥(passkey)作为备用验证方式由 PR-02234【用户端】新增通行密钥 交付；本 PR 不实现通行密钥本身。",
+      "status": "not-doing",
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-026",
+          "locator": "PR-02234 通行密钥(不在本 PR)",
+          "disposition": "not-applicable",
+          "reason": "[他 PR] 通行密钥(passkey)作为备用验证方式由 PR-02234【用户端】新增通行密钥 交付；本 PR 不实现通行密钥本身。"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-028",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-E714C1CABE9F",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 142,
+          "lineEnd": 142
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-BEC8EFD0E36A",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 137,
+          "lineEnd": 140
+        }
+      ],
+      "statement": "忘记密码验证码校验流精保持页面形式(与登录/注册一致)，不纳入本次弹窗化改造范围；行为不变。(用户确认)",
+      "status": "not-doing",
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-028",
+          "locator": "apps/Login 忘记密码页面(保持页面形式不变)",
+          "disposition": "not-applicable",
+          "reason": "忘记密码验证码校验流精保持页面形式(与登录/注册一致)，不纳入本次弹窗化改造范围；行为不变。(用户确认)"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-027",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-75E1670AD34B",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 268,
+          "lineEnd": 329
+        }
+      ],
+      "statement": "验收标准回归项全链路回归：登录→验证码校验→登录成功/失败；注册→验证码校验→注册成功/失败；提币→双重校验→提币成功/失败；修改安全设置→校验→修改成功/失败，交互改动后链路仍完整；GA 校验在登录/提币等场景不受本次交互改动影响；后台验证码下发功能不因前端交互改动导致下发中断。",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 6
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-060",
+          "locator": "apps/Login 登录全链路回归",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-061",
+          "locator": "apps/Register 注册全链路回归",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-062",
+          "locator": "apps/Balance/Trade 提币全链路回归(双重校验)",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-063",
+          "locator": "apps/Account 修改安全设置全链路回归",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-064",
+          "locator": "GA 校验在登录/提币场景不受本次交互改动影响(回归)",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-065",
+          "locator": "后台验证码下发(短信/邮件)不因前端交互改动中断(回归)",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    }
+  ],
+  "requirementsAuthor": {
+    "kind": "model",
+    "id": "pi/requirements-extractor",
+    "client": "pi",
+    "sessionId": "01a091f1-6d50-77a0-93a4-b740d1592eae"
+  },
+  "coverageAudit": {
+    "sourceFingerprint": "pending",
+    "requirementsFingerprint": "pending",
+    "reviewMode": "independent-cold-read",
+    "reviewRunId": "pending",
+    "reviewer": {
+      "kind": "model",
+      "id": "pending"
+    },
+    "completedAt": "2000-01-01T00:00:00Z",
+    "verdict": "changes-required",
+    "unresolved": [
+      "awaiting independent cold-read coverage review"
+    ]
+  },
+  "routing": {
+    "scopeClass": "cross-boundary",
+    "riskSignals": [
+      "funds",
+      "authentication-surface",
+      "password",
+      "multiple-entry-points",
+      "shared-component"
+    ],
+    "verificationLevel": "V2",
+    "routerVersion": 1
+  },
+  "apiDependency": {
+    "mode": "pending-dependency",
+    "reason": "R-014 冷却截止时间戳恢复、R-015 限频类型/错误码展示依赖后端字段(来自 PR-02189/PR-02235)，当前后端未就绪",
+    "blockerId": "BLK-API-COOLDOWN-RATELIMIT"
+  },
+  "sourceReadiness": {
+    "figma": {
+      "requirement": "required",
+      "status": "pending",
+      "reason": "原型图为 netlify/wiki 链接，Figma 规格待接入"
+    },
+    "api": {
+      "requirement": "required",
+      "status": "pending",
+      "reason": "冷却时间戳/限频错误码契约来自 PR-02189/PR-02235，未交付"
+    }
+  },
+  "evidenceCommands": [
+    {
+      "evidenceId": "E-01",
+      "kind": "copy-literal",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-001-S-001-copy-literal-apps-Register-RegisterV2.spec.ts"
+      ],
+      "requirementIds": [
+        "R-001"
+      ],
+      "surfaceIds": [
+        "S-001"
+      ]
+    },
+    {
+      "evidenceId": "E-02",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-001-S-001-component-dom-apps-Register-RegisterV2.spec.ts"
+      ],
+      "requirementIds": [
+        "R-001"
+      ],
+      "surfaceIds": [
+        "S-001"
+      ]
+    },
+    {
+      "evidenceId": "E-03",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-002-S-002-component-dom-apps-Login-LoginForm-VerifyInputs.spec.ts"
+      ],
+      "requirementIds": [
+        "R-002"
+      ],
+      "surfaceIds": [
+        "S-002"
+      ]
+    },
+    {
+      "evidenceId": "E-04",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-003-S-003-component-dom-apps-web-VerifyInputs.spec.ts"
+      ],
+      "requirementIds": [
+        "R-003"
+      ],
+      "surfaceIds": [
+        "S-003"
+      ]
+    },
+    {
+      "evidenceId": "E-05",
+      "kind": "pure-logic",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-003-S-003-pure-logic-apps-web-VerifyInputs.spec.ts"
+      ],
+      "requirementIds": [
+        "R-003"
+      ],
+      "surfaceIds": [
+        "S-003"
+      ]
+    },
+    {
+      "evidenceId": "E-06",
+      "kind": "copy-literal",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-003-S-003-copy-literal-apps-web-VerifyInputs.spec.ts"
+      ],
+      "requirementIds": [
+        "R-003"
+      ],
+      "surfaceIds": [
+        "S-003"
+      ]
+    },
+    {
+      "evidenceId": "E-07",
+      "kind": "copy-literal",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-004-S-004-copy-literal-apps-web-SwitchVerifyMethodDialog.spec.ts"
+      ],
+      "requirementIds": [
+        "R-004"
+      ],
+      "surfaceIds": [
+        "S-004"
+      ]
+    },
+    {
+      "evidenceId": "E-08",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-004-S-004-component-dom-apps-web-SwitchVerifyMethodDialog.spec.ts"
+      ],
+      "requirementIds": [
+        "R-004"
+      ],
+      "surfaceIds": [
+        "S-004"
+      ]
+    },
+    {
+      "evidenceId": "E-09",
+      "kind": "copy-literal",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-004-S-066-copy-literal-apps-web-SwitchVerifyMethodDialog.spec.ts"
+      ],
+      "requirementIds": [
+        "R-004"
+      ],
+      "surfaceIds": [
+        "S-066"
+      ]
+    },
+    {
+      "evidenceId": "E-10",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-004-S-066-component-dom-apps-web-SwitchVerifyMethodDialog.spec.ts"
+      ],
+      "requirementIds": [
+        "R-004"
+      ],
+      "surfaceIds": [
+        "S-066"
+      ]
+    },
+    {
+      "evidenceId": "E-11",
+      "kind": "pure-logic",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-005-S-005-pure-logic-apps-web-VerifyInputs.spec.ts"
+      ],
+      "requirementIds": [
+        "R-005"
+      ],
+      "surfaceIds": [
+        "S-005"
+      ]
+    },
+    {
+      "evidenceId": "E-12",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-005-S-005-component-dom-apps-web-VerifyInputs.spec.ts"
+      ],
+      "requirementIds": [
+        "R-005"
+      ],
+      "surfaceIds": [
+        "S-005"
+      ]
+    },
+    {
+      "evidenceId": "E-13",
+      "kind": "pure-logic",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-006-S-006-pure-logic-apps-web-resolver-util-hook.spec.ts"
+      ],
+      "requirementIds": [
+        "R-006"
+      ],
+      "surfaceIds": [
+        "S-006"
+      ]
+    },
+    {
+      "evidenceId": "E-14",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-006-S-006-component-dom-apps-web-resolver-util-hook.spec.ts"
+      ],
+      "requirementIds": [
+        "R-006"
+      ],
+      "surfaceIds": [
+        "S-006"
+      ]
+    },
+    {
+      "evidenceId": "E-15",
+      "kind": "copy-literal",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-006-S-006-copy-literal-apps-web-resolver-util-hook.spec.ts"
+      ],
+      "requirementIds": [
+        "R-006"
+      ],
+      "surfaceIds": [
+        "S-006"
+      ]
+    },
+    {
+      "evidenceId": "E-16",
+      "kind": "pure-logic",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-006-S-007-pure-logic-apps-Balance-Trade.spec.ts"
+      ],
+      "requirementIds": [
+        "R-006"
+      ],
+      "surfaceIds": [
+        "S-007"
+      ]
+    },
+    {
+      "evidenceId": "E-17",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-006-S-007-component-dom-apps-Balance-Trade.spec.ts"
+      ],
+      "requirementIds": [
+        "R-006"
+      ],
+      "surfaceIds": [
+        "S-007"
+      ]
+    },
+    {
+      "evidenceId": "E-18",
+      "kind": "copy-literal",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-006-S-007-copy-literal-apps-Balance-Trade.spec.ts"
+      ],
+      "requirementIds": [
+        "R-006"
+      ],
+      "surfaceIds": [
+        "S-007"
+      ]
+    },
+    {
+      "evidenceId": "E-19",
+      "kind": "pure-logic",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-006-S-086-pure-logic-apps-Account.spec.ts"
+      ],
+      "requirementIds": [
+        "R-006"
+      ],
+      "surfaceIds": [
+        "S-086"
+      ]
+    },
+    {
+      "evidenceId": "E-20",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-006-S-086-component-dom-apps-Account.spec.ts"
+      ],
+      "requirementIds": [
+        "R-006"
+      ],
+      "surfaceIds": [
+        "S-086"
+      ]
+    },
+    {
+      "evidenceId": "E-21",
+      "kind": "copy-literal",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-006-S-086-copy-literal-apps-Account.spec.ts"
+      ],
+      "requirementIds": [
+        "R-006"
+      ],
+      "surfaceIds": [
+        "S-086"
+      ]
+    },
+    {
+      "evidenceId": "E-22",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-007-S-030-component-dom-apps-Balance-Trade-components-SecurityVe.spec.ts"
+      ],
+      "requirementIds": [
+        "R-007"
+      ],
+      "surfaceIds": [
+        "S-030"
+      ]
+    },
+    {
+      "evidenceId": "E-23",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-007-S-031-component-dom-apps-Account.spec.ts"
+      ],
+      "requirementIds": [
+        "R-007"
+      ],
+      "surfaceIds": [
+        "S-031"
+      ]
+    },
+    {
+      "evidenceId": "E-24",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-007-S-032-component-dom-apps-Account.spec.ts"
+      ],
+      "requirementIds": [
+        "R-007"
+      ],
+      "surfaceIds": [
+        "S-032"
+      ]
+    },
+    {
+      "evidenceId": "E-25",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-007-S-033-component-dom-apps-Account.spec.ts"
+      ],
+      "requirementIds": [
+        "R-007"
+      ],
+      "surfaceIds": [
+        "S-033"
+      ]
+    },
+    {
+      "evidenceId": "E-26",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-007-S-034-component-dom-apps-Account.spec.ts"
+      ],
+      "requirementIds": [
+        "R-007"
+      ],
+      "surfaceIds": [
+        "S-034"
+      ]
+    },
+    {
+      "evidenceId": "E-27",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-007-S-035-component-dom-apps-BindGoogle.spec.ts"
+      ],
+      "requirementIds": [
+        "R-007"
+      ],
+      "surfaceIds": [
+        "S-035"
+      ]
+    },
+    {
+      "evidenceId": "E-28",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-007-S-036-component-dom-apps-Account.spec.ts"
+      ],
+      "requirementIds": [
+        "R-007"
+      ],
+      "surfaceIds": [
+        "S-036"
+      ]
+    },
+    {
+      "evidenceId": "E-29",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-007-S-037-component-dom-apps-Account.spec.ts"
+      ],
+      "requirementIds": [
+        "R-007"
+      ],
+      "surfaceIds": [
+        "S-037"
+      ]
+    },
+    {
+      "evidenceId": "E-30",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-007-S-038-component-dom-apps-AddressManagement.spec.ts"
+      ],
+      "requirementIds": [
+        "R-007"
+      ],
+      "surfaceIds": [
+        "S-038"
+      ]
+    },
+    {
+      "evidenceId": "E-31",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-007-S-039-component-dom-apps-DeleteAccount.spec.ts"
+      ],
+      "requirementIds": [
+        "R-007"
+      ],
+      "surfaceIds": [
+        "S-039"
+      ]
+    },
+    {
+      "evidenceId": "E-32",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-007-S-040-component-dom-apps-ApiManagement-API.spec.ts"
+      ],
+      "requirementIds": [
+        "R-007"
+      ],
+      "surfaceIds": [
+        "S-040"
+      ]
+    },
+    {
+      "evidenceId": "E-33",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-007-S-043-component-dom-apps-ApiUpdate-API.spec.ts"
+      ],
+      "requirementIds": [
+        "R-007"
+      ],
+      "surfaceIds": [
+        "S-043"
+      ]
+    },
+    {
+      "evidenceId": "E-34",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-007-S-041-component-dom-apps-ApiManagementView-API.spec.ts"
+      ],
+      "requirementIds": [
+        "R-007"
+      ],
+      "surfaceIds": [
+        "S-041"
+      ]
+    },
+    {
+      "evidenceId": "E-35",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-007-S-042-component-dom-apps-BuyCrypto.spec.ts"
+      ],
+      "requirementIds": [
+        "R-007"
+      ],
+      "surfaceIds": [
+        "S-042"
+      ]
+    },
+    {
+      "evidenceId": "E-36",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-008-S-050-component-dom-apps-BindEmail-GA.spec.ts"
+      ],
+      "requirementIds": [
+        "R-008"
+      ],
+      "surfaceIds": [
+        "S-050"
+      ]
+    },
+    {
+      "evidenceId": "E-37",
+      "kind": "pure-logic",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-008-S-050-pure-logic-apps-BindEmail-GA.spec.ts"
+      ],
+      "requirementIds": [
+        "R-008"
+      ],
+      "surfaceIds": [
+        "S-050"
+      ]
+    },
+    {
+      "evidenceId": "E-38",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-008-S-051-component-dom-apps-Account-GA.spec.ts"
+      ],
+      "requirementIds": [
+        "R-008"
+      ],
+      "surfaceIds": [
+        "S-051"
+      ]
+    },
+    {
+      "evidenceId": "E-39",
+      "kind": "pure-logic",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-008-S-051-pure-logic-apps-Account-GA.spec.ts"
+      ],
+      "requirementIds": [
+        "R-008"
+      ],
+      "surfaceIds": [
+        "S-051"
+      ]
+    },
+    {
+      "evidenceId": "E-40",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-008-S-052-component-dom-apps-Account-GA.spec.ts"
+      ],
+      "requirementIds": [
+        "R-008"
+      ],
+      "surfaceIds": [
+        "S-052"
+      ]
+    },
+    {
+      "evidenceId": "E-41",
+      "kind": "pure-logic",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-008-S-052-pure-logic-apps-Account-GA.spec.ts"
+      ],
+      "requirementIds": [
+        "R-008"
+      ],
+      "surfaceIds": [
+        "S-052"
+      ]
+    },
+    {
+      "evidenceId": "E-42",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-008-S-053-component-dom-apps-Account.spec.ts"
+      ],
+      "requirementIds": [
+        "R-008"
+      ],
+      "surfaceIds": [
+        "S-053"
+      ]
+    },
+    {
+      "evidenceId": "E-43",
+      "kind": "pure-logic",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-008-S-053-pure-logic-apps-Account.spec.ts"
+      ],
+      "requirementIds": [
+        "R-008"
+      ],
+      "surfaceIds": [
+        "S-053"
+      ]
+    },
+    {
+      "evidenceId": "E-44",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-008-S-054-component-dom-S-050-S-053.spec.ts"
+      ],
+      "requirementIds": [
+        "R-008"
+      ],
+      "surfaceIds": [
+        "S-054"
+      ]
+    },
+    {
+      "evidenceId": "E-45",
+      "kind": "pure-logic",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-008-S-054-pure-logic-S-050-S-053.spec.ts"
+      ],
+      "requirementIds": [
+        "R-008"
+      ],
+      "surfaceIds": [
+        "S-054"
+      ]
+    },
+    {
+      "evidenceId": "E-46",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-009-S-009-component-dom-apps-web-VerifyInputs-CodeVerifyDialog.spec.ts"
+      ],
+      "requirementIds": [
+        "R-009"
+      ],
+      "surfaceIds": [
+        "S-009"
+      ]
+    },
+    {
+      "evidenceId": "E-47",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-010-S-010-component-dom-apps-web-NoCodeGuideDialog.spec.ts"
+      ],
+      "requirementIds": [
+        "R-010"
+      ],
+      "surfaceIds": [
+        "S-010"
+      ]
+    },
+    {
+      "evidenceId": "E-48",
+      "kind": "copy-literal",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-010-S-010-copy-literal-apps-web-NoCodeGuideDialog.spec.ts"
+      ],
+      "requirementIds": [
+        "R-010"
+      ],
+      "surfaceIds": [
+        "S-010"
+      ]
+    },
+    {
+      "evidenceId": "E-49",
+      "kind": "copy-literal",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-011-S-011-copy-literal-apps-web-i18n-codeVerify-json-NoCodeGuid.spec.ts"
+      ],
+      "requirementIds": [
+        "R-011"
+      ],
+      "surfaceIds": [
+        "S-011"
+      ]
+    },
+    {
+      "evidenceId": "E-50",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-012-S-012-component-dom-apps-web-VerifyInputs-useCountdown.spec.ts"
+      ],
+      "requirementIds": [
+        "R-012"
+      ],
+      "surfaceIds": [
+        "S-012"
+      ]
+    },
+    {
+      "evidenceId": "E-51",
+      "kind": "pure-logic",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-012-S-012-pure-logic-apps-web-VerifyInputs-useCountdown.spec.ts"
+      ],
+      "requirementIds": [
+        "R-012"
+      ],
+      "surfaceIds": [
+        "S-012"
+      ]
+    },
+    {
+      "evidenceId": "E-52",
+      "kind": "copy-literal",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-013-S-013-copy-literal-apps-web-VerifyInputs-icon-tooltip-Web.spec.ts"
+      ],
+      "requirementIds": [
+        "R-013"
+      ],
+      "surfaceIds": [
+        "S-013"
+      ]
+    },
+    {
+      "evidenceId": "E-53",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-013-S-013-component-dom-apps-web-VerifyInputs-icon-tooltip-Web.spec.ts"
+      ],
+      "requirementIds": [
+        "R-013"
+      ],
+      "surfaceIds": [
+        "S-013"
+      ]
+    },
+    {
+      "evidenceId": "E-54",
+      "kind": "pure-logic",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-014-S-014-pure-logic-apps-web-VerifyInputs-useCountdown.spec.ts"
+      ],
+      "requirementIds": [
+        "R-014"
+      ],
+      "surfaceIds": [
+        "S-014"
+      ]
+    },
+    {
+      "evidenceId": "E-55",
+      "kind": "payload-contract",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-014-S-014-payload-contract-apps-web-VerifyInputs-useCountdown.spec.ts"
+      ],
+      "requirementIds": [
+        "R-014"
+      ],
+      "surfaceIds": [
+        "S-014"
+      ]
+    },
+    {
+      "evidenceId": "E-56",
+      "kind": "browser-interaction",
+      "argv": [
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-014-S-014.json"
+      ],
+      "requirementIds": [
+        "R-014"
+      ],
+      "surfaceIds": [
+        "S-014"
+      ]
+    },
+    {
+      "evidenceId": "E-57",
+      "kind": "pure-logic",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-015-S-015-pure-logic-apps-web-VerifyInputs-useSmsErrorBar.spec.ts"
+      ],
+      "requirementIds": [
+        "R-015"
+      ],
+      "surfaceIds": [
+        "S-015"
+      ]
+    },
+    {
+      "evidenceId": "E-58",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-015-S-015-component-dom-apps-web-VerifyInputs-useSmsErrorBar.spec.ts"
+      ],
+      "requirementIds": [
+        "R-015"
+      ],
+      "surfaceIds": [
+        "S-015"
+      ]
+    },
+    {
+      "evidenceId": "E-59",
+      "kind": "pure-logic",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-015-S-088-pure-logic-apps-web-IP-UID-60.spec.ts"
+      ],
+      "requirementIds": [
+        "R-015"
+      ],
+      "surfaceIds": [
+        "S-088"
+      ]
+    },
+    {
+      "evidenceId": "E-60",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-015-S-088-component-dom-apps-web-IP-UID-60.spec.ts"
+      ],
+      "requirementIds": [
+        "R-015"
+      ],
+      "surfaceIds": [
+        "S-088"
+      ]
+    },
+    {
+      "evidenceId": "E-61",
+      "kind": "pure-logic",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-016-S-016-pure-logic-apps-web-VerifyInputs.spec.ts"
+      ],
+      "requirementIds": [
+        "R-016"
+      ],
+      "surfaceIds": [
+        "S-016"
+      ]
+    },
+    {
+      "evidenceId": "E-62",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-016-S-016-component-dom-apps-web-VerifyInputs.spec.ts"
+      ],
+      "requirementIds": [
+        "R-016"
+      ],
+      "surfaceIds": [
+        "S-016"
+      ]
+    },
+    {
+      "evidenceId": "E-63",
+      "kind": "pure-logic",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-017-S-017-pure-logic-posthog-verification-scene-view.spec.ts"
+      ],
+      "requirementIds": [
+        "R-017"
+      ],
+      "surfaceIds": [
+        "S-017"
+      ]
+    },
+    {
+      "evidenceId": "E-64",
+      "kind": "payload-contract",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-017-S-017-payload-contract-posthog-verification-scene-view.spec.ts"
+      ],
+      "requirementIds": [
+        "R-017"
+      ],
+      "surfaceIds": [
+        "S-017"
+      ]
+    },
+    {
+      "evidenceId": "E-65",
+      "kind": "pure-logic",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-017-S-070-pure-logic-posthog-click-get-code.spec.ts"
+      ],
+      "requirementIds": [
+        "R-017"
+      ],
+      "surfaceIds": [
+        "S-070"
+      ]
+    },
+    {
+      "evidenceId": "E-66",
+      "kind": "payload-contract",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-017-S-070-payload-contract-posthog-click-get-code.spec.ts"
+      ],
+      "requirementIds": [
+        "R-017"
+      ],
+      "surfaceIds": [
+        "S-070"
+      ]
+    },
+    {
+      "evidenceId": "E-67",
+      "kind": "pure-logic",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-017-S-071-pure-logic-posthog-code-send-result.spec.ts"
+      ],
+      "requirementIds": [
+        "R-017"
+      ],
+      "surfaceIds": [
+        "S-071"
+      ]
+    },
+    {
+      "evidenceId": "E-68",
+      "kind": "payload-contract",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-017-S-071-payload-contract-posthog-code-send-result.spec.ts"
+      ],
+      "requirementIds": [
+        "R-017"
+      ],
+      "surfaceIds": [
+        "S-071"
+      ]
+    },
+    {
+      "evidenceId": "E-69",
+      "kind": "pure-logic",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-017-S-072-pure-logic-posthog-hit-rate-limit.spec.ts"
+      ],
+      "requirementIds": [
+        "R-017"
+      ],
+      "surfaceIds": [
+        "S-072"
+      ]
+    },
+    {
+      "evidenceId": "E-70",
+      "kind": "payload-contract",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-017-S-072-payload-contract-posthog-hit-rate-limit.spec.ts"
+      ],
+      "requirementIds": [
+        "R-017"
+      ],
+      "surfaceIds": [
+        "S-072"
+      ]
+    },
+    {
+      "evidenceId": "E-71",
+      "kind": "pure-logic",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-017-S-073-pure-logic-posthog-switch-channel.spec.ts"
+      ],
+      "requirementIds": [
+        "R-017"
+      ],
+      "surfaceIds": [
+        "S-073"
+      ]
+    },
+    {
+      "evidenceId": "E-72",
+      "kind": "payload-contract",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-017-S-073-payload-contract-posthog-switch-channel.spec.ts"
+      ],
+      "requirementIds": [
+        "R-017"
+      ],
+      "surfaceIds": [
+        "S-073"
+      ]
+    },
+    {
+      "evidenceId": "E-73",
+      "kind": "pure-logic",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-017-S-074-pure-logic-posthog-view-no-code-guide.spec.ts"
+      ],
+      "requirementIds": [
+        "R-017"
+      ],
+      "surfaceIds": [
+        "S-074"
+      ]
+    },
+    {
+      "evidenceId": "E-74",
+      "kind": "payload-contract",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-017-S-074-payload-contract-posthog-view-no-code-guide.spec.ts"
+      ],
+      "requirementIds": [
+        "R-017"
+      ],
+      "surfaceIds": [
+        "S-074"
+      ]
+    },
+    {
+      "evidenceId": "E-75",
+      "kind": "pure-logic",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-017-S-075-pure-logic-posthog-code-verify-submit.spec.ts"
+      ],
+      "requirementIds": [
+        "R-017"
+      ],
+      "surfaceIds": [
+        "S-075"
+      ]
+    },
+    {
+      "evidenceId": "E-76",
+      "kind": "payload-contract",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-017-S-075-payload-contract-posthog-code-verify-submit.spec.ts"
+      ],
+      "requirementIds": [
+        "R-017"
+      ],
+      "surfaceIds": [
+        "S-075"
+      ]
+    },
+    {
+      "evidenceId": "E-77",
+      "kind": "pure-logic",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-017-S-076-pure-logic-posthog-code-verify-result.spec.ts"
+      ],
+      "requirementIds": [
+        "R-017"
+      ],
+      "surfaceIds": [
+        "S-076"
+      ]
+    },
+    {
+      "evidenceId": "E-78",
+      "kind": "payload-contract",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-017-S-076-payload-contract-posthog-code-verify-result.spec.ts"
+      ],
+      "requirementIds": [
+        "R-017"
+      ],
+      "surfaceIds": [
+        "S-076"
+      ]
+    },
+    {
+      "evidenceId": "E-79",
+      "kind": "browser-interaction",
+      "argv": [
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-027-S-060.json"
+      ],
+      "requirementIds": [
+        "R-027"
+      ],
+      "surfaceIds": [
+        "S-060"
+      ]
+    },
+    {
+      "evidenceId": "E-80",
+      "kind": "browser-interaction",
+      "argv": [
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-027-S-061.json"
+      ],
+      "requirementIds": [
+        "R-027"
+      ],
+      "surfaceIds": [
+        "S-061"
+      ]
+    },
+    {
+      "evidenceId": "E-81",
+      "kind": "browser-interaction",
+      "argv": [
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-027-S-062.json"
+      ],
+      "requirementIds": [
+        "R-027"
+      ],
+      "surfaceIds": [
+        "S-062"
+      ]
+    },
+    {
+      "evidenceId": "E-82",
+      "kind": "browser-interaction",
+      "argv": [
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-027-S-063.json"
+      ],
+      "requirementIds": [
+        "R-027"
+      ],
+      "surfaceIds": [
+        "S-063"
+      ]
+    },
+    {
+      "evidenceId": "E-83",
+      "kind": "browser-interaction",
+      "argv": [
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-027-S-064.json"
+      ],
+      "requirementIds": [
+        "R-027"
+      ],
+      "surfaceIds": [
+        "S-064"
+      ]
+    },
+    {
+      "evidenceId": "E-84",
+      "kind": "browser-interaction",
+      "argv": [
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-027-S-065.json"
+      ],
+      "requirementIds": [
+        "R-027"
+      ],
+      "surfaceIds": [
+        "S-065"
+      ]
+    }
+  ],
+  "sourceUnitDispositions": [
+    {
+      "sourceId": "SRC-E0A694076BA2",
+      "disposition": "not-a-requirement",
+      "reason": "背景/上下文说明，非独立原子需求"
+    },
+    {
+      "sourceId": "SRC-E70D5C1A23CC",
+      "disposition": "not-a-requirement",
+      "reason": "章节标题/元信息，非原子需求"
+    },
+    {
+      "sourceId": "SRC-CDB57041C282",
+      "disposition": "not-a-requirement",
+      "reason": "章节标题/元信息，非原子需求"
+    },
+    {
+      "sourceId": "SRC-9BB7FAB2CF94",
+      "disposition": "not-a-requirement",
+      "reason": "章节标题/元信息，非原子需求"
+    },
+    {
+      "sourceId": "SRC-05DCA906E4E1",
+      "disposition": "not-a-requirement",
+      "reason": "章节标题/元信息，非原子需求"
+    },
+    {
+      "sourceId": "SRC-C490882B691D",
+      "disposition": "not-a-requirement",
+      "reason": "文档栅格/布局/预览块标记，无交付语义"
+    },
+    {
+      "sourceId": "SRC-89C749E99A9A",
+      "disposition": "not-a-requirement",
+      "reason": "文档栅格/布局/预览块标记，无交付语义"
+    },
+    {
+      "sourceId": "SRC-E21D7DFEE748",
+      "disposition": "not-a-requirement",
+      "reason": "文档栅格/布局/预览块标记，无交付语义"
+    },
+    {
+      "sourceId": "SRC-CD01087B16C9",
+      "disposition": "not-a-requirement",
+      "reason": "文档栅格/布局/预览块标记，无交付语义"
+    },
+    {
+      "sourceId": "SRC-7A67DBB2A6D6",
+      "disposition": "not-a-requirement",
+      "reason": "现状描述，作为背景，非本期交付需求"
+    },
+    {
+      "sourceId": "SRC-7A67DBB2A6D6-2",
+      "disposition": "not-a-requirement",
+      "reason": "现状描述，作为背景，非本期交付需求"
+    },
+    {
+      "sourceId": "SRC-73E15CFD524E",
+      "disposition": "not-a-requirement",
+      "reason": "背景/上下文说明，非独立原子需求"
+    },
+    {
+      "sourceId": "SRC-E22868D8F122",
+      "disposition": "not-a-requirement",
+      "reason": "背景/上下文说明，非独立原子需求"
+    },
+    {
+      "sourceId": "SRC-C1E74A9E46E3",
+      "disposition": "not-a-requirement",
+      "reason": "文档栅格/布局/预览块标记，无交付语义"
+    },
+    {
+      "sourceId": "SRC-F59C3D1CEC68",
+      "disposition": "not-a-requirement",
+      "reason": "文档栅格/布局/预览块标记，无交付语义"
+    },
+    {
+      "sourceId": "SRC-CD01087B16C9-2",
+      "disposition": "not-a-requirement",
+      "reason": "文档栅格/布局/预览块标记，无交付语义"
+    },
+    {
+      "sourceId": "SRC-4764278D6632",
+      "disposition": "not-a-requirement",
+      "reason": "章节标题/元信息，非原子需求"
+    },
+    {
+      "sourceId": "SRC-537F67BD4706",
+      "disposition": "not-a-requirement",
+      "reason": "背景/上下文说明，非独立原子需求"
+    }
+  ],
+  "scopeApproval": null,
+  "autopilot": {
+    "phase": "intake",
+    "implementation": {
+      "status": "pending",
+      "changedPaths": []
+    },
+    "repairAttempts": {
+      "code": 0,
+      "browser": 0
+    },
+    "lastCheckpointAt": "2026-09-12T05:49:36.236Z"
+  }
+}
