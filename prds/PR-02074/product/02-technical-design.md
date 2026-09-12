@@ -1,5 +1,7 @@
 # Technical Design — PR-02074 预测市场三期
 
+> 2026-09-12 实施状态：Prediction 三期迁移与 web-next 配套基础设施已完成。本文中的 `apps/web` 路径保留为最初 G3 设计记录；后续实现统一落在 `apps/web-next` 的 Prediction、hooks/endpoints 与 prediction routes。
+
 > G2 已定稿（[00-feature-inventory.md](./00-feature-inventory.md)）。本文为 G3 技术方案，供负责人审阅；审阅通过后再建 worktree 进 G4。
 
 ## 0. 关键约束回顾（G2）

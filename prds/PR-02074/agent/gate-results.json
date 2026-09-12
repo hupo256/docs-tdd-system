@@ -1,24 +1,24 @@
 {
-  "generatedAt": "2026-09-03T00:43:40.922Z",
+  "generatedAt": "2026-09-12T09:02:42.196Z",
   "tool": "run-project-gate.mjs",
   "projectId": "PR-02074",
   "gate": "G8",
   "partial": false,
   "ok": false,
   "summary": {
-    "total": 82,
-    "ok": 79,
+    "total": 80,
+    "ok": 78,
     "warn": 2,
     "waived": 0,
-    "fail": 1
+    "fail": 0
   },
   "groups": {
     "documentation": {
-      "total": 66,
-      "ok": 64,
+      "total": 64,
+      "ok": 63,
       "warn": 1,
       "waived": 0,
-      "fail": 1
+      "fail": 0
     },
     "implementation": {
       "total": 6,
@@ -447,32 +447,16 @@
     },
     {
       "ruleId": "CODE-MOCK-002",
-      "ok": true,
-      "message": "mock residue grep is empty in responsibility modules",
-      "file": "../docs_tdd/prds/PR-02074",
-      "severity": "error",
-      "category": "documentation"
-    },
-    {
-      "ruleId": "CODE-MSW-002",
-      "ok": true,
-      "message": "MSW route B leaves no business mock switch residue in responsibility modules",
-      "file": "../docs_tdd/prds/PR-02074",
-      "severity": "error",
-      "category": "documentation"
-    },
-    {
-      "ruleId": "CODE-ASSUMED-001",
-      "ok": true,
-      "message": "no `// ASSUMED:` residue in responsibility modules",
+      "ok": false,
+      "message": "cannot scan mock residue (rg unavailable: ENOENT)",
       "file": "../docs_tdd/prds/PR-02074",
       "severity": "warn",
       "category": "documentation"
     },
     {
       "ruleId": "CODE-SCOPE-001",
-      "ok": false,
-      "message": "changed files outside 责任模块目录 (confirm not out-of-scope, §1.1):\napps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/crypto/page.tsx\napps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/finance/page.tsx\napps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/page.tsx\napps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/politics/page.tsx\napps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/search/page.tsx\napps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/sports/page.tsx\napps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/world-cup/page.tsx\napps/web/src/components/Empty.tsx\napps/web/src/constants/pathnames.ts\napps/web/src/proxy.ts",
+      "ok": true,
+      "message": "all changed source files fall inside 责任模块目录",
       "file": "../docs_tdd/prds/PR-02074",
       "severity": "warn",
       "category": "documentation"
@@ -591,8 +575,8 @@
     },
     {
       "ruleId": "VERIFY-G8-004",
-      "ok": false,
-      "message": "origin/feature/PR-02074、当前 HEAD 与 delivery-status.headSha 不一致或不存在",
+      "ok": true,
+      "message": "origin/feature/PR-02074、当前 HEAD 与 delivery-status.headSha 一致",
       "file": "../docs_tdd/prds/PR-02074/agent/delivery-status.json",
       "severity": "error",
       "category": "documentation"
@@ -609,17 +593,17 @@
       "ruleId": "VERIFY-BIOME-001",
       "ok": true,
       "severity": "error",
-      "message": "biome check 通过：实检 137 / 候选 143 个文件",
+      "message": "biome check 通过：实检 226 / 候选 232 个文件",
       "file": "",
       "category": "build-quality",
       "evidence": {
-        "command": "pnpm exec biome check --no-errors-on-unmatched apps/web-next/setupVitest.ts apps/web-next/src/apps/Prediction/PredictionCategoryPage.tsx apps/web-next/src/apps/Prediction/common/categories.ts apps/web-next/src/apps/Prediction/common/categorySelection.ts apps/web-next/src/apps/Prediction/common/eventCardType.ts apps/web-next/src/apps/Prediction/common/formatTradeVolume.ts apps/web-next/src/apps/Prediction/common/outcomeLabels.ts apps/web-next/src/apps/Prediction/common/predictionRoute.ts apps/web-next/src/apps/Prediction/common/resolveCategoryTree.ts apps/web-next/src/apps/Prediction/common/test/categories.test.ts apps/web-next/src/apps/Prediction/common/test/categorySelection.test.ts apps/web-next/src/apps/Prediction/common/test/eventCardType.test.ts apps/web-next/src/apps/Prediction/common/test/formatTradeVolume.test.ts apps/web-next/src/apps/Prediction/common/test/outcomeLabels.test.ts apps/web-next/src/apps/Prediction/common/test/predictionEventFixtures.ts apps/web-next/src/apps/Prediction/common/test/predictionRoute.test.ts apps/web-next/src/apps/Prediction/common/test/resolveCategoryTree.test.ts apps/web-next/src/apps/Prediction/common/viewModels.ts apps/web-next/src/apps/Prediction/components/CategorySidebar.tsx apps/web-next/src/apps/Prediction/components/CategoryTabs.tsx apps/web-next/src/apps/Prediction/components/EventCardVisuals.tsx apps/web-next/src/apps/Prediction/components/EventTab.tsx apps/web-next/src/apps/Prediction/components/PLoadingMan.tsx apps/web-next/src/apps/Prediction/components/PredictionCategoryList.tsx apps/web-next/src/apps/Prediction/components/PredictionListSkeleton.tsx apps/web-next/src/apps/Prediction/components/YesNoPairBtn.tsx apps/web-next/src/apps/Prediction/components/test/CategorySidebar.test.tsx apps/web-next/src/apps/Prediction/components/test/CategoryTabs.test.tsx apps/web-next/src/apps/Prediction/components/test/EventTab.test.tsx apps/web-next/src/apps/Prediction/components/test/PredictionCategoryList.test.tsx apps/web-next/src/apps/Prediction/components/test/YesNoPairBtn.test.tsx apps/web-next/src/apps/Prediction/hooks/useFormatTradeVolume.ts apps/web-next/src/apps/Prediction/mappers/mapTagEventsToPrediction.ts apps/web-next/src/apps/Prediction/mappers/test/mapTagEventsToPrediction.test.ts apps/web-next/src/components/Empty.tsx apps/web-next/src/components/test/Empty.test.tsx apps/web-next/src/constants/pathnames.ts apps/web-next/src/i18n/core/namespaces.ts apps/web-next/src/i18n/core/resources.ts apps/web-next/src/i18n/core/test/namespaces.test.ts apps/web-next/src/i18n/core/test/resources.test.ts apps/web-next/src/i18n/i18next.d.ts apps/web-next/src/i18n/resources/zh-CN/common.json apps/web-next/src/i18n/resources/zh-CN/polymarket.json apps/web-next/src/platform/components/ui/pagination/FxPagination.tsx apps/web-next/src/platform/components/ui/pagination/index.ts apps/web-next/src/platform/components/ui/pagination/pageRange.ts apps/web-next/src/platform/components/ui/pagination/test/FxPagination.test.tsx apps/web-next/src/platform/components/ui/pagination/test/pageRange.test.ts apps/web-next/src/platform/domain/web/WebHttpApi.ts apps/web-next/src/platform/domain/web/endpoints/getCategoryTreeEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/getEstimatedProfitEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/getExchangeRateEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/getTagEventsListEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/searchEventsEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/test/getCategoryTreeEndpoint.test.ts apps/web-next/src/platform/domain/web/endpoints/test/getEstimatedProfitEndpoint.test.ts apps/web-next/src/platform/domain/web/endpoints/test/getExchangeRateEndpoint.test.ts apps/web-next/src/platform/domain/web/endpoints/test/getTagEventsListEndpoint.test.ts apps/web-next/src/platform/domain/web/endpoints/test/searchEventsEndpoint.test.ts apps/web-next/src/platform/domain/web/schema/predictionSchemas.ts apps/web-next/src/platform/http/test/RequestMetadataService.test.ts apps/web-next/src/platform/schema/resilientArray.ts apps/web-next/src/platform/schema/test/resilientArray.test.ts apps/web-next/src/routeTree.gen.ts apps/web-next/src/routes/(main)/prediction/crypto.tsx apps/web-next/src/routes/(main)/prediction/finance.tsx apps/web-next/src/routes/(main)/prediction/index.tsx apps/web-next/src/routes/(main)/prediction/politics.tsx apps/web-next/src/routes/(main)/prediction/route.tsx apps/web-next/src/routes/test/-__root.test.ts apps/web-next/src/routes/test/-predictionRoutes.test.ts apps/web-next/src/services/hooks/common/exchangeRateQuery.ts apps/web-next/src/services/hooks/common/test/exchangeRateQuery.test.ts apps/web-next/src/services/hooks/prediction/categoryTreeQuery.ts apps/web-next/src/services/hooks/prediction/estimatedProfitQuery.ts apps/web-next/src/services/hooks/prediction/searchEventsQuery.ts apps/web-next/src/services/hooks/prediction/tagEventsListQuery.ts apps/web-next/src/services/hooks/prediction/test/predictionQueries.test.ts apps/web/public/mockServiceWorker.js apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/crypto/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/finance/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/politics/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/search/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/sports/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/world-cup/page.tsx apps/web/src/apps/Prediction/SearchResultsPage.tsx apps/web/src/apps/Prediction/WorldCup/EventTab.tsx apps/web/src/apps/Prediction/WorldCup/MatchTab.tsx apps/web/src/apps/Prediction/WorldCup/OngoingTab.tsx apps/web/src/apps/Prediction/WorldCup/WorldCupFaq.tsx apps/web/src/apps/Prediction/WorldCup/common/MatchCard.tsx apps/web/src/apps/Prediction/WorldCup/common/calc.ts apps/web/src/apps/Prediction/WorldCup/common/format.ts apps/web/src/apps/Prediction/WorldCup/common/matchSegments.test.ts apps/web/src/apps/Prediction/WorldCup/common/matchSegments.ts apps/web/src/apps/Prediction/WorldCup/common/matchTime.test.ts apps/web/src/apps/Prediction/WorldCup/common/matchTime.ts apps/web/src/apps/Prediction/WorldCup/common/ongoingGroup.test.ts apps/web/src/apps/Prediction/WorldCup/common/types.ts apps/web/src/apps/Prediction/WorldCup/index.tsx apps/web/src/apps/Prediction/common/categories.test.ts apps/web/src/apps/Prediction/common/categories.ts apps/web/src/apps/Prediction/common/categorySelection.test.ts apps/web/src/apps/Prediction/common/categorySelection.ts apps/web/src/apps/Prediction/common/eventCardType.test.ts apps/web/src/apps/Prediction/common/eventCardType.ts apps/web/src/apps/Prediction/common/metadata.ts apps/web/src/apps/Prediction/common/outcomeLabels.test.ts apps/web/src/apps/Prediction/common/outcomeLabels.ts apps/web/src/apps/Prediction/common/resolveCategoryTree.test.ts apps/web/src/apps/Prediction/common/resolveCategoryTree.ts apps/web/src/apps/Prediction/common/searchDirection.test.ts apps/web/src/apps/Prediction/common/searchDirection.ts apps/web/src/apps/Prediction/common/searchSort.test.ts apps/web/src/apps/Prediction/common/searchSort.ts apps/web/src/apps/Prediction/components/CategorySidebar.tsx apps/web/src/apps/Prediction/components/CategoryTabs.tsx apps/web/src/apps/Prediction/components/PredictionCategoryList.tsx apps/web/src/apps/Prediction/components/PredictionTradeMan/EstimatedProfit.tsx apps/web/src/apps/Prediction/components/PredictionTradeMan/useTradeDerivedState.ts apps/web/src/apps/Prediction/components/SearchBox/HighlightedText.tsx apps/web/src/apps/Prediction/components/SearchBox/SearchPopup.tsx apps/web/src/apps/Prediction/components/SearchBox/highlightMatch.test.ts apps/web/src/apps/Prediction/components/SearchBox/highlightMatch.ts apps/web/src/apps/Prediction/components/SearchBox/index.tsx apps/web/src/apps/Prediction/components/SearchResultCard.tsx apps/web/src/apps/Prediction/index.tsx apps/web/src/components/Empty.tsx apps/web/src/constants/pathnames.ts apps/web/src/i18n/locales/zh-CN/common.json apps/web/src/i18n/locales/zh-CN/polymarket.json apps/web/src/mocks/browser.ts apps/web/src/mocks/fixtures/prediction.ts apps/web/src/mocks/prediction.contract.test.ts apps/web/src/mocks/useMockWorker.ts apps/web/src/proxy.ts apps/web/src/services/api/prediction/mapTagEventsToWorldCup.test.ts apps/web/src/services/api/prediction/mapTagEventsToWorldCup.ts apps/web/src/services/api/prediction/polymarket.test.ts apps/web/src/services/api/prediction/polymarket.ts apps/web/src/services/api/prediction/schemas.ts",
+        "command": "pnpm exec biome check --no-errors-on-unmatched apps/security-admin/src/stores/usePermissionStore.ts apps/web-next/package.json apps/web-next/setupVitest.ts apps/web-next/src/apps/Prediction/PredictionCategoryPage.tsx apps/web-next/src/apps/Prediction/SearchResultsPage.tsx apps/web-next/src/apps/Prediction/common/buildSearchTradeContext.ts apps/web-next/src/apps/Prediction/common/buildShareInviteUrl.ts apps/web-next/src/apps/Prediction/common/categories.ts apps/web-next/src/apps/Prediction/common/categorySelection.ts apps/web-next/src/apps/Prediction/common/eventCardType.ts apps/web-next/src/apps/Prediction/common/formatTradeVolume.ts apps/web-next/src/apps/Prediction/common/highlightMatch.ts apps/web-next/src/apps/Prediction/common/matchSegments.ts apps/web-next/src/apps/Prediction/common/matchTime.ts apps/web-next/src/apps/Prediction/common/outcomeLabels.ts apps/web-next/src/apps/Prediction/common/overlayTradeOutcome.ts apps/web-next/src/apps/Prediction/common/polymarketOutcomes.ts apps/web-next/src/apps/Prediction/common/predictionRoute.ts apps/web-next/src/apps/Prediction/common/resolveCategoryTree.ts apps/web-next/src/apps/Prediction/common/searchDirection.ts apps/web-next/src/apps/Prediction/common/searchSort.ts apps/web-next/src/apps/Prediction/common/sportsModels.ts apps/web-next/src/apps/Prediction/common/test/buildSearchTradeContext.test.ts apps/web-next/src/apps/Prediction/common/test/buildShareInviteUrl.test.ts apps/web-next/src/apps/Prediction/common/test/categories.test.ts apps/web-next/src/apps/Prediction/common/test/categorySelection.test.ts apps/web-next/src/apps/Prediction/common/test/eventCardType.test.ts apps/web-next/src/apps/Prediction/common/test/formatTradeVolume.test.ts apps/web-next/src/apps/Prediction/common/test/highlightMatch.test.ts apps/web-next/src/apps/Prediction/common/test/matchSegments.test.ts apps/web-next/src/apps/Prediction/common/test/matchTime.test.ts apps/web-next/src/apps/Prediction/common/test/outcomeLabels.test.ts apps/web-next/src/apps/Prediction/common/test/overlayTradeOutcome.test.ts apps/web-next/src/apps/Prediction/common/test/predictionEventFixtures.ts apps/web-next/src/apps/Prediction/common/test/predictionRoute.test.ts apps/web-next/src/apps/Prediction/common/test/resolveCategoryTree.test.ts apps/web-next/src/apps/Prediction/common/test/searchDirection.test.ts apps/web-next/src/apps/Prediction/common/test/searchSort.test.ts apps/web-next/src/apps/Prediction/common/test/sportsModels.test.ts apps/web-next/src/apps/Prediction/common/test/tradeCalculations.test.ts apps/web-next/src/apps/Prediction/common/test/tradeOutcomeLabels.test.ts apps/web-next/src/apps/Prediction/common/tradeCalculations.ts apps/web-next/src/apps/Prediction/common/tradeOutcomeLabels.ts apps/web-next/src/apps/Prediction/common/viewModels.ts apps/web-next/src/apps/Prediction/components/CategorySidebar.tsx apps/web-next/src/apps/Prediction/components/CategoryTabs.tsx apps/web-next/src/apps/Prediction/components/EventCardVisuals.tsx apps/web-next/src/apps/Prediction/components/EventTab.tsx apps/web-next/src/apps/Prediction/components/HighlightedText.tsx apps/web-next/src/apps/Prediction/components/MatchCard.tsx apps/web-next/src/apps/Prediction/components/MyOrdersLink.tsx apps/web-next/src/apps/Prediction/components/PLoadingMan.tsx apps/web-next/src/apps/Prediction/components/PredictionCategoryList.tsx apps/web-next/src/apps/Prediction/components/PredictionFaq.tsx apps/web-next/src/apps/Prediction/components/PredictionListBoundary.tsx apps/web-next/src/apps/Prediction/components/PredictionListSkeleton.tsx apps/web-next/src/apps/Prediction/components/PredictionShareMan/PredictionShareCard.tsx apps/web-next/src/apps/Prediction/components/PredictionShareMan/index.tsx apps/web-next/src/apps/Prediction/components/PredictionShareMan/types.ts apps/web-next/src/apps/Prediction/components/PredictionTradeMan/index.tsx apps/web-next/src/apps/Prediction/components/PredictionTradeMan/types.ts apps/web-next/src/apps/Prediction/components/PredictionTradeMan/useTradeDerivedState.ts apps/web-next/src/apps/Prediction/components/SearchBox.tsx apps/web-next/src/apps/Prediction/components/SearchPopup.tsx apps/web-next/src/apps/Prediction/components/SearchResultCard.tsx apps/web-next/src/apps/Prediction/components/SportsPredictionList.tsx apps/web-next/src/apps/Prediction/components/YesNoPairBtn.tsx apps/web-next/src/apps/Prediction/components/test/CategorySidebar.test.tsx apps/web-next/src/apps/Prediction/components/test/CategoryTabs.test.tsx apps/web-next/src/apps/Prediction/components/test/EventTab.test.tsx apps/web-next/src/apps/Prediction/components/test/MyOrdersLink.test.tsx apps/web-next/src/apps/Prediction/components/test/PredictionCategoryList.test.tsx apps/web-next/src/apps/Prediction/components/test/PredictionFaq.test.tsx apps/web-next/src/apps/Prediction/components/test/PredictionListBoundary.test.tsx apps/web-next/src/apps/Prediction/components/test/SearchPopup.test.tsx apps/web-next/src/apps/Prediction/components/test/YesNoPairBtn.test.tsx apps/web-next/src/apps/Prediction/hooks/useFormatTradeVolume.ts apps/web-next/src/apps/Prediction/hooks/useOpenPredictionTrade.ts apps/web-next/src/apps/Prediction/hooks/usePredictionCategorySelection.ts apps/web-next/src/apps/Prediction/mappers/mapTagEventsToMatches.ts apps/web-next/src/apps/Prediction/mappers/mapTagEventsToPrediction.ts apps/web-next/src/apps/Prediction/mappers/test/mapTagEventsToMatches.test.ts apps/web-next/src/apps/Prediction/mappers/test/mapTagEventsToPrediction.test.ts apps/web-next/src/apps/shared/components/main-header/mainNavigationConfig.ts apps/web-next/src/apps/shared/components/main-header/test/mainNavigationConfig.test.ts apps/web-next/src/apps/shared/components/test/MainFooter.test.tsx apps/web-next/src/components/Empty.tsx apps/web-next/src/components/test/Empty.test.tsx apps/web-next/src/constants/pathnames.ts apps/web-next/src/i18n/core/namespaces.ts apps/web-next/src/i18n/core/resources.ts apps/web-next/src/i18n/core/test/namespaces.test.ts apps/web-next/src/i18n/core/test/resources.test.ts apps/web-next/src/i18n/i18next.d.ts apps/web-next/src/i18n/resources/zh-CN/common.json apps/web-next/src/i18n/resources/zh-CN/polymarket.json apps/web-next/src/platform/components/convenience/modal/Modal.tsx apps/web-next/src/platform/components/convenience/modal/test/Modal.test.tsx apps/web-next/src/platform/components/ui/pagination/FxPagination.tsx apps/web-next/src/platform/components/ui/pagination/index.ts apps/web-next/src/platform/components/ui/pagination/pageRange.ts apps/web-next/src/platform/components/ui/pagination/test/FxPagination.test.tsx apps/web-next/src/platform/components/ui/pagination/test/pageRange.test.ts apps/web-next/src/platform/domain/web/WebHttpApi.ts apps/web-next/src/platform/domain/web/endpoints/getCategoryTreeEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/getEstimatedProfitEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/getEventsByIdEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/getExchangeRateEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/getTagEventsListEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/placePredictionMarketOrderEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/searchEventsEndpoint.ts apps/web-next/src/platform/domain/web/endpoints/test/getCategoryTreeEndpoint.test.ts apps/web-next/src/platform/domain/web/endpoints/test/getEstimatedProfitEndpoint.test.ts apps/web-next/src/platform/domain/web/endpoints/test/getEventsByIdEndpoint.test.ts apps/web-next/src/platform/domain/web/endpoints/test/getExchangeRateEndpoint.test.ts apps/web-next/src/platform/domain/web/endpoints/test/getTagEventsListEndpoint.test.ts apps/web-next/src/platform/domain/web/endpoints/test/placePredictionMarketOrderEndpoint.test.ts apps/web-next/src/platform/domain/web/endpoints/test/searchEventsEndpoint.test.ts apps/web-next/src/platform/runtime/browser/test/BrowserRequestMetadata.test.ts apps/web-next/src/platform/schema/resilientArray.ts apps/web-next/src/platform/schema/test/resilientArray.test.ts apps/web-next/src/routeTree.gen.ts apps/web-next/src/routes/(main)/prediction/crypto.tsx apps/web-next/src/routes/(main)/prediction/finance.tsx apps/web-next/src/routes/(main)/prediction/index.tsx apps/web-next/src/routes/(main)/prediction/politics.tsx apps/web-next/src/routes/(main)/prediction/route.tsx apps/web-next/src/routes/(main)/prediction/search.tsx apps/web-next/src/routes/(main)/prediction/sports.tsx apps/web-next/src/routes/(main)/prediction/world-cup.tsx apps/web-next/src/routes/test/-predictionRoutes.test.ts apps/web-next/src/services/api/cms/cmsBaseUrl.ts apps/web-next/src/services/hooks/common/exchangeRateQuery.ts apps/web-next/src/services/hooks/common/test/exchangeRateQuery.test.ts apps/web-next/src/services/hooks/prediction/categoryTreeQuery.ts apps/web-next/src/services/hooks/prediction/estimatedProfitQuery.ts apps/web-next/src/services/hooks/prediction/eventsByIdQuery.ts apps/web-next/src/services/hooks/prediction/placePredictionMarketOrderMutation.ts apps/web-next/src/services/hooks/prediction/searchEventsQuery.ts apps/web-next/src/services/hooks/prediction/tagEventsListQuery.ts apps/web-next/src/services/hooks/prediction/test/placePredictionMarketOrderMutation.test.ts apps/web-next/src/services/hooks/prediction/test/predictionQueries.test.ts apps/web/public/mockServiceWorker.js apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/crypto/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/finance/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/politics/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/search/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/sports/page.tsx apps/web/src/app/[lang]/(with-header)/(with-footer)/prediction/world-cup/page.tsx apps/web/src/apps/Balance/Trade/Deposit/DepositCryptoSelector.tsx apps/web/src/apps/Balance/Trade/Withdraw/WithdrawCryptoSelector.tsx apps/web/src/apps/Prediction/SearchResultsPage.tsx apps/web/src/apps/Prediction/WorldCup/EventTab.tsx apps/web/src/apps/Prediction/WorldCup/MatchTab.tsx apps/web/src/apps/Prediction/WorldCup/OngoingTab.tsx apps/web/src/apps/Prediction/WorldCup/WorldCupFaq.tsx apps/web/src/apps/Prediction/WorldCup/common/MatchCard.tsx apps/web/src/apps/Prediction/WorldCup/common/calc.test.ts apps/web/src/apps/Prediction/WorldCup/common/calc.ts apps/web/src/apps/Prediction/WorldCup/common/format.ts apps/web/src/apps/Prediction/WorldCup/common/matchSegments.test.ts apps/web/src/apps/Prediction/WorldCup/common/matchSegments.ts apps/web/src/apps/Prediction/WorldCup/common/matchTime.test.ts apps/web/src/apps/Prediction/WorldCup/common/matchTime.ts apps/web/src/apps/Prediction/WorldCup/common/ongoingGroup.test.ts apps/web/src/apps/Prediction/WorldCup/common/types.ts apps/web/src/apps/Prediction/WorldCup/index.tsx apps/web/src/apps/Prediction/common/buildSearchTradeContext.test.ts apps/web/src/apps/Prediction/common/buildSearchTradeContext.ts apps/web/src/apps/Prediction/common/categories.test.ts apps/web/src/apps/Prediction/common/categories.ts apps/web/src/apps/Prediction/common/categorySelection.test.ts apps/web/src/apps/Prediction/common/categorySelection.ts apps/web/src/apps/Prediction/common/eventCardType.test.ts apps/web/src/apps/Prediction/common/eventCardType.ts apps/web/src/apps/Prediction/common/metadata.ts apps/web/src/apps/Prediction/common/outcomeLabels.test.ts apps/web/src/apps/Prediction/common/outcomeLabels.ts apps/web/src/apps/Prediction/common/polymarketOutcomes.ts apps/web/src/apps/Prediction/common/resolveCategoryTree.test.ts apps/web/src/apps/Prediction/common/resolveCategoryTree.ts apps/web/src/apps/Prediction/common/searchDirection.test.ts apps/web/src/apps/Prediction/common/searchDirection.ts apps/web/src/apps/Prediction/common/searchSort.test.ts apps/web/src/apps/Prediction/common/searchSort.ts apps/web/src/apps/Prediction/common/tradeOutcomeLabels.test.ts apps/web/src/apps/Prediction/common/tradeOutcomeLabels.ts apps/web/src/apps/Prediction/components/CategorySidebar.test.ts apps/web/src/apps/Prediction/components/CategorySidebar.tsx apps/web/src/apps/Prediction/components/CategoryTabs.test.ts apps/web/src/apps/Prediction/components/CategoryTabs.tsx apps/web/src/apps/Prediction/components/MyOrdersLink.test.ts apps/web/src/apps/Prediction/components/MyOrdersLink.tsx apps/web/src/apps/Prediction/components/PredictionCategoryList.tsx apps/web/src/apps/Prediction/components/PredictionTradeMan/EstimatedProfit.tsx apps/web/src/apps/Prediction/components/PredictionTradeMan/EventListPanel.tsx apps/web/src/apps/Prediction/components/PredictionTradeMan/TradeAmountInput.tsx apps/web/src/apps/Prediction/components/PredictionTradeMan/TradePanel.tsx apps/web/src/apps/Prediction/components/PredictionTradeMan/index.tsx apps/web/src/apps/Prediction/components/PredictionTradeMan/types.ts apps/web/src/apps/Prediction/components/PredictionTradeMan/useTradeDerivedState.ts apps/web/src/apps/Prediction/components/SearchBox/HighlightedText.test.ts apps/web/src/apps/Prediction/components/SearchBox/HighlightedText.tsx apps/web/src/apps/Prediction/components/SearchBox/SearchPopup.test.ts apps/web/src/apps/Prediction/components/SearchBox/SearchPopup.tsx apps/web/src/apps/Prediction/components/SearchBox/highlightMatch.test.ts apps/web/src/apps/Prediction/components/SearchBox/highlightMatch.ts apps/web/src/apps/Prediction/components/SearchBox/index.tsx apps/web/src/apps/Prediction/components/SearchResultCard.tsx apps/web/src/apps/Prediction/hooks/usePredictionCategorySelection.ts apps/web/src/apps/Prediction/index.test.ts apps/web/src/apps/Prediction/index.tsx apps/web/src/apps/Sdk/Deposit/SdkDepositCryptoSelector.tsx apps/web/src/apps/Sdk/Withdraw/SdkWithdrawCryptoSelector.tsx apps/web/src/components/Empty.tsx apps/web/src/components/Navbar/index.tsx apps/web/src/components/layout/Header/PageEntries/helper.test.ts apps/web/src/components/layout/Header/PageEntries/helper.tsx apps/web/src/constants/pathnames.ts apps/web/src/i18n/locales/zh-CN/common.json apps/web/src/i18n/locales/zh-CN/polymarket.json apps/web/src/mocks/browser.ts apps/web/src/mocks/fixtures/prediction.ts apps/web/src/mocks/prediction.contract.test.ts apps/web/src/mocks/useMockWorker.ts apps/web/src/proxy.ts apps/web/src/services/api/prediction/mapTagEventsToWorldCup.test.ts apps/web/src/services/api/prediction/mapTagEventsToWorldCup.ts apps/web/src/services/api/prediction/polymarket.test.ts apps/web/src/services/api/prediction/polymarket.ts apps/web/src/services/api/prediction/schemas.ts",
         "cwd": ".",
         "status": 0,
-        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-03T00-42-11-164Z-biome-check.log",
+        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-12T08-49-40-587Z-biome-check.log",
         "counts": {
-          "candidates": 143,
-          "checked": 137,
+          "candidates": 232,
+          "checked": 226,
           "errors": 0,
           "warnings": 0,
           "diagnostics": []
@@ -630,16 +614,16 @@
       "ruleId": "VERIFY-TYPE-001",
       "ok": true,
       "severity": "error",
-      "message": "apps/web 改动文件类型检查通过（全仓 356 处存量报错不阻断）",
+      "message": "apps/web 改动文件类型检查通过（全仓 344 处存量报错不阻断）",
       "file": "apps/web",
       "category": "build-quality",
       "evidence": {
         "command": "pnpm exec tsc --project ./tsconfig.json --noEmit --pretty false",
         "cwd": "apps/web",
-        "status": 2,
-        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-03T00-42-11-698Z-tsc-apps-web.log",
+        "status": 1,
+        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-12T08-49-44-392Z-tsc-apps-web.log",
         "counts": {
-          "total": 356,
+          "total": 344,
           "inChangedFiles": 0
         }
       }
@@ -648,13 +632,13 @@
       "ruleId": "VERIFY-TYPE-002",
       "ok": false,
       "severity": "warn",
-      "message": "改动文件之外的 tsc 报错 356 > 基线 193，疑似共享类型改动涟漪",
+      "message": "改动文件之外的 tsc 报错 344 > 基线 193，疑似共享类型改动涟漪",
       "file": "apps/web",
       "category": "build-quality",
       "evidence": {
         "counts": {
-          "total": 356,
-          "outsideChanged": 356,
+          "total": 344,
+          "outsideChanged": 344,
           "baseline": 193
         }
       }
@@ -670,7 +654,7 @@
         "command": "pnpm exec tsc --project ./tsconfig.json --noEmit --pretty false",
         "cwd": "apps/web-next",
         "status": 0,
-        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-03T00-42-35-084Z-tsc-apps-web-next.log",
+        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-12T08-50-13-537Z-tsc-apps-web-next.log",
         "counts": {
           "total": 0,
           "inChangedFiles": 0
@@ -696,17 +680,17 @@
       "ruleId": "VERIFY-TEST-001",
       "ok": true,
       "severity": "error",
-      "message": ". vitest 通过：16 个相关测试文件（16 passed (16)）",
+      "message": ". vitest 通过：25 个相关测试文件（25 passed (25)）",
       "file": "",
       "category": "build-quality",
       "evidence": {
-        "command": "pnpm exec vitest run apps/web/src/apps/Prediction/WorldCup/common/calc.test.ts apps/web/src/apps/Prediction/WorldCup/common/matchSegments.test.ts apps/web/src/apps/Prediction/WorldCup/common/matchTime.test.ts apps/web/src/apps/Prediction/WorldCup/common/ongoingGroup.test.ts apps/web/src/apps/Prediction/common/categories.test.ts apps/web/src/apps/Prediction/common/categorySelection.test.ts apps/web/src/apps/Prediction/common/eventCardType.test.ts apps/web/src/apps/Prediction/common/outcomeLabels.test.ts apps/web/src/apps/Prediction/common/resolveCategoryTree.test.ts apps/web/src/apps/Prediction/common/searchDirection.test.ts apps/web/src/apps/Prediction/common/searchSort.test.ts apps/web/src/apps/Prediction/components/SearchBox/highlightMatch.test.ts apps/web/src/constants/pathnames.test.ts apps/web/src/mocks/prediction.contract.test.ts apps/web/src/services/api/prediction/mapTagEventsToWorldCup.test.ts apps/web/src/services/api/prediction/polymarket.test.ts",
+        "command": "pnpm exec vitest run apps/web/src/apps/Prediction/WorldCup/common/calc.test.ts apps/web/src/apps/Prediction/WorldCup/common/matchSegments.test.ts apps/web/src/apps/Prediction/WorldCup/common/matchTime.test.ts apps/web/src/apps/Prediction/WorldCup/common/ongoingGroup.test.ts apps/web/src/apps/Prediction/common/buildSearchTradeContext.test.ts apps/web/src/apps/Prediction/common/categories.test.ts apps/web/src/apps/Prediction/common/categorySelection.test.ts apps/web/src/apps/Prediction/common/eventCardType.test.ts apps/web/src/apps/Prediction/common/outcomeLabels.test.ts apps/web/src/apps/Prediction/common/resolveCategoryTree.test.ts apps/web/src/apps/Prediction/common/searchDirection.test.ts apps/web/src/apps/Prediction/common/searchSort.test.ts apps/web/src/apps/Prediction/common/tradeOutcomeLabels.test.ts apps/web/src/apps/Prediction/components/CategorySidebar.test.ts apps/web/src/apps/Prediction/components/CategoryTabs.test.ts apps/web/src/apps/Prediction/components/MyOrdersLink.test.ts apps/web/src/apps/Prediction/components/SearchBox/HighlightedText.test.ts apps/web/src/apps/Prediction/components/SearchBox/SearchPopup.test.ts apps/web/src/apps/Prediction/components/SearchBox/highlightMatch.test.ts apps/web/src/apps/Prediction/index.test.ts apps/web/src/components/layout/Header/PageEntries/helper.test.ts apps/web/src/constants/pathnames.test.ts apps/web/src/mocks/prediction.contract.test.ts apps/web/src/services/api/prediction/mapTagEventsToWorldCup.test.ts apps/web/src/services/api/prediction/polymarket.test.ts",
         "cwd": ".",
         "status": 0,
-        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-03T00-42-37-950Z-vitest-related-root.log",
+        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-12T08-51-01-406Z-vitest-related-root.log",
         "counts": {
-          "selected": 16,
-          "summary": "16 passed (16)"
+          "selected": 25,
+          "summary": "25 passed (25)"
         }
       }
     },
@@ -714,17 +698,17 @@
       "ruleId": "VERIFY-TEST-001",
       "ok": true,
       "severity": "error",
-      "message": "apps/web-next vitest 通过：29 个相关测试文件（29 passed (29)）",
+      "message": "apps/web-next vitest 通过：50 个相关测试文件（50 passed (50)）",
       "file": "apps/web-next",
       "category": "build-quality",
       "evidence": {
-        "command": "pnpm exec vitest run src/apps/Prediction/common/test/categories.test.ts src/apps/Prediction/common/test/categorySelection.test.ts src/apps/Prediction/common/test/eventCardType.test.ts src/apps/Prediction/common/test/formatTradeVolume.test.ts src/apps/Prediction/common/test/outcomeLabels.test.ts src/apps/Prediction/common/test/predictionRoute.test.ts src/apps/Prediction/common/test/resolveCategoryTree.test.ts src/apps/Prediction/components/test/CategorySidebar.test.tsx src/apps/Prediction/components/test/CategoryTabs.test.tsx src/apps/Prediction/components/test/EventTab.test.tsx src/apps/Prediction/components/test/PredictionCategoryList.test.tsx src/apps/Prediction/components/test/YesNoPairBtn.test.tsx src/apps/Prediction/mappers/test/mapTagEventsToPrediction.test.ts src/components/test/Empty.test.tsx src/i18n/core/test/namespaces.test.ts src/i18n/core/test/resources.test.ts src/platform/components/ui/pagination/test/FxPagination.test.tsx src/platform/components/ui/pagination/test/pageRange.test.ts src/platform/domain/web/endpoints/test/getCategoryTreeEndpoint.test.ts src/platform/domain/web/endpoints/test/getEstimatedProfitEndpoint.test.ts src/platform/domain/web/endpoints/test/getExchangeRateEndpoint.test.ts src/platform/domain/web/endpoints/test/getTagEventsListEndpoint.test.ts src/platform/domain/web/endpoints/test/searchEventsEndpoint.test.ts src/platform/http/test/RequestMetadataService.test.ts src/platform/schema/test/resilientArray.test.ts src/routes/test/-__root.test.ts src/routes/test/-predictionRoutes.test.ts src/services/hooks/common/test/exchangeRateQuery.test.ts src/services/hooks/prediction/test/predictionQueries.test.ts",
+        "command": "pnpm exec vitest run src/apps/Prediction/common/test/buildSearchTradeContext.test.ts src/apps/Prediction/common/test/buildShareInviteUrl.test.ts src/apps/Prediction/common/test/categories.test.ts src/apps/Prediction/common/test/categorySelection.test.ts src/apps/Prediction/common/test/eventCardType.test.ts src/apps/Prediction/common/test/formatTradeVolume.test.ts src/apps/Prediction/common/test/highlightMatch.test.ts src/apps/Prediction/common/test/matchSegments.test.ts src/apps/Prediction/common/test/matchTime.test.ts src/apps/Prediction/common/test/outcomeLabels.test.ts src/apps/Prediction/common/test/overlayTradeOutcome.test.ts src/apps/Prediction/common/test/predictionRoute.test.ts src/apps/Prediction/common/test/resolveCategoryTree.test.ts src/apps/Prediction/common/test/searchDirection.test.ts src/apps/Prediction/common/test/searchSort.test.ts src/apps/Prediction/common/test/sportsModels.test.ts src/apps/Prediction/common/test/tradeCalculations.test.ts src/apps/Prediction/common/test/tradeOutcomeLabels.test.ts src/apps/Prediction/components/test/CategorySidebar.test.tsx src/apps/Prediction/components/test/CategoryTabs.test.tsx src/apps/Prediction/components/test/EventTab.test.tsx src/apps/Prediction/components/test/MyOrdersLink.test.tsx src/apps/Prediction/components/test/PredictionCategoryList.test.tsx src/apps/Prediction/components/test/PredictionFaq.test.tsx src/apps/Prediction/components/test/PredictionListBoundary.test.tsx src/apps/Prediction/components/test/SearchPopup.test.tsx src/apps/Prediction/components/test/YesNoPairBtn.test.tsx src/apps/Prediction/mappers/test/mapTagEventsToMatches.test.ts src/apps/Prediction/mappers/test/mapTagEventsToPrediction.test.ts src/apps/shared/components/main-header/test/mainNavigationConfig.test.ts src/apps/shared/components/test/MainFooter.test.tsx src/components/test/Empty.test.tsx src/i18n/core/test/namespaces.test.ts src/i18n/core/test/resources.test.ts src/platform/components/convenience/modal/test/Modal.test.tsx src/platform/components/ui/pagination/test/FxPagination.test.tsx src/platform/components/ui/pagination/test/pageRange.test.ts src/platform/domain/web/endpoints/test/getCategoryTreeEndpoint.test.ts src/platform/domain/web/endpoints/test/getEstimatedProfitEndpoint.test.ts src/platform/domain/web/endpoints/test/getEventsByIdEndpoint.test.ts src/platform/domain/web/endpoints/test/getExchangeRateEndpoint.test.ts src/platform/domain/web/endpoints/test/getTagEventsListEndpoint.test.ts src/platform/domain/web/endpoints/test/placePredictionMarketOrderEndpoint.test.ts src/platform/domain/web/endpoints/test/searchEventsEndpoint.test.ts src/platform/runtime/browser/test/BrowserRequestMetadata.test.ts src/platform/schema/test/resilientArray.test.ts src/routes/test/-predictionRoutes.test.ts src/services/hooks/common/test/exchangeRateQuery.test.ts src/services/hooks/prediction/test/placePredictionMarketOrderMutation.test.ts src/services/hooks/prediction/test/predictionQueries.test.ts",
         "cwd": "apps/web-next",
         "status": 0,
-        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-03T00-42-40-385Z-vitest-related-apps-web-next.log",
+        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-12T08-51-30-619Z-vitest-related-apps-web-next.log",
         "counts": {
-          "selected": 29,
-          "summary": "29 passed (29)"
+          "selected": 50,
+          "summary": "50 passed (50)"
         }
       }
     },
@@ -752,7 +736,7 @@
         "command": "pnpm --filter @fameex/web --filter web-next build:prod",
         "cwd": ".",
         "status": 0,
-        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-03T00-42-43-432Z-production-build.log",
+        "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-12T08-52-15-739Z-production-build.log",
         "counts": null
       }
     },
@@ -763,56 +747,56 @@
       "ok": true,
       "severity": "error",
       "message": "G8 机器事实层已实跑：9 条 biome/tsc/vitest 结论",
-      "evidence": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-03T00-42-10-887Z-verify-build-quality.log"
+      "evidence": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-12T08-49-39-421Z-verify-build-quality.log"
     }
   ],
   "commands": [
     {
       "label": "verify-project-gate PR-02074 G8",
-      "status": 1,
-      "ok": false,
-      "startedAt": "2026-09-03T00:42:00.998Z",
-      "finishedAt": "2026-09-03T00:42:01.327Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-03T00-42-00-998Z-verify-project-gate-g8.log"
+      "status": 0,
+      "ok": true,
+      "startedAt": "2026-09-12T08:49:10.002Z",
+      "finishedAt": "2026-09-12T08:49:11.824Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-12T08-49-10-002Z-verify-project-gate-g8.log"
     },
     {
       "label": "verify-code-rules --project PR-02074",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-09-03T00:42:01.329Z",
-      "finishedAt": "2026-09-03T00:42:10.887Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-03T00-42-01-329Z-verify-code-rules.log"
+      "startedAt": "2026-09-12T08:49:11.826Z",
+      "finishedAt": "2026-09-12T08:49:39.418Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-12T08-49-11-826Z-verify-code-rules.log"
     },
     {
       "label": "verify-build-quality --project PR-02074",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-09-03T00:42:10.887Z",
-      "finishedAt": "2026-09-03T00:43:40.921Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-03T00-42-10-887Z-verify-build-quality.log"
+      "startedAt": "2026-09-12T08:49:39.421Z",
+      "finishedAt": "2026-09-12T09:02:42.192Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-12T08-49-39-421Z-verify-build-quality.log"
     },
     {
       "label": "update-project-index --write",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-09-03T00:43:41.371Z",
-      "finishedAt": "2026-09-03T00:43:41.454Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-03T00-43-41-371Z-update-project-index.log"
+      "startedAt": "2026-09-12T09:02:50.555Z",
+      "finishedAt": "2026-09-12T09:02:58.578Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-12T09-02-50-555Z-update-project-index.log"
     },
     {
       "label": "render-delivery-summary --project PR-02074 --write",
       "status": 0,
       "ok": true,
-      "startedAt": "2026-09-03T00:43:41.455Z",
-      "finishedAt": "2026-09-03T00:43:41.799Z",
-      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-03T00-43-41-455Z-render-delivery-summary.log"
+      "startedAt": "2026-09-12T09:02:58.581Z",
+      "finishedAt": "2026-09-12T09:03:00.032Z",
+      "logFile": "/var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/docs-tdd-logs/PR-02074/2026-09-12T09-02-58-581Z-render-delivery-summary.log"
     }
   ],
   "codeRules": {
     "required": true,
     "skipped": false,
     "reason": "",
-    "ok": true
+    "ok": false
   },
   "buildQuality": {
     "required": true,
@@ -823,25 +807,25 @@
     "baselineFile": "../docs_tdd/prds/PR-02074/agent/tsc-baseline.json"
   },
   "source": {
-    "gateCommand": "/Users/aven/.nvm/versions/node/v24.7.0/bin/node /Users/aven/github/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-02074 G8 --json",
+    "gateCommand": "/opt/homebrew/Cellar/node/26.3.1/bin/node /Users/aven/github/docs_tdd/common/engine/agent-scripts/verify-project-gate.mjs PR-02074 G8 --json",
     "parseError": null,
-    "codeRulesCommand": "/Users/aven/.nvm/versions/node/v24.7.0/bin/node /Users/aven/github/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --project PR-02074 --json",
-    "codeRulesParseError": null,
-    "buildQualityCommand": "/Users/aven/.nvm/versions/node/v24.7.0/bin/node /Users/aven/github/docs_tdd/common/engine/agent-scripts/verify-build-quality.mjs --project PR-02074 --json --production-build",
+    "codeRulesCommand": "/opt/homebrew/Cellar/node/26.3.1/bin/node /Users/aven/github/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --project PR-02074 --json",
+    "codeRulesParseError": "Unterminated string in JSON at position 55615 (line 1061 column 131)",
+    "buildQualityCommand": "/opt/homebrew/Cellar/node/26.3.1/bin/node /Users/aven/github/docs_tdd/common/engine/agent-scripts/verify-build-quality.mjs --project PR-02074 --json --production-build",
     "buildQualityParseError": null
   },
   "fingerprint": {
-    "headSha": "9201ec48f2e9f3e8367c4b6bba000d38c683eb5a",
-    "baseSha": "830327da03bb8bf03b499a8a19994a30dafd4b8a",
-    "dirtyHash": "058b42e497c14c5a568483977cc84b2b85dbd2f9becd98ec66e2368deed356ef",
+    "headSha": "839f3a8e44baf924379915e723e0297ef9406772",
+    "baseSha": "b0039e8d9b74b43230a29be4f9ec45601be0d492",
+    "dirtyHash": "bd375afe832c5c2ab5dae26fc77f54a8d27fe704e9c7d1bf5f5ab2d797fd0974",
     "dirtyFileCount": 0,
     "untrackedFileCount": 0,
-    "rulesetVersion": "local-2026.09-atomic-acceptance-v1",
+    "rulesetVersion": "3.2",
     "rulePolicyFingerprint": "4763b5474fb9cefaaa18cbc8cd503397ee014f85b8ad548a51bf892086a14503"
   },
   "cache": {
     "hit": false,
-    "fingerprint": "95db4c245b8a1cc4"
+    "fingerprint": "bbba380bd0d798f5"
   },
   "stageSync": {
     "attempted": false,

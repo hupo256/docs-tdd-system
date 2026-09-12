@@ -13,7 +13,7 @@
 | Figma 主画板 | ⚠️ PRD 未附 Figma，仅 bitmart 截图；待补（见「待确认」）|
 | 清单维护人 | Agent |
 | G2 确认人 & 日期 | ✅ aven / 2026-07-22 |
-| 责任模块目录 | `apps/web/src/apps/Prediction/**`、`apps/web/src/services/api/prediction/**`、`apps/web/src/mocks/**`（MSW）（改动边界白名单，见 [change-scope-boundary.md §1.1](../../../common/rules/change-scope-boundary.md)）|
+| 责任模块目录 | `apps/web-next/src/apps/Prediction/**`、`apps/web-next/src/services/hooks/prediction/**`、`apps/web-next/src/platform/domain/web/endpoints/**`、`apps/web-next/src/routes/(main)/prediction/**`、`apps/web-next/src/i18n/resources/zh-CN/polymarket.json`（迁移与基建已完成；`apps/web` 仅作 legacy 参照）|
 | visualFidelity | standard（**G2 定：以 bitmart 截图为视觉基线**；Figma 后补且改动不大）|
 
 ## G2 决策（aven / 2026-07-22，锁定）
@@ -26,7 +26,9 @@
 
 ## 现状与复用基线（一期 + 二期已落）
 
-- 用户侧代码在 `apps/web/src/apps/Prediction/`：一期为**世界杯**单一分类（`WorldCup/`），`index.tsx` 已**预留**顶部一级 Tab 占位 + 左侧二级分类占位（现 `hidden`）。
+> 2026-09-12：以下为三期启动时的 legacy 基线记录。迁移与配套基建现已完成，后续实现以 `apps/web-next` 为准。
+
+- 三期启动时用户侧代码位于 `apps/web/src/apps/Prediction/`：一期为**世界杯**单一分类（`WorldCup/`），`index.tsx` 已**预留**顶部一级 Tab 占位 + 左侧二级分类占位（现 `hidden`）。
 - 数据源为 **Polymarket**：`services/api/prediction/`（`polymarket.ts` = `useTagEventsListQuery`、`schemas.ts` = Zod、`mapTagEventsToWorldCup.ts` = mapper）。
 - 现有列表接口参数已含 `tagType`(现固定 `'sports'`)、`tableType`(比赛=1/事件=2)、分页 —— **三期即扩展 `tagType` 为四大类 + 增加二/三级分类过滤参数**。
 - 已有组件可复用：`MatchTab`（三段占比条比赛卡形态 = 体育「进行中」聚合 / 「即将开始」聚合 / 「比赛」tab 共用）、`EventTab`、`PredictionShareMan`（分享弹窗，一期已有）、`PredictionTradeMan`（下单弹窗）。
