@@ -3,11 +3,11 @@
 // reports path/surface coverage, and persists only the latest development checkpoint.
 
 import assert from 'node:assert/strict'
-import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
-import { basename, join, resolve } from 'node:path'
+import { basename, dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { changedCodePaths, codeFingerprint, matchesEffectiveCodeState, pendingCodePaths } from './lib/fingerprint.mjs'
+import { evidenceCommandRuntimeProblem, executeReviewedCommand, selectDevelopmentCommands } from './lib/vnext-command-contract.mjs'
 import { deliveryPolicyPaths, deliveryScopePathProblems, outOfScopeDeliveryPaths } from './lib/vnext-delivery-scope.mjs'
 import { persistVNextWorkItem } from './lib/vnext-persistence.mjs'
 import { scopeApprovalFingerprint } from './lib/vnext-risk-route.mjs'
@@ -21,25 +21,44 @@ function outputTail(value, limit = 2000) {
 }
 
 function defaultExecute(spec, worktree) {
-  const result = spawnSync(spec.argv[0], spec.argv.slice(1), {
-    cwd: worktree,
-    encoding: 'utf8',
-    stdio: 'pipe',
-    shell: false,
-    timeout: (spec.timeoutSeconds || 600) * 1000,
-    maxBuffer: 16 * 1024 * 1024,
-  })
-  return {
-    exitCode: Number.isInteger(result.status) ? result.status : 124,
-    signal: result.signal || '',
-    stdout: result.stdout || '',
-    stderr: `${result.stderr || ''}${result.error ? `\n${result.error.message}` : ''}`,
-  }
+  return executeReviewedCommand(spec, worktree)
 }
 
 function locatorMatchesPath(locator, path) {
-  const normalized = String(locator || '').replaceAll('\\', '/')
-  return normalized.includes(path) || normalized.includes(basename(path))
+  const normalized = String(locator || '').replaceAll('\\', '/').toLowerCase()
+  const normalizedPath = path.replaceAll('\\', '/').toLowerCase()
+  const stem = basename(normalizedPath).replace(/\.(?:test\.)?[cm]?[jt]sx?$/, '')
+  const parent = basename(dirname(normalizedPath))
+  return normalized.includes(normalizedPath)
+    || (stem !== 'index' && stem.length >= 5 && normalized.includes(stem))
+    || (stem === 'index' && parent.length >= 5 && normalized.includes(parent))
+}
+
+function explicitPathCoverage(workItem, changedPaths, pathMappings = []) {
+  if (!Array.isArray(pathMappings)) throw new Error('dev-check path mappings must be an array')
+  const changed = new Set(changedPaths)
+  const surfaceOwners = new Map()
+  for (const requirement of workItem.requirements || []) {
+    if (requirement.status !== 'doing') continue
+    for (const surface of requirement.affectedSurfaces || []) {
+      if (surface.disposition === 'implement') surfaceOwners.set(surface.surfaceId, requirement.requirementId)
+    }
+  }
+  const mapped = new Map()
+  for (const entry of pathMappings) {
+    const path = String(entry?.path || '').replaceAll('\\', '/').replace(/^\.\//, '')
+    if (!path || !changed.has(path)) throw new Error(`path mapping is not a changed path: ${path || '<empty>'}`)
+    if (mapped.has(path)) throw new Error(`duplicate path mapping: ${path}`)
+    if (!Array.isArray(entry.surfaceIds) || !entry.surfaceIds.length) throw new Error(`path mapping requires surfaceIds: ${path}`)
+    const unknown = entry.surfaceIds.filter((surfaceId) => !surfaceOwners.has(surfaceId))
+    if (unknown.length) throw new Error(`path mapping references non-doing or non-implement surfaces for ${path}: ${unknown.join(', ')}`)
+    const surfaceIds = [...new Set(entry.surfaceIds)].sort()
+    mapped.set(path, {
+      requirementIds: [...new Set(surfaceIds.map((surfaceId) => surfaceOwners.get(surfaceId)))].sort(),
+      surfaceIds,
+    })
+  }
+  return mapped
 }
 
 export function parseTypecheckDiagnostics(text) {
@@ -115,9 +134,10 @@ export function developmentPreflightProblems(workItem) {
   return [...new Set(problems)]
 }
 
-export function runDevelopmentCheck({ workItem, worktree, baseRef = 'origin/online', generatedAt = new Date().toISOString(), dependencies = {} } = {}) {
+export function runDevelopmentCheck({ workItem, worktree, baseRef = 'origin/online', generatedAt = new Date().toISOString(), pathMappings = [], dependencies = {} } = {}) {
   const preflightProblems = developmentPreflightProblems(workItem)
   if (preflightProblems.length) throw new Error(`development check preflight failed: ${preflightProblems.join('; ')}`)
+  if (!Array.isArray(pathMappings)) throw new Error('dev-check path mappings must be an array')
   const measure = dependencies.measure || codeFingerprint
   const listChanged = dependencies.changedPaths || changedCodePaths
   const listPending = dependencies.pendingPaths || pendingCodePaths
@@ -129,21 +149,32 @@ export function runDevelopmentCheck({ workItem, worktree, baseRef = 'origin/onli
   const surfaces = (workItem.requirements || []).flatMap((requirement) => (requirement.affectedSurfaces || [])
     .filter((surface) => requirement.status === 'doing' && surface.disposition === 'implement')
     .map((surface) => ({ requirementId: requirement.requirementId, ...surface })))
+  const inheritedMappings = (workItem.autopilot?.lastDevCheck?.pathCoverage || [])
+    .filter((entry) => entry.surfaceIds?.length && changedPaths.includes(entry.path))
+    .map((entry) => ({ path: entry.path, surfaceIds: entry.surfaceIds }))
+  const explicitCoverage = explicitPathCoverage(workItem, changedPaths, pathMappings.length ? pathMappings : inheritedMappings)
   const pathCoverage = changedPaths.map((path) => {
-    const matched = surfaces.filter((surface) => locatorMatchesPath(surface.locator, path))
+    const locatorMatches = surfaces.filter((surface) => locatorMatchesPath(surface.locator, path))
+    const explicit = explicitCoverage.get(path)
     return {
       path,
-      requirementIds: [...new Set(matched.map((surface) => surface.requirementId))].sort(),
-      surfaceIds: [...new Set(matched.map((surface) => surface.surfaceId))].sort(),
+      requirementIds: explicit?.requirementIds || [...new Set(locatorMatches.map((surface) => surface.requirementId))].sort(),
+      surfaceIds: explicit?.surfaceIds || [...new Set(locatorMatches.map((surface) => surface.surfaceId))].sort(),
+      mappingSource: explicit ? 'input' : 'locator',
     }
   })
+  const unmappedPaths = pathCoverage.filter((entry) => !entry.surfaceIds.length).map((entry) => entry.path)
   const policyPaths = deliveryPolicyPaths(workItem)
   const outOfScopePaths = outOfScopeDeliveryPaths(workItem, changedPaths)
-  const commands = (workItem.evidenceCommands || []).filter((command) => !DEFERRED_COMMAND_KINDS.has(command.kind))
+  const commandSelection = selectDevelopmentCommands(workItem.evidenceCommands || [], DEFERRED_COMMAND_KINDS)
+  const commands = commandSelection.commands
   const commandResults = []
   let typecheckSummary = null
   for (const command of commands) {
-    const result = execute(command, worktree)
+    const commandProblem = evidenceCommandRuntimeProblem(command, worktree)
+    const result = commandProblem
+      ? { exitCode: 127, signal: '', stdout: '', stderr: commandProblem }
+      : execute(command, worktree)
     const afterCommand = measure(worktree, baseRef)
     if (!matchesEffectiveCodeState(before, afterCommand)) throw new Error(`${command.evidenceId} changed effective code content during dev-check`)
     const typecheck = isTypecheckCommand(command)
@@ -162,10 +193,11 @@ export function runDevelopmentCheck({ workItem, worktree, baseRef = 'origin/onli
       argv: command.argv,
       result: passed ? 'pass' : 'fail',
       exitCode: result.exitCode,
-      ...(typecheck ? { evaluation: 'baseline-aware-typecheck' } : {}),
+      ...(commandProblem ? { evaluation: 'command-preflight' } : typecheck ? { evaluation: 'baseline-aware-typecheck' } : {}),
       ...(result.signal ? { signal: result.signal } : {}),
       ...(passed ? {} : { stdoutTail: outputTail(result.stdout), stderrTail: outputTail(result.stderr) }),
     })
+    if (commandProblem || result.exitCode === 124) break
   }
   const after = measure(worktree, baseRef)
   if (!matchesEffectiveCodeState(before, after)) throw new Error('development check changed effective code content')
@@ -173,8 +205,11 @@ export function runDevelopmentCheck({ workItem, worktree, baseRef = 'origin/onli
   const problems = [
     ...(!changedPaths.length ? ['no changed paths were found against the configured base'] : []),
     ...(!commands.length ? ['no reviewed non-browser development commands are configured'] : []),
+    ...unmappedPaths.map((path) => `changed path has no doing requirement/implement surface mapping: ${path}`),
     ...outOfScopePaths.map((path) => `changed path is outside deliveryScope.policyPaths: ${path}`),
-    ...commandResults.filter((result) => result.result === 'fail').map((result) => `${result.evidenceId} failed with exit code ${result.exitCode}`),
+    ...commandResults.filter((result) => result.result === 'fail').map((result) => result.evaluation === 'command-preflight'
+      ? result.stderrTail
+      : `${result.evidenceId} failed with exit code ${result.exitCode}`),
   ]
   const report = {
     schemaVersion: 1,
@@ -187,8 +222,15 @@ export function runDevelopmentCheck({ workItem, worktree, baseRef = 'origin/onli
     changedPaths,
     pendingCommitPaths,
     pathCoverage,
-    unmappedPaths: pathCoverage.filter((entry) => !entry.surfaceIds.length).map((entry) => entry.path),
+    unmappedPaths,
     pathPolicy: { status: policyPaths.length ? 'enforced' : 'not-configured', policyPaths, outOfScopePaths },
+    commandSelection: {
+      plannedCount: (workItem.evidenceCommands || []).filter((command) => !DEFERRED_COMMAND_KINDS.has(command.kind)).length,
+      selectedCount: commands.length,
+      executedCount: commandResults.length,
+      supersededCommandIds: commandSelection.supersededCommandIds,
+      notRunCommandIds: commands.slice(commandResults.length).map((command) => command.evidenceId),
+    },
     commandResults,
     ...(typecheckSummary ? { typecheckSummary } : {}),
     blockers,
@@ -238,6 +280,27 @@ export function selfTest() {
   assert.equal(report.ok, true, JSON.stringify(report))
   assert.deepEqual(report.pathCoverage[0].surfaceIds, ['S-001'])
   assert.equal(applyDevelopmentCheck(workItem, report).autopilot.lastDevCheck.runId, report.runId)
+  const selected = selectDevelopmentCommands([
+    { evidenceId: 'E-file', kind: 'pure-logic', argv: ['pnpm', 'test', '--run', 'tests/a.spec.ts'], requirementIds: ['R-001'], surfaceIds: ['S-001'] },
+    { evidenceId: 'E-suite', kind: 'contract-or-scenario-tests', argv: ['pnpm', 'test', '--run', 'tests'], requirementIds: ['R-001'], surfaceIds: ['S-001'] },
+    { evidenceId: 'E-type', kind: 'directed-quality', argv: ['pnpm', 'typecheck'], requirementIds: ['R-001'], surfaceIds: ['S-001'] },
+    { evidenceId: 'E-browser', kind: 'browser-interaction', argv: ['node', 'browser.mjs'], requirementIds: ['R-001'], surfaceIds: ['S-001'] },
+  ], DEFERRED_COMMAND_KINDS)
+  assert.deepEqual(selected.commands.map((command) => command.evidenceId), ['E-suite', 'E-type'])
+  assert.deepEqual(selected.supersededCommandIds, ['E-file'])
+  assert.match(evidenceCommandRuntimeProblem({ evidenceId: 'E-missing', argv: ['pnpm', 'test', '--run', 'missing-tests'] }, '/tmp'), /does not exist/)
+  const unmapped = runDevelopmentCheck({
+    workItem, worktree: '/tmp/worktree',
+    dependencies: { measure: () => code, changedPaths: () => ['src/unknown.ts'], pendingPaths: () => ['src/unknown.ts'], execute: () => ({ exitCode: 0, signal: '', stdout: '', stderr: '' }) },
+  })
+  assert.equal(unmapped.ok, false)
+  assert.match(unmapped.problems.join(' '), /no doing requirement/)
+  const explicitlyMapped = runDevelopmentCheck({
+    workItem, worktree: '/tmp/worktree', pathMappings: [{ path: 'src/unknown.ts', surfaceIds: ['S-001'] }],
+    dependencies: { measure: () => code, changedPaths: () => ['src/unknown.ts'], pendingPaths: () => ['src/unknown.ts'], execute: () => ({ exitCode: 0, signal: '', stdout: '', stderr: '' }) },
+  })
+  assert.equal(explicitlyMapped.ok, true)
+  assert.equal(explicitlyMapped.pathCoverage[0].mappingSource, 'input')
   const baselineOutput = Array.from({ length: 132 }, (_, index) => `legacy/file-${index}.ts(1,1): error TS2322: debt`).join('\n')
   const baselineTypecheck = baselineAwareTypecheck({ output: baselineOutput, exitCode: 1, changedPaths: ['src/login.ts'] })
   assert.deepEqual(
@@ -272,7 +335,10 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     const projectDir = resolve(argumentValue('--project'))
     const worktree = resolve(argumentValue('--worktree'))
     const workItem = JSON.parse(readFileSync(join(projectDir, 'work-item.json'), 'utf8'))
-    const report = runDevelopmentCheck({ workItem, worktree, baseRef: argumentValue('--base') || 'origin/online' })
+    const pathMapFile = argumentValue('--path-map')
+    const pathMapInput = pathMapFile ? JSON.parse(readFileSync(resolve(pathMapFile), 'utf8')) : []
+    const pathMappings = Array.isArray(pathMapInput) ? pathMapInput : pathMapInput.mappings
+    const report = runDevelopmentCheck({ workItem, worktree, baseRef: argumentValue('--base') || 'origin/online', pathMappings })
     const persisted = persistVNextWorkItem(projectDir, applyDevelopmentCheck(workItem, report))
     console.log(JSON.stringify({ ...report, persisted }, null, 2))
     process.exitCode = report.ok ? 0 : 1

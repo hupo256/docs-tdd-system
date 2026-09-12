@@ -123,12 +123,15 @@ node common/engine/agent-scripts/docs-tdd.mjs run PR-01234
 
 Figma/API 缺失不会在 intake 阶段形成全局阻塞。CLI 输出的 action packet 是客户端无关协议；Claude、Codex、Pi、Cursor 都按 `action`、`reason`、`constraints` 执行，不从 Markdown 阶段文字猜状态。
 
-实现过程中可先运行 `docs-tdd dev-check PR-01234`。它只执行已审查的非浏览器命令，报告当前 changed paths、待提交 paths、requirement/surface 映射、未映射路径和 `deliveryScope.policyPaths` 越界，并把结果写入 `work-item.json.autopilot.lastDevCheck`；不会生成或覆盖正式的 `latest-result.json`。对 `tsc`/`typecheck` 命令使用 baseline-aware 判定：存量诊断可以保留，但 changed path 新诊断或相对上次基线增长的跨文件诊断会失败；首次运行会把当前 changed path 之外的诊断数登记为基线。`deliveryScope.policyPaths` 是真实写入边界：checkpoint、dev-check、evidence 和 commit guard 任一层发现越界都会 fail-closed。
+实现过程中可先运行 `docs-tdd dev-check PR-01234`。它只执行已审查的非浏览器命令，报告当前 changed paths、待提交 paths、requirement/surface 映射、未映射路径和 `deliveryScope.policyPaths` 越界，并把结果写入 `work-item.json.autopilot.lastDevCheck`；不会生成或覆盖正式的 `latest-result.json`。覆盖同一批 requirement/surface 的目录级测试会取代其目录下重复的文件级命令；缺失/空测试目标、未映射路径和越界路径都会 fail-closed。每条命令默认限时 300 秒，超时会终止整个子进程组并停止后续命令，保证失败报告可以落盘。对 `tsc`/`typecheck` 命令使用 baseline-aware 判定：存量诊断可以保留，但 changed path 新诊断或相对上次基线增长的跨文件诊断会失败；首次运行会把当前 changed path 之外的诊断数登记为基线。`deliveryScope.policyPaths` 是真实写入边界：checkpoint、dev-check、evidence 和 commit guard 任一层发现越界都会 fail-closed。
+
+当 surface locator 是业务描述、无法可靠推导代码路径时，可传 `--path-map <json>`；JSON 为 `{ "mappings": [{ "path": "repo/relative/file.ts", "surfaceIds": ["S-001"] }] }`。CLI 只接受当前 changed path 和已批准 doing/implement surface，并把解析后的 requirement/surface 绑定写入报告；后续相同路径可复用上次映射。该映射只证明改动路径属于批准范围，不证明功能已经完成。
 
 实现动作完成后，Agent 将 action packet 的 `actionId`、真实 `changedPaths`、代码搜索得到的 `discoveredSurfaces` 与实际覆盖的 `coveredSurfaceIds` 写入临时 checkpoint JSON，再调用：
 
 ```bash
 node common/engine/agent-scripts/docs-tdd.mjs dev-check PR-01234
+node common/engine/agent-scripts/docs-tdd.mjs dev-check PR-01234 --path-map /tmp/PR-01234-path-map.json
 node common/engine/agent-scripts/docs-tdd.mjs checkpoint PR-01234 --input /tmp/checkpoint.json
 # 可选：在依赖尚未齐备时提交明确标记为 non-delivery 的中间成果
 node common/engine/agent-scripts/docs-tdd.mjs commit PR-01234 --mode checkpoint
@@ -137,7 +140,7 @@ node common/engine/agent-scripts/docs-tdd.mjs run PR-01234
 node common/engine/agent-scripts/docs-tdd.mjs commit PR-01234 --mode delivery
 ```
 
-其中 `docs-tdd run` 会自动执行已审查的 evidence command plan，并自动组装 surfaces report 跑 enforced verify；显式 delivery commit 只在 authoritative PASS 已就绪时提交冻结路径。证据保存在 `~/.cache/docs-tdd/evidence/<PROJECT-ID>/`，不会增加项目状态文件。命令退出 1 时仍会把 CLI 签名的失败证据送入 verify，使 Autopilot 真正进入修复分支；只有 runner/协议错误才中断。代码检查与 browser 检查分别最多自动修复两轮，任一域耗尽即输出 `escalate-repair-failure`，禁止无限重试。
+其中 `docs-tdd run` 会自动执行已审查的 evidence command plan，并自动组装 surfaces report 跑 enforced verify；显式 delivery commit 只在 authoritative PASS 已就绪时提交冻结路径。正式 evidence runner 与 dev-check 共用目录级命令去重、测试目标预检、300 秒默认预算和进程组超时契约。证据保存在 `~/.cache/docs-tdd/evidence/<PROJECT-ID>/`，不会增加项目状态文件。命令退出 1 时仍会把 CLI 签名的失败证据送入 verify，使 Autopilot 真正进入修复分支；只有 runner/协议错误才中断。代码检查与 browser 检查分别最多自动修复两轮，任一域耗尽即输出 `escalate-repair-failure`，禁止无限重试。
 
 `evidencePlan[].runtimeRequired=true` 不是注释字段：同一 requirement 必须另有受审查的 `browser-interaction` argv 命令，runner 与最终出口都会双重检查，普通 Vitest/文案命令不能冒充 runtime evidence。浏览器命令仍遵守 [browser-e2e-mcp.md](../rules/browser-e2e-mcp.md) 的边界：不向业务仓安装 Playwright/Puppeteer；优先把可回归逻辑固化为定向测试，只对确需真实运行时的集成行为使用已有外部 browser adapter。
 

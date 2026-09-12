@@ -5,11 +5,11 @@
 
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
-import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs'
 import { dirname, isAbsolute, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { changedCodePaths, codeFingerprint, matchesEffectiveCodeState } from './lib/fingerprint.mjs'
+import { evidenceCommandRuntimeProblem, executeReviewedCommand, selectDevelopmentCommands } from './lib/vnext-command-contract.mjs'
 import { deliveryScopePathProblems } from './lib/vnext-delivery-scope.mjs'
 import { evidencePlanFingerprint, signEvidenceBundle, verifyEvidenceReceipt } from './lib/vnext-evidence-receipt.mjs'
 import { EXIT_EVIDENCE_REQUIREMENTS } from './lib/vnext-exit.mjs'
@@ -95,20 +95,7 @@ function outputTail(value, limit = 2000) {
 }
 
 function executeCommand(spec, worktree) {
-  const startedAt = new Date().toISOString()
-  const result = spawnSync(spec.argv[0], spec.argv.slice(1), {
-    cwd: worktree,
-    encoding: 'utf8',
-    stdio: 'pipe',
-    timeout: (spec.timeoutSeconds || 600) * 1000,
-    maxBuffer: 16 * 1024 * 1024,
-    shell: false,
-  })
-  const finishedAt = new Date().toISOString()
-  const stdout = result.stdout || ''
-  const stderr = `${result.stderr || ''}${result.error ? `\n${result.error.message}` : ''}`
-  const exitCode = Number.isInteger(result.status) ? result.status : 124
-  return { startedAt, finishedAt, stdout, stderr, exitCode, signal: result.signal || '' }
+  return executeReviewedCommand(spec, worktree)
 }
 
 export function verificationScopePaths(workItem, worktree, baseRef = 'origin/online') {
@@ -131,12 +118,17 @@ export function runEvidencePlan({ plan, workItem, worktree, baseRef = 'origin/on
   if (pathProblems.length) throw new Error(`evidence scope violates delivery policy:\n- ${pathProblems.join('\n- ')}`)
   const startedAt = now()
   const facts = []
-  for (const spec of plan.commands) {
-    const execution = execute(spec, worktree)
+  const commandProblem = dependencies.commandProblem || evidenceCommandRuntimeProblem
+  const commandSelection = selectDevelopmentCommands(plan.commands)
+  for (const spec of commandSelection.commands) {
+    const runtimeProblem = commandProblem(spec, worktree)
+    const execution = runtimeProblem
+      ? { startedAt: new Date().toISOString(), finishedAt: new Date().toISOString(), stdout: '', stderr: runtimeProblem, exitCode: 127, signal: '' }
+      : execute(spec, worktree)
     const afterCommand = measure(worktree, baseRef)
     if (!matchesEffectiveCodeState(before, afterCommand)) throw new Error(`${spec.evidenceId} changed effective code content; inspect the worktree and rerun from the final code state`)
     const digest = outputHash({ argv: spec.argv, status: execution.exitCode, signal: execution.signal, stdout: execution.stdout, stderr: execution.stderr })
-    facts.push({
+    const fact = {
       evidenceId: spec.evidenceId,
       kind: spec.kind,
       result: execution.exitCode === 0 ? 'pass' : 'fail',
@@ -156,7 +148,21 @@ export function runEvidencePlan({ plan, workItem, worktree, baseRef = 'origin/on
         ...(execution.exitCode === 0 ? {} : { stdoutTail: outputTail(execution.stdout), stderrTail: outputTail(execution.stderr) }),
         ...(execution.signal ? { signal: execution.signal } : {}),
       },
-    })
+    }
+    facts.push(fact)
+    if (fact.result === 'pass') {
+      for (const { command } of commandSelection.supersededCommands.filter((entry) => entry.coveringCommandId === spec.evidenceId)) {
+        facts.push({
+          ...fact,
+          evidenceId: command.evidenceId,
+          kind: command.kind,
+          requirementIds: command.requirementIds || [],
+          surfaceIds: command.surfaceIds || [],
+          evidenceRefs: [...fact.evidenceRefs, `covered-by:${spec.evidenceId}`],
+        })
+      }
+    }
+    if (runtimeProblem || execution.exitCode === 124) break
   }
   const after = measure(worktree, baseRef)
   if (!matchesEffectiveCodeState(before, after)) throw new Error('evidence command changed effective code content; inspect the worktree and rerun from the final code state')
@@ -213,6 +219,23 @@ export function selfTest() {
     assert.equal(bundle.assuranceMode, 'autonomous')
     assert.equal(bundle.facts[0].result, 'pass')
     assert.deepEqual(verifyEvidenceReceipt(bundle, { workItem, currentCodeState: code, keyPath }), [])
+    const aggregate = { ...command, evidenceId: 'E-all', kind: 'directed-tests', argv: ['pnpm', 'test', '--run', 'tests'] }
+    const child = { ...command, evidenceId: 'E-child', argv: ['pnpm', 'test', '--run', 'tests/child.test.ts'] }
+    const aggregateWorkItem = { ...workItem, evidenceCommands: [aggregate, child] }
+    let executionCount = 0
+    const aggregateBundle = runEvidencePlan({
+      plan: { ...plan, commands: [aggregate, child] }, workItem: aggregateWorkItem, worktree: '/tmp/worktree', keyPath,
+      dependencies: {
+        measure: () => code,
+        now: (() => { const values = ['2026-09-10T00:01:00Z', '2026-09-10T00:01:01Z']; return () => values.shift() })(),
+        commandProblem: () => '',
+        execute: () => { executionCount += 1; return { startedAt: '2026-09-10T00:01:00Z', finishedAt: '2026-09-10T00:01:01Z', stdout: 'all', stderr: '', exitCode: 0, signal: '' } },
+      },
+    })
+    assert.equal(executionCount, 1)
+    assert.deepEqual(aggregateBundle.facts.map((fact) => fact.evidenceId), ['E-all', 'E-child'])
+    assert.ok(aggregateBundle.facts[1].evidenceRefs.includes('covered-by:E-all'))
+    assert.deepEqual(verifyEvidenceReceipt(aggregateBundle, { workItem: aggregateWorkItem, currentCodeState: code, keyPath }), [])
     assert.match(evidencePlanProblems({ ...plan, commands: [...plan.commands, plan.commands[0]] }, workItem).join(' '), /duplicate/)
     assert.match(evidencePlanProblems({ ...plan, commands: [{ ...plan.commands[0], argv: ['echo ok'] }] }, workItem).join(' '), /argv/)
     const runtimeWorkItem = structuredClone(workItem)

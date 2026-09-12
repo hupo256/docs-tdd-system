@@ -10,7 +10,7 @@
 ## 2026-09-12（v3.3 Autopilot Implementation Loop）
 
 - **Feature / Bugfix 双入口**：`kickoff --kind bugfix` 把缺陷报告绑定为 incident source，使用 `fix/<PROJECT-ID>` 分支；两类 intake 共用风险路由、独立审查和正式验证，不为修 bug 开旁路。
-- **实现期快速反馈**：新增 `docs-tdd dev-check`，执行已审查的非浏览器证据命令，报告 changed path 到 requirement/surface 的映射，并用 baseline-aware typecheck 区分存量诊断与当前改动回归；不污染正式 `latest-result.json`。
+- **实现期快速反馈**：新增 `docs-tdd dev-check`，执行已审查的非浏览器证据命令，报告 changed path 到 requirement/surface 的映射，并用 baseline-aware typecheck 区分存量诊断与当前改动回归；不污染正式 `latest-result.json`。真实 V2 pilot 进一步补齐目录级命令去重、缺失/空测试目标拒绝、显式 `--path-map`、未映射路径直接失败，以及 300 秒进程组超时和 fail-fast；正式 evidence runner 复用同一命令执行契约，避免空操作假绿与超时后无报告。
 - **写入边界与两类提交**：`deliveryScope.policyPaths` 在 checkpoint、dev-check、evidence、pre-commit/CI guard 全链 fail-closed；checkpoint commit 必须绑定 passing dev-check 且标记 non-delivery，delivery commit 仍只接受 authoritative PASS，均不自动 push。
 - **审查降噪与有界失败**：审查请求优先语义单元，结构节点和非规格图片保留可审计 inventory 但不挤占附件；timeout 随 payload 调整，传输失败单独记账并升级人工，不消耗语义审查轮次。
 - **Pilot 资格与当前进度**：R-13 只接受 v3.3 下经公共命令完成、取得 authoritative PASS 且有 post-test observation 的真实 V0/V1/V2；历史样本和 synthetic fixture 不追认。PR-02233 已作为真实 V2 项目纳入 collecting，未完成前不计数。

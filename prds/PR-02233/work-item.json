@@ -4945,7 +4945,376 @@
       "code": 0,
       "browser": 0
     },
-    "lastCheckpointAt": "2026-09-12T05:49:36.236Z"
+    "lastCheckpointAt": "2026-09-12T16:14:15.770Z",
+    "lastDevCheck": {
+      "schemaVersion": 1,
+      "projectId": "PR-02233",
+      "runId": "dev-check-20260912161415",
+      "checkedAt": "2026-09-12T16:14:15.770Z",
+      "status": "failed",
+      "ok": false,
+      "codeState": {
+        "headSha": "bf73151de82cb83b55fb4733560a062bf82bac68",
+        "contentHash": "29c71d0a3557196a00e34960933660d0ff262801929ef0fb7d315821bc93e4a5",
+        "dirtyHash": "3271caa0908677ead9cc2d584ae72b1c4e85b0ed4270a235ac584b988b48e40a"
+      },
+      "changedPaths": [
+        "apps/web/src/components/CodeVerifyDialog/index.tsx",
+        "apps/web/src/components/Verification/NoCodeGuideDialog.tsx",
+        "apps/web/src/components/Verification/SendCodeButton.tsx",
+        "apps/web/src/components/Verification/methodResolver.test.ts",
+        "apps/web/src/components/Verification/methodResolver.ts",
+        "apps/web/src/components/Verification/sendCodeError.test.ts",
+        "apps/web/src/components/Verification/sendCodeError.ts",
+        "apps/web/src/components/Verification/tracking.ts",
+        "apps/web/src/components/VerifyInputs/index.tsx",
+        "apps/web/src/i18n/locales/zh-CN/codeVerify.json",
+        "apps/web/src/utils/countdown.test.ts",
+        "apps/web/src/utils/countdown.ts",
+        "apps/web/src/utils/hooks/useCountdown.ts"
+      ],
+      "pendingCommitPaths": [],
+      "pathCoverage": [
+        {
+          "path": "apps/web/src/components/CodeVerifyDialog/index.tsx",
+          "requirementIds": [
+            "R-009",
+            "R-010",
+            "R-012",
+            "R-013",
+            "R-015",
+            "R-016",
+            "R-017"
+          ],
+          "surfaceIds": [
+            "S-009",
+            "S-010",
+            "S-012",
+            "S-013",
+            "S-015",
+            "S-016",
+            "S-017",
+            "S-070",
+            "S-071",
+            "S-072",
+            "S-074",
+            "S-075",
+            "S-076"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web/src/components/Verification/NoCodeGuideDialog.tsx",
+          "requirementIds": [
+            "R-010",
+            "R-011"
+          ],
+          "surfaceIds": [
+            "S-010",
+            "S-011"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web/src/components/Verification/SendCodeButton.tsx",
+          "requirementIds": [
+            "R-012",
+            "R-013"
+          ],
+          "surfaceIds": [
+            "S-012",
+            "S-013"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web/src/components/Verification/methodResolver.test.ts",
+          "requirementIds": [
+            "R-006"
+          ],
+          "surfaceIds": [
+            "S-006"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web/src/components/Verification/methodResolver.ts",
+          "requirementIds": [
+            "R-006"
+          ],
+          "surfaceIds": [
+            "S-006"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web/src/components/Verification/sendCodeError.test.ts",
+          "requirementIds": [
+            "R-015",
+            "R-016"
+          ],
+          "surfaceIds": [
+            "S-015",
+            "S-016"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web/src/components/Verification/sendCodeError.ts",
+          "requirementIds": [
+            "R-015",
+            "R-016"
+          ],
+          "surfaceIds": [
+            "S-015",
+            "S-016"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web/src/components/Verification/tracking.ts",
+          "requirementIds": [
+            "R-017"
+          ],
+          "surfaceIds": [
+            "S-017",
+            "S-070",
+            "S-071",
+            "S-072",
+            "S-073",
+            "S-074",
+            "S-075",
+            "S-076"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web/src/components/VerifyInputs/index.tsx",
+          "requirementIds": [
+            "R-001",
+            "R-002",
+            "R-003",
+            "R-005",
+            "R-009",
+            "R-010",
+            "R-012",
+            "R-013",
+            "R-014",
+            "R-015",
+            "R-016",
+            "R-017"
+          ],
+          "surfaceIds": [
+            "S-001",
+            "S-002",
+            "S-003",
+            "S-005",
+            "S-009",
+            "S-010",
+            "S-012",
+            "S-013",
+            "S-014",
+            "S-015",
+            "S-016",
+            "S-017",
+            "S-070",
+            "S-071",
+            "S-072",
+            "S-074",
+            "S-075",
+            "S-076"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web/src/i18n/locales/zh-CN/codeVerify.json",
+          "requirementIds": [
+            "R-001",
+            "R-010",
+            "R-011",
+            "R-012",
+            "R-013",
+            "R-015",
+            "R-016",
+            "R-029"
+          ],
+          "surfaceIds": [
+            "S-001",
+            "S-010",
+            "S-011",
+            "S-012",
+            "S-013",
+            "S-015",
+            "S-016",
+            "S-089"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web/src/utils/countdown.test.ts",
+          "requirementIds": [
+            "R-012",
+            "R-013",
+            "R-014"
+          ],
+          "surfaceIds": [
+            "S-012",
+            "S-013",
+            "S-014"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web/src/utils/countdown.ts",
+          "requirementIds": [
+            "R-012",
+            "R-013",
+            "R-014"
+          ],
+          "surfaceIds": [
+            "S-012",
+            "S-013",
+            "S-014"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web/src/utils/hooks/useCountdown.ts",
+          "requirementIds": [
+            "R-012",
+            "R-013",
+            "R-014"
+          ],
+          "surfaceIds": [
+            "S-012",
+            "S-013",
+            "S-014"
+          ],
+          "mappingSource": "input"
+        }
+      ],
+      "unmappedPaths": [],
+      "pathPolicy": {
+        "status": "not-configured",
+        "policyPaths": [],
+        "outOfScopePaths": []
+      },
+      "commandSelection": {
+        "plannedCount": 84,
+        "selectedCount": 2,
+        "executedCount": 1,
+        "supersededCommandIds": [
+          "E-01",
+          "E-02",
+          "E-03",
+          "E-04",
+          "E-05",
+          "E-06",
+          "E-07",
+          "E-08",
+          "E-09",
+          "E-10",
+          "E-11",
+          "E-12",
+          "E-13",
+          "E-14",
+          "E-15",
+          "E-16",
+          "E-17",
+          "E-18",
+          "E-19",
+          "E-20",
+          "E-21",
+          "E-22",
+          "E-23",
+          "E-24",
+          "E-25",
+          "E-26",
+          "E-27",
+          "E-28",
+          "E-29",
+          "E-30",
+          "E-31",
+          "E-32",
+          "E-33",
+          "E-34",
+          "E-35",
+          "E-36",
+          "E-37",
+          "E-38",
+          "E-39",
+          "E-40",
+          "E-41",
+          "E-42",
+          "E-43",
+          "E-44",
+          "E-45",
+          "E-46",
+          "E-47",
+          "E-48",
+          "E-49",
+          "E-50",
+          "E-51",
+          "E-52",
+          "E-53",
+          "E-54",
+          "E-55",
+          "E-57",
+          "E-58",
+          "E-59",
+          "E-60",
+          "E-61",
+          "E-62",
+          "E-63",
+          "E-64",
+          "E-65",
+          "E-66",
+          "E-67",
+          "E-68",
+          "E-69",
+          "E-70",
+          "E-71",
+          "E-72",
+          "E-73",
+          "E-74",
+          "E-75",
+          "E-76",
+          "E-77",
+          "E-78",
+          "E-87",
+          "E-88",
+          "E-90",
+          "E-91",
+          "E-92"
+        ],
+        "notRunCommandIds": [
+          "E-86"
+        ]
+      },
+      "commandResults": [
+        {
+          "evidenceId": "E-85",
+          "kind": "contract-or-scenario-tests",
+          "argv": [
+            "pnpm",
+            "--filter",
+            "@fameex/web",
+            "test",
+            "--run",
+            "apps/web/src/__tests__/PR-02233"
+          ],
+          "result": "fail",
+          "exitCode": 127,
+          "evaluation": "command-preflight",
+          "stdoutTail": "",
+          "stderrTail": "E-85 --run target does not exist: apps/web/src/__tests__/PR-02233"
+        }
+      ],
+      "blockers": [],
+      "problems": [
+        "E-85 --run target does not exist: apps/web/src/__tests__/PR-02233"
+      ]
+    }
   },
   "extractionAudit": {
     "schemaVersion": 1,
