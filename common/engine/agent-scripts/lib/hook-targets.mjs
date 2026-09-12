@@ -26,7 +26,7 @@ function shellTargets(command) {
   for (const match of normalized.matchAll(/(?:^|[^>])>{1,2}\s*(["']?)([^\s"';&|]+)\1/g)) targets.push(match[2])
   for (const match of normalized.matchAll(/\b(?:touch|rm|unlink)\s+(?:--\s+)?(["']?)([^\s"';&|]+)\1/g)) targets.push(match[2])
   for (const match of normalized.matchAll(/\b(?:tee|truncate)\s+(?:-[^\s]+\s+)*(["']?)([^\s"';&|]+)\1/g)) targets.push(match[2])
-  for (const match of normalized.matchAll(/\b(?:cp|mv)\s+(?:-[^\s]+\s+)*(?:["']?[^\s"';&|]+["']?\s+)+(["']?)([^\s"';&|]+)\1(?=\s*(?:[;&|]|$))/g)) targets.push(match[2])
+  for (const match of normalized.matchAll(/\b(?:cp|mv)[ \t]+(?:-[^\s]+[ \t]+)*(?:["']?[^\s"';&|]+["']?[ \t]+)+(["']?)([^\s"';&|]+)\1(?=[ \t]*(?:[;&|]|\r?$))/gm)) targets.push(match[2])
   for (const match of normalized.matchAll(/\b(?:biome|prettier)\b[^\n;&|]*\s(?:--write|check\s+--write)[^\n;&|]*\s(["']?)([^\s"';&|]+)\1/g)) targets.push(match[2])
   return targets
 }
@@ -128,6 +128,7 @@ function selfTest() {
   assert.equal(classifyTargets({ tool_input: { command: 'grep -c x file 2>&1' } }, '/repo').unknownWrite, false)
   assert.deepEqual(extractTargets({ tool_input: { command: 'printf x > src/out.txt 2>&1' } }), ['src/out.txt'])
   assert.deepEqual(classifyTargets({ tool_input: { command: 'cp /tmp/a src/a.ts' } }, '/repo').repoTargets, ['src/a.ts'])
+  assert.deepEqual(extractTargets({ tool_input: { command: 'cp /tmp/a src/a.ts\ncp /tmp/b src/b.ts' } }), ['src/a.ts', 'src/b.ts'])
   assert.equal(classifyTargets({ tool_input: { command: "python -c 'open(\"src/a.ts\",\"w\").write(\"x\")' > /tmp/out" } }, '/repo').unknownWrite, true)
   assert.equal(classifyTargets({ tool_input: { command: 'node -e "console.log(JSON.stringify({stats: 1}))"' } }, '/repo').unknownWrite, false, 'read-only node -e is not an opaque write')
   assert.equal(classifyTargets({ tool_input: { command: 'node -e "require(\'fs\').writeFileSync(\'src/a.ts\', \'x\')"' } }, '/repo').unknownWrite, true, 'node -e with write API is an opaque write')

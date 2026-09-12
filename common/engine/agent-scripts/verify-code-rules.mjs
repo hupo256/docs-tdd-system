@@ -82,6 +82,8 @@ function runGit(gitArgs, { allowFailure = true } = {}) {
   return result.status === 0 ? result.stdout.trim() : ''
 }
 
+const mergeBaseRef = baseResolvable ? runGit(['merge-base', baseRef, 'HEAD']) : ''
+
 function splitLines(value) {
   return value ? value.split('\n').map((line) => line.trim()).filter(Boolean) : []
 }
@@ -408,9 +410,14 @@ function diffAddedLines(file) {
       .map((text, index) => ({ line: index + 1, text }))
   }
 
-  outputs.push(runGit(['diff', '--unified=0', '--no-ext-diff', `${baseRef}...HEAD`, '--', file]))
-  outputs.push(runGit(['diff', '--unified=0', '--no-ext-diff', '--', file]))
-  outputs.push(runGit(['diff', '--cached', '--unified=0', '--no-ext-diff', '--', file]))
+  if (mergeBaseRef) {
+    // Scan the final worktree state relative to the branch point. Concatenating committed,
+    // staged, and unstaged diffs keeps superseded added lines and reports already-fixed code.
+    outputs.push(runGit(['diff', '--unified=0', '--no-ext-diff', mergeBaseRef, '--', file]))
+  } else {
+    outputs.push(runGit(['diff', '--unified=0', '--no-ext-diff', '--', file]))
+    outputs.push(runGit(['diff', '--cached', '--unified=0', '--no-ext-diff', '--', file]))
+  }
 
   const added = []
   for (const output of outputs.filter(Boolean)) {
