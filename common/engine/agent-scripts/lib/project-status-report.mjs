@@ -9,6 +9,7 @@
  * 报告/IO 型（无导出纯逻辑），登记 check-doc-budget 的 SELF_TEST_EXEMPT；行为由 capability 冒烟 + golden 覆盖。
  */
 
+import { spawnSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { resolveProjectRoot, resolveRoots } from './roots.mjs'
@@ -37,6 +38,61 @@ export function resolveProjectWorktree(id) {
     worktree: existsSync(worktree) ? worktree : repoRoot,
     requestedWorktree: worktree,
   }
+}
+
+function gitOutput(cwd, args) {
+  const result = spawnSync('git', args, { cwd, encoding: 'utf8' })
+  return { ok: result.status === 0, stdout: (result.stdout || '').trim(), stderr: (result.stderr || '').trim() }
+}
+
+export function validateProjectWorktreeFacts(facts) {
+  const problems = []
+  if (!facts.configuredPath) problems.push('project README has no worktree binding')
+  if (facts.requestedWorktree && facts.configuredPath && facts.worktree !== facts.configuredPath) problems.push('requested worktree differs from the project README binding')
+  if (!facts.exists) problems.push('configured worktree does not exist')
+  if (facts.exists && !facts.topMatches) problems.push('configured path is not a git worktree root')
+  if (facts.exists && !facts.branch) problems.push('worktree has no checked-out branch')
+  if (['online', 'pre', 'test', 'dev'].includes(facts.branch)) problems.push(`environment branch is forbidden for coding: ${facts.branch}`)
+  if (facts.branch && facts.branch !== facts.expectedBranch) problems.push(`worktree branch ${facts.branch} does not match expected ${facts.expectedBranch}`)
+  if (facts.branch && !facts.branch.includes(facts.projectId)) problems.push(`worktree branch is not bound to ${facts.projectId}`)
+  if (facts.exists && !facts.baseExists) problems.push(`configured base ref does not exist: ${facts.baseRef}`)
+  if (facts.exists && facts.baseExists && !facts.descendsFromBase) problems.push(`worktree HEAD is not a descendant of ${facts.baseRef}`)
+  if (facts.requireClean && facts.dirty) problems.push('worktree has unowned changes; checkpoint or clean them before implementation')
+  return problems
+}
+
+// Write-capable v2 commands must use this fail-closed inspection. The permissive resolver above
+// remains available only for read-only status/capability reporting.
+export function inspectProjectWorktree(projectId, { requestedWorktree = '', requireClean = false } = {}) {
+  const projectDir = resolveProjectRoot(projectId)
+  const readmeFile = join(projectDir, 'README.md')
+  const readme = existsSync(readmeFile) ? readFileSync(readmeFile, 'utf8') : ''
+  const configuredValue = readme.match(/^worktree:\s*(.*)$/m)?.[1]?.replace(/^['"]|['"]$/g, '').trim()
+  const configuredPath = configuredValue ? resolve(projectDir, configuredValue) : ''
+  const expectedBranch = readme.match(/^branch:\s*(.*)$/m)?.[1]?.replace(/^['"]|['"]$/g, '').trim() || `${config.branchPrefix || 'feature/'}${projectId}`
+  const baseRef = config.baseRef || 'origin/online'
+  const worktree = requestedWorktree ? resolve(requestedWorktree) : configuredPath
+  const exists = Boolean(worktree && existsSync(worktree))
+  const top = exists ? gitOutput(worktree, ['rev-parse', '--show-toplevel']) : { ok: false, stdout: '' }
+  const branchResult = exists ? gitOutput(worktree, ['branch', '--show-current']) : { ok: false, stdout: '' }
+  const base = exists ? gitOutput(worktree, ['rev-parse', '--verify', `${baseRef}^{commit}`]) : { ok: false }
+  const facts = {
+    projectId, configuredPath, requestedWorktree, worktree, exists,
+    topMatches: top.ok && resolve(top.stdout) === worktree,
+    branch: branchResult.ok ? branchResult.stdout : '', expectedBranch, baseRef,
+    baseExists: base.ok,
+    descendsFromBase: base.ok && gitOutput(worktree, ['merge-base', '--is-ancestor', baseRef, 'HEAD']).ok,
+    requireClean,
+    dirty: exists && Boolean(gitOutput(worktree, ['status', '--porcelain']).stdout),
+  }
+  const problems = validateProjectWorktreeFacts(facts)
+  return { ok: problems.length === 0, projectId, worktree, branch: facts.branch, expectedBranch, baseRef, problems }
+}
+
+export function requireProjectWorktree(projectId, options = {}) {
+  const inspection = inspectProjectWorktree(projectId, options)
+  if (!inspection.ok) throw new Error(`unsafe project worktree for ${projectId}: ${inspection.problems.join('; ')}`)
+  return inspection.worktree
 }
 
 // `docs-tdd capability`：把「机器能不能干活」的一屏体检收敛成 报告行 + 告警行两张表，交 cli-report 打印。

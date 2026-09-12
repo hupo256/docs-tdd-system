@@ -37,6 +37,29 @@ export function coverageFingerprints(workItem) {
   }
 }
 
+export function effectiveCoverageReview(workItem) {
+  const audit = workItem?.coverageAudit || {}
+  const fingerprints = coverageFingerprints(workItem)
+  const problems = []
+  if (audit.sourceFingerprint !== fingerprints.sourceFingerprint) problems.push('coverage audit source fingerprint is stale')
+  if (audit.requirementsFingerprint !== fingerprints.requirementsFingerprint) problems.push('coverage audit requirements fingerprint is stale')
+  if (audit.verdict === 'pass' && !(audit.unresolved || []).length) return { ok: problems.length === 0, mode: 'review', problems }
+
+  const adjudication = workItem?.reviewAdjudication
+  if (!adjudication) return { ok: false, mode: 'review', problems: [...problems, 'coverage audit verdict is not pass'] }
+  if (adjudication.originalReviewRunId !== audit.reviewRunId) problems.push('review adjudication targets a different review run')
+  if (adjudication.sourceFingerprint !== fingerprints.sourceFingerprint) problems.push('review adjudication source fingerprint is stale')
+  if (adjudication.requirementsFingerprint !== fingerprints.requirementsFingerprint) problems.push('review adjudication requirements fingerprint is stale')
+  if (adjudication.effectiveVerdict !== 'pass') problems.push('review adjudication does not pass coverage')
+  const findings = audit.findings || []
+  const decisions = adjudication.decisions || []
+  const expectedIds = findings.map((finding) => finding.findingId).sort()
+  const actualIds = decisions.map((decision) => decision.findingId).sort()
+  if (JSON.stringify(expectedIds) !== JSON.stringify(actualIds)) problems.push('review adjudication does not cover every finding exactly once')
+  if (decisions.some((decision) => decision.disposition === 'accepted')) problems.push('accepted review findings require extraction repair and a new review')
+  return { ok: problems.length === 0, mode: 'human-adjudication', problems }
+}
+
 // Test/replay helper only. Production callers must use applyCoverageReview(), which validates
 // reviewer identity, verdict, dispositions and both fingerprints before sealing the audit.
 export function sealCoverageAuditForFixture(workItem, { reviewRunId = 'fixture-review' } = {}) {
@@ -100,8 +123,8 @@ function requirementCoverageProblems(workItem, sourceUnits, sourceOracle) {
   if (!workItem.coverageAudit?.reviewRunId) problems.push('coverage audit has no review run ID')
   if (!['human', 'model'].includes(workItem.coverageAudit?.reviewer?.kind) || !workItem.coverageAudit?.reviewer?.id) problems.push('coverage audit has no reviewer identity')
   if (!workItem.coverageAudit?.completedAt || Number.isNaN(Date.parse(workItem.coverageAudit.completedAt))) problems.push('coverage audit has no valid completion time')
-  if (workItem.coverageAudit?.verdict !== 'pass') problems.push('coverage audit verdict is not pass')
-  if (workItem.coverageAudit?.unresolved?.length) problems.push(`coverage audit has unresolved findings: ${workItem.coverageAudit.unresolved.join(', ')}`)
+  const effectiveReview = effectiveCoverageReview(workItem)
+  if (!effectiveReview.ok) problems.push(...effectiveReview.problems)
 
   const anchoredSourceIds = new Set()
   for (const requirement of requirements) {

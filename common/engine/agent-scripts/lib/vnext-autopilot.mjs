@@ -5,8 +5,8 @@
 import assert from 'node:assert/strict'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { coverageFingerprints, stableFingerprint } from './vnext-work-item.mjs'
-import { scopeApprovalFingerprint } from './vnext-risk-route.mjs'
+import { coverageFingerprints, effectiveCoverageReview, stableFingerprint } from './vnext-work-item.mjs'
+import { createScopeApproval, scopeApprovalFingerprint } from './vnext-risk-route.mjs'
 import { evaluateSourceReadiness, reconcileAvailableSources } from './vnext-source-readiness.mjs'
 
 export const AUTOPILOT_PHASES = Object.freeze([
@@ -27,6 +27,7 @@ export const AUTOPILOT_ACTIONS = Object.freeze([
   'repair-review-findings',
   'escalate-review-failure',
   'collect-scope-approval',
+  'prepare-coding-worktree',
   'implement-current-scope',
   'await-late-dependencies',
   'reconcile-late-sources',
@@ -85,12 +86,14 @@ export function deriveAutopilotAction({
   codeStateFresh = true,
   assuranceTrusted = false,
   deliveryCommitted = false,
+  worktreeReady = true,
 } = {}) {
   if (workItem?.workflowVersion !== 2 || !workItem?.projectId) throw new Error('Autopilot requires a workflowVersion=2 work item')
   const projectId = workItem.projectId
   const requirements = Array.isArray(workItem.requirements) ? workItem.requirements : []
   const doing = requirements.filter((requirement) => requirement.status === 'doing')
   const coverage = workItem.coverageAudit
+  const effectiveReview = effectiveCoverageReview(workItem)
   const sourceReadiness = evaluateSourceReadiness(workItem)
 
   if (!doing.length) {
@@ -125,7 +128,7 @@ export function deriveAutopilotAction({
       constraints: ['risk-may-only-increase', 'classify-missing-figma-or-api-as-pending-not-global-blocker'],
     })
   }
-  if (coverage?.verdict !== 'pass' && workItem.reviewControl?.status === 'escalated') {
+  if (!effectiveReview.ok && workItem.reviewControl?.status === 'escalated') {
     return actionPacket(workItem, {
       action: 'escalate-review-failure',
       phase: 'blocked',
@@ -135,7 +138,7 @@ export function deriveAutopilotAction({
     })
   }
   const latestReviewAttempt = workItem.reviewControl?.history?.at(-1)
-  if (coverage?.verdict !== 'pass' && latestReviewAttempt?.verdict === 'changes-required'
+  if (!effectiveReview.ok && latestReviewAttempt?.verdict === 'changes-required'
       && latestReviewAttempt.requirementsFingerprint === fingerprints.requirementsFingerprint) {
     return actionPacket(workItem, {
       action: 'repair-review-findings',
@@ -145,7 +148,7 @@ export function deriveAutopilotAction({
       constraints: ['resolve-current-findings', 'do-not-retry-unchanged-candidate'],
     })
   }
-  if (coverage?.verdict !== 'pass' || (coverage?.unresolved || []).length) {
+  if (!effectiveReview.ok) {
     return actionPacket(workItem, {
       action: 'complete-independent-review',
       phase: 'planning',
@@ -160,7 +163,17 @@ export function deriveAutopilotAction({
       action: 'collect-scope-approval',
       phase: 'planning',
       reason: 'The current V2 policy still requires a fingerprint-bound human scope approval.',
-      constraints: ['human-confirmation-required'],
+      command: `docs-tdd scope-approval ${projectId} --out <scope-approval.json>`,
+      constraints: ['human-confirmation-required', `apply-with: docs-tdd scope-approve ${projectId} --input <scope-approval.json>`],
+    })
+  }
+  if (!worktreeReady) {
+    return actionPacket(workItem, {
+      action: 'prepare-coding-worktree',
+      phase: 'planning',
+      reason: 'No safe project-bound coding worktree is available.',
+      command: `docs-tdd worktree-prepare ${projectId}`,
+      constraints: ['do-not-code-on-environment-branches', 'do-not-fallback-to-repository-root'],
     })
   }
   if (implementationState(workItem, latestResult).status !== 'completed') {
@@ -365,8 +378,9 @@ export function selfTest() {
   }
   assert.equal(deriveAutopilotAction({ workItem: needsReviewRepair }).action, 'repair-review-findings')
 
-  const reviewed = { ...needsReview, coverageAudit: { verdict: 'pass', unresolved: [] } }
+  const reviewed = { ...needsReview, coverageAudit: { ...coverageFingerprints(needsReview), reviewMode: 'independent-cold-read', reviewRunId: 'review-1', reviewer: { kind: 'human', id: 'reviewer' }, completedAt: '2026-09-08T00:00:00Z', verdict: 'pass', unresolved: [] } }
   assert.equal(deriveAutopilotAction({ workItem: reviewed }).action, 'implement-current-scope')
+  assert.equal(deriveAutopilotAction({ workItem: reviewed, worktreeReady: false }).action, 'prepare-coding-worktree')
 
   const implementAction = deriveAutopilotAction({ workItem: reviewed })
   const implemented = applyAutopilotCheckpoint(reviewed, {
@@ -425,8 +439,25 @@ export function selfTest() {
   assert.equal(deriveAutopilotAction({ workItem: implemented, latestResult: passed, resultIntegrityOk: false }).action, 'refresh-invalid-verification')
   assert.equal(deriveAutopilotAction({ workItem: implemented, latestResult: passed, codeStateFresh: false }).action, 'revalidate-current-code-evidence')
 
-  const v2 = { ...reviewed, routing: { riskSignals: ['funds'], verificationLevel: 'V2' }, scopeApproval: null }
+  const v2 = {
+    ...reviewed,
+    routing: {
+      scopeClass: 'cross-boundary',
+      riskSignals: ['funds', 'authentication-surface'],
+      verificationLevel: 'V2',
+      routerVersion: 1,
+    },
+    scopeApproval: null,
+  }
   assert.equal(deriveAutopilotAction({ workItem: v2 }).action, 'collect-scope-approval')
+  v2.scopeApproval = createScopeApproval(v2, {
+    confirmedBy: 'owner@example.com',
+    confirmedAt: '2026-09-12',
+    reason: 'scope reviewed',
+    recordedVia: { client: 'human' },
+  })
+  assert.notEqual(v2.routing.riskSignals.join(','), [...v2.routing.riskSignals].sort().join(','))
+  assert.equal(deriveAutopilotAction({ workItem: v2 }).action, 'implement-current-scope')
   console.log('vnext-autopilot self-test passed')
 }
 

@@ -42,8 +42,10 @@
 - `baseline-observations.json`：用户复盘中可确认的事故事实；与机器指标分离。
 - `baseline.json`：由 `vnext-baseline.mjs --write` 从四个历史项目重复生成。
 - `vnext-work-item.schema.json`：v2 单一业务事实载体的第一版 schema。
-- `lib/vnext-source-units.mjs`：将 Markdown 原始来源确定性正规化为 text/table/image units；source ID 不依赖行号；图片描述原文进入 reviewer 输入，本地图片字节以 SHA-256 绑定，未下载/不可读图片阻断审查；同步时间和 Lark 临时媒体 URL 不制造伪漂移。
+- `lib/vnext-source-units.mjs`：将 Markdown 与 HTML 原始来源确定性正规化为 text/table/image units；HTML table 支持 `thead/tbody`、内联标签、实体、`rowspan/colspan`，每个业务行独立成 unit，单元格图片也独立成 image unit；source ID 不依赖行号；图片描述原文进入 reviewer 输入，本地图片字节以 SHA-256 绑定，未下载/不可读图片阻断审查；同步时间和 Lark 临时媒体 URL 不制造伪漂移。
 - `vnext-review.mjs` + `lib/vnext-review-receipt.mjs`：由 `docs-tdd review` 真正启动无工具、无代码上下文的独立 client/session，图片以附件传入；输出经本机 HMAC 签名后写回 work-item，手写 reviewer JSON 不能形成 V1/V2 有效审查。
+- `vnext-review-adjudicate.mjs`：逐 finding 的人工裁决 overlay；保留原始签名审查结果，接受项必须修复候选并显式 `review-resume`，拒绝项必须带反证，延期项必须带 owner/batch。
+- `vnext-scope-approval.mjs`：公开的 V2 人签协议；先生成当前 fingerprint 的审批摘要，再应用带确认人、日期和原因的输入，来源/范围/风险变化后自动失效。
 - `lib/vnext-coverage-review.mjs` + `vnext-coverage-review.schema.json`：独立冷读审查 I/O 契约；作者 identity/session 必填且不能与 reviewer 相同，每条 finding 必须处置，过期 fingerprint 不可复用。
 - `lib/vnext-work-item.mjs`：`SOURCE_FRESH`、`REQUIREMENT_COVERAGE`、`SURFACE_COVERAGE` 的纯判定核心。
 - `fixtures/vnext-replay/`：PR-02306 图片需求漏抽取、PR-01930 集合落点漏实现、PR-02265 PRD 漂移三个确定性事故夹具及三个修复后 positive controls。
@@ -83,6 +85,7 @@ node common/engine/agent-scripts/vnext-exit-replay.mjs
 node common/engine/agent-scripts/vnext-artifact-budget.mjs
 node common/engine/agent-scripts/vnext-context-budget.mjs
 node common/engine/agent-scripts/vnext-pilot.mjs --self-test
+node common/engine/agent-scripts/vnext-readiness.mjs
 # 登记真实新需求后；collecting 返回 1、rollback 返回 2、具备人工评审资格返回 0
 node common/engine/agent-scripts/vnext-pilot.mjs --write
 node common/engine/agent-scripts/vnext-verify.mjs --self-test
@@ -103,6 +106,13 @@ node common/engine/agent-scripts/docs-tdd.mjs source-sync PR-01234
 node common/engine/agent-scripts/docs-tdd.mjs extract PR-01234 --out /tmp/extraction.json
 node common/engine/agent-scripts/docs-tdd.mjs extract PR-01234 --input /tmp/extraction.json
 
+# V2 独立审查通过后生成并应用人签；不得手改 work-item.json
+node common/engine/agent-scripts/docs-tdd.mjs scope-approval PR-01234 --out /tmp/scope-approval.json
+# 人只填写 confirmation.confirmedBy / confirmedAt / reason
+node common/engine/agent-scripts/docs-tdd.mjs scope-approve PR-01234 --input /tmp/scope-approval.json --client human
+
+# 编码前创建/校验项目专属 worktree；写命令不会再回退仓库根目录
+node common/engine/agent-scripts/docs-tdd.mjs worktree-prepare PR-01234
 
 # 新项目：PRD 是唯一必需输入
 node common/engine/agent-scripts/docs-tdd.mjs run PR-01234 --prd <source>
@@ -177,7 +187,7 @@ CLI 执行 evidence 前后仍比较整棵有效代码树，测试命令若改写
 
 ## 独立审查调用边界
 
-独立 Reviewer 不是确定性格式校验器。`docs-tdd extract --input` 必须先产出与当前 source/requirements fingerprint 一致且 `status=pass` 的 `extractionAudit`；否则 `review` 在启动子进程前失败。每次 changes-required 消耗一次审查机会，只有候选 requirements/evidenceCommands 确实变化后才能继续；累计三轮或相同 finding 再现时输出 `human-review-required`。Reviewer CLI 不可用或启动失败同样写入 `reviewControl.status=escalated`，由人处理后重新应用抽取候选以开启新一轮。
+独立 Reviewer 不是确定性格式校验器。`docs-tdd extract --input` 必须先产出与当前 source/requirements fingerprint 一致且 `status=pass` 的 `extractionAudit`；否则 `review` 在启动子进程前失败。每次 changes-required 消耗一次审查机会；累计三轮、相同 finding 再现或 Reviewer 不可用时输出 `human-review-required`。人必须逐 finding 执行 `review-adjudicate`；接受项修复抽取候选后还必须显式 `review-resume`，不能靠重复 review 或手改状态复活。拒绝/不适用/延期全部有依据且无接受项时，裁决 overlay 可形成有效 PASS，但原始签名审查 receipt 与 verdict 保持不变。
 
 ```bash
 # 1. 原始来源 → 稳定 source snapshot + source units
@@ -189,6 +199,14 @@ node common/engine/agent-scripts/docs-tdd.mjs extract PR-01234 --input /tmp/extr
 
 # 3. 在 requirementsAuthor 已记录后启动真正独立的 source-only reviewer；V1/V2 必须走此入口
 node common/engine/agent-scripts/docs-tdd.mjs review PR-01234 --client pi
+
+# 若升级人工：逐 finding 裁决。接受项先重新 apply extraction，再显式恢复 review
+node common/engine/agent-scripts/docs-tdd.mjs review-adjudicate PR-01234 --input /tmp/review-adjudication.json --client human
+node common/engine/agent-scripts/docs-tdd.mjs review-resume PR-01234 --input /tmp/review-resume.json --client human
+
+# V2 review PASS 后执行 fingerprint-bound scope approval
+node common/engine/agent-scripts/docs-tdd.mjs scope-approval PR-01234 --out /tmp/scope-approval.json
+node common/engine/agent-scripts/docs-tdd.mjs scope-approve PR-01234 --input /tmp/scope-approval.json --client human
 
 # 4. 运行受信 command evidence；命令计划默认取自已审查的 work-item.json evidenceCommands，输出放在被测 worktree 外
 node common/engine/agent-scripts/docs-tdd.mjs evidence PR-01234 --worktree /absolute/path/to/worktree --out /tmp/evidence.json

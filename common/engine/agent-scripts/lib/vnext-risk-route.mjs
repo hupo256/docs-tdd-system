@@ -65,23 +65,31 @@ export function deriveRiskRoute({ scopeClass, riskSignals = [], minimumLevel = '
 
 export function scopeApprovalFingerprint(workItem, routing = workItem?.routing) {
   const fingerprints = coverageFingerprints(workItem)
+  const normalizedRouting = routing ? deriveRiskRoute(routing).routing : routing
   return stableFingerprint({
     projectId: workItem?.projectId,
     sourceFingerprint: fingerprints.sourceFingerprint,
     requirementsFingerprint: fingerprints.requirementsFingerprint,
-    routing,
+    routing: normalizedRouting,
     apiDependency: workItem?.apiDependency || null,
   })
 }
 
-export function createScopeApproval(workItem, { confirmedBy, confirmedAt } = {}) {
+export function createScopeApproval(workItem, { confirmedBy, confirmedAt, reason, recordedVia } = {}) {
   const route = deriveRiskRoute(workItem?.routing)
   if (!route.ok || route.routing.verificationLevel !== 'V2') throw new Error('scope approval is only valid for a valid V2 route')
   if (!confirmedBy?.trim() || !/^\d{4}-\d{2}-\d{2}$/.test(confirmedAt || '')) throw new Error('V2 scope approval requires a human confirmer and YYYY-MM-DD date')
+  if (!reason?.trim()) throw new Error('V2 scope approval requires a human reason')
+  if (!recordedVia?.client?.trim()) throw new Error('V2 scope approval requires the recording client')
   return {
     confirmationKind: 'human',
-    confirmedBy,
+    confirmedBy: confirmedBy.trim(),
     confirmedAt,
+    reason: reason.trim(),
+    recordedVia: {
+      client: recordedVia.client.trim(),
+      ...(recordedVia.sessionId?.trim() ? { sessionId: recordedVia.sessionId.trim() } : {}),
+    },
     fingerprint: scopeApprovalFingerprint(workItem, route.routing),
   }
 }
@@ -102,6 +110,8 @@ export function verifyVNextRouting(workItem) {
       if (approval.confirmationKind !== 'human') approvalProblems.push('V2 scope approval must be human')
       if (!approval.confirmedBy?.trim()) approvalProblems.push('V2 scope approval has no confirmer')
       if (!/^\d{4}-\d{2}-\d{2}$/.test(approval.confirmedAt || '')) approvalProblems.push('V2 scope approval has no valid date')
+      if (!approval.reason?.trim()) approvalProblems.push('V2 scope approval has no reason')
+      if (!approval.recordedVia?.client?.trim()) approvalProblems.push('V2 scope approval has no recording client')
       const expected = scopeApprovalFingerprint(workItem, route.routing)
       if (approval.fingerprint !== expected) approvalProblems.push('V2 scope approval fingerprint is stale')
     }
@@ -135,12 +145,17 @@ export function selfTest() {
     scopeApproval: null,
   }
   assert.equal(verifyVNextRouting(workItem).checks.find((check) => check.code === 'SCOPE_APPROVAL').ok, false)
-  workItem.scopeApproval = createScopeApproval(workItem, { confirmedBy: 'owner@example.com', confirmedAt: '2026-09-04' })
+  workItem.scopeApproval = createScopeApproval(workItem, { confirmedBy: 'owner@example.com', confirmedAt: '2026-09-04', reason: 'scope reviewed', recordedVia: { client: 'human' } })
   assert.equal(verifyVNextRouting(workItem).ok, true)
+  const reorderedRouting = {
+    ...workItem.routing,
+    riskSignals: [...workItem.routing.riskSignals].reverse(),
+  }
+  assert.equal(scopeApprovalFingerprint(workItem, reorderedRouting), workItem.scopeApproval.fingerprint)
   workItem.requirements.push({ requirementId: 'R-002' })
   assert.equal(verifyVNextRouting(workItem).checks.find((check) => check.code === 'SCOPE_APPROVAL').ok, false)
   workItem.requirements.pop()
-  workItem.scopeApproval = createScopeApproval(workItem, { confirmedBy: 'owner@example.com', confirmedAt: '2026-09-04' })
+  workItem.scopeApproval = createScopeApproval(workItem, { confirmedBy: 'owner@example.com', confirmedAt: '2026-09-04', reason: 'scope reviewed', recordedVia: { client: 'human' } })
   workItem.apiDependency = { mode: 'real-api', reason: 'existing API' }
   assert.equal(verifyVNextRouting(workItem).checks.find((check) => check.code === 'SCOPE_APPROVAL').ok, false)
   console.log('vnext-risk-route self-test passed')

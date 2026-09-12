@@ -243,14 +243,42 @@
           "lineEnd": 71
         },
         {
-          "type": "text",
-          "sourceId": "SRC-75E1670AD34B",
+          "type": "table",
+          "sourceId": "SRC-888E04AA8464",
           "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
-          "lineStart": 268,
-          "lineEnd": 329
+          "lineStart": 277,
+          "lineEnd": 277
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-11AB5AA644E3",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 278,
+          "lineEnd": 278
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-1D9E0D0F96DF",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 279,
+          "lineEnd": 279
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-6DF4C0A2605F",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 280,
+          "lineEnd": 280
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-CD10F9CB66B0",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 48,
+          "lineEnd": 48
         }
       ],
-      "statement": "Web 注册校验页「切换验证方式」文案改为「没收到验证码？尝试邮箱注册」，点击回到注册页第一步且不保留已填验证码；App 保持现有切换注册方式引导不变。该引导文案需在所有支持语言下正确展示，无 hardcode 中文。",
+      "statement": "Web 注册校验页「切换验证方式」文案改为「没收到验证码？尝试邮箱注册」，点击回到注册页第一步且不保留已填验证码；该 Web 文案使用稳定 i18n key、无 hardcode。App 的独立不变回归义务由 R-031 承接。",
       "status": "doing",
       "affectedSurfaces": [
         {
@@ -268,7 +296,11 @@
           "type": "component-dom",
           "runtimeRequired": false
         }
-      ]
+      ],
+      "collectionSemantics": {
+        "kind": "none",
+        "expectedCount": 0
+      }
     },
     {
       "requirementId": "R-002",
@@ -293,9 +325,30 @@
           "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
           "lineStart": 85,
           "lineEnd": 85
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-AC4BD5C0303D",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 281,
+          "lineEnd": 281
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-C1989E5A2246",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 282,
+          "lineEnd": 282
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-8A57819ED822",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 283,
+          "lineEnd": 283
         }
       ],
-      "statement": "Web 登录校验页移除旧「切换验证方式」入口（原点击仅跳回登录页、无效）。本项仅移除入口，不新增任何前端文案。",
+      "statement": "Web 登录校验页移除旧的、点击后仅跳回登录页的无效「切换验证方式」实现；最终态不是完全移除切换能力，而是由 R-003～R-005 在确认按钮下提供仅对绑定 ≥2 种方式用户展示的真实切换入口。旧验收表中“登录校验区域不再展示任何切换入口”的行已被后续内审结论和详细流程取代。",
       "status": "doing",
       "affectedSurfaces": [
         {
@@ -309,7 +362,11 @@
           "type": "component-dom",
           "runtimeRequired": false
         }
-      ]
+      ],
+      "collectionSemantics": {
+        "kind": "none",
+        "expectedCount": 0
+      }
     },
     {
       "requirementId": "R-003",
@@ -327,6 +384,13 @@
           "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
           "lineStart": 112,
           "lineEnd": 113
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-CD10F9CB66B0",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 48,
+          "lineEnd": 48
         }
       ],
       "statement": "登录校验区【确认】按钮下方新增【切换验证方式】入口，仅当用户绑定 ≥2 种方式时展示，单一方式隐藏。该入口按钮文案需在所有支持语言下正确展示，无 hardcode 中文。",
@@ -358,7 +422,11 @@
           "type": "copy-literal",
           "runtimeRequired": false
         }
-      ]
+      ],
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      }
     },
     {
       "requirementId": "R-004",
@@ -383,9 +451,16 @@
           "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
           "lineStart": 115,
           "lineEnd": 117
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-CD10F9CB66B0",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 48,
+          "lineEnd": 48
         }
       ],
-      "statement": "点击【切换验证方式】弹出弹窗：标题「切换验证方式」/副标题「选择一种已绑定的验证方式完成登录」；列表项含图标+方式名称+说明(邮箱/手机脱敏；GA 显示\"30秒自动更新,无需发送\")+当前方式标【当前】；排序 GA→邮箱→手机；✕或点遮罩关闭且不改当前方式。列表仅展示用户已绑定的方式，不展示未绑定的方式。弹窗内所有新增文案(标题/副标题/列表项说明/GA 说明)需在所有支持语言下正确展示，无 hardcode 中文。",
+      "statement": "点击【切换验证方式】弹出弹窗：标题「切换验证方式」/副标题「选择一种已绑定的验证方式完成登录」；列表项含图标+方式名称+说明(邮箱/手机脱敏；GA 显示“30秒自动更新,无需发送”)；当前方式同时显示【当前】标记和明确的选中高亮边框；排序 GA→邮箱→手机；✕或点遮罩关闭且不改当前方式。列表仅展示用户已绑定的方式，不展示未绑定的方式。所有新增文案使用稳定 i18n key、无 hardcode。",
       "status": "doing",
       "collectionSemantics": {
         "kind": "explicit-set",
@@ -464,30 +539,111 @@
           "type": "component-dom",
           "runtimeRequired": false
         }
-      ]
+      ],
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      }
     },
     {
       "requirementId": "R-006",
       "sourceAnchors": [
         {
-          "type": "text",
-          "sourceId": "SRC-F3D6C645F528",
+          "type": "table",
+          "sourceId": "SRC-E98FF0CAE893",
           "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
-          "lineStart": 121,
+          "lineStart": 123,
+          "lineEnd": 123
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-5B31D0A17CD5",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 124,
+          "lineEnd": 124
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-BCDD9CCDFBD9",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 125,
+          "lineEnd": 125
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-E39CF1EC41D5",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 126,
           "lineEnd": 126
         },
         {
-          "type": "text",
-          "sourceId": "SRC-75E1670AD34B",
+          "type": "table",
+          "sourceId": "SRC-DE873CBBC6C4",
           "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
-          "lineStart": 268,
-          "lineEnd": 329
+          "lineStart": 284,
+          "lineEnd": 284
         },
         {
-          "type": "text",
-          "sourceId": "SRC-1F4191526DB8",
+          "type": "table",
+          "sourceId": "SRC-83D2F0FC8202",
           "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
-          "lineStart": 43,
+          "lineStart": 285,
+          "lineEnd": 285
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-19DB5086B468",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 286,
+          "lineEnd": 286
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-7100F25E8992",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 287,
+          "lineEnd": 287
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-6B74259F46BC",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 288,
+          "lineEnd": 288
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-153253CA3A3B",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 289,
+          "lineEnd": 289
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-B3E6F8C2E8F4",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 290,
+          "lineEnd": 290
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-0E73C3FFC609",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 291,
+          "lineEnd": 291
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-86E7F5C1BABA",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 292,
+          "lineEnd": 292
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-CD10F9CB66B0",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 48,
           "lineEnd": 48
         }
       ],
@@ -495,7 +651,7 @@
       "status": "doing",
       "collectionSemantics": {
         "kind": "explicit-set",
-        "expectedCount": 4
+        "expectedCount": 9
       },
       "affectedSurfaces": [
         {
@@ -519,6 +675,31 @@
           "disposition": "deferred",
           "owner": "App 团队",
           "batch": "App 交接批次"
+        },
+        {
+          "surfaceId": "S-095",
+          "locator": "apps/Register 注册校验：使用注册时选择的邮箱或手机",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-096",
+          "locator": "apps/Login 登录校验：GA > 邮箱 > 手机默认优先级及切换",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-097",
+          "locator": "apps/Balance/Trade 提币：正常双重校验组合矩阵",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-098",
+          "locator": "apps/Account 修改密码：正常双重校验组合矩阵",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-099",
+          "locator": "apps/web 其他敏感操作：单绑单一、双绑及以上双重校验矩阵",
+          "disposition": "implement"
         }
       ],
       "evidencePlan": [
@@ -541,24 +722,10 @@
       "sourceAnchors": [
         {
           "type": "text",
-          "sourceId": "SRC-BEC8EFD0E36A",
-          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
-          "lineStart": 137,
-          "lineEnd": 140
-        },
-        {
-          "type": "text",
           "sourceId": "SRC-55D95BA8AC0B",
           "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
           "lineStart": 132,
           "lineEnd": 133
-        },
-        {
-          "type": "text",
-          "sourceId": "SRC-E714C1CABE9F",
-          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
-          "lineStart": 142,
-          "lineEnd": 142
         },
         {
           "type": "image",
@@ -678,13 +845,55 @@
           "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
           "lineStart": 142,
           "lineEnd": 142
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-D50B055E27B2",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 139,
+          "lineEnd": 139
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-D8B6CC68C4FF",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 140,
+          "lineEnd": 140
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-F8F4F5748F9C",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 142,
+          "lineEnd": 142
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-9D5D2E334A10",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 142,
+          "lineEnd": 142
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-2D93FAA3A2F7",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 142,
+          "lineEnd": 142
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-99E6C7B114AE",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 142,
+          "lineEnd": 142
         }
       ],
       "statement": "除登录/注册保留页面形式外，其余所有校验场景统一优化为弹窗模式（逐场景实现，防漏）。",
       "status": "doing",
       "collectionSemantics": {
         "kind": "explicit-set",
-        "expectedCount": 15
+        "expectedCount": 16
       },
       "affectedSurfaces": [
         {
@@ -754,12 +963,19 @@
         },
         {
           "surfaceId": "S-042",
-          "locator": "apps/BuyCrypto 买币三板块出售购买 校验弹窗",
+          "locator": "apps/BuyCrypto 共享安全校验组件矩阵：三个板块 × 购买/出售两个方向（6 个成员）",
           "disposition": "implement"
         },
         {
           "surfaceId": "S-077",
-          "locator": "App 对应校验场景弹窗化评估(App 交接批次)",
+          "locator": "App iOS 共享安全校验组件：覆盖 PRD 列出的全部非登录/注册校验场景",
+          "disposition": "deferred",
+          "owner": "App 团队",
+          "batch": "App 交接批次"
+        },
+        {
+          "surfaceId": "S-091",
+          "locator": "App Android 共享安全校验组件：覆盖 PRD 列出的全部非登录/注册校验场景",
           "disposition": "deferred",
           "owner": "App 团队",
           "batch": "App 交接批次"
@@ -775,13 +991,6 @@
     {
       "requirementId": "R-008",
       "sourceAnchors": [
-        {
-          "type": "text",
-          "sourceId": "SRC-76838D100679",
-          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
-          "lineStart": 146,
-          "lineEnd": 146
-        },
         {
           "type": "image",
           "sourceId": "SRC-92A84661A698",
@@ -811,18 +1020,95 @@
           "lineEnd": 146
         },
         {
-          "type": "text",
-          "sourceId": "SRC-75E1670AD34B",
+          "type": "table",
+          "sourceId": "SRC-9897ABA8C170",
           "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
-          "lineStart": 268,
-          "lineEnd": 329
+          "lineStart": 146,
+          "lineEnd": 146
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-E7C6B3BB5974",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 146,
+          "lineEnd": 146
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-043DED7A08A0",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 146,
+          "lineEnd": 146
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-FAF9FEB8357B",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 146,
+          "lineEnd": 146
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-561DCD64606F",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 294,
+          "lineEnd": 294
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-51446BA1564A",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 295,
+          "lineEnd": 295
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-218A9FA3A6FE",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 296,
+          "lineEnd": 296
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-5C25B615F9F0",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 297,
+          "lineEnd": 297
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-CB427AB579AE",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 298,
+          "lineEnd": 298
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-BA9BDC13F94E",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 299,
+          "lineEnd": 299
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-E4A84160AB9D",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 300,
+          "lineEnd": 300
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-B31667AAD714",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 301,
+          "lineEnd": 301
         }
       ],
       "statement": "改/绑邮箱手机表单页只验证\"新绑定目标\"(新邮箱/手机输入+验证码四态)；账户身份安全校验移到提交通过后的弹窗，弹窗方式按优先级：改邮箱/手机(有旧联系方式)=GA+邮箱/手机可切换；首次绑手机(仅有邮箱)=邮箱单一固定；首次绑邮箱(有手机+GA)=GA+手机固定。流系与回退：表单校验通过→关闭表单→弹出安全校验弹窗→弹窗内校验通过→修改/绑定生效；弹窗内取消或校验失败→修改/绑定操作不生效，可重新发起。",
       "status": "doing",
       "collectionSemantics": {
         "kind": "explicit-set",
-        "expectedCount": 6
+        "expectedCount": 7
       },
       "affectedSurfaces": [
         {
@@ -851,8 +1137,15 @@
           "disposition": "implement"
         },
         {
-          "surfaceId": "S-077",
-          "locator": "App 对应校验场景弹窗化评估(App 交接批次)",
+          "surfaceId": "S-109",
+          "locator": "App iOS 改/绑邮箱手机校验场景弹窗化",
+          "disposition": "deferred",
+          "owner": "App 团队",
+          "batch": "App 交接批次"
+        },
+        {
+          "surfaceId": "S-110",
+          "locator": "App Android 改/绑邮箱手机校验场景弹窗化",
           "disposition": "deferred",
           "owner": "App 团队",
           "batch": "App 交接批次"
@@ -878,6 +1171,20 @@
           "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
           "lineStart": 161,
           "lineEnd": 162
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-5B4DB6029369",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 302,
+          "lineEnd": 302
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-30D6AB99E561",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 303,
+          "lineEnd": 303
         }
       ],
       "statement": "【没有收到验证码？】入口固定展示在验证码输入区域下方，一个验证场景只出现一次(双重校验两个验证码框也只展示一个入口)。",
@@ -901,18 +1208,15 @@
           "type": "component-dom",
           "runtimeRequired": false
         }
-      ]
+      ],
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      }
     },
     {
       "requirementId": "R-010",
       "sourceAnchors": [
-        {
-          "type": "text",
-          "sourceId": "SRC-08A9C49EE710",
-          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
-          "lineStart": 166,
-          "lineEnd": 166
-        },
         {
           "type": "text",
           "sourceId": "SRC-D02ADA9DD1B7",
@@ -968,6 +1272,97 @@
           "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
           "lineStart": 159,
           "lineEnd": 159
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-842262C4C28A",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 166,
+          "lineEnd": 166
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-AD7A80D96AF6",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 166,
+          "lineEnd": 166
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-3CCD3F0ABA76",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 166,
+          "lineEnd": 166
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-51F931EADAFD",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 166,
+          "lineEnd": 166
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-2361D084FC6E",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 166,
+          "lineEnd": 166
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-FEEB903BA9E4",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 304,
+          "lineEnd": 304
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-F5CFBE361A0C",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 305,
+          "lineEnd": 305
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-3180FAA1AA02",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 306,
+          "lineEnd": 306
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-A6F4AF3BCD6A",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 307,
+          "lineEnd": 307
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-F4404B0B2AF9",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 310,
+          "lineEnd": 310
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-B2484CB39C3C",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 311,
+          "lineEnd": 311
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-292A2650BA83",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 312,
+          "lineEnd": 312
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-CD10F9CB66B0",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 48,
+          "lineEnd": 48
         }
       ],
       "statement": "点击【没有收到验证码？】弹出引导弹窗：标题固定；邮箱/手机双 Tab 恒显；默认 Tab 按当前请求验证码类型定位(邮箱+手机场景默认邮箱)；底部左客服 icon 右已知晓；点 Tab 仅切换正文不影响背后表单；点客服打开客服；点已知晓关闭。弹窗内所有文案(标题/Tab/正文/客服icon/已知晓按钮)需在所有支持语言下正确展示，无 hardcode 中文。",
@@ -995,7 +1390,11 @@
           "type": "copy-literal",
           "runtimeRequired": false
         }
-      ]
+      ],
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      }
     },
     {
       "requirementId": "R-011",
@@ -1048,6 +1447,20 @@
           "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
           "lineStart": 182,
           "lineEnd": 186
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-5BA7813ECEED",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 308,
+          "lineEnd": 308
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-35B83D4A991B",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 309,
+          "lineEnd": 309
         }
       ],
       "statement": "「没有收到验证码？」弹窗邮箱 Tab / 手机 Tab 排查文案按 PRD 逐字实现；Web 业务开发只维护 zh-CN 并使用 i18n key、禁止 hardcode，其他语言由国际化团队补齐。",
@@ -1071,18 +1484,15 @@
           "type": "copy-literal",
           "runtimeRequired": false
         }
-      ]
+      ],
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      }
     },
     {
       "requirementId": "R-012",
       "sourceAnchors": [
-        {
-          "type": "text",
-          "sourceId": "SRC-CA76DF87391B",
-          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
-          "lineStart": 210,
-          "lineEnd": 210
-        },
         {
           "type": "text",
           "sourceId": "SRC-F1E335E224CA",
@@ -1096,9 +1506,79 @@
           "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
           "lineStart": 206,
           "lineEnd": 206
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-30C7ECC18211",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 210,
+          "lineEnd": 210
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-25BAE0C9633A",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 210,
+          "lineEnd": 210
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-2A562D5B7CF5",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 210,
+          "lineEnd": 210
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-37642C53DCFB",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 210,
+          "lineEnd": 210
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-D007C3260213",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 313,
+          "lineEnd": 313
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-74621C5522D0",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 314,
+          "lineEnd": 314
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-2B2F7ED3C449",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 315,
+          "lineEnd": 315
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-3716EBDB13D1",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 316,
+          "lineEnd": 316
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-4183F21A1BB5",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 317,
+          "lineEnd": 317
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-0726E491424A",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 319,
+          "lineEnd": 319
         }
       ],
-      "statement": "获取验证码按钮四态：初始(获取验证码,可点)→加载(三跳动圆点,禁用)→已发送(倒计时+icon,禁用)→重新发送(可点)；加载态与已发送态在代码层禁用 onclick 防重复触发。",
+      "statement": "获取验证码按钮四态：初始「获取验证码」(可点)→加载(三跳动圆点,禁用)→已发送「验证码已发送」+ icon(禁用；剩余倒计时在 R-013 Tooltip 动态展示)→「重新发送」(可点)；加载态与已发送态在代码层禁用 onclick 防重复触发。",
       "status": "doing",
       "affectedSurfaces": [
         {
@@ -1123,7 +1603,11 @@
           "type": "pure-logic",
           "runtimeRequired": false
         }
-      ]
+      ],
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      }
     },
     {
       "requirementId": "R-013",
@@ -1141,6 +1625,20 @@
           "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
           "lineStart": 217,
           "lineEnd": 219
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-B0D4E0AAF621",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 318,
+          "lineEnd": 318
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-CD10F9CB66B0",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 48,
+          "lineEnd": 48
         }
       ],
       "statement": "已发送态 icon tooltip 文案「{n}秒后可重新发送验证码，有效期为10分钟」，{n} 每秒动态刷新；Web 端鼠标悬浮 icon 显示、移出隐藏。该 tooltip 文案需在所有支持语言下正确展示，无 hardcode 中文。",
@@ -1161,7 +1659,11 @@
           "type": "component-dom",
           "runtimeRequired": false
         }
-      ]
+      ],
+      "collectionSemantics": {
+        "kind": "none",
+        "expectedCount": 0
+      }
     },
     {
       "requirementId": "R-014",
@@ -1193,9 +1695,30 @@
           "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
           "lineStart": 236,
           "lineEnd": 236
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-B244782C4028",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 320,
+          "lineEnd": 320
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-D04A2445B410",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 321,
+          "lineEnd": 321
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-D4F22F901A7E",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 293,
+          "lineEnd": 293
         }
       ],
-      "statement": "邮箱/手机可切换场景各方式倒计时各自独立、切回保留原倒计时不重置；页面刷新或离开重进时前端依据后端返回的冷却截止时间戳计算剩余秒数并恢复已发送态。",
+      "statement": "邮箱与手机验证码倒计时彼此独立，切换后保留各自剩余时间；同一种验证码方式跨业务场景继续共用后端冷却（例如修改邮箱后进入提币仍受同一冷却截止时间约束）。页面刷新或离开重进时，前端依据后端返回的冷却截止时间戳恢复已发送态和剩余秒数。",
       "status": "doing",
       "affectedSurfaces": [
         {
@@ -1209,6 +1732,13 @@
           "disposition": "deferred",
           "owner": "App 团队",
           "batch": "App 交接批次"
+        },
+        {
+          "surfaceId": "S-103",
+          "locator": "验证码发送 API：返回按验证方式跨业务场景共享的冷却截止时间戳",
+          "disposition": "deferred",
+          "owner": "验证码后端团队",
+          "batch": "PR-02189/PR-02235 API contract prerequisite"
         }
       ],
       "evidencePlan": [
@@ -1224,7 +1754,11 @@
           "type": "browser-interaction",
           "runtimeRequired": true
         }
-      ]
+      ],
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 3
+      }
     },
     {
       "requirementId": "R-015",
@@ -1244,11 +1778,39 @@
           "lineEnd": 243
         },
         {
-          "type": "text",
-          "sourceId": "SRC-75E1670AD34B",
+          "type": "table",
+          "sourceId": "SRC-812F2921CD45",
           "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
-          "lineStart": 268,
-          "lineEnd": 329
+          "lineStart": 322,
+          "lineEnd": 322
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-C5979406ACDE",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 323,
+          "lineEnd": 323
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-A78B1264377D",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 324,
+          "lineEnd": 324
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-F801244EBD28",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 325,
+          "lineEnd": 325
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-32334CDE9D08",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 39,
+          "lineEnd": 39
         }
       ],
       "statement": "限频类失败：命中频繁/上限时先 Toast 提示原因并对按钮做冷却禁用；禁用期间再次点击由前端拦截不发起后端请求并再次 Toast 告知，冷却时长/截止时间以后端返回为准。IP 限频/UID 限频/60秒限频需有区分性提示（前端根据后端返回的限频类型渲染对应文案，使用户和客服能看懂被拦截原因；限频类型本体的判定/错误码由 PR-02235 交付，本 PR 仅负责前端区分性渲染）。",
@@ -1299,20 +1861,41 @@
         },
         {
           "type": "text",
-          "sourceId": "SRC-281C56C3C654",
-          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
-          "lineStart": 256,
-          "lineEnd": 258
-        },
-        {
-          "type": "text",
           "sourceId": "SRC-F4B85BAE1FC7",
           "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
           "lineStart": 250,
           "lineEnd": 250
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-D11B2F8CD9FF",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 258,
+          "lineEnd": 258
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-7F28D72D0EDE",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 326,
+          "lineEnd": 326
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-2D8D131E6FC5",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 327,
+          "lineEnd": 327
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-0F450B9EA57B",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 328,
+          "lineEnd": 328
         }
       ],
-      "statement": "服务异常(网络异常/服务端异常)时按钮从加载态回退到初始态或重新发送态并 Toast 提示错误码，不进入 60 秒倒计时、可立即重试。错误码/错误信息文案由后端返回，前端不新增固定文案，仅透传展示。",
+      "statement": "服务异常时按钮从加载态回退到初始态或重新发送态，不进入 60 秒倒计时并可立即重试：无后端响应的网络异常由前端展示本地化「网络异常」Toast；服务端返回异常时透传后端错误码/错误信息。",
       "status": "doing",
       "affectedSurfaces": [
         {
@@ -1337,20 +1920,80 @@
           "type": "component-dom",
           "runtimeRequired": false
         }
-      ]
+      ],
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      }
     },
     {
       "requirementId": "R-017",
       "sourceAnchors": [
         {
-          "type": "text",
-          "sourceId": "SRC-9920F59580C2",
+          "type": "table",
+          "sourceId": "SRC-23CCBF76B484",
           "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
           "lineStart": 264,
           "lineEnd": 264
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-6F93F95A872D",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 264,
+          "lineEnd": 264
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-7AC0EB7F0BDD",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 264,
+          "lineEnd": 264
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-50A8F1CAC93A",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 264,
+          "lineEnd": 264
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-7E7F0E1FA494",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 264,
+          "lineEnd": 264
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-374D8CCEE017",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 264,
+          "lineEnd": 264
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-8036D2C461DA",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 264,
+          "lineEnd": 264
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-963A1F665E81",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 264,
+          "lineEnd": 264
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-D32140823F42",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 329,
+          "lineEnd": 329
         }
       ],
-      "statement": "验证交互全事件埋点上报，8 个结构不同的事件各自独立触发时机与参数契约：verification_scene_view(interaction_type/verify_methods) / click_get_code(method/button_state/attempt_count) / code_send_result(method/result/fail_reason/fail_code/duration_ms) / hit_rate_limit(method/limit_type/cooldown_seconds) / switch_channel(from_method/to_method) / view_no_code_guide(current_method) / code_verify_submit(method) / code_verify_result(method/verify_mode/result/fail_reason)。",
+      "statement": "验证交互全事件埋点上报，8 个结构不同的事件各自独立触发时机与参数契约：verification_scene_view(interaction_type/verify_methods) / click_get_code(method/button_state/attempt_count) / code_send_result(method/result/fail_reason/fail_code/duration_ms/attempt_count) / hit_rate_limit(method/limit_type/cooldown_seconds) / switch_channel(from_method/to_method) / view_no_code_guide(current_method) / code_verify_submit(method) / code_verify_result(method/verify_mode/result/fail_reason)。",
       "status": "doing",
       "collectionSemantics": {
         "kind": "explicit-set",
@@ -1441,12 +2084,19 @@
           "lineEnd": 232
         }
       ],
-      "statement": "[App] 短信验证码「快捷填充」重复填入(如 12341234)修复：填充为替换而非追加、只填一次、位数正确可校验。",
+      "statement": "[App] 全部短信验证码输入入口的「快捷填充」重复填入(如 12341234)修复：填充为替换而非追加、只填一次、位数正确可校验；iOS 与 Android 各自通过共享验证码输入控件覆盖所有入口。",
       "status": "deferred",
       "affectedSurfaces": [
         {
           "surfaceId": "S-018",
-          "locator": "App 短信验证码输入框自动填充逻辑",
+          "locator": "App iOS 共享短信验证码输入控件：覆盖全部快捷填充入口",
+          "disposition": "deferred",
+          "owner": "App 团队",
+          "batch": "App 交接批次"
+        },
+        {
+          "surfaceId": "S-112",
+          "locator": "App Android 共享短信验证码输入控件：覆盖全部快捷填充入口",
           "disposition": "deferred",
           "owner": "App 团队",
           "batch": "App 交接批次"
@@ -1457,32 +2107,36 @@
           "type": "component-dom",
           "runtimeRequired": false
         }
-      ]
+      ],
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      }
     },
     {
       "requirementId": "R-019",
       "sourceAnchors": [
         {
           "type": "text",
-          "sourceId": "SRC-0F9AE3D66A9B",
+          "sourceId": "SRC-15FEF963C1CB",
           "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
-          "lineStart": 60,
-          "lineEnd": 60
+          "lineStart": 93,
+          "lineEnd": 93
         },
         {
           "type": "text",
-          "sourceId": "SRC-7668A8B65525",
+          "sourceId": "SRC-766B6B55EA75",
           "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
-          "lineStart": 217,
-          "lineEnd": 219
+          "lineStart": 99,
+          "lineEnd": 101
         }
       ],
-      "statement": "[App] 登录切换验证方式入口新增、App 端 tooltip 点击显示/再次点击或点其他区域关闭、App 端切换注册方式引导保持不变——均由 App 侧交付。",
+      "statement": "[App] 登录校验新增真正的验证方式切换入口和选择弹窗，仅展示已绑定方式；由 App 团队在 App 交接批次交付。",
       "status": "deferred",
       "affectedSurfaces": [
         {
           "surfaceId": "S-019",
-          "locator": "App 登录/校验交互(切换入口 + tooltip 点击)",
+          "locator": "App 登录验证方式切换入口与选择弹窗",
           "disposition": "deferred",
           "owner": "App 团队",
           "batch": "App 交接批次"
@@ -1493,7 +2147,11 @@
           "type": "component-dom",
           "runtimeRequired": false
         }
-      ]
+      ],
+      "collectionSemantics": {
+        "kind": "none",
+        "expectedCount": 0
+      }
     },
     {
       "requirementId": "R-020",
@@ -1506,49 +2164,28 @@
           "lineEnd": 254
         },
         {
-          "type": "text",
-          "sourceId": "SRC-75E1670AD34B",
-          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
-          "lineStart": 268,
-          "lineEnd": 329
-        }
-      ],
-      "statement": "[他 PR] 限频策略本体、错误码文案、以及限频类型区分性展示(IP限频/UID限频/60秒限频的可辨识提示)均由 PR-02235 交付；本 PR 仅前端消费其返回的限频类型/文案。",
-      "status": "not-doing",
-      "affectedSurfaces": [
-        {
-          "surfaceId": "S-020",
-          "locator": "PR-02235 限频策略/错误码/类型区分文案(不在本 PR)",
-          "disposition": "not-applicable",
-          "reason": "[他 PR] 限频策略本体、错误码文案、以及限频类型区分性展示(IP限频/UID限频/60秒限频的可辨识提示)均由 PR-02235 交付；本 PR 仅前端消费其返回的限频类型/文案。"
-        }
-      ],
-      "evidencePlan": [
-        {
-          "type": "pure-logic",
-          "runtimeRequired": false
-        }
-      ]
-    },
-    {
-      "requirementId": "R-021",
-      "sourceAnchors": [
-        {
-          "type": "text",
-          "sourceId": "SRC-DA5AFF0BA7C8",
+          "type": "table",
+          "sourceId": "SRC-32334CDE9D08",
           "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
           "lineStart": 39,
           "lineEnd": 39
         }
       ],
-      "statement": "[他 PR] 短信下发渠道优化/有效期10分钟/多渠道自动降级/后台状态由 PR-02189 交付。",
+      "statement": "[他 PR] PR-02235 负责限频策略本体、限频类型判定、错误码以及返回给前端的提示内容；本 PR 不推导限频类型或自造错误文案，但由 R-015 消费其返回的类型/文案/冷却时间，并完成 IP/UID/60 秒限频的前端差异化渲染和交互。 同时由 PR-02235/验证码后端补齐触发限频的 IP 与请求记录链路，供客服后台追溯具体拦截原因。",
       "status": "not-doing",
       "affectedSurfaces": [
         {
-          "surfaceId": "S-021",
-          "locator": "PR-02189 短信后台(不在本 PR)",
+          "surfaceId": "S-020",
+          "locator": "PR-02235 限频策略、类型判定、错误码和提示内容合同(不在本 PR)",
           "disposition": "not-applicable",
-          "reason": "[他 PR] 短信下发渠道优化/有效期10分钟/多渠道自动降级/后台状态由 PR-02189 交付。"
+          "reason": "PR-02235 交付后端限频判定与返回合同；PR-02233 的前端消费、差异化展示和冷却交互由 R-015/S-015/S-088 交付。"
+        },
+        {
+          "surfaceId": "S-093",
+          "locator": "PR-02235/验证码后台：限频 IP 与请求记录诊断链路",
+          "disposition": "deferred",
+          "owner": "验证码后端团队",
+          "batch": "PR-02235"
         }
       ],
       "evidencePlan": [
@@ -1556,14 +2193,65 @@
           "type": "pure-logic",
           "runtimeRequired": false
         }
-      ]
+      ],
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      }
+    },
+    {
+      "requirementId": "R-021",
+      "sourceAnchors": [
+        {
+          "type": "table",
+          "sourceId": "SRC-E1B451445429",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 39,
+          "lineEnd": 39
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-F3D910888827",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 39,
+          "lineEnd": 39
+        }
+      ],
+      "statement": "[他 PR] PR-02189 负责短信渠道资产与智能路由：移除或过滤不再使用的渠道，并按国家、运营商或邮箱后缀选择可用渠道。",
+      "status": "not-doing",
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-021",
+          "locator": "PR-02189 短信后台：无效渠道过滤与国家/运营商/邮箱后缀路由",
+          "disposition": "deferred",
+          "owner": "短信后台团队",
+          "batch": "PR-02189"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "api-contract",
+          "runtimeRequired": false
+        }
+      ],
+      "collectionSemantics": {
+        "kind": "none",
+        "expectedCount": 0
+      }
     },
     {
       "requirementId": "R-026",
       "sourceAnchors": [
         {
-          "type": "text",
-          "sourceId": "SRC-DA5AFF0BA7C8",
+          "type": "table",
+          "sourceId": "SRC-32334CDE9D08",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 39,
+          "lineEnd": 39
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-E1B451445429",
           "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
           "lineStart": 39,
           "lineEnd": 39
@@ -1584,24 +2272,28 @@
           "type": "pure-logic",
           "runtimeRequired": false
         }
-      ]
+      ],
+      "collectionSemantics": {
+        "kind": "none",
+        "expectedCount": 0
+      }
     },
     {
       "requirementId": "R-028",
       "sourceAnchors": [
         {
-          "type": "text",
-          "sourceId": "SRC-E714C1CABE9F",
+          "type": "table",
+          "sourceId": "SRC-D50B055E27B2",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 139,
+          "lineEnd": 139
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-610E293D8B8C",
           "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
           "lineStart": 142,
           "lineEnd": 142
-        },
-        {
-          "type": "text",
-          "sourceId": "SRC-BEC8EFD0E36A",
-          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
-          "lineStart": 137,
-          "lineEnd": 140
         }
       ],
       "statement": "忘记密码验证码校验流精保持页面形式(与登录/注册一致)，不纳入本次弹窗化改造范围；行为不变。(用户确认)",
@@ -1619,54 +2311,140 @@
           "type": "pure-logic",
           "runtimeRequired": false
         }
-      ]
+      ],
+      "collectionSemantics": {
+        "kind": "none",
+        "expectedCount": 0
+      }
     },
     {
       "requirementId": "R-027",
       "sourceAnchors": [
         {
-          "type": "text",
-          "sourceId": "SRC-75E1670AD34B",
+          "type": "table",
+          "sourceId": "SRC-87CD64CAB9DF",
           "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
-          "lineStart": 268,
-          "lineEnd": 329
+          "lineStart": 45,
+          "lineEnd": 45
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-39F15B295F10",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 46,
+          "lineEnd": 46
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-1FE715049BF2",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 47,
+          "lineEnd": 47
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-0F79C545C922",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 270,
+          "lineEnd": 270
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-4F48C4F035F0",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 271,
+          "lineEnd": 271
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-679C32DB40DE",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 272,
+          "lineEnd": 272
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-E65C2D44E3D2",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 273,
+          "lineEnd": 273
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-4943E58EC0E3",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 274,
+          "lineEnd": 274
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-0C62739FEFE4",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 275,
+          "lineEnd": 275
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-32D265D18E61",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 276,
+          "lineEnd": 276
         }
       ],
-      "statement": "验收标准回归项全链路回归：登录→验证码校验→登录成功/失败；注册→验证码校验→注册成功/失败；提币→双重校验→提币成功/失败；修改安全设置→校验→修改成功/失败，交互改动后链路仍完整；GA 校验在登录/提币等场景不受本次交互改动影响；后台验证码下发功能不因前端交互改动导致下发中断。",
+      "statement": "验收标准回归项全链路回归：登录→验证码校验→登录成功/失败；注册→验证码校验→注册成功/失败；提币→双重校验→提币成功/失败；修改安全设置→校验→修改成功/失败，交互改动后链路仍完整；GA 校验在登录/提币等场景不受本次交互改动影响；后台验证码下发功能不因前端交互改动导致下发中断。 Web H5 与 PC 使用同一实现但必须通过双视口场景矩阵；App iOS 与 Android 的同组全链路回归分别交接。",
       "status": "doing",
       "collectionSemantics": {
         "kind": "explicit-set",
-        "expectedCount": 6
+        "expectedCount": 9
       },
       "affectedSurfaces": [
         {
           "surfaceId": "S-060",
-          "locator": "apps/Login 登录全链路回归",
+          "locator": "apps/Login 登录全链路回归（Web H5/PC 共享实现）",
           "disposition": "implement"
         },
         {
           "surfaceId": "S-061",
-          "locator": "apps/Register 注册全链路回归",
+          "locator": "apps/Register 注册全链路回归（Web H5/PC 共享实现）",
           "disposition": "implement"
         },
         {
           "surfaceId": "S-062",
-          "locator": "apps/Balance/Trade 提币全链路回归(双重校验)",
+          "locator": "apps/Balance/Trade 提币全链路回归(双重校验)（Web H5/PC 共享实现）",
           "disposition": "implement"
         },
         {
           "surfaceId": "S-063",
-          "locator": "apps/Account 修改安全设置全链路回归",
+          "locator": "apps/Account 修改安全设置全链路回归（Web H5/PC 共享实现）",
           "disposition": "implement"
         },
         {
           "surfaceId": "S-064",
-          "locator": "GA 校验在登录/提币场景不受本次交互改动影响(回归)",
+          "locator": "GA 校验在登录/提币场景不受本次交互改动影响(回归)（Web H5/PC 共享实现）",
           "disposition": "implement"
         },
         {
           "surfaceId": "S-065",
-          "locator": "后台验证码下发(短信/邮件)不因前端交互改动中断(回归)",
+          "locator": "后台验证码下发(短信/邮件)不因前端交互改动中断(回归)（Web H5/PC 共享实现）",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-100",
+          "locator": "App iOS：登录/注册/提币/安全设置/GA/验证码下发全链路回归矩阵",
+          "disposition": "deferred",
+          "owner": "App 团队",
+          "batch": "App 交接批次"
+        },
+        {
+          "surfaceId": "S-101",
+          "locator": "App Android：登录/注册/提币/安全设置/GA/验证码下发全链路回归矩阵",
+          "disposition": "deferred",
+          "owner": "App 团队",
+          "batch": "App 交接批次"
+        },
+        {
+          "surfaceId": "S-102",
+          "locator": "Web H5 + PC 双视口全链路浏览器场景矩阵",
           "disposition": "implement"
         }
       ],
@@ -1676,6 +2454,373 @@
           "runtimeRequired": true
         }
       ]
+    },
+    {
+      "requirementId": "R-029",
+      "sourceAnchors": [
+        {
+          "type": "table",
+          "sourceId": "SRC-CD10F9CB66B0",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 48,
+          "lineEnd": 48
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-30C7ECC18211",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 210,
+          "lineEnd": 210
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-25BAE0C9633A",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 210,
+          "lineEnd": 210
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-2A562D5B7CF5",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 210,
+          "lineEnd": 210
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-37642C53DCFB",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 210,
+          "lineEnd": 210
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-842262C4C28A",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 166,
+          "lineEnd": 166
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-AD7A80D96AF6",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 166,
+          "lineEnd": 166
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-2361D084FC6E",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 166,
+          "lineEnd": 166
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-4183F21A1BB5",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 317,
+          "lineEnd": 317
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-6DF4C0A2605F",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 280,
+          "lineEnd": 280
+        }
+      ],
+      "statement": "所有本 PR 新增或修改的用户可见文案均覆盖平台支持语言：Web 业务开发提交稳定 i18n key 与 zh-CN 源文案，禁止 hardcode；其余支持语言由国际化团队通过统一翻译交付物补齐，owner=国际化团队，batch=PR-02233 locale handoff。范围包括注册/登录切换入口与弹窗、验证优先级边界提示、未收到验证码弹窗、验证码按钮四态、Tooltip、网络异常和限频展示。",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-089",
+          "locator": "apps/web public/locales/zh-CN：PR-02233 全部新增文案及稳定 i18n key",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-090",
+          "locator": "apps/web public/locales 非 zh-CN 的全部受支持语言：PR-02233 翻译交付物",
+          "disposition": "deferred",
+          "owner": "国际化团队",
+          "batch": "PR-02233 locale handoff"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "copy-literal",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-030",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-7668A8B65525",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 217,
+          "lineEnd": 219
+        }
+      ],
+      "statement": "[App] 已发送态 icon 点击显示动态倒计时 Tooltip；再次点击 icon 或点击页面其他区域关闭。",
+      "status": "deferred",
+      "collectionSemantics": {
+        "kind": "none",
+        "expectedCount": 0
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-104",
+          "locator": "App 验证码已发送态 Tooltip 点击与关闭交互",
+          "disposition": "deferred",
+          "owner": "App 团队",
+          "batch": "App 交接批次"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-031",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-A10EDBB3130B",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 80,
+          "lineEnd": 81
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-1D9E0D0F96DF",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 279,
+          "lineEnd": 279
+        }
+      ],
+      "statement": "[App] 注册验证码页面保持现有切换注册方式引导和返回注册页行为不变，作为 App 回归项。",
+      "status": "deferred",
+      "collectionSemantics": {
+        "kind": "none",
+        "expectedCount": 0
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-105",
+          "locator": "App 注册验证码页既有切换注册方式引导回归",
+          "disposition": "deferred",
+          "owner": "App 团队",
+          "batch": "App 交接批次"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-032",
+      "sourceAnchors": [
+        {
+          "type": "table",
+          "sourceId": "SRC-E1B451445429",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 39,
+          "lineEnd": 39
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-F3D910888827",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 39,
+          "lineEnd": 39
+        }
+      ],
+      "statement": "[后台交接] 建立短信主动监控与告警，覆盖到达率、投递延迟、失败率以及运营商侧日上限；不得仅依赖用户投诉后被动排查。",
+      "status": "deferred",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-106",
+          "locator": "短信监控：到达率/延迟/失败率指标与告警",
+          "disposition": "deferred",
+          "owner": "短信后台团队",
+          "batch": "PR-02189 monitoring follow-up"
+        },
+        {
+          "surfaceId": "S-107",
+          "locator": "短信监控：运营商日上限感知与告警",
+          "disposition": "deferred",
+          "owner": "短信后台团队",
+          "batch": "PR-02189 monitoring follow-up"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "api-contract",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-033",
+      "sourceAnchors": [
+        {
+          "type": "table",
+          "sourceId": "SRC-F3D910888827",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 39,
+          "lineEnd": 39
+        }
+      ],
+      "statement": "[后台/产品交接] 明确延迟验证码与重新发送后的验证码签发、失效及用户提示语义，避免旧码仍在途时生成多个有效码而使用户无法判断应使用哪一个。",
+      "status": "deferred",
+      "collectionSemantics": {
+        "kind": "none",
+        "expectedCount": 0
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-108",
+          "locator": "验证码后端签发/失效合同与延迟码重发产品策略",
+          "disposition": "deferred",
+          "owner": "验证码后端团队 + 产品",
+          "batch": "PR-02189 resend-validity follow-up"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "api-contract",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-034",
+      "sourceAnchors": [
+        {
+          "type": "table",
+          "sourceId": "SRC-E1B451445429",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 39,
+          "lineEnd": 39
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-F3D910888827",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 39,
+          "lineEnd": 39
+        }
+      ],
+      "statement": "[他 PR] 短信主渠道异常时自动降级到下一可用渠道并重新签发验证码；验证码有效期为 10 分钟。",
+      "status": "deferred",
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-111",
+          "locator": "PR-02189 短信后台：自动降级、重发与 10 分钟有效期合同",
+          "disposition": "deferred",
+          "owner": "短信后台团队",
+          "batch": "PR-02189"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "api-contract",
+          "runtimeRequired": false
+        }
+      ],
+      "collectionSemantics": {
+        "kind": "none",
+        "expectedCount": 0
+      }
+    },
+    {
+      "requirementId": "R-035",
+      "sourceAnchors": [
+        {
+          "type": "table",
+          "sourceId": "SRC-E1B451445429",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 39,
+          "lineEnd": 39
+        }
+      ],
+      "statement": "[运营交接] 人工下发按渠道以 3～5 分钟间隔依次尝试；全部失败后进入人工提币与人工冲销 SOP。",
+      "status": "deferred",
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-092",
+          "locator": "客服人工验证码下发、人工提币与人工冲销 SOP",
+          "disposition": "deferred",
+          "owner": "客服运营 + 短信后台团队",
+          "batch": "PR-02189/SOP follow-up"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "copy-literal",
+          "runtimeRequired": false
+        }
+      ],
+      "collectionSemantics": {
+        "kind": "none",
+        "expectedCount": 0
+      }
+    },
+    {
+      "requirementId": "R-036",
+      "sourceAnchors": [
+        {
+          "type": "table",
+          "sourceId": "SRC-E1B451445429",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 39,
+          "lineEnd": 39
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-F3D910888827",
+          "path": "prds/PR-02233/inbox/lark-sync/prd-latest.extracted.md",
+          "lineStart": 39,
+          "lineEnd": 39
+        }
+      ],
+      "statement": "[后台交接] 暴露第三方短信渠道的发送返回状态或可查询详情，供客服定位每次投递故障。",
+      "status": "deferred",
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-094",
+          "locator": "PR-02189 短信后台：第三方渠道返回状态与查询详情",
+          "disposition": "deferred",
+          "owner": "短信后台团队",
+          "batch": "PR-02189"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "api-contract",
+          "runtimeRequired": false
+        }
+      ],
+      "collectionSemantics": {
+        "kind": "none",
+        "expectedCount": 0
+      }
     }
   ],
   "requirementsAuthor": {
@@ -1685,18 +2830,151 @@
     "sessionId": "01a091f1-6d50-77a0-93a4-b740d1592eae"
   },
   "coverageAudit": {
-    "sourceFingerprint": "pending",
-    "requirementsFingerprint": "pending",
+    "sourceFingerprint": "c9c32b814a286dca6b092ebf4e11ab3730441c7b0915a85470b28c5452efe09d",
+    "requirementsFingerprint": "3673a3a29ce3662ff0a8b79eae1474e0dd5dd3d47677e1b2cca72b63a59cf3e7",
     "reviewMode": "independent-cold-read",
-    "reviewRunId": "pending",
+    "reviewRunId": "review-86f1107e-e91f-4166-add1-2d7415a8c33f",
     "reviewer": {
       "kind": "model",
-      "id": "pending"
+      "id": "pi/uniaix/gpt-5.6-sol"
     },
-    "completedAt": "2000-01-01T00:00:00Z",
+    "completedAt": "2026-09-12T10:29:59.684Z",
     "verdict": "changes-required",
+    "findings": [
+      {
+        "findingId": "F-001",
+        "code": "missing-surface",
+        "message": "The popup-conversion collection is incomplete. The source states that only login and registration retain page-based verification, while the scene inventory explicitly includes forgot-password verification. Therefore forgot password falls within the non-login/registration scenarios that must use a verification popup. R-028 instead marks it not applicable based on an unsupported “user confirmation,” and R-007 has no implementing surface or evidence command for this flow. Add the forgot-password verification surface to the popup collection and provide corresponding evidence.",
+        "sourceIds": [
+          "SRC-D8B6CC68C4FF",
+          "SRC-610E293D8B8C",
+          "SRC-F11347F738C9"
+        ],
+        "disposition": "open"
+      }
+    ],
+    "receipt": {
+      "issuedBy": "docs-tdd-review-v1",
+      "client": "pi",
+      "sessionId": "86f1107e-e91f-4166-add1-2d7415a8c33f",
+      "sourceIsolation": "source-only-no-code",
+      "requestFingerprint": "a4758fea98136947cf99715cca5d2ed4d5145b88e4ee360912978c8ee0688035",
+      "reviewedAssets": [
+        {
+          "sourceId": "SRC-E9340E359735",
+          "assetHash": "1e2dc37779c55d4f44fd09d09abb00ca59cbfe06a29844c08b4093d12c02bb8b"
+        },
+        {
+          "sourceId": "SRC-88AE784CEEE0",
+          "assetHash": "fe4b12ee82fafe443db222b0374330978a5f59db6983df2b20327a10850af983"
+        },
+        {
+          "sourceId": "SRC-4E02866959D4",
+          "assetHash": "f0ba206aa93815de2b0928aed89f1397632c56e600b418e421e6547a739b19be"
+        },
+        {
+          "sourceId": "SRC-0CC76D6FFA98",
+          "assetHash": "9b1b92f88281ecd36ff5c17f7311c3e5c307c40a55975d9b3b607731d296c022"
+        },
+        {
+          "sourceId": "SRC-064CB027CFB3",
+          "assetHash": "8d20e4e9a374a29331e604d2e3ac3018a349e03a0883a53942363525c2a8a62b"
+        },
+        {
+          "sourceId": "SRC-CB7B1EE252FC",
+          "assetHash": "379806e79bcf3f03139cc46f02bf87cb2e2e6ee9d49a8079b25ea8a93fd94a77"
+        },
+        {
+          "sourceId": "SRC-38BD411AB7FA",
+          "assetHash": "c99967dd7a026e691cf5149bfccdd36c0732cf735a2b94d86f0c5404ba4d3d3b"
+        },
+        {
+          "sourceId": "SRC-E4376240B527",
+          "assetHash": "719bbda98fa6b3cd11ef6427822404c2b338a65a1057a6012bfed0f665da3506"
+        },
+        {
+          "sourceId": "SRC-384DA8CDFDA5",
+          "assetHash": "16f9e29157c0aae3189fc14f9047fef4edb32a2ce7c483f1219e65f6c9cb8bb4"
+        },
+        {
+          "sourceId": "SRC-41A6E5ADEDB7",
+          "assetHash": "b2bb7d5e4492fdc3a9483dda13b5050db07961c46fd1a44b5d60d6abce5972b7"
+        },
+        {
+          "sourceId": "SRC-EFAA92690017",
+          "assetHash": "5816502a8f9ac0bb05e56672546cb252354cfdded9de512fba73f62242aa7f28"
+        },
+        {
+          "sourceId": "SRC-10609BC6D905",
+          "assetHash": "f1442bd9de2d487aba71c2ba3b3b5263179ebb9c10d276900bd8b69f28255d92"
+        },
+        {
+          "sourceId": "SRC-4C392AEEDDA4",
+          "assetHash": "10aa9baab044e323548cc5b6df7dd33f94f37b6269e59d1460cbbe67b35084df"
+        },
+        {
+          "sourceId": "SRC-8DF0199AEEF6",
+          "assetHash": "ffa3b993c9f95a6a90787c167ab4da9643d32619e9a5405aeb783b2b5aa1c77c"
+        },
+        {
+          "sourceId": "SRC-B6FE06D4DAD0",
+          "assetHash": "9dc1948d91c58ce85ecb03ab8e2bb89219cfd59f73e58972674809d56d1ca0b8"
+        },
+        {
+          "sourceId": "SRC-ED9295E2DD4D",
+          "assetHash": "ed5e76e737e4562b6eef899a4429e42e236a14c7cd0b1a5c309b21df6b667a99"
+        },
+        {
+          "sourceId": "SRC-85551C5A7606",
+          "assetHash": "42413d9c76bba547048071ce0d86735d0930a7ef573b2cc4b5410b2c3cf75784"
+        },
+        {
+          "sourceId": "SRC-2CE1D6D045D6",
+          "assetHash": "c4685732ce3e67fc4607e729206c20c8069f8d681f010e49fe0562b53ef2cda2"
+        },
+        {
+          "sourceId": "SRC-7F0D479471E2",
+          "assetHash": "a02fc14b9ab07a82abcb77c1c1ee9cb34322001ae8f3a4913ff1b13334dc90fc"
+        },
+        {
+          "sourceId": "SRC-CBBB8578D775",
+          "assetHash": "fe504f4763f12d6237f2aaa371f4ec86f230b1d59b56a9426df00d7326d6d61f"
+        },
+        {
+          "sourceId": "SRC-F11347F738C9",
+          "assetHash": "4fc21639a0a8be16b615ba4fdc783fdb894543d543066194f245df3e504443e2"
+        },
+        {
+          "sourceId": "SRC-92A84661A698",
+          "assetHash": "46ba6dde9770d4164c0b519700c87490e95d08d70465174b0f353223a8ec67b6"
+        },
+        {
+          "sourceId": "SRC-88D08D558049",
+          "assetHash": "017a5c79dc668b8517278cd1ffa1a83586af739af3ec9bbb22c1ac7ae9a998b0"
+        },
+        {
+          "sourceId": "SRC-2D8E58E20C07",
+          "assetHash": "591f8458969671183cc31208977e90b2007249fc4b838de8dbd69ed843b6e0e5"
+        },
+        {
+          "sourceId": "SRC-FB35C5272486",
+          "assetHash": "881b541eceb281ad5fcb1ae8e3ac724595cc556e64b8ac041e6543553d560a29"
+        },
+        {
+          "sourceId": "SRC-88BBE9AC8B14",
+          "assetHash": "b22be9d1163f52f9d9c12c4069e51800ae7f1b3a0a1a64ede2e6ee1fe9f217f4"
+        },
+        {
+          "sourceId": "SRC-00EDCEFE08AC",
+          "assetHash": "8aa78a1c51a29ec6b6415c594e53bab48854ec4f46c16230af4d335480e0da86"
+        }
+      ],
+      "startedAt": "2026-09-12T10:25:39.770Z",
+      "completedAt": "2026-09-12T10:29:59.684Z",
+      "signature": "50f8468987527108504537b0160fa9695122b06f0b74223e6e01df233ebdd84d"
+    },
     "unresolved": [
-      "awaiting independent cold-read coverage review"
+      "F-001: The popup-conversion collection is incomplete. The source states that only login and registration retain page-based verification, while the scene inventory explicitly includes forgot-password verification. Therefore forgot password falls within the non-login/registration scenarios that must use a verification popup. R-028 instead marks it not applicable based on an unsupported “user confirmation,” and R-007 has no implementing surface or evidence command for this flow. Add the forgot-password verification surface to the popup collection and provide corresponding evidence."
     ]
   },
   "routing": {
@@ -2350,7 +3628,7 @@
         "@fameex/web",
         "test",
         "--run",
-        "apps/web/src/__tests__/PR-02233/R-007-S-042-component-dom-apps-BuyCrypto.spec.ts"
+        "apps/web/src/__tests__/PR-02233/R-007-S-042-buy-crypto-3x2-matrix.spec.ts"
       ],
       "requirementIds": [
         "R-007"
@@ -3226,6 +4504,312 @@
       "surfaceIds": [
         "S-065"
       ]
+    },
+    {
+      "evidenceId": "E-85",
+      "kind": "contract-or-scenario-tests",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233"
+      ],
+      "requirementIds": [
+        "R-001",
+        "R-002",
+        "R-003",
+        "R-004",
+        "R-005",
+        "R-006",
+        "R-007",
+        "R-008",
+        "R-009",
+        "R-010",
+        "R-011",
+        "R-012",
+        "R-013",
+        "R-014",
+        "R-015",
+        "R-016",
+        "R-017",
+        "R-027",
+        "R-029"
+      ],
+      "surfaceIds": [
+        "S-001",
+        "S-002",
+        "S-003",
+        "S-004",
+        "S-066",
+        "S-005",
+        "S-006",
+        "S-007",
+        "S-086",
+        "S-095",
+        "S-096",
+        "S-097",
+        "S-098",
+        "S-099",
+        "S-030",
+        "S-031",
+        "S-032",
+        "S-033",
+        "S-034",
+        "S-035",
+        "S-036",
+        "S-037",
+        "S-038",
+        "S-039",
+        "S-040",
+        "S-043",
+        "S-041",
+        "S-042",
+        "S-050",
+        "S-051",
+        "S-052",
+        "S-053",
+        "S-054",
+        "S-009",
+        "S-010",
+        "S-011",
+        "S-012",
+        "S-013",
+        "S-014",
+        "S-015",
+        "S-088",
+        "S-016",
+        "S-017",
+        "S-070",
+        "S-071",
+        "S-072",
+        "S-073",
+        "S-074",
+        "S-075",
+        "S-076",
+        "S-060",
+        "S-061",
+        "S-062",
+        "S-063",
+        "S-064",
+        "S-065",
+        "S-102",
+        "S-089"
+      ]
+    },
+    {
+      "evidenceId": "E-86",
+      "kind": "directed-quality",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "typecheck"
+      ],
+      "requirementIds": [
+        "R-001",
+        "R-002",
+        "R-003",
+        "R-004",
+        "R-005",
+        "R-006",
+        "R-007",
+        "R-008",
+        "R-009",
+        "R-010",
+        "R-011",
+        "R-012",
+        "R-013",
+        "R-014",
+        "R-015",
+        "R-016",
+        "R-017",
+        "R-027",
+        "R-029"
+      ],
+      "surfaceIds": [
+        "S-001",
+        "S-002",
+        "S-003",
+        "S-004",
+        "S-066",
+        "S-005",
+        "S-006",
+        "S-007",
+        "S-086",
+        "S-095",
+        "S-096",
+        "S-097",
+        "S-098",
+        "S-099",
+        "S-030",
+        "S-031",
+        "S-032",
+        "S-033",
+        "S-034",
+        "S-035",
+        "S-036",
+        "S-037",
+        "S-038",
+        "S-039",
+        "S-040",
+        "S-043",
+        "S-041",
+        "S-042",
+        "S-050",
+        "S-051",
+        "S-052",
+        "S-053",
+        "S-054",
+        "S-009",
+        "S-010",
+        "S-011",
+        "S-012",
+        "S-013",
+        "S-014",
+        "S-015",
+        "S-088",
+        "S-016",
+        "S-017",
+        "S-070",
+        "S-071",
+        "S-072",
+        "S-073",
+        "S-074",
+        "S-075",
+        "S-076",
+        "S-060",
+        "S-061",
+        "S-062",
+        "S-063",
+        "S-064",
+        "S-065",
+        "S-102",
+        "S-089"
+      ]
+    },
+    {
+      "evidenceId": "E-87",
+      "kind": "copy-literal",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-029-i18n-coverage.spec.ts"
+      ],
+      "requirementIds": [
+        "R-029"
+      ],
+      "surfaceIds": [
+        "S-089"
+      ]
+    },
+    {
+      "evidenceId": "E-88",
+      "kind": "contract-or-scenario-tests",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-006-verification-priority-consumer-matrix.spec.ts"
+      ],
+      "requirementIds": [
+        "R-006"
+      ],
+      "surfaceIds": [
+        "S-095",
+        "S-096",
+        "S-097",
+        "S-098",
+        "S-099"
+      ]
+    },
+    {
+      "evidenceId": "E-89",
+      "kind": "browser-interaction",
+      "argv": [
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-027-S-102-h5-pc-matrix.json"
+      ],
+      "requirementIds": [
+        "R-027"
+      ],
+      "surfaceIds": [
+        "S-102"
+      ]
+    },
+    {
+      "evidenceId": "E-90",
+      "kind": "component-dom",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-006-consumer-dom-matrix.spec.ts"
+      ],
+      "requirementIds": [
+        "R-006"
+      ],
+      "surfaceIds": [
+        "S-095",
+        "S-096",
+        "S-097",
+        "S-098",
+        "S-099"
+      ]
+    },
+    {
+      "evidenceId": "E-91",
+      "kind": "pure-logic",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-006-consumer-priority-matrix.spec.ts"
+      ],
+      "requirementIds": [
+        "R-006"
+      ],
+      "surfaceIds": [
+        "S-095",
+        "S-096",
+        "S-097",
+        "S-098",
+        "S-099"
+      ]
+    },
+    {
+      "evidenceId": "E-92",
+      "kind": "copy-literal",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "test",
+        "--run",
+        "apps/web/src/__tests__/PR-02233/R-006-consumer-copy-matrix.spec.ts"
+      ],
+      "requirementIds": [
+        "R-006"
+      ],
+      "surfaceIds": [
+        "S-095",
+        "S-096",
+        "S-097",
+        "S-098",
+        "S-099"
+      ]
     }
   ],
   "sourceUnitDispositions": [
@@ -3241,16 +4825,6 @@
     },
     {
       "sourceId": "SRC-CDB57041C282",
-      "disposition": "not-a-requirement",
-      "reason": "章节标题/元信息，非原子需求"
-    },
-    {
-      "sourceId": "SRC-9BB7FAB2CF94",
-      "disposition": "not-a-requirement",
-      "reason": "章节标题/元信息，非原子需求"
-    },
-    {
-      "sourceId": "SRC-05DCA906E4E1",
       "disposition": "not-a-requirement",
       "reason": "章节标题/元信息，非原子需求"
     },
@@ -3318,9 +4892,49 @@
       "sourceId": "SRC-537F67BD4706",
       "disposition": "not-a-requirement",
       "reason": "背景/上下文说明，非独立原子需求"
+    },
+    {
+      "sourceId": "SRC-6456C6E9EB49",
+      "disposition": "not-a-requirement",
+      "reason": "版本元数据或评审过程记录，不是实现需求"
+    },
+    {
+      "sourceId": "SRC-80CB1A4B61DC",
+      "disposition": "not-a-requirement",
+      "reason": "版本元数据或评审过程记录，不是实现需求"
+    },
+    {
+      "sourceId": "SRC-80CB1A4B61DC-2",
+      "disposition": "not-a-requirement",
+      "reason": "版本元数据或评审过程记录，不是实现需求"
+    },
+    {
+      "sourceId": "SRC-D41B461106BB",
+      "disposition": "not-a-requirement",
+      "reason": "版本元数据或评审过程记录，不是实现需求"
+    },
+    {
+      "sourceId": "SRC-587E966DE400",
+      "disposition": "not-a-requirement",
+      "reason": "版本元数据或评审过程记录，不是实现需求"
+    },
+    {
+      "sourceId": "SRC-E5387E6D141B",
+      "disposition": "not-a-requirement",
+      "reason": "版本元数据或评审过程记录，不是实现需求"
     }
   ],
-  "scopeApproval": null,
+  "scopeApproval": {
+    "confirmationKind": "human",
+    "confirmedBy": "project-owner-via-chat",
+    "confirmedAt": "2026-09-12",
+    "reason": "Approved the current PR-02233 doing scope and accepted fail-closed blocking while required Figma/API dependencies remain unavailable.",
+    "recordedVia": {
+      "client": "human",
+      "sessionId": "v3-3-completion"
+    },
+    "fingerprint": "e6e01c1f0e45f574b4ed072bf92c5504cfadedac43715bc9f6df0ba01163098a"
+  },
   "autopilot": {
     "phase": "intake",
     "implementation": {
@@ -3332,5 +4946,229 @@
       "browser": 0
     },
     "lastCheckpointAt": "2026-09-12T05:49:36.236Z"
+  },
+  "extractionAudit": {
+    "schemaVersion": 1,
+    "auditedAt": "2026-09-12T10:25:38.896Z",
+    "sourceFingerprint": "c9c32b814a286dca6b092ebf4e11ab3730441c7b0915a85470b28c5452efe09d",
+    "requirementsFingerprint": "3673a3a29ce3662ff0a8b79eae1474e0dd5dd3d47677e1b2cca72b63a59cf3e7",
+    "sourceUnitsFingerprint": "1baa83316e03ef19b24561d3e625488c9bf0494b168e68e20939f134c27db54c",
+    "status": "pass",
+    "checks": [
+      {
+        "code": "EXTRACTION_STRUCTURE",
+        "ok": true,
+        "problems": []
+      },
+      {
+        "code": "EVIDENCE_COMMANDS",
+        "ok": true,
+        "problems": []
+      }
+    ]
+  },
+  "reviewControl": {
+    "sourceFingerprint": "c9c32b814a286dca6b092ebf4e11ab3730441c7b0915a85470b28c5452efe09d",
+    "attempts": 2,
+    "maxAttempts": 3,
+    "status": "adjudicated",
+    "history": [
+      {
+        "reviewRunId": "review-468e3ac1-e444-425f-86ee-c701a405bbc6",
+        "completedAt": "2026-09-12T10:12:17.606Z",
+        "requirementsFingerprint": "a1ab58c602ade2f27f97e7ab70fb4a99e2173cd4de5c6089ead67f212b421e91",
+        "verdict": "changes-required",
+        "findingSignature": "1034e47cbc211e16fa2c4358de8ed347385131127330fb8bdaa91de05657ba91",
+        "findings": [
+          {
+            "findingId": "F-001",
+            "code": "missing-requirement",
+            "message": "The popup-conversion collection incorrectly excludes the forgot-password verification flow. The rule exempts only login and registration, while the scene inventory explicitly includes 忘记密码. R-028's claim that it remains page-based relies on an unanchored “用户确认” and contradicts the supplied source. Add the forgot-password verification flow as an affected popup surface and evidence target.",
+            "sourceIds": [
+              "SRC-D8B6CC68C4FF",
+              "SRC-610E293D8B8C"
+            ],
+            "disposition": "open"
+          },
+          {
+            "findingId": "F-002",
+            "code": "missing-requirement",
+            "message": "No candidate requirement or handoff covers proactive SMS delivery monitoring and alerting, including awareness of carrier-side daily limits. R-021 covers routing, fallback and queryable channel status, but those do not satisfy the source's separate requirement for active arrival-rate, latency and failure-rate monitoring and alerts.",
+            "sourceIds": [
+              "SRC-E1B451445429",
+              "SRC-F3D910888827"
+            ],
+            "disposition": "open"
+          },
+          {
+            "findingId": "F-003",
+            "code": "missing-requirement",
+            "message": "The delayed-code/resend ambiguity is not covered. The source identifies that a resend creates a new code while an older code may still be in transit, causing users to receive multiple codes without knowing which is valid. The four-state button and cooldown only prevent clicks during the cooldown; they do not define behavior after cooldown or provide an explicit backend follow-up for code issuance/validity semantics.",
+            "sourceIds": [
+              "SRC-F3D910888827"
+            ],
+            "disposition": "open"
+          },
+          {
+            "findingId": "F-004",
+            "code": "merged-requirement",
+            "message": "R-001 merges a Web implementation change with the independent App no-change regression obligation, while R-031 separately duplicates that App obligation. R-001 has collectionSemantics=none and only the Web surface S-001, so its doing status and evidence cannot independently represent its App assertion. Split the Web and App requirements cleanly or remove the duplicated App clause from R-001.",
+            "sourceIds": [
+              "SRC-A10EDBB3130B",
+              "SRC-1D9E0D0F96DF"
+            ],
+            "disposition": "open"
+          },
+          {
+            "findingId": "F-005",
+            "code": "missing-requirement",
+            "message": "The switch-method prototype visibly requires the current method row to have a distinct selected/highlighted treatment (the email row has the emphasized blue border) in addition to the 【当前】 badge. R-004 captures the badge but omits this visible selected-state requirement and therefore provides no explicit evidence expectation for it.",
+            "sourceIds": [
+              "SRC-0CC76D6FFA98"
+            ],
+            "disposition": "open"
+          }
+        ]
+      },
+      {
+        "reviewRunId": "review-161adbfe-63a4-4c28-a148-b28a11c0f941",
+        "completedAt": "2026-09-12T10:25:10.272Z",
+        "requirementsFingerprint": "d32f326dfdffa1d31ff582bb6276b33c17d3ad08841f9df52d61792a00357b91",
+        "verdict": "changes-required",
+        "findingSignature": "97c8874e60b77d6bfa4592f9b6e3d306b911561e920628823216ec00a777e26f",
+        "findings": [
+          {
+            "findingId": "F-001",
+            "code": "missing-surface",
+            "message": "R-028 incorrectly excludes the forgot-password verification flow based on an unattached “user confirmation.” The source states that only login and registration retain page form, that all other verification scenarios become popups, and explicitly lists forgot password. Add an implement surface and evidence for forgot-password popup conversion, or record an explicit source-backed conflict resolution.",
+            "sourceIds": [
+              "SRC-D50B055E27B2",
+              "SRC-D8B6CC68C4FF",
+              "SRC-610E293D8B8C"
+            ],
+            "disposition": "open"
+          },
+          {
+            "findingId": "F-002",
+            "code": "other",
+            "message": "The login-switch requirements remain internally contradictory. Detailed requirements and the review record require a real switch entry/dialog on Web and App, while acceptance rows require Web to show no switch entry and App to remain unchanged. R-002/R-003/R-019 unilaterally declare the acceptance rows superseded without a source unit establishing that precedence. Preserve this as an open clarification or provide a source-backed precedence rule.",
+            "sourceIds": [
+              "SRC-587E966DE400",
+              "SRC-15FEF963C1CB",
+              "SRC-766B6B55EA75",
+              "SRC-AC4BD5C0303D",
+              "SRC-C1989E5A2246"
+            ],
+            "disposition": "open"
+          },
+          {
+            "findingId": "F-003",
+            "code": "missing-requirement",
+            "message": "R-012 does not retain the acceptance requirement that the successful-send button visibly becomes “验证码已发送” plus the icon. It instead specifies only “倒计时+icon,” leaving the exact visible sent-state label uncovered. Capture the label explicitly while keeping the dynamic remaining time in the tooltip as required by R-013.",
+            "sourceIds": [
+              "SRC-2A562D5B7CF5",
+              "SRC-3716EBDB13D1"
+            ],
+            "disposition": "open"
+          },
+          {
+            "findingId": "F-004",
+            "code": "missing-requirement",
+            "message": "The backend/channel handoff omits concrete channel-management obligations: remove/filter unused channels and define automatic routing using country, carrier, or email-suffix information. R-021's generic “渠道优化/自动降级” wording does not preserve these source semantics or identify corresponding affected surfaces.",
+            "sourceIds": [
+              "SRC-E1B451445429"
+            ],
+            "disposition": "open"
+          },
+          {
+            "findingId": "F-005",
+            "code": "merged-requirement",
+            "message": "R-021 combines independently deliverable and independently verifiable work—channel filtering/routing, automatic fallback and resend, ten-minute validity, manual 3–5 minute SOP with withdrawal/reversal, and third-party status diagnostics—under one requirement and one bundled backend surface. Split these obligations or model them as an explicit member collection with separate owners, surfaces, and evidence contracts.",
+            "sourceIds": [
+              "SRC-E1B451445429",
+              "SRC-F3D910888827"
+            ],
+            "disposition": "open"
+          },
+          {
+            "findingId": "F-006",
+            "code": "ambiguous-collection",
+            "message": "Surface ID S-077 is reused with incompatible meanings: R-007 defines it as the iOS shared security-verification component, while R-008 defines it as a generic App popup-conversion assessment. This makes both explicit-set counts and handoff/evidence mapping ambiguous. Assign distinct stable surface IDs and state the iOS/Android membership for R-008.",
+            "sourceIds": [
+              "SRC-D8B6CC68C4FF",
+              "SRC-9897ABA8C170",
+              "SRC-E7C6B3BB5974",
+              "SRC-043DED7A08A0",
+              "SRC-FAF9FEB8357B"
+            ],
+            "disposition": "open"
+          },
+          {
+            "findingId": "F-007",
+            "code": "ambiguous-collection",
+            "message": "R-018 requires inspection and correction of every App SMS-code input entry, but declares collectionSemantics=none and provides only one generic surface. The whole-source scope includes both iOS and Android, and the source explicitly says all SMS verification-code inputs. Enumerate the platform/entry matrix or identify authoritative shared controls whose coverage proves the collection complete.",
+            "sourceIds": [
+              "SRC-87CD64CAB9DF",
+              "SRC-73D64CB69F5F",
+              "SRC-83AF8F66B3E0"
+            ],
+            "disposition": "open"
+          },
+          {
+            "findingId": "F-008",
+            "code": "inadequate-evidence-command",
+            "message": "R-006 lists pure-logic, component-dom, and copy-literal evidence, but implement surfaces S-095 through S-099 are covered only by aggregate contract-or-scenario-tests/typecheck commands (E-85, E-86, E-88). Those command kinds do not satisfy the listed evidence types for the registration, login, withdrawal, password, and other-sensitive-operation consumers. Add plan-conforming consumer integration/DOM evidence (and applicable copy evidence), or revise the evidence plan with a justified matching kind.",
+            "sourceIds": [],
+            "disposition": "open"
+          }
+        ]
+      },
+      {
+        "reviewRunId": "review-86f1107e-e91f-4166-add1-2d7415a8c33f",
+        "completedAt": "2026-09-12T10:29:59.684Z",
+        "requirementsFingerprint": "3673a3a29ce3662ff0a8b79eae1474e0dd5dd3d47677e1b2cca72b63a59cf3e7",
+        "verdict": "changes-required",
+        "findingSignature": "79c8ce19936f60b6d8a90136735a61ecc5aa9c9bd418f30692a0520fed3658b4",
+        "findings": [
+          {
+            "findingId": "F-001",
+            "code": "missing-surface",
+            "message": "The popup-conversion collection is incomplete. The source states that only login and registration retain page-based verification, while the scene inventory explicitly includes forgot-password verification. Therefore forgot password falls within the non-login/registration scenarios that must use a verification popup. R-028 instead marks it not applicable based on an unsupported “user confirmation,” and R-007 has no implementing surface or evidence command for this flow. Add the forgot-password verification surface to the popup collection and provide corresponding evidence.",
+            "sourceIds": [
+              "SRC-D8B6CC68C4FF",
+              "SRC-610E293D8B8C",
+              "SRC-F11347F738C9"
+            ],
+            "disposition": "open"
+          }
+        ]
+      }
+    ]
+  },
+  "reviewAdjudication": {
+    "schemaVersion": 1,
+    "originalReviewRunId": "review-86f1107e-e91f-4166-add1-2d7415a8c33f",
+    "sourceFingerprint": "c9c32b814a286dca6b092ebf4e11ab3730441c7b0915a85470b28c5452efe09d",
+    "requirementsFingerprint": "3673a3a29ce3662ff0a8b79eae1474e0dd5dd3d47677e1b2cca72b63a59cf3e7",
+    "adjudicatedBy": "project-owner-prior-confirmation",
+    "adjudicatedAt": "2026-09-12",
+    "reason": "Preserve the previously confirmed forgot-password page-form exception recorded in R-028; the independent reviewer correctly identified the source-level tension, which is resolved by explicit human scope authority.",
+    "recordedVia": {
+      "client": "human",
+      "sessionId": "v3-3-completion"
+    },
+    "decisions": [
+      {
+        "findingId": "F-001",
+        "disposition": "rejected",
+        "reason": "Forgot-password verification remains page-based by explicit project-owner decision; it is intentionally excluded from the popup-conversion implementation collection.",
+        "evidenceRefs": [
+          "work-item:R-028",
+          "source:SRC-F11347F738C9",
+          "decision:project-owner-forgot-password-page-exception"
+        ]
+      }
+    ],
+    "effectiveVerdict": "pass"
   }
 }

@@ -29,7 +29,7 @@ import { explainRule } from './lib/explain-rule.mjs'
 import { G6_CONTEXT_SCENARIOS, loadG6ContextSession, nextG6ContextScenario, printG6ContextPlan, recordG6Context, sameG6ContextBinding } from './lib/g6-context-session.mjs'
 import { createFingerprint } from './lib/gate-cache.mjs'
 import { maybeBroadcastGate, printGateHeartbeat } from './lib/gate-heartbeat.mjs'
-import { capability, resolveProjectWorktree } from './lib/project-status-report.mjs'
+import { capability, requireProjectWorktree, resolveProjectWorktree } from './lib/project-status-report.mjs'
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 import { resolveRuleSessionClient } from './lib/rule-session.mjs'
 import { latestReleasePin, resolveRulePin, upgradeRulePin } from './lib/rule-pin.mjs'
@@ -91,6 +91,17 @@ const partial = cliArgs.includes('--partial')
 function run(args, cwd = executionRoot) {
   const result = spawnSync(process.execPath, args, { cwd, stdio: 'inherit' })
   return result.status ?? 1
+}
+
+function safeV2Worktree(id, args) {
+  const worktreeIndex = args.indexOf('--worktree')
+  const requestedWorktree = worktreeIndex >= 0 && args[worktreeIndex + 1] ? resolve(args[worktreeIndex + 1]) : ''
+  try {
+    return requireProjectWorktree(id, { requestedWorktree })
+  } catch (error) {
+    console.error(error.message)
+    process.exit(2)
+  }
 }
 
 const readJson = (file) => JSON.parse(readFileSync(file, 'utf8'))
@@ -237,7 +248,7 @@ if (command === 'rules') {
 }
 
 if (!new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(projectId || '')) {
-  console.error('usage: docs-tdd.mjs <run|kickoff|status|resume|next|source-update|source-sync|extract|checkpoint|capability|probe|doctor|release|golden|guard|rule-health|rules|explain|check|gate|review|evidence|verify|context|changed|recommend> PR-01234 [G0-G8|scenario] [--input file.json] [--evidence evidence.json] [--surfaces surfaces.json] [--plan evidence-plan.json] [--out file.json] [--dry-run] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|pi|human] [--session-id <id>] [--target path] [--model <name>]')
+  console.error('usage: docs-tdd.mjs <run|kickoff|status|resume|next|source-update|source-sync|extract|scope-approval|scope-approve|review|review-adjudicate|review-resume|checkpoint|worktree-prepare|capability|probe|doctor|release|golden|guard|rule-health|rules|explain|check|gate|evidence|verify|context|changed|recommend> PR-01234 [G0-G8|scenario] [--input file.json] [--evidence evidence.json] [--surfaces surfaces.json] [--plan evidence-plan.json] [--out file.json] [--dry-run] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|pi|human] [--session-id <id>] [--target path] [--model <name>]')
   process.exit(1)
 }
 
@@ -246,6 +257,42 @@ if (['run', 'kickoff', 'status', 'resume', 'next', 'source-update', 'checkpoint'
 }
 
 const projectWorkflowVersion = workflowVersionForProject(projectId, { resolveProjectRoot })
+if (projectWorkflowVersion === 2 && command === 'worktree-prepare') {
+  process.exit(run([join(scriptDir, 'prepare-coding-worktree.mjs'), projectId, ...commandArgs], repoRoot))
+}
+if (projectWorkflowVersion === 2 && ['scope-approval', 'scope-approve'].includes(command)) {
+  const inputIndex = commandArgs.indexOf('--input')
+  const outputIndex = commandArgs.indexOf('--out')
+  if (command === 'scope-approve' && (inputIndex < 0 || !commandArgs[inputIndex + 1])) {
+    console.error('scope-approve requires --input <scope-approval.json>')
+    process.exit(1)
+  }
+  if (command === 'scope-approval' && inputIndex >= 0) {
+    console.error('scope-approval is read-only; use scope-approve to apply an input')
+    process.exit(1)
+  }
+  process.exit(run([
+    join(scriptDir, 'vnext-scope-approval.mjs'), '--project', resolveProjectRoot(projectId),
+    ...(inputIndex >= 0 ? ['--input', resolve(commandArgs[inputIndex + 1])] : []),
+    ...(outputIndex >= 0 ? ['--out', resolve(commandArgs[outputIndex + 1])] : []),
+    '--client', agentClient,
+    ...(contextSessionId ? ['--session-id', contextSessionId] : []),
+  ], docsRoot))
+}
+if (projectWorkflowVersion === 2 && ['review-adjudicate', 'review-resume'].includes(command)) {
+  const inputIndex = commandArgs.indexOf('--input')
+  if (inputIndex < 0 || !commandArgs[inputIndex + 1]) {
+    console.error(`${command} requires --input <human-review.json>`)
+    process.exit(1)
+  }
+  process.exit(run([
+    join(scriptDir, 'vnext-review-adjudicate.mjs'), '--project', resolveProjectRoot(projectId),
+    '--input', resolve(commandArgs[inputIndex + 1]),
+    ...(command === 'review-resume' ? ['--resume'] : []),
+    '--client', agentClient,
+    ...(contextSessionId ? ['--session-id', contextSessionId] : []),
+  ], docsRoot))
+}
 if (projectWorkflowVersion === 2 && command === 'source-sync') {
   process.exit(run([
     join(scriptDir, 'vnext-source-sync.mjs'), '--project', resolveProjectRoot(projectId),
@@ -303,10 +350,7 @@ if (projectWorkflowVersion === 2 && command === 'evidence') {
     console.error('--out requires <evidence.json>')
     process.exit(1)
   }
-  const worktreeIndex = commandArgs.indexOf('--worktree')
-  const worktree = worktreeIndex >= 0 && commandArgs[worktreeIndex + 1]
-    ? resolve(commandArgs[worktreeIndex + 1])
-    : resolveProjectWorktree(projectId).worktree
+  const worktree = safeV2Worktree(projectId, commandArgs)
   process.exit(run([
     join(scriptDir, 'vnext-evidence.mjs'), '--project', resolveProjectRoot(projectId), '--worktree', worktree, '--base', config.baseRef || 'origin/online',
     ...(planIndex >= 0 ? ['--plan', resolve(commandArgs[planIndex + 1])] : []),
@@ -332,10 +376,7 @@ if (projectWorkflowVersion === 2 && command === 'verify') {
     console.error(`canonical v2 work item is missing: ${projectWorkItemFile}`)
     process.exit(1)
   }
-  const worktreeIndex = commandArgs.indexOf('--worktree')
-  const worktree = worktreeIndex >= 0 && commandArgs[worktreeIndex + 1]
-    ? resolve(commandArgs[worktreeIndex + 1])
-    : resolveProjectWorktree(projectId).worktree
+  const worktree = safeV2Worktree(projectId, commandArgs)
   const verifyArgs = [join(scriptDir, 'vnext-verify.mjs')]
   if (hasInput) {
     const inputFile = resolve(commandArgs[inputIndex + 1])
@@ -374,7 +415,7 @@ if (projectWorkflowVersion === 2 && ['gate', 'changed'].includes(command)) {
   console.error(`${command} is a v1-only command; ${projectId} uses workflowVersion 2. Use docs-tdd verify ${projectId} --input <verify-input.json>.`)
   process.exit(1)
 }
-if (['source-sync', 'extract', 'review', 'evidence', 'verify'].includes(command)) {
+if (['source-sync', 'extract', 'scope-approval', 'scope-approve', 'review', 'review-adjudicate', 'review-resume', 'worktree-prepare', 'evidence', 'verify'].includes(command)) {
   console.error(`${command} is a v2-only command; ${projectId} uses workflowVersion 1. Use docs-tdd gate ${projectId} <GATE>.`)
   process.exit(1)
 }

@@ -117,6 +117,144 @@ function makeUnitFactory(path) {
   }
 }
 
+function decodeHtml(value) {
+  const named = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' }
+  return String(value || '').replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (match, entity) => {
+    if (entity[0] === '#') {
+      const radix = entity[1]?.toLowerCase() === 'x' ? 16 : 10
+      const raw = radix === 16 ? entity.slice(2) : entity.slice(1)
+      const point = Number.parseInt(raw, radix)
+      return Number.isFinite(point) ? String.fromCodePoint(point) : match
+    }
+    return named[entity.toLowerCase()] ?? match
+  })
+}
+
+function htmlAttributes(rawTag) {
+  const attributes = {}
+  const tagName = rawTag.match(/^<\/?\s*([:\w-]+)/)?.[1]?.toLowerCase()
+  for (const match of rawTag.matchAll(/([:\w-]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g)) {
+    const name = match[1].toLowerCase()
+    if (name === tagName) continue
+    attributes[name] = decodeHtml(match[2] ?? match[3] ?? match[4] ?? '')
+  }
+  return attributes
+}
+
+function htmlTokens(html) {
+  const tokens = []
+  for (const match of html.matchAll(/<!--[\s\S]*?-->|<[^>]+>|[^<]+/g)) {
+    const raw = match[0]
+    if (!raw.startsWith('<') || raw.startsWith('<!--')) {
+      tokens.push({ type: 'text', value: raw, start: match.index })
+      continue
+    }
+    const tag = raw.match(/^<\s*(\/?)\s*([a-zA-Z][\w:-]*)/)
+    if (!tag) continue
+    tokens.push({ type: 'tag', raw, name: tag[2].toLowerCase(), closing: Boolean(tag[1]), attributes: htmlAttributes(raw), start: match.index })
+  }
+  return tokens
+}
+
+const normalizeHtmlText = (value) => decodeHtml(value).replace(/\s+/g, ' ').trim()
+const lineAtOffset = (content, offset, baseLine) => baseLine + (content.slice(0, offset).match(/\n/g) || []).length
+
+function expandHtmlRows(rows) {
+  const pending = new Map()
+  return rows.map((row) => {
+    const values = []
+    const headers = []
+    for (const [column, carry] of [...pending.entries()]) {
+      values[column] = carry.text
+      headers[column] = carry.header
+      carry.remaining -= 1
+      if (carry.remaining <= 0) pending.delete(column)
+    }
+    let column = 0
+    for (const cell of row.cells) {
+      while (values[column] !== undefined) column += 1
+      const colspan = Math.max(1, Number.parseInt(cell.colspan || '1', 10) || 1)
+      const rowspan = Math.max(1, Number.parseInt(cell.rowspan || '1', 10) || 1)
+      for (let offset = 0; offset < colspan; offset += 1) {
+        values[column + offset] = cell.text
+        headers[column + offset] = cell.header
+        if (rowspan > 1) pending.set(column + offset, { text: cell.text, header: cell.header, remaining: rowspan - 1 })
+      }
+      column += colspan
+    }
+    return { ...row, values, headers }
+  })
+}
+
+export function parseHtmlTables(html, { baseLine = 1 } = {}) {
+  const tables = []
+  let table = null
+  let row = null
+  let cell = null
+  let theadDepth = 0
+  for (const token of htmlTokens(html)) {
+    if (token.type === 'tag' && token.name === 'table' && !token.closing && !table) {
+      table = { lineStart: lineAtOffset(html, token.start, baseLine), rows: [] }
+      continue
+    }
+    if (!table) continue
+    if (token.type === 'tag' && token.name === 'thead') {
+      theadDepth += token.closing ? -1 : 1
+      continue
+    }
+    if (token.type === 'tag' && token.name === 'tr') {
+      if (!token.closing) row = { cells: [], inHead: theadDepth > 0, lineStart: lineAtOffset(html, token.start, baseLine), images: [] }
+      else if (row) {
+        table.rows.push(row)
+        row = null
+      }
+      continue
+    }
+    if (!row) {
+      if (token.type === 'tag' && token.name === 'table' && token.closing) {
+        table.lineEnd = lineAtOffset(html, token.start + token.raw.length, baseLine)
+        table.rows = expandHtmlRows(table.rows)
+        tables.push(table)
+        table = null
+      }
+      continue
+    }
+    if (token.type === 'tag' && ['td', 'th'].includes(token.name)) {
+      if (!token.closing) cell = { parts: [], header: token.name === 'th' || theadDepth > 0, colspan: token.attributes.colspan, rowspan: token.attributes.rowspan }
+      else if (cell) {
+        row.cells.push({ ...cell, text: normalizeHtmlText(cell.parts.join(' ')) })
+        delete row.cells.at(-1).parts
+        cell = null
+      }
+      continue
+    }
+    if (cell && token.type === 'tag' && token.name === 'img') {
+      const target = token.attributes.src || token.attributes['data-src']
+      if (target) row.images.push({ target, alt: token.attributes.alt || '', lineStart: lineAtOffset(html, token.start, baseLine) })
+      continue
+    }
+    if (cell && token.type === 'text') cell.parts.push(token.value)
+    if (cell && token.type === 'tag' && token.name === 'br' && !token.closing) cell.parts.push(' ')
+  }
+  return tables
+}
+
+function appendImageUnit(units, unit, documentPath, image, readAsset) {
+  const resolvedAsset = readAsset?.({ documentPath, target: image.target }) || {}
+  const assetStatus = resolvedAsset.status || (/^data:/i.test(image.target) ? 'embedded-unread' : /^(?:https?:)?\/\//i.test(image.target) ? 'remote' : 'unread')
+  const assetHash = resolvedAsset.bytes ? sha256(resolvedAsset.bytes) : ''
+  const canonicalImage = canonicalizeLarkDocumentContent(`![](${image.target})`)
+  const stableRemotePath = imageMatches(canonicalImage)[0]?.target || image.target
+  const assetPath = assetStatus === 'remote' ? stableRemotePath : resolvedAsset.assetPath || image.target
+  const mediaType = resolvedAsset.mediaType || mediaTypes.get(extname(image.target.split(/[?#]/, 1)[0]).toLowerCase()) || 'application/octet-stream'
+  units.push(unit({
+    type: 'image', lineStart: image.lineStart, lineEnd: image.lineStart,
+    content: [image.alt, image.target, assetHash ? `asset-sha256:${assetHash}` : `asset-status:${assetStatus}`].filter(Boolean).join('\n'),
+    identityContent: `${canonicalImage}\0${assetHash}`,
+    assetPath, assetHash, assetStatus, mediaType,
+  }))
+}
+
 export function extractSourceUnits(document, { readAsset } = {}) {
   if (!document?.path || typeof document.content !== 'string') throw new Error('source document requires path and string content')
   const rawContent = stripSyncEnvelope(document.content).replace(/[ \t]+$/gm, '').trim()
@@ -136,6 +274,36 @@ export function extractSourceUnits(document, { readAsset } = {}) {
   }
 
   for (let index = 0; index < lines.length;) {
+    if (/<table(?:\s|>)/i.test(rawLines[index] || '')) {
+      flushText()
+      const start = index
+      let block = rawLines[index]
+      while (!/<\/table\s*>/i.test(block) && index + 1 < rawLines.length) {
+        index += 1
+        block += `\n${rawLines[index]}`
+      }
+      const tables = parseHtmlTables(block, { baseLine: start + 1 })
+      if (tables.length) {
+        for (const table of tables) {
+          const headerRows = table.rows.filter((candidate) => candidate.inHead || (candidate.headers.length > 0 && candidate.headers.every(Boolean)))
+          const headers = headerRows.at(-1)?.values || []
+          const businessRows = table.rows.filter((candidate) => !headerRows.includes(candidate))
+          const content = table.rows.map((candidate) => candidate.values.join(' | ')).join('\n')
+          units.push(unit({ type: 'table', lineStart: table.lineStart, lineEnd: table.lineEnd, content, tableRole: 'container', rowCount: businessRows.length }))
+          businessRows.forEach((businessRow, rowIndex) => {
+            const rowContent = normalizeHtmlText(businessRow.values.map((value, column) => headers[column] ? `${headers[column]}: ${value}` : value).filter(Boolean).join(' | '))
+            if (rowContent) units.push(unit({ type: 'table', lineStart: businessRow.lineStart, lineEnd: businessRow.lineStart, content: rowContent, tableRole: 'row', rowIndex: rowIndex + 1 }))
+            for (const image of businessRow.images) appendImageUnit(units, unit, document.path, image, readAsset)
+          })
+        }
+        const outside = normalizeHtmlText(block.replace(/<table(?:\s|>)[\s\S]*?<\/table\s*>/gi, ' ').replace(/<[^>]+>/g, ' '))
+        if (outside) units.push(unit({ type: 'text', lineStart: start + 1, lineEnd: index + 1, content: outside }))
+        index += 1
+        continue
+      }
+      index = start
+    }
+
     if (tableStart(lines, index)) {
       flushText()
       const start = index
@@ -166,21 +334,7 @@ export function extractSourceUnits(document, { readAsset } = {}) {
     const images = imageMatches(rawLines[index] || lines[index])
     if (images.length) {
       flushText()
-      for (const image of images) {
-        const resolvedAsset = readAsset?.({ documentPath: document.path, target: image.target }) || {}
-        const assetStatus = resolvedAsset.status || (/^data:/i.test(image.target) ? 'embedded-unread' : /^(?:https?:)?\/\//i.test(image.target) ? 'remote' : 'unread')
-        const assetHash = resolvedAsset.bytes ? sha256(resolvedAsset.bytes) : ''
-        const canonicalImage = canonicalizeLarkDocumentContent(`![](${image.target})`)
-        const stableRemotePath = imageMatches(canonicalImage)[0]?.target || image.target
-        const assetPath = assetStatus === 'remote' ? stableRemotePath : resolvedAsset.assetPath || image.target
-        const mediaType = resolvedAsset.mediaType || mediaTypes.get(extname(image.target.split(/[?#]/, 1)[0]).toLowerCase()) || 'application/octet-stream'
-        units.push(unit({
-          type: 'image', lineStart: index + 1, lineEnd: index + 1,
-          content: [image.alt, image.target, assetHash ? `asset-sha256:${assetHash}` : `asset-status:${assetStatus}`].filter(Boolean).join('\n'),
-          identityContent: `${canonicalImage}\0${assetHash}`,
-          assetPath, assetHash, assetStatus, mediaType,
-        }))
-      }
+      for (const image of images) appendImageUnit(units, unit, document.path, { ...image, lineStart: index + 1 }, readAsset)
       const remainder = images.reduce((line, image) => line.replace(image.raw, ''), rawLines[index] || lines[index]).trim()
       if (remainder) units.push(unit({ type: 'text', lineStart: index + 1, lineEnd: index + 1, content: remainder }))
       index += 1
@@ -264,6 +418,18 @@ export function selfTest() {
   assert.equal(isStructuralSourceUnit(first.sourceUnits.find((item) => item.tableRole === 'row')), false)
   const compactTable = normalizeSourceDocuments([{ path: 'lark.md', content: '|A|B|\n|-|-|\n|x|y|' }], { revision: '1' })
   assert.equal(compactTable.sourceUnits.filter((item) => item.tableRole === 'row').length, 1)
+
+  const htmlTable = normalizeSourceDocuments([{
+    path: 'lark-html.md',
+    content: '<p>Before</p><table><thead><tr><th>Entry</th><th>Copy</th><th>Asset</th></tr></thead><tbody><tr><td rowspan="2"><strong>Reset &amp; recover</strong></td><td>A<br>B</td><td><img src="images/reset.png" alt="reset"></td></tr><tr><td colspan="2">Shared</td></tr></tbody></table><p>After</p>',
+  }], { revision: '1', readAsset: assetReader })
+  assert.equal(htmlTable.sourceUnits.filter((item) => item.tableRole === 'container').length, 1)
+  assert.equal(htmlTable.sourceUnits.filter((item) => item.tableRole === 'row').length, 2)
+  assert.match(htmlTable.sourceUnits.find((item) => item.tableRole === 'row').content, /Entry: Reset & recover.*Copy: A B/)
+  assert.match(htmlTable.sourceUnits.filter((item) => item.tableRole === 'row')[1].content, /Entry: Reset & recover.*Copy: Shared.*Asset: Shared/)
+  assert.equal(htmlTable.sourceUnits.filter((item) => item.type === 'image').length, 1)
+  assert.match(htmlTable.sourceUnits.find((item) => item.type === 'text').content, /Before After/)
+  assert.equal(parseHtmlTables('<table><tr><td>broken').length, 0)
 
   const reordered = normalizeSourceDocuments([
     { path: 'b.md', content: 'B' },

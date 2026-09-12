@@ -7,7 +7,7 @@ import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
 import { homedir } from 'node:os'
 import { fileURLToPath } from 'node:url'
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
-import { resolveProjectWorktree } from './lib/project-status-report.mjs'
+import { inspectProjectWorktree, requireProjectWorktree } from './lib/project-status-report.mjs'
 import { decideNext } from './lib/project-decision.mjs'
 import { changedCodePaths, codeFingerprint, matchesEffectiveCodeState } from './lib/fingerprint.mjs'
 import { sourceTypeFromPrd } from './lib/project-scaffold.mjs'
@@ -268,15 +268,17 @@ function inspectVNext(id) {
 
   const failedChecks = (latest?.checks || []).filter((check) => !check.ok)
   const integrity = latest ? verifyExitResultIntegrity(latest, workItem) : { ok: true, problems: [] }
+  const worktreeInspection = inspectProjectWorktree(id)
   let codeStateFresh = true
   let codeStateProblem = ''
   let deliveryCommitted = true
   if (latest) {
     try {
       const scopePaths = latest.codeFingerprint?.scopeMode === 'path-set-v1' ? latest.codeFingerprint.scopePaths : null
-      const current = codeFingerprint(resolveProjectWorktree(id).worktree, config.baseRef || 'origin/online', { scopePaths })
+      const safeWorktree = requireProjectWorktree(id)
+      const current = codeFingerprint(safeWorktree, config.baseRef || 'origin/online', { scopePaths })
       codeStateFresh = matchesEffectiveCodeState(current, latest.codeFingerprint)
-      deliveryCommitted = scopedDeliveryCommitted(resolveProjectWorktree(id).worktree, latest.codeFingerprint)
+      deliveryCommitted = scopedDeliveryCommitted(safeWorktree, latest.codeFingerprint)
       if (!codeStateFresh) codeStateProblem = 'code content changed; revalidate evidence only (the signed source review remains reusable while the work item is unchanged)'
     } catch (error) {
       codeStateFresh = false
@@ -293,6 +295,7 @@ function inspectVNext(id) {
     codeStateFresh,
     assuranceTrusted,
     deliveryCommitted,
+    worktreeReady: worktreeInspection.ok,
   })
   return {
     projectId: id,
@@ -302,7 +305,7 @@ function inspectVNext(id) {
     currentStage: `V2-${actionPacket.phase}`,
     nextAction: actionPacket.action,
     command: actionPacket.command,
-    blockers: [...failedChecks.flatMap((check) => check.problems || [check.code]), ...integrity.problems, ...(codeStateProblem ? [codeStateProblem] : [])],
+    blockers: [...failedChecks.flatMap((check) => check.problems || [check.code]), ...integrity.problems, ...worktreeInspection.problems, ...(codeStateProblem ? [codeStateProblem] : [])],
     actionPacket,
     ...(latest ? {
       latestResult: {
@@ -424,7 +427,7 @@ function checkpoint() {
   const checkpointInput = readJson(inputFile)
   if (!checkpointInput) throw new Error(`cannot read checkpoint: ${inputFile}`)
   if (checkpointInput.outcome === 'completed') {
-    const actualChangedPaths = new Set(changedCodePaths(resolveProjectWorktree(projectId).worktree, config.baseRef || 'origin/online'))
+    const actualChangedPaths = new Set(changedCodePaths(requireProjectWorktree(projectId), config.baseRef || 'origin/online'))
     const unverifiedPaths = (checkpointInput.changedPaths || []).filter((path) => !actualChangedPaths.has(path))
     if (unverifiedPaths.length) throw new Error(`checkpoint paths are not changed from ${config.baseRef || 'origin/online'}: ${unverifiedPaths.join(', ')}`)
   }
@@ -442,7 +445,7 @@ function runAutonomousValidation(id) {
   }
   let worktree
   try {
-    worktree = resolveProjectWorktree(id).worktree
+    worktree = requireProjectWorktree(id)
   } catch (error) {
     return { ok: false, step: 'worktree', error: error.message }
   }
@@ -511,7 +514,7 @@ function commitEvidenceScope(id) {
   const projectDir = resolveProjectRoot(id)
   const latest = readJson(join(projectDir, 'latest-result.json'))
   const paths = latest?.codeFingerprint?.scopeMode === 'path-set-v1' ? latest.codeFingerprint.scopePaths : []
-  return commitScopedPaths(resolveProjectWorktree(id).worktree, id, paths)
+  return commitScopedPaths(requireProjectWorktree(id), id, paths)
 }
 
 function autopilotRun() {

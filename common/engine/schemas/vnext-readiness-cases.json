@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "release": "autopilot-v3.3",
+  "cases": [
+    { "id": "R-01", "scenario": "V2 scope approval is generated and applied through public CLI", "phase": "p0", "required": true },
+    { "id": "R-02", "scenario": "changes-required review can be human-adjudicated without mutating the signed reviewer receipt", "phase": "p0", "required": true },
+    { "id": "R-03", "scenario": "accepted review findings require candidate repair and explicit review resume", "phase": "p0", "required": true },
+    { "id": "R-04", "scenario": "HTML PRD tables produce deterministic table rows and independent image units", "phase": "p0", "required": true },
+    { "id": "R-05", "scenario": "missing or unsafe coding worktrees fail closed and route to worktree preparation", "phase": "p0", "required": true },
+    { "id": "R-06", "scenario": "scope approval remains current when equivalent risk signals have a different input order", "phase": "p0", "required": true },
+    { "id": "R-07", "scenario": "bugfix intake can bind an independent incident source", "phase": "p1", "required": false },
+    { "id": "R-08", "scenario": "V2 dev-check reports implementation-stage scoped feedback", "phase": "p1", "required": false },
+    { "id": "R-09", "scenario": "typecheck distinguishes baseline failures from changed-path regressions", "phase": "p1", "required": false },
+    { "id": "R-10", "scenario": "checkpoint and delivery commits are represented independently", "phase": "p1", "required": false },
+    { "id": "R-11", "scenario": "deliveryScope accepts relative policy paths and rejects out-of-scope writes", "phase": "p1", "required": false },
+    { "id": "R-12", "scenario": "review payload prioritizes semantic evidence without losing source anchors", "phase": "p1", "required": false },
+    { "id": "R-13", "scenario": "V0, V1 and V2 projects reach verified commit through public commands only", "phase": "pilot", "required": false }
+  ]
+}
