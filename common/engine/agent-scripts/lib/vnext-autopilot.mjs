@@ -179,11 +179,20 @@ export function deriveAutopilotAction({
     })
   }
   if (implementationState(workItem, latestResult).status !== 'completed') {
+    const failedDevCheck = workItem.autopilot?.lastDevCheck?.ok === false ? workItem.autopilot.lastDevCheck : null
+    const devCheckProblems = (failedDevCheck?.problems || []).filter(Boolean)
     return actionPacket(workItem, {
       action: 'implement-current-scope',
       phase: 'implementing',
-      reason: 'The reviewed scope has not been marked implementation-complete.',
-      constraints: ['implement-only-reviewed-scope', 'checkpoint-real-changed-paths', 'do-not-claim-late-sources-as-final-contracts'],
+      reason: failedDevCheck
+        ? `The reviewed scope remains incomplete; last dev-check failed${devCheckProblems.length ? `: ${devCheckProblems.join('; ')}` : '.'}`
+        : 'The reviewed scope has not been marked implementation-complete.',
+      constraints: [
+        'implement-only-reviewed-scope',
+        'checkpoint-real-changed-paths',
+        'do-not-claim-late-sources-as-final-contracts',
+        ...(failedDevCheck ? ['resolve-last-dev-check-before-checkpoint'] : []),
+      ],
       checkpoint: {
         command: `docs-tdd checkpoint ${projectId} --input <checkpoint.json>`,
         requiredFields: ['actionId', 'outcome', 'changedPaths', 'discoveredSurfaces', 'coveredSurfaceIds'],
@@ -421,6 +430,11 @@ export function selfTest() {
   const reviewed = { ...needsReview, coverageAudit: { ...coverageFingerprints(needsReview), reviewMode: 'independent-cold-read', reviewRunId: 'review-1', reviewer: { kind: 'human', id: 'reviewer' }, completedAt: '2026-09-08T00:00:00Z', verdict: 'pass', unresolved: [] } }
   assert.equal(deriveAutopilotAction({ workItem: reviewed }).action, 'implement-current-scope')
   assert.equal(deriveAutopilotAction({ workItem: reviewed, worktreeReady: false }).action, 'prepare-coding-worktree')
+  const failedDevelopment = structuredClone(reviewed)
+  failedDevelopment.autopilot.lastDevCheck = { ok: false, problems: ['E-1 target missing'] }
+  const failedDevelopmentAction = deriveAutopilotAction({ workItem: failedDevelopment })
+  assert.match(failedDevelopmentAction.reason, /E-1 target missing/)
+  assert.ok(failedDevelopmentAction.constraints.includes('resolve-last-dev-check-before-checkpoint'))
 
   const implementAction = deriveAutopilotAction({ workItem: reviewed })
   const implemented = applyAutopilotCheckpoint(reviewed, {
