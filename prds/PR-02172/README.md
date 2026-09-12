@@ -1,9 +1,9 @@
 ---
 projectId: PR-02172
-status: active
+status: closed
 stage: G8
 branch: feature/PR-02172
-worktree: /Users/aven/github/PR-02172
+worktree: ""
 port: ""
 visualFidelity: standard
 prdSource: https://qfglxo2m3dc.sg.larksuite.com/docx/Zj7Dd8cdIorON3xmYSdlI94qg1c
@@ -20,11 +20,18 @@ workflowVersion: 1
 
 | 字段 | 值 |
 |------|-----|
-| 当前阶段 | G8；2026-08-21 正式 Figma 到位，Web 三个入口正在同步 UI |
-| 最新通过门禁 | G8 |
+| 当前阶段 | 发布归档：负责人于 2026-09-12 确认已上线；worktree 已回收 |
+| 归档门禁标记 | G8：保留既有真实 PASS 历史，不补造新的 Gate 证据 |
+| 发布状态 | `feature/PR-02172` 的 HEAD `92cde0060596` 已在 `origin/online`；核验见 `evidence/release/2026-09-12/README.md` |
 | 公共规则 | 继承 ../../common/README.md |
 | PRD 来源 | https://qfglxo2m3dc.sg.larksuite.com/docx/Zj7Dd8cdIorON3xmYSdlI94qg1c |
 | visualFidelity | standard（已确认；12px 圆角 / 15px blur 使用最近 preset） |
+
+## 归档判断（2026-09-12）
+
+- 负责人确认该项目已经上线；`feature/PR-02172` 的当前 HEAD 已合入 `origin/online`。
+- 一次性编码 worktree 已按上线回收；本地与远端 `feature/PR-02172` 分支均保留供回查。远端分支存在与本地不同的历史，未强推或改写。
+- 历史 Gate、协作记录与证据保留原样；后续问题按新的变更项目处理，不重新激活本项目。
 
 ## 文档地图
 
@@ -40,7 +47,7 @@ workflowVersion: 1
 - engineering/development-rules.md
 - agent/README.md
 
-## 待确认
+## 历史待确认（不构成活动工作项）
 
 - [x] 12 项技术方向全部按建议确认（2026-08-03）
 - [x] 当前负责人确认 C01-C18 建议方案（2026-08-03）

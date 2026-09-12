@@ -48,8 +48,10 @@ export function parseFrontmatter(text) {
 
 export function frontmatterStatus(readme) {
   const fm = parseFrontmatter(readme)
-  if (fm.stage) return `${fm.stage}`
+  // 已关闭项目的生命周期状态优先于历史阶段，否则 PROJECTS.md 会把已归档项目误显示为活跃 G8。
+  // stage 仅保留为 frontmatter 兼容字段，不在索引中展示，避免把上线归档误读为补跑过同名 Gate。
   if (fm.status && fm.status !== 'active') return `${fm.status}`
+  if (fm.stage) return `${fm.stage}`
   return ''
 }
 
@@ -174,6 +176,7 @@ export function selfTest() {
   const fm = parseFrontmatter('---\nprojectId: PR-00003\nstage: G6\nstatus: active\n---\n# PR-00003')
   assert.ok(fm.projectId === 'PR-00003' && fm.stage === 'G6' && fm.status === 'active', 'parseFrontmatter should parse simple scalars')
   assert.equal(frontmatterStatus('---\nstage: G6\n---\n# PR-00003\n\n## 状态\n| 当前阶段 | G0 |'), 'G6', 'frontmatter stage must win over narrative status')
+  assert.equal(frontmatterStatus('---\nstatus: closed\nstage: G8\n---\n# PR-00003'), 'closed', 'closed lifecycle status must not be hidden by or imply a historical stage')
   const prioritySample = '---\nstage: G4\n---\n# PR-00004\n\n## 状态\n\n| 字段 | 值 |\n|------|-----|\n| 最新通过门禁 | G6 |\n| 当前阶段 | G0 |'
   assert.equal(machineRowStatus(prioritySample) || frontmatterStatus(prioritySample) || parseStatus(prioritySample), 'G6', 'machine row must win over frontmatter stage')
   assert.equal(legacyAwareStatus('G8', { runs: [] }, () => false), 'G8 (legacy-unverified)', 'G5+ without machine history must be marked legacy-unverified')
