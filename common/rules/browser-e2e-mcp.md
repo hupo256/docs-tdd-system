@@ -23,6 +23,16 @@ UI/UX 自测用 **系统 Chrome + Chrome Playwright 扩展 + Cursor Playwright M
 
 Playwright MCP 配置见 `~/.cursor/mcp.json`（`@playwright/mcp --extension`）。调用前读 `mcps/user-Playwright/tools/*.json` 确认参数。
 
+### 3.1 v3.2 browser adapter
+
+将下列 argv 与 requirement/surface IDs 冻结进 `evidenceCommands`：
+
+```text
+node apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs --scenario <project>/agent/browser-scenarios/check.json
+```
+
+场景步骤含 `tool`、`arguments` 和可选的 `assert.contains/notContains`。adapter 以 `PLAYWRIGHT_MCP_EXTENSION_TOKEN` 连接 Chrome；全通过退出 0，否则非 0。不得改 Git 或保存截图；依赖不可用必须失败，不回退人工结果。凭据不进状态机。
+
 ## 4. 操作示例
 
 ```

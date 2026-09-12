@@ -9,9 +9,10 @@ import { tmpdir } from 'node:os'
 import { delimiter, dirname, isAbsolute, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
-import { buildCoverageReviewRequest, applyCoverageReview, coverageReviewResponseFromAudit, REVIEW_PROTOCOL } from './lib/vnext-coverage-review.mjs'
+import { buildCoverageReviewRequest, applyCoverageReview, coverageReviewResponseFromAudit, validateCoverageReviewResponse, REVIEW_PROTOCOL } from './lib/vnext-coverage-review.mjs'
 import { docsSystemRoot } from './lib/roots.mjs'
 import { persistVNextWorkItem } from './lib/vnext-persistence.mjs'
+import { intakeAuditProblems, runIntakeAudit } from './lib/vnext-intake-audit.mjs'
 import { signReviewResponse } from './lib/vnext-review-receipt.mjs'
 import { normalizeSourceDocuments, readLocalSourceAsset } from './lib/vnext-source-units.mjs'
 import { stableFingerprint } from './lib/vnext-work-item.mjs'
@@ -130,6 +131,47 @@ function sourceDocumentsFor(workItem) {
   })
 }
 
+const findingSignature = (findings = []) => stableFingerprint(findings.map((finding) => ({
+  code: finding.code,
+  sourceIds: [...(finding.sourceIds || [])].sort(),
+})).sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b))))
+
+function escalationPayload(workItem, reason, control) {
+  return {
+    status: 'escalated',
+    reason,
+    projectId: workItem.projectId,
+    attempts: control.attempts,
+    maxAttempts: 3,
+    findings: control.history?.at(-1)?.findings || [],
+    nextAction: 'human-review-required',
+  }
+}
+
+export function advanceReviewControl(previous, response, request) {
+  const signature = findingSignature(response.findings)
+  const repeatedFinding = response.verdict === 'changes-required'
+    && previous.history?.some((attempt) => attempt.findingSignature === signature)
+  const attempts = previous.attempts + 1
+  const escalated = response.verdict === 'changes-required' && (attempts >= 3 || repeatedFinding)
+  const history = [...(previous.history || []), {
+    reviewRunId: response.reviewRunId,
+    completedAt: response.completedAt,
+    requirementsFingerprint: request.requirementsFingerprint,
+    verdict: response.verdict,
+    findingSignature: signature,
+    findings: response.findings,
+  }].slice(-3)
+  return {
+    sourceFingerprint: request.sourceFingerprint,
+    attempts,
+    maxAttempts: 3,
+    status: response.verdict === 'pass' ? 'passed' : escalated ? 'escalated' : 'changes-required',
+    ...(escalated ? { reason: repeatedFinding ? 'repeated-findings' : 'review-attempt-limit', escalatedAt: response.completedAt } : {}),
+    history,
+  }
+}
+
 export function runIsolatedCoverageReview({ projectDir, client, model, spawn = spawnSync, now = () => new Date().toISOString(), keyPath } = {}) {
   if (!projectDir) throw new Error('review requires a project directory')
   const workItemFile = join(resolve(projectDir), 'work-item.json')
@@ -144,8 +186,19 @@ export function runIsolatedCoverageReview({ projectDir, client, model, spawn = s
     revision: workItem.sourceSnapshot.revision,
     readAsset: (asset) => readLocalSourceAsset(asset, { root: docsSystemRoot }),
   })
-  if (stableFingerprint(normalized.sourceSnapshot) !== stableFingerprint(workItem.sourceSnapshot)) throw new Error('current source/assets differ from workItem.sourceSnapshot; refresh extraction before review')
+  if (stableFingerprint(normalized.sourceSnapshot) !== stableFingerprint(workItem.sourceSnapshot)) throw new Error('current source/assets differ from workItem.sourceSnapshot; run docs-tdd source-sync before extraction/review')
+  const preflightProblems = intakeAuditProblems(workItem, normalized.sourceUnits)
+  if (preflightProblems.length) throw new Error(`deterministic intake audit blocked reviewer invocation:\n- ${preflightProblems.join('\n- ')}`)
   const request = buildCoverageReviewRequest({ workItem, sourceUnits: normalized.sourceUnits })
+  const previous = workItem.reviewControl?.sourceFingerprint === request.sourceFingerprint
+    ? workItem.reviewControl
+    : { status: 'active', attempts: 0, history: [] }
+  if (previous.status === 'escalated' || previous.attempts >= 3) {
+    throw new Error(`review escalation required: ${JSON.stringify(escalationPayload(workItem, previous.reason || 'review-attempt-limit', previous))}`)
+  }
+  if (previous.history?.at(-1)?.verdict === 'changes-required' && previous.history.at(-1).requirementsFingerprint === request.requirementsFingerprint) {
+    throw new Error('review retry blocked: requirements/evidence are unchanged since the previous changes-required verdict')
+  }
 
   const sessionId = randomUUID()
   if (workItem.requirementsAuthor.sessionId === sessionId) throw new Error('reviewer session unexpectedly matches requirements author session')
@@ -155,27 +208,39 @@ export function runIsolatedCoverageReview({ projectDir, client, model, spawn = s
     const requestFile = join(temporary, 'review-request.json')
     writeFileSync(requestFile, `${JSON.stringify(request, null, 2)}\n`)
     const imageFiles = request.sourceAssets.map((asset) => isAbsolute(asset.assetPath) ? asset.assetPath : resolve(docsSystemRoot, asset.assetPath))
-    const modelOutput = runReviewer({ client, requestFile, imageFiles, sessionId, sessionDir: temporary, model, spawn })
-    const completedAt = now()
-    const response = signReviewResponse({
-      schemaVersion: 1,
-      protocol: REVIEW_PROTOCOL,
-      projectId: workItem.projectId,
-      sourceFingerprint: request.sourceFingerprint,
-      requirementsFingerprint: request.requirementsFingerprint,
-      reviewRunId: `review-${sessionId}`,
-      completedAt,
-      reviewer: { kind: 'model', id: `${client}/${model || 'default'}` },
-      verdict: modelOutput.verdict,
-      findings: modelOutput.findings,
-    }, {
-      request, client, sessionId, startedAt, completedAt,
-      reviewedAssets: request.sourceAssets,
-      keyPath,
-    })
-    const reviewedWorkItem = applyCoverageReview(workItem, response, { request, receiptKeyPath: keyPath })
+    let response
+    try {
+      const modelOutput = runReviewer({ client, requestFile, imageFiles, sessionId, sessionDir: temporary, model, spawn })
+      const completedAt = now()
+      response = signReviewResponse({
+        schemaVersion: 1,
+        protocol: REVIEW_PROTOCOL,
+        projectId: workItem.projectId,
+        sourceFingerprint: request.sourceFingerprint,
+        requirementsFingerprint: request.requirementsFingerprint,
+        reviewRunId: `review-${sessionId}`,
+        completedAt,
+        reviewer: { kind: 'model', id: `${client}/${model || 'default'}` },
+        verdict: modelOutput.verdict,
+        findings: modelOutput.findings,
+      }, {
+        request, client, sessionId, startedAt, completedAt,
+        reviewedAssets: request.sourceAssets,
+        keyPath,
+      })
+      validateCoverageReviewResponse(workItem, response, { request, receiptKeyPath: keyPath })
+    } catch (error) {
+      const reviewControl = {
+        ...previous, status: 'escalated', reason: 'reviewer-unavailable', sourceFingerprint: request.sourceFingerprint,
+        attempts: Math.min(3, previous.attempts + 1), maxAttempts: 3, escalatedAt: now(), lastError: error.message,
+      }
+      persistVNextWorkItem(projectDir, { ...workItem, reviewControl })
+      throw new Error(`review escalation required: ${JSON.stringify(escalationPayload(workItem, 'reviewer-unavailable', reviewControl))}`)
+    }
+    const reviewControl = advanceReviewControl(previous, response, request)
+    const reviewedWorkItem = { ...applyCoverageReview(workItem, response, { request, receiptKeyPath: keyPath }), reviewControl }
     const persisted = persistVNextWorkItem(projectDir, reviewedWorkItem)
-    return { response, workItem: reviewedWorkItem, persisted }
+    return { response, workItem: reviewedWorkItem, persisted, ...(reviewControl.status === 'escalated' ? { escalation: escalationPayload(workItem, reviewControl.reason, reviewControl) } : {}) }
   } finally {
     rmSync(temporary, { recursive: true, force: true })
   }
@@ -191,11 +256,16 @@ export function selfTest() {
     const normalized = normalizeSourceDocuments([{ path: sourcePath, content: 'One requirement.\n' }], { revision: '1' })
     const workItem = {
       schemaVersion: 1, workflowVersion: 2, projectId: 'PR-00001', sourceSnapshot: normalized.sourceSnapshot,
-      requirements: [{ requirementId: 'R-001', sourceAnchors: [{ type: 'text', sourceId: normalized.sourceUnits[0].sourceId }], statement: 'One requirement.', status: 'doing', affectedSurfaces: [], evidencePlan: [{ type: 'copy-literal', runtimeRequired: false }] }],
+      requirements: [{ requirementId: 'R-001', sourceAnchors: [{ type: 'text', sourceId: normalized.sourceUnits[0].sourceId }], statement: 'One requirement.', status: 'doing', collectionSemantics: { kind: 'none', expectedCount: 0 }, affectedSurfaces: [], evidencePlan: [{ type: 'copy-literal', runtimeRequired: false }] }],
+      evidenceCommands: [
+        { evidenceId: 'E-1', kind: 'copy-literal', argv: ['node', 'scripts/check-copy.mjs'], requirementIds: ['R-001'], surfaceIds: [] },
+        { evidenceId: 'E-2', kind: 'touched-file-quality', argv: ['pnpm', 'lint'] },
+      ],
       requirementsAuthor: { kind: 'model', id: 'author', client: 'pi', sessionId: 'author-session' },
       coverageAudit: { sourceFingerprint: 'pending', requirementsFingerprint: 'pending', reviewMode: 'independent-cold-read', reviewRunId: 'pending', reviewer: { kind: 'model', id: 'pending' }, completedAt: '2000-01-01T00:00:00Z', verdict: 'changes-required', unresolved: ['pending'] },
-      routing: { scopeClass: 'local', riskSignals: [], verificationLevel: 'V1', routerVersion: 1 }, apiDependency: { mode: 'no-request', reason: 'fixture' }, scopeApproval: null,
+      routing: { scopeClass: 'local', riskSignals: [], verificationLevel: 'V0', routerVersion: 1 }, apiDependency: { mode: 'no-request', reason: 'fixture' }, scopeApproval: null,
     }
+    workItem.extractionAudit = runIntakeAudit(workItem, normalized.sourceUnits, { auditedAt: '2026-09-10T00:00:00Z' })
     persistVNextWorkItem(projectDir, workItem)
     assert.equal(resolveReviewerExecutable('pi', {
       env: { PATH: '/bin' },
@@ -215,6 +285,26 @@ export function selfTest() {
     const replayRequest = buildCoverageReviewRequest({ workItem: result.workItem, sourceUnits: normalized.sourceUnits })
     assert.doesNotThrow(() => applyCoverageReview(result.workItem, coverageReviewResponseFromAudit(result.workItem), { request: replayRequest, receiptKeyPath: keyPath }))
     assert.equal(JSON.parse(readFileSync(join(projectDir, 'work-item.json'), 'utf8')).coverageAudit.verdict, 'pass')
+    persistVNextWorkItem(projectDir, workItem)
+    assert.throws(() => runIsolatedCoverageReview({ projectDir, client: 'pi', keyPath, spawn: () => ({ status: 1, stdout: '', stderr: 'offline' }) }), /review escalation required/)
+    const unavailable = JSON.parse(readFileSync(join(projectDir, 'work-item.json'), 'utf8')).reviewControl
+    assert.equal(unavailable.status, 'escalated')
+    assert.equal(unavailable.reason, 'reviewer-unavailable')
+    assert.equal(unavailable.attempts, 1)
+
+    const finding = [{ findingId: 'F-1', code: 'missing-requirement', message: 'missing', sourceIds: [normalized.sourceUnits[0].sourceId], disposition: 'open' }]
+    const requestBase = { sourceFingerprint: 'source', requirementsFingerprint: 'requirements-1' }
+    const responseBase = { reviewRunId: 'r1', completedAt: '2026-09-10T00:00:01Z', verdict: 'changes-required', findings: finding }
+    const firstFailure = advanceReviewControl({ attempts: 0, history: [] }, responseBase, requestBase)
+    assert.equal(firstFailure.status, 'changes-required')
+    const repeated = advanceReviewControl(firstFailure, { ...responseBase, reviewRunId: 'r2', completedAt: '2026-09-10T00:00:02Z' }, { ...requestBase, requirementsFingerprint: 'requirements-2' })
+    assert.equal(repeated.status, 'escalated')
+    assert.equal(repeated.reason, 'repeated-findings')
+    const differentFinding = [{ ...finding[0], findingId: 'F-2', code: 'missing-surface' }]
+    const secondFailure = advanceReviewControl(firstFailure, { ...responseBase, reviewRunId: 'r2', completedAt: '2026-09-10T00:00:02Z', findings: differentFinding }, { ...requestBase, requirementsFingerprint: 'requirements-2' })
+    const thirdFailure = advanceReviewControl(secondFailure, { ...responseBase, reviewRunId: 'r3', completedAt: '2026-09-10T00:00:03Z', findings: [{ ...finding[0], findingId: 'F-3', code: 'other' }] }, { ...requestBase, requirementsFingerprint: 'requirements-3' })
+    assert.equal(thirdFailure.status, 'escalated')
+    assert.equal(thirdFailure.reason, 'review-attempt-limit')
     console.log('vnext-review self-test passed')
   } finally {
     rmSync(root, { recursive: true, force: true })
@@ -242,6 +332,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
         reviewRunId: result.response.reviewRunId,
         receipt: { ...result.response.receipt, signature: '<stored-in-work-item>' },
         persisted: result.persisted,
+        ...(result.escalation ? { escalation: result.escalation } : {}),
       }, null, 2))
       process.exitCode = result.response.verdict === 'pass' ? 0 : 1
     } catch (error) {

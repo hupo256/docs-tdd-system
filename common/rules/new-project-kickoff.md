@@ -1,6 +1,6 @@
 # 新项目一句话启动协议
 
-> 本文只定义启动编排。docs_tdd v3.1 的第二代协议规则以 [../vnext/README.md](../vnext/README.md) 为准，项目兼容标识为 `workflowVersion: 2`；第一代专题只服务 `workflowVersion: 1` 存量项目或显式 `--legacy` 项目。章节号 §2 被外链引用，勿改编号。
+> 本文只定义启动编排。docs_tdd v3.2 的第二代协议规则以 [../vnext/README.md](../vnext/README.md) 为准，项目兼容标识为 `workflowVersion: 2`；第一代专题只服务 `workflowVersion: 1` 存量项目或显式 `--legacy` 项目。章节号 §2 被外链引用，勿改编号。
 
 ## 1. 启动口令
 

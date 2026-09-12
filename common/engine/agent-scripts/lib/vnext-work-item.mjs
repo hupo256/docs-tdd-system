@@ -174,6 +174,14 @@ export function verifyVNextCoverage({ workItem, currentSourceSnapshot, sourceUni
   if (!workItem?.sourceSnapshot?.sources?.length) sourceProblems.push('source snapshot has no sources')
   if (actualSource !== expectedSource) sourceProblems.push('current source snapshot differs from work item')
   if (workItem?.coverageAudit?.sourceFingerprint !== expectedSource) sourceProblems.push('coverage audit does not match current source snapshot')
+  if (workItem?.coverageAudit?.receipt) {
+    const extractionAudit = workItem.extractionAudit
+    const expectedRequirements = coverageFingerprints(workItem).requirementsFingerprint
+    if (extractionAudit?.status !== 'pass') sourceProblems.push('signed review requires a passing deterministic extraction audit')
+    if (extractionAudit?.sourceFingerprint !== expectedSource) sourceProblems.push('extraction audit does not match current source snapshot')
+    if (extractionAudit?.requirementsFingerprint !== expectedRequirements) sourceProblems.push('extraction audit does not match current requirements')
+    if (sourceUnits && extractionAudit?.sourceUnitsFingerprint !== stableFingerprint(sourceUnits)) sourceProblems.push('extraction audit does not match current normalized source units')
+  }
 
   const requirementProblems = requirementCoverageProblems(workItem || {}, sourceUnits, sourceOracle)
   const surfaceProblems = surfaceCoverageProblems(workItem || {}, discoveredSurfaces, implementation)

@@ -69,7 +69,9 @@ export function readLocalSourceAsset({ documentPath, target }, { root = process.
 
 function tableDelimiter(line) {
   const cells = line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|')
-  return cells.length >= 2 && cells.every((cell) => /^\s*:?-{3,}:?\s*$/.test(cell))
+  // Lark exports compact Markdown delimiters such as `|-|-|`; CommonMark producers
+  // commonly use three hyphens. Accept both without weakening the surrounding table shape.
+  return cells.length >= 2 && cells.every((cell) => /^\s*:?-+:?\s*$/.test(cell))
 }
 
 function tableStart(lines, index) {
@@ -77,6 +79,7 @@ function tableStart(lines, index) {
 }
 
 export function isStructuralSourceUnit(unit) {
+  if (unit?.type === 'table' && ['container', 'header'].includes(unit.tableRole)) return true
   if (unit?.type !== 'text') return false
   const lines = String(unit.content || '').split('\n').map((line) => line.trim()).filter(Boolean)
   if (!lines.length) return true
@@ -141,7 +144,22 @@ export function extractSourceUnits(document, { readAsset } = {}) {
         tableLines.push(lines[index])
         index += 1
       }
-      units.push(unit({ type: 'table', lineStart: start + 1, lineEnd: start + tableLines.length, content: tableLines.join('\n') }))
+      // Keep a structural container for backward-compatible table-level anchors, while exposing
+      // every data row as its own semantic unit. A reviewer can now identify one omitted row
+      // deterministically instead of accepting a single opaque multi-row table blob.
+      units.push(unit({
+        type: 'table', lineStart: start + 1, lineEnd: start + tableLines.length,
+        content: tableLines.join('\n'), tableRole: 'container', rowCount: Math.max(0, tableLines.length - 2),
+      }))
+      if (tableLines.length >= 2) {
+        const header = tableLines[0]
+        for (let rowIndex = 2; rowIndex < tableLines.length; rowIndex += 1) {
+          units.push(unit({
+            type: 'table', lineStart: start + rowIndex + 1, lineEnd: start + rowIndex + 1,
+            content: `${header}\n${tableLines[rowIndex]}`, tableRole: 'row', rowIndex: rowIndex - 1,
+          }))
+        }
+      }
       continue
     }
 
@@ -231,8 +249,10 @@ export function selfTest() {
   const first = normalizeSourceDocuments([{ path: 'inbox/prd.md', content: markdown }], { revision: '7', readAsset: assetReader })
   const second = normalizeSourceDocuments([{ path: 'inbox/prd.md', content: markdown.replaceAll('\r\n', '\n') }], { revision: '7', readAsset: assetReader })
   assert.deepEqual(first, second)
-  assert.deepEqual(first.sourceUnits.map((item) => item.type), ['text', 'text', 'table', 'image', 'text'])
-  assert.equal(first.sourceUnits.find((item) => item.type === 'table').lineStart, 5)
+  assert.deepEqual(first.sourceUnits.map((item) => item.type), ['text', 'text', 'table', 'table', 'table', 'image', 'text'])
+  assert.equal(first.sourceUnits.find((item) => item.tableRole === 'container').lineStart, 5)
+  assert.deepEqual(first.sourceUnits.filter((item) => item.tableRole === 'row').map((item) => item.rowIndex), [1, 2])
+  assert.match(first.sourceUnits.find((item) => item.tableRole === 'row').content, /Entry.*Copy[\s\S]*Reset.*A/)
   assert.equal(first.sourceUnits.find((item) => item.type === 'image').lineStart, 10)
   assert.ok(first.sourceUnits.every((item) => item.sourceId.startsWith('SRC-') && item.contentHash.length === 64))
   assert.equal(first.sourceSnapshot.assets[0].assetStatus, 'local')
@@ -240,7 +260,10 @@ export function selfTest() {
   assert.match(first.sourceUnits.find((item) => item.type === 'image').content, /reset password/)
   assert.equal(isStructuralSourceUnit(first.sourceUnits[0]), true)
   assert.equal(isStructuralSourceUnit(first.sourceUnits[1]), false)
-  assert.equal(isStructuralSourceUnit(first.sourceUnits.find((item) => item.type === 'table')), false)
+  assert.equal(isStructuralSourceUnit(first.sourceUnits.find((item) => item.tableRole === 'container')), true)
+  assert.equal(isStructuralSourceUnit(first.sourceUnits.find((item) => item.tableRole === 'row')), false)
+  const compactTable = normalizeSourceDocuments([{ path: 'lark.md', content: '|A|B|\n|-|-|\n|x|y|' }], { revision: '1' })
+  assert.equal(compactTable.sourceUnits.filter((item) => item.tableRole === 'row').length, 1)
 
   const reordered = normalizeSourceDocuments([
     { path: 'b.md', content: 'B' },

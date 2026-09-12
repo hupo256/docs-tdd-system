@@ -7,6 +7,14 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-09-12（v3.2 Intake / Review Reliability）
+
+- **确定性检查前移**：新增 `docs-tdd extract` 脚手架与 `extractionAudit`；重复需求 ID、漏锚语义 unit/表格行、集合计数和 evidence command 完整性在启动模型 Reviewer 前 fail-closed。
+- **Reviewer 有界化**：同一候选禁止无变化重试；changes-required 最多三轮，相同 finding 再现、次数耗尽或 Reviewer CLI 不可用均持久化 `reviewControl.status=escalated` 并转人工，不再无限循环。
+- **表格逐行与 Source 重同步**：Markdown 表格同时产出结构容器和逐数据行 unit；`docs-tdd source-sync` 先拉 staging，再比较语义快照并原子替换，有变化才使旧抽取/审查/结果失效，失败保留旧快照。
+- **Browser adapter 闭环**：提供 `playwright-mcp-adapter.mjs`，通过仓外 `@playwright/mcp --extension` 执行场景动作/断言，并文档化 argv、退出码和无源码副作用契约；不向业务仓安装 Playwright，也不把 adapter 纳入状态机。
+- **兼容边界不变**：产品版本升至 v3.2，项目协议仍为 `workflowVersion: 2`；Lark 继续保持 `lark-lightweight` 独立链，不接入 v3.2 状态机。
+
 ## 2026-09-11（Lark 轻量闭环与正式交付权分离）
 
 - **不并入 v3.1 状态机**：Lark 保留适合群反馈的独立任务/提交链；`done` 定义为本地候选修复，审计显式写 `assuranceMode=lark-lightweight`、`deliveryAuthority=false`。L2 高风险改动提示项目级 authoritative PASS，但不因此阻断 Lark 候选修复。

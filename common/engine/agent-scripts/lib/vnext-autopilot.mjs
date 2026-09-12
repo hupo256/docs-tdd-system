@@ -5,7 +5,7 @@
 import assert from 'node:assert/strict'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { stableFingerprint } from './vnext-work-item.mjs'
+import { coverageFingerprints, stableFingerprint } from './vnext-work-item.mjs'
 import { scopeApprovalFingerprint } from './vnext-risk-route.mjs'
 import { evaluateSourceReadiness, reconcileAvailableSources } from './vnext-source-readiness.mjs'
 
@@ -21,8 +21,11 @@ export const AUTOPILOT_PHASES = Object.freeze([
 
 export const AUTOPILOT_ACTIONS = Object.freeze([
   'extract-requirements',
+  'repair-intake-extraction',
   'classify-scope-and-risk',
   'complete-independent-review',
+  'repair-review-findings',
+  'escalate-review-failure',
   'collect-scope-approval',
   'implement-current-scope',
   'await-late-dependencies',
@@ -95,7 +98,23 @@ export function deriveAutopilotAction({
       action: 'extract-requirements',
       phase: 'intake',
       reason: 'The PRD is available, but no doing requirements have been extracted yet.',
+      command: `docs-tdd extract ${projectId} --out <extraction.json>`,
       constraints: ['prd-is-the-only-required-start-input', 'do-not-invent-missing-business-semantics'],
+    })
+  }
+  const fingerprints = coverageFingerprints(workItem)
+  const extractionAuditCurrent = workItem.extractionAudit?.status === 'pass'
+    && workItem.extractionAudit.sourceFingerprint === fingerprints.sourceFingerprint
+    && workItem.extractionAudit.requirementsFingerprint === fingerprints.requirementsFingerprint
+  // Already-reviewed v3.1 work items remain readable. Any new/revised candidate must pass the v3.2
+  // deterministic intake audit before spending an isolated reviewer invocation.
+  if (coverage?.verdict !== 'pass' && !extractionAuditCurrent) {
+    return actionPacket(workItem, {
+      action: 'repair-intake-extraction',
+      phase: 'intake',
+      reason: 'Requirement extraction has not passed the current deterministic intake audit.',
+      command: `docs-tdd extract ${projectId} --input <extraction.json>`,
+      constraints: ['fix-source-attribution-before-review', 'reviewer-must-not-repair-mechanical-errors'],
     })
   }
   if (!workItem.routing || workItem.routing.riskSignals?.includes('unclassified') || sourceReadiness.unknownKinds.length) {
@@ -104,6 +123,26 @@ export function deriveAutopilotAction({
       phase: 'planning',
       reason: 'Requirements exist, but scope/risk routing is not classified.',
       constraints: ['risk-may-only-increase', 'classify-missing-figma-or-api-as-pending-not-global-blocker'],
+    })
+  }
+  if (coverage?.verdict !== 'pass' && workItem.reviewControl?.status === 'escalated') {
+    return actionPacket(workItem, {
+      action: 'escalate-review-failure',
+      phase: 'blocked',
+      status: 'blocked',
+      reason: `Independent review requires human intervention: ${workItem.reviewControl.reason || 'attempt limit reached'}.`,
+      constraints: ['do-not-loop-reviewer', 'human-review-required'],
+    })
+  }
+  const latestReviewAttempt = workItem.reviewControl?.history?.at(-1)
+  if (coverage?.verdict !== 'pass' && latestReviewAttempt?.verdict === 'changes-required'
+      && latestReviewAttempt.requirementsFingerprint === fingerprints.requirementsFingerprint) {
+    return actionPacket(workItem, {
+      action: 'repair-review-findings',
+      phase: 'planning',
+      reason: 'The independent reviewer requested changes; revise the extraction before another review attempt.',
+      command: `docs-tdd extract ${projectId} --out <extraction.json>`,
+      constraints: ['resolve-current-findings', 'do-not-retry-unchanged-candidate'],
     })
   }
   if (coverage?.verdict !== 'pass' || (coverage?.unresolved || []).length) {
@@ -314,10 +353,17 @@ export function selfTest() {
 
   const requirement = { requirementId: 'R-001', status: 'doing' }
   const unclassified = { ...base, requirements: [requirement] }
+  unclassified.extractionAudit = { status: 'pass', ...coverageFingerprints(unclassified) }
   assert.equal(deriveAutopilotAction({ workItem: unclassified }).action, 'classify-scope-and-risk')
 
   const needsReview = { ...unclassified, routing: { riskSignals: [], verificationLevel: 'V0' } }
   assert.equal(deriveAutopilotAction({ workItem: needsReview }).action, 'complete-independent-review')
+  const needsReviewRepair = structuredClone(needsReview)
+  needsReviewRepair.reviewControl = {
+    status: 'changes-required', attempts: 1,
+    history: [{ verdict: 'changes-required', requirementsFingerprint: coverageFingerprints(needsReviewRepair).requirementsFingerprint }],
+  }
+  assert.equal(deriveAutopilotAction({ workItem: needsReviewRepair }).action, 'repair-review-findings')
 
   const reviewed = { ...needsReview, coverageAudit: { verdict: 'pass', unresolved: [] } }
   assert.equal(deriveAutopilotAction({ workItem: reviewed }).action, 'implement-current-scope')

@@ -5,7 +5,7 @@
 
 ## 1. 启动协议
 
-0. **新需求路由（2026-09-08 起正式生效）**：docs_tdd **v3.1** 的全新项目/独立微变更默认使用第二代协议（`workflowVersion: 2`）。`docs-tdd kickoff` 建立最小三文件工作流；抽取并记录 `requirementsAuthor` 后必须执行 `docs-tdd review <PROJECT-ID> --client pi` 取得隔离子会话签名审查，再用 `docs-tdd evidence` 执行已审查的 command plan，最后由 `docs-tdd verify <PROJECT-ID> --input <verify-input.json>` 写入唯一正式出口；只有 enforced PASS 且 `autonomous/cli-attested` 可交付。存量 `workflowVersion: 1` 项目继续走 v1 G0–G8，不静默迁移；只有明确要求 `--legacy` 才新建 v1。切换记录见 [../vnext/cutover-decision-20260908.md](../vnext/cutover-decision-20260908.md)，操作规则见 [../vnext/README.md](../vnext/README.md)。
+0. **新需求路由（2026-09-08 起正式生效）**：docs_tdd **v3.2** 的全新项目/独立微变更默认使用第二代协议（`workflowVersion: 2`）。`docs-tdd kickoff` 建立最小三文件工作流；`docs-tdd extract` 生成/应用脚手架并通过确定性 intake audit 后，才执行最多三轮的隔离 `docs-tdd review`，再由 `evidence` 与 `verify` 形成唯一正式出口；只有 enforced PASS 且 `autonomous/cli-attested` 可交付。存量 `workflowVersion: 1` 项目继续走 v1 G0–G8，不静默迁移；只有明确要求 `--legacy` 才新建 v1。切换记录见 [../vnext/cutover-decision-20260908.md](../vnext/cutover-decision-20260908.md)，操作规则见 [../vnext/README.md](../vnext/README.md)。
 1. 先读取 README `workflowVersion`。v2 恢复时读 `work-item.json` 与 `latest-result.json`（若存在）；v1 恢复时读 `agent/context-summary.md`。
 2. 执行 `docs-tdd context <PROJECT-ID> <SCENARIO>`：v2 返回最小 work-item context；v1 返回场景规则包并在编码场景签发 rule session。禁止自行全读规则。
 3. v2 编辑后执行 `docs-tdd evidence <PROJECT-ID> --out <evidence.json>`（命令计划取自 work-item），再用 `docs-tdd verify <PROJECT-ID> --evidence <evidence.json> --surfaces <surfaces.json>` 一步组装并写入正式出口（workItem/sourceDocuments 自动从 work-item 组装，只需 agent 提供 `discoveredSurfaces`+`coveredSurfaceIds` 落点报告）；兼容旧路仍可用 `--input <verify-input.json>`。v1 编辑后执行 `changed`，阶段交付执行 `gate`。CLI 会拒绝混用。
@@ -24,7 +24,7 @@
 - 编码必须在 `feature/<PROJECT-ID>` worktree；v1 于 G4 准备，v2 于范围审查完成后准备。基线来自 `origin/online`；Git 只正向合环境分支。
 - Mock：v2 按 `apiDependency` 条件化（仅 `mock-required` 要求 MSW）；v1 新功能默认 MSW + 契约测试。service/hook/mapper/组件不写 mock 分支。
 - DTO 先过 schema/mapper；单一来源 mapper 字段默认与 API 同名，仅跨来源统一或多字段派生允许改名并登记结构化理由。
-- PRD 含图片、表格或嵌入对象时必须真实读取：v2 归一化为 source units 并进入 coverage review；v1 走 `prd_intake` 且 G2 前追踪到 Feature/Task。无法读取即阻断。
+- PRD 含图片、表格或嵌入对象时必须真实读取：v2 表格逐数据行归一化，抽取先过确定性 intake audit 再进入有界 coverage review；v1 走 `prd_intake` 且 G2 前追踪到 Feature/Task。无法读取即阻断。
 - 共享数据、状态、规则和配置只设一个权威写入口；编码前登记所有权，必要副本必须登记同步/失效、owner 和验证证据。
 - 新建前查复用；改动限责任模块，越界先记录并重点 review。
 - 固定文案逐字遵循 PRD/Figma 契约，apps/web 开发期只改 zh-CN。

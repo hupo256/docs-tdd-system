@@ -224,11 +224,11 @@ export function selfTest() {
   }
 }
 
-if (process.argv.includes('--self-test')) selfTest()
-else if (process.argv.includes('--help')) {
-  console.log('usage: vnext-evidence.mjs --project <v2-dir> --worktree <path> [--base <ref>] [--plan <evidence-plan.json>] [--out <evidence.json>]')
-} else if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  try {
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  if (process.argv.includes('--self-test')) selfTest()
+  else if (process.argv.includes('--help')) {
+    console.log('usage: vnext-evidence.mjs --project <v2-dir> --worktree <path> [--base <ref>] [--plan <evidence-plan.json>] [--out <evidence.json>]')
+  } else try {
     const projectValue = argumentValue('--project')
     const planFile = argumentValue('--plan')
     const worktreeValue = argumentValue('--worktree')

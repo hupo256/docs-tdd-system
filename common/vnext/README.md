@@ -1,12 +1,12 @@
-# docs_tdd v3.1 正式工作流
+# docs_tdd v3.2 正式工作流
 
-> 状态：**正式启用（enforced）**。当前框架发布版本为 **v3.1**，使用第二代 work-item 协议；项目文件中的稳定兼容标识仍为 `workflowVersion: 2`。自 2026-09-08 起，该协议作为新需求默认系统；第一代流程只服务存量 `workflowVersion: 1` 项目和显式 `--legacy` 项目。历史切换决策见 [cutover-decision-20260908.md](./cutover-decision-20260908.md)。
+> 状态：**正式启用（enforced）**。当前框架发布版本为 **v3.2**，使用第二代 work-item 协议；项目文件中的稳定兼容标识仍为 `workflowVersion: 2`。自 2026-09-08 起，该协议作为新需求默认系统；第一代流程只服务存量 `workflowVersion: 1` 项目和显式 `--legacy` 项目。历史切换决策见 [cutover-decision-20260908.md](./cutover-decision-20260908.md)。
 
 ## 版本边界
 
-- **产品发布版本**：v3.1，表示当前整体能力集合。
+- **产品发布版本**：v3.2，表示当前整体能力集合。
 - **项目协议标识**：`workflowVersion: 2`，只负责区分第二代 work-item 项目与第一代 G0–G8 项目。
-- v3.1 没有引入不兼容的第三代项目数据模型，因此不伪造 `workflowVersion: 3`，也不迁移或重写历史项目。
+- v3.2 没有引入不兼容的第三代项目数据模型，因此不伪造 `workflowVersion: 3`，也不迁移或重写历史项目。
 
 ## 不变量
 
@@ -33,6 +33,11 @@
 
 ## 当前已落地
 
+- `vnext-extract.mjs` + `lib/vnext-intake-audit.mjs`：CLI 先生成 source-unit 抽取脚手架，再对候选 requirements 做确定性前置审计；重复 ID、漏锚语义 unit/表格行、集合计数和证据计划缺陷在调用模型 Reviewer 前失败。
+- `vnext-review.mjs` 的有界审查控制：同一候选禁止无变化重试；最多三轮；相同 finding 再现、次数耗尽或 Reviewer 不可用均持久化明确升级状态并转人工。
+- `vnext-source-sync.mjs`：从既有 Lark source config 拉取到 staging，规范化并比较语义快照；无变化不改文件，有变化才原子替换来源并使旧抽取/审查/结果失效，失败保留旧快照。
+- `lib/vnext-source-units.mjs`：Markdown 表格按容器 + 每个数据行生成稳定 source units，避免一整张表作为一个不可审计黑盒。
+- `lib/playwright-mcp-adapter.mjs`：通过仓外 `@playwright/mcp --extension` 驱动系统 Chrome，按场景 JSON 执行动作和文本断言，为 `browser-interaction` evidence command 提供可执行 argv；token/浏览器不可用时明确失败。
 - `docs-tdd run <PROJECT-ID> --prd <source>` + `lib/vnext-autopilot.mjs`：PRD-only 新建/恢复入口与纯状态机；`status/next/resume/run` 返回同一个 client-neutral action packet。v2 不再把 `agent/run-state.json` 当作第二状态源。
 - `baseline-observations.json`：用户复盘中可确认的事故事实；与机器指标分离。
 - `baseline.json`：由 `vnext-baseline.mjs --write` 从四个历史项目重复生成。
@@ -88,9 +93,17 @@ node common/engine/agent-scripts/lib/vnext-work-item.mjs --self-test
 node common/engine/agent-scripts/lib/vnext-metrics.mjs --self-test
 ```
 
-## Autopilot 入口
+## Intake / Autopilot 入口
 
 ```bash
+# 已有 Lark source config 的项目：原子重拉 PRD；无语义变化不触发重审
+node common/engine/agent-scripts/docs-tdd.mjs source-sync PR-01234
+
+# 生成抽取脚手架；填写临时 JSON 后应用，CLI 会持久化 extractionAudit
+node common/engine/agent-scripts/docs-tdd.mjs extract PR-01234 --out /tmp/extraction.json
+node common/engine/agent-scripts/docs-tdd.mjs extract PR-01234 --input /tmp/extraction.json
+
+
 # 新项目：PRD 是唯一必需输入
 node common/engine/agent-scripts/docs-tdd.mjs run PR-01234 --prd <source>
 
@@ -164,18 +177,24 @@ CLI 执行 evidence 前后仍比较整棵有效代码树，测试命令若改写
 
 ## 独立审查调用边界
 
+独立 Reviewer 不是确定性格式校验器。`docs-tdd extract --input` 必须先产出与当前 source/requirements fingerprint 一致且 `status=pass` 的 `extractionAudit`；否则 `review` 在启动子进程前失败。每次 changes-required 消耗一次审查机会，只有候选 requirements/evidenceCommands 确实变化后才能继续；累计三轮或相同 finding 再现时输出 `human-review-required`。Reviewer CLI 不可用或启动失败同样写入 `reviewControl.status=escalated`，由人处理后重新应用抽取候选以开启新一轮。
+
 ```bash
 # 1. 原始来源 → 稳定 source snapshot + source units
 node common/engine/agent-scripts/vnext-verify.mjs --normalize-sources source-input.json
 
-# 2. 在 requirementsAuthor 已记录后启动真正独立的 source-only reviewer；V1/V2 必须走此入口
+# 2. 先生成并应用抽取候选；这一步执行确定性 intake audit
+node common/engine/agent-scripts/docs-tdd.mjs extract PR-01234 --out /tmp/extraction.json
+node common/engine/agent-scripts/docs-tdd.mjs extract PR-01234 --input /tmp/extraction.json
+
+# 3. 在 requirementsAuthor 已记录后启动真正独立的 source-only reviewer；V1/V2 必须走此入口
 node common/engine/agent-scripts/docs-tdd.mjs review PR-01234 --client pi
 
-# 3. 运行受信 command evidence；命令计划默认取自已审查的 work-item.json evidenceCommands，输出放在被测 worktree 外
+# 4. 运行受信 command evidence；命令计划默认取自已审查的 work-item.json evidenceCommands，输出放在被测 worktree 外
 node common/engine/agent-scripts/docs-tdd.mjs evidence PR-01234 --worktree /absolute/path/to/worktree --out /tmp/evidence.json
 # --plan <evidence-plan.json> 仅作兼容/显式输入保留；若提供，必须与 work-item.evidenceCommands 完全一致，否则 fail-closed
 
-# 4. 组装并跑正式出口：--evidence 自动注入签名 bundle，--surfaces 只提供 agent 实现后无法推导的落点报告
+# 5. 组装并跑正式出口：--evidence 自动注入签名 bundle，--surfaces 只提供 agent 实现后无法推导的落点报告
 #    （discoveredSurfaces = 代码搜索实到的落点；coveredSurfaceIds = 实际实现覆盖的）。workItem/sourceDocuments 由 CLI 从 work-item.json 自动组装。
 node common/engine/agent-scripts/docs-tdd.mjs verify PR-01234 --evidence /tmp/evidence.json --surfaces /tmp/surfaces.json --worktree /absolute/path/to/worktree
 

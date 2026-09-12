@@ -237,7 +237,7 @@ if (command === 'rules') {
 }
 
 if (!new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(projectId || '')) {
-  console.error('usage: docs-tdd.mjs <run|kickoff|status|resume|next|source-update|checkpoint|capability|probe|doctor|release|golden|guard|rule-health|rules|explain|check|gate|review|evidence|verify|context|changed|recommend> PR-01234 [G0-G8|scenario] [--input verify-input.json] [--evidence evidence.json] [--surfaces surfaces.json] [--plan evidence-plan.json] [--out evidence.json] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|pi|human] [--session-id <id>] [--target path] [--model <name>]')
+  console.error('usage: docs-tdd.mjs <run|kickoff|status|resume|next|source-update|source-sync|extract|checkpoint|capability|probe|doctor|release|golden|guard|rule-health|rules|explain|check|gate|review|evidence|verify|context|changed|recommend> PR-01234 [G0-G8|scenario] [--input file.json] [--evidence evidence.json] [--surfaces surfaces.json] [--plan evidence-plan.json] [--out file.json] [--dry-run] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|pi|human] [--session-id <id>] [--target path] [--model <name>]')
   process.exit(1)
 }
 
@@ -246,6 +246,29 @@ if (['run', 'kickoff', 'status', 'resume', 'next', 'source-update', 'checkpoint'
 }
 
 const projectWorkflowVersion = workflowVersionForProject(projectId, { resolveProjectRoot })
+if (projectWorkflowVersion === 2 && command === 'source-sync') {
+  process.exit(run([
+    join(scriptDir, 'vnext-source-sync.mjs'), '--project', resolveProjectRoot(projectId),
+    ...(commandArgs.includes('--dry-run') ? ['--dry-run'] : []),
+  ], docsRoot))
+}
+if (projectWorkflowVersion === 2 && command === 'extract') {
+  const inputIndex = commandArgs.indexOf('--input')
+  const outputIndex = commandArgs.indexOf('--out')
+  if (inputIndex >= 0 && !commandArgs[inputIndex + 1]) {
+    console.error('--input requires <extraction.json>')
+    process.exit(1)
+  }
+  if (outputIndex >= 0 && !commandArgs[outputIndex + 1]) {
+    console.error('--out requires <extraction.json>')
+    process.exit(1)
+  }
+  process.exit(run([
+    join(scriptDir, 'vnext-extract.mjs'), '--project', resolveProjectRoot(projectId),
+    ...(inputIndex >= 0 ? ['--input', resolve(commandArgs[inputIndex + 1])] : []),
+    ...(outputIndex >= 0 ? ['--out', resolve(commandArgs[outputIndex + 1])] : []),
+  ], docsRoot))
+}
 if (projectWorkflowVersion === 2 && command === 'context') {
   const session = commandArgs.indexOf('--session')
   if (session >= 0 && !commandArgs[session + 1]) {
@@ -351,7 +374,7 @@ if (projectWorkflowVersion === 2 && ['gate', 'changed'].includes(command)) {
   console.error(`${command} is a v1-only command; ${projectId} uses workflowVersion 2. Use docs-tdd verify ${projectId} --input <verify-input.json>.`)
   process.exit(1)
 }
-if (['review', 'evidence', 'verify'].includes(command)) {
+if (['source-sync', 'extract', 'review', 'evidence', 'verify'].includes(command)) {
   console.error(`${command} is a v2-only command; ${projectId} uses workflowVersion 1. Use docs-tdd gate ${projectId} <GATE>.`)
   process.exit(1)
 }
