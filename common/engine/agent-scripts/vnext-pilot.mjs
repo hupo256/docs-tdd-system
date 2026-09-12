@@ -45,12 +45,24 @@ export function inspectV1Isolation() {
 export function inspectPilotEntry(entry, registryDir) {
   const sampleId = entry.sampleId || entry.projectId
   const root = isAbsolute(entry.artifactDir) ? entry.artifactDir : resolve(registryDir, entry.artifactDir)
+  const artifactMode = entry.artifactMode || 'isolated-snapshot'
+  const execution = entry.executionAttestation || null
+  const common = {
+    sampleId,
+    projectId: entry.projectId,
+    root,
+    artifactMode,
+    autopilotRelease: execution?.release || null,
+    publicCommandsOnly: execution?.publicCommandsOnly === true,
+    executionAttestedBy: execution?.attestedBy || null,
+    executionAttestedAt: execution?.attestedAt || null,
+  }
   const problems = []
   let workItem = null
   try {
     for (const name of VNEXT_ARTIFACT_FILES) if (!existsSync(join(root, name))) problems.push(`missing ${name}`)
     workItem = existsSync(join(root, 'work-item.json')) ? load(join(root, 'work-item.json')) : null
-    if (problems.length) return { sampleId, projectId: entry.projectId, level: workItem?.routing?.verificationLevel || null, root, ok: false, problems }
+    if (problems.length) return { ...common, level: workItem?.routing?.verificationLevel || null, authoritative: false, deliveryCommitted: workItem?.autopilot?.delivery?.status === 'committed', ok: false, problems }
     const latest = load(join(root, 'latest-result.json'))
     const history = readVNextRunHistory(root)
     if (workItem.projectId !== entry.projectId || latest.projectId !== entry.projectId) problems.push('projectId does not match registry')
@@ -60,14 +72,12 @@ export function inspectPilotEntry(entry, registryDir) {
     if (latest.status !== 'passed' || latest.ok !== true) problems.push(`latest result is ${latest.status}, not passed`)
     const context = buildVNextContext({ workItem, latestResult: latest, generatedAt: entry.observation?.observedThrough || entry.enrolledAt })
     const artifacts = fileCount(root)
-    if (artifacts > VNEXT_ARTIFACT_FILES.length) problems.push(`default artifact directory contains ${artifacts} files, expected at most ${VNEXT_ARTIFACT_FILES.length}`)
+    if (artifactMode === 'isolated-snapshot' && artifacts > VNEXT_ARTIFACT_FILES.length) problems.push(`isolated artifact directory contains ${artifacts} files, expected at most ${VNEXT_ARTIFACT_FILES.length}`)
     if (!entry.newRequirement) problems.push('pilot entry is not attested as a new requirement')
     if (!entry.observation) problems.push('post-test observation is pending')
     return {
-      sampleId,
-      projectId: entry.projectId,
+      ...common,
       level: workItem.routing.verificationLevel,
-      root,
       latestStatus: latest.status,
       runCount: history.length,
       artifactCount: artifacts,
@@ -76,11 +86,13 @@ export function inspectPilotEntry(entry, registryDir) {
       omissionEscapes: entry.observation?.requirementOmissionEscapes ?? null,
       falseGreenEscapes: entry.observation?.falseGreenEscapes ?? null,
       observedThrough: entry.observation?.observedThrough ?? null,
+      authoritative: latest.mode === 'enforced' && latest.assuranceMode === 'autonomous' && latest.evidenceTrust === 'cli-attested',
+      deliveryCommitted: workItem.autopilot?.delivery?.status === 'committed' && Boolean(workItem.autopilot?.delivery?.commitSha),
       ok: problems.length === 0,
       problems,
     }
   } catch (error) {
-    return { sampleId, projectId: entry.projectId, level: workItem?.routing?.verificationLevel || null, root, ok: false, problems: [error.message] }
+    return { ...common, level: workItem?.routing?.verificationLevel || null, authoritative: false, deliveryCommitted: workItem?.autopilot?.delivery?.status === 'committed', ok: false, problems: [error.message] }
   }
 }
 
@@ -93,6 +105,22 @@ export function evaluatePilot(registry, samples, isolation = inspectV1Isolation(
   const withinCount = samples.length >= registry.minimumSamples && samples.length <= registry.maximumSamples
   const levelCoverage = requiredLevels.every((level) => levels.includes(level))
   const zeroEscapes = escapeSamples.length === 0
+  const qualificationTarget = registry.qualificationTarget || null
+  const qualifiedSamples = qualificationTarget
+    ? samples.filter((sample) => sample.ok
+      && sample.authoritative === true
+      && sample.deliveryCommitted === true
+      && sample.autopilotRelease === qualificationTarget.release
+      && sample.publicCommandsOnly === qualificationTarget.publicCommandsOnly
+      && Boolean(sample.executionAttestedBy)
+      && Boolean(sample.executionAttestedAt))
+    : []
+  const qualifiedLevels = [...new Set(qualifiedSamples.map((sample) => sample.level).filter(Boolean))].sort()
+  const missingQualifiedLevels = requiredLevels.filter((level) => !qualifiedLevels.includes(level))
+  const releaseQualificationComplete = qualificationTarget?.readinessCaseId === 'R-13'
+    && qualificationTarget.publicCommandsOnly === true
+    && Boolean(qualificationTarget.release)
+    && missingQualifiedLevels.length === 0
   let decision = 'collecting'
   if (!isolation.ok || !zeroEscapes || samples.length > registry.maximumSamples) decision = 'rollback'
   else if (withinCount && completed.length === samples.length && levelCoverage) decision = 'eligible-for-human-cutover-review'
@@ -113,28 +141,55 @@ export function evaluatePilot(registry, samples, isolation = inspectV1Isolation(
       zeroRequirementOmissionEscapes: samples.reduce((total, sample) => total + (sample.omissionEscapes || 0), 0) === 0,
       zeroFalseGreenEscapes: samples.reduce((total, sample) => total + (sample.falseGreenEscapes || 0), 0) === 0,
     },
+    releaseQualification: {
+      readinessCaseId: qualificationTarget?.readinessCaseId || null,
+      release: qualificationTarget?.release || null,
+      publicCommandsOnly: qualificationTarget?.publicCommandsOnly ?? null,
+      completed: releaseQualificationComplete,
+      completedSamples: qualifiedSamples.length,
+      completedLevels: qualifiedLevels,
+      missingLevels: missingQualifiedLevels,
+    },
     checks: [
       { code: 'LEGACY_ISOLATED', ok: isolation.ok, problems: isolation.coupled || [] },
       { code: 'SAMPLE_COUNT', ok: withinCount, problems: withinCount ? [] : [`need ${registry.minimumSamples}–${registry.maximumSamples} samples, got ${samples.length}`] },
       { code: 'LEVEL_COVERAGE', ok: levelCoverage, problems: requiredLevels.filter((level) => !levels.includes(level)).map((level) => `no completed ${level} sample`) },
       { code: 'SAMPLES_COMPLETE', ok: completed.length === samples.length && samples.length > 0, problems: samples.filter((sample) => !sample.ok).map((sample) => `${sample.sampleId || sample.projectId}: ${sample.problems.join('; ')}`) },
       { code: 'ZERO_ESCAPES', ok: zeroEscapes, problems: escapeSamples.map((sample) => `${sample.sampleId || sample.projectId}: omission=${sample.omissionEscapes}, falseGreen=${sample.falseGreenEscapes}`) },
+      {
+        code: 'R13_PUBLIC_COMMAND_PILOTS',
+        ok: releaseQualificationComplete,
+        required: false,
+        problems: qualificationTarget
+          ? missingQualifiedLevels.map((level) => `no completed ${qualificationTarget.release} ${level} sample attested as public-command-only`)
+          : ['pilot registry has no release qualification target'],
+      },
     ],
     samples,
   }
 }
 
 export function selfTest() {
-  const registry = { mode: 'explicit-dual-track-shadow', minimumSamples: 5, maximumSamples: 10, requiredLevels: ['V0', 'V1', 'V2'] }
-  const samples = ['V0', 'V0', 'V1', 'V2', 'V2'].map((level, index) => ({ sampleId: `SAMPLE-${index}`, projectId: `PR-0000${index}`, level, ok: true, problems: [], omissionEscapes: 0, falseGreenEscapes: 0 }))
+  const registry = {
+    mode: 'explicit-dual-track-shadow',
+    minimumSamples: 5,
+    maximumSamples: 10,
+    requiredLevels: ['V0', 'V1', 'V2'],
+    qualificationTarget: { readinessCaseId: 'R-13', release: 'autopilot-v3.3', publicCommandsOnly: true },
+  }
+  const samples = ['V0', 'V0', 'V1', 'V2', 'V2'].map((level, index) => ({ sampleId: `SAMPLE-${index}`, projectId: `PR-0000${index}`, level, ok: true, problems: [], omissionEscapes: 0, falseGreenEscapes: 0, authoritative: true, deliveryCommitted: true, autopilotRelease: 'autopilot-v3.3', publicCommandsOnly: true, executionAttestedBy: 'owner', executionAttestedAt: '2026-09-12T00:00:00Z' }))
   const ready = evaluatePilot(registry, samples, { ok: true, coupled: [] })
   assert.equal(ready.decision, 'eligible-for-human-cutover-review')
   assert.equal(ready.automaticCutover, false)
+  assert.equal(ready.releaseQualification.completed, true)
   const escaped = structuredClone(samples)
   escaped[2].omissionEscapes = 1
   assert.equal(evaluatePilot(registry, escaped, { ok: true, coupled: [] }).decision, 'rollback')
   assert.equal(evaluatePilot(registry, samples.slice(0, 2), { ok: true, coupled: [] }).decision, 'collecting')
   assert.equal(evaluatePilot(registry, samples, { ok: false, coupled: ['docs-tdd.mjs'] }).decision, 'rollback')
+  const unattested = structuredClone(samples)
+  unattested[2].publicCommandsOnly = false
+  assert.equal(evaluatePilot(registry, unattested, { ok: true, coupled: [] }).releaseQualification.completed, false)
   console.log('vnext-pilot self-test passed')
 }
 

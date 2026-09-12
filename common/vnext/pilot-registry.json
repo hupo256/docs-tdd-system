@@ -8,13 +8,20 @@
     "V1",
     "V2"
   ],
+  "qualificationTarget": {
+    "readinessCaseId": "R-13",
+    "release": "autopilot-v3.3",
+    "publicCommandsOnly": true
+  },
   "entries": [
     {
       "sampleId": "PR-02074-SEARCH-WIDTH",
       "projectId": "PR-02074",
       "artifactDir": "pilots/PR-02074-search-width",
+      "artifactMode": "isolated-snapshot",
       "enrolledAt": "2026-09-04T09:42:00Z",
       "newRequirement": true,
+      "executionAttestation": null,
       "observation": {
         "confirmedBy": "aven",
         "observedThrough": "2026-09-05T00:00:00.000Z",
@@ -27,8 +34,10 @@
       "sampleId": "PR-02172-PROVIDER-VISIBILITY",
       "projectId": "PR-02172",
       "artifactDir": "pilots/PR-02172-provider-visibility",
+      "artifactMode": "isolated-snapshot",
       "enrolledAt": "2026-09-04T09:42:00Z",
       "newRequirement": true,
+      "executionAttestation": null,
       "observation": {
         "confirmedBy": "aven",
         "observedThrough": "2026-09-05T00:00:00.000Z",
@@ -36,6 +45,16 @@
         "falseGreenEscapes": 0,
         "notes": "已提测（临近 pre），QA 阶段未发现 PRD 漏项；vNext 出口 PASS 与提测结果一致。"
       }
+    },
+    {
+      "sampleId": "PR-02233-AUTOPILOT-V33",
+      "projectId": "PR-02233",
+      "artifactDir": "../../prds/PR-02233",
+      "artifactMode": "project",
+      "enrolledAt": "2026-09-12T12:28:48Z",
+      "newRequirement": true,
+      "executionAttestation": null,
+      "observation": null
     }
   ],
   "candidateAssessments": [

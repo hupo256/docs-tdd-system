@@ -1,58 +1,52 @@
-# 灰度样本 post-test observation 模板
+# Pilot 完成与 post-test observation 模板
 
-> `pilot-registry.json` 中的 `observation` 字段必须用本模板格式填写；填完后运行 `node common/engine/agent-scripts/vnext-pilot.mjs --write` 刷新报告。
-> 观察截止时间必须真实，填表人必须署名。
+> `pilot-registry.json` 同时记录执行证明和提测后观察。运行
+> `node common/engine/agent-scripts/vnext-pilot.mjs --write` 刷新报告。
+> 未真实完成的字段必须保持 `null`，禁止为补齐 R-13 追认历史样本或预填零逃逸。
 
-## 模板结构
+## 1. v3.3 公共命令执行证明
+
+只有样本已经通过公共 `docs-tdd` 命令完成 intake、review、implementation checkpoint、CLI evidence、enforced verify 和 delivery commit 后，才填写：
 
 ```json
 {
-  "observedBy": "填写人姓名/工号",
-  "observedThrough": "YYYY-MM-DD",
-  "omissionEscapes": 0,
+  "release": "autopilot-v3.3",
+  "publicCommandsOnly": true,
+  "attestedBy": "填写人姓名/工号",
+  "attestedAt": "YYYY-MM-DDTHH:mm:ssZ"
+}
+```
+
+- `release` 必须等于 registry 的 `qualificationTarget.release`。
+- `publicCommandsOnly` 只能在全流程未直接改写状态/结果、未绕过 public CLI 时填 `true`。
+- `attestedBy` / `attestedAt` 由实际核对命令链的人填写。
+- 仅有 PASS、旧版历史快照或 synthetic fixture 都不能构成该证明。
+
+## 2. 提测后 observation
+
+```json
+{
+  "confirmedBy": "填写人姓名/工号",
+  "observedThrough": "YYYY-MM-DDTHH:mm:ssZ",
+  "requirementOmissionEscapes": 0,
   "falseGreenEscapes": 0,
   "notes": ""
 }
 ```
 
-## 字段说明
+- `confirmedBy`：实际观察并确认的负责人。
+- `observedThrough`：真实观察截止时间，不得晚于填表时间。
+- `requirementOmissionEscapes`：提测后发现的 PRD 漏项数量。
+- `falseGreenEscapes`：enforced PASS 后在提测中暴露的假绿次数。
+- `notes`：补充漏项类型、修复批次或 QA 结论。
 
-- `observedBy`：实际观察并确认的负责人。
-- `observedThrough`：观察截止时间，不得晚于实际填表日期。
-- `omissionEscapes`：提测后发现的 PRD 漏项数量。
-- `falseGreenEscapes`：提测前 vNext 出口 PASS、提测后实际失败的次数。
-- `notes`：补充说明，如漏项类型、修复批次等。
+## 3. R-13 完成条件
 
-## PR-02074-SEARCH-WIDTH（V0）
+`R13_PUBLIC_COMMAND_PILOTS` 只有在 V0、V1、V2 各至少一个样本同时满足以下条件时通过：
 
-```json
-{
-  "sampleId": "PR-02074-SEARCH-WIDTH",
-  "projectId": "PR-02074",
-  "observedBy": "",
-  "observedThrough": "",
-  "omissionEscapes": null,
-  "falseGreenEscapes": null,
-  "notes": ""
-}
-```
+1. 三文件出口完整、签名与 run history 一致，结果为 authoritative PASS；
+2. post-test observation 已由负责人填写；
+3. `executionAttestation.release=autopilot-v3.3`；
+4. `executionAttestation.publicCommandsOnly=true`。
 
-## PR-02172-PROVIDER-VISIBILITY（V1）
-
-```json
-{
-  "sampleId": "PR-02172-PROVIDER-VISIBILITY",
-  "projectId": "PR-02172",
-  "observedBy": "",
-  "observedThrough": "",
-  "omissionEscapes": null,
-  "falseGreenEscapes": null,
-  "notes": ""
-}
-```
-
-## 使用方式
-
-1. 确认/填写对应样本的 observation 对象。
-2. 写入 `common/vnext/pilot-registry.json` 对应 `entries[].observation`。
-3. 运行 `node common/engine/agent-scripts/vnext-pilot.mjs --write`。
+当前历史 V0/V1 样本不自动追认为 v3.3；已纳入但尚未完成的项目允许保持 collecting。

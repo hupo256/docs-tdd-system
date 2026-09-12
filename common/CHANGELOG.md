@@ -13,6 +13,8 @@
 - **实现期快速反馈**：新增 `docs-tdd dev-check`，执行已审查的非浏览器证据命令，报告 changed path 到 requirement/surface 的映射，并用 baseline-aware typecheck 区分存量诊断与当前改动回归；不污染正式 `latest-result.json`。
 - **写入边界与两类提交**：`deliveryScope.policyPaths` 在 checkpoint、dev-check、evidence、pre-commit/CI guard 全链 fail-closed；checkpoint commit 必须绑定 passing dev-check 且标记 non-delivery，delivery commit 仍只接受 authoritative PASS，均不自动 push。
 - **审查降噪与有界失败**：审查请求优先语义单元，结构节点和非规格图片保留可审计 inventory 但不挤占附件；timeout 随 payload 调整，传输失败单独记账并升级人工，不消耗语义审查轮次。
+- **Pilot 资格与当前进度**：R-13 只接受 v3.3 下经公共命令完成、取得 authoritative PASS 且有 post-test observation 的真实 V0/V1/V2；历史样本和 synthetic fixture 不追认。PR-02233 已作为真实 V2 项目纳入 collecting，未完成前不计数。
+- **本地交付边界定案**：owner 明确远端 CI guard 为 `not-required`；doctor 读取配置后不再为该选择告警，本机 pre-commit 继续强制 code-rules 与 delivery guard。`--no-verify` 或其他未安装 hook 的机器仍在保障边界之外。
 - **兼容边界不变**：产品版本升至 v3.3，项目协议继续使用 `workflowVersion: 2`；存量 work-item 无需迁移。
 
 ## 2026-09-12（v3.2 Intake / Review Reliability）
@@ -33,7 +35,7 @@
 
 - **版本身份**：当前框架与规则集正式定名为 **docs_tdd v3.1**；`common/rules/ruleset.json` 是机器可读版本源，发布清单随规则链重新生成。项目内 `workflowVersion: 2` 继续作为第二代 work-item 协议的兼容路由标识，不等同于产品版本，也不回写历史项目。
 - **正式能力集合**：v3.1 收录 PRD-only Autopilot、隔离子会话审查、CLI-attested evidence、相关路径内容绑定、code/browser 有界修复、后到 Figma/API 增量对齐，以及 authoritative PASS 后按冻结路径提交且永不自动 push。当前契约与操作入口见 [vnext/README.md](./vnext/README.md)。
-- **交付强制边界**：本机 pre-commit 已无条件串联 code-rules 与 `vnext-delivery-guard`；业务仓尚无可识别的远端 CI gate，因此 `--no-verify`、未安装本地 hook 的其他机器或远端直接修改仍缺少服务器侧二次拦截。该限制不伪装成已闭环。
+- **交付强制边界（当时状态）**：本机 pre-commit 已无条件串联 code-rules 与 `vnext-delivery-guard`；当时业务仓尚无可识别的远端 CI gate。后续 owner 已在 2026-09-12 明确远端 CI 为 `not-required`，当前边界以上方 v3.3 条目为准。
 
 ## 2026-09-10（Hook 止血 + v2 intake/review 防假绿）
 

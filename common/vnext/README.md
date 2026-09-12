@@ -287,10 +287,11 @@ node common/engine/agent-scripts/vnext-context.mjs --project /path/to/v2/PR-0123
 - `apiDependency.mode` 是 work-item 必填事实：无请求或真实 API 时禁止新增 vNext 范围 MSW；只有 `mock-required` 才要求 worker、handler 与 contract 覆盖；`pending-dependency` 必须绑定 open blocker，最终出口保持 blocked。
 - V2 scope approval fingerprint 包含 `apiDependency`，API/MSW 策略变更后旧的人签自动失效。
 
-## 历史 Phase 7 灰度（非当前切流条件）
+## Pilot 质量观察与 v3.3 R-13（非当前切流条件）
 
-1. 已有项目继续 v1；只有显式加入 `pilot-registry.json` 且 `newRequirement: true` 的新需求使用 v2。V0 可以是挂在现有项目下的一条独立微小变更，不要求为了灰度另建项目编号；registry 用可选 `sampleId` 区分同一项目内的多个微变更、沿用所属 `projectId`，但必须有可冻结的原始需求、独立 artifact 目录和可验证代码状态。
-2. 每个样本从三文件机器读取 level、出口完整性、context 字符数和文件数；提测后的漏项/假绿由负责人填写带姓名和观察截止时间的 observation。
-3. 样本少于 5 个、未覆盖 V0/V1/V2、任一样本未 PASS，均保持 `collecting`；任一漏项/假绿或 v1 入口耦合立即给出 `rollback`。
-4. 满足条件也只输出 `eligible-for-human-cutover-review`，`automaticCutover` 永远为 false。owner 已于 2026-09-08 独立批准正式切换；pilot 继续作为历史质量观测，不控制 Router 或正式出口。
-5. 当前 `pilot-report.json` 仅保留 PR-02074（V0）与 PR-02172（V1）两个历史编码样本，实时有效性以报告为准；PR-02117/PR-02133/PR-02193 因 API `pending-dependency` 已从 `pilot-registry` 中移除，不再作为切流依据。PR-02118 作为“仅运营 SOP、无明确软件交付”的负向候选保留，不计入编码样本。
+1. Pilot 必须是 `newRequirement: true` 的真实需求；V0 可以是现有项目下的独立微变更。`artifactMode=isolated-snapshot` 只允许三份规范状态文件，`artifactMode=project` 可直接读取公共 CLI 管理的真实项目目录及其 source/support files。
+2. 每个样本从三文件机器读取 level、出口完整性和 context 预算；提测后的漏项/假绿由负责人填写带姓名和观察截止时间的 observation。
+3. 历史质量观察达到 3–10 个 completed 样本、覆盖 V0/V1/V2 且零逃逸时，仍只输出 `eligible-for-human-cutover-review`；`automaticCutover` 永远为 false，pilot 不控制 Router 或正式出口。
+4. R-13 是独立的 v3.3 release qualification：V0/V1/V2 各至少一个样本必须取得 authoritative PASS、完成 post-test observation，并由实际核对人证明全流程只使用公共 `docs-tdd` 命令。旧版历史 PASS、未完成项目和 synthetic fixture 均不计数。
+5. 当前 PR-02074（V0）与 PR-02172（V1）仅是历史样本，不能追认为 v3.3；PR-02233（V2）已纳入真实项目观察，但在实现、依赖、验证、交付和 post-test 观察完成前保持 collecting。PR-02118 作为“仅运营 SOP、无明确软件交付”的负向候选保留，不计入编码样本。
+6. 执行证明和 observation 的填写格式见 `pilots/observation-template.md`；任何未发生的事实保持 `null`。

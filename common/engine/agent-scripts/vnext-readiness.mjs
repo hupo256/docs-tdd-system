@@ -17,6 +17,8 @@ export function runReadiness() {
   assert.equal(cases.schemaVersion, 1)
   assert.equal(cases.cases.filter((item) => item.required).length, 12)
   assert.equal(new Set(cases.cases.map((item) => item.id)).size, cases.cases.length)
+  const r13 = cases.cases.find((item) => item.id === 'R-13')
+  assert.equal(r13?.required, false)
 
   const commands = readFileSync(join(scriptDir, 'docs-tdd.mjs'), 'utf8')
   for (const command of ['scope-approval', 'scope-approve', 'review-adjudicate', 'review-resume', 'worktree-prepare', 'dev-check', 'commit']) {
@@ -46,6 +48,7 @@ export function runReadiness() {
     'vnext-dev-check.mjs',
     'vnext-commit.mjs',
     'vnext-delivery-guard.mjs',
+    'vnext-pilot.mjs',
     'vnext-review.mjs',
     'vnext-scope-approval.mjs',
     'vnext-review-adjudicate.mjs',
@@ -56,7 +59,15 @@ export function runReadiness() {
   })
   const failed = results.filter((result) => !result.ok)
   if (failed.length) throw new Error(failed.map((result) => `${result.relativePath}: ${result.output}`).join('\n'))
-  return { ok: true, release: cases.release, requiredCases: cases.cases.filter((item) => item.required).map((item) => item.id), suites: results.map((item) => item.relativePath) }
+  const pilotReport = JSON.parse(readFileSync(join(engineDir, '..', 'vnext/pilot-report.json'), 'utf8'))
+  const pilotCheck = pilotReport.checks?.find((item) => item.code === 'R13_PUBLIC_COMMAND_PILOTS')
+  return {
+    ok: true,
+    release: cases.release,
+    requiredCases: cases.cases.filter((item) => item.required).map((item) => item.id),
+    optionalCases: [{ id: r13.id, complete: pilotCheck?.ok === true, problems: pilotCheck?.problems || ['pilot report is missing the R-13 check'] }],
+    suites: results.map((item) => item.relativePath),
+  }
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

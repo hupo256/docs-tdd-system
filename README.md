@@ -185,7 +185,7 @@ evidenceTrust=cli-attested
 
 Figma/API 在 intake 阶段可以是 `required + pending`，不阻止 PRD-first 实现；若最终验收依赖它们，则 unresolved 状态不能进入 ready-to-test。资料到达后运行 `docs-tdd source-update`，只处理受影响的增量并重新对齐证据。
 
-取得 authoritative PASS 后，Autopilot 只 `git add` / `git commit --only` 当前冻结路径，不带入其他工作区改动，且永不执行 `git push`。pre-commit delivery guard 会再次校验 PASS、签名、内容指纹和提交集合；远端 CI 仍需在消费仓显式接入同一 guard。
+取得 authoritative PASS 后，Autopilot 只 `git add` / `git commit --only` 当前冻结路径，不带入其他工作区改动，且永不执行 `git push`。pre-commit delivery guard 会再次校验 PASS、签名、内容指纹和提交集合。当前 owner 明确选择本机 pre-commit 作为交付边界，远端 CI guard 为 `not-required`；使用 `--no-verify` 或在未安装本地 hook 的机器提交属于该边界之外的显式风险。
 
 默认工作流状态只持久化三个文件：
 

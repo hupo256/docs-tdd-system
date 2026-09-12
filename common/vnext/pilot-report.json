@@ -1,17 +1,18 @@
 {
   "schemaVersion": 1,
   "mode": "explicit-dual-track-shadow",
-  "generatedAt": "2026-09-10T03:47:40.508Z",
+  "generatedAt": "2026-09-12T12:33:52.814Z",
   "decision": "collecting",
   "automaticCutover": false,
   "summary": {
-    "enrolled": 2,
+    "enrolled": 3,
     "completed": 0,
     "minimumSamples": 3,
     "maximumSamples": 10,
     "enrolledLevels": [
       "V0",
-      "V1"
+      "V1",
+      "V2"
     ],
     "completedLevels": [],
     "requiredLevels": [
@@ -22,6 +23,19 @@
     "zeroRequirementOmissionEscapes": true,
     "zeroFalseGreenEscapes": true
   },
+  "releaseQualification": {
+    "readinessCaseId": "R-13",
+    "release": "autopilot-v3.3",
+    "publicCommandsOnly": true,
+    "completed": false,
+    "completedSamples": 0,
+    "completedLevels": [],
+    "missingLevels": [
+      "V0",
+      "V1",
+      "V2"
+    ]
+  },
   "checks": [
     {
       "code": "LEGACY_ISOLATED",
@@ -30,10 +44,8 @@
     },
     {
       "code": "SAMPLE_COUNT",
-      "ok": false,
-      "problems": [
-        "need 3–10 samples, got 2"
-      ]
+      "ok": true,
+      "problems": []
     },
     {
       "code": "LEVEL_COVERAGE",
@@ -48,35 +60,78 @@
       "code": "SAMPLES_COMPLETE",
       "ok": false,
       "problems": [
-        "PR-02074-SEARCH-WIDTH: latest result is invalid or stale: result does not match work item",
-        "PR-02172-PROVIDER-VISIBILITY: latest result is invalid or stale: result does not match work item"
+        "PR-02074-SEARCH-WIDTH: invalid stored run implemented-PR-02074-20260904: assuranceMode/evidenceTrust must be autonomous/cli-attested or assisted-pilot/caller-supplied",
+        "PR-02172-PROVIDER-VISIBILITY: invalid stored run implemented-PR-02172-20260904: assuranceMode/evidenceTrust must be autonomous/cli-attested or assisted-pilot/caller-supplied",
+        "PR-02233-AUTOPILOT-V33: missing latest-result.json; missing runs.jsonl"
       ]
     },
     {
       "code": "ZERO_ESCAPES",
       "ok": true,
       "problems": []
+    },
+    {
+      "code": "R13_PUBLIC_COMMAND_PILOTS",
+      "ok": false,
+      "required": false,
+      "problems": [
+        "no completed autopilot-v3.3 V0 sample attested as public-command-only",
+        "no completed autopilot-v3.3 V1 sample attested as public-command-only",
+        "no completed autopilot-v3.3 V2 sample attested as public-command-only"
+      ]
     }
   ],
   "samples": [
     {
       "sampleId": "PR-02074-SEARCH-WIDTH",
       "projectId": "PR-02074",
-      "level": "V0",
       "root": "/Users/aven/github/docs_tdd/common/vnext/pilots/PR-02074-search-width",
+      "artifactMode": "isolated-snapshot",
+      "autopilotRelease": null,
+      "publicCommandsOnly": false,
+      "executionAttestedBy": null,
+      "executionAttestedAt": null,
+      "level": "V0",
+      "authoritative": false,
+      "deliveryCommitted": false,
       "ok": false,
       "problems": [
-        "latest result is invalid or stale: result does not match work item"
+        "invalid stored run implemented-PR-02074-20260904: assuranceMode/evidenceTrust must be autonomous/cli-attested or assisted-pilot/caller-supplied"
       ]
     },
     {
       "sampleId": "PR-02172-PROVIDER-VISIBILITY",
       "projectId": "PR-02172",
-      "level": "V1",
       "root": "/Users/aven/github/docs_tdd/common/vnext/pilots/PR-02172-provider-visibility",
+      "artifactMode": "isolated-snapshot",
+      "autopilotRelease": null,
+      "publicCommandsOnly": false,
+      "executionAttestedBy": null,
+      "executionAttestedAt": null,
+      "level": "V1",
+      "authoritative": false,
+      "deliveryCommitted": false,
       "ok": false,
       "problems": [
-        "latest result is invalid or stale: result does not match work item"
+        "invalid stored run implemented-PR-02172-20260904: assuranceMode/evidenceTrust must be autonomous/cli-attested or assisted-pilot/caller-supplied"
+      ]
+    },
+    {
+      "sampleId": "PR-02233-AUTOPILOT-V33",
+      "projectId": "PR-02233",
+      "root": "/Users/aven/github/docs_tdd/prds/PR-02233",
+      "artifactMode": "project",
+      "autopilotRelease": null,
+      "publicCommandsOnly": false,
+      "executionAttestedBy": null,
+      "executionAttestedAt": null,
+      "level": "V2",
+      "authoritative": false,
+      "deliveryCommitted": false,
+      "ok": false,
+      "problems": [
+        "missing latest-result.json",
+        "missing runs.jsonl"
       ]
     }
   ]

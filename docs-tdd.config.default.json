@@ -53,6 +53,7 @@
     "cursorLocalGovernance": "~/.cursor/rules/local-governance.mdc"
   },
   "enforcementWiring": {
+    "remoteCiRequired": true,
     "ciConfigCandidates": [".gitlab-ci.yml", ".github/workflows"],
     "ciMarker": "verify-code-rules.mjs",
     "precommitConfig": "package.json",

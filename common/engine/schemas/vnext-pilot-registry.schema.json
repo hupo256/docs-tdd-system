@@ -3,29 +3,51 @@
   "$id": "vnext-pilot-registry.schema.json",
   "title": "docs_tdd vNext Pilot Registry",
   "type": "object",
-  "required": ["schemaVersion", "mode", "minimumSamples", "maximumSamples", "requiredLevels", "entries"],
+  "required": ["schemaVersion", "mode", "minimumSamples", "maximumSamples", "requiredLevels", "qualificationTarget", "entries"],
   "properties": {
     "schemaVersion": { "const": 1 },
     "mode": { "const": "explicit-dual-track-shadow" },
-    "minimumSamples": { "type": "integer", "minimum": 5, "maximum": 10 },
-    "maximumSamples": { "type": "integer", "minimum": 5, "maximum": 10 },
+    "minimumSamples": { "type": "integer", "minimum": 3, "maximum": 10 },
+    "maximumSamples": { "type": "integer", "minimum": 3, "maximum": 10 },
     "requiredLevels": {
       "type": "array",
       "uniqueItems": true,
       "items": { "type": "string", "enum": ["V0", "V1", "V2"] }
+    },
+    "qualificationTarget": {
+      "type": "object",
+      "required": ["readinessCaseId", "release", "publicCommandsOnly"],
+      "additionalProperties": false,
+      "properties": {
+        "readinessCaseId": { "const": "R-13" },
+        "release": { "type": "string", "minLength": 1 },
+        "publicCommandsOnly": { "const": true }
+      }
     },
     "entries": {
       "type": "array",
       "maxItems": 10,
       "items": {
         "type": "object",
-        "required": ["projectId", "artifactDir", "enrolledAt", "newRequirement", "observation"],
+        "required": ["projectId", "artifactDir", "artifactMode", "enrolledAt", "newRequirement", "executionAttestation", "observation"],
         "properties": {
           "sampleId": { "type": "string", "pattern": "^[A-Z0-9][A-Z0-9._-]{2,63}$" },
           "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },
           "artifactDir": { "type": "string", "minLength": 1 },
+          "artifactMode": { "type": "string", "enum": ["isolated-snapshot", "project"] },
           "enrolledAt": { "type": "string", "format": "date-time" },
           "newRequirement": { "const": true },
+          "executionAttestation": {
+            "type": ["object", "null"],
+            "required": ["release", "publicCommandsOnly", "attestedBy", "attestedAt"],
+            "properties": {
+              "release": { "type": "string", "minLength": 1 },
+              "publicCommandsOnly": { "const": true },
+              "attestedBy": { "type": "string", "minLength": 1 },
+              "attestedAt": { "type": "string", "format": "date-time" }
+            },
+            "additionalProperties": false
+          },
           "observation": {
             "type": ["object", "null"],
             "required": ["confirmedBy", "observedThrough", "requirementOmissionEscapes", "falseGreenEscapes"],

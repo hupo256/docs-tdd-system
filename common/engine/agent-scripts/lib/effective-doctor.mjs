@@ -31,6 +31,13 @@ export function pathsResolveToCanonical(entries, canonical) {
   return entries.every((entry) => existsSync(entry) && realpathSync(entry) === target)
 }
 
+export function evaluateRemoteCiGate({ required, ciFiles, missingMarkers, candidates }) {
+  if (!required) return { ok: true, message: 'remote CI guards are explicitly not required; the local pre-commit hook remains the delivery boundary' }
+  if (ciFiles.length === 0) return { ok: false, message: `no CI config found (${candidates.join(', ')}); code-rules + v2 delivery CI guards cannot be confirmed` }
+  if (missingMarkers.length === 0) return { ok: true, message: 'code-rules + v2 delivery CI guards are wired' }
+  return { ok: false, message: `CI config is missing guard marker(s): ${missingMarkers.join(', ')}; Cursor and non-hook commits can bypass a machine gate` }
+}
+
 function listConsumerWorktrees(ruleConsumerRoot) {
   const result = spawnSync('git', ['worktree', 'list', '--porcelain'], { cwd: ruleConsumerRoot, encoding: 'utf8', stdio: 'pipe' })
   if (result.status !== 0) return [ruleConsumerRoot]
@@ -207,14 +214,8 @@ export function runDoctor(deps) {
     }
   }).join('\n')
   const missingCiMarkers = ciMarkers.filter((marker) => !ciContents.includes(marker))
-  const ciWired = ciFiles.length > 0 && missingCiMarkers.length === 0
-  add(
-    'CI-GATE',
-    ciWired,
-    'warn',
-    ciFiles.length === 0 ? `no CI config found (${ciCandidates.join(', ')}); code-rules + v2 delivery CI guards cannot be confirmed` : ciWired ? 'code-rules + v2 delivery CI guards are wired' : `CI config is missing guard marker(s): ${missingCiMarkers.join(', ')}; Cursor and non-hook commits can bypass a machine gate`,
-    ciCandidates[0],
-  )
+  const ciGate = evaluateRemoteCiGate({ required: wiring.remoteCiRequired !== false, ciFiles, missingMarkers: missingCiMarkers, candidates: ciCandidates })
+  add('CI-GATE', ciGate.ok, 'warn', ciGate.message, ciCandidates[0])
 
   const precommitConfigName = wiring.precommitConfig || 'package.json'
   const precommitMarker = wiring.precommitMarker || 'precommit-verify-code-rules.mjs'
@@ -325,6 +326,10 @@ if (process.argv[1]?.endsWith('effective-doctor.mjs') && process.argv.includes('
     writeFileSync(bad, 'only rule-router.md here\n')
     assert.equal(containsProtocol(bad), false)
     assert.equal(containsProtocol(join(fixture, 'missing.md')), false)
+
+    assert.equal(evaluateRemoteCiGate({ required: false, ciFiles: [], missingMarkers: ['guard'], candidates: ['ci.yml'] }).ok, true)
+    assert.equal(evaluateRemoteCiGate({ required: true, ciFiles: [], missingMarkers: ['guard'], candidates: ['ci.yml'] }).ok, false)
+    assert.equal(evaluateRemoteCiGate({ required: true, ciFiles: ['ci.yml'], missingMarkers: [], candidates: ['ci.yml'] }).ok, true)
 
     // findHiddenRuleEntries：非 git 目录 → git 命令失败 → 该 worktree 记 (scan failed)，不抛。
     mkdirSync(join(fixture, 'plain'), { recursive: true })
