@@ -30,21 +30,52 @@ export function hashCanonicalLarkContent(content) {
   return createHash('sha256').update(canonicalizeLarkDocumentContent(content)).digest('hex')
 }
 
+// feishu.cn/file/<token> 预览链与 larksuite 同构链：提取可鉴权下载的 file token。
+// 这类 URL 未鉴权 fetch 只会拿到登录页 HTML，必须走 lark-cli media-download。
+const LARK_FILE_URL_RE = /https?:\/\/[^\s"')]*\/file\/([A-Za-z0-9_-]+)/i
+
+// 将一个媒体 URL 归类为鉴权 lark-media（file token）或普通 http 外链。
+export function classifyMediaUrl(url) {
+  const fileToken = LARK_FILE_URL_RE.exec(String(url || ''))?.[1]
+  if (fileToken) return { kind: 'lark-media', token: fileToken, url: String(url) }
+  return { kind: 'http', url: String(url) }
+}
+
+// 图片 magic bytes 嗅探：防止把登录页/错误 HTML 当图片落盘。返回图片类型或 null。
+export function sniffImageType(buffer) {
+  const b = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer || [])
+  if (b.length >= 8 && b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) return 'png'
+  if (b.length >= 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return 'jpeg'
+  if (b.length >= 6 && b[0] === 0x47 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x38) return 'gif'
+  if (b.length >= 12 && b.toString('ascii', 0, 4) === 'RIFF' && b.toString('ascii', 8, 12) === 'WEBP') return 'webp'
+  if (b.length >= 2 && b[0] === 0x42 && b[1] === 0x4d) return 'bmp'
+  return null
+}
+
 export function localizeLarkMediaReferences(content, assetDir = 'assets') {
   const media = []
-  const allocate = (url) => {
+  const allocate = (descriptor) => {
     const fileName = `img-${String(media.length + 1).padStart(3, '0')}.png`
-    media.push({ url, fileName })
+    media.push({ fileName, ...descriptor })
     return `${assetDir}/${fileName}`
   }
 
   const localized = String(content || '').replace(/!\[(?:\\.|[^\]])*\]\(https?:\/\/[^\s)]+\)|<img\b[^>]*>/gi, (raw) => {
     const markdown = /^!\[((?:\\.|[^\]])*)\]\((https?:\/\/[^\s)]+)\)$/i.exec(raw)
-    if (markdown) return `![${markdown[1]}](${allocate(markdown[2])})`
+    if (markdown) return `![${markdown[1]}](${allocate(classifyMediaUrl(markdown[2]))})`
 
-    const url = /\bhref\s*=\s*["'](https?:\/\/[^"']+)["']/i.exec(raw)?.[1]
-    if (!url) return raw
-    const localPath = allocate(url)
+    // <img> 标签：优先用稳定的内嵌 src=TOKEN（docx 媒体，走鉴权下载），
+    // 其次才用 href http（可能是易变的 authcode 临时链）。
+    const srcAttr = /\bsrc\s*=\s*["']([^"']*)["']/i.exec(raw)?.[1]
+    const href = /\bhref\s*=\s*["'](https?:\/\/[^"']+)["']/i.exec(raw)?.[1]
+    let descriptor = null
+    if (srcAttr && !/^https?:\/\//i.test(srcAttr) && !srcAttr.startsWith(`${assetDir}/`)) {
+      descriptor = { kind: 'lark-media', token: srcAttr }
+    } else if (href) {
+      descriptor = classifyMediaUrl(href)
+    }
+    if (!descriptor) return raw
+    const localPath = allocate(descriptor)
     const withoutHref = raw.replace(/\s+href\s*=\s*["'][^"']+["']/i, '')
     if (/\bsrc\s*=\s*["'][^"']*["']/i.test(withoutHref)) {
       return withoutHref.replace(/\bsrc\s*=\s*["'][^"']*["']/i, `src="${localPath}"`)
@@ -137,11 +168,25 @@ export function selfTest() {
   // 否则「读本地已落盘副本重算」与「直连 fetch」永远不等。
   assert.equal(hashCanonicalLarkContent('第一行  \n第二行'), hashCanonicalLarkContent('第一行\n第二行'))
 
-  const localized = localizeLarkMediaReferences(`![a](https://x/one.png)\n<img href="https://x/two.png" src="token"/>`)
-  assert.deepEqual(localized.media.map((item) => item.fileName), ['img-001.png', 'img-002.png'])
+  const localized = localizeLarkMediaReferences(`![a](https://example.com/one.png)\n![b](https://feishu.cn/file/FILETOKEN123)\n<img src="EMBEDTOKEN456" mime="image/png"/>\n<img href="https://example.com/four.png"/>`)
+  assert.deepEqual(localized.media.map((item) => item.fileName), ['img-001.png', 'img-002.png', 'img-003.png', 'img-004.png'])
+  // 外链 markdown 图 → http 直下；feishu.cn/file/<token> → 鉴权 lark-media；
+  // 内嵌 <img src=TOKEN>（无 http）→ 鉴权 lark-media；<img href=http> → http。
+  assert.deepEqual(localized.media[0], { fileName: 'img-001.png', kind: 'http', url: 'https://example.com/one.png' })
+  assert.deepEqual(localized.media[1], { fileName: 'img-002.png', kind: 'lark-media', token: 'FILETOKEN123', url: 'https://feishu.cn/file/FILETOKEN123' })
+  assert.deepEqual(localized.media[2], { fileName: 'img-003.png', kind: 'lark-media', token: 'EMBEDTOKEN456' })
+  assert.deepEqual(localized.media[3], { fileName: 'img-004.png', kind: 'http', url: 'https://example.com/four.png' })
   assert.match(localized.content, /!\[a\]\(assets\/img-001\.png\)/)
-  assert.match(localized.content, /src="assets\/img-002\.png"/)
+  assert.match(localized.content, /src="assets\/img-003\.png"/)
   assert.doesNotMatch(localized.content, /href=/)
+
+  // sniffImageType：只有真实图片 magic bytes 才过；HTML 登录页必须返回 null（不得冒充图片）。
+  assert.equal(sniffImageType(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])), 'png')
+  assert.equal(sniffImageType(Buffer.from([0xff, 0xd8, 0xff, 0xe0])), 'jpeg')
+  assert.equal(sniffImageType(Buffer.from([0x47, 0x49, 0x46, 0x38, 0x39, 0x61])), 'gif')
+  assert.equal(sniffImageType(Buffer.concat([Buffer.from('RIFF'), Buffer.alloc(4), Buffer.from('WEBP')])), 'webp')
+  assert.equal(sniffImageType(Buffer.from('<!doctype html><html><head>login</head></html>', 'utf8')), null)
+  assert.equal(sniffImageType(Buffer.alloc(0)), null)
 
   const parsed = parseLarkDocumentPayload(JSON.stringify({
     ok: true,

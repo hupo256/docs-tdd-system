@@ -83,6 +83,7 @@ const SELF_TEST_SCRIPTS = [
   ['lib/l2-rule-resolver.mjs', '--self-test'],
   ['lib/l2-rule-resolver-golden.mjs'],
   ['lib/pi-adapter.mjs', '--self-test'],
+  ['lib/playwright-mcp-adapter.mjs', '--self-test'],
   ['lib/prd-manifest.mjs', '--self-test'],
   ['lib/project-decision.mjs', '--self-test'],
   ['lib/project-index.mjs', '--self-test'],

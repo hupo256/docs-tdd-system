@@ -12,7 +12,7 @@ import {
   shellQuote,
   validateSource,
 } from './lib/lark-command.mjs'
-import { localizeLarkMediaReferences, parseLarkDocumentPayload } from './lib/lark-prd-drift.mjs'
+import { classifyMediaUrl, localizeLarkMediaReferences, parseLarkDocumentPayload, sniffImageType } from './lib/lark-prd-drift.mjs'
 
 // 安全边界 validateSource 沿用从本文件导入（common/lark-bot/__tests__/lark-pure.test.mjs 依赖此路径）。
 export { validateSource } from './lib/lark-command.mjs'
@@ -68,11 +68,11 @@ const parseArgs = (argv) => {
 
 const readJson = async (filePath) => JSON.parse(await fs.readFile(filePath, 'utf8'))
 
-const runCommand = async (command) => {
+const runCommand = async (command, { cwd = repoRoot } = {}) => {
   const [binary, ...args] = command
 
   return new Promise((resolve, reject) => {
-    const child = spawn(binary, args, { cwd: repoRoot, stdio: ['ignore', 'pipe', 'pipe'] })
+    const child = spawn(binary, args, { cwd, stdio: ['ignore', 'pipe', 'pipe'] })
     let stdout = ''
     let stderr = ''
     let settled = false
@@ -124,6 +124,51 @@ command: ${JSON.stringify(command.join(' '))}
 
 `
 
+// docx 内嵌媒体 / feishu.cn/file token 必须走鉴权 media-download，未鉴权 fetch 只会拿到登录页 HTML。
+// media-download 拒绝 out-of-tree 的 --output，故把 cwd 设到 assetDir、--output 仅文件名。
+const downloadLarkMedia = async ({ token, assetDir, fileName }) => {
+  const command = ['lark-cli', 'docs', '+media-download', '--token', token, '--output', fileName, '--overwrite', '--as', 'user', '--format', 'json']
+  const { stdout } = await runCommand(command, { cwd: assetDir })
+  let payload = null
+  try {
+    payload = JSON.parse(stdout)
+  } catch {
+    payload = null
+  }
+  if (!payload?.ok) {
+    throw new Error(`failed to download PRD media token ${token}: ${payload?.error?.message || stdout.trim()}`)
+  }
+  // media-download 会按真实 content-type 自动定扩展名；归一到约定的 fileName（下游引用 assets/img-NNN.png）。
+  const savedPath = payload?.data?.saved_path
+  const targetPath = path.join(assetDir, fileName)
+  if (savedPath && path.resolve(savedPath) !== path.resolve(targetPath)) {
+    await fs.rename(path.resolve(savedPath), targetPath)
+  }
+}
+
+const downloadHttpMedia = async ({ url, assetDir, fileName }) => {
+  const response = await fetch(url)
+  if (!response.ok) throw new Error(`failed to download PRD media ${fileName}: HTTP ${response.status}`)
+  await fs.writeFile(path.join(assetDir, fileName), Buffer.from(await response.arrayBuffer()))
+}
+
+const downloadPrdMedia = async ({ media, assetDir }) => {
+  const descriptor = media.kind ? media : classifyMediaUrl(media.url)
+  if (descriptor.kind === 'lark-media' && descriptor.token) {
+    await downloadLarkMedia({ token: descriptor.token, assetDir, fileName: media.fileName })
+  } else if (descriptor.url) {
+    await downloadHttpMedia({ url: descriptor.url, assetDir, fileName: media.fileName })
+  } else {
+    throw new Error(`PRD media ${media.fileName} has no downloadable source (token/url missing)`)
+  }
+  // 落盘后一律校验 magic bytes：非图片（登录页/错误 HTML）删文件并硬失败，绝不冒充 local 图片资产。
+  const bytes = await fs.readFile(path.join(assetDir, media.fileName))
+  if (!sniffImageType(bytes)) {
+    await fs.rm(path.join(assetDir, media.fileName), { force: true })
+    throw new Error(`PRD media ${media.fileName} is not a valid image (source returned non-image bytes, likely an auth/login HTML page); refusing to store it as an image asset`)
+  }
+}
+
 const writeSourceOutput = async ({ source, targetPath, command, stdout, stderr, syncedAt }) => {
   await fs.mkdir(path.dirname(targetPath), { recursive: true })
 
@@ -162,9 +207,7 @@ const writeSourceOutput = async ({ source, targetPath, command, stdout, stderr, 
     const assetDir = path.join(outputDir, 'assets')
     await fs.mkdir(assetDir, { recursive: true })
     for (const media of localized.media) {
-      const response = await fetch(media.url)
-      if (!response.ok) throw new Error(`failed to download PRD media ${media.fileName}: HTTP ${response.status}`)
-      await fs.writeFile(path.join(assetDir, media.fileName), Buffer.from(await response.arrayBuffer()))
+      await downloadPrdMedia({ media, assetDir })
     }
     const frontMatter = `---\nsourceName: ${JSON.stringify(`${source.name || source.target} (extracted, localized assets)`)}\nsourceType: ${JSON.stringify(source.type)}\nsourceUrl: ${JSON.stringify(source.url)}\nderivedFrom: ${JSON.stringify(source.target)}\nsyncedAt: ${JSON.stringify(syncedAt)}\nreadOnly: true\n---\n\n`
     await fs.writeFile(localizedPath, `${frontMatter}${cleanMarkdown(localized.content)}\n`)
