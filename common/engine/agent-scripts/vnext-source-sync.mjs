@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url'
 import { docsSystemRoot, resolveDocsPath, resolveRoots } from './lib/roots.mjs'
 import { persistVNextWorkItem } from './lib/vnext-persistence.mjs'
 import { normalizeSourceDocuments, readLocalSourceAsset } from './lib/vnext-source-units.mjs'
+import { bindVNextIntake } from './lib/vnext-intake.mjs'
 import { stableFingerprint } from './lib/vnext-work-item.mjs'
 import { runSyncLarkDocs } from './sync-lark-docs.mjs'
 
@@ -111,6 +112,7 @@ export async function syncVNextSource(projectDir, { dryRun = false, sync = runSy
     swapped = true
     const next = structuredClone(workItem)
     next.sourceSnapshot = normalized.sourceSnapshot
+    if (next.intake) next.intake = bindVNextIntake(next.intake.kind, normalized.sourceSnapshot)
     next.coverageAudit = pendingCoverage('source changed; regenerate extraction and independent review')
     next.scopeApproval = null
     delete next.extractionAudit
@@ -164,7 +166,8 @@ export async function selfTest() {
     const initial = normalizeSourceDocuments([{ path: canonicalPath, content: 'Old requirement.\n' }], { revision: 'old' })
     initial.sourceSnapshot.revision = initial.sourceSnapshot.contentHash
     const workItem = {
-      schemaVersion: 1, workflowVersion: 2, projectId: 'PR-00001', sourceSnapshot: initial.sourceSnapshot,
+      schemaVersion: 1, workflowVersion: 2, projectId: 'PR-00001',
+      intake: bindVNextIntake('bugfix', initial.sourceSnapshot), sourceSnapshot: initial.sourceSnapshot,
       requirements: [], coverageAudit: pendingCoverage('fixture'), routing: { scopeClass: 'local', riskSignals: ['unclassified'], verificationLevel: 'V0', routerVersion: 1 },
       apiDependency: { mode: 'no-request', reason: 'fixture' }, scopeApproval: null,
     }
@@ -183,6 +186,8 @@ export async function selfTest() {
     const changed = await syncVNextSource(projectDir, { sync: fakeSync })
     assert.equal(changed.changed, true)
     assert.equal(readFileSync(join(outputDir, 'prd.md'), 'utf8'), 'New requirement.\n')
+    const refreshed = JSON.parse(readFileSync(join(projectDir, 'work-item.json'), 'utf8'))
+    assert.equal(refreshed.intake.sourceFingerprint, stableFingerprint(refreshed.sourceSnapshot))
     const beforeFailure = readFileSync(join(projectDir, 'work-item.json'), 'utf8')
     await assert.rejects(() => syncVNextSource(projectDir, { sync: async () => { throw new Error('network unavailable') } }), /network unavailable/)
     assert.equal(readFileSync(join(projectDir, 'work-item.json'), 'utf8'), beforeFailure)

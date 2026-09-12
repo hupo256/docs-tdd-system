@@ -6,6 +6,7 @@ import assert from 'node:assert/strict'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { coverageFingerprints, effectiveCoverageReview, stableFingerprint } from './vnext-work-item.mjs'
+import { deliveryScopePathProblems } from './vnext-delivery-scope.mjs'
 import { createScopeApproval, scopeApprovalFingerprint } from './vnext-risk-route.mjs'
 import { evaluateSourceReadiness, reconcileAvailableSources } from './vnext-source-readiness.mjs'
 
@@ -45,6 +46,7 @@ export function initialAutopilotState(generatedAt = new Date().toISOString()) {
   return {
     phase: 'intake',
     implementation: { status: 'pending', changedPaths: [] },
+    delivery: { status: 'pending' },
     repairAttempts: { code: 0, browser: 0 },
     lastCheckpointAt: generatedAt,
   }
@@ -325,6 +327,8 @@ export function applyAutopilotCheckpoint(workItem, checkpoint, { latestResult = 
       throw new Error('completed implementation checkpoint requires discoveredSurfaces and coveredSurfaceIds arrays')
     }
   }
+  const pathProblems = deliveryScopePathProblems(next, changedPaths)
+  if (pathProblems.length) throw new Error(pathProblems.join('; '))
 
   next.autopilot = {
     ...initialAutopilotState(generatedAt),
@@ -333,6 +337,7 @@ export function applyAutopilotCheckpoint(workItem, checkpoint, { latestResult = 
     implementation: {
       ...previous,
       status: ['reconcile-late-sources', 'repair-failed-checks'].includes(expected.action) ? 'completed' : checkpoint.outcome,
+      checkpoint: { actionId: checkpoint.actionId, outcome: checkpoint.outcome, recordedAt: generatedAt },
       changedPaths,
       ...(checkpoint.discoveredSurfaces ? { discoveredSurfaces: checkpoint.discoveredSurfaces } : {}),
       ...(checkpoint.coveredSurfaceIds ? { coveredSurfaceIds: checkpoint.coveredSurfaceIds } : {}),
@@ -340,6 +345,7 @@ export function applyAutopilotCheckpoint(workItem, checkpoint, { latestResult = 
       ...(checkpoint.blockers ? { blockers: checkpoint.blockers } : {}),
       ...(checkpoint.outcome === 'completed' ? { completedAt: generatedAt } : {}),
     },
+    delivery: { status: 'pending' },
     repairAttempts: {
       ...(next.autopilot?.repairAttempts || { code: 0, browser: 0 }),
       ...(expected.action === 'repair-failed-checks' && checkpoint.outcome === 'completed'
@@ -347,6 +353,40 @@ export function applyAutopilotCheckpoint(workItem, checkpoint, { latestResult = 
         : {}),
       ...(expected.action === 'reconcile-late-sources' ? { code: 0, browser: 0 } : {}),
     },
+    lastCheckpointAt: generatedAt,
+  }
+  return next
+}
+
+function commitRecord(commit, generatedAt, extra = {}) {
+  if (!commit?.commitSha?.trim() || !Array.isArray(commit.paths) || !commit.paths.length) throw new Error('commit record requires commitSha and non-empty paths')
+  return {
+    status: 'committed',
+    commitSha: commit.commitSha,
+    paths: [...new Set(commit.paths)].sort(),
+    committedAt: generatedAt,
+    pushed: false,
+    ...extra,
+  }
+}
+
+export function applyCheckpointCommit(workItem, commit, { generatedAt = new Date().toISOString() } = {}) {
+  const next = structuredClone(workItem)
+  next.autopilot = {
+    ...initialAutopilotState(generatedAt),
+    ...(next.autopilot || {}),
+    checkpointCommit: commitRecord(commit, generatedAt, { nonDelivery: true }),
+    lastCheckpointAt: generatedAt,
+  }
+  return next
+}
+
+export function applyDeliveryCommit(workItem, commit, { generatedAt = new Date().toISOString() } = {}) {
+  const next = structuredClone(workItem)
+  next.autopilot = {
+    ...initialAutopilotState(generatedAt),
+    ...(next.autopilot || {}),
+    delivery: commitRecord(commit, generatedAt),
     lastCheckpointAt: generatedAt,
   }
   return next
@@ -391,7 +431,22 @@ export function selfTest() {
     coveredSurfaceIds: ['S-001'],
   }, { generatedAt: '2026-09-08T00:01:00Z' })
   assert.equal(deriveAutopilotAction({ workItem: implemented }).action, 'capture-cli-evidence')
+  assert.equal(implemented.autopilot.implementation.checkpoint.actionId, implementAction.actionId)
+  assert.equal(implemented.autopilot.delivery.status, 'pending')
+  const checkpointCommitted = applyCheckpointCommit(implemented, { commitSha: 'checkpoint123', paths: ['src/x.ts'] }, { generatedAt: '2026-09-08T00:01:30Z' })
+  assert.equal(checkpointCommitted.autopilot.checkpointCommit.nonDelivery, true)
+  assert.equal(checkpointCommitted.autopilot.delivery.status, 'pending')
+  const committed = applyDeliveryCommit(checkpointCommitted, { commitSha: 'abc123', paths: ['src/x.ts'] }, { generatedAt: '2026-09-08T00:02:00Z' })
+  assert.equal(committed.autopilot.implementation.checkpoint.actionId, implementAction.actionId)
+  assert.equal(committed.autopilot.checkpointCommit.commitSha, 'checkpoint123')
+  assert.deepEqual(committed.autopilot.delivery, { status: 'committed', commitSha: 'abc123', paths: ['src/x.ts'], committedAt: '2026-09-08T00:02:00Z', pushed: false })
   assert.throws(() => applyAutopilotCheckpoint(reviewed, { actionId: 'stale', outcome: 'completed' }), /actionId is stale/)
+  const scopedReviewed = structuredClone(reviewed)
+  scopedReviewed.deliveryScope = { policyPaths: ['src/allowed'] }
+  scopedReviewed.coverageAudit = { ...scopedReviewed.coverageAudit, ...coverageFingerprints(scopedReviewed) }
+  const scopedAction = deriveAutopilotAction({ workItem: scopedReviewed })
+  assert.throws(() => applyAutopilotCheckpoint(scopedReviewed, { actionId: scopedAction.actionId, outcome: 'in-progress', changedPaths: ['src/forbidden.ts'] }), /outside deliveryScope/)
+  assert.equal(applyAutopilotCheckpoint(scopedReviewed, { actionId: scopedAction.actionId, outcome: 'in-progress', changedPaths: ['src/allowed/x.ts'] }).autopilot.implementation.changedPaths[0], 'src/allowed/x.ts')
 
   const waitingForApi = structuredClone(implemented)
   waitingForApi.apiDependency = { mode: 'mock-required', reason: 'approved scenarios while API is pending', contractIds: ['C-1'] }

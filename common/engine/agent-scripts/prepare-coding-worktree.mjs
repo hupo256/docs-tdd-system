@@ -112,7 +112,8 @@ if (resolve(gitRoot) !== repoRoot) {
 
 const parentDir = dirname(repoRoot);
 const worktreeDir = join(parentDir, projectId);
-const branchName = `${config.branchPrefix || 'feature/'}${projectId}`;
+const configuredBranch = frontmatterValue(join(resolveProjectRoot(projectId), 'README.md'), 'branch');
+const branchName = configuredBranch || `${config.branchPrefix || 'feature/'}${projectId}`;
 const mainDocsTdd = docsSystemRoot;
 const linkedDocsTdd = join(worktreeDir, config.docsMountPath);
 const webDir = join(worktreeDir, config.appSubpath || 'apps/web');

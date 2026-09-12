@@ -6,6 +6,7 @@ import assert from 'node:assert/strict'
 import { fileURLToPath } from 'node:url'
 import { resolve } from 'node:path'
 import { coverageFingerprints, verifyVNextCoverage } from './vnext-work-item.mjs'
+import { deliveryPolicyPaths } from './vnext-delivery-scope.mjs'
 import { reviewRequestFingerprint, verifyReviewReceipt } from './vnext-review-receipt.mjs'
 import { isStructuralSourceUnit } from './vnext-source-units.mjs'
 
@@ -38,6 +39,7 @@ function deliveryScopeProblems(workItem) {
   if (!scope.deferred?.owner?.trim() || !scope.deferred?.batch?.trim() || !scope.deferred?.reason?.trim()) {
     problems.push('bounded deliveryScope requires deferred owner, batch, and reason')
   }
+  try { deliveryPolicyPaths(workItem) } catch (error) { problems.push(error.message) }
   return problems
 }
 
@@ -62,15 +64,30 @@ export function buildCoverageReviewRequest({ workItem, sourceUnits }) {
     return disposition?.disposition !== 'not-a-requirement'
   })
   if (unattributed.length) throw new Error(`source units have no requirement attribution: ${unattributed.map((unit) => unit.sourceId).join(', ')}`)
+  const prioritizedSourceUnits = sourceUnits
+    .filter((unit) => anchoredSourceIds.has(unit.sourceId) || !isStructuralSourceUnit(unit))
+    .sort((left, right) => Number(anchoredSourceIds.has(right.sourceId)) - Number(anchoredSourceIds.has(left.sourceId)))
+  const prioritizedIds = new Set(prioritizedSourceUnits.map((unit) => unit.sourceId))
+  const missingAnchors = [...anchoredSourceIds].filter((sourceId) => !prioritizedIds.has(sourceId))
+  if (missingAnchors.length) throw new Error(`review payload lost requirement anchors: ${missingAnchors.join(', ')}`)
+  const sourceInventory = sourceUnits.map((unit) => ({
+    sourceId: unit.sourceId,
+    type: unit.type,
+    structural: isStructuralSourceUnit(unit),
+    anchored: anchoredSourceIds.has(unit.sourceId),
+    disposition: dispositionBySourceId.get(unit.sourceId)?.disposition || (anchoredSourceIds.has(unit.sourceId) ? 'requirement-anchor' : 'unassigned'),
+  }))
   const sourceAssets = sourceUnits.filter((unit) => unit.type === 'image').map((unit) => ({
     sourceId: unit.sourceId,
     assetPath: unit.assetPath,
     assetHash: unit.assetHash,
     assetStatus: unit.assetStatus,
     mediaType: unit.mediaType,
+    reviewDisposition: anchoredSourceIds.has(unit.sourceId) ? 'attached-requirement-anchor' : 'manifest-only',
   }))
   const unreadAssets = sourceAssets.filter((asset) => !asset.assetHash || !['local', 'embedded'].includes(asset.assetStatus))
   if (unreadAssets.length) throw new Error(`image assets are not locally readable: ${unreadAssets.map((asset) => `${asset.sourceId}:${asset.assetStatus}`).join(', ')}`)
+  const reviewAssets = sourceAssets.filter((asset) => asset.reviewDisposition === 'attached-requirement-anchor')
   const fingerprints = coverageFingerprints(workItem)
   const request = {
     schemaVersion: 1,
@@ -78,8 +95,10 @@ export function buildCoverageReviewRequest({ workItem, sourceUnits }) {
     projectId: workItem.projectId,
     checks: ['source-unit-to-requirement', 'collection-completeness', 'affected-surface-candidates', 'evidence-command-adequacy'],
     ...fingerprints,
-    sourceUnits,
+    sourceUnits: prioritizedSourceUnits,
+    sourceInventory,
     sourceAssets,
+    reviewAssets,
     deliveryScope: workItem.deliveryScope || { kind: 'whole-source' },
     candidateRequirements: reviewRequirements(workItem.requirements),
     candidateEvidenceCommands: workItem.evidenceCommands || [],
@@ -137,7 +156,7 @@ export function validateCoverageReviewResponse(workItem, response, { request = n
   const receiptRequired = workItem?.routing?.verificationLevel !== 'V0' || sourceAssets.length > 0
   if (receiptRequired) {
     if (!request) problems.push('current normalized review request is required to validate the receipt')
-    else problems.push(...verifyReviewReceipt(response, { requestFingerprint: reviewRequestFingerprint(request), sourceAssets, keyPath: receiptKeyPath }))
+    else problems.push(...verifyReviewReceipt(response, { requestFingerprint: reviewRequestFingerprint(request), sourceAssets: request.reviewAssets || sourceAssets, keyPath: receiptKeyPath }))
     if (workItem?.requirementsAuthor?.kind === 'model' && !workItem.requirementsAuthor.client?.trim()) problems.push('requirementsAuthor.client is required for independent model review')
     if (workItem?.requirementsAuthor?.kind === 'model' && !workItem.requirementsAuthor.sessionId?.trim()) problems.push('requirementsAuthor.sessionId is required for independent model review')
     if (workItem?.requirementsAuthor?.sessionId && workItem.requirementsAuthor.sessionId === response?.receipt?.sessionId) problems.push('reviewer session must differ from requirements author session')
@@ -195,17 +214,29 @@ export function selfTest() {
     apiDependency: { mode: 'no-request', reason: 'fixture' },
     coverageAudit: {},
   }
-  const request = buildCoverageReviewRequest({
-    workItem,
-    sourceUnits: [
-      { sourceId: 'SRC-HEADING', type: 'text', path: 'prd.md', lineStart: 1, lineEnd: 1, content: '# Requirement', contentHash: 'heading' },
-      { sourceId: 'SRC-1', type: 'text', path: 'prd.md', lineStart: 2, lineEnd: 2, content: 'A', contentHash: 'a' },
-    ],
-  })
+  const sourceUnits = [
+    { sourceId: 'SRC-HEADING', type: 'text', path: 'prd.md', lineStart: 1, lineEnd: 1, content: '# Requirement', contentHash: 'heading' },
+    { sourceId: 'SRC-1', type: 'text', path: 'prd.md', lineStart: 2, lineEnd: 2, content: 'A', contentHash: 'a' },
+  ]
+  const request = buildCoverageReviewRequest({ workItem, sourceUnits })
   assert.equal(request.protocol, REVIEW_PROTOCOL)
   assert.deepEqual(request.candidateRequirements[0].evidencePlan, [{ type: 'copy-literal', runtimeRequired: false }])
   assert.deepEqual(request.candidateEvidenceCommands, [])
   assert.deepEqual(request.deliveryScope, { kind: 'whole-source' })
+  assert.equal(request.sourceUnits[0].sourceId, 'SRC-1')
+  assert.equal(request.sourceUnits.some((unit) => unit.sourceId === 'SRC-HEADING'), false)
+  assert.equal(request.sourceInventory.some((unit) => unit.sourceId === 'SRC-HEADING' && unit.structural), true)
+  const imageUnits = [
+    ...sourceUnits,
+    { sourceId: 'IMG-ANCHORED', type: 'image', path: 'prd.md', lineStart: 3, lineEnd: 3, content: 'target state', contentHash: 'image-a', assetPath: 'a.png', assetHash: 'a'.repeat(64), assetStatus: 'local', mediaType: 'image/png' },
+    { sourceId: 'IMG-REFERENCE', type: 'image', path: 'prd.md', lineStart: 4, lineEnd: 4, content: 'current state', contentHash: 'image-b', assetPath: 'b.png', assetHash: 'b'.repeat(64), assetStatus: 'local', mediaType: 'image/png' },
+  ]
+  const imageWorkItem = structuredClone(workItem)
+  imageWorkItem.requirements[0].sourceAnchors.push({ sourceId: 'IMG-ANCHORED' })
+  imageWorkItem.sourceUnitDispositions = [{ sourceId: 'IMG-REFERENCE', disposition: 'not-a-requirement', reason: 'current-state reference' }]
+  const imageRequest = buildCoverageReviewRequest({ workItem: imageWorkItem, sourceUnits: imageUnits })
+  assert.deepEqual(imageRequest.reviewAssets.map((asset) => asset.sourceId), ['IMG-ANCHORED'])
+  assert.equal(imageRequest.sourceAssets.find((asset) => asset.sourceId === 'IMG-REFERENCE').reviewDisposition, 'manifest-only')
 
   const response = {
     schemaVersion: 1,
@@ -223,7 +254,8 @@ export function selfTest() {
   assert.equal(reviewed.coverageAudit.verdict, 'pass')
   assert.deepEqual(reviewed.coverageAudit.findings, [])
   assert.deepEqual(reviewed.coverageAudit.unresolved, [])
-  assert.equal(verifyVNextCoverage({ workItem: reviewed }).checks.find((item) => item.code === 'REQUIREMENT_COVERAGE').ok, true)
+  const requirementCheck = verifyVNextCoverage({ workItem: reviewed }).checks.find((item) => item.code === 'REQUIREMENT_COVERAGE')
+  assert.equal(requirementCheck.ok, true, requirementCheck.problems.join('; '))
   assert.throws(() => buildCoverageReviewRequest({ workItem, sourceUnits: [{ sourceId: 'OTHER' }] }), /anchors are absent/)
   assert.throws(() => applyCoverageReview(workItem, { ...response, sourceFingerprint: 'stale' }), /source fingerprint is stale/)
   const { findings: omittedFindings, ...withoutFindings } = response

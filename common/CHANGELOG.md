@@ -7,6 +7,14 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-09-12（v3.3 Autopilot Implementation Loop）
+
+- **Feature / Bugfix 双入口**：`kickoff --kind bugfix` 把缺陷报告绑定为 incident source，使用 `fix/<PROJECT-ID>` 分支；两类 intake 共用风险路由、独立审查和正式验证，不为修 bug 开旁路。
+- **实现期快速反馈**：新增 `docs-tdd dev-check`，执行已审查的非浏览器证据命令，报告 changed path 到 requirement/surface 的映射，并用 baseline-aware typecheck 区分存量诊断与当前改动回归；不污染正式 `latest-result.json`。
+- **写入边界与两类提交**：`deliveryScope.policyPaths` 在 checkpoint、dev-check、evidence、pre-commit/CI guard 全链 fail-closed；checkpoint commit 必须绑定 passing dev-check 且标记 non-delivery，delivery commit 仍只接受 authoritative PASS，均不自动 push。
+- **审查降噪与有界失败**：审查请求优先语义单元，结构节点和非规格图片保留可审计 inventory 但不挤占附件；timeout 随 payload 调整，传输失败单独记账并升级人工，不消耗语义审查轮次。
+- **兼容边界不变**：产品版本升至 v3.3，项目协议继续使用 `workflowVersion: 2`；存量 work-item 无需迁移。
+
 ## 2026-09-12（v3.2 Intake / Review Reliability）
 
 - **确定性检查前移**：新增 `docs-tdd extract` 脚手架与 `extractionAudit`；重复需求 ID、漏锚语义 unit/表格行、集合计数和 evidence command 完整性在启动模型 Reviewer 前 fail-closed。

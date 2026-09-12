@@ -10,9 +10,12 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { changedCodePaths, codeFingerprint, matchesEffectiveCodeState } from './lib/fingerprint.mjs'
+import { deliveryScopePathProblems } from './lib/vnext-delivery-scope.mjs'
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 import { verifyExitResultIntegrity } from './lib/vnext-exit.mjs'
 import { projectIdForWorktree, projectIdFromBranch, workflowVersionForProject } from './lib/workflow-version.mjs'
+import { coverageFingerprints } from './lib/vnext-work-item.mjs'
+import { checkpointCommitProblems } from './vnext-dev-check.mjs'
 
 function option(name) {
   const index = process.argv.indexOf(name)
@@ -52,6 +55,7 @@ export function deliveryGuardProblems({
   if (recordedCode?.scopeMode !== 'path-set-v1' || !recordedCode.scopePaths?.length) problems.push('latest result must freeze a non-empty path-set-v1 scope')
   if (!matchesCode(currentCodeState, recordedCode)) problems.push('current code content differs from the verified path set')
   if (!samePaths(changedPaths, recordedCode?.scopePaths)) problems.push('changed paths differ from the verified path set')
+  problems.push(...deliveryScopePathProblems(workItem, changedPaths))
   return [...new Set(problems)]
 }
 
@@ -102,6 +106,18 @@ function selfTest() {
   assert.match(deliveryGuardProblems({ projectId: 'PR-00001', workItem, latestResult: { ...latestResult, status: 'failed', ok: false }, currentCodeState: code, changedPaths: scopePaths, dependencies }).join(' '), /enforced PASS/)
   assert.match(deliveryGuardProblems({ projectId: 'PR-00001', workItem, latestResult, currentCodeState: { ...code, contentHash: 'b'.repeat(64) }, changedPaths: scopePaths, dependencies }).join(' '), /code content/)
   assert.match(deliveryGuardProblems({ projectId: 'PR-00001', workItem, latestResult, currentCodeState: code, changedPaths: scopePaths, baseAvailable: false, dependencies }).join(' '), /base ref/)
+  const reviewedWorkItem = {
+    ...workItem,
+    requirements: [{ requirementId: 'R-001', status: 'doing' }],
+    routing: { verificationLevel: 'V1', riskSignals: [] },
+    coverageAudit: { verdict: 'pass', unresolved: [] },
+    autopilot: { lastDevCheck: { status: 'passed', ok: true, codeState: code, pendingCommitPaths: scopePaths } },
+  }
+  Object.assign(reviewedWorkItem.coverageAudit, coverageFingerprints(reviewedWorkItem))
+  assert.deepEqual(checkpointCommitProblems({ projectId: 'PR-00001', workItem: reviewedWorkItem, currentCodeState: code, changedPaths: scopePaths, dependencies }), [])
+  assert.match(checkpointCommitProblems({ projectId: 'PR-00001', workItem: reviewedWorkItem, currentCodeState: code, changedPaths: ['src/other.ts'], dependencies }).join(' '), /staged paths/)
+  const pathScopedWorkItem = { ...workItem, deliveryScope: { policyPaths: ['src/allowed'] } }
+  assert.match(deliveryGuardProblems({ projectId: 'PR-00001', workItem: pathScopedWorkItem, latestResult, currentCodeState: code, changedPaths: scopePaths, dependencies }).join(' '), /outside deliveryScope/)
   assert.throws(() => deliveryChangedPaths('.', 'HEAD', 'unknown'), /unknown changed-path source/)
 
   const repo = mkdtempSync(join(tmpdir(), 'vnext-delivery-guard-'))
@@ -144,24 +160,22 @@ function main() {
   const latestResult = readJson(join(projectDir, 'latest-result.json'))
   const baseRef = option('--base') || config.baseRef || 'origin/online'
   const changedSource = option('--changed-source') || 'base'
+  const commitMode = option('--mode') || process.env.DOCS_TDD_COMMIT_MODE || 'delivery'
+  if (!['checkpoint', 'delivery'].includes(commitMode)) throw new Error(`unknown commit mode: ${commitMode}`)
   const baseAvailable = git(['rev-parse', '--verify', `${baseRef}^{commit}`], worktree).status === 0
   const scopePaths = latestResult?.codeFingerprint?.scopeMode === 'path-set-v1' ? latestResult.codeFingerprint.scopePaths : []
-  const currentCodeState = codeFingerprint(worktree, baseRef, { scopePaths })
-  const problems = deliveryGuardProblems({
-    projectId,
-    workItem,
-    latestResult,
-    currentCodeState,
-    changedPaths: deliveryChangedPaths(worktree, baseRef, changedSource),
-    baseAvailable,
-  })
-  const result = { ok: problems.length === 0, applies: true, projectId, workflowVersion, baseRef, changedSource, problems }
+  const currentCodeState = codeFingerprint(worktree, baseRef, commitMode === 'delivery' ? { scopePaths } : {})
+  const changedPaths = deliveryChangedPaths(worktree, baseRef, changedSource)
+  const problems = commitMode === 'checkpoint'
+    ? checkpointCommitProblems({ projectId, workItem, currentCodeState, changedPaths, baseAvailable })
+    : deliveryGuardProblems({ projectId, workItem, latestResult, currentCodeState, changedPaths, baseAvailable })
+  const result = { ok: problems.length === 0, applies: true, projectId, workflowVersion, commitMode, baseRef, changedSource, problems }
   console.log(json ? JSON.stringify(result) : result.ok
-    ? `vnext delivery guard: PASS ${projectId}`
-    : `vnext delivery guard: BLOCK ${projectId}\n${problems.map((problem) => `  - ${problem}`).join('\n')}`)
+    ? `vnext ${commitMode} guard: PASS ${projectId}`
+    : `vnext ${commitMode} guard: BLOCK ${projectId}\n${problems.map((problem) => `  - ${problem}`).join('\n')}`)
   if (!result.ok) process.exitCode = 1
 }
 
 if (process.argv.includes('--self-test')) selfTest()
-else if (process.argv.includes('--help')) console.log('usage: vnext-delivery-guard.mjs [--project PR-xxxxx] [--worktree <path>] [--base <ref>] [--changed-source base|staged] [--json] [--self-test]')
+else if (process.argv.includes('--help')) console.log('usage: vnext-delivery-guard.mjs [--project PR-xxxxx] [--worktree <path>] [--base <ref>] [--changed-source base|staged] [--mode checkpoint|delivery] [--json] [--self-test]')
 else if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main()

@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { unlinkSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { matchesEffectiveCodeState } from './fingerprint.mjs'
-import { stableFingerprint } from './vnext-work-item.mjs'
+import { stableFingerprint, verificationWorkItemFingerprint } from './vnext-work-item.mjs'
 import { evidenceBundleFingerprint, signEvidenceBundle, verifyEvidenceAttestation, verifyEvidenceReceipt } from './vnext-evidence-receipt.mjs'
 
 export const EXIT_EVIDENCE_REQUIREMENTS = Object.freeze({
@@ -180,7 +180,7 @@ export function buildVNextExitResult({ workItem, preflightChecks = [], currentCo
     level,
     status: blockedBy.length ? 'blocked' : ok ? 'passed' : 'failed',
     ok,
-    workItemFingerprint: stableFingerprint(workItem),
+    workItemFingerprint: verificationWorkItemFingerprint(workItem),
     codeFingerprint: currentCodeState,
     checks,
     summary: summarize(checks),
@@ -222,7 +222,7 @@ export function verifyExitResultIntegrity(result, workItem = null) {
     if (result.status === 'failed' && !result.failureDomains.length) problems.push('failed result requires at least one failureDomain')
   }
   if (result?.resultFingerprint !== stableFingerprint(resultBody(result))) problems.push('result fingerprint does not match payload')
-  if (workItem && result?.workItemFingerprint !== stableFingerprint(workItem)) problems.push('result does not match work item')
+  if (workItem && result?.workItemFingerprint !== verificationWorkItemFingerprint(workItem)) problems.push('result does not match work item')
   return { ok: problems.length === 0, problems }
 }
 

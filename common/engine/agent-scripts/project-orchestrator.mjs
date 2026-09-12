@@ -12,9 +12,10 @@ import { decideNext } from './lib/project-decision.mjs'
 import { changedCodePaths, codeFingerprint, matchesEffectiveCodeState } from './lib/fingerprint.mjs'
 import { sourceTypeFromPrd } from './lib/project-scaffold.mjs'
 import { normalizeSourceDocuments, readLocalSourceAsset } from './lib/vnext-source-units.mjs'
+import { bindVNextIntake, VNEXT_INTAKE_KINDS, vNextBranchName } from './lib/vnext-intake.mjs'
 import { verifyExitResultIntegrity } from './lib/vnext-exit.mjs'
 import { initializeVNextArtifacts, persistVNextWorkItem } from './lib/vnext-persistence.mjs'
-import { applyAutopilotCheckpoint, deriveAutopilotAction, initialAutopilotState } from './lib/vnext-autopilot.mjs'
+import { applyAutopilotCheckpoint, applyDeliveryCommit, deriveAutopilotAction, initialAutopilotState } from './lib/vnext-autopilot.mjs'
 import { applySourceUpdate, initialSourceReadiness } from './lib/vnext-source-readiness.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
@@ -39,8 +40,8 @@ function readJson(file) {
   try { return JSON.parse(readFileSync(file, 'utf8')) } catch { return null }
 }
 
-function runGit(worktree, gitArgs, spawn = spawnSync) {
-  const result = spawn('git', gitArgs, { cwd: worktree, encoding: 'utf8', stdio: 'pipe' })
+function runGit(worktree, gitArgs, spawn = spawnSync, env = process.env) {
+  const result = spawn('git', gitArgs, { cwd: worktree, encoding: 'utf8', stdio: 'pipe', env })
   if (result.status !== 0) throw new Error((result.stderr || result.stdout || `git ${gitArgs.join(' ')} failed`).trim())
   return result.stdout || ''
 }
@@ -123,26 +124,32 @@ function syncAndInit(id, { legacy = true } = {}) {
 // 不再物化 v1 全套 product/engineering 文档。PRD 同步成功后用 normalizeSourceDocuments 生成
 // 带真实 source 锚点的 work-item stub(requirements 为空,verify 会诚实地 FAIL 到抽取完成为止)。
 // 显式 --legacy 才走 v1 全套(start-new-project.mjs)。
-function kickoffVNext(projectDir, prd, title) {
+function kickoffVNext(projectDir, prd, title, intakeKind) {
   mkdirSync(join(projectDir, 'inbox/lark-sync'), { recursive: true })
   mkdirSync(join(projectDir, 'agent'), { recursive: true })
-  const branchName = `${config.branchPrefix || 'feature/'}${projectId}`
-  writeFileSync(join(projectDir, 'README.md'), `---\nprojectId: ${projectId}\nstatus: active\nstage: G1\nbranch: ${branchName}\nworktree: ""\nport: ""\nvisualFidelity: standard\nprdSource: ${prd}\nfigmaNode: ""\nlarkEnabled: false\nworkflowVersion: 2\n---\n\n# ${projectId} ${title}\n\n> v2 Autopilot 项目：PRD 是唯一必需的开工输入；Figma/API 可后续增量接入。工作事实只保存在 work-item.json、latest-result.json、runs.jsonl。\n\n## 继续开发\n\n运行 \`docs-tdd run ${projectId}\`。CLI 会根据当前事实返回唯一下一动作；正常路径无需手工选择 Gate 或拼装验证输入。\n`)
+  const branchName = vNextBranchName(projectId, intakeKind, config.branchPrefix || 'feature/')
+  const sourceRole = intakeKind === 'bugfix' ? 'incident' : 'prd'
+  const sourceLabel = intakeKind === 'bugfix' ? '缺陷报告' : '需求 PRD'
+  writeFileSync(join(projectDir, 'README.md'), `---\nprojectId: ${projectId}\nstatus: active\nstage: G1\nbranch: ${branchName}\nworktree: ""\nport: ""\nvisualFidelity: standard\nprdSource: ${prd}\nfigmaNode: ""\nlarkEnabled: false\nworkflowVersion: 2\nworkItemKind: ${intakeKind}\n---\n\n# ${projectId} ${title}\n\n> v2 Autopilot ${intakeKind === 'bugfix' ? 'Bugfix' : 'Feature'} 项目：${sourceLabel}是唯一必需的开工输入；Figma/API 可后续增量接入。工作事实只保存在 work-item.json、latest-result.json、runs.jsonl。\n\n## 继续开发\n\n运行 \`docs-tdd run ${projectId}\`。CLI 会根据当前事实返回唯一下一动作；正常路径无需手工选择 Gate 或拼装验证输入。\n`)
   const larkOutputDir = String(config.larkOutputDir || `apps/web/docs_tdd/prds/\${projectId}/inbox/lark-sync`).replaceAll('${projectId}', projectId)
   writeFileSync(join(projectDir, 'agent/lark-sources.json'), JSON.stringify({
     projectId,
     outputDir: larkOutputDir,
-    sources: [{ type: sourceTypeFromPrd(prd), operation: 'read', name: '需求 PRD', url: prd, target: 'prd-latest.md', localizedTarget: 'prd-latest.extracted.md' }],
+    sources: [{
+      type: sourceTypeFromPrd(prd), operation: 'read', name: sourceLabel, url: prd,
+      target: `${sourceRole}-latest.md`, localizedTarget: `${sourceRole}-latest.extracted.md`,
+    }],
   }, null, 2))
 }
 
 // PRD 同步成功后,用规范化 source snapshot 直接落 work-item stub(requirements 为空 →
 // 首次 verify 如实 FAIL,逼出「抽取 + 独立冷读审查」;riskSignals 置 unclassified → RISK_ROUTE
 // 强制显式分类,不允许静默当 V0)。
-function vnextInitWorkItem(projectDir) {
+function vnextInitWorkItem(projectDir, intakeKind) {
   const manifest = readJson(join(projectDir, 'agent/prd-source-manifest.json'))
-  const rawSyncedMd = join(projectDir, 'inbox/lark-sync/prd-latest.md')
-  const localizedSyncedMd = join(projectDir, 'inbox/lark-sync/prd-latest.extracted.md')
+  const sourceConfig = readJson(join(projectDir, 'agent/lark-sources.json'))?.sources?.[0]
+  const rawSyncedMd = join(projectDir, 'inbox/lark-sync', sourceConfig?.target || 'prd-latest.md')
+  const localizedSyncedMd = join(projectDir, 'inbox/lark-sync', sourceConfig?.localizedTarget || 'prd-latest.extracted.md')
   const syncedMd = existsSync(localizedSyncedMd) ? localizedSyncedMd : rawSyncedMd
   if (!existsSync(syncedMd)) return false
   const revision = manifest?.remoteSources?.[0]?.revisionId || '1'
@@ -155,6 +162,7 @@ function vnextInitWorkItem(projectDir) {
     schemaVersion: 1,
     workflowVersion: 2,
     projectId,
+    intake: bindVNextIntake(intakeKind, sourceSnapshot),
     sourceSnapshot,
     requirements: [],
     coverageAudit: {
@@ -176,26 +184,33 @@ function vnextInitWorkItem(projectDir) {
 function kickoff() {
   const prd = option('--prd')
   const title = option('--title', projectId)
+  const requestedKind = option('--kind')
+  let intakeKind = requestedKind || 'feature'
   let legacy = args.includes('--legacy')
   if (!prd) throw new Error('kickoff requires --prd <Lark URL or local Markdown>')
+  if (!VNEXT_INTAKE_KINDS.includes(intakeKind)) throw new Error(`kickoff --kind must be one of: ${VNEXT_INTAKE_KINDS.join(', ')}`)
+  if (legacy && requestedKind) throw new Error('kickoff --kind is only supported by workflowVersion 2')
   const projectDir = resolveProjectRoot(projectId)
   if (existsSync(projectDir)) {
     const existingVersion = projectWorkflowVersion(projectId)
     if (existingVersion === 2 && legacy) throw new Error(`${projectId} is already workflowVersion 2; refusing to downgrade it with --legacy`)
     legacy = existingVersion === 1
+    const existingKind = readJson(join(projectDir, 'work-item.json'))?.intake?.kind
+    if (requestedKind && existingKind && requestedKind !== existingKind) throw new Error(`${projectId} is already a ${existingKind} intake; refusing --kind ${requestedKind}`)
+    intakeKind = existingKind || intakeKind
   }
   if (!existsSync(projectDir)) {
     if (legacy) {
       const scaffold = executeScript('start-new-project.mjs', [projectId, '--prd', prd, '--title', title])
       if (scaffold.status !== 0) throw new Error((scaffold.stderr || scaffold.stdout).trim())
     } else {
-      kickoffVNext(projectDir, prd, title)
+      kickoffVNext(projectDir, prd, title, intakeKind)
     }
   }
 
   const result = syncAndInit(projectId, { legacy })
   if (!legacy) {
-    const initialized = result.ok && vnextInitWorkItem(projectDir)
+    const initialized = result.ok && vnextInitWorkItem(projectDir, intakeKind)
     if (!initialized) {
       print({
         projectId,
@@ -251,7 +266,7 @@ export function vnextVerificationNextAction({ authoritativePass, shadowOnly, int
   return 'fix_failed_checks_and_reverify'
 }
 
-function inspectVNext(id) {
+export function inspectVNext(id) {
   const projectDir = resolveProjectRoot(id)
   const workItem = readJson(join(projectDir, 'work-item.json'))
   const latest = readJson(join(projectDir, 'latest-result.json'))
@@ -307,6 +322,11 @@ function inspectVNext(id) {
     command: actionPacket.command,
     blockers: [...failedChecks.flatMap((check) => check.problems || [check.code]), ...integrity.problems, ...worktreeInspection.problems, ...(codeStateProblem ? [codeStateProblem] : [])],
     actionPacket,
+    lifecycle: {
+      implementationCheckpoint: workItem.autopilot?.implementation?.checkpoint || null,
+      checkpointCommit: workItem.autopilot?.checkpointCommit || null,
+      deliveryCommit: workItem.autopilot?.delivery || { status: 'pending' },
+    },
     ...(latest ? {
       latestResult: {
         mode: latest.mode,
@@ -498,23 +518,30 @@ function runAutonomousValidation(id) {
   }
 }
 
-export function commitScopedPaths(worktree, id, paths, spawn = spawnSync) {
-  if (!paths?.length) return { ok: false, step: 'commit', error: 'automatic commit requires path-set-v1 evidence scope' }
+export function commitScopedPaths(worktree, id, paths, spawn = spawnSync, mode = 'delivery') {
+  if (!paths?.length) return { ok: false, step: 'commit', error: 'automatic commit requires a non-empty path scope' }
+  if (!['checkpoint', 'delivery'].includes(mode)) return { ok: false, step: 'commit', error: `unknown commit mode: ${mode}` }
   try {
-    runGit(worktree, ['add', '--', ...paths], spawn)
-    runGit(worktree, ['commit', '--only', '-m', `feat: implement ${id}`, '--', ...paths], spawn)
-    const commitSha = runGit(worktree, ['rev-parse', 'HEAD'], spawn).trim()
-    return { ok: true, step: 'commit', commitSha, paths, pushed: false }
+    const env = { ...process.env, DOCS_TDD_COMMIT_MODE: mode }
+    runGit(worktree, ['add', '--', ...paths], spawn, env)
+    const message = mode === 'checkpoint' ? `chore: checkpoint ${id} [non-delivery]` : `feat: implement ${id}`
+    runGit(worktree, ['commit', '--only', '-m', message, '--', ...paths], spawn, env)
+    const commitSha = runGit(worktree, ['rev-parse', 'HEAD'], spawn, env).trim()
+    return { ok: true, step: 'commit', mode, commitSha, paths, pushed: false }
   } catch (error) {
     return { ok: false, step: 'commit', error: error.message, paths, pushed: false }
   }
 }
 
-function commitEvidenceScope(id) {
+export function commitEvidenceScope(id) {
   const projectDir = resolveProjectRoot(id)
   const latest = readJson(join(projectDir, 'latest-result.json'))
   const paths = latest?.codeFingerprint?.scopeMode === 'path-set-v1' ? latest.codeFingerprint.scopePaths : []
-  return commitScopedPaths(requireProjectWorktree(id), id, paths)
+  const commit = commitScopedPaths(requireProjectWorktree(id), id, paths, spawnSync, 'delivery')
+  if (!commit.ok) return commit
+  const workItem = readJson(join(projectDir, 'work-item.json'))
+  const persisted = persistVNextWorkItem(projectDir, applyDeliveryCommit(workItem, commit))
+  return { ...commit, persisted }
 }
 
 function autopilotRun() {
@@ -570,27 +597,30 @@ function selfTest() {
     || scopedDeliveryCommitted('/tmp/worktree', { scopeMode: 'path-set-v1', scopePaths: ['src/a.ts'] }, () => ({ status: 0, stdout: ' M src/a.ts', stderr: '' }))
     || !commit.ok
     || commit.commitSha !== 'abc123'
+    || commit.mode !== 'delivery'
     || gitCalls.some((gitArgs) => gitArgs[0] === 'push')
     || !gitCalls.some((gitArgs) => gitArgs[0] === 'commit' && gitArgs.includes('--only'))
   ) process.exit(1)
   console.log('project-orchestrator self-test passed (structured inferState + decideNext wiring)')
 }
 
-if (args.includes('--self-test')) selfTest()
-else if (!new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(projectId || '')) {
-  console.error('usage: project-orchestrator.mjs <run|kickoff|status|resume|next|source-update|checkpoint> PR-01234 [--prd <source>] [--title <name>] [--input <json>]')
-  process.exit(1)
-} else {
-  try {
-    if (command === 'run') autopilotRun()
-    else if (command === 'kickoff') kickoff()
-    else if (command === 'status' || command === 'next') status()
-    else if (command === 'resume') resume()
-    else if (command === 'source-update') sourceUpdate()
-    else if (command === 'checkpoint') checkpoint()
-    else throw new Error(`unknown orchestrator command: ${command}`)
-  } catch (error) {
-    console.error(error.message)
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  if (args.includes('--self-test')) selfTest()
+  else if (!new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(projectId || '')) {
+    console.error('usage: project-orchestrator.mjs <run|kickoff|status|resume|next|source-update|checkpoint> PR-01234 [--prd <source>] [--title <name>] [--input <json>]')
     process.exit(1)
+  } else {
+    try {
+      if (command === 'run') autopilotRun()
+      else if (command === 'kickoff') kickoff()
+      else if (command === 'status' || command === 'next') status()
+      else if (command === 'resume') resume()
+      else if (command === 'source-update') sourceUpdate()
+      else if (command === 'checkpoint') checkpoint()
+      else throw new Error(`unknown orchestrator command: ${command}`)
+    } catch (error) {
+      console.error(error.message)
+      process.exit(1)
+    }
   }
 }

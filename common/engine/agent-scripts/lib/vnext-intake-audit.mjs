@@ -7,6 +7,7 @@ import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { evidencePlanProblems } from '../vnext-evidence.mjs'
 import { isStructuralSourceUnit } from './vnext-source-units.mjs'
+import { vNextIntakeProblems } from './vnext-intake.mjs'
 import { coverageFingerprints, stableFingerprint } from './vnext-work-item.mjs'
 
 const EVIDENCE_TYPES = new Set(['copy-literal', 'component-dom', 'pure-logic', 'payload-contract', 'api-contract', 'browser-interaction', 'visual'])
@@ -64,6 +65,7 @@ export function runIntakeAudit(workItem, sourceUnits, { auditedAt = new Date().t
   if (!Array.isArray(sourceUnits) || !sourceUnits.length) throw new Error('intake audit requires normalized source units')
   const checks = []
   const add = (code, problems) => checks.push({ code, ok: problems.length === 0, problems })
+  add('INTAKE_SOURCE_BINDING', vNextIntakeProblems(workItem))
   add('EXTRACTION_STRUCTURE', requirementProblems(workItem, sourceUnits))
   add('EVIDENCE_COMMANDS', evidencePlanProblems({ schemaVersion: 1, projectId: workItem.projectId, commands: workItem.evidenceCommands || [] }, workItem))
   const fingerprints = coverageFingerprints(workItem)
@@ -109,13 +111,19 @@ export function selfTest() {
   }
   const pass = runIntakeAudit(workItem, units, { auditedAt: '2026-09-12T00:00:00Z' })
   assert.equal(pass.status, 'pass', JSON.stringify(pass))
+  const staleIntake = {
+    ...workItem,
+    intake: { kind: 'bugfix', sourceRole: 'incident', sourceFingerprint: 'stale', sourcePaths: ['prd.md'] },
+  }
+  const problemsFor = (item, code) => runIntakeAudit(item, units).checks.find((check) => check.code === code)?.problems.join(' ') || ''
+  assert.match(problemsFor(staleIntake, 'INTAKE_SOURCE_BINDING'), /stale/)
   assert.deepEqual(intakeAuditProblems({ ...workItem, extractionAudit: pass }, units), [])
   const duplicate = structuredClone(workItem)
   duplicate.requirements.push(structuredClone(duplicate.requirements[0]))
-  assert.match(runIntakeAudit(duplicate, units).checks[0].problems.join(' '), /duplicate requirement IDs/)
+  assert.match(problemsFor(duplicate, 'EXTRACTION_STRUCTURE'), /duplicate requirement IDs/)
   const omittedRow = structuredClone(workItem)
   omittedRow.sourceUnitDispositions = []
-  assert.match(runIntakeAudit(omittedRow, units).checks[0].problems.join(' '), /SRC-2/)
+  assert.match(problemsFor(omittedRow, 'EXTRACTION_STRUCTURE'), /SRC-2/)
   console.log('vnext-intake-audit self-test passed')
 }
 

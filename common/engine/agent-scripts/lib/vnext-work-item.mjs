@@ -18,14 +18,27 @@ export function stableFingerprint(value) {
   return createHash('sha256').update(JSON.stringify(canonicalize(value))).digest('hex')
 }
 
+// Commit bookkeeping is recorded after verification and must not invalidate the verified
+// requirement/evidence contract. All implementation and review facts remain fingerprinted.
+export function verificationWorkItemFingerprint(workItem) {
+  const contract = structuredClone(workItem)
+  if (contract?.autopilot) {
+    delete contract.autopilot.checkpointCommit
+    delete contract.autopilot.delivery
+    delete contract.autopilot.lastCheckpointAt
+  }
+  return stableFingerprint(contract)
+}
+
 export function coverageFingerprints(workItem) {
   const requirements = workItem?.requirements || []
   // A bounded delivery batch is part of the reviewed requirement boundary. Keep the legacy
   // fingerprint unchanged when no boundary is declared, but invalidate review/scope approval
   // whenever a declared batch or its delegated remainder changes.
-  const reviewedRequirements = workItem?.deliveryScope || workItem?.sourceUnitDispositions || workItem?.evidenceCommands
+  const reviewedRequirements = workItem?.intake || workItem?.deliveryScope || workItem?.sourceUnitDispositions || workItem?.evidenceCommands
     ? {
         requirements,
+        ...(workItem?.intake ? { intake: workItem.intake } : {}),
         ...(workItem?.deliveryScope ? { deliveryScope: workItem.deliveryScope } : {}),
         ...(workItem?.sourceUnitDispositions ? { sourceUnitDispositions: workItem.sourceUnitDispositions } : {}),
         ...(workItem?.evidenceCommands ? { evidenceCommands: workItem.evidenceCommands } : {}),
@@ -242,6 +255,10 @@ export function selfTest() {
   const commandBound = { ...base, evidenceCommands: [{ evidenceId: 'E-1', kind: 'directed-tests', argv: ['pnpm', 'test'] }] }
   const commandChanged = { ...base, evidenceCommands: [{ evidenceId: 'E-1', kind: 'directed-tests', argv: ['pnpm', 'test', 'other'] }] }
   assert.notEqual(coverageFingerprints(commandBound).requirementsFingerprint, coverageFingerprints(commandChanged).requirementsFingerprint)
+  assert.notEqual(
+    coverageFingerprints({ ...base, intake: { kind: 'feature', sourceRole: 'prd', sourceFingerprint: 'a', sourcePaths: ['prd.md'] } }).requirementsFingerprint,
+    coverageFingerprints({ ...base, intake: { kind: 'bugfix', sourceRole: 'incident', sourceFingerprint: 'a', sourcePaths: ['prd.md'] } }).requirementsFingerprint,
+  )
   const sealed = sealCoverageAuditForFixture(base)
   const valid = verifyVNextCoverage({
     workItem: sealed,
@@ -280,6 +297,10 @@ export function selfTest() {
   const extraSemantic = { sourceId: 'SRC-EXTRA', type: 'text', content: 'Also change the mobile entry.' }
   assert.equal(verifyVNextCoverage({ workItem: v0Sealed, sourceUnits: [structuralUnit, semanticUnit, extraSemantic] }).checks.find((item) => item.code === 'REQUIREMENT_COVERAGE').ok, false)
   assert.match(v0MicroProblems(v0Sealed, [{ sourceId: 'SRC-TABLE', type: 'table', content: '| A |' }]).join(' '), /cannot contain table/)
+  const verifiedContract = { ...sealed, autopilot: { implementation: { status: 'completed' }, delivery: { status: 'pending' } } }
+  const afterCommit = { ...verifiedContract, autopilot: { ...verifiedContract.autopilot, delivery: { status: 'committed', commitSha: 'abc' }, lastCheckpointAt: '2026-09-08T00:00:00Z' } }
+  assert.equal(verificationWorkItemFingerprint(verifiedContract), verificationWorkItemFingerprint(afterCommit))
+  assert.notEqual(verificationWorkItemFingerprint(verifiedContract), verificationWorkItemFingerprint({ ...verifiedContract, requirements: [] }))
   console.log('vnext-work-item self-test passed')
 }
 

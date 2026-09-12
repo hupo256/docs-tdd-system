@@ -5,7 +5,7 @@
 
 ## 1. 启动协议
 
-0. **新需求路由（2026-09-08 起正式生效）**：docs_tdd **v3.2** 的全新项目/独立微变更默认使用第二代协议（`workflowVersion: 2`）。`docs-tdd kickoff` 建立最小三文件工作流；`docs-tdd extract` 生成/应用脚手架并通过确定性 intake audit 后，才执行最多三轮的隔离 `docs-tdd review`，再由 `evidence` 与 `verify` 形成唯一正式出口；只有 enforced PASS 且 `autonomous/cli-attested` 可交付。存量 `workflowVersion: 1` 项目继续走 v1 G0–G8，不静默迁移；只有明确要求 `--legacy` 才新建 v1。切换记录见 [../vnext/cutover-decision-20260908.md](../vnext/cutover-decision-20260908.md)，操作规则见 [../vnext/README.md](../vnext/README.md)。
+0. **新需求路由（2026-09-08 起正式生效）**：docs_tdd **v3.3** 的全新项目/独立微变更默认使用第二代协议（`workflowVersion: 2`）。`docs-tdd kickoff` 建立最小三文件工作流；`docs-tdd extract` 生成/应用脚手架并通过确定性 intake audit 后，才执行最多三轮的隔离 `docs-tdd review`，再由 `evidence` 与 `verify` 形成唯一正式出口；只有 enforced PASS 且 `autonomous/cli-attested` 可交付。存量 `workflowVersion: 1` 项目继续走 v1 G0–G8，不静默迁移；只有明确要求 `--legacy` 才新建 v1。切换记录见 [../vnext/cutover-decision-20260908.md](../vnext/cutover-decision-20260908.md)，操作规则见 [../vnext/README.md](../vnext/README.md)。
 1. 先读取 README `workflowVersion`。v2 恢复时读 `work-item.json` 与 `latest-result.json`（若存在）；v1 恢复时读 `agent/context-summary.md`。
 2. 执行 `docs-tdd context <PROJECT-ID> <SCENARIO>`：v2 返回最小 work-item context；v1 返回场景规则包并在编码场景签发 rule session。禁止自行全读规则。
 3. v2 编辑后执行 `docs-tdd evidence <PROJECT-ID> --out <evidence.json>`（命令计划取自 work-item），再用 `docs-tdd verify <PROJECT-ID> --evidence <evidence.json> --surfaces <surfaces.json>` 一步组装并写入正式出口（workItem/sourceDocuments 自动从 work-item 组装，只需 agent 提供 `discoveredSurfaces`+`coveredSurfaceIds` 落点报告）；兼容旧路仍可用 `--input <verify-input.json>`。v1 编辑后执行 `changed`，阶段交付执行 `gate`。CLI 会拒绝混用。

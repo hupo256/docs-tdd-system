@@ -88,7 +88,18 @@ export function resolveReviewerExecutable(client, {
   return client
 }
 
-function runReviewer({ client, requestFile, imageFiles, sessionId, sessionDir, model, spawn = spawnSync }) {
+export function reviewerTimeoutMs(request, envValue = process.env.DOCS_TDD_REVIEW_TIMEOUT_MS) {
+  if (envValue) {
+    const explicit = Number(envValue)
+    if (!Number.isFinite(explicit) || explicit < 1000) throw new Error('DOCS_TDD_REVIEW_TIMEOUT_MS must be at least 1000')
+    return explicit
+  }
+  const characters = JSON.stringify(request || {}).length
+  const imageCount = request?.reviewAssets?.length || 0
+  return Math.min(900000, 180000 + Math.ceil(characters / 50000) * 30000 + imageCount * 20000)
+}
+
+function runReviewer({ client, requestFile, imageFiles, sessionId, sessionDir, model, timeoutMs, spawn = spawnSync }) {
   const prompt = reviewPrompt()
   let args
   if (client === 'pi') {
@@ -113,7 +124,7 @@ function runReviewer({ client, requestFile, imageFiles, sessionId, sessionDir, m
   const result = spawn(executable, args, {
     cwd: sessionDir,
     encoding: 'utf8',
-    timeout: Number(process.env.DOCS_TDD_REVIEW_TIMEOUT_MS || 300000),
+    timeout: timeoutMs,
     env: { ...process.env, DOCS_TDD_REVIEW_ISOLATED: '1' },
     stdio: ['ignore', 'pipe', 'pipe'],
   })
@@ -207,10 +218,11 @@ export function runIsolatedCoverageReview({ projectDir, client, model, spawn = s
   try {
     const requestFile = join(temporary, 'review-request.json')
     writeFileSync(requestFile, `${JSON.stringify(request, null, 2)}\n`)
-    const imageFiles = request.sourceAssets.map((asset) => isAbsolute(asset.assetPath) ? asset.assetPath : resolve(docsSystemRoot, asset.assetPath))
+    const reviewAssets = request.reviewAssets || request.sourceAssets
+    const imageFiles = reviewAssets.map((asset) => isAbsolute(asset.assetPath) ? asset.assetPath : resolve(docsSystemRoot, asset.assetPath))
     let response
     try {
-      const modelOutput = runReviewer({ client, requestFile, imageFiles, sessionId, sessionDir: temporary, model, spawn })
+      const modelOutput = runReviewer({ client, requestFile, imageFiles, sessionId, sessionDir: temporary, model, timeoutMs: reviewerTimeoutMs(request), spawn })
       const completedAt = now()
       response = signReviewResponse({
         schemaVersion: 1,
@@ -225,14 +237,14 @@ export function runIsolatedCoverageReview({ projectDir, client, model, spawn = s
         findings: modelOutput.findings,
       }, {
         request, client, sessionId, startedAt, completedAt,
-        reviewedAssets: request.sourceAssets,
+        reviewedAssets: reviewAssets,
         keyPath,
       })
       validateCoverageReviewResponse(workItem, response, { request, receiptKeyPath: keyPath })
     } catch (error) {
       const reviewControl = {
         ...previous, status: 'escalated', reason: 'reviewer-unavailable', sourceFingerprint: request.sourceFingerprint,
-        attempts: Math.min(3, previous.attempts + 1), maxAttempts: 3, escalatedAt: now(), lastError: error.message,
+        attempts: previous.attempts, maxAttempts: 3, transportFailures: (previous.transportFailures || 0) + 1, escalatedAt: now(), lastError: error.message,
       }
       persistVNextWorkItem(projectDir, { ...workItem, reviewControl })
       throw new Error(`review escalation required: ${JSON.stringify(escalationPayload(workItem, 'reviewer-unavailable', reviewControl))}`)
@@ -290,7 +302,10 @@ export function selfTest() {
     const unavailable = JSON.parse(readFileSync(join(projectDir, 'work-item.json'), 'utf8')).reviewControl
     assert.equal(unavailable.status, 'escalated')
     assert.equal(unavailable.reason, 'reviewer-unavailable')
-    assert.equal(unavailable.attempts, 1)
+    assert.equal(unavailable.attempts, 0)
+    assert.equal(unavailable.transportFailures, 1)
+    assert.equal(reviewerTimeoutMs({ sourceUnits: [], reviewAssets: [] }, '420000'), 420000)
+    assert.ok(reviewerTimeoutMs({ sourceUnits: [{ content: 'x'.repeat(100000) }], reviewAssets: [{ sourceId: 'IMG-1' }] }, '') > reviewerTimeoutMs({ sourceUnits: [], reviewAssets: [] }, ''))
 
     const finding = [{ findingId: 'F-1', code: 'missing-requirement', message: 'missing', sourceIds: [normalized.sourceUnits[0].sourceId], disposition: 'open' }]
     const requestBase = { sourceFingerprint: 'source', requirementsFingerprint: 'requirements-1' }

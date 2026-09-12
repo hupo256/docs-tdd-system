@@ -10,6 +10,7 @@ import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from '
 import { dirname, isAbsolute, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { changedCodePaths, codeFingerprint, matchesEffectiveCodeState } from './lib/fingerprint.mjs'
+import { deliveryScopePathProblems } from './lib/vnext-delivery-scope.mjs'
 import { evidencePlanFingerprint, signEvidenceBundle, verifyEvidenceReceipt } from './lib/vnext-evidence-receipt.mjs'
 import { EXIT_EVIDENCE_REQUIREMENTS } from './lib/vnext-exit.mjs'
 
@@ -125,6 +126,9 @@ export function runEvidencePlan({ plan, workItem, worktree, baseRef = 'origin/on
   const now = dependencies.now || (() => new Date().toISOString())
   const before = measure(worktree, baseRef)
   if (!before?.isGitRepo || !before.headSha || !before.contentHash) throw new Error('evidence runner requires a valid Git worktree fingerprint')
+  const policyScopePaths = dependencies.scopePaths || (dependencies.measure ? [] : verificationScopePaths(workItem, worktree, baseRef))
+  const pathProblems = deliveryScopePathProblems(workItem, policyScopePaths)
+  if (pathProblems.length) throw new Error(`evidence scope violates delivery policy:\n- ${pathProblems.join('\n- ')}`)
   const startedAt = now()
   const facts = []
   for (const spec of plan.commands) {
@@ -159,7 +163,7 @@ export function runEvidencePlan({ plan, workItem, worktree, baseRef = 'origin/on
   // The full-tree fingerprints above are a mutation guard around command execution. The persisted
   // identity is narrower: freeze the feature's actual changed paths so an unrelated later edit does
   // not invalidate green evidence, while any byte/mode/deletion change inside this set still does.
-  const scopePaths = dependencies.measure ? [] : verificationScopePaths(workItem, worktree, baseRef)
+  const scopePaths = policyScopePaths
   if (!dependencies.measure && !scopePaths.length) throw new Error('path-scoped evidence requires at least one changed or implementation-reported path')
   const attestedCodeState = dependencies.measure
     ? after

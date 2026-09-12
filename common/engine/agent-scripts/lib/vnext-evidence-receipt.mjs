@@ -9,7 +9,7 @@ import { chmodSync, existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSy
 import { homedir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { stableFingerprint } from './vnext-work-item.mjs'
+import { stableFingerprint, verificationWorkItemFingerprint } from './vnext-work-item.mjs'
 
 export const EVIDENCE_RECEIPT_ISSUER = 'docs-tdd-evidence-v1'
 export const defaultEvidenceKeyPath = () => process.env.DOCS_TDD_EVIDENCE_KEY_FILE || join(homedir(), '.docs-tdd', 'evidence-receipt.key')
@@ -60,7 +60,7 @@ export function signEvidenceBundle(bundle, { workItem, plan, startedAt, complete
   const receipt = {
     issuedBy: EVIDENCE_RECEIPT_ISSUER,
     projectId: workItem.projectId,
-    workItemFingerprint: stableFingerprint(workItem),
+    workItemFingerprint: verificationWorkItemFingerprint(workItem),
     codeContentHash: bundle?.codeFingerprint?.contentHash || '',
     planFingerprint: evidencePlanFingerprint(plan),
     runId: bundle?.runId || '',
@@ -107,7 +107,7 @@ export function verifyEvidenceReceipt(bundle, { workItem, currentCodeState, keyP
   const problems = verifyEvidenceAttestation(bundle?.receipt, {
     expectedBundleFingerprint: evidenceBundleFingerprint(bundle),
     expectedProjectId: workItem?.projectId,
-    expectedWorkItemFingerprint: stableFingerprint(workItem),
+    expectedWorkItemFingerprint: verificationWorkItemFingerprint(workItem),
     expectedCodeContentHash: currentCodeState?.contentHash,
     expectedRunId: bundle?.runId,
     keyPath,

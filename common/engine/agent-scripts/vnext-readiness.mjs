@@ -15,13 +15,15 @@ const engineDir = resolve(scriptDir, '..')
 export function runReadiness() {
   const cases = JSON.parse(readFileSync(join(engineDir, 'schemas/vnext-readiness-cases.json'), 'utf8'))
   assert.equal(cases.schemaVersion, 1)
-  assert.equal(cases.cases.filter((item) => item.required).length, 6)
+  assert.equal(cases.cases.filter((item) => item.required).length, 12)
   assert.equal(new Set(cases.cases.map((item) => item.id)).size, cases.cases.length)
 
   const commands = readFileSync(join(scriptDir, 'docs-tdd.mjs'), 'utf8')
-  for (const command of ['scope-approval', 'scope-approve', 'review-adjudicate', 'review-resume', 'worktree-prepare']) {
+  for (const command of ['scope-approval', 'scope-approve', 'review-adjudicate', 'review-resume', 'worktree-prepare', 'dev-check', 'commit']) {
     assert.match(commands, new RegExp(`['\"]${command}['\"]`), `public CLI is missing ${command}`)
   }
+  const orchestrator = readFileSync(join(scriptDir, 'project-orchestrator.mjs'), 'utf8')
+  assert.match(orchestrator, /option\('--kind'\)/, 'public kickoff is missing --kind intake selection')
   const safeFacts = {
     projectId: 'PR-00001', configuredPath: '/tmp/PR-00001', requestedWorktree: '', worktree: '/tmp/PR-00001',
     exists: true, topMatches: true, branch: 'feature/PR-00001', expectedBranch: 'feature/PR-00001',
@@ -35,8 +37,16 @@ export function runReadiness() {
 
   const suites = [
     'lib/vnext-source-units.mjs',
+    'lib/vnext-intake.mjs',
+    'lib/vnext-delivery-scope.mjs',
     'lib/vnext-risk-route.mjs',
     'lib/vnext-autopilot.mjs',
+    'lib/vnext-coverage-review.mjs',
+    'lib/vnext-work-item.mjs',
+    'vnext-dev-check.mjs',
+    'vnext-commit.mjs',
+    'vnext-delivery-guard.mjs',
+    'vnext-review.mjs',
     'vnext-scope-approval.mjs',
     'vnext-review-adjudicate.mjs',
   ]

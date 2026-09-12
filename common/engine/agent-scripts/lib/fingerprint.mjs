@@ -44,6 +44,13 @@ export function changedCodePaths(cwd, baseRef = 'origin/online') {
   return normalizedScopePaths([...changed, ...untracked])
 }
 
+export function pendingCodePaths(cwd) {
+  const staged = gitValue(['diff', '--cached', '--name-only', '-z', '--'], cwd).split('\0').filter(Boolean)
+  const unstaged = gitValue(['diff', '--name-only', '-z', '--'], cwd).split('\0').filter(Boolean)
+  const untracked = gitValue(['ls-files', '--others', '--exclude-standard', '-z'], cwd).split('\0').filter(Boolean)
+  return normalizedScopePaths([...staged, ...unstaged, ...untracked])
+}
+
 function untrackedContentHash(cwd) {
   const files = gitValue(['ls-files', '--others', '--exclude-standard'], cwd).split('\n').filter(Boolean).sort()
   const hash = createHash('sha256')
@@ -113,11 +120,13 @@ export function selfTest() {
     writeFileSync(join(dir, 'relevant.txt'), 'v2\n')
     const scopePaths = changedCodePaths(dir, 'HEAD')
     assert.deepEqual(scopePaths, ['relevant.txt'])
+    assert.deepEqual(pendingCodePaths(dir), ['relevant.txt'])
     const recorded = codeFingerprint(dir, 'HEAD', { scopePaths })
     writeFileSync(join(dir, 'unrelated.txt'), 'v2\n')
     assert.equal(matchesEffectiveCodeState(codeFingerprint(dir, 'HEAD', { scopePaths }), recorded), true)
     git('add', '.')
     git('commit', '-qm', 'commit without changing relevant bytes')
+    assert.deepEqual(pendingCodePaths(dir), [])
     assert.equal(matchesEffectiveCodeState(codeFingerprint(dir, 'HEAD', { scopePaths }), recorded), true)
     writeFileSync(join(dir, 'relevant.txt'), 'v3\n')
     assert.equal(matchesEffectiveCodeState(codeFingerprint(dir, 'HEAD', { scopePaths }), recorded), false)

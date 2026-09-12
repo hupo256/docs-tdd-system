@@ -248,7 +248,7 @@ if (command === 'rules') {
 }
 
 if (!new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(projectId || '')) {
-  console.error('usage: docs-tdd.mjs <run|kickoff|status|resume|next|source-update|source-sync|extract|scope-approval|scope-approve|review|review-adjudicate|review-resume|checkpoint|worktree-prepare|capability|probe|doctor|release|golden|guard|rule-health|rules|explain|check|gate|evidence|verify|context|changed|recommend> PR-01234 [G0-G8|scenario] [--input file.json] [--evidence evidence.json] [--surfaces surfaces.json] [--plan evidence-plan.json] [--out file.json] [--dry-run] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|pi|human] [--session-id <id>] [--target path] [--model <name>]')
+  console.error('usage: docs-tdd.mjs <run|kickoff|status|resume|next|source-update|source-sync|extract|scope-approval|scope-approve|review|review-adjudicate|review-resume|checkpoint|dev-check|commit|worktree-prepare|capability|probe|doctor|release|golden|guard|rule-health|rules|explain|check|gate|evidence|verify|context|changed|recommend> PR-01234 [G0-G8|scenario] [--input file.json] [--evidence evidence.json] [--surfaces surfaces.json] [--plan evidence-plan.json] [--out file.json] [--kind feature|bugfix] [--dry-run] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|pi|human] [--session-id <id>] [--target path] [--model <name>]')
   process.exit(1)
 }
 
@@ -257,6 +257,9 @@ if (['run', 'kickoff', 'status', 'resume', 'next', 'source-update', 'checkpoint'
 }
 
 const projectWorkflowVersion = workflowVersionForProject(projectId, { resolveProjectRoot })
+if (projectWorkflowVersion === 2 && command === 'commit') {
+  process.exit(run([join(scriptDir, 'vnext-commit.mjs'), '--project', projectId, ...commandArgs], docsRoot))
+}
 if (projectWorkflowVersion === 2 && command === 'worktree-prepare') {
   process.exit(run([join(scriptDir, 'prepare-coding-worktree.mjs'), projectId, ...commandArgs], repoRoot))
 }
@@ -337,6 +340,12 @@ if (projectWorkflowVersion === 2 && command === 'review') {
   process.exit(run([
     join(scriptDir, 'vnext-review.mjs'), '--project', resolveProjectRoot(projectId), '--client', agentClient,
     ...(model ? ['--model', model] : []),
+  ], docsRoot))
+}
+if (projectWorkflowVersion === 2 && command === 'dev-check') {
+  const worktree = safeV2Worktree(projectId, commandArgs)
+  process.exit(run([
+    join(scriptDir, 'vnext-dev-check.mjs'), '--project', resolveProjectRoot(projectId), '--worktree', worktree, '--base', config.baseRef || 'origin/online',
   ], docsRoot))
 }
 if (projectWorkflowVersion === 2 && command === 'evidence') {

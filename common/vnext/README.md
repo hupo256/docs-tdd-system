@@ -1,12 +1,12 @@
-# docs_tdd v3.2 正式工作流
+# docs_tdd v3.3 正式工作流
 
-> 状态：**正式启用（enforced）**。当前框架发布版本为 **v3.2**，使用第二代 work-item 协议；项目文件中的稳定兼容标识仍为 `workflowVersion: 2`。自 2026-09-08 起，该协议作为新需求默认系统；第一代流程只服务存量 `workflowVersion: 1` 项目和显式 `--legacy` 项目。历史切换决策见 [cutover-decision-20260908.md](./cutover-decision-20260908.md)。
+> 状态：**正式启用（enforced）**。当前框架发布版本为 **v3.3**，使用第二代 work-item 协议；项目文件中的稳定兼容标识仍为 `workflowVersion: 2`。自 2026-09-08 起，该协议作为新需求默认系统；第一代流程只服务存量 `workflowVersion: 1` 项目和显式 `--legacy` 项目。历史切换决策见 [cutover-decision-20260908.md](./cutover-decision-20260908.md)。
 
 ## 版本边界
 
-- **产品发布版本**：v3.2，表示当前整体能力集合。
+- **产品发布版本**：v3.3，表示当前整体能力集合。
 - **项目协议标识**：`workflowVersion: 2`，只负责区分第二代 work-item 项目与第一代 G0–G8 项目。
-- v3.2 没有引入不兼容的第三代项目数据模型，因此不伪造 `workflowVersion: 3`，也不迁移或重写历史项目。
+- v3.3 没有引入不兼容的第三代项目数据模型，因此不伪造 `workflowVersion: 3`，也不迁移或重写历史项目。
 
 ## 不变量
 
@@ -123,18 +123,27 @@ node common/engine/agent-scripts/docs-tdd.mjs run PR-01234
 
 Figma/API 缺失不会在 intake 阶段形成全局阻塞。CLI 输出的 action packet 是客户端无关协议；Claude、Codex、Pi、Cursor 都按 `action`、`reason`、`constraints` 执行，不从 Markdown 阶段文字猜状态。
 
+实现过程中可先运行 `docs-tdd dev-check PR-01234`。它只执行已审查的非浏览器命令，报告当前 changed paths、待提交 paths、requirement/surface 映射、未映射路径和 `deliveryScope.policyPaths` 越界，并把结果写入 `work-item.json.autopilot.lastDevCheck`；不会生成或覆盖正式的 `latest-result.json`。对 `tsc`/`typecheck` 命令使用 baseline-aware 判定：存量诊断可以保留，但 changed path 新诊断或相对上次基线增长的跨文件诊断会失败；首次运行会把当前 changed path 之外的诊断数登记为基线。`deliveryScope.policyPaths` 是真实写入边界：checkpoint、dev-check、evidence 和 commit guard 任一层发现越界都会 fail-closed。
+
 实现动作完成后，Agent 将 action packet 的 `actionId`、真实 `changedPaths`、代码搜索得到的 `discoveredSurfaces` 与实际覆盖的 `coveredSurfaceIds` 写入临时 checkpoint JSON，再调用：
 
 ```bash
+node common/engine/agent-scripts/docs-tdd.mjs dev-check PR-01234
 node common/engine/agent-scripts/docs-tdd.mjs checkpoint PR-01234 --input /tmp/checkpoint.json
+# 可选：在依赖尚未齐备时提交明确标记为 non-delivery 的中间成果
+node common/engine/agent-scripts/docs-tdd.mjs commit PR-01234 --mode checkpoint
 node common/engine/agent-scripts/docs-tdd.mjs run PR-01234
+# 或在 authoritative PASS 后显式执行最终提交
+node common/engine/agent-scripts/docs-tdd.mjs commit PR-01234 --mode delivery
 ```
 
-第二条命令会自动执行已审查的 evidence command plan，并自动组装 surfaces report 跑 enforced verify。证据保存在 `~/.cache/docs-tdd/evidence/<PROJECT-ID>/`，不会增加项目状态文件。命令退出 1 时仍会把 CLI 签名的失败证据送入 verify，使 Autopilot 真正进入修复分支；只有 runner/协议错误才中断。代码检查与 browser 检查分别最多自动修复两轮，任一域耗尽即输出 `escalate-repair-failure`，禁止无限重试。
+其中 `docs-tdd run` 会自动执行已审查的 evidence command plan，并自动组装 surfaces report 跑 enforced verify；显式 delivery commit 只在 authoritative PASS 已就绪时提交冻结路径。证据保存在 `~/.cache/docs-tdd/evidence/<PROJECT-ID>/`，不会增加项目状态文件。命令退出 1 时仍会把 CLI 签名的失败证据送入 verify，使 Autopilot 真正进入修复分支；只有 runner/协议错误才中断。代码检查与 browser 检查分别最多自动修复两轮，任一域耗尽即输出 `escalate-repair-failure`，禁止无限重试。
 
 `evidencePlan[].runtimeRequired=true` 不是注释字段：同一 requirement 必须另有受审查的 `browser-interaction` argv 命令，runner 与最终出口都会双重检查，普通 Vitest/文案命令不能冒充 runtime evidence。浏览器命令仍遵守 [browser-e2e-mcp.md](../rules/browser-e2e-mcp.md) 的边界：不向业务仓安装 Playwright/Puppeteer；优先把可回归逻辑固化为定向测试，只对确需真实运行时的集成行为使用已有外部 browser adapter。
 
-取得 authoritative PASS 后，`run` 只 `git add`/`git commit --only` 当前 `path-set-v1` 冻结路径；其他已暂存或未暂存文件不会被带入。commit hook 若改写相关字节，状态会回到重验而不是沿用旧绿灯。Autopilot 永不执行 `git push`。
+取得 authoritative PASS 后，`run` 只 `git add`/`git commit --only` 当前 `path-set-v1` 冻结路径；其他已暂存或未暂存文件不会被带入。`commit --mode checkpoint` 则只接受当前 passing dev-check 的 `pendingCommitPaths`，写入独立的 `checkpointCommit.nonDelivery=true` 记录，绝不冒充 delivery。commit hook 若改写相关字节，状态会回到重验而不是沿用旧绿灯。Autopilot 永不执行 `git push`。
+
+独立审查 payload 会把 requirement 已锚定的语义单元排在最前，未锚定结构节点仅保留在 `sourceInventory`；所有图片 hash 和 disposition 都保留在 manifest，但仅把 requirement anchor 实际引用的规格图片作为 `reviewAssets` 附件发送。超时时间按 payload 字符数和附件数动态计算；传输失败单独累计 `transportFailures`，不消耗语义审查次数。
 
 本地安装器生成的 pre-commit 会在 `verify-code-rules` 后自动执行 v2 delivery guard。若团队 hook 只通过 JS/TS glob 的 lint-staged 调 wrapper，安装器不会误判为完整接线，而会保留团队 hook并追加无条件的个人兜底。CI 需同时显式接入：
 
