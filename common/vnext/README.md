@@ -26,7 +26,7 @@
 | 2 风险路由 | scope × risk 纯路由器、只升不降、V2 人工范围确认 | 四项目分类符合冻结结论；低风险样例不误升；未知风险不可降档 | **完成** |
 | 3 统一出口 | 单一 v2 verify 聚合结果并接入正式命令 | V0/V1/V2 共用一个出口；blocked/旧代码内容/伪造 PASS 不可绿 | **完成（enforced）** |
 | 4 产物收敛 | v2 scaffold、latest-result、runs.jsonl；处置与 V2 确认留在 work-item | 默认持久化文件数降低至少 80% | **完成** |
-| 5 上下文压缩 | v2 最小 context + session delta | V0/V1 ≤4K 字符；V2 ≤8K 字符；可测 context 字符降低至少 60% | **完成** |
+| 5 上下文压缩 | v2 最小 context + session delta | V0/V1 ≤4K 字符；V2 目标 ≤8K、硬上限 24K；可测 context 字符降低至少 60% | **完成** |
 | 6 MSW 条件化 | no-request / real-api / mock-required / pending-dependency | 无请求或真实 API 可用时不建 MSW，且无需 waiver | **完成** |
 | 7 灰度与退役决策 | 历史 V0/V1/V2 样本与回放 | 灰度结果只作回归观测，不自动切流 | **完成；正式切换由 owner 于 2026-09-08 显式批准** |
 | 8 正式切换 | Router、kickoff、CLI 版本路由、enforced 出口、v1 冻结 | 新项目默认 v2；v2 禁跑 v1 Gate；正式 verify 非 PASS 即非零 | **完成** |
@@ -59,7 +59,7 @@
 - `lib/vnext-persistence.mjs`：三文件持久化、原子替换、追加式历史、runId 幂等、锁超时/陈旧锁恢复和中断续写。
 - `vnext-artifact-budget.mjs` + `artifact-budget.json`：以同一四项目组合对比 253 → 12 个默认流程文件，减少 95.26%。
 - `vnext-context.mjs` + `lib/vnext-context.mjs`：按 work-item 生成紧凑上下文；fingerprint 未变时只返回 delta/unchanged，不重载 v1 规则包。
-- `vnext-context-budget.mjs` + `context-budget.json`：V0/V1 4K、V2 8K 硬预算；四案例同口径字符代理减少 99.21%，历史 token 继续明确记为 null。
+- `vnext-context-budget.mjs` + `context-budget.json`：V0/V1 4K 硬预算；V2 以 8K 为目标预算、24K 为硬上限，超过 8K 且不超过 24K 时标记 `large-context` 但不阻断；四案例同口径字符代理减少 99.14%，历史 token 继续明确记为 null。
 - `lib/vnext-msw-policy.mjs`：按 API 依赖选择 no-request / real-api / mock-required / pending-dependency；无通用 MSW 仪式，也无 waiver 旁路。
 - `vnext-pilot.mjs` + `pilot-registry.json` / `pilot-report.json`：保留历史双轨样本与质量观察；它不再决定当前工作流，且永不自动切流。正式状态只由 owner 决策记录和 CLI 路由定义。
 
@@ -284,7 +284,8 @@ node common/engine/agent-scripts/vnext-context.mjs --project /path/to/v2/PR-0123
 node common/engine/agent-scripts/vnext-context.mjs --project /path/to/v2/PR-01234 --session /tmp/session.json --json
 ```
 
-- full context 必须包含每条 requirement、surface、evidence plan、coverage finding disposition、API/MSW 策略和最后出口状态；超预算直接失败，绝不静默截断需求。
+- full context 必须包含每条 requirement、surface、evidence plan、coverage finding disposition、API/MSW 策略和最后出口状态；绝不静默截断需求。
+- V0/V1 的目标与硬上限均为 4K 字符；V2 目标预算为 8K，超过 8K 且不超过 24K 时进入 `large-context` 模式并携带 warning 继续运行，超过 24K 才返回 `bound-implementation-scope` 要求建立有 owner/batch/reason 的 `deliveryScope`。
 - 同 work-item fingerprint 下返回 delta/unchanged；session 由调用方临时持有，不增加项目默认文件。
 - 历史 token 没有机器记录，所以不伪造 token 降幅；`context-budget.json` 只报告可复算的 Unicode 字符代理。
 - `apiDependency.mode` 是 work-item 必填事实：无请求或真实 API 时禁止新增 vNext 范围 MSW；只有 `mock-required` 才要求 worker、handler 与 contract 覆盖；`pending-dependency` 必须绑定 open blocker，最终出口保持 blocked。

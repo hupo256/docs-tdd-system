@@ -121,13 +121,23 @@ function selfTest() {
   })
   assert.equal(resume.action.action, 'resume-review-after-human-repair')
 
+  const large = structuredClone(workItem)
+  large.requirements[0].statement = 'x'.repeat(9000)
+  const allowed = deriveReviewPlanningPolicy(large, {
+    effectiveReview: { ok: true },
+    fingerprints: { requirementsFingerprint: 'requirements' },
+  })
+  assert.equal(allowed.action, null)
+  assert.equal(vnextContextReadiness(large).budgetStatus, 'large-context')
+
   const oversized = structuredClone(workItem)
-  oversized.requirements = Array.from({ length: 60 }, (_, index) => ({ ...requirement, requirementId: `R-${index}`, statement: 'x'.repeat(200) }))
+  oversized.requirements[0].statement = 'x'.repeat(25000)
   const bounded = deriveReviewPlanningPolicy(oversized, {
     effectiveReview: { ok: true },
     fingerprints: { requirementsFingerprint: 'requirements' },
   })
   assert.equal(bounded.action.action, 'bound-implementation-scope')
+  assert.match(bounded.action.reason, /24000 character budget/)
   console.log('vnext-review-policy self-test passed')
 }
 

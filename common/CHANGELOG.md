@@ -11,6 +11,7 @@
 
 - **自动审查两轮封顶**：每次人工介入前最多执行两轮独立 Reviewer；第二轮仍未通过进入 `human-review-deferred`，允许先完成实现，但 evidence、测试交接和 ready-to-test 前必须人工逐 finding 裁决。Reviewer 基础设施不可用仍立即阻断；人工接受 finding 后，修订候选并显式 `review-resume` 才能开启下一段两轮预算。
 - **上下文 readiness 前移**：Autopilot 在模型审查和业务编码前生成完整实现上下文；超预算直接返回 `bound-implementation-scope`，禁止一边声称 `implement-current-scope` 一边让 `context` fail-closed。
+- **大型 V2 双层预算**：8K 从阻断线改为目标线；超过 8K 且不超过 24K 时保留完整需求并以 `large-context` warning 继续，只有超过 24K 才要求拆分 `deliveryScope`。V0/V1 仍保持 4K 硬上限。
 - **状态与环境诊断**：V2 项目索引改从真实 action 派生状态，并拆分 active / closed / diagnostic fixture；上下文同时展示 raw/effective review verdict；doctor 增加 `rg` 运行依赖检查。
 
 ## 2026-09-12（v3.3 Autopilot Implementation Loop）

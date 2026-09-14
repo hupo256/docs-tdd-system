@@ -42,6 +42,9 @@ else if (process.argv.includes('--help')) {
     const input = inputFile ? readJson(inputFile) : projectDir ? loadProjectContextInput(projectDir, arg('--session')) : null
     if (!input) throw new Error('--project or --input is required')
     const result = buildVNextContext(input)
+    if (!process.argv.includes('--json') && result.budgetStatus === 'large-context') {
+      console.error(`[large-context] ${result.chars} characters; target=${result.targetBudget}, hard=${result.budget}. Full requirements preserved.`)
+    }
     console.log(process.argv.includes('--json') ? JSON.stringify(result, null, 2) : result.text)
   } catch (error) {
     console.error(`vNext context failed: ${error.message}`)

@@ -6,7 +6,11 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createContextPack } from './lib/context-pack.mjs'
-import { buildVNextContext, VNEXT_CONTEXT_BUDGETS } from './lib/vnext-context.mjs'
+import {
+  buildVNextContext,
+  VNEXT_CONTEXT_HARD_BUDGETS,
+  VNEXT_CONTEXT_TARGET_BUDGETS,
+} from './lib/vnext-context.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const fixturesDir = join(scriptDir, '..', 'fixtures', 'vnext-replay')
@@ -39,7 +43,16 @@ export function buildContextBudget() {
     { label: 'V2-PR-02265', workItem: load(join(fixturesDir, 'PR-02265-stale-prd-revision.json')).workItem },
   ].map(({ label, workItem }) => {
     const context = buildVNextContext({ workItem, generatedAt: '2026-09-04T00:00:00Z' })
-    return { label, level: context.level, chars: context.chars, budget: context.budget, withinBudget: context.chars <= context.budget }
+    return {
+      label,
+      level: context.level,
+      chars: context.chars,
+      targetBudget: context.targetBudget,
+      budget: context.budget,
+      budgetStatus: context.budgetStatus,
+      withinTarget: context.chars <= context.targetBudget,
+      withinBudget: context.chars <= context.budget,
+    }
   })
   const v1PerProjectChars = v1.reduce((total, item) => total + item.chars, 0)
   const v1ComparableChars = v1PerProjectChars * cases.length
@@ -54,7 +67,10 @@ export function buildContextBudget() {
     v1PerProjectChars,
     vnextCases: cases,
     comparison: { projectCount: cases.length, v1ComparableChars, vnextComparableChars, reductionPercent, targetReductionPercent: 60, ok: reductionPercent >= 60 && cases.every((item) => item.withinBudget) },
-    budgets: VNEXT_CONTEXT_BUDGETS,
+    budgets: {
+      target: VNEXT_CONTEXT_TARGET_BUDGETS,
+      hard: VNEXT_CONTEXT_HARD_BUDGETS,
+    },
   }
 }
 

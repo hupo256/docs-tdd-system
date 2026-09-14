@@ -50,6 +50,7 @@ G6 验收按维度顺序加载 `g6_code_review`→`g6_contract`→`g6_visual`→
 
 - 主线程只保留决策、风险和结果；大文件先 `rg` 定位再读局部，长命令只回传失败行。
 - context pack 是带 L3/effective fingerprint 的 `/tmp` 可丢弃缓存；规则真值仍是各层权威源。
+- v2 实现上下文：V0/V1 4K 硬上限；V2 8K 目标、24K 硬上限，超过目标且不超过硬上限时以 `large-context` warning 继续，超过硬上限才拆 `deliveryScope`；禁止静默截断需求。
 - 只有传入真实 `--session-id`（或客户端提供对应 session 环境变量）才在同一 project/client/session 内返回 delta；不带会话身份时每次完整报告，禁止跨任务猜测“已经读过”。
 - Gate 完成、场景切换、PRD/契约 fingerprint 变化或处理大量日志/图片后，更新 `context-summary.md`；新任务只恢复 Router、摘要和当前 compact pack。
 - 修改规则后依次运行 `docs-tdd check`、`rule-release.mjs --write`、`effective-rules.mjs --write`；任一发布漂移会阻断 context/changed/gate，但不阻断 check/capability/doctor。

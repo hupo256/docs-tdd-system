@@ -7,7 +7,10 @@ import { fileURLToPath } from 'node:url'
 import { EXIT_EVIDENCE_REQUIREMENTS, verifyExitResultIntegrity } from './vnext-exit.mjs'
 import { coverageFingerprints, effectiveCoverageReview, stableFingerprint } from './vnext-work-item.mjs'
 
-export const VNEXT_CONTEXT_BUDGETS = Object.freeze({ V0: 4000, V1: 4000, V2: 8000 })
+export const VNEXT_CONTEXT_TARGET_BUDGETS = Object.freeze({ V0: 4000, V1: 4000, V2: 8000 })
+export const VNEXT_CONTEXT_HARD_BUDGETS = Object.freeze({ V0: 4000, V1: 4000, V2: 24000 })
+// Backward-compatible name: budget has always represented the fail-closed hard ceiling.
+export const VNEXT_CONTEXT_BUDGETS = VNEXT_CONTEXT_HARD_BUDGETS
 
 function oneLine(value) {
   return String(value ?? '').replace(/\s+/g, ' ').replace(/\|/g, '/').trim()
@@ -91,7 +94,13 @@ function renderDelta(workItem, result, unchanged) {
 export function vnextContextReadiness(workItem) {
   try {
     const context = buildVNextContext({ workItem })
-    return { ok: true, chars: context.chars, budget: context.budget }
+    return {
+      ok: true,
+      chars: context.chars,
+      targetBudget: context.targetBudget,
+      budget: context.budget,
+      budgetStatus: context.budgetStatus,
+    }
   } catch (error) {
     const budgetMatch = /context is (\d+) characters, above (\d+)/.exec(error.message)
     return {
@@ -103,11 +112,33 @@ export function vnextContextReadiness(workItem) {
   }
 }
 
+export function largeContextActionFields(workItem, constraints = []) {
+  const hasCandidate = Array.isArray(workItem?.requirements) && workItem.requirements.length > 0
+    && Boolean(workItem?.routing?.verificationLevel)
+  if (!hasCandidate) return { constraints }
+  const readiness = vnextContextReadiness(workItem)
+  if (!readiness.ok || readiness.budgetStatus !== 'large-context') return { constraints }
+  return {
+    constraints: [...constraints, 'large-context-preserve-full-requirements-no-silent-truncation'],
+    warnings: [{
+      code: 'large-context',
+      message: `Implementation context is ${readiness.chars} characters; target is ${readiness.targetBudget} and hard limit is ${readiness.budget}.`,
+    }],
+    contextBudget: {
+      status: readiness.budgetStatus,
+      chars: readiness.chars,
+      target: readiness.targetBudget,
+      hard: readiness.budget,
+    },
+  }
+}
+
 export function buildVNextContext({ workItem, latestResult = null, previousSession = null, generatedAt = new Date().toISOString() } = {}) {
   if (workItem?.workflowVersion !== 2 || !workItem?.projectId) throw new Error('vNext context requires a workflowVersion=2 work item')
   const level = workItem.routing?.verificationLevel
-  const budget = VNEXT_CONTEXT_BUDGETS[level]
-  if (!budget) throw new Error(`unknown vNext level: ${level || 'missing'}`)
+  const targetBudget = VNEXT_CONTEXT_TARGET_BUDGETS[level]
+  const budget = VNEXT_CONTEXT_HARD_BUDGETS[level]
+  if (!targetBudget || !budget) throw new Error(`unknown vNext level: ${level || 'missing'}`)
   if (latestResult) {
     const integrity = verifyExitResultIntegrity(latestResult, workItem)
     if (!integrity.ok) throw new Error(`latest result is invalid or stale: ${integrity.problems.join('; ')}`)
@@ -121,6 +152,7 @@ export function buildVNextContext({ workItem, latestResult = null, previousSessi
   const text = mode === 'full' ? renderFull(workItem, latestResult) : renderDelta(workItem, latestResult, unchanged)
   const chars = Array.from(text).length
   if (chars > budget) throw new Error(`${level} context is ${chars} characters, above ${budget}; split the work item instead of silently truncating requirements`)
+  const budgetStatus = chars > targetBudget ? 'large-context' : 'standard'
   return {
     schemaVersion: 1,
     workflowVersion: 2,
@@ -128,7 +160,9 @@ export function buildVNextContext({ workItem, latestResult = null, previousSessi
     level,
     mode,
     chars,
+    targetBudget,
     budget,
+    budgetStatus,
     text,
     session: { schemaVersion: 1, projectId: workItem.projectId, level, workItemFingerprint, resultStateFingerprint, contextFingerprint, generatedAt },
   }
@@ -172,12 +206,25 @@ export function selfTest() {
   const changed = structuredClone(workItem)
   changed.requirements[0].statement = 'Changed requirement'
   assert.equal(buildVNextContext({ workItem: changed, previousSession: full.session }).mode, 'full')
-  const tooLarge = structuredClone(workItem)
-  tooLarge.requirements = Array.from({ length: 100 }, (_, index) => ({ ...workItem.requirements[0], requirementId: `R-${String(index).padStart(3, '0')}`, statement: 'x'.repeat(100) }))
+  const large = structuredClone(workItem)
+  large.routing.verificationLevel = 'V2'
+  large.requirements[0].statement = 'x'.repeat(9000)
+  const largeContext = buildVNextContext({ workItem: large })
+  assert.ok(largeContext.chars > largeContext.targetBudget && largeContext.chars <= largeContext.budget)
+  assert.equal(largeContext.targetBudget, 8000)
+  assert.equal(largeContext.budget, 24000)
+  assert.equal(largeContext.budgetStatus, 'large-context')
+  assert.equal(vnextContextReadiness(large).budgetStatus, 'large-context')
+  const actionFields = largeContextActionFields(large, ['existing-constraint'])
+  assert.equal(actionFields.warnings[0].code, 'large-context')
+  assert.deepEqual(actionFields.constraints, ['existing-constraint', 'large-context-preserve-full-requirements-no-silent-truncation'])
+  const tooLarge = structuredClone(large)
+  tooLarge.requirements[0].statement = 'x'.repeat(25000)
   assert.throws(() => buildVNextContext({ workItem: tooLarge }), /silently truncating/)
   const readiness = vnextContextReadiness(tooLarge)
   assert.equal(readiness.ok, false)
   assert.equal(readiness.code, 'context-budget-exceeded')
+  assert.equal(readiness.budget, 24000)
   console.log('vnext-context self-test passed')
 }
 

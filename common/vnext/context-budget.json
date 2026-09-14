@@ -11,63 +11,82 @@
   "v1Packs": [
     {
       "scenario": "g0_g2_scope",
-      "chars": 27888
+      "chars": 28037
     },
     {
       "scenario": "g4_coding_worktree",
-      "chars": 16544
+      "chars": 18192
     },
     {
       "scenario": "g6_code_review",
-      "chars": 20042
+      "chars": 20011
     },
     {
       "scenario": "g6_contract",
-      "chars": 21174
+      "chars": 21148
     }
   ],
-  "v1PerProjectChars": 85648,
+  "v1PerProjectChars": 87388,
   "vnextCases": [
     {
       "label": "V0-low-risk",
       "level": "V0",
-      "chars": 465,
+      "chars": 535,
+      "targetBudget": 4000,
       "budget": 4000,
+      "budgetStatus": "standard",
+      "withinTarget": true,
       "withinBudget": true
     },
     {
       "label": "V1-PR-02306",
       "level": "V1",
-      "chars": 623,
+      "chars": 693,
+      "targetBudget": 4000,
       "budget": 4000,
+      "budgetStatus": "standard",
+      "withinTarget": true,
       "withinBudget": true
     },
     {
       "label": "V2-PR-01930",
       "level": "V2",
-      "chars": 920,
-      "budget": 8000,
+      "chars": 990,
+      "targetBudget": 8000,
+      "budget": 24000,
+      "budgetStatus": "standard",
+      "withinTarget": true,
       "withinBudget": true
     },
     {
       "label": "V2-PR-02265",
       "level": "V2",
-      "chars": 710,
-      "budget": 8000,
+      "chars": 780,
+      "targetBudget": 8000,
+      "budget": 24000,
+      "budgetStatus": "standard",
+      "withinTarget": true,
       "withinBudget": true
     }
   ],
   "comparison": {
     "projectCount": 4,
-    "v1ComparableChars": 342592,
-    "vnextComparableChars": 2718,
-    "reductionPercent": 99.21,
+    "v1ComparableChars": 349552,
+    "vnextComparableChars": 2998,
+    "reductionPercent": 99.14,
     "targetReductionPercent": 60,
     "ok": true
   },
   "budgets": {
-    "V0": 4000,
-    "V1": 4000,
-    "V2": 8000
+    "target": {
+      "V0": 4000,
+      "V1": 4000,
+      "V2": 8000
+    },
+    "hard": {
+      "V0": 4000,
+      "V1": 4000,
+      "V2": 24000
+    }
   }
 }

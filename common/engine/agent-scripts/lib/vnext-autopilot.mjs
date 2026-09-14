@@ -7,6 +7,7 @@ import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { coverageFingerprints, effectiveCoverageReview, stableFingerprint } from './vnext-work-item.mjs'
 import { deliveryScopePathProblems } from './vnext-delivery-scope.mjs'
+import { largeContextActionFields } from './vnext-context.mjs'
 import { deriveReviewPlanningPolicy } from './vnext-review-policy.mjs'
 import { createScopeApproval, scopeApprovalFingerprint } from './vnext-risk-route.mjs'
 import { evaluateSourceReadiness, reconcileAvailableSources } from './vnext-source-readiness.mjs'
@@ -75,7 +76,7 @@ function actionPacket(workItem, { action, phase, reason, command = '', status = 
     action,
     reason,
     command,
-    constraints,
+    ...largeContextActionFields(workItem, constraints),
     ...(checkpoint ? { checkpoint } : {}),
   }
 }
@@ -436,6 +437,12 @@ export function selfTest() {
   const reviewed = { ...needsReview, coverageAudit: { ...coverageFingerprints(needsReview), reviewMode: 'independent-cold-read', reviewRunId: 'review-1', reviewer: { kind: 'human', id: 'reviewer' }, completedAt: '2026-09-08T00:00:00Z', verdict: 'pass', unresolved: [] } }
   assert.equal(deriveAutopilotAction({ workItem: reviewed }).action, 'implement-current-scope')
   assert.equal(deriveAutopilotAction({ workItem: reviewed, worktreeReady: false }).action, 'prepare-coding-worktree')
+  const large = structuredClone(reviewed)
+  large.routing = { scopeClass: 'multi-surface', riskSignals: ['high-impact'], verificationLevel: 'V2' }
+  large.requirements[0].statement = 'x'.repeat(9000)
+  large.coverageAudit = { ...large.coverageAudit, ...coverageFingerprints(large) }
+  const largeAction = deriveAutopilotAction({ workItem: large })
+  assert.deepEqual([largeAction.action, largeAction.contextBudget.status, largeAction.warnings[0].code], ['collect-scope-approval', 'large-context', 'large-context'])
   const oversized = structuredClone(reviewed)
   oversized.routing = { scopeClass: 'multi-surface', riskSignals: [], verificationLevel: 'V1' }
   oversized.requirements[0].statement = 'x'.repeat(5000)

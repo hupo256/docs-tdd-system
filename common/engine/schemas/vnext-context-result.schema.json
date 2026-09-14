@@ -3,7 +3,7 @@
   "$id": "vnext-context-result.schema.json",
   "title": "docs_tdd vNext Context Result",
   "type": "object",
-  "required": ["schemaVersion", "workflowVersion", "projectId", "level", "mode", "chars", "budget", "text", "session"],
+  "required": ["schemaVersion", "workflowVersion", "projectId", "level", "mode", "chars", "targetBudget", "budget", "budgetStatus", "text", "session"],
   "properties": {
     "schemaVersion": { "const": 1 },
     "workflowVersion": { "const": 2 },
@@ -11,7 +11,9 @@
     "level": { "type": "string", "enum": ["V0", "V1", "V2"] },
     "mode": { "type": "string", "enum": ["full", "delta", "unchanged"] },
     "chars": { "type": "integer", "minimum": 1 },
-    "budget": { "type": "integer", "enum": [4000, 8000] },
+    "targetBudget": { "type": "integer", "enum": [4000, 8000] },
+    "budget": { "type": "integer", "enum": [4000, 24000] },
+    "budgetStatus": { "type": "string", "enum": ["standard", "large-context"] },
     "text": { "type": "string", "minLength": 1 },
     "session": {
       "type": "object",
