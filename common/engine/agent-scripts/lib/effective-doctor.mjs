@@ -84,6 +84,16 @@ export function runDoctor(deps) {
   const checks = []
   const add = (id, ok, severity, message, file = '') => checks.push({ id, ok, severity, message, file })
 
+  const ripgrep = spawnSync('rg', ['--version'], { encoding: 'utf8', stdio: 'pipe' })
+  const ripgrepReady = ripgrep.status === 0
+  add(
+    'RUNTIME-DEPENDENCY-RG',
+    ripgrepReady,
+    'error',
+    ripgrepReady ? `ripgrep is available: ${(ripgrep.stdout || '').split('\n')[0]}` : 'ripgrep (rg) is required by residue and delivery-summary scans but is unavailable',
+    'PATH',
+  )
+
   for (const file of [...sources.l1, ...sources.adapters.slice(0, 3)]) {
     add('ADAPTER-EXISTS', existsSync(file), 'error', `${label(file)} ${existsSync(file) ? 'exists' : 'is missing'}`, label(file))
   }

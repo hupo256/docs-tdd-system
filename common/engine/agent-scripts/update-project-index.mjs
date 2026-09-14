@@ -21,6 +21,7 @@ import {
 } from './lib/project-index.mjs'
 import { codeFingerprint } from './lib/fingerprint.mjs'
 import { verifyExitResultIntegrity } from './lib/vnext-exit.mjs'
+import { deriveAutopilotAction } from './lib/vnext-autopilot.mjs'
 
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, config } = resolveRoots()
 const args = process.argv.slice(2)
@@ -130,6 +131,7 @@ function projectInfo(name, byBranch) {
   const title = stripMd(firstMatch(readme, [/^#\s+(.+)$/m], name)) || name
   const frontmatter = parseFrontmatter(readme)
   const workflowVersion = Number(frontmatter.workflowVersion || (existsSync(join(dir, 'work-item.json')) ? 2 : 1))
+  const indexGroup = frontmatter.indexGroup || (['closed', 'archived'].includes(frontmatter.status) ? 'closed' : 'active')
   const worktree = worktreePathFor(name, byBranch || {})
   // 优先级：表格机器行（gate 通过时脚本写入）> frontmatter stage（早期元数据兼容层）> 人工叙述行。
   const rawStatus = machineRowStatus(readme) || frontmatterStatus(readme) || parseStatus(readme)
@@ -166,11 +168,27 @@ function projectInfo(name, byBranch) {
         fresh = current.headSha === latest.codeFingerprint.headSha && current.baseSha === latest.codeFingerprint.baseSha && current.dirtyHash === latest.codeFingerprint.dirtyHash
       } catch { fresh = false }
     }
-    const complete = latest?.mode === 'enforced' && latest?.status === 'passed' && latest?.ok === true && integrity.ok && fresh
-    const v2Status = complete ? 'V2 complete' : latest ? `V2 ${latest.status}${latest.mode === 'shadow' ? ' (shadow/non-authoritative)' : !integrity.ok || !fresh ? ' (stale/invalid)' : ''}` : 'V2 review/evidence'
+    const assuranceTrusted = latest?.mode === 'enforced' && latest?.assuranceMode === 'autonomous' && latest?.evidenceTrust === 'cli-attested'
+    const deliveryCommitted = workItem?.autopilot?.delivery?.status === 'committed'
+    const complete = latest?.mode === 'enforced' && latest?.status === 'passed' && latest?.ok === true && integrity.ok && fresh && assuranceTrusted && deliveryCommitted
+    let v2Status = 'V2 invalid work item'
+    try {
+      const action = deriveAutopilotAction({
+        workItem,
+        latestResult: latest,
+        resultIntegrityOk: integrity.ok,
+        codeStateFresh: latest ? fresh : true,
+        assuranceTrusted,
+        deliveryCommitted,
+        worktreeReady: Boolean(worktree),
+      })
+      v2Status = complete ? 'V2 complete' : `V2 ${action.phase}/${action.action}`
+    } catch (error) {
+      v2Status = `V2 invalid: ${error.message}`
+    }
     const approval = workItem?.scopeApproval ? `${workItem.scopeApproval.confirmedBy} / ${String(workItem.scopeApproval.confirmedAt || '').slice(0, 10)}` : workItem?.routing?.verificationLevel === 'V2' ? '缺失' : '不要求'
     return {
-      id: name, title, workflow: 'v2', status: v2Status, prd, g2: approval,
+      id: name, title, workflow: 'v2', status: v2Status, indexGroup, prd, g2: approval,
       modulePath: '见 work-item.json', worktree, evidenceCount: countEvidence(dir),
       gate: latest ? `V2 ${latest.mode || 'unknown'} ${latest.status || 'invalid'}` : '未验证',
       gateAt: latest?.generatedAt || '',
@@ -182,6 +200,7 @@ function projectInfo(name, byBranch) {
     title,
     workflow: 'v1',
     status: displayStatus,
+    indexGroup,
     prd,
     g2,
     modulePath,

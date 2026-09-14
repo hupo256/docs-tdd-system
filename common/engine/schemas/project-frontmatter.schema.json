@@ -43,6 +43,10 @@
     "workflowVersion": {
       "type": "integer",
       "enum": [1, 2]
+    },
+    "indexGroup": {
+      "type": "string",
+      "enum": ["active", "closed", "fixture"]
     }
   },
   "additionalProperties": false

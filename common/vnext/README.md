@@ -34,7 +34,7 @@
 ## 当前已落地
 
 - `vnext-extract.mjs` + `lib/vnext-intake-audit.mjs`：CLI 先生成 source-unit 抽取脚手架，再对候选 requirements 做确定性前置审计；重复 ID、漏锚语义 unit/表格行、集合计数和证据计划缺陷在调用模型 Reviewer 前失败。
-- `vnext-review.mjs` 的有界审查控制：同一候选禁止无变化重试；最多三轮；相同 finding 再现、次数耗尽或 Reviewer 不可用均持久化明确升级状态并转人工。
+- `vnext-review.mjs` 的有界审查控制：同一候选禁止无变化重试；每次人工介入前最多两轮。相同 finding 再现或次数耗尽进入 `human-review-deferred`，允许先实现但在 evidence / 测试交接前强制人工逐项裁决；Reviewer 不可用则立即 `escalated`，实现前处理。
 - `vnext-source-sync.mjs`：从既有 Lark source config 拉取到 staging，规范化并比较语义快照；无变化不改文件，有变化才原子替换来源并使旧抽取/审查/结果失效，失败保留旧快照。
 - `lib/vnext-source-units.mjs`：Markdown 表格按容器 + 每个数据行生成稳定 source units，避免一整张表作为一个不可审计黑盒。
 - `lib/playwright-mcp-adapter.mjs`：通过仓外 `@playwright/mcp --extension` 驱动系统 Chrome，按场景 JSON 执行动作和文本断言，为 `browser-interaction` evidence command 提供可执行 argv；token/浏览器不可用时明确失败。
@@ -199,7 +199,7 @@ CLI 执行 evidence 前后仍比较整棵有效代码树，测试命令若改写
 
 ## 独立审查调用边界
 
-独立 Reviewer 不是确定性格式校验器。`docs-tdd extract --input` 必须先产出与当前 source/requirements fingerprint 一致且 `status=pass` 的 `extractionAudit`；否则 `review` 在启动子进程前失败。每次 changes-required 消耗一次审查机会；累计三轮、相同 finding 再现或 Reviewer 不可用时输出 `human-review-required`。人必须逐 finding 执行 `review-adjudicate`；接受项修复抽取候选后还必须显式 `review-resume`，不能靠重复 review 或手改状态复活。拒绝/不适用/延期全部有依据且无接受项时，裁决 overlay 可形成有效 PASS，但原始签名审查 receipt 与 verdict 保持不变。
+独立 Reviewer 不是确定性格式校验器。`docs-tdd extract --input` 必须先产出与当前 source/requirements fingerprint 一致且 `status=pass` 的 `extractionAudit`；否则 `review` 在启动子进程前失败。每次 changes-required 消耗一次审查机会；每次人工介入前累计两轮或相同 finding 再现时进入 `human-review-deferred`。此状态可继续实现当前抽取范围，但必须在运行 evidence、提交测试或声明 ready-to-test 前，由人逐 finding 执行 `review-adjudicate`。Reviewer 不可用属于基础设施失败，立即 `escalated` 并在实现前处理。人工接受 finding 后须修复抽取候选并显式 `review-resume`；该人工动作才重置下一段两轮预算，不能靠重复 review 或手改状态复活。拒绝/不适用/延期全部有依据且无接受项时，裁决 overlay 可形成有效 PASS，但原始签名审查 receipt 与 verdict 保持不变。
 
 ```bash
 # 1. 原始来源 → 稳定 source snapshot + source units
@@ -216,7 +216,7 @@ node common/engine/agent-scripts/docs-tdd.mjs review PR-01234 --client pi
 node common/engine/agent-scripts/docs-tdd.mjs review-adjudicate PR-01234 --input /tmp/review-adjudication.json --client human
 node common/engine/agent-scripts/docs-tdd.mjs review-resume PR-01234 --input /tmp/review-resume.json --client human
 
-# V2 review PASS 后执行 fingerprint-bound scope approval
+# V2 review PASS，或两轮耗尽进入 bounded human defer 后，执行 fingerprint-bound scope approval
 node common/engine/agent-scripts/docs-tdd.mjs scope-approval PR-01234 --out /tmp/scope-approval.json
 node common/engine/agent-scripts/docs-tdd.mjs scope-approve PR-01234 --input /tmp/scope-approval.json --client human
 

@@ -7,6 +7,12 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-09-13（审查成本上限与状态可信度）
+
+- **自动审查两轮封顶**：每次人工介入前最多执行两轮独立 Reviewer；第二轮仍未通过进入 `human-review-deferred`，允许先完成实现，但 evidence、测试交接和 ready-to-test 前必须人工逐 finding 裁决。Reviewer 基础设施不可用仍立即阻断；人工接受 finding 后，修订候选并显式 `review-resume` 才能开启下一段两轮预算。
+- **上下文 readiness 前移**：Autopilot 在模型审查和业务编码前生成完整实现上下文；超预算直接返回 `bound-implementation-scope`，禁止一边声称 `implement-current-scope` 一边让 `context` fail-closed。
+- **状态与环境诊断**：V2 项目索引改从真实 action 派生状态，并拆分 active / closed / diagnostic fixture；上下文同时展示 raw/effective review verdict；doctor 增加 `rg` 运行依赖检查。
+
 ## 2026-09-12（v3.3 Autopilot Implementation Loop）
 
 - **Feature / Bugfix 双入口**：`kickoff --kind bugfix` 把缺陷报告绑定为 incident source，使用 `fix/<PROJECT-ID>` 分支；两类 intake 共用风险路由、独立审查和正式验证，不为修 bug 开旁路。
@@ -20,7 +26,7 @@
 ## 2026-09-12（v3.2 Intake / Review Reliability）
 
 - **确定性检查前移**：新增 `docs-tdd extract` 脚手架与 `extractionAudit`；重复需求 ID、漏锚语义 unit/表格行、集合计数和 evidence command 完整性在启动模型 Reviewer 前 fail-closed。
-- **Reviewer 有界化**：同一候选禁止无变化重试；changes-required 最多三轮，相同 finding 再现、次数耗尽或 Reviewer CLI 不可用均持久化 `reviewControl.status=escalated` 并转人工，不再无限循环。
+- **Reviewer 有界化（当时策略，已由 2026-09-13 两轮策略替代）**：同一候选禁止无变化重试；changes-required 当时最多三轮，相同 finding 再现、次数耗尽或 Reviewer CLI 不可用均持久化 `reviewControl.status=escalated` 并转人工，不再无限循环。
 - **表格逐行与 Source 重同步**：Markdown 表格同时产出结构容器和逐数据行 unit；`docs-tdd source-sync` 先拉 staging，再比较语义快照并原子替换，有变化才使旧抽取/审查/结果失效，失败保留旧快照。
 - **Browser adapter 闭环**：提供 `playwright-mcp-adapter.mjs`，通过仓外 `@playwright/mcp --extension` 执行场景动作/断言，并文档化 argv、退出码和无源码副作用契约；不向业务仓安装 Playwright，也不把 adapter 纳入状态机。
 - **兼容边界不变**：产品版本升至 v3.2，项目协议仍为 `workflowVersion: 2`；Lark 继续保持 `lark-lightweight` 独立链，不接入 v3.2 状态机。

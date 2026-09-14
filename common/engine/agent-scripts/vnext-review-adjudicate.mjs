@@ -10,6 +10,7 @@ import { persistVNextWorkItem } from './lib/vnext-persistence.mjs'
 import { coverageFingerprints, effectiveCoverageReview } from './lib/vnext-work-item.mjs'
 
 const DISPOSITIONS = new Set(['accepted', 'rejected', 'not-applicable', 'deferred'])
+const MAX_AUTOMATED_REVIEW_ATTEMPTS = 2
 
 function validateHuman(input, verb) {
   if (!input?.adjudicatedBy?.trim() || !/^\d{4}-\d{2}-\d{2}$/.test(input?.adjudicatedAt || '')) {
@@ -75,8 +76,8 @@ export function applyReviewAdjudication(workItem, input, { client = 'human', ses
 export function resumeReview(workItem, input, { client = 'human', sessionId = '' } = {}) {
   if (input?.schemaVersion !== 1 || input?.projectId !== workItem?.projectId) throw new Error('review resume schemaVersion/projectId does not match work item')
   validateHuman(input, 'review resume')
-  if (workItem.reviewControl?.status !== 'escalated' && workItem.reviewControl?.status !== 'changes-required') {
-    throw new Error('review resume requires an escalated or changes-required review control')
+  if (!['escalated', 'human-review-deferred', 'changes-required'].includes(workItem.reviewControl?.status)) {
+    throw new Error('review resume requires an escalated, deferred-human, or changes-required review control')
   }
   const fingerprints = coverageFingerprints(workItem)
   const extraction = workItem.extractionAudit
@@ -89,7 +90,7 @@ export function resumeReview(workItem, input, { client = 'human', sessionId = ''
   if (!infrastructureFailure && !(accepted && candidateChanged)) {
     throw new Error('semantic review resume requires accepted findings and a revised extraction candidate')
   }
-  const { reason: _reason, escalatedAt: _escalatedAt, lastError: _lastError, ...control } = workItem.reviewControl || {}
+  const { reason: _reason, escalatedAt: _escalatedAt, deferredAt: _deferredAt, lastError: _lastError, ...control } = workItem.reviewControl || {}
   return {
     ...workItem,
     reviewControl: {
@@ -97,6 +98,7 @@ export function resumeReview(workItem, input, { client = 'human', sessionId = ''
       sourceFingerprint: fingerprints.sourceFingerprint,
       status: 'active',
       attempts: 0,
+      maxAttempts: MAX_AUTOMATED_REVIEW_ATTEMPTS,
     },
     reviewAdjudication: workItem.reviewAdjudication ? {
       ...workItem.reviewAdjudication,
@@ -122,7 +124,7 @@ export function selfTest() {
         unresolved: ['F-1: false positive'],
       },
       extractionAudit: { status: 'pass' },
-      reviewControl: { sourceFingerprint: 'source', attempts: 1, maxAttempts: 3, status: 'escalated', reason: 'repeated-findings', history: [] },
+      reviewControl: { sourceFingerprint: 'source', attempts: 1, maxAttempts: 2, status: 'human-review-deferred', reason: 'repeated-findings', history: [] },
     }
     const fingerprints = coverageFingerprints(workItem)
     Object.assign(workItem.coverageAudit, fingerprints)
@@ -144,13 +146,13 @@ export function selfTest() {
     const revised = structuredClone(accepted)
     revised.requirements.push({ requirementId: 'R-002' })
     Object.assign(revised.extractionAudit, { status: 'pass', ...coverageFingerprints(revised) })
-    revised.reviewControl.attempts = 3
+    revised.reviewControl.attempts = 2
     const resumed = resumeReview(revised, { schemaVersion: 1, projectId: 'PR-00001', adjudicatedBy: 'owner@example.com', adjudicatedAt: '2026-09-13', reason: 'candidate repaired' })
     assert.equal(resumed.reviewControl.status, 'active')
     assert.equal(resumed.reviewControl.attempts, 0)
 
     const infrastructureFailure = structuredClone(workItem)
-    infrastructureFailure.reviewControl = { ...infrastructureFailure.reviewControl, attempts: 3, reason: 'reviewer-unavailable' }
+    infrastructureFailure.reviewControl = { ...infrastructureFailure.reviewControl, status: 'escalated', attempts: 2, reason: 'reviewer-unavailable' }
     const infrastructureResumed = resumeReview(infrastructureFailure, { schemaVersion: 1, projectId: 'PR-00001', adjudicatedBy: 'owner@example.com', adjudicatedAt: '2026-09-13', reason: 'reviewer repaired' })
     assert.equal(infrastructureResumed.reviewControl.attempts, 0)
     persistVNextWorkItem(root, resumed)

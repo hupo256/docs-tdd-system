@@ -202,11 +202,12 @@
       "properties": {
         "sourceFingerprint": { "type": "string", "minLength": 1 },
         "attempts": { "type": "integer", "minimum": 0, "maximum": 3 },
-        "maxAttempts": { "const": 3 },
+        "maxAttempts": { "enum": [2, 3], "description": "New review cycles use 2; 3 is accepted only for persisted legacy history." },
         "transportFailures": { "type": "integer", "minimum": 0 },
-        "status": { "enum": ["active", "changes-required", "passed", "adjudicated", "escalated"] },
+        "status": { "enum": ["active", "changes-required", "passed", "adjudicated", "human-review-deferred", "escalated"] },
         "reason": { "enum": ["reviewer-unavailable", "repeated-findings", "review-attempt-limit"] },
         "escalatedAt": { "type": "string", "format": "date-time" },
+        "deferredAt": { "type": "string", "format": "date-time" },
         "lastError": { "type": "string" },
         "history": {
           "type": "array",

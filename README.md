@@ -8,7 +8,7 @@
 
 ## 它解决什么
 
-AI 编码的两个顽疾：**跳过需求确认直接写码**、**规则散落导致每次重新解释**。docs_tdd v3.3 用 `work-item.json` 固定原始需求、覆盖审查、风险等级和证据，并由 `latest-result.json` 给出唯一正式结论；抽取先经过确定性 intake audit，独立 Reviewer 最多三轮且重复 finding 会升级人工，第一代 G0–G8 仅作为存量兼容。AI「已读/已注意」不算数，只认执行契约产出的证据。
+AI 编码的两个顽疾：**跳过需求确认直接写码**、**规则散落导致每次重新解释**。docs_tdd v3.3 用 `work-item.json` 固定原始需求、覆盖审查、风险等级和证据，并由 `latest-result.json` 给出唯一正式结论；抽取先经过确定性 intake audit，独立 Reviewer 在每次人工介入前最多两轮；仍未通过时允许先实现，但测试交接前必须人工逐 finding 核对，第一代 G0–G8 仅作为存量兼容。AI「已读/已注意」不算数，只认执行契约产出的证据。
 
 规则本身遵循「**规则可变多，常驻恒定小**」：AI 开工只常驻读一个路由文件（`common/rules/rule-router.md`，≤5000 字符机器守），其余按场景加载，避免上下文膨胀。
 
@@ -22,7 +22,7 @@ AI 编码的两个顽疾：**跳过需求确认直接写码**、**规则散落�
 | **模板** | 新需求复制使用的文档骨架 | `templates/` |
 | **项目实例** | 各需求的文档/证据（清单见自动生成的 [PROJECTS.md](./PROJECTS.md)） | `prds/<PROJECT-ID>/` |
 
-核心命令统一走 `<mount>/common/engine/agent-scripts/docs-tdd.mjs`。下表中的 `docs-tdd` 是 `node <mount>/common/engine/agent-scripts/docs-tdd.mjs` 的阅读简写：
+运行环境必须提供 Node.js、Git 与 ripgrep（`rg`）；`docs-tdd doctor` 会对缺失依赖 fail-closed。核心命令统一走 `<mount>/common/engine/agent-scripts/docs-tdd.mjs`。下表中的 `docs-tdd` 是 `node <mount>/common/engine/agent-scripts/docs-tdd.mjs` 的阅读简写：
 
 ```bash
 docs-tdd run <PROJECT-ID> --prd <src>      # v3.3 Autopilot：断点续跑、自动验证/限次修复、按证据路径 commit（不 push）
@@ -131,7 +131,7 @@ v3.3 是当前产品版本；项目文件继续使用 `workflowVersion: 2` 作�
   → 建立 work-item 并规范化文本、表格、图片等来源
   → 由脚手架抽取原子需求、实现 surface 和验收命令
   → 确定性 intake audit 前置拦截结构/锚点/证据计划缺陷
-  → 启动隔离的 source-only 子会话做独立覆盖审查（最多三轮）
+  → 启动隔离的 source-only 子会话做独立覆盖审查（人工介入前最多两轮）
   → 按 scope × risk 路由 V0 / V1 / V2
   → Agent 在 feature worktree 实现并登记 checkpoint
   → CLI 执行已审查的 evidence command plan
@@ -152,7 +152,7 @@ CLI 始终返回带稳定 `actionId` 的唯一 action packet；Agent 只按 `act
 
 #### 2. 结构化需求、确定性前置审计与机器独立审查
 
-PRD 被确定性转换为 source units；表格既保留容器上下文，也逐数据行生成稳定 unit。先用 `docs-tdd extract <ID> --out /tmp/extraction.json` 生成带来源锚点的脚手架，填写 requirements、surfaces、Figma/API 依赖和 `evidenceCommands` 后，以 `--input` 应用。CLI 会先审计重复 ID、语义 unit/表格行覆盖、集合计数、来源锚点和证据命令完整性；失败时不调用 Reviewer。需求作者登记身份后，`docs-tdd review` 才启动另一个 client/session；reviewer 只收到规范化 PRD、候选需求和图片，不得到代码或工具。审查最多三轮：候选未变化禁止重试，相同 finding 再现或三轮未通过会持久化 `escalated` 并转人工；Reviewer 启动失败也明确升级，不进入无限循环。审查结果由 CLI 本机签名，手写 reviewer JSON、复用同一 session、未处置 finding 或来源漂移都不能形成有效审查。
+PRD 被确定性转换为 source units；表格既保留容器上下文，也逐数据行生成稳定 unit。先用 `docs-tdd extract <ID> --out /tmp/extraction.json` 生成带来源锚点的脚手架，填写 requirements、surfaces、Figma/API 依赖和 `evidenceCommands` 后，以 `--input` 应用。CLI 会先审计重复 ID、语义 unit/表格行覆盖、集合计数、来源锚点和证据命令完整性；失败时不调用 Reviewer。需求作者登记身份后，`docs-tdd review` 才启动另一个 client/session；reviewer 只收到规范化 PRD、候选需求和图片，不得到代码或工具。每次人工介入前最多自动审查两轮：候选未变化禁止重试，相同 finding 再现或两轮未通过会持久化 `human-review-deferred`；实现可以继续，但 evidence / 测试交接前必须人工逐 finding 裁决。Reviewer 启动失败仍立即 `escalated`，在实现前处理，不进入无限循环。审查结果由 CLI 本机签名，手写 reviewer JSON、复用同一 session、未处置 finding 或来源漂移都不能形成有效审查。
 
 #### 3. 实现与真实覆盖登记
 

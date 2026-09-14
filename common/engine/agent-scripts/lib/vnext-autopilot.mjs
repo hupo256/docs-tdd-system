@@ -7,6 +7,7 @@ import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { coverageFingerprints, effectiveCoverageReview, stableFingerprint } from './vnext-work-item.mjs'
 import { deliveryScopePathProblems } from './vnext-delivery-scope.mjs'
+import { deriveReviewPlanningPolicy } from './vnext-review-policy.mjs'
 import { createScopeApproval, scopeApprovalFingerprint } from './vnext-risk-route.mjs'
 import { evaluateSourceReadiness, reconcileAvailableSources } from './vnext-source-readiness.mjs'
 
@@ -24,9 +25,12 @@ export const AUTOPILOT_ACTIONS = Object.freeze([
   'extract-requirements',
   'repair-intake-extraction',
   'classify-scope-and-risk',
+  'bound-implementation-scope',
   'complete-independent-review',
   'repair-review-findings',
+  'resume-review-after-human-repair',
   'escalate-review-failure',
+  'complete-deferred-human-review',
   'collect-scope-approval',
   'prepare-coding-worktree',
   'implement-current-scope',
@@ -130,35 +134,9 @@ export function deriveAutopilotAction({
       constraints: ['risk-may-only-increase', 'classify-missing-figma-or-api-as-pending-not-global-blocker'],
     })
   }
-  if (!effectiveReview.ok && workItem.reviewControl?.status === 'escalated') {
-    return actionPacket(workItem, {
-      action: 'escalate-review-failure',
-      phase: 'blocked',
-      status: 'blocked',
-      reason: `Independent review requires human intervention: ${workItem.reviewControl.reason || 'attempt limit reached'}.`,
-      constraints: ['do-not-loop-reviewer', 'human-review-required'],
-    })
-  }
-  const latestReviewAttempt = workItem.reviewControl?.history?.at(-1)
-  if (!effectiveReview.ok && latestReviewAttempt?.verdict === 'changes-required'
-      && latestReviewAttempt.requirementsFingerprint === fingerprints.requirementsFingerprint) {
-    return actionPacket(workItem, {
-      action: 'repair-review-findings',
-      phase: 'planning',
-      reason: 'The independent reviewer requested changes; revise the extraction before another review attempt.',
-      command: `docs-tdd extract ${projectId} --out <extraction.json>`,
-      constraints: ['resolve-current-findings', 'do-not-retry-unchanged-candidate'],
-    })
-  }
-  if (!effectiveReview.ok) {
-    return actionPacket(workItem, {
-      action: 'complete-independent-review',
-      phase: 'planning',
-      reason: 'The extracted requirements have not passed the current independent coverage review.',
-      command: `docs-tdd review ${projectId} --client pi`,
-      constraints: ['source-only-review', 'review-session-must-differ-from-author-session'],
-    })
-  }
+  const reviewPolicy = deriveReviewPlanningPolicy(workItem, { effectiveReview, fingerprints })
+  if (reviewPolicy.action) return actionPacket(workItem, reviewPolicy.action)
+  const { deferredHumanReview } = reviewPolicy
   const scopeApprovalIsCurrent = workItem.scopeApproval?.fingerprint === scopeApprovalFingerprint(workItem)
   if (workItem.routing.verificationLevel === 'V2' && !scopeApprovalIsCurrent) {
     return actionPacket(workItem, {
@@ -188,9 +166,10 @@ export function deriveAutopilotAction({
         ? `The reviewed scope remains incomplete; last dev-check failed${devCheckProblems.length ? `: ${devCheckProblems.join('; ')}` : '.'}`
         : 'The reviewed scope has not been marked implementation-complete.',
       constraints: [
-        'implement-only-reviewed-scope',
+        deferredHumanReview ? 'implement-provisional-extracted-scope' : 'implement-only-reviewed-scope',
         'checkpoint-real-changed-paths',
         'do-not-claim-late-sources-as-final-contracts',
+        ...(deferredHumanReview ? ['human-review-required-before-test-handoff'] : []),
         ...(failedDevCheck ? ['resolve-last-dev-check-before-checkpoint'] : []),
       ],
       checkpoint: {
@@ -219,6 +198,16 @@ export function deriveAutopilotAction({
       status: 'waiting',
       reason: `PRD-first implementation is complete; ready-to-test waits for: ${sourceReadiness.pendingRequiredKinds.join(', ')}.`,
       constraints: ['do-not-claim-ready-to-test', 'continue-unrelated-work', 'resume-on-source-update'],
+    })
+  }
+  if (deferredHumanReview) {
+    return actionPacket(workItem, {
+      action: 'complete-deferred-human-review',
+      phase: 'implementation-ready',
+      status: 'waiting',
+      reason: 'Two automatic coverage reviews were consumed; implementation may proceed, but human finding-by-finding adjudication is mandatory before test handoff.',
+      command: `docs-tdd review-adjudicate ${projectId} --input <review-adjudication.json> --client human`,
+      constraints: ['decide-every-open-finding', 'accepted-findings-return-to-extraction', 'no-evidence-or-test-handoff-before-effective-pass'],
     })
   }
   if (!latestResult) {
@@ -406,6 +395,7 @@ export function selfTest() {
     schemaVersion: 1,
     workflowVersion: 2,
     projectId: 'PR-00001',
+    sourceSnapshot: { revision: '1', sources: [] },
     requirements: [],
     coverageAudit: { verdict: 'changes-required', unresolved: ['pending'] },
     routing: { riskSignals: ['unclassified'], verificationLevel: 'V0' },
@@ -413,7 +403,10 @@ export function selfTest() {
   }
   assert.equal(deriveAutopilotAction({ workItem: base }).action, 'extract-requirements')
 
-  const requirement = { requirementId: 'R-001', status: 'doing' }
+  const requirement = {
+    requirementId: 'R-001', status: 'doing', statement: 'Implement the scoped change.',
+    sourceAnchors: [{ sourceId: 'SRC-1' }], affectedSurfaces: [], evidencePlan: [],
+  }
   const unclassified = { ...base, requirements: [requirement] }
   unclassified.extractionAudit = { status: 'pass', ...coverageFingerprints(unclassified) }
   assert.equal(deriveAutopilotAction({ workItem: unclassified }).action, 'classify-scope-and-risk')
@@ -427,9 +420,27 @@ export function selfTest() {
   }
   assert.equal(deriveAutopilotAction({ workItem: needsReviewRepair }).action, 'repair-review-findings')
 
+  const deferredHuman = structuredClone(needsReviewRepair)
+  deferredHuman.reviewControl = { ...deferredHuman.reviewControl, status: 'human-review-deferred', attempts: 2, maxAttempts: 2 }
+  assert.equal(deriveAutopilotAction({ workItem: deferredHuman }).action, 'implement-current-scope')
+  const deferredAction = deriveAutopilotAction({ workItem: deferredHuman })
+  const deferredImplemented = applyAutopilotCheckpoint(deferredHuman, {
+    actionId: deferredAction.actionId,
+    outcome: 'completed',
+    changedPaths: ['src/deferred.ts'],
+    discoveredSurfaces: [],
+    coveredSurfaceIds: [],
+  })
+  assert.equal(deriveAutopilotAction({ workItem: deferredImplemented }).action, 'complete-deferred-human-review')
+
   const reviewed = { ...needsReview, coverageAudit: { ...coverageFingerprints(needsReview), reviewMode: 'independent-cold-read', reviewRunId: 'review-1', reviewer: { kind: 'human', id: 'reviewer' }, completedAt: '2026-09-08T00:00:00Z', verdict: 'pass', unresolved: [] } }
   assert.equal(deriveAutopilotAction({ workItem: reviewed }).action, 'implement-current-scope')
   assert.equal(deriveAutopilotAction({ workItem: reviewed, worktreeReady: false }).action, 'prepare-coding-worktree')
+  const oversized = structuredClone(reviewed)
+  oversized.routing = { scopeClass: 'multi-surface', riskSignals: [], verificationLevel: 'V1' }
+  oversized.requirements[0].statement = 'x'.repeat(5000)
+  oversized.extractionAudit = { status: 'pass', ...coverageFingerprints(oversized) }
+  assert.equal(deriveAutopilotAction({ workItem: oversized }).action, 'bound-implementation-scope')
   const failedDevelopment = structuredClone(reviewed)
   failedDevelopment.autopilot.lastDevCheck = { ok: false, problems: ['E-1 target missing'] }
   const failedDevelopmentAction = deriveAutopilotAction({ workItem: failedDevelopment })
@@ -456,7 +467,11 @@ export function selfTest() {
   assert.deepEqual(committed.autopilot.delivery, { status: 'committed', commitSha: 'abc123', paths: ['src/x.ts'], committedAt: '2026-09-08T00:02:00Z', pushed: false })
   assert.throws(() => applyAutopilotCheckpoint(reviewed, { actionId: 'stale', outcome: 'completed' }), /actionId is stale/)
   const scopedReviewed = structuredClone(reviewed)
-  scopedReviewed.deliveryScope = { policyPaths: ['src/allowed'] }
+  scopedReviewed.deliveryScope = {
+    kind: 'bounded-batch', batchId: 'batch-1', includedRequirementIds: ['R-001'],
+    deferred: { owner: 'owner', batch: 'batch-2', reason: 'bounded context' },
+    policyPaths: ['src/allowed'],
+  }
   scopedReviewed.coverageAudit = { ...scopedReviewed.coverageAudit, ...coverageFingerprints(scopedReviewed) }
   const scopedAction = deriveAutopilotAction({ workItem: scopedReviewed })
   assert.throws(() => applyAutopilotCheckpoint(scopedReviewed, { actionId: scopedAction.actionId, outcome: 'in-progress', changedPaths: ['src/forbidden.ts'] }), /outside deliveryScope/)

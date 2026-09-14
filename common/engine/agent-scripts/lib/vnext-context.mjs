@@ -5,7 +5,7 @@ import assert from 'node:assert/strict'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { EXIT_EVIDENCE_REQUIREMENTS, verifyExitResultIntegrity } from './vnext-exit.mjs'
-import { stableFingerprint } from './vnext-work-item.mjs'
+import { coverageFingerprints, effectiveCoverageReview, stableFingerprint } from './vnext-work-item.mjs'
 
 export const VNEXT_CONTEXT_BUDGETS = Object.freeze({ V0: 4000, V1: 4000, V2: 8000 })
 
@@ -69,7 +69,9 @@ function renderFull(workItem, result) {
     lines.push(`- ${requirement.requirementId}[${requirement.status}] ${oneLine(requirement.statement)} | src=${sources} | surfaces=${surfaces} | proof=${evidence}`)
   }
   const findings = workItem.coverageAudit.findings || []
-  lines.push('', `Coverage review: ${workItem.coverageAudit.verdict}; ${workItem.coverageAudit.reviewer.kind}:${oneLine(workItem.coverageAudit.reviewer.id)}; findings=${findings.length}`)
+  const effectiveReview = effectiveCoverageReview(workItem)
+  const reviewer = workItem.coverageAudit.reviewer || { kind: 'unknown', id: 'pending' }
+  lines.push('', `Coverage review: raw=${workItem.coverageAudit.verdict}; effective=${effectiveReview.ok ? 'pass' : 'changes-required'} (${effectiveReview.mode}); ${reviewer.kind}:${oneLine(reviewer.id)}; findings=${findings.length}`)
   for (const finding of findings) lines.push(`- ${finding.findingId}[${finding.disposition}] ${oneLine(finding.message)}${finding.reason ? `; ${oneLine(finding.reason)}` : ''}`)
   lines.push('', ...renderResult(result), '', `Exit: docs-tdd verify ${workItem.projectId} --input <verify-input.json> --worktree <path>`)
   return `${lines.join('\n')}\n`
@@ -84,6 +86,21 @@ function renderDelta(workItem, result, unchanged) {
   else lines.push(...renderResult(result))
   lines.push('Continue using work-item.json as the business source of truth; do not reload v1 rule packs.')
   return `${lines.join('\n')}\n`
+}
+
+export function vnextContextReadiness(workItem) {
+  try {
+    const context = buildVNextContext({ workItem })
+    return { ok: true, chars: context.chars, budget: context.budget }
+  } catch (error) {
+    const budgetMatch = /context is (\d+) characters, above (\d+)/.exec(error.message)
+    return {
+      ok: false,
+      code: budgetMatch ? 'context-budget-exceeded' : 'context-invalid',
+      ...(budgetMatch ? { chars: Number(budgetMatch[1]), budget: Number(budgetMatch[2]) } : {}),
+      problem: error.message,
+    }
+  }
 }
 
 export function buildVNextContext({ workItem, latestResult = null, previousSession = null, generatedAt = new Date().toISOString() } = {}) {
@@ -131,9 +148,24 @@ export function selfTest() {
       evidencePlan: [{ type: 'component-dom', runtimeRequired: false }],
     }],
   }
+  Object.assign(workItem.coverageAudit, coverageFingerprints(workItem))
   const full = buildVNextContext({ workItem, generatedAt: '2026-09-04T00:00:00Z' })
   assert.equal(full.mode, 'full')
   assert.ok(full.chars < 4000 && full.text.includes('S-002'))
+  assert.ok(full.text.includes('raw=pass; effective=pass (review)'))
+  const adjudicated = structuredClone(workItem)
+  adjudicated.coverageAudit.verdict = 'changes-required'
+  adjudicated.coverageAudit.findings = [{ findingId: 'F-1', disposition: 'open', message: 'false positive' }]
+  adjudicated.coverageAudit.unresolved = ['F-1: false positive']
+  const adjudicatedFingerprints = coverageFingerprints(adjudicated)
+  Object.assign(adjudicated.coverageAudit, adjudicatedFingerprints)
+  adjudicated.reviewAdjudication = {
+    originalReviewRunId: adjudicated.coverageAudit.reviewRunId,
+    ...adjudicatedFingerprints,
+    effectiveVerdict: 'pass',
+    decisions: [{ findingId: 'F-1', disposition: 'rejected' }],
+  }
+  assert.ok(buildVNextContext({ workItem: adjudicated }).text.includes('raw=changes-required; effective=pass (human-adjudication)'))
   const unchanged = buildVNextContext({ workItem, previousSession: full.session, generatedAt: '2026-09-04T00:01:00Z' })
   assert.equal(unchanged.mode, 'unchanged')
   assert.ok(unchanged.chars < full.chars)
@@ -143,6 +175,9 @@ export function selfTest() {
   const tooLarge = structuredClone(workItem)
   tooLarge.requirements = Array.from({ length: 100 }, (_, index) => ({ ...workItem.requirements[0], requirementId: `R-${String(index).padStart(3, '0')}`, statement: 'x'.repeat(100) }))
   assert.throws(() => buildVNextContext({ workItem: tooLarge }), /silently truncating/)
+  const readiness = vnextContextReadiness(tooLarge)
+  assert.equal(readiness.ok, false)
+  assert.equal(readiness.code, 'context-budget-exceeded')
   console.log('vnext-context self-test passed')
 }
 

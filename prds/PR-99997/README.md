@@ -10,6 +10,7 @@ prdSource: common/vnext/sentinel/PR-99997-prd.md
 figmaNode: ""
 larkEnabled: false
 workflowVersion: 2
+indexGroup: fixture
 ---
 
 # PR-99997 搜索弹窗图标间距减半（哨兵）

@@ -13,6 +13,7 @@ import { evidenceCommandRuntimeProblem, executeReviewedCommand, selectDevelopmen
 import { deliveryScopePathProblems } from './lib/vnext-delivery-scope.mjs'
 import { evidencePlanFingerprint, signEvidenceBundle, verifyEvidenceReceipt } from './lib/vnext-evidence-receipt.mjs'
 import { EXIT_EVIDENCE_REQUIREMENTS } from './lib/vnext-exit.mjs'
+import { effectiveCoverageReview } from './lib/vnext-work-item.mjs'
 
 const PLAN_FIELDS = new Set(['schemaVersion', 'projectId', 'commands'])
 const COMMAND_FIELDS = new Set(['evidenceId', 'kind', 'argv', 'requirementIds', 'surfaceIds', 'timeoutSeconds'])
@@ -34,8 +35,11 @@ function unknownFields(value, allowed) {
   return Object.keys(value || {}).filter((key) => !allowed.has(key))
 }
 
-export function evidencePlanProblems(plan, workItem) {
+export function evidencePlanProblems(plan, workItem, { requireEffectiveReview = false } = {}) {
   const problems = []
+  if (requireEffectiveReview && workItem?.workflowVersion === 2 && !effectiveCoverageReview(workItem).ok) {
+    problems.push('formal evidence requires an effective coverage review pass; complete deferred human review before test handoff')
+  }
   if (plan?.schemaVersion !== 1) problems.push('evidence plan schemaVersion must be 1')
   if (plan?.projectId !== workItem?.projectId) problems.push('evidence plan projectId does not match work item')
   const rootUnknown = unknownFields(plan, PLAN_FIELDS)
@@ -106,7 +110,7 @@ export function verificationScopePaths(workItem, worktree, baseRef = 'origin/onl
 }
 
 export function runEvidencePlan({ plan, workItem, worktree, baseRef = 'origin/online', keyPath, dependencies = {} } = {}) {
-  const problems = evidencePlanProblems(plan, workItem)
+  const problems = evidencePlanProblems(plan, workItem, { requireEffectiveReview: true })
   if (problems.length) throw new Error(`invalid evidence plan:\n- ${problems.join('\n- ')}`)
   const measure = dependencies.measure || codeFingerprint
   const execute = dependencies.execute || executeCommand
@@ -236,6 +240,8 @@ export function selfTest() {
     assert.deepEqual(aggregateBundle.facts.map((fact) => fact.evidenceId), ['E-all', 'E-child'])
     assert.ok(aggregateBundle.facts[1].evidenceRefs.includes('covered-by:E-all'))
     assert.deepEqual(verifyEvidenceReceipt(aggregateBundle, { workItem: aggregateWorkItem, currentCodeState: code, keyPath }), [])
+    const deferredWorkItem = { ...workItem, workflowVersion: 2, coverageAudit: { verdict: 'changes-required' } }
+    assert.match(evidencePlanProblems(plan, deferredWorkItem, { requireEffectiveReview: true }).join(' '), /deferred human review/)
     assert.match(evidencePlanProblems({ ...plan, commands: [...plan.commands, plan.commands[0]] }, workItem).join(' '), /duplicate/)
     assert.match(evidencePlanProblems({ ...plan, commands: [{ ...plan.commands[0], argv: ['echo ok'] }] }, workItem).join(' '), /argv/)
     const runtimeWorkItem = structuredClone(workItem)
