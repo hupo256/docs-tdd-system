@@ -69,7 +69,7 @@
 - **G3 真实代码链 + 可替换数据源**：Service/Hook/Schema/Mapper/组件全按生产结构实现，未就绪接口才由 MSW 网络层拦截，业务代码不出现 mock 分支（[architecture-and-state.md §8.4.1](./architecture-and-state.md)）。临时字段进 `agent/assumptions.json` + 代码 `// ASSUMED: ASM-xxx`；非 API 的临时业务决策进 `agent/fast-track.json`。`product/03-api-contract.md` 接口表维护状态列 `mock中 / dev-ready / 已切真实 / blocked`（[§8.4.2](./architecture-and-state.md)）。**接口 100% 已存在复用、可直连 test 环境验证**（本通道的典型情况）时可选择完全不采用 MSW；但仍必须按 §8.4.1 第 5 点走 `agent/rule-waivers.json` 具名 + 限期豁免——「看起来都 ready」不能省略登记，owner 要为这个判断担责。
 
   临时值只允许默认安全、可删除的行为：权限未知时拒绝操作；金额规则未知时显示 `--` 并禁用提交；未知状态进入显式 unknown 分支且不开放动作；正式路由未知时只用 dev-only 占位入口；核心流程未知时只做无副作用原型。禁止用“默认允许”“默认成功”“随便取 8 位精度”等值伪装业务已确定。
-- **G4 完成「前端可验收版本」**：填满 `product/02-technical-design.md` 四表（复用盘点 / 单一事实源所有权 / 数据流分层 / PRD 路径核验）无占位（`DOC-G4-001..009`，见 [architecture-and-state.md §2/§4.0](./architecture-and-state.md)）；按 [coding-worktree.md](./coding-worktree.md) 备 `feature/<PROJECT-ID>` worktree；至少覆盖 normal/empty/error/unauthorized/edge 场景 + schema/mapper/逻辑/组件测试 + PRD 截图对应页面交互；跑 `docs-tdd changed` 与 `docs-tdd gate <PR> G4`；出一份前端证据报告（已完成项 / 假设项 / 待正式资料对账项），路径落 `evidence/`。
+- **G4 完成「前端可验收版本」**：填满 `product/02-technical-design.md` 四表（复用盘点 / 单一事实源所有权 / 数据流分层 / PRD 路径核验）无占位（`DOC-G4-001..009`，见 [architecture-and-state.md §2/§4.0](./architecture-and-state.md)）；按 [coding-worktree.md](./coding-worktree.md) 备 `feature/<PROJECT-ID>` worktree；至少覆盖 normal/empty/error/unauthorized/edge 场景 + schema/mapper/纯 tool 逻辑定向测试 + 组件 DOM 契约/浏览器证据 + PRD 截图对应页面交互；跑 `docs-tdd changed` 与 `docs-tdd gate <PR> G4`；出一份前端证据报告（已完成项 / 假设项 / 待正式资料对账项），路径落 `evidence/`。
 
 ## 3. 证据：两条「待补」登记线 + 停靠态
 

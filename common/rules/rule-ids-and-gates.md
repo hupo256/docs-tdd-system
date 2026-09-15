@@ -105,7 +105,7 @@ node apps/web/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --no-gl
 
 ### 3.1 `CODE-ARCH-003` 执行契约
 
-> 执行契约见唯一正文源 [api-and-mapper.md §1.2](./api-and-mapper.md)；本表只登记机器覆盖。
+> 执行契约见唯一正文源 [api-and-mapper.md §1.3](./api-and-mapper.md)；本表只登记机器覆盖。
 
 ## 3.5 机器事实层（真跑 biome / tsc / vitest）
 

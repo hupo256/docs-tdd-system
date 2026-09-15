@@ -7,6 +7,13 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-09-15（验证经济与响应韧性收口）
+
+- **批次化、定向验证**：Biome / TypeScript / tests 改为相关改动稳定后集中执行；Biome 和测试必须显式指向 touched files / 直接相关测试，禁止每个小改动重复跑完整检查，也禁止整仓、整包或整目录测试。TypeScript 保持项目依赖图正确性，但只以 touched-file diagnostics 归因本次门禁。
+- **组件测试边界**：Vitest 只用于自然独立的纯/tool `.ts` 逻辑；`.tsx` 的 label、visibility、条件渲染改走 DOM-contract 或 browser evidence，禁止新增 Vitest/RTL render 测试或为凑测试拆组件。v1 `component-dom` 不再接受 `vitest` method；v2 intake/reviewer 与 evidence command policy 同步拒绝组件测试冒充 DOM 证据。
+- **集合解析韧性**：API/schema/mapper 流程要求逐元素韧性解析与定向回归证据；单个字段或单条记录异常不得让其余合法 response/list 整体不渲染。
+- **生效边界**：规则同时进入常驻批次节奏、按需质量清单、API 专题与 v2 evidence plan 机器校验；既有 work-item 中的宽范围或 component-dom Vitest 命令需重新审查后更新，不能沿用旧 scope approval 冒充合规。
+
 ## 2026-09-13（审查成本上限与状态可信度）
 
 - **自动审查两轮封顶**：每次人工介入前最多执行两轮独立 Reviewer；第二轮仍未通过进入 `human-review-deferred`，允许先完成实现，但 evidence、测试交接和 ready-to-test 前必须人工逐 finding 裁决。Reviewer 基础设施不可用仍立即阻断；人工接受 finding 后，修订候选并显式 `review-resume` 才能开启下一段两轮预算。

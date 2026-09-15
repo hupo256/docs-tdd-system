@@ -29,7 +29,7 @@
 - 新建前查复用；改动限责任模块，越界先记录并重点 review。
 - 固定文案逐字遵循 PRD/Figma 契约，apps/web 开发期只改 zh-CN。
 - PRD 验收下沉到原子 requirement：v2 requirement 直接绑定 source/surface/evidence；v1 维持 requirement ID ↔ 单一 Task。一个 PASS 不得覆盖多个可独立失败的子点。
-- v2 的 coverage findings 必须处置且正式 verify 通过；v1 G6 必须 code review。JS/TS/JSON touched files 均须运行适用的质量检查。
+- v2 的 coverage findings 必须处置且正式 verify 通过；v1 G6 必须 code review。质量检查在一批相关改动稳定后集中执行，范围限 touched files 与直接相关测试；小步编辑期间不重复跑完整 Biome/typecheck/test。
 - v1 新功能 MSW 继续按 manifest 强制验证；v2 只有 `apiDependency.mode=mock-required` 时要求 handler/worker/contract 覆盖，其他模式禁止无必要新增 mock。
 
 ## 3. 场景

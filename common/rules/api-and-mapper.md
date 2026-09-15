@@ -19,6 +19,7 @@
 - 禁止 `schema.parse(x) as T` 掩盖 schema 漏字段；mock response 走相同 schema/mapper/UI 类型链路。
 - Mapper 是纯转换层，只接收已通过 schema 的 DTO 并返回 UI Model；不得调用 API、React Query、store 或 UI，也不得读取组件状态。
 - 金额、精度、排序、状态机和路由决策等风险逻辑放纯函数并测试。
+- 集合逐项解析：坏字段/记录不得清空其余合法项；细则见 L1 `api-schema-mapper.md`。
 
 ### 1.1 固定层契约
 
@@ -32,10 +33,14 @@
 
 Hook 可按项目既有 service 封装把 schema/mapper 接在 `transfer` 中，但职责与数据顺序不变。目录位置不是免责依据：G6 Review 按真实 import 和输入输出判断边界。
 
-### 1.2 `CODE-ARCH-003` 执行契约（本节的机器覆盖）
+### 1.2 集合响应韧性证据
+
+列表 parser 须逐项窄化，坏项按契约丢弃/降级且可观测；禁用宽松 schema 吞错或伪造默认。定向纯逻辑测试须证明一个坏字段/项不影响其余项。整批失败仅限 API 明定原子语义且 owner 已确认。
+
+### 1.3 `CODE-ARCH-003` 执行契约（本节的机器覆盖）
 
 - **Trigger**：新增或修改 Component、React Query Hook、API Service、schema/DTO、Mapper，或生产代码的 mock 边界 import。
-- **Source**：本节（§1 调用链、数据链和层依赖）是唯一正文源；rule-ids-and-gates.md 只登记机器覆盖。
+- **Source**：本节（§1 调用链、数据链和层依赖）是 L3 流程源；通用 schema/mapper 实现正文位于 L1 coding-quality 的 `api-schema-mapper.md`，rule-ids-and-gates.md 只登记机器覆盖。
 - **Loader**：编码前按 `write_ui`、`write_query_hook`、`write_api` 或 `write_mapper` 加载；G6 加载 `quality-checklist.md`。
 - **Executor**：编辑后由 `verify-code-rules.mjs`/`docs-tdd changed` 扫 changed 文件全量 import，阶段出口由 G6 gate 与 code review 共同执行。
 - **Evidence**：扫描 finding 包含 Rule ID、文件、行号和 import source；G6 在 `06-collaboration.md` 记录已修、误报或有期限豁免，并关联 gate fingerprint。

@@ -12,9 +12,8 @@ Browser/Playwright MCP 逐步 UI 走查对 Agent 是**串行**的:每步「操�
 
 | 验证类型 | 负责 | 工具 | 判定方式 |
 |---------|------|------|---------|
-| 业务逻辑/状态机/状态不可逆/互斥判定 | **Agent** | Vitest | 断言,可回归 |
-| 边界/异常/降级/空态错态 loading retry | **Agent** | Vitest | 断言 |
-| 数据/mapper/排序/精度/上报 payload | **Agent** | Vitest | 断言 |
+| 纯/tool `.ts`：逻辑/状态机/边界/降级 | **Agent** | Vitest | 定向断言 |
+| schema/mapper/排序/精度/payload | **Agent** | Vitest（`.ts`） | 定向断言 |
 | DOM 契约:锚点存在、class 挂对、图标名合法、`getComputedStyle` == 设计 token | **Agent** | 一次性批量脚本（Playwright MCP `browser_evaluate` 或 Node） | **取值比对**,不截图 |
 | 集成崩溃（只有真跑起来才暴露:图标名错、SSR、hydration、接口 404） | **Agent** | Browser/Playwright MCP,**加载一次**看 console/首屏 | 看报错,不逐步走 |
 | 视觉还原/L2 Figma 并排 ≥95%/圆角字号间距 | **人工** | 肉眼 + Figma Dev Mode | 目测 |
@@ -24,7 +23,7 @@ Browser/Playwright MCP 逐步 UI 走查对 Agent 是**串行**的:每步「操�
 ## 2. Agent 铁律
 
 1. **默认不用 Browser/Playwright MCP 做验证。** 例外只有一种:**只有真跑起来才会暴露的集成 bug**（图标名不存在、SSR/hydration mismatch、接口 404、白屏）。这类**加载一次页面看 console 与首屏**即可,不做逐步交互走查。
-2. **能写成断言的,绝不靠截图。** 状态、互斥、上报、降级 → 一律进 Vitest。
+2. **Vitest 只测自然独立的纯/tool `.ts`。** 禁止 `.tsx` render 测试及为凑测试拆组件；组件 label/visibility/分支用 DOM-contract 或浏览器。
 3. **需浏览器取值时,一个 `browser_evaluate` 批量取全**（一次拿回所有 `getComputedStyle`/`querySelector` 结果做比对）,**不要一步一截图**。
 4. **纯视觉/手感/响应式,不自己逐帧比对**——产出**带勾选框的人工走查清单**（含触发方式、URL、预期）,交人工过。
 5. 触发条件（登录态、mock 场景、后台数据）不具备时,标「未验证/阻塞」并写清需谁补什么,**不空等、不假装通过**。
@@ -33,7 +32,7 @@ Browser/Playwright MCP 逐步 UI 走查对 Agent 是**串行**的:每步「操�
 
 需求收口时 Agent 至少交:
 
-- **Vitest 用例**:覆盖 §1 前三类（逻辑/边界/数据）,全绿;命令 + 结果贴报告。
+- **Vitest**:只测纯/tool `.ts`；没有则记 `not-required`。只传相关文件，禁止 `.tsx` render 测试。
 - **DOM 契约校验结果**:一段 `browser_evaluate` 或脚本的输出（锚点/class/图标/computed style 对照表）。
 - **集成加载结论**:目标页加载一次的 console 报错清单（0 error 或列出并说明）。
 - **人工走查清单**（见 §4 模板）:把所有视觉/手感/响应式项列成勾选框,交人工。
@@ -67,7 +66,7 @@ Agent 生成,人工执行。每项写清怎么触发、看什么、Figma 节点�
 
 ## 6. 测试生命周期（`.test.ts` 要不要跟业务上线、要不要清理）
 
-**默认：单测是长期回归资产,跟业务代码一起 commit、一起上线,不清理。** 与 mock 脚手架（临时、接口就绪后零残留拆除,见 [mock-legacy-route-a.md](./mock-legacy-route-a.md) §8.0.3）方向相反——别把两者混为一谈。§1 前三类（逻辑/边界/数据）的断言,价值就在「将来每次改动都能回归」,删掉 = 自毁护栏。300 行上限也[豁免 test/spec/fixture](./rule-ids-and-gates.md)（`CODE-FILE-001`）,即按正式共存代码对待。
+**默认：符合本规范的纯/tool `.test.ts` 是长期回归资产,跟业务代码一起 commit、一起上线,不清理。** 与 mock 脚手架（临时、接口就绪后零残留拆除,见 [mock-legacy-route-a.md](./mock-legacy-route-a.md) §8.0.3）方向相反——别把两者混为一谈。其价值就在「将来改动时定向回归」,删掉 = 自毁护栏；但这不构成为 `.tsx` 组件新增 render 测试的理由。300 行上限也[豁免 test/spec/fixture](./rule-ids-and-gates.md)（`CODE-FILE-001`）,即按正式共存代码对待。
 
 只有下面三类有生命周期,且处置方式都**不是「定期扫低价值测试批量删」**（误删护栏的风险远大于省下的体积）:
 
@@ -82,4 +81,4 @@ Agent 生成,人工执行。每项写清怎么触发、看什么、Figma 节点�
 
 ## 7. 一句话
 
-**Agent 固化能回归的（逻辑、边界、数据、DOM 契约）,人工过一眼能判的（像素、手感、响应式）。** 各用所长,别让 Agent 干肉眼 0.5 秒的活。**单测跟业务一起上线、不清理;只有 fixture 会过期,更新它别删它。**
+**Agent 固化能回归的（纯/tool 逻辑、边界、数据、DOM 契约）,人工过一眼能判的（像素、手感、响应式）。** 各用所长,别让 Agent 干肉眼 0.5 秒的活。**不测 `.tsx` 组件；合规的纯/tool 单测跟业务一起上线、不清理，只有 fixture 会过期，更新它别删它。**

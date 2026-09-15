@@ -1,6 +1,6 @@
 # 测试、自测与 Review 公共清单
 
-> AI 主用。章节号被外链引用（§3.2/§3.4/§3.5/§5），勿改编号。
+> AI 主用。章节号被外链引用（§3.2/§3.4/§3.5/§5），勿改编号。通用编码手艺的真值仍在 L1 `~/.ai-rules/AGENT.md` 与 `coding-quality` skill；本文只承接 docs_tdd 的执行时机、证据和 gate。
 
 ## 1. 必测优先级
 
@@ -11,15 +11,13 @@
 
 ## 2. 自动验证
 
-每次代码变更后：
+改动稳定后集中验证；小步不重复跑检查：
 
-- 触达 JS/TS/JSON 跑 Biome。
-- 机器静态规则跑 `node apps/web/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --project <PROJECT-ID>`（只检查新增/已改文件，内容类规则只看 diff 新增行）。
-- 已启用 `pilot.prdIntake` 的项目跑 `docs-tdd changed <PROJECT-ID>`；通过标准消费 [lark-doc-sync.md §8](./lark-doc-sync.md) 与 [prd-feature-inventory.md §3](./prd-feature-inventory.md)。
-- 需要浏览器才能证明的交互/集成行为必须真实执行 [browser-e2e-mcp.md](./browser-e2e-mcp.md)；能由 Vitest/DOM 契约证明的优先自动断言；纯视觉、手感与响应式默认交人工清单，分工以 [verification-division-of-labor.md](./verification-division-of-labor.md) 为准。
-- 报告字段、目录和命令 fallback 统一执行 [execution-evidence.md](./execution-evidence.md)，本清单不维护格式副本。
-- 全量 typecheck/test 被仓库既有问题阻塞时，记录阻塞原因并过滤确认本次模块无新增错误。
-- 发现不符合 PRD/Figma/API 契约/QA 用例的点，修复并重跑对应检查。
+- Biome 只传 touched JS/TS/JSON；测试只传 touched 或直接相关的具体文件，禁止整仓/整包/整目录运行。
+- TypeScript 可加载项目依赖图，但只归因 touched-file 新诊断或跨文件增量；稳定后跑一次。
+- Vitest 只测自然独立的纯函数、mapper、resolver、formatter、计算或状态机等 tool `.ts`。不为 `.tsx` 写 Vitest/RTL render 测试，也不为凑测试拆组件；label/visibility/条件渲染用 DOM-contract 或浏览器。
+- 批次末运行 `verify-code-rules.mjs --project <PROJECT-ID>`；启用 `pilot.prdIntake` 再跑一次 `docs-tdd changed <PROJECT-ID>`。需真实运行时的行为按 [browser-e2e-mcp.md](./browser-e2e-mcp.md)，分工见 [verification-division-of-labor.md](./verification-division-of-labor.md)。
+- 报告按 [execution-evidence.md](./execution-evidence.md)。既有问题写阻塞并确认本次无新增；未执行标 `not-required`，修复后只重跑受影响检查。
 
 ## 3. 需求完成后的自测与验收策略
 
@@ -34,8 +32,8 @@ G6/交付前按「清单 → 场景 → 证据 → 残留风险」顺序自测�
 | 层级 | 必测内容 | 证据 |
 |------|----------|------|
 | 文档 | 每条「本期做」均有任务和验收结果；裁剪项有确认记录 | 清单勾选摘要 |
-| 静态质量 | Biome、类型检查、单测/相关测试 | 命令+结果；失败写阻塞原因 |
-| 业务逻辑 | mapper/排序/状态机/金额精度/跳转/权限/登录态 | 单测或手测步骤 |
+| 静态质量 | touched-file Biome、touched-diagnostic 类型检查、直接相关测试 | 命令+结果；失败写阻塞原因 |
+| 业务逻辑 | mapper/排序/状态机/金额精度/跳转/权限/登录态 | 纯/tool 逻辑单测或手测步骤 |
 | 页面交互 | CTA/Tab/排序/分页/弹窗/FAQ/表单/空·错·loading·retry | Browser/Playwright 结论 |
 | 视觉响应式 | 桌面、390px H5、dark/light；**L2：与 Figma 并排走查清单全 pass（默认人工，Agent 供 DOM 契约比对）** | 文字报告：节点 ID + 模块 pass/fail（见 [component-reuse-and-visual-fidelity.md §3.0](./component-reuse-and-visual-fidelity.md)、[verification-division-of-labor.md](./verification-division-of-labor.md)） |
 | 数据联调 | 真实接口/Mock 兜底/WS·轮询/异常返回/空数据 | 环境、样例、阻塞项 |
@@ -87,12 +85,12 @@ G7 是 test 提测前的用例预检与开发侧回归阶段，不是 AQ 在 tes
 - [ ] 重要 UI（Hero/卡片/排行榜/弹窗/浮层）已完成 L2 Figma 并排走查清单，逐项 pass 或列偏差（判定见 [component-reuse-and-visual-fidelity.md §3.0](./component-reuse-and-visual-fidelity.md)；L2 默认人工、Agent 供 DOM 契约，见 [verification-division-of-labor.md](./verification-division-of-labor.md)）；未用 L1 代替 L2。
 - [ ] 路由文件保持薄层。
 - [ ] 组件不直接依赖 API DTO。
-- [ ] API/schema/mapper 已通过 [api-and-mapper.md](./api-and-mapper.md) 对应检查，结构化例外与对账证据已记录。
+- [ ] API/schema/mapper 已按 [api-and-mapper.md](./api-and-mapper.md) 检查；集合坏字段/项不清空其余合法响应。
 - [ ] G6 已按真实 import 反查层边界：Mapper 保持纯转换；Component 不依赖 raw DTO/schema/低层 HTTP；API Service 不依赖 Feature UI；机器候选 `CODE-ARCH-003` 命中已人工确认或修复。
 - [ ] Mock 生命周期已通过 [architecture-and-state.md §8](./architecture-and-state.md)；遗留路线 A 才额外执行 [mock-legacy-route-a.md](./mock-legacy-route-a.md)。
 - [ ] L1/L2 代码质量 findings 已处理或登记：组件内 `fetch`、无约束 `any`、派生状态双写、散落映射/跳转动作等由全局规则、skill 或 `.cursor/rules` 审查；本清单只承接结果和证据。
 - [ ] Review 已反查所有权表：无同一业务事实的多个可写副本；无只靠人工记忆同步的常量/枚举/规则/项目结论；迁移期例外已进 `06-collaboration.md` 并带到期条件和移除计划。
-- [ ] 固定文案逐字核对：每条文案值 === 文案契约表「默认中文」=== PRD/Figma 原文（无意译/改写/增删标点）；已建「值 === 来源原文」字面断言测试（`it.each` + `toBe`，覆盖标题/按钮/toast/弹窗），结构断言不替代（见 [architecture-and-state.md §7.1](./architecture-and-state.md)，反面案例 PR-02022）。
+- [ ] 固定文案逐字等于 PRD/Figma 契约；用 Node/source contract 批量校验，未为 `.tsx` 新增 render 测试（见 [architecture-and-state.md §7.1](./architecture-and-state.md)）。
 - [ ] L1 结构/可维护性 findings 已处理或登记：`.tsx` 体量、活注释、关键逻辑注释、重复逻辑抽取等不在 L3 复制正文。
 - [ ] loading/empty/error/disabled 完整。
 - [ ] 未登录/无权限/接口失败/空数据边界覆盖。
@@ -101,10 +99,10 @@ G7 是 test 提测前的用例预检与开发侧回归阶段，不是 AQ 在 tes
 - [ ] 用户切 light 后刷新/重进仍 light。
 - [ ] Figma token 映射无硬编码绕过；可由 `tailwind-preset.js` 表达的尺寸/圆角未写成 arbitrary class。
 - [ ] i18n 符合公共规则：`apps/web` 开发期只考虑中文，提测前收敛到 `zh-CN`；`apps/` 其他默认文字写死；无手动新增/复制/同步/占位其他语言目录；使用时优先静态全键 `t('ns:key')`，动态键须保留静态可 grep 前缀 + `Record` 收敛枚举。
-- [ ] 触达文件已跑 Biome。
+- [ ] 相关改动稳定后，touched files 已集中跑一次 Biome。
 - [ ] 已跑 `verify-code-rules.mjs --project <PROJECT-ID>`（只检查新增/已改文件）；findings 已修或登记豁免。
 - [ ] **G6 已跑 `/code-review` skill 审本次 diff**，`agent/code-review.json` 记录 findings、处置、证据和 review HEAD；不能只写“已 review”。
-- [ ] 已完成 PRD bullet ↔ 原子需求 ↔ 单一 Task ↔ acceptance evidence 对账；每个所需证据类型都有匹配的 passed 项，纯 copy 断言未冒充 label/可见性/条件渲染证据。
+- [ ] PRD ↔ 原子需求 ↔ Task ↔ evidence 已对账；copy 未冒充 DOM 证据，`.tsx` 未新增 Vitest/RTL render 测试。
 - [ ] Browser/Playwright 验证结论已记录。
 - [ ] Browser/Playwright 已真实打开页面逐项自测，报告记 URL/视口/步骤/结果。
 - [ ] PRD/交互文档写「点击 X→Y」的行为，测试有实际 `browser_click` + Y 副作用验证（URL 变化/弹窗消失/toast/状态变更）；未以文案出现代替交互验证（见 [browser-e2e-mcp.md §5](./browser-e2e-mcp.md)）。
