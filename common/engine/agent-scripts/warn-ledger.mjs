@@ -237,7 +237,7 @@ if (args.includes('--health') || positional[0] === 'health') {
 
 if (positional[0] === 'record') {
   const projectId = positional[1]
-  if (!/^PR-\d{5}$/.test(projectId || '')) { console.error('usage: warn-ledger.mjs record PR-01234 --write'); process.exit(1) }
+  if (!/^(?:PR|TR)-\d{5}$/.test(projectId || '')) { console.error('usage: warn-ledger.mjs record <PROJECT-ID> --write'); process.exit(1) }
   const worktree = readWorktree(projectId)
   const run = spawnSync(process.execPath, [join(scriptDir, 'verify-code-rules.mjs'), '--project', projectId, '--json'], { cwd: worktree, encoding: 'utf8' })
   let findings = []

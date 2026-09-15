@@ -116,7 +116,7 @@ if (args.includes('--self-test')) {
   process.exit(0)
 }
 
-if (!new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(projectId || '') || !/^G[0-8]$/.test(gate)) usage()
+if (!new RegExp(`^(?:${config.projectIdPattern || '(?:PR|TR)-\\d{5}'})$`).test(projectId || '') || !/^G[0-8]$/.test(gate)) usage()
 const { partial, gateLabel, error: partialError } = resolvePartialRun({ gate, partial: partialRequested })
 if (partialError) fail(partialError)
 if (skipCodeRules && strictCodeRuleGates.includes(gate) && !skipCodeRulesReason) {

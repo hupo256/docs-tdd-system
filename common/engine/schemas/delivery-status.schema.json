@@ -5,7 +5,7 @@
   "type": "object",
   "required": ["projectId", "mode", "branch", "headSha", "evidence"],
   "properties": {
-    "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },
+    "projectId": { "type": "string", "pattern": "^(?:PR|TR)-\\d{5}$" },
     "mode": {
       "type": "string",
       "description": "Git delivery state. pushed is sufficient for G8 test handoff; this is not a test/pre/online environment status.",

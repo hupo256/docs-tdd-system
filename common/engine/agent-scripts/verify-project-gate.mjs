@@ -128,7 +128,7 @@ function runSelfTest() {
 
 if (args.includes('--self-test')) runSelfTest()
 
-if (!/^PR-\d{5}$/.test(projectId || '') || !/^G[0-8]$/.test(gate)) failUsage()
+if (!/^(?:PR|TR)-\d{5}$/.test(projectId || '') || !/^G[0-8]$/.test(gate)) failUsage()
 // partial 只对 G6 合法；非法组合直接 usage 退出，不静默降级成完整 G6。
 const { partial, gateLabel, error: partialError } = resolvePartialRun({ gate, partial: partialRequested })
 if (partialError) {

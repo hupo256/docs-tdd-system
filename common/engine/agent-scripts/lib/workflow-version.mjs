@@ -18,7 +18,7 @@ function git(args, cwd) {
 export function projectIdFromBranch(branch, config = {}) {
   if (typeof branch !== 'string' || !branch.trim()) return null
   const branchPrefix = config.branchPrefix || 'feature/'
-  const projectIdPattern = config.projectIdPattern || 'PR-\\d{5}'
+  const projectIdPattern = config.projectIdPattern || '(?:PR|TR)-\\d{5}'
   const idRe = new RegExp(projectIdPattern)
   for (const prefix of [branchPrefix, 'fix/']) {
     if (branch.startsWith(prefix)) {
@@ -64,6 +64,7 @@ function selfTest() {
     if (!condition) throw new Error(`workflow-version self-test failed: ${message}`)
   }
   assert(projectIdFromBranch('feature/PR-01234-foo', {}) === 'PR-01234', 'feature/ prefix extraction')
+  assert(projectIdFromBranch('feature/TR-02386-login', {}) === 'TR-02386', 'TR feature prefix extraction')
   assert(projectIdFromBranch('fix/PR-05678-bar', {}) === 'PR-05678', 'fix/ prefix extraction')
   assert(projectIdFromBranch('main', {}) === null, 'unrelated branch yields no projectId')
   assert(projectIdFromBranch('release/PR-09999', {}) === 'PR-09999', 'bare pattern fallback')

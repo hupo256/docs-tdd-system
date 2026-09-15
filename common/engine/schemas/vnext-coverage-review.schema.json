@@ -7,7 +7,7 @@
   "properties": {
     "schemaVersion": { "const": 1 },
     "protocol": { "const": "vnext-independent-coverage-review-v2" },
-    "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },
+    "projectId": { "type": "string", "pattern": "^(?:PR|TR)-\\d{5}$" },
     "sourceFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
     "requirementsFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
     "reviewRunId": { "type": "string", "minLength": 1 },

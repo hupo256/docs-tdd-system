@@ -346,7 +346,7 @@ function remigrateManifest(projectId) {
 }
 
 const projectId = args[0]
-if (!/^PR-\d{5}$/.test(projectId || '')) {
+if (!/^(?:PR|TR)-\d{5}$/.test(projectId || '')) {
   console.error('usage: prd-intake.mjs PR-01234 [--init --source <docs_tdd/*.md> ... | --remigrate | --stage G0|G2 | --approve] [--json]')
   process.exit(1)
 }

@@ -46,7 +46,7 @@ function fail(message) {
 }
 
 function assertProjectId(value) {
-  if (!new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(value || '')) {
+  if (!new RegExp(`^(?:${config.projectIdPattern || '(?:PR|TR)-\\d{5}'})$`).test(value || '')) {
     fail('usage: start-new-project.mjs PR-01234 --prd <Lark URL or local md path> [--title <name>] [--dry-run]');
   }
 }

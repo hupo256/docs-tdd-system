@@ -67,7 +67,7 @@ function runSelfTest() {
 }
 
 if (process.argv.includes('--self-test')) runSelfTest()
-if (!/^PR-\d{5}$/.test(projectId || '')) failUsage()
+if (!/^(?:PR|TR)-\d{5}$/.test(projectId || '')) failUsage()
 
 const projectDir = resolveProjectRoot(projectId)
 const manifestFile = join(projectDir, 'agent/msw-manifest.json')

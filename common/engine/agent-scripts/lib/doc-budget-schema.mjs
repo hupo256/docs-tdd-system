@@ -113,13 +113,14 @@ export function selfTest() {
     required: ['id', 'stage'],
     additionalProperties: false,
     properties: {
-      id: { type: 'string', pattern: '^PR-\\d{4,}$' },
+      id: { type: 'string', pattern: '^(?:PR|TR)-\\d{5}$' },
       stage: { type: 'string', enum: ['G0', 'G3', 'G6'] },
       order: { type: 'integer', minimum: 0 },
       tags: { type: 'array', items: { type: 'string' } },
     },
   }
   assert.deepEqual(validateSchema({ id: 'PR-01947', stage: 'G3', order: 1, tags: ['a'] }, schema), [])
+  assert.deepEqual(validateSchema({ id: 'TR-02386', stage: 'G3', order: 1, tags: ['a'] }, schema), [])
   assert.deepEqual(validateSchema('nope', schema), ['root 必须是 object'])
   const bad = validateSchema({ id: 'X', stage: 'G9', order: -1, extra: 1, tags: [2] }, schema)
   assert.ok(bad.some((e) => e.includes('缺少必填字段')) === false) // id/stage 都在

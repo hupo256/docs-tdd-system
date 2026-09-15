@@ -103,10 +103,10 @@ node apps/web/docs_tdd/common/engine/agent-scripts/prepare-coding-worktree.mjs P
 
 脚本必须完成/检查：
 
-1. 编号格式 `PR-xxxxx`。
-2. 新分支 `feature/PR-xxxxx`，**从最新 `origin/online` 切出**（默认 `--base-ref origin/online`，切前先 `git fetch origin online`）。
+1. 编号格式为 `PR-xxxxx` 或 `TR-xxxxx`。
+2. 新分支 `feature/<PROJECT-ID>`，**从最新 `origin/online` 切出**（默认 `--base-ref origin/online`，切前先 `git fetch origin online`）。
 3. **基线校验**：`git merge-base --is-ancestor origin/online HEAD` 通过（基线方向语义见 [git-branch-flow.md](./git-branch-flow.md) §1）；不通过即切错基线，脚本立即失败。
-4. worktree 与主仓同级，目录名 `PR-xxxxx`。
+4. worktree 与主仓同级，目录名 `<PROJECT-ID>`。
 5. worktree 内 `apps/web/docs_tdd` 是指向主仓的软链。
 6. 依赖就绪，优先 `pnpm install --frozen-lockfile`。
 7. 具备 `node`/`pnpm`/`git`。

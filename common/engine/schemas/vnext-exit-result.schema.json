@@ -13,7 +13,7 @@
     "evidenceTrust": { "type": "string", "enum": ["caller-supplied", "cli-attested"] },
     "runId": { "type": "string", "minLength": 1 },
     "generatedAt": { "type": "string", "format": "date-time" },
-    "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },
+    "projectId": { "type": "string", "pattern": "^(?:PR|TR)-\\d{5}$" },
     "level": { "type": "string", "enum": ["V0", "V1", "V2"] },
     "status": { "type": "string", "enum": ["passed", "failed", "blocked"] },
     "ok": { "type": "boolean" },
@@ -81,7 +81,7 @@
       "required": ["issuedBy", "projectId", "workItemFingerprint", "codeContentHash", "planFingerprint", "runId", "startedAt", "completedAt", "signature", "bundleFingerprint"],
       "properties": {
         "issuedBy": { "const": "docs-tdd-evidence-v1" },
-        "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },
+        "projectId": { "type": "string", "pattern": "^(?:PR|TR)-\\d{5}$" },
         "workItemFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
         "codeContentHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
         "planFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },

@@ -45,7 +45,7 @@ const verifyPath = readOption('--verify-path', config.verifyPath || '/zh-CN');
 const baseRef = readOption('--base-ref', config.baseRef || 'origin/online');
 
 function printHelp() {
-  console.log(`usage: prepare-coding-worktree.mjs <PR-01234> [--dry-run] [--skip-install] [--skip-verify] [--port <port>] [--verify-path <path>] [--base-ref <ref>] [--help]
+  console.log(`usage: prepare-coding-worktree.mjs <PROJECT-ID> [--dry-run] [--skip-install] [--skip-verify] [--port <port>] [--verify-path <path>] [--base-ref <ref>] [--help]
 
 Create ${config.branchPrefix || 'feature/'}<PR-ID> worktree from the configured base ref, symlink docs_tdd, install deps, and verify dev server.
 
@@ -100,9 +100,9 @@ function tryOutput(command, args, cwd = repoRoot) {
   return result.stdout.trim();
 }
 
-const projectIdPattern = new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`);
+const projectIdPattern = new RegExp(`^(?:${config.projectIdPattern || '(?:PR|TR)-\\d{5}'})$`);
 if (!projectId || !projectIdPattern.test(projectId)) {
-  fail('usage: prepare-coding-worktree.mjs PR-01234 [--dry-run] [--skip-install] [--skip-verify] [--port 4001] [--verify-path /zh-CN] [--base-ref origin/online]');
+  fail('usage: prepare-coding-worktree.mjs <PROJECT-ID> [--dry-run] [--skip-install] [--skip-verify] [--port 4001] [--verify-path /zh-CN] [--base-ref origin/online]');
 }
 
 const gitRoot = output('git', ['rev-parse', '--show-toplevel']);

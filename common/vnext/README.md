@@ -2,6 +2,8 @@
 
 > 状态：**正式启用（enforced）**。当前框架发布版本为 **v3.3**，使用第二代 work-item 协议；项目文件中的稳定兼容标识仍为 `workflowVersion: 2`。自 2026-09-08 起，该协议作为新需求默认系统；第一代流程只服务存量 `workflowVersion: 1` 项目和显式 `--legacy` 项目。历史切换决策见 [cutover-decision-20260908.md](./cutover-decision-20260908.md)。
 
+项目编号支持大写 `PR-xxxxx` 与 `TR-xxxxx`（五位数字）；本文命令里的 `PR-01234` 仅作示例。
+
 ## 版本边界
 
 - **产品发布版本**：v3.3，表示当前整体能力集合。

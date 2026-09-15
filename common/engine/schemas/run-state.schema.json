@@ -6,7 +6,7 @@
   "required": ["version", "projectId", "status", "currentStage", "nextAction", "updatedAt", "attempts"],
   "properties": {
     "version": { "type": "integer", "minimum": 1 },
-    "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },
+    "projectId": { "type": "string", "pattern": "^(?:PR|TR)-\\d{5}$" },
     "status": { "type": "string", "enum": ["ready", "active", "waiting_approval", "blocked", "complete"] },
     "workflowVersion": { "type": "integer", "enum": [1, 2] },
     "currentStage": { "type": "string", "pattern": "^(G[0-8]|V2-(intake|review|evidence|verification|complete))$" },

@@ -6,7 +6,7 @@
   "required": ["version", "projectId", "generatedAt", "approvedFingerprint", "sources", "items"],
   "properties": {
     "version": { "type": "integer", "minimum": 1 },
-    "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },
+    "projectId": { "type": "string", "pattern": "^(?:PR|TR)-\\d{5}$" },
     "generatedAt": { "type": "string", "minLength": 1 },
     "approvedFingerprint": { "type": "string" },
     "remoteSources": {

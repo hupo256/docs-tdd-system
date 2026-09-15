@@ -32,7 +32,7 @@
         "required": ["projectId", "artifactDir", "artifactMode", "enrolledAt", "newRequirement", "executionAttestation", "observation"],
         "properties": {
           "sampleId": { "type": "string", "pattern": "^[A-Z0-9][A-Z0-9._-]{2,63}$" },
-          "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },
+          "projectId": { "type": "string", "pattern": "^(?:PR|TR)-\\d{5}$" },
           "artifactDir": { "type": "string", "minLength": 1 },
           "artifactMode": { "type": "string", "enum": ["isolated-snapshot", "project"] },
           "enrolledAt": { "type": "string", "format": "date-time" },
@@ -71,7 +71,7 @@
         "additionalProperties": false,
         "required": ["projectId", "sourceRef", "sourceRevision", "sourceContentHash", "requestedLevel", "classifiedLevel", "decision", "assessedAt", "reason"],
         "properties": {
-          "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },
+          "projectId": { "type": "string", "pattern": "^(?:PR|TR)-\\d{5}$" },
           "sourceRef": { "type": "string", "minLength": 1 },
           "sourceRevision": { "type": "string", "minLength": 1 },
           "sourceContentHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
@@ -89,7 +89,7 @@
         "type": "object",
         "required": ["projectId", "source", "decidedAt", "decision", "reason"],
         "properties": {
-          "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },
+          "projectId": { "type": "string", "pattern": "^(?:PR|TR)-\\d{5}$" },
           "source": { "type": "string", "minLength": 1 },
           "decidedAt": { "type": "string", "format": "date-time" },
           "decision": { "const": "not-coding-pilot" },

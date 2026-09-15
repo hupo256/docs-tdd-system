@@ -101,7 +101,7 @@ function fail(message) {
   process.exit(1)
 }
 
-if (!/^PR-\d{5}$/.test(projectId || '')) {
+if (!/^(?:PR|TR)-\d{5}$/.test(projectId || '')) {
   fail('usage: update-context-summary.mjs PR-01234 [--stage G6] [--write|--dry-run]')
 }
 

@@ -2,6 +2,8 @@
 
 `common/` 是新项目继承项目流程、门禁、自测、边界和证据规则的唯一公共入口。项目目录只放当前需求的差异化规则、PRD、Figma、API 和任务。通用代码质量归全局 AGENTS/skill，FameEX 代码锚点归 `.cursor/rules/*.mdc`；本目录只记录何时加载、如何验证、证据落哪里。
 
+项目编号统一使用大写 `PR-xxxxx` 或 `TR-xxxxx`（五位数字）；下方命令中的 `PR-01234` 仅为示例，两类编号均由同一工具链支持。
+
 > **开工不要全读本索引**：常驻只读 [rule-router.md](./rules/rule-router.md)，再执行 `docs-tdd.mjs context <PROJECT-ID> <SCENARIO>` 读取带 fingerprint 的临时 context pack。下面是**专题全索引，供人工查阅**，不是每次全读清单。
 
 ## 专题全索引（查阅用）

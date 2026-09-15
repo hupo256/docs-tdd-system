@@ -135,7 +135,7 @@ function recoverLatest(outDir, history) {
 }
 
 function assertWorkItem(workItem) {
-  if (workItem?.schemaVersion !== 1 || workItem?.workflowVersion !== 2 || !/^PR-\d{5}$/.test(workItem?.projectId || '')) {
+  if (workItem?.schemaVersion !== 1 || workItem?.workflowVersion !== 2 || !/^(?:PR|TR)-\d{5}$/.test(workItem?.projectId || '')) {
     throw new Error('work item must be schemaVersion=1, workflowVersion=2, and have a PR-xxxxx projectId')
   }
 }

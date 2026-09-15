@@ -10,7 +10,7 @@ import { stableFingerprint } from './vnext-work-item.mjs'
 export const VNEXT_INTAKE_KINDS = Object.freeze(['feature', 'bugfix'])
 
 export function vNextBranchName(projectId, kind = 'feature', featurePrefix = 'feature/') {
-  if (!/^PR-\d{5}$/.test(projectId || '')) throw new Error('vNext branch requires a PR-xxxxx projectId')
+  if (!/^(?:PR|TR)-\d{5}$/.test(projectId || '')) throw new Error('vNext branch requires a PR-xxxxx or TR-xxxxx projectId')
   if (!VNEXT_INTAKE_KINDS.includes(kind)) throw new Error(`unsupported vNext intake kind: ${kind || 'missing'}`)
   return `${kind === 'bugfix' ? 'fix/' : featurePrefix}${projectId}`
 }

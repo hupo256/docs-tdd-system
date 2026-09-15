@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "project-frontmatter.schema.json",
   "title": "Project README Frontmatter",
-  "description": "Machine-readable metadata at the top of each PR-xxxxx/README.md",
+  "description": "Machine-readable metadata at the top of each PR-xxxxx or TR-xxxxx README.md",
   "type": "object",
   "required": ["projectId", "status", "stage", "branch", "worktree", "port", "visualFidelity", "prdSource", "figmaNode", "larkEnabled"],
   "properties": {

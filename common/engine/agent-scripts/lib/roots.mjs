@@ -37,13 +37,13 @@ export function resolveProjectRoot(projectId) {
   if (typeof projectId !== 'string' || !projectId.trim()) throw new Error('projectId is empty')
   return join(prdsRoot, projectId.trim())
 }
-// List all project instance IDs (PR-* dirs) under the current prds root. Single
+// List all project instance IDs (PR-* / TR-* dirs) under the current prds root. Single
 // source for the several sites that used to readdirSync the docs root directly, so
 // the prds/ move needs no per-site path knowledge — they follow prdsRoot.
 export function listProjectIds() {
   if (!existsSync(prdsRoot)) return []
   return readdirSync(prdsRoot, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory() && /^PR-/.test(entry.name))
+    .filter((entry) => entry.isDirectory() && /^(?:PR|TR)-/.test(entry.name))
     .map((entry) => entry.name)
 }
 
@@ -70,7 +70,7 @@ export function resolveDocsPath(value, { consumerRoot, docsMountPath = 'apps/web
       : input
   } else if (input === docsMountPath || input.startsWith(mountPrefix)) {
     candidate = join(docsSystemRoot, input === docsMountPath ? '' : input.slice(mountPrefix.length))
-  } else if (/^PR-[^/]+(?:\/|$)/.test(input)) {
+  } else if (/^(?:PR|TR)-[^/]+(?:\/|$)/.test(input)) {
     // bare project-relative input (legacy callers) -> current prds root
     candidate = join(prdsRoot, input)
   } else if (/^(?:prds|common|templates)(?:\/|$)/.test(input)) {

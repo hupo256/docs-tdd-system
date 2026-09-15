@@ -3,7 +3,7 @@
   "appSubpath": ".",
   "docsMountPath": "docs_tdd",
   "baseRef": "origin/main",
-  "projectIdPattern": "PR-\\d{5}",
+  "projectIdPattern": "(?:PR|TR)-\\d{5}",
   "branchPrefix": "feature/",
   "defaultPort": 3000,
   "portRangeStart": 3000,

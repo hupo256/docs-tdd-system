@@ -5,7 +5,7 @@
   "type": "object",
   "required": ["projectId", "runs"],
   "properties": {
-    "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },
+    "projectId": { "type": "string", "pattern": "^(?:PR|TR)-\\d{5}$" },
     "runs": {
       "type": "array",
       "items": {

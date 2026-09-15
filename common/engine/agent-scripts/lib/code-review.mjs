@@ -44,7 +44,7 @@ export function validateCodeReview(report, expectedProjectId = '') {
   if (!report || typeof report !== 'object' || Array.isArray(report)) return ['code-review.json 必须是对象']
   const errors = []
   if (!isNonEmptyString(report.projectId)) errors.push('缺 projectId')
-  else if (!/^PR-\d{5}$/.test(report.projectId)) errors.push('projectId 须形如 PR-01234')
+  else if (!/^(?:PR|TR)-\d{5}$/.test(report.projectId)) errors.push('projectId 须形如 PR-01234 或 TR-01234')
   else if (expectedProjectId && report.projectId !== expectedProjectId) errors.push(`projectId=${report.projectId} 与当前项目 ${expectedProjectId} 不一致`)
   if (!DATE_RE.test(report.reviewedAt ?? '')) errors.push('reviewedAt 须是 YYYY-MM-DD')
   if (!isNonEmptyString(report.reviewer)) errors.push('缺 reviewer')

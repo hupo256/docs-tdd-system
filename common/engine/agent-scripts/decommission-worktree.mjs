@@ -60,7 +60,7 @@ function readOption(name, fallback) {
   return process.argv[index + 1] ?? fallback
 }
 
-if (!projectId || !/^PR-[A-Za-z0-9]+$/.test(projectId)) {
+if (!projectId || !/^(?:PR|TR)-\d{5}$/.test(projectId)) {
   fail('用法：decommission-worktree.mjs PR-xxxxx [--dry-run] [--force] [--path <worktree>] [--branch <name>]')
 }
 

@@ -127,8 +127,8 @@ if (command === 'capability') {
 }
 
 if (command === 'probe') {
-  if (!projectId || !/^PR-\d+$/.test(projectId)) {
-    console.error('Usage: docs-tdd probe PR-XXXXX --client codex|claude|pi [--target path]')
+  if (!projectId || !/^(?:PR|TR)-\d+$/.test(projectId)) {
+    console.error('Usage: docs-tdd probe <PROJECT-ID> --client codex|claude|pi [--target path]')
     process.exit(1)
   }
   if (!['codex', 'claude', 'pi'].includes(agentClient)) {
@@ -200,7 +200,7 @@ if (command === 'explain') {
 if (command === 'rules') {
   const subcommand = projectId
   const targetPr = detail
-  const idPattern = new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`)
+  const idPattern = new RegExp(`^(?:${config.projectIdPattern || '(?:PR|TR)-\\d{5}'})$`)
   if (!['status', 'upgrade'].includes(subcommand) || !idPattern.test(targetPr || '')) {
     console.error('usage: docs-tdd.mjs rules <status|upgrade> PR-01234')
     process.exit(1)
@@ -247,7 +247,7 @@ if (command === 'rules') {
   process.exit(0)
 }
 
-if (!new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(projectId || '')) {
+if (!new RegExp(`^(?:${config.projectIdPattern || '(?:PR|TR)-\\d{5}'})$`).test(projectId || '')) {
   console.error('usage: docs-tdd.mjs <run|kickoff|status|resume|next|source-update|source-sync|extract|scope-approval|scope-approve|review|review-adjudicate|review-resume|checkpoint|dev-check|commit|worktree-prepare|capability|probe|doctor|release|golden|guard|rule-health|rules|explain|check|gate|evidence|verify|context|changed|recommend> PR-01234 [G0-G8|scenario] [--input file.json] [--evidence evidence.json] [--surfaces surfaces.json] [--plan evidence-plan.json] [--path-map dev-check-path-map.json] [--out file.json] [--kind feature|bugfix] [--dry-run] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|pi|human] [--session-id <id>] [--target path] [--model <name>]')
   process.exit(1)
 }

@@ -12,7 +12,7 @@ const scriptDir = dirname(fileURLToPath(import.meta.url))
 const { docsSystemRoot, consumerRoot: repoRoot, consumerWorktree, config } = resolveRoots()
 const executionRoot = consumerWorktree && consumerWorktree !== docsSystemRoot ? consumerWorktree : repoRoot
 const args = process.argv.slice(2)
-const projectId = args.find((arg) => new RegExp(`^(?:${config.projectIdPattern || 'PR-\\d{5}'})$`).test(arg)) || ''
+const projectId = args.find((arg) => new RegExp(`^(?:${config.projectIdPattern || '(?:PR|TR)-\\d{5}'})$`).test(arg)) || ''
 const scenarioIndex = args.indexOf('--scenario')
 const scenario = scenarioIndex >= 0 ? args[scenarioIndex + 1] : 'docs_tdd_maintenance'
 const allowTrackedRuleChanges = args.includes('--allow-tracked-rule-changes')

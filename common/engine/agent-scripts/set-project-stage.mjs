@@ -189,7 +189,7 @@ if (args.includes('--self-test')) {
   process.exit(0)
 }
 
-if (!/^PR-\d{5}$/.test(projectId || '') || !/^G[0-8]$/.test(gate)) {
+if (!/^(?:PR|TR)-\d{5}$/.test(projectId || '') || !/^G[0-8]$/.test(gate)) {
   fail('usage: set-project-stage.mjs PR-01234 G6 [--force] [--dry-run] [--json] [--no-index] [--no-summary]')
 }
 

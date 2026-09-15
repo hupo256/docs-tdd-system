@@ -7,7 +7,7 @@
   "properties": {
     "schemaVersion": { "const": 1 },
     "workflowVersion": { "const": 2 },
-    "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },
+    "projectId": { "type": "string", "pattern": "^(?:PR|TR)-\\d{5}$" },
     "level": { "type": "string", "enum": ["V0", "V1", "V2"] },
     "mode": { "type": "string", "enum": ["full", "delta", "unchanged"] },
     "chars": { "type": "integer", "minimum": 1 },
@@ -20,7 +20,7 @@
       "required": ["schemaVersion", "projectId", "level", "workItemFingerprint", "resultStateFingerprint", "contextFingerprint", "generatedAt"],
       "properties": {
         "schemaVersion": { "const": 1 },
-        "projectId": { "type": "string", "pattern": "^PR-\\d{5}$" },
+        "projectId": { "type": "string", "pattern": "^(?:PR|TR)-\\d{5}$" },
         "level": { "type": "string", "enum": ["V0", "V1", "V2"] },
         "workItemFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
         "resultStateFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },

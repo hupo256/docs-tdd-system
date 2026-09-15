@@ -31,7 +31,7 @@ export function validateAcceptanceResults(report, expectedProjectId = '') {
   if (!report || typeof report !== 'object' || Array.isArray(report)) return ['acceptance-results.json 必须是对象']
   const errors = []
   if (!nonEmpty(report.projectId)) errors.push('缺 projectId')
-  else if (!/^PR-\d{5}$/.test(report.projectId)) errors.push('projectId 须形如 PR-01234')
+  else if (!/^(?:PR|TR)-\d{5}$/.test(report.projectId)) errors.push('projectId 须形如 PR-01234 或 TR-01234')
   else if (expectedProjectId && report.projectId !== expectedProjectId) errors.push(`projectId=${report.projectId} 与当前项目 ${expectedProjectId} 不一致`)
   // head 记录验收对应的 commit sha：强制记录，代码再改即由 DOC-AC-006 判定过时。
   if (!nonEmpty(report.head)) errors.push('缺 head（须记录验收对应的 commit sha，代码变更后重跑）')

@@ -628,7 +628,7 @@ const docFilesForScriptRefs = [
 // 这里专门拦 `docs-tdd.mjs context PR-01234 typo_scenario` 这类能复制、但运行必失败的漂移。
 {
   const invalidScenarioRefs = []
-  const literalScenarioRe = /docs-tdd\.mjs\s+context\s+(?:PR-\d{5}|<PROJECT-ID>)\s+([a-z][a-z0-9_]*)/g
+  const literalScenarioRe = /docs-tdd\.mjs\s+context\s+(?:(?:PR|TR)-\d{5}|<PROJECT-ID>)\s+([a-z][a-z0-9_]*)/g
   for (const file of docFilesForScriptRefs) {
     const text = readFileSync(file, 'utf8')
     for (const match of text.matchAll(literalScenarioRe)) {
@@ -840,7 +840,7 @@ if (missingTemplateRefs.length) {
 {
   const syncErrors = []
   const projectNames = readdirSync(PRDS_DIR, { withFileTypes: true })
-    .filter((entry) => isRealProjectDir(entry, /^PR-\d{5}$/))
+    .filter((entry) => isRealProjectDir(entry, /^(?:PR|TR)-\d{5}$/))
     .map((entry) => entry.name)
   let checkedGates = 0
   for (const name of projectNames) {
@@ -903,7 +903,7 @@ if (missingTemplateRefs.length) {
   const chainErrors = []
   const requiredSequence = ['G5', 'G6', 'G7', 'G8']
   const projectNames = readdirSync(PRDS_DIR, { withFileTypes: true })
-    .filter((entry) => isRealProjectDir(entry, /^PR-/))
+    .filter((entry) => isRealProjectDir(entry, /^(?:PR|TR)-/))
     .map((entry) => entry.name)
   let checkedProjects = 0
   for (const name of projectNames) {
@@ -989,7 +989,7 @@ if (missingTemplateRefs.length) {
     errors.push(...schemaLoadErrors)
   } else {
     const projectNames = readdirSync(PRDS_DIR, { withFileTypes: true })
-      .filter((entry) => isRealProjectDir(entry, /^PR-/))
+      .filter((entry) => isRealProjectDir(entry, /^(?:PR|TR)-/))
       .map((entry) => entry.name)
     const schemaErrors = []
     for (const name of projectNames) {

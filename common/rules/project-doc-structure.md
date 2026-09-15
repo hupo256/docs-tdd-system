@@ -4,9 +4,9 @@
 
 ## 变量约定
 
-- `<PROJECT-ID>`:项目编号目录,大写字母+五位数字,如 `PR-01234`。
+- `<PROJECT-ID>`:项目编号目录，使用 `PR-xxxxx` 或 `TR-xxxxx`（大写前缀 + 五位数字），如 `PR-01234`、`TR-02386`。
 - `<feature-domain>`:代码业务域名,仅用于源码路径,如 `apps/web/src/apps/<feature-domain>/`、`services/api/<feature-domain>/`。
-- 公共规则正文不得写入具体项目目录;具体 `PR-xxxxx` 只允许出现在项目索引、历史来源、复盘案例或项目自己的文档。
+- 公共规则正文不得写入具体项目目录；具体 `PR-xxxxx` / `TR-xxxxx` 只允许出现在项目索引、历史来源、复盘案例或项目自己的文档。
 
 ## 推荐结构
 
@@ -70,7 +70,7 @@ PROJECTS.md                    # 顶层项目状态索引，由 update-project-i
 
 ## 命名规则
 
-- 项目目录名必须用项目编号 `PR-01234`;字母大写,不用业务名、kebab-case 或小写 `pr-01234`。
+- 项目目录名必须用项目编号（如 `PR-01234` 或 `TR-02386`）；字母大写，不用业务名、kebab-case 或小写编号。
 - `inbox/` 原始输入建议 `.md`;可留原始中文名,也可重命名 `prd-<PROJECT-ID>-<简述>-<yyyymmdd>.md`。原始名含中文/特殊字符时在 `README.md` 登记来源和重命名映射,避免脚本引用和 grep 出错。
 - 项目文档按编号排序,方便每次从 00/01 读到 07。
 - 新增 Figma 规格:G1 复制 `templates/07-figma-spec-template.md` → `product/07-figma-spec.md`;原始 MCP 导出放 `inbox/figma/`。
