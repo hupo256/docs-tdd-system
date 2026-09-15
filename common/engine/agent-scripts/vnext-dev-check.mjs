@@ -282,13 +282,13 @@ export function selfTest() {
   assert.equal(applyDevelopmentCheck(workItem, report).autopilot.lastDevCheck.runId, report.runId)
   const selected = selectDevelopmentCommands([
     { evidenceId: 'E-file', kind: 'pure-logic', argv: ['pnpm', 'test', '--run', 'tests/a.spec.ts'], requirementIds: ['R-001'], surfaceIds: ['S-001'] },
-    { evidenceId: 'E-suite', kind: 'contract-or-scenario-tests', argv: ['pnpm', 'test', '--run', 'tests'], requirementIds: ['R-001'], surfaceIds: ['S-001'] },
-    { evidenceId: 'E-type', kind: 'directed-quality', argv: ['pnpm', 'typecheck'], requirementIds: ['R-001'], surfaceIds: ['S-001'] },
+    { evidenceId: 'E-same', kind: 'contract-or-scenario-tests', argv: ['pnpm', 'test', '--run', 'tests/a.spec.ts'], requirementIds: ['R-001'], surfaceIds: ['S-001'] },
+    { evidenceId: 'E-type', kind: 'directed-quality', argv: ['node', 'scripts/check-touched-types.mjs', '--files', 'src/login.ts'], requirementIds: ['R-001'], surfaceIds: ['S-001'] },
     { evidenceId: 'E-browser', kind: 'browser-interaction', argv: ['node', 'browser.mjs'], requirementIds: ['R-001'], surfaceIds: ['S-001'] },
   ], DEFERRED_COMMAND_KINDS)
-  assert.deepEqual(selected.commands.map((command) => command.evidenceId), ['E-suite', 'E-type'])
-  assert.deepEqual(selected.supersededCommandIds, ['E-file'])
-  assert.match(evidenceCommandRuntimeProblem({ evidenceId: 'E-missing', argv: ['pnpm', 'test', '--run', 'missing-tests'] }, '/tmp'), /does not exist/)
+  assert.deepEqual(selected.commands.map((command) => command.evidenceId), ['E-file', 'E-type'])
+  assert.deepEqual(selected.supersededCommandIds, ['E-same'])
+  assert.match(evidenceCommandRuntimeProblem({ evidenceId: 'E-missing', kind: 'pure-logic', argv: ['pnpm', 'test', '--run', 'missing-tests.spec.ts'] }, '/tmp'), /does not exist/)
   const unmapped = runDevelopmentCheck({
     workItem, worktree: '/tmp/worktree',
     dependencies: { measure: () => code, changedPaths: () => ['src/unknown.ts'], pendingPaths: () => ['src/unknown.ts'], execute: () => ({ exitCode: 0, signal: '', stdout: '', stderr: '' }) },

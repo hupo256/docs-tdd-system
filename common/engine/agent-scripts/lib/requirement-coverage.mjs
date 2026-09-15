@@ -13,8 +13,8 @@ export const REQUIREMENT_EVIDENCE_TYPES = [
 ]
 
 export const EVIDENCE_METHODS = {
-  'copy-literal': ['vitest'],
-  'component-dom': ['vitest', 'browser'],
+  'copy-literal': ['contract'],
+  'component-dom': ['contract', 'browser'],
   'pure-logic': ['vitest'],
   'payload-contract': ['vitest', 'contract'],
   'api-contract': ['vitest', 'contract'],
@@ -176,7 +176,10 @@ function selfTest() {
   assert.equal(valid.requirements.length, 1)
   assert.ok(valid.checks.every((check) => check.ok))
   assert.deepEqual(valid.requirements[0].evidenceTypes, ['copy-literal', 'component-dom'])
-  assert.ok(evidenceMethodMatches('component-dom', 'vitest'))
+  assert.ok(evidenceMethodMatches('copy-literal', 'contract'))
+  assert.ok(!evidenceMethodMatches('copy-literal', 'vitest'))
+  assert.ok(evidenceMethodMatches('component-dom', 'contract'))
+  assert.ok(!evidenceMethodMatches('component-dom', 'vitest'))
   assert.ok(!evidenceMethodMatches('visual', 'vitest'))
 
   const noTask = atomicRequirementChecks({ inventoryText: inventory, tasksText: tasks.replace('R-F01-01', '—'), doingFeatureIds: ['F01'] })

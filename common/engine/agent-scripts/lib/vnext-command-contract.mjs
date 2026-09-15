@@ -3,8 +3,8 @@
 
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
-import { basename, dirname, join, relative, resolve } from 'node:path'
+import { existsSync, readFileSync, statSync } from 'node:fs'
+import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const DEFAULT_COMMAND_TIMEOUT_SECONDS = 300
@@ -40,10 +40,51 @@ export function executeReviewedCommand(spec, worktree) {
   }
 }
 
-function testRunTarget(command) {
-  const runIndex = command.argv.indexOf('--run')
-  if (runIndex === -1 || !command.argv[runIndex + 1]) return ''
-  return command.argv[runIndex + 1].replaceAll('\\', '/').replace(/\/$/, '')
+function normalizedArgv(command) {
+  return (command?.argv || []).map((part) => part.replaceAll('\\', '/').replace(/\/$/, ''))
+}
+
+function explicitTestTargets(command) {
+  return normalizedArgv(command).filter((part) => /\.(?:test|spec)\.[cm]?[jt]sx?$/.test(part))
+}
+
+function looksLikeTestRunner(command) {
+  return normalizedArgv(command).some((part) => ['test', '--test', 'vitest', 'jest', 'mocha', 'ava', 'tap'].includes(basename(part).toLowerCase()))
+}
+
+function qualityScope(command) {
+  if (!['directed-quality', 'touched-file-quality'].includes(command?.kind)) return null
+  const args = normalizedArgv(command)
+  const invokesQualityTool = args.some((part) => ['biome', 'eslint', 'lint', 'tsc', 'typecheck', 'type-check'].includes(basename(part).toLowerCase()))
+  if (!invokesQualityTool) return null
+  const filesOptionIndex = args.indexOf('--files')
+  const targets = args.filter((part) => /\.(?:[cm]?[jt]sx?|json)$/.test(part))
+  if (filesOptionIndex >= 0 && args[filesOptionIndex + 1]) targets.push(...args[filesOptionIndex + 1].split(','))
+  return targets
+}
+
+export function evidenceCommandPolicyProblem(command) {
+  if (['component-dom', 'copy-literal'].includes(command?.kind) && looksLikeTestRunner(command)) {
+    return `${command?.evidenceId || 'command'} ${command.kind} must use a Node/source DOM-contract script or browser evidence, not a Vitest/Jest component or copy test`
+  }
+  const testTargets = explicitTestTargets(command)
+  if (looksLikeTestRunner(command) && !testTargets.length) {
+    return `${command?.evidenceId || 'command'} test command must name explicit related test files; repository/package/directory-wide suites are prohibited`
+  }
+  if (testTargets.some((target) => /[*?{}[\]]/.test(target))) {
+    return `${command?.evidenceId || 'command'} test command must name concrete test files; glob targets are prohibited`
+  }
+  if (testTargets.some((target) => /\.(?:test|spec)\.[cm]?[jt]sx$/.test(target))) {
+    return `${command?.evidenceId || 'command'} .tsx component test targets are prohibited; use a Node/source DOM-contract script or browser evidence`
+  }
+  const qualityTargets = qualityScope(command)
+  if (qualityTargets && !qualityTargets.length) {
+    return `${command?.evidenceId || 'command'} quality command must name touched files (or pass --files); unscoped lint/typecheck is prohibited`
+  }
+  if (qualityTargets?.some((target) => /[*?{}[\]]/.test(target))) {
+    return `${command?.evidenceId || 'command'} quality command must name concrete touched files; glob targets are prohibited`
+  }
+  return ''
 }
 
 function includesAll(parent = [], child = []) {
@@ -52,13 +93,11 @@ function includesAll(parent = [], child = []) {
 }
 
 function commandSupersedes(parent, child) {
-  const parentTarget = testRunTarget(parent)
-  const childTarget = testRunTarget(child)
-  if (!parentTarget || !childTarget || parentTarget === childTarget || !childTarget.startsWith(`${parentTarget}/`)) return false
+  if (normalizedArgv(parent).join('\0') !== normalizedArgv(child).join('\0')) return false
   if (!includesAll(parent.requirementIds, child.requirementIds) || !includesAll(parent.surfaceIds, child.surfaceIds)) return false
-  const parentPrefix = parent.argv.slice(0, parent.argv.indexOf('--run')).join('\0')
-  const childPrefix = child.argv.slice(0, child.argv.indexOf('--run')).join('\0')
-  return parentPrefix === childPrefix
+  const strictlyBroader = (parent.requirementIds || []).length > (child.requirementIds || []).length
+    || (parent.surfaceIds || []).length > (child.surfaceIds || []).length
+  return strictlyBroader || String(parent.evidenceId).localeCompare(String(child.evidenceId)) < 0
 }
 
 export function selectDevelopmentCommands(evidenceCommands = [], deferredKinds = new Set()) {
@@ -78,22 +117,24 @@ export function selectDevelopmentCommands(evidenceCommands = [], deferredKinds =
 }
 
 export function evidenceCommandRuntimeProblem(command, worktree) {
-  const target = testRunTarget(command)
-  if (!target || /[*?{}[\]]/.test(target)) return ''
+  const policyProblem = evidenceCommandPolicyProblem(command)
+  if (policyProblem) return policyProblem
+  const targets = explicitTestTargets(command)
+  if (!targets.length) return ''
   const absoluteWorktree = resolve(worktree)
-  const absoluteTarget = resolve(worktree, target)
-  const targetRelative = relative(absoluteWorktree, absoluteTarget)
-  if (!targetRelative || targetRelative.startsWith('..') || resolve(absoluteWorktree, targetRelative) !== absoluteTarget) {
-    return `${command.evidenceId} --run target must be a repository-relative path`
+  for (const target of targets) {
+    if (isAbsolute(target)) return `${command.evidenceId} test target must be a repository-relative path`
+    const absoluteTarget = resolve(worktree, target)
+    const targetRelative = relative(absoluteWorktree, absoluteTarget)
+    if (!targetRelative || targetRelative.startsWith('..') || resolve(absoluteWorktree, targetRelative) !== absoluteTarget) {
+      return `${command.evidenceId} test target must be a repository-relative path`
+    }
+    if (!existsSync(absoluteTarget)) return `${command.evidenceId} test target does not exist: ${target}`
+    if (!statSync(absoluteTarget).isFile()) return `${command.evidenceId} test target must be an explicit file: ${target}`
   }
-  if (!existsSync(absoluteTarget)) return `${command.evidenceId} --run target does not exist: ${target}`
-  if (statSync(absoluteTarget).isDirectory() && !readdirSync(absoluteTarget, { recursive: true }).some((entry) => /\.(?:test|spec)\.[cm]?[jt]sx?$/.test(String(entry)))) {
-    return `${command.evidenceId} --run directory contains no test files: ${target}`
-  }
-  const runIndex = command.argv.indexOf('--run')
-  const scriptName = command.argv.slice(1, runIndex).at(-1)
-  if (basename(command.argv[0]).startsWith('pnpm') && scriptName === 'test') {
-    let packageDir = statSync(absoluteTarget).isDirectory() ? absoluteTarget : dirname(absoluteTarget)
+  if (basename(command.argv[0]).startsWith('pnpm') && command.argv.includes('test')) {
+    const filteredPackage = command.argv.includes('--filter')
+    let packageDir = filteredPackage ? dirname(resolve(worktree, targets[0])) : absoluteWorktree
     let packageJson = ''
     while (!relative(absoluteWorktree, packageDir).startsWith('..')) {
       const candidate = join(packageDir, 'package.json')
@@ -105,19 +146,26 @@ export function evidenceCommandRuntimeProblem(command, worktree) {
       packageDir = dirname(packageDir)
     }
     if (!packageJson || !JSON.parse(readFileSync(packageJson, 'utf8')).scripts?.test) {
-      return `${command.evidenceId} target package has no test script: ${target}`
+      return `${command.evidenceId} target package has no test script: ${targets[0]}`
     }
   }
   return ''
 }
 
 export async function selfTest() {
-  const aggregate = { evidenceId: 'E-all', kind: 'pure-logic', argv: ['pnpm', 'test', '--run', 'src/tests'], requirementIds: ['R-1'], surfaceIds: ['S-1'] }
+  const aggregate = { evidenceId: 'E-all', kind: 'pure-logic', argv: ['pnpm', 'test', '--run', 'src/tests/one.test.ts'], requirementIds: ['R-1', 'R-2'], surfaceIds: ['S-1'] }
   const child = { evidenceId: 'E-one', kind: 'pure-logic', argv: ['pnpm', 'test', '--run', 'src/tests/one.test.ts'], requirementIds: ['R-1'], surfaceIds: ['S-1'] }
   const selection = selectDevelopmentCommands([aggregate, child])
   assert.deepEqual(selection.supersededCommandIds, ['E-one'])
   assert.equal(selection.supersededCommands[0].coveringCommandId, 'E-all')
-  assert.match(evidenceCommandRuntimeProblem({ evidenceId: 'E-missing', argv: ['pnpm', 'test', '--run', `missing-${process.pid}`] }, '/tmp'), /does not exist/)
+  assert.match(evidenceCommandPolicyProblem({ evidenceId: 'E-suite', kind: 'pure-logic', argv: ['pnpm', 'test', '--run', 'src/tests'] }), /explicit related test files/)
+  assert.match(evidenceCommandPolicyProblem({ evidenceId: 'E-dom', kind: 'component-dom', argv: ['pnpm', 'test', '--run', 'src/Card.test.tsx'] }), /DOM-contract/)
+  assert.match(evidenceCommandPolicyProblem({ evidenceId: 'E-copy', kind: 'copy-literal', argv: ['pnpm', 'test', '--run', 'src/copy.test.ts'] }), /source DOM-contract/)
+  assert.match(evidenceCommandPolicyProblem({ evidenceId: 'E-test-glob', kind: 'pure-logic', argv: ['pnpm', 'test', '--run', 'src/*.test.ts'] }), /concrete test files/)
+  assert.match(evidenceCommandPolicyProblem({ evidenceId: 'E-tsx', kind: 'pure-logic', argv: ['pnpm', 'test', '--run', 'src/Card.test.tsx'] }), /component test targets/)
+  assert.match(evidenceCommandPolicyProblem({ evidenceId: 'E-type', kind: 'directed-quality', argv: ['pnpm', 'typecheck'] }), /touched files/)
+  assert.match(evidenceCommandPolicyProblem({ evidenceId: 'E-quality-glob', kind: 'directed-quality', argv: ['biome', 'check', 'src/*.ts'] }), /concrete touched files/)
+  assert.match(evidenceCommandRuntimeProblem({ evidenceId: 'E-missing', kind: 'pure-logic', argv: ['pnpm', 'test', '--run', `missing-${process.pid}.test.ts`] }, '/tmp'), /does not exist/)
   const executed = executeReviewedCommand({ argv: [process.execPath, '-e', "console.log('ok')"], timeoutSeconds: 5 }, process.cwd())
   assert.equal(executed.exitCode, 0)
   assert.match(executed.stdout, /ok/)

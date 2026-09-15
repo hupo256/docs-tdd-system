@@ -9,7 +9,7 @@ import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from '
 import { dirname, isAbsolute, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { changedCodePaths, codeFingerprint, matchesEffectiveCodeState } from './lib/fingerprint.mjs'
-import { evidenceCommandRuntimeProblem, executeReviewedCommand, selectDevelopmentCommands } from './lib/vnext-command-contract.mjs'
+import { evidenceCommandPolicyProblem, evidenceCommandRuntimeProblem, executeReviewedCommand, selectDevelopmentCommands } from './lib/vnext-command-contract.mjs'
 import { deliveryScopePathProblems } from './lib/vnext-delivery-scope.mjs'
 import { evidencePlanFingerprint, signEvidenceBundle, verifyEvidenceReceipt } from './lib/vnext-evidence-receipt.mjs'
 import { EXIT_EVIDENCE_REQUIREMENTS } from './lib/vnext-exit.mjs'
@@ -60,6 +60,8 @@ export function evidencePlanProblems(plan, workItem, { requireEffectiveReview = 
     else {
       const trivial = trivialCommandProblem(command.argv)
       if (trivial) problems.push(`${label}: ${trivial}`)
+      const policy = evidenceCommandPolicyProblem(command)
+      if (policy) problems.push(policy)
     }
     if (command?.timeoutSeconds !== undefined && (!Number.isInteger(command.timeoutSeconds) || command.timeoutSeconds < 1 || command.timeoutSeconds > 1800)) problems.push(`${label} timeoutSeconds must be an integer from 1 to 1800`)
     if (command?.requirementIds !== undefined && (!Array.isArray(command.requirementIds) || command.requirementIds.some((id) => !requirementIds.has(id)))) problems.push(`${label} contains unknown requirementIds`)
@@ -223,7 +225,7 @@ export function selfTest() {
     assert.equal(bundle.assuranceMode, 'autonomous')
     assert.equal(bundle.facts[0].result, 'pass')
     assert.deepEqual(verifyEvidenceReceipt(bundle, { workItem, currentCodeState: code, keyPath }), [])
-    const aggregate = { ...command, evidenceId: 'E-all', kind: 'directed-tests', argv: ['pnpm', 'test', '--run', 'tests'] }
+    const aggregate = { ...command, evidenceId: 'E-all', kind: 'directed-tests', argv: ['pnpm', 'test', '--run', 'tests/child.test.ts'] }
     const child = { ...command, evidenceId: 'E-child', argv: ['pnpm', 'test', '--run', 'tests/child.test.ts'] }
     const aggregateWorkItem = { ...workItem, evidenceCommands: [aggregate, child] }
     let executionCount = 0
@@ -244,6 +246,10 @@ export function selfTest() {
     assert.match(evidencePlanProblems(plan, deferredWorkItem, { requireEffectiveReview: true }).join(' '), /deferred human review/)
     assert.match(evidencePlanProblems({ ...plan, commands: [...plan.commands, plan.commands[0]] }, workItem).join(' '), /duplicate/)
     assert.match(evidencePlanProblems({ ...plan, commands: [{ ...plan.commands[0], argv: ['echo ok'] }] }, workItem).join(' '), /argv/)
+    const broadTest = { ...plan.commands[0], argv: ['pnpm', 'test'] }
+    assert.match(evidencePlanProblems({ ...plan, commands: [broadTest] }, { ...workItem, evidenceCommands: [broadTest] }).join(' '), /explicit related test files/)
+    const componentTest = { ...plan.commands[0], kind: 'component-dom', argv: ['pnpm', 'test', '--run', 'src/Card.test.tsx'] }
+    assert.match(evidencePlanProblems({ ...plan, commands: [componentTest] }, { ...workItem, evidenceCommands: [componentTest] }).join(' '), /DOM-contract/)
     const runtimeWorkItem = structuredClone(workItem)
     runtimeWorkItem.requirements[0].status = 'doing'
     runtimeWorkItem.requirements[0].evidencePlan = [{ type: 'pure-logic', runtimeRequired: true }]

@@ -264,8 +264,8 @@ function selfTest() {
   const atomicPassed = {
     ...passed,
     items: [
-      { ...passed.items[0], id: 'AC-1', requirementId: 'R-F01-01', taskId: 'T10a', evidenceType: 'copy-literal' },
-      { ...passed.items[0], id: 'AC-2', requirementId: 'R-F01-01', taskId: 'T10a', evidenceType: 'component-dom' },
+      { ...passed.items[0], id: 'AC-1', requirementId: 'R-F01-01', taskId: 'T10a', evidenceType: 'copy-literal', method: 'contract' },
+      { ...passed.items[0], id: 'AC-2', requirementId: 'R-F01-01', taskId: 'T10a', evidenceType: 'component-dom', method: 'contract' },
     ],
   }
   const atomicChecks = acceptanceChecks({ report: atomicPassed, doingFeatureIds: ['F01'], atomicRequirements, requirementTasks })

@@ -646,7 +646,7 @@ function scanAddedLine(file, line, text, findings, { visualFidelityHigh = projec
       'CODE-COPY-001',
       file,
       line,
-      '新增行含硬编码中文展示文案；固定文案须走 i18n `t(\'ns:key\')` + `03-api-contract.md §7` 文案契约表，并配「值===来源原文」字面断言测试（§7 强制项,PR-02022 意译根因）。确属非展示文本（如 aria/调试）请加 // copy-exception 说明。',
+      '新增行含硬编码中文展示文案；固定文案须走 i18n `t(\'ns:key\')` + `03-api-contract.md §7` 文案契约表，并用 Node/source contract 批量校验「值===来源原文」（§7 强制项,PR-02022 意译根因）；不得为 .tsx 新增 render 测试。确属非展示文本（如 aria/调试）请加 // copy-exception 说明。',
       'warn',
     )
   }

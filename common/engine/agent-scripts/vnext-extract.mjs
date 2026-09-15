@@ -44,6 +44,9 @@ export function scaffoldExtraction(workItem, { root = docsSystemRoot } = {}) {
       'Anchor every semantic source unit, including each tableRole=row unit, or exclude it with a reason.',
       'Declare collectionSemantics and affectedSurfaces explicitly.',
       'Provide non-trivial argv-array evidenceCommands covering every doing requirement and implement surface.',
+      'Batch quality checks after the related edit set is stable; target touched files and explicit directly related test files, never a repository/package/directory-wide suite.',
+      'Use Vitest only for naturally separate pure/tool-shaped .ts logic. Never add a Vitest/RTL render test for a .tsx component or extract component logic solely to make it unit-testable; prove component DOM with a Node DOM-contract script or browser evidence.',
+      'For collection response parsers, include a focused pure-logic case proving one malformed field/item does not suppress the remaining valid items.',
     ],
     sourceUnits: normalized.sourceUnits,
     requirements: workItem.requirements || [],
@@ -90,7 +93,7 @@ export function selfTest() {
       requirements: [{ requirementId: 'R-001', sourceAnchors: [{ type: 'text', sourceId: semantic.sourceId }], statement: 'Change A.', status: 'doing', collectionSemantics: { kind: 'none', expectedCount: 0 }, affectedSurfaces: [{ surfaceId: 'S-001', locator: 'src/a.ts', disposition: 'implement' }], evidencePlan: [{ type: 'copy-literal', runtimeRequired: false }] }],
       evidenceCommands: [
         { evidenceId: 'E-1', kind: 'copy-literal', argv: ['node', 'scripts/check-copy.mjs'], requirementIds: ['R-001'], surfaceIds: ['S-001'] },
-        { evidenceId: 'E-2', kind: 'touched-file-quality', argv: ['pnpm', 'lint'] },
+        { evidenceId: 'E-2', kind: 'touched-file-quality', argv: ['pnpm', 'exec', 'biome', 'check', 'apps/web/src/a.ts'] },
       ],
       requirementsAuthor: { kind: 'model', id: 'pi/test', client: 'pi', sessionId: 'author-1' },
     }

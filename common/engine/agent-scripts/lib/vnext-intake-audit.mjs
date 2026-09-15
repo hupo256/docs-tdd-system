@@ -105,7 +105,7 @@ export function selfTest() {
     sourceUnitDispositions: [{ sourceId: 'SRC-2', disposition: 'not-a-requirement', reason: 'example only' }],
     evidenceCommands: [
       { evidenceId: 'E-1', kind: 'copy-literal', argv: ['node', 'scripts/check-copy.mjs'], requirementIds: ['R-001'], surfaceIds: ['S-001'] },
-      { evidenceId: 'E-2', kind: 'touched-file-quality', argv: ['pnpm', 'lint'] },
+      { evidenceId: 'E-2', kind: 'touched-file-quality', argv: ['pnpm', 'exec', 'biome', 'check', 'apps/web/src/a.ts'] },
     ],
     routing: { verificationLevel: 'V0' },
   }
