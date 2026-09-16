@@ -1,0 +1,144 @@
+{
+  "schemaVersion": 1,
+  "policy": {
+    "defaultClient": "claude",
+    "allowedClients": ["claude", "pi"]
+  },
+  "cases": [
+    {
+      "caseId": "PR-02306-password-entry-omission",
+      "sourceUnits": [
+        {
+          "sourceId": "PRD-TEXT-PASSWORD-RULE",
+          "text": "Extend the shared password special-character rule."
+        },
+        {
+          "sourceId": "PRD-IMG-004",
+          "text": "Apply the required copy to the reset-password entry."
+        },
+        {
+          "sourceId": "PRD-IMG-005",
+          "text": "Apply the required copy to the change-login-password entry."
+        }
+      ],
+      "expectedRequirementKeys": [
+        "password/shared-special-character-rule",
+        "password/reset-entry-copy",
+        "password/change-login-entry-copy"
+      ],
+      "expectedSurfaceKeys": [
+        "password/shared-validator",
+        "password/reset-entry",
+        "password/change-login-entry"
+      ],
+      "mutations": [
+        {
+          "mutationId": "drop-image-only-entries",
+          "omissionClass": "missing-requirement",
+          "requirementKeys": ["password/shared-special-character-rule"],
+          "surfaceKeys": ["password/shared-validator"],
+          "expectedMissingRequirementKeys": [
+            "password/reset-entry-copy",
+            "password/change-login-entry-copy"
+          ],
+          "expectedMissingSurfaceKeys": [
+            "password/reset-entry",
+            "password/change-login-entry"
+          ]
+        }
+      ]
+    },
+    {
+      "caseId": "PR-01930-fund-flow-surface-omission",
+      "sourceUnits": [
+        {
+          "sourceId": "PRD-TABLE-C-END-FLOWS",
+          "text": "Add the trial-fund system-recovery flow type to every applicable web fund-flow entry; repository discovery identifies three consumers."
+        }
+      ],
+      "expectedRequirementKeys": ["fund-flow/add-system-recovery-type"],
+      "expectedSurfaceKeys": [
+        "fund-flow/cash-flow-filter",
+        "fund-flow/futures-orders-filter",
+        "fund-flow/third-consumer"
+      ],
+      "mutations": [
+        {
+          "mutationId": "drop-third-discovered-consumer",
+          "omissionClass": "missing-surface",
+          "requirementKeys": ["fund-flow/add-system-recovery-type"],
+          "surfaceKeys": [
+            "fund-flow/cash-flow-filter",
+            "fund-flow/futures-orders-filter"
+          ],
+          "expectedMissingRequirementKeys": [],
+          "expectedMissingSurfaceKeys": ["fund-flow/third-consumer"]
+        }
+      ]
+    },
+    {
+      "caseId": "PR-01988-reconciliation-safety-branches",
+      "sourceUnits": [
+        {
+          "sourceId": "PRD-MANUAL-RECONCILIATION",
+          "text": "Manual FOK reconciliation requires an independent permission, a second confirmation, and an audit record containing operator, time, hash, and status."
+        },
+        {
+          "sourceId": "QA-RECONCILIATION-RETRY",
+          "text": "When FOK is not fully filled, mark the attempt failed and allow an authorized operator to retry without duplicate submission."
+        }
+      ],
+      "expectedRequirementKeys": [
+        "reconciliation/independent-permission",
+        "reconciliation/second-confirmation",
+        "reconciliation/audit-record",
+        "reconciliation/failure-retry"
+      ],
+      "expectedSurfaceKeys": [
+        "reconciliation/menu-and-route-permission",
+        "reconciliation/action-permission",
+        "reconciliation/confirm-dialog",
+        "reconciliation/audit-list",
+        "reconciliation/failure-retry-control"
+      ],
+      "mutations": [
+        {
+          "mutationId": "drop-permission-branch",
+          "omissionClass": "permission-branch",
+          "requirementKeys": [
+            "reconciliation/second-confirmation",
+            "reconciliation/audit-record",
+            "reconciliation/failure-retry"
+          ],
+          "surfaceKeys": [
+            "reconciliation/confirm-dialog",
+            "reconciliation/audit-list",
+            "reconciliation/failure-retry-control"
+          ],
+          "expectedMissingRequirementKeys": ["reconciliation/independent-permission"],
+          "expectedMissingSurfaceKeys": [
+            "reconciliation/menu-and-route-permission",
+            "reconciliation/action-permission"
+          ]
+        },
+        {
+          "mutationId": "drop-failure-retry-branch",
+          "omissionClass": "error-branch",
+          "requirementKeys": [
+            "reconciliation/independent-permission",
+            "reconciliation/second-confirmation",
+            "reconciliation/audit-record"
+          ],
+          "surfaceKeys": [
+            "reconciliation/menu-and-route-permission",
+            "reconciliation/action-permission",
+            "reconciliation/confirm-dialog",
+            "reconciliation/audit-list"
+          ],
+          "expectedMissingRequirementKeys": ["reconciliation/failure-retry"],
+          "expectedMissingSurfaceKeys": ["reconciliation/failure-retry-control"]
+        }
+      ]
+    }
+  ]
+}

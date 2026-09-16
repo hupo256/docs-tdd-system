@@ -11,6 +11,8 @@ import { vNextIntakeProblems } from './vnext-intake.mjs'
 import { coverageFingerprints, stableFingerprint } from './vnext-work-item.mjs'
 
 const EVIDENCE_TYPES = new Set(['copy-literal', 'component-dom', 'pure-logic', 'payload-contract', 'api-contract', 'browser-interaction', 'visual'])
+const FACT_CATEGORIES = new Set(['action', 'content', 'state', 'constraint', 'dependency', 'permission', 'navigation', 'error', 'collection', 'entry', 'visual'])
+const SURFACE_DISPOSITIONS = new Set(['implement', 'already-covered', 'not-applicable', 'deferred'])
 const duplicateValues = (values) => [...new Set(values.filter((value, index) => values.indexOf(value) !== index))]
 
 function requirementProblems(workItem, sourceUnits) {
@@ -38,11 +40,21 @@ function requirementProblems(workItem, sourceUnits) {
     } else if (semantics.kind !== 'none' && (requirement.affectedSurfaces || []).length !== semantics.expectedCount) {
       problems.push(`${label} expected ${semantics.expectedCount} affected surfaces but declares ${(requirement.affectedSurfaces || []).length}`)
     }
+    const surfaces = requirement?.affectedSurfaces || []
+    if (requirement?.status === 'doing' && !surfaces.length) problems.push(`${label} requires at least one affected surface`)
+    for (const [surfaceIndex, surface] of surfaces.entries()) {
+      const surfaceLabel = surface?.surfaceId || `${label}.affectedSurfaces[${surfaceIndex}]`
+      if (!/^S-\d{3}$/.test(surface?.surfaceId || '') || !surface?.locator?.trim() || !SURFACE_DISPOSITIONS.has(surface?.disposition)) problems.push(`${surfaceLabel} requires a valid ID, locator, and disposition`)
+    }
     if (!Array.isArray(requirement?.evidencePlan) || !requirement.evidencePlan.length) problems.push(`${label} requires an evidencePlan`)
     for (const evidence of requirement?.evidencePlan || []) {
       if (!EVIDENCE_TYPES.has(evidence?.type) || typeof evidence?.runtimeRequired !== 'boolean') problems.push(`${label} has an invalid evidencePlan item`)
     }
   }
+
+  const surfaceIds = requirements.flatMap((requirement) => requirement.affectedSurfaces || []).map((surface) => surface.surfaceId).filter(Boolean)
+  const duplicateSurfaces = duplicateValues(surfaceIds)
+  if (duplicateSurfaces.length) problems.push(`duplicate surface IDs: ${duplicateSurfaces.join(', ')}`)
 
   const anchored = new Set(requirements.flatMap((requirement) => (requirement.sourceAnchors || []).map((anchor) => anchor.sourceId)))
   const dispositions = new Map((workItem?.sourceUnitDispositions || []).map((item) => [item.sourceId, item]))
@@ -60,6 +72,49 @@ function requirementProblems(workItem, sourceUnits) {
   return problems
 }
 
+function traceabilityProblems(workItem, sourceUnits) {
+  const problems = []
+  const facts = workItem?.extractionFacts || []
+  const sourceIds = new Set(sourceUnits.map((unit) => unit.sourceId))
+  const requirementById = new Map((workItem?.requirements || []).map((item) => [item.requirementId, item]))
+  const dispositions = new Map((workItem?.sourceUnitDispositions || []).map((item) => [item.sourceId, item]))
+  if (!facts.length) return ['three-stage extraction requires a non-empty extractionFacts inventory']
+  const duplicateFactIds = duplicateValues(facts.map((fact) => fact.factId).filter(Boolean))
+  if (duplicateFactIds.length) problems.push(`duplicate fact IDs: ${duplicateFactIds.join(', ')}`)
+  const linkedRequirements = new Set()
+  const coveredSources = new Set()
+  for (const [index, fact] of facts.entries()) {
+    const label = fact?.factId || `extractionFacts[${index}]`
+    if (!/^F-\d{3}$/.test(fact?.factId || '')) problems.push(`${label} requires a stable F-NNN ID`)
+    if (!FACT_CATEGORIES.has(fact?.category)) problems.push(`${label} requires a valid category`)
+    if (!fact?.statement?.trim()) problems.push(`${label} requires a factual statement`)
+    if (!Array.isArray(fact?.sourceIds) || !fact.sourceIds.length) problems.push(`${label} requires sourceIds`)
+    if (!Array.isArray(fact?.requirementIds) || !fact.requirementIds.length) problems.push(`${label} requires requirementIds`)
+    for (const sourceId of fact?.sourceIds || []) {
+      if (!sourceIds.has(sourceId)) problems.push(`${label} references unknown sourceId ${sourceId}`)
+      coveredSources.add(sourceId)
+    }
+    for (const requirementId of fact?.requirementIds || []) {
+      const requirement = requirementById.get(requirementId)
+      if (!requirement) {
+        problems.push(`${label} references unknown requirementId ${requirementId}`)
+        continue
+      }
+      linkedRequirements.add(requirementId)
+      const anchors = new Set((requirement.sourceAnchors || []).map((anchor) => anchor.sourceId))
+      if (!(fact.sourceIds || []).some((sourceId) => anchors.has(sourceId))) problems.push(`${label} and ${requirementId} have no shared source anchor`)
+    }
+  }
+  for (const unit of sourceUnits) {
+    if (isStructuralSourceUnit(unit) || coveredSources.has(unit.sourceId) || dispositions.get(unit.sourceId)?.disposition === 'not-a-requirement') continue
+    problems.push(`semantic source unit ${unit.sourceId} is missing from extractionFacts and has no exclusion`)
+  }
+  for (const requirement of workItem?.requirements || []) {
+    if (!linkedRequirements.has(requirement.requirementId)) problems.push(`${requirement.requirementId} is not derived from any extraction fact`)
+  }
+  return problems
+}
+
 export function runIntakeAudit(workItem, sourceUnits, { auditedAt = new Date().toISOString() } = {}) {
   if (!workItem?.projectId || workItem.workflowVersion !== 2) throw new Error('intake audit requires a workflowVersion=2 work item')
   if (!Array.isArray(sourceUnits) || !sourceUnits.length) throw new Error('intake audit requires normalized source units')
@@ -67,6 +122,7 @@ export function runIntakeAudit(workItem, sourceUnits, { auditedAt = new Date().t
   const add = (code, problems) => checks.push({ code, ok: problems.length === 0, problems })
   add('INTAKE_SOURCE_BINDING', vNextIntakeProblems(workItem))
   add('EXTRACTION_STRUCTURE', requirementProblems(workItem, sourceUnits))
+  add('EXTRACTION_TRACEABILITY', traceabilityProblems(workItem, sourceUnits))
   add('EVIDENCE_COMMANDS', evidencePlanProblems({ schemaVersion: 1, projectId: workItem.projectId, commands: workItem.evidenceCommands || [] }, workItem))
   const fingerprints = coverageFingerprints(workItem)
   const audit = {
@@ -88,6 +144,7 @@ export function intakeAuditProblems(workItem, sourceUnits) {
   if (audit.status !== 'pass') problems.push('extractionAudit status is not pass')
   if (audit.sourceFingerprint !== current.sourceFingerprint) problems.push('extractionAudit source fingerprint is stale')
   if (audit.requirementsFingerprint !== current.requirementsFingerprint) problems.push('extractionAudit requirements fingerprint is stale')
+  if (audit.evidencePlanFingerprint !== current.evidencePlanFingerprint) problems.push('extractionAudit evidence-plan fingerprint is stale')
   if (audit.sourceUnitsFingerprint !== current.sourceUnitsFingerprint) problems.push('extractionAudit source-unit fingerprint is stale')
   if (current.status !== 'pass') problems.push(...current.checks.flatMap((check) => check.problems))
   return [...new Set(problems)]
@@ -101,8 +158,12 @@ export function selfTest() {
   ]
   const workItem = {
     workflowVersion: 2, projectId: 'PR-00001', sourceSnapshot: { revision: '1', contentHash: 'x', sources: [{ path: 'prd.md', contentHash: 'x' }] },
-    requirements: [{ requirementId: 'R-001', sourceAnchors: [{ type: 'text', sourceId: 'SRC-1' }], statement: 'Change A.', status: 'doing', collectionSemantics: { kind: 'none', expectedCount: 0 }, affectedSurfaces: [{ surfaceId: 'S-001', locator: 'src/a.ts', disposition: 'implement' }], evidencePlan: [{ type: 'copy-literal', runtimeRequired: false }] }],
-    sourceUnitDispositions: [{ sourceId: 'SRC-2', disposition: 'not-a-requirement', reason: 'example only' }],
+    extractionFacts: [
+      { factId: 'F-001', category: 'action', statement: 'Change A.', sourceIds: ['SRC-1'], requirementIds: ['R-001'] },
+      { factId: 'F-002', category: 'content', statement: 'The table row is an example.', sourceIds: ['SRC-2'], requirementIds: ['R-001'] },
+    ],
+    requirements: [{ requirementId: 'R-001', sourceAnchors: [{ type: 'text', sourceId: 'SRC-1' }, { type: 'table', sourceId: 'SRC-2' }], statement: 'Change A.', status: 'doing', collectionSemantics: { kind: 'none', expectedCount: 0 }, affectedSurfaces: [{ surfaceId: 'S-001', locator: 'src/a.ts', disposition: 'implement' }], evidencePlan: [{ type: 'copy-literal', runtimeRequired: false }] }],
+    sourceUnitDispositions: [],
     evidenceCommands: [
       { evidenceId: 'E-1', kind: 'copy-literal', argv: ['node', 'scripts/check-copy.mjs'], requirementIds: ['R-001'], surfaceIds: ['S-001'] },
       { evidenceId: 'E-2', kind: 'touched-file-quality', argv: ['pnpm', 'exec', 'biome', 'check', 'apps/web/src/a.ts'] },
@@ -121,9 +182,13 @@ export function selfTest() {
   const duplicate = structuredClone(workItem)
   duplicate.requirements.push(structuredClone(duplicate.requirements[0]))
   assert.match(problemsFor(duplicate, 'EXTRACTION_STRUCTURE'), /duplicate requirement IDs/)
-  const omittedRow = structuredClone(workItem)
-  omittedRow.sourceUnitDispositions = []
-  assert.match(problemsFor(omittedRow, 'EXTRACTION_STRUCTURE'), /SRC-2/)
+  const missingFact = structuredClone(workItem)
+  missingFact.extractionFacts = missingFact.extractionFacts.filter((fact) => fact.factId !== 'F-002')
+  missingFact.sourceUnitDispositions = []
+  assert.match(problemsFor(missingFact, 'EXTRACTION_TRACEABILITY'), /SRC-2/)
+  const duplicateSurface = structuredClone(workItem)
+  duplicateSurface.requirements.push({ ...structuredClone(duplicateSurface.requirements[0]), requirementId: 'R-002' })
+  assert.match(problemsFor(duplicateSurface, 'EXTRACTION_STRUCTURE'), /duplicate surface IDs/)
   console.log('vnext-intake-audit self-test passed')
 }
 

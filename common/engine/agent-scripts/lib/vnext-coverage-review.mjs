@@ -5,25 +5,51 @@
 import assert from 'node:assert/strict'
 import { fileURLToPath } from 'node:url'
 import { resolve } from 'node:path'
-import { coverageFingerprints, verifyVNextCoverage } from './vnext-work-item.mjs'
+import { coverageFingerprints, stableFingerprint, verifyVNextCoverage } from './vnext-work-item.mjs'
 import { deliveryPolicyPaths } from './vnext-delivery-scope.mjs'
 import { reviewRequestFingerprint, verifyReviewReceipt } from './vnext-review-receipt.mjs'
 import { isStructuralSourceUnit } from './vnext-source-units.mjs'
 
-export const REVIEW_PROTOCOL = 'vnext-independent-coverage-review-v2'
+export const REVIEW_PROTOCOL = 'vnext-independent-coverage-review-v3'
 const allowedDispositions = new Set(['resolved', 'not-applicable', 'deferred', 'open'])
-const allowedFindingCodes = new Set(['missing-requirement', 'merged-requirement', 'ambiguous-collection', 'missing-surface', 'inadequate-evidence-command', 'other'])
+const allowedFindingCodes = new Set(['missing-requirement', 'merged-requirement', 'ambiguous-collection', 'missing-surface', 'other'])
 
 function reviewRequirements(requirements = []) {
-  return requirements.map(({ requirementId, sourceAnchors, statement, status, collectionSemantics, affectedSurfaces, evidencePlan }) => ({
+  return requirements.map(({ requirementId, sourceAnchors, statement, status, collectionSemantics, affectedSurfaces }) => ({
     requirementId,
     sourceAnchors,
     statement,
     status,
     collectionSemantics,
     affectedSurfaces,
-    evidencePlan,
   }))
+}
+
+function candidateDiff(previous = [], current = []) {
+  const previousById = new Map(previous.map((item) => [item.requirementId, item]))
+  const currentById = new Map(current.map((item) => [item.requirementId, item]))
+  return {
+    addedRequirementIds: [...currentById.keys()].filter((id) => !previousById.has(id)).sort(),
+    removedRequirementIds: [...previousById.keys()].filter((id) => !currentById.has(id)).sort(),
+    changedRequirementIds: [...currentById.keys()].filter((id) => previousById.has(id)
+      && stableFingerprint(previousById.get(id)) !== stableFingerprint(currentById.get(id))).sort(),
+  }
+}
+
+export function attachReviewIteration(request, reviewControl = {}, { reviewRunId = '' } = {}) {
+  const history = reviewControl.history || []
+  const completedIndex = reviewRunId ? history.findIndex((item) => item.reviewRunId === reviewRunId) : -1
+  const prior = completedIndex >= 0 ? history[completedIndex - 1] : history.at(-1)
+  const iteration = completedIndex >= 0 ? completedIndex + 1 : (reviewControl.attempts || 0) + 1
+  const packet = !prior
+    ? { ...request, reviewIteration: iteration }
+    : {
+        ...request,
+        reviewIteration: iteration,
+        previousReview: { reviewRunId: prior.reviewRunId, verdict: prior.verdict, findings: structuredClone(prior.findings || []) },
+        candidateDiff: candidateDiff(prior.candidateRequirements || [], request.candidateRequirements || []),
+      }
+  return { ...packet, requestFingerprint: reviewRequestFingerprint(packet) }
 }
 
 function deliveryScopeProblems(workItem) {
@@ -36,8 +62,8 @@ function deliveryScopeProblems(workItem) {
   if (new Set(included).size !== included.length || JSON.stringify(included) !== JSON.stringify(actual)) {
     problems.push('deliveryScope.includedRequirementIds must exactly match current requirements')
   }
-  if (!scope.deferred?.owner?.trim() || !scope.deferred?.batch?.trim() || !scope.deferred?.reason?.trim()) {
-    problems.push('bounded deliveryScope requires deferred owner, batch, and reason')
+  if (scope.deferred !== null && (!scope.deferred?.owner?.trim() || !scope.deferred?.batch?.trim() || !scope.deferred?.reason?.trim())) {
+    problems.push('bounded deliveryScope.deferred must be null for an empty remainder or include owner, batch, and reason')
   }
   try { deliveryPolicyPaths(workItem) } catch (error) { problems.push(error.message) }
   return problems
@@ -88,20 +114,21 @@ export function buildCoverageReviewRequest({ workItem, sourceUnits }) {
   const unreadAssets = sourceAssets.filter((asset) => !asset.assetHash || !['local', 'embedded'].includes(asset.assetStatus))
   if (unreadAssets.length) throw new Error(`image assets are not locally readable: ${unreadAssets.map((asset) => `${asset.sourceId}:${asset.assetStatus}`).join(', ')}`)
   const reviewAssets = sourceAssets.filter((asset) => asset.reviewDisposition === 'attached-requirement-anchor')
-  const fingerprints = coverageFingerprints(workItem)
+  const { sourceFingerprint, requirementsFingerprint } = coverageFingerprints(workItem)
   const request = {
     schemaVersion: 1,
     protocol: REVIEW_PROTOCOL,
     projectId: workItem.projectId,
-    checks: ['source-unit-to-requirement', 'collection-completeness', 'affected-surface-candidates', 'evidence-command-adequacy'],
-    ...fingerprints,
+    checks: ['source-unit-to-fact', 'fact-to-requirement', 'collection-completeness', 'affected-surface-candidates'],
+    sourceFingerprint,
+    requirementsFingerprint,
     sourceUnits: prioritizedSourceUnits,
     sourceInventory,
     sourceAssets,
     reviewAssets,
     deliveryScope: workItem.deliveryScope || { kind: 'whole-source' },
+    extractionFacts: structuredClone(workItem.extractionFacts || []),
     candidateRequirements: reviewRequirements(workItem.requirements),
-    candidateEvidenceCommands: workItem.evidenceCommands || [],
   }
   return { ...request, requestFingerprint: reviewRequestFingerprint(request) }
 }
@@ -144,7 +171,7 @@ export function validateCoverageReviewResponse(workItem, response, { request = n
   const duplicateIds = findingIds.filter((id, index) => findingIds.indexOf(id) !== index)
   if (duplicateIds.length) problems.push(`duplicate finding IDs: ${[...new Set(duplicateIds)].join(', ')}`)
   const open = findings.filter((finding) => finding.disposition === 'open')
-  if (workItem?.deliveryScope?.kind === 'bounded-batch') {
+  if (workItem?.deliveryScope?.kind === 'bounded-batch' && workItem.deliveryScope.deferred) {
     const expected = workItem.deliveryScope.deferred
     const boundary = findings.find((finding) => finding.disposition === 'deferred' && finding.owner === expected.owner && finding.batch === expected.batch)
     if (!boundary) problems.push(`bounded delivery scope requires a deferred finding for ${expected.batch}`)
@@ -220,8 +247,8 @@ export function selfTest() {
   ]
   const request = buildCoverageReviewRequest({ workItem, sourceUnits })
   assert.equal(request.protocol, REVIEW_PROTOCOL)
-  assert.deepEqual(request.candidateRequirements[0].evidencePlan, [{ type: 'copy-literal', runtimeRequired: false }])
-  assert.deepEqual(request.candidateEvidenceCommands, [])
+  assert.equal(Object.hasOwn(request.candidateRequirements[0], 'evidencePlan'), false)
+  assert.equal(Object.hasOwn(request, 'candidateEvidenceCommands'), false)
   assert.deepEqual(request.deliveryScope, { kind: 'whole-source' })
   assert.equal(request.sourceUnits[0].sourceId, 'SRC-1')
   assert.equal(request.sourceUnits.some((unit) => unit.sourceId === 'SRC-HEADING'), false)
@@ -276,6 +303,8 @@ export function selfTest() {
   }
   const boundedRequest = buildCoverageReviewRequest({ workItem: bounded, sourceUnits: request.sourceUnits })
   assert.equal(boundedRequest.deliveryScope.batchId, 'batch-1')
+  const emptyRemainderRequest = buildCoverageReviewRequest({ workItem: { ...bounded, deliveryScope: { ...bounded.deliveryScope, deferred: null } }, sourceUnits: request.sourceUnits })
+  assert.equal(emptyRemainderRequest.deliveryScope.deferred, null)
   const boundedResponse = { ...response, sourceFingerprint: boundedRequest.sourceFingerprint, requirementsFingerprint: boundedRequest.requirementsFingerprint }
   assert.throws(() => applyCoverageReview(bounded, boundedResponse), /requires a deferred finding/)
   const boundaryFinding = { findingId: 'F-DEFER', code: 'other', message: 'remainder is delegated', sourceIds: [], disposition: 'deferred', reason: 'separate delivery', owner: 'other-owner', batch: 'batch-2' }

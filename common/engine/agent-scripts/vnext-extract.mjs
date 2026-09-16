@@ -14,7 +14,7 @@ import { normalizeSourceDocuments, readLocalSourceAsset } from './lib/vnext-sour
 import { coverageFingerprints } from './lib/vnext-work-item.mjs'
 
 const CANDIDATE_FIELDS = [
-  'requirements', 'sourceUnitDispositions', 'evidenceCommands', 'requirementsAuthor',
+  'extractionFacts', 'requirements', 'sourceUnitDispositions', 'evidenceCommands', 'requirementsAuthor',
   'routing', 'apiDependency', 'sourceReadiness', 'deliveryScope',
 ]
 
@@ -40,15 +40,18 @@ export function scaffoldExtraction(workItem, { root = docsSystemRoot } = {}) {
     projectId: workItem.projectId,
     sourceFingerprint: expected,
     instructions: [
-      'Create one atomic requirement per independently testable behavior.',
-      'Anchor every semantic source unit, including each tableRole=row unit, or exclude it with a reason.',
-      'Declare collectionSemantics and affectedSurfaces explicitly.',
+      'Stage A — facts: enumerate source-grounded actions, content, states, constraints, dependencies, permissions, navigation, errors, collections, entries, and visual facts in extractionFacts.',
+      'Stage B — requirements: map every fact to one or more independently testable atomic requirements; every semantic source unit must appear in a fact or have an explicit exclusion.',
+      'Stage C — surfaces: expand every doing requirement into explicit affectedSurfaces, including every member of all/every sets and symmetric sibling entry points.',
+      'Anchor every requirement to the same source units as its facts, including each tableRole=row unit.',
+      'Declare collectionSemantics and affectedSurfaces explicitly; collection expectedCount must equal the declared member surfaces.',
       'Provide non-trivial argv-array evidenceCommands covering every doing requirement and implement surface.',
       'Batch quality checks after the related edit set is stable; target touched files and explicit directly related test files, never a repository/package/directory-wide suite.',
       'Use Vitest only for naturally separate pure/tool-shaped .ts logic. Never add a Vitest/RTL render test for a .tsx component or extract component logic solely to make it unit-testable; prove component DOM with a Node DOM-contract script or browser evidence.',
       'For collection response parsers, include a focused pure-logic case proving one malformed field/item does not suppress the remaining valid items.',
     ],
     sourceUnits: normalized.sourceUnits,
+    extractionFacts: workItem.extractionFacts || [],
     requirements: workItem.requirements || [],
     sourceUnitDispositions: workItem.sourceUnitDispositions || [],
     evidenceCommands: workItem.evidenceCommands || [],
@@ -67,14 +70,21 @@ export function applyExtractionCandidate(workItem, candidate, { root = docsSyste
   const next = structuredClone(workItem)
   for (const field of CANDIDATE_FIELDS) {
     if (Object.hasOwn(candidate, field)) next[field] = structuredClone(candidate[field])
-    else if (['requirements', 'requirementsAuthor', 'routing', 'apiDependency'].includes(field)) throw new Error(`extraction candidate requires ${field}`)
+    else if (['extractionFacts', 'requirements', 'requirementsAuthor', 'routing', 'apiDependency'].includes(field)) throw new Error(`extraction candidate requires ${field}`)
   }
-  next.coverageAudit = {
-    sourceFingerprint: 'pending', requirementsFingerprint: 'pending', reviewMode: 'independent-cold-read',
-    reviewRunId: 'pending', reviewer: { kind: 'model', id: 'pending' }, completedAt: '2000-01-01T00:00:00Z',
-    verdict: 'changes-required', unresolved: ['deterministic intake passed; independent review is pending'],
+  const previousFingerprints = coverageFingerprints(workItem)
+  const nextFingerprints = coverageFingerprints(next)
+  const scopeChanged = previousFingerprints.sourceFingerprint !== nextFingerprints.sourceFingerprint
+    || previousFingerprints.requirementsFingerprint !== nextFingerprints.requirementsFingerprint
+  if (scopeChanged) {
+    next.coverageAudit = {
+      sourceFingerprint: 'pending', requirementsFingerprint: 'pending', reviewMode: 'independent-cold-read',
+      reviewRunId: 'pending', reviewer: { kind: 'model', id: 'pending' }, completedAt: '2000-01-01T00:00:00Z',
+      verdict: 'changes-required', unresolved: ['deterministic intake passed; independent review is pending'],
+    }
+    next.scopeApproval = null
+    next.reviewAdjudication = null
   }
-  next.scopeApproval = null
   next.extractionAudit = runIntakeAudit(next, scaffold.sourceUnits, { ...(auditedAt ? { auditedAt } : {}) })
   return next
 }
@@ -90,6 +100,7 @@ export function selfTest() {
     const semantic = sourceUnits.find((unit) => unit.content === 'Change A.')
     const candidate = {
       ...scaffold,
+      extractionFacts: [{ factId: 'F-001', category: 'action', statement: 'Change A.', sourceIds: [semantic.sourceId], requirementIds: ['R-001'] }],
       requirements: [{ requirementId: 'R-001', sourceAnchors: [{ type: 'text', sourceId: semantic.sourceId }], statement: 'Change A.', status: 'doing', collectionSemantics: { kind: 'none', expectedCount: 0 }, affectedSurfaces: [{ surfaceId: 'S-001', locator: 'src/a.ts', disposition: 'implement' }], evidencePlan: [{ type: 'copy-literal', runtimeRequired: false }] }],
       evidenceCommands: [
         { evidenceId: 'E-1', kind: 'copy-literal', argv: ['node', 'scripts/check-copy.mjs'], requirementIds: ['R-001'], surfaceIds: ['S-001'] },
@@ -100,9 +111,14 @@ export function selfTest() {
     const applied = applyExtractionCandidate(workItem, candidate, { root, auditedAt: '2026-09-12T00:00:00Z' })
     assert.equal(applied.extractionAudit.status, 'pass', JSON.stringify(applied.extractionAudit))
     assert.equal(applied.coverageAudit.verdict, 'changes-required')
-    const priorReview = { status: 'changes-required', attempts: 1, history: [{ verdict: 'changes-required' }] }
-    const revised = applyExtractionCandidate({ ...workItem, reviewControl: priorReview }, candidate, { root })
+    const priorReview = { status: 'passed', attempts: 1, history: [{ verdict: 'pass' }] }
+    const reviewedWorkItem = { ...applied, reviewControl: priorReview, coverageAudit: { ...applied.coverageAudit, ...coverageFingerprints(applied), verdict: 'pass', unresolved: [] } }
+    const evidenceOnly = structuredClone(candidate)
+    evidenceOnly.evidenceCommands[0].argv.push('--focused')
+    const revised = applyExtractionCandidate(reviewedWorkItem, evidenceOnly, { root })
     assert.deepEqual(revised.reviewControl, priorReview)
+    assert.equal(revised.coverageAudit.verdict, 'pass')
+    assert.notEqual(revised.extractionAudit.evidencePlanFingerprint, applied.extractionAudit.evidencePlanFingerprint)
     assert.throws(() => applyExtractionCandidate(workItem, { ...candidate, sourceFingerprint: 'stale' }, { root }), /stale/)
     console.log('vnext-extract self-test passed')
   } finally {
@@ -123,7 +139,12 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       const workItemFile = join(projectDir, 'work-item.json')
       const workItem = JSON.parse(readFileSync(workItemFile, 'utf8'))
       const input = argumentValue('--input')
-      if (!input) {
+      if (process.argv.includes('--check')) {
+        const scaffold = scaffoldExtraction(workItem)
+        const audit = runIntakeAudit(workItem, scaffold.sourceUnits)
+        console.log(JSON.stringify(audit, null, 2))
+        process.exitCode = audit.status === 'pass' ? 0 : 1
+      } else if (!input) {
         const scaffold = scaffoldExtraction(workItem)
         const output = argumentValue('--out')
         if (output) writeFileSync(resolve(output), `${JSON.stringify(scaffold, null, 2)}\n`)

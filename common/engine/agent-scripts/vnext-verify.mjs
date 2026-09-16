@@ -6,14 +6,16 @@ import { readFileSync, unlinkSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { isAbsolute, join, relative, resolve, sep } from 'node:path'
 import { docsSystemRoot } from './lib/roots.mjs'
-import { buildCoverageReviewRequest, applyCoverageReview, coverageReviewResponseFromAudit, REVIEW_PROTOCOL } from './lib/vnext-coverage-review.mjs'
+import { attachReviewIteration, buildCoverageReviewRequest, applyCoverageReview, coverageReviewResponseFromAudit, REVIEW_PROTOCOL } from './lib/vnext-coverage-review.mjs'
 import { buildVNextExitResult, verifyExitResultIntegrity } from './lib/vnext-exit.mjs'
 import { codeFingerprint } from './lib/fingerprint.mjs'
 import { initializeVNextArtifacts, persistVNextRun, VNEXT_ARTIFACT_FILES } from './lib/vnext-persistence.mjs'
 import { evaluateVNextMswPolicy } from './lib/vnext-msw-policy.mjs'
+import { manualTestProblems } from './lib/vnext-manual-test.mjs'
 import { normalizeSourceDocuments, readLocalSourceAsset } from './lib/vnext-source-units.mjs'
 import { verifyVNextRouting } from './lib/vnext-risk-route.mjs'
 import { signEvidenceBundle } from './lib/vnext-evidence-receipt.mjs'
+import { verifyReviewReceipt } from './lib/vnext-review-receipt.mjs'
 import { coverageFingerprints, verifyVNextCoverage } from './lib/vnext-work-item.mjs'
 import { evaluateSourceReadiness } from './lib/vnext-source-readiness.mjs'
 
@@ -92,7 +94,22 @@ export function prepareReview(input) {
   const expected = coverageFingerprints(input.workItem).sourceFingerprint
   const actual = coverageFingerprints({ sourceSnapshot: normalized.sourceSnapshot }).sourceFingerprint
   if (actual !== expected) throw new Error('current source documents differ from workItem.sourceSnapshot; refresh the work item before review')
-  return buildCoverageReviewRequest({ workItem: input.workItem, sourceUnits: normalized.sourceUnits })
+  return attachReviewIteration(
+    buildCoverageReviewRequest({ workItem: input.workItem, sourceUnits: normalized.sourceUnits }),
+    input.workItem.reviewControl,
+  )
+}
+
+function reviewedWorkItemForVerification(workItem, reviewResponse, reviewRequest) {
+  if (!workItem.reviewAdjudication?.repairConfirmation) {
+    return applyCoverageReview(workItem, reviewResponse, { request: reviewRequest })
+  }
+  const receiptProblems = verifyReviewReceipt(reviewResponse, {
+    requestFingerprint: reviewResponse.receipt?.requestFingerprint,
+    sourceAssets: reviewResponse.receipt?.reviewedAssets || [],
+  })
+  if (receiptProblems.length) throw new Error(`invalid original coverage review receipt: ${receiptProblems.join('; ')}`)
+  return workItem
 }
 
 export function runVNextVerification(input, { currentCodeState, generatedAt, mode = 'enforced' } = {}) {
@@ -108,8 +125,12 @@ export function runVNextVerification(input, { currentCodeState, generatedAt, mod
   if (!currentCodeState) throw new Error('verification requires a code fingerprint measured by the CLI')
 
   const normalized = normalizeCurrentSources(input.workItem, input.sourceDocuments, input.currentRevision)
-  const reviewRequest = buildCoverageReviewRequest({ workItem: input.workItem, sourceUnits: normalized.sourceUnits })
-  const reviewedWorkItem = applyCoverageReview(input.workItem, reviewResponse, { request: reviewRequest })
+  const reviewRequest = attachReviewIteration(
+    buildCoverageReviewRequest({ workItem: input.workItem, sourceUnits: normalized.sourceUnits }),
+    input.workItem.reviewControl,
+    { reviewRunId: reviewResponse.reviewRunId },
+  )
+  const reviewedWorkItem = reviewedWorkItemForVerification(input.workItem, reviewResponse, reviewRequest)
   const coverage = verifyVNextCoverage({
     workItem: reviewedWorkItem,
     currentSourceSnapshot: normalized.sourceSnapshot,
@@ -120,9 +141,16 @@ export function runVNextVerification(input, { currentCodeState, generatedAt, mod
   const routing = verifyVNextRouting(reviewedWorkItem)
   const mswPolicy = evaluateVNextMswPolicy({ workItem: reviewedWorkItem, implementation: input.implementation, blockers: input.blockers })
   const sourceReadiness = evaluateSourceReadiness(reviewedWorkItem)
+  const manualProblems = manualTestProblems(reviewedWorkItem, currentCodeState)
+  const manualTestCheck = {
+    code: 'MANUAL_PRETEST_RUN',
+    ok: manualProblems.length === 0,
+    problems: manualProblems,
+    evidenceIds: reviewedWorkItem.manualTestRun?.runId ? [reviewedWorkItem.manualTestRun.runId] : [],
+  }
   return buildVNextExitResult({
     workItem: reviewedWorkItem,
-    preflightChecks: [...coverage.checks, ...routing.checks, mswPolicy, sourceReadiness],
+    preflightChecks: [...coverage.checks, ...routing.checks, mswPolicy, sourceReadiness, manualTestCheck],
     currentCodeState,
     evidence: input.evidence,
     blockers: input.blockers,
@@ -239,6 +267,10 @@ export function selfTest() {
   const pass = runVNextVerification(verifyInput, { currentCodeState: code, generatedAt: '2026-09-04T00:00:03Z' })
   assert.equal(pass.ok, true, JSON.stringify(pass))
   assert.equal(pass.mode, 'enforced')
+  const manualRequiredInput = structuredClone(verifyInput)
+  manualRequiredInput.workItem.reviewControl = { sourceFingerprint: 'source', attempts: 2, status: 'adjudicated', requiresPretestHumanRun: true }
+  const manualMissing = runVNextVerification(manualRequiredInput, { currentCodeState: code, generatedAt: '2026-09-04T00:00:03Z' })
+  assert.equal(manualMissing.checks.find((item) => item.code === 'MANUAL_PRETEST_RUN').ok, false)
   const stale = runVNextVerification({ ...verifyInput, currentRevision: '2' }, { currentCodeState: code, generatedAt: '2026-09-04T00:00:03Z' })
   assert.equal(stale.ok, false)
   assert.equal(stale.checks.find((item) => item.code === 'SOURCE_FRESH').ok, false)
@@ -347,9 +379,13 @@ if (process.argv.includes('--self-test')) {
         if (!outDir) throw new Error('--write requires --out')
         assertSafeArtifactOutput(worktreePath, outDir)
         const normalized = normalizeCurrentSources(input.workItem, input.sourceDocuments, input.currentRevision)
-        const reviewRequest = buildCoverageReviewRequest({ workItem: input.workItem, sourceUnits: normalized.sourceUnits })
         const reviewResponse = input.reviewResponse || coverageReviewResponseFromAudit(input.workItem)
-        const workItem = applyCoverageReview(input.workItem, reviewResponse, { request: reviewRequest })
+        const reviewRequest = attachReviewIteration(
+          buildCoverageReviewRequest({ workItem: input.workItem, sourceUnits: normalized.sourceUnits }),
+          input.workItem.reviewControl,
+          { reviewRunId: reviewResponse.reviewRunId },
+        )
+        const workItem = reviewedWorkItemForVerification(input.workItem, reviewResponse, reviewRequest)
         const persisted = persistVNextRun(outDir, { workItem, result })
         console.error(`vNext artifacts: ${persisted.idempotent ? 'idempotent' : 'written'} (${persisted.runCount} run${persisted.runCount === 1 ? '' : 's'})`)
       }

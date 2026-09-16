@@ -1731,7 +1731,7 @@
   ],
   "coverageAudit": {
     "sourceFingerprint": "2d6f51ac5b1765d36d4848182176f90f27f8db60b11f3a5434bb033a01b048c8",
-    "requirementsFingerprint": "c3164c9e1e0b6234718bedf50ba457c1836eb8ed2d14bdef2028aa2d5e50e4ee",
+    "requirementsFingerprint": "54187d366395265a4f9d2ec8f94ee50464b136c535c1ed8f3eb92c0291880b50",
     "reviewMode": "independent-cold-read",
     "reviewRunId": "review-a8779fa3-a63f-48f4-a71a-fb101389d0f4",
     "reviewer": {
@@ -1751,17 +1751,6 @@
         "disposition": "open"
       }
     ],
-    "receipt": {
-      "issuedBy": "docs-tdd-review-v1",
-      "client": "claude",
-      "sessionId": "a8779fa3-a63f-48f4-a71a-fb101389d0f4",
-      "sourceIsolation": "source-only-no-code",
-      "requestFingerprint": "0e93ce60c3ac1d0f75781266334039b8c889e552ee86fd9785539a5608ad8b69",
-      "reviewedAssets": [],
-      "startedAt": "2026-09-16T04:13:47.259Z",
-      "completedAt": "2026-09-16T04:34:49.583Z",
-      "signature": "2f00b867fc815f5df4032566a86938c90d9c4e5d73a36615052b69f3dc256ab0"
-    },
     "unresolved": [
       "F-001: E-33 is declared kind=component-dom but its argv runs a component-size/line-count quality script (scripts/quality/tr-02386/component-size.mjs) across ~31 .tsx surfaces to evidence R-021's ≤300-line rule. A line-count scan verifies neither DOM contract nor rendered component behavior, so the kind does not plausibly match the argv, and it functions as a broad quality sweep rather than scoped DOM evidence. R-021's static line-count constraint should be evidenced with a directed-quality/static-scan command whose kind matches (as E-51 does), not mislabeled as component-dom."
     ]
@@ -1799,11 +1788,11 @@
     "confirmationKind": "human",
     "confirmedBy": "aven",
     "confirmedAt": "2026-09-16",
-    "reason": "TR-02386 登录/注册迁移范围确认：23 条 doing 需求、contract-change/auth 风险路径，后端契约冻结沿用 legacy，评审已闭环（含 E-33 kind 标注的人工裁定）。",
+    "reason": "确认三阶段迁移后的同一批次范围：23 条 doing 需求、108 条 source-grounded facts、82 个显式 Surface；无 deferred remainder。沿用已确认的 authentication/contract/password 高风险路由及 legacy API 契约边界。",
     "recordedVia": {
       "client": "human"
     },
-    "fingerprint": "a2881a318beac82a0005eca6c47032a8853284d8b6ffab49456164117d9fb283"
+    "fingerprint": "23aa59d3195b6040f7b08a7f87e0623238104a89709fc1f25d15b653d2594d75"
   },
   "autopilot": {
     "phase": "validating",
@@ -5349,16 +5338,17 @@
   ],
   "requirementsAuthor": {
     "kind": "model",
-    "id": "devin/swe-2-high",
-    "client": "cursor",
-    "sessionId": "tr-02386-devin-1"
+    "id": "uniaix/gpt-5.6-sol",
+    "client": "pi",
+    "sessionId": "three-stage-migration"
   },
   "deliveryScope": null,
   "extractionAudit": {
     "schemaVersion": 1,
-    "auditedAt": "2026-09-16T04:13:32.608Z",
+    "auditedAt": "2026-09-16T09:36:47.136Z",
     "sourceFingerprint": "2d6f51ac5b1765d36d4848182176f90f27f8db60b11f3a5434bb033a01b048c8",
-    "requirementsFingerprint": "c3164c9e1e0b6234718bedf50ba457c1836eb8ed2d14bdef2028aa2d5e50e4ee",
+    "requirementsFingerprint": "ad651bad33ee14d14d079e7c5b3ad80dfbe1365980dab7f86f91dae742133f03",
+    "evidencePlanFingerprint": "5ba14a69e3111b2ffed7aaf8e1bcccd3eee685983faaad82bea3b3a760f2fb7a",
     "sourceUnitsFingerprint": "31ec71819cd192288acff8d1210933bec6ea703a0070b248a1b7996c2dd6e0cf",
     "status": "pass",
     "checks": [
@@ -5373,6 +5363,11 @@
         "problems": []
       },
       {
+        "code": "EXTRACTION_TRACEABILITY",
+        "ok": true,
+        "problems": []
+      },
+      {
         "code": "EVIDENCE_COMMANDS",
         "ok": true,
         "problems": []
@@ -5381,7 +5376,7 @@
   },
   "reviewControl": {
     "sourceFingerprint": "2d6f51ac5b1765d36d4848182176f90f27f8db60b11f3a5434bb033a01b048c8",
-    "attempts": 1,
+    "attempts": 2,
     "maxAttempts": 2,
     "status": "adjudicated",
     "history": [
@@ -5421,16 +5416,19 @@
           }
         ]
       }
-    ]
+    ],
+    "requiresPretestHumanRun": true
   },
   "reviewAdjudication": {
     "schemaVersion": 1,
     "originalReviewRunId": "review-a8779fa3-a63f-48f4-a71a-fb101389d0f4",
     "sourceFingerprint": "2d6f51ac5b1765d36d4848182176f90f27f8db60b11f3a5434bb033a01b048c8",
-    "requirementsFingerprint": "c3164c9e1e0b6234718bedf50ba457c1836eb8ed2d14bdef2028aa2d5e50e4ee",
+    "requirementsFingerprint": "ad651bad33ee14d14d079e7c5b3ad80dfbe1365980dab7f86f91dae742133f03",
+    "baseRequirementsFingerprint": "54187d366395265a4f9d2ec8f94ee50464b136c535c1ed8f3eb92c0291880b50",
+    "repairConfirmation": true,
     "adjudicatedBy": "aven",
     "adjudicatedAt": "2026-09-16",
-    "reason": "人工裁定：E-33 的 ≤300 行门禁是对组件源码的契约扫描（与 component-dom 类证据脚本同机制——静态读源文件断言组件结构契约），kind 标注之争属分类口径问题，不影响证据有效性；该检查已在 evidence 中真实执行通过。",
+    "reason": "三阶段抽取迁移仅补充 108 条 Source Unit → Fact → Requirement 可追溯映射，不改变已评审的 23 条需求与 Surface；两轮模型评审预算已耗尽，人工复核原 finding 在当前映射下仍属分类口径问题，不启动第三轮模型评审。",
     "recordedVia": {
       "client": "human"
     },
@@ -5438,13 +5436,1208 @@
       {
         "findingId": "F-001",
         "disposition": "rejected",
-        "reason": "component-size.mjs 是组件源码契约扫描，与 E-20~E-31 的 component-dom 脚本同为「读源码断言组件结构」机制；kind 标签不改变其证据效力",
+        "reason": "E-33 的 component-size.mjs 仍是针对当前 R-021 全量组件成员的静态源码契约扫描；三阶段 traceability 迁移未改变该证据或需求语义。",
         "evidenceRefs": [
           "apps/web-next/scripts/quality/tr-02386/component-size.mjs",
-          "evidence-run:evidence-20260915191151-80449ceb"
+          "work-item:R-021",
+          "extractionAudit:EXTRACTION_TRACEABILITY"
         ]
       }
     ],
     "effectiveVerdict": "pass"
-  }
+  },
+  "extractionFacts": [
+    {
+      "factId": "F-001",
+      "category": "dependency",
+      "statement": "| 步骤 | Method | Path | 关键字段 | 备注 | | 查 2FA 开关 | POST | `/fe-ex-api/user/getValidateSwitch` | `validateSwitch: 0/1` | 0 时跳过验证码 |",
+      "sourceIds": [
+        "SRC-F42D9D8D9661"
+      ],
+      "requirementIds": [
+        "R-001"
+      ]
+    },
+    {
+      "factId": "F-002",
+      "category": "dependency",
+      "statement": "| 步骤 | Method | Path | 关键字段 | 备注 | | 提交账密 | POST | `/fe-ex-api/v6/user/login_in` | `verificationType: '2'`、`token: true`、`nc: null`、加密 `mobileNumber` / `loginPword`、极验字段、可选 `utm_source`/`hichatToken` | 返回 `type`（VerifyType）+ `token` |",
+      "sourceIds": [
+        "SRC-4733C42AFE5A"
+      ],
+      "requirementIds": [
+        "R-001"
+      ]
+    },
+    {
+      "factId": "F-003",
+      "category": "dependency",
+      "statement": "| 步骤 | Method | Path | 关键字段 | 备注 | | 确认登录 | POST | `/fe-ex-api/user/confirm_login` | `token`、`type: 'google'\\|'email'\\|'phone'`、`authCode` | 返回 `quicktoken` + `uid` |",
+      "sourceIds": [
+        "SRC-BF1F3098581C"
+      ],
+      "requirementIds": [
+        "R-001"
+      ]
+    },
+    {
+      "factId": "F-004",
+      "category": "content",
+      "statement": "**加密规则**：`mobileNumber` 与 `loginPword` 均使用 `encryptPasswordWithKey` 加密后发送。",
+      "sourceIds": [
+        "SRC-4311B0668E00"
+      ],
+      "requirementIds": [
+        "R-001"
+      ]
+    },
+    {
+      "factId": "F-005",
+      "category": "action",
+      "statement": "**Token 语义**：legacy `confirm_login` 返回 `quicktoken`，之后直接作为 `accessToken` 写入 storage；本次迁移沿用该行为，并在真实验收时确认。",
+      "sourceIds": [
+        "SRC-FC18A19406EB"
+      ],
+      "requirementIds": [
+        "R-001"
+      ]
+    },
+    {
+      "factId": "F-006",
+      "category": "action",
+      "statement": "| 缺失项 | 说明 | 影响范围 | | 登录 endpoint 未注册到 group | `loginInEndpoint.ts`、`confirmLoginEndpoint.ts`、`getValidateSwitchEndpoint.ts` 只被 import，未 `.add()` | 调用 |",
+      "sourceIds": [
+        "SRC-9B0D5EADB173"
+      ],
+      "requirementIds": [
+        "R-001"
+      ]
+    },
+    {
+      "factId": "F-007",
+      "category": "dependency",
+      "statement": "2. **登录 endpoint 注册到 WebHttpApi group** 修改 `apps/web-next/src/platform/domain/web/WebHttpApi.ts`，把 `LoginInEndpoint`、`ConfirmLoginEndpoint`、`GetValidateSwitchEndpoint` 真正 `.add()` 进某个 group。",
+      "sourceIds": [
+        "SRC-60DD35892A05"
+      ],
+      "requirementIds": [
+        "R-001"
+      ]
+    },
+    {
+      "factId": "F-008",
+      "category": "dependency",
+      "statement": "**目标**：所有登录/注册相关 endpoint 在 `WebHttpApi` 中可用，并附带 contract 测试。",
+      "sourceIds": [
+        "SRC-1A8B4CA3F0CE"
+      ],
+      "requirementIds": [
+        "R-001"
+      ]
+    },
+    {
+      "factId": "F-009",
+      "category": "dependency",
+      "statement": "**修改目录**： - `apps/web-next/src/platform/domain/web/endpoints/` - `apps/web-next/src/platform/domain/web/WebHttpApi.ts` - `apps/web-next/src/platform/domain/web/endpoints/test/`",
+      "sourceIds": [
+        "SRC-B59F6245F99D"
+      ],
+      "requirementIds": [
+        "R-001"
+      ]
+    },
+    {
+      "factId": "F-010",
+      "category": "constraint",
+      "statement": "**行为契约**： - `login_in` payload 必须包含加密后的 `mobileNumber` / `loginPword`、极验字段、`verificationType: '2'`、`token: true`。 - `confirm_login` payload 必须包含 `token`、`type`（google/email/phone）、`authCode`。 - 注册 endpoint payload 必须包含加密后的账号/手机号、极验字段、`token: true`、`verificationType: '2'`。 - 注册 set-password payload 必须包含加密后的 `loginPword`。",
+      "sourceIds": [
+        "SRC-7F1746136C7E"
+      ],
+      "requirementIds": [
+        "R-001"
+      ]
+    },
+    {
+      "factId": "F-011",
+      "category": "collection",
+      "statement": "**测试**：每个 endpoint 写一个 contract test：断言请求 body 字段名、断言加密字段存在、断言 response envelope 解包形状。",
+      "sourceIds": [
+        "SRC-5A9BB1236773"
+      ],
+      "requirementIds": [
+        "R-001"
+      ]
+    },
+    {
+      "factId": "F-012",
+      "category": "content",
+      "statement": "**验收**： - `tsc --noEmit` 通过新 endpoint 类型。 - contract tests 全绿。",
+      "sourceIds": [
+        "SRC-E095C853914B"
+      ],
+      "requirementIds": [
+        "R-001"
+      ]
+    },
+    {
+      "factId": "F-013",
+      "category": "action",
+      "statement": "**风险/回滚**：仅新增 endpoint，未改动 UI；删除新增文件即可回滚。",
+      "sourceIds": [
+        "SRC-511849802C17"
+      ],
+      "requirementIds": [
+        "R-001"
+      ]
+    },
+    {
+      "factId": "F-014",
+      "category": "dependency",
+      "statement": "| 步骤 | Method | Path | 关键字段 | | 邮箱预检 | POST | `/fe-ex-api/v1/user/reg_email_chk_info` | 加密 `email`、极验字段、`verificationType: '2'`、`token: true`、可选 `invitedCode` |",
+      "sourceIds": [
+        "SRC-0FBB0FD0762A"
+      ],
+      "requirementIds": [
+        "R-002"
+      ]
+    },
+    {
+      "factId": "F-015",
+      "category": "dependency",
+      "statement": "| 步骤 | Method | Path | 关键字段 | | 邮箱验证码确认 | POST | `/fe-ex-api/v1/user/reg_email_confirm` | `token`、`emailCode` |",
+      "sourceIds": [
+        "SRC-65DA0490E12B"
+      ],
+      "requirementIds": [
+        "R-002"
+      ]
+    },
+    {
+      "factId": "F-016",
+      "category": "dependency",
+      "statement": "| 步骤 | Method | Path | 关键字段 | | 设置邮箱密码 | POST | `/fe-ex-api/v1/user/set_email_password` | `token`、加密 `loginPword` |",
+      "sourceIds": [
+        "SRC-5A84CB50A78D"
+      ],
+      "requirementIds": [
+        "R-002"
+      ]
+    },
+    {
+      "factId": "F-017",
+      "category": "dependency",
+      "statement": "| 步骤 | Method | Path | 关键字段 | | 手机预检 | POST | `/fe-ex-api/v1/user/reg_mobile_chk_info` | 加密 `mobileNumber`、`countryCode`、极验字段、`verificationType: '2'`、`token: true`、可选 `invitedCode` |",
+      "sourceIds": [
+        "SRC-E6EFCA4AF144"
+      ],
+      "requirementIds": [
+        "R-002"
+      ]
+    },
+    {
+      "factId": "F-018",
+      "category": "dependency",
+      "statement": "| 步骤 | Method | Path | 关键字段 | | 手机验证码确认 | POST | `/fe-ex-api/v1/user/reg_mobile_confirm` | `token`、`smsCode` |",
+      "sourceIds": [
+        "SRC-C418195B9ACA"
+      ],
+      "requirementIds": [
+        "R-002"
+      ]
+    },
+    {
+      "factId": "F-019",
+      "category": "dependency",
+      "statement": "| 步骤 | Method | Path | 关键字段 | | 设置手机密码 | POST | `/fe-ex-api/v1/user/set_mobile_password` | `token`、加密 `loginPword` |",
+      "sourceIds": [
+        "SRC-A0078BAAC2CE"
+      ],
+      "requirementIds": [
+        "R-002"
+      ]
+    },
+    {
+      "factId": "F-020",
+      "category": "action",
+      "statement": "| 缺失项 | 说明 | 影响范围 | | 注册 endpoint / hook | `reg_email_chk_info` / `reg_mobile_chk_info` / `set_*_password` 等均未迁移 | 注册 |",
+      "sourceIds": [
+        "SRC-9200BDAA12EB"
+      ],
+      "requirementIds": [
+        "R-002"
+      ]
+    },
+    {
+      "factId": "F-021",
+      "category": "content",
+      "statement": "1. **注册 endpoint / hook** - `apps/web-next/src/platform/domain/web/endpoints/regEmailChkInfoEndpoint.ts` - `apps/web-next/src/platform/domain/web/endpoints/regEmailConfirmEndpoint.ts` - `apps/web-next/src/platform/domain/web/endpoints/setEmailPasswordEndpoint.ts` - 以及对应 mobile 版本 - `apps/web-next/src/services/hooks/auth/reg*Mutation.ts`",
+      "sourceIds": [
+        "SRC-5D7D53FDC51F"
+      ],
+      "requirementIds": [
+        "R-002"
+      ]
+    },
+    {
+      "factId": "F-022",
+      "category": "dependency",
+      "statement": "| 步骤 | Method | Path | 关键字段 | | 获取二维码 | POST | `/fe-ex-api/get_login_qrcode_id` | - |",
+      "sourceIds": [
+        "SRC-D2DDCF891A15"
+      ],
+      "requirementIds": [
+        "R-003"
+      ]
+    },
+    {
+      "factId": "F-023",
+      "category": "state",
+      "statement": "| 步骤 | Method | Path | 关键字段 | | 查询状态 | POST | `/fe-ex-api/get_login_qrcode_status` | `qrcodeId` |",
+      "sourceIds": [
+        "SRC-CFBF9140C765"
+      ],
+      "requirementIds": [
+        "R-003"
+      ]
+    },
+    {
+      "factId": "F-024",
+      "category": "state",
+      "statement": "legacy 同时通过 WS 推送扫码状态，本次需评估 web-next 现有 WS 层是否可直接复用；若不能，先实现轮询兜底。",
+      "sourceIds": [
+        "SRC-3493673A2EA3"
+      ],
+      "requirementIds": [
+        "R-003"
+      ]
+    },
+    {
+      "factId": "F-025",
+      "category": "state",
+      "statement": "| 缺失项 | 说明 | 影响范围 | | 二维码登录 hook / WS | `get_login_qrcode_id` / `get_login_qrcode_status` 未迁移 | 扫码登录 |",
+      "sourceIds": [
+        "SRC-4A3BFD5001EE"
+      ],
+      "requirementIds": [
+        "R-003"
+      ]
+    },
+    {
+      "factId": "F-026",
+      "category": "state",
+      "statement": "4. **二维码登录 hooks / WS** - `apps/web-next/src/services/hooks/auth/loginQRCodeQuery.ts` - `apps/web-next/src/services/hooks/auth/qrStatusMutation.ts` - 复用或迁移 `useLoginQRCodeWS`",
+      "sourceIds": [
+        "SRC-F39EACC1BC98"
+      ],
+      "requirementIds": [
+        "R-003"
+      ]
+    },
+    {
+      "factId": "F-027",
+      "category": "dependency",
+      "statement": "| 场景 | Method | Path | 关键字段 / 说明 | | Google/Apple/Telegram 授权后 | POST | `/fe-ex-api/oauth/authLogin` | `source`、`idToken` |",
+      "sourceIds": [
+        "SRC-B75B8CB0380C"
+      ],
+      "requirementIds": [
+        "R-004"
+      ]
+    },
+    {
+      "factId": "F-028",
+      "category": "navigation",
+      "statement": "| 场景 | Method | Path | 关键字段 / 说明 | | 查询 HiChat 状态 | GET | `/fe-ex-api/exchange-web-api/hichat/check_user_status/{gToken}` | 注意 legacy 使用 `grant_token` / `GRANT_TOKEN` 回跳，web-next 当前只认 `gToken`，需收敛 |",
+      "sourceIds": [
+        "SRC-403FF684A712"
+      ],
+      "requirementIds": [
+        "R-004"
+      ]
+    },
+    {
+      "factId": "F-029",
+      "category": "dependency",
+      "statement": "| 场景 | Method | Path | 关键字段 / 说明 | | 三方注册 | POST | `/fe-ex-api/oauth/authRegister` | `source`、`idToken`、极验字段、可选 `invitedCode`、`authCode` |",
+      "sourceIds": [
+        "SRC-64BA497DA00C"
+      ],
+      "requirementIds": [
+        "R-004"
+      ]
+    },
+    {
+      "factId": "F-030",
+      "category": "dependency",
+      "statement": "| 场景 | Method | Path | 关键字段 / 说明 | | 创建账号预检 | POST | `/fe-ex-api/oauth/newRegisterCheck` | `source`、`idToken`、加密 `mobileOrEmailNumber`、可选 `countryCode` |",
+      "sourceIds": [
+        "SRC-C6B472C3F2DB"
+      ],
+      "requirementIds": [
+        "R-004"
+      ]
+    },
+    {
+      "factId": "F-031",
+      "category": "dependency",
+      "statement": "| 场景 | Method | Path | 关键字段 / 说明 | | 关联已有账号 | POST | `/fe-ex-api/oauth/joinAddAccount` | `source`、`idToken`、账号/密码加密、极验字段 |",
+      "sourceIds": [
+        "SRC-19C91D37D93C"
+      ],
+      "requirementIds": [
+        "R-004"
+      ]
+    },
+    {
+      "factId": "F-032",
+      "category": "dependency",
+      "statement": "| 场景 | Method | Path | 关键字段 / 说明 | | HiChat 注册并绑定 | POST | `/fe-ex-api/exchange-web-api/hichat/register_and_bind` | `grantToken`、极验字段 |",
+      "sourceIds": [
+        "SRC-8CCDC0D1B177"
+      ],
+      "requirementIds": [
+        "R-004"
+      ]
+    },
+    {
+      "factId": "F-033",
+      "category": "dependency",
+      "statement": "| 场景 | Method | Path | 关键字段 / 说明 | | HiChat 绑定已有账号 | POST | `/fe-ex-api/exchange-web-api/hichat/bind_existing_account` | `grantToken`、加密账号/密码、验证码 |",
+      "sourceIds": [
+        "SRC-B091F297979C"
+      ],
+      "requirementIds": [
+        "R-004"
+      ]
+    },
+    {
+      "factId": "F-034",
+      "category": "state",
+      "statement": "**三方状态码**：`authStatus=1` 已授权自动登录；`authStatus=2` 已注册需关联；`authStatus=0` 未注册需选择。",
+      "sourceIds": [
+        "SRC-6CE04EDAAF04"
+      ],
+      "requirementIds": [
+        "R-004"
+      ]
+    },
+    {
+      "factId": "F-035",
+      "category": "entry",
+      "statement": "5. **`VerifyInputs` store（登录/注册共用）** 从 legacy `apps/web/src/components/VerifyInputs/store.ts` 迁移，包含 `useResetVerifyOnPathEntry`，避免同路径 remount 时重置。",
+      "sourceIds": [
+        "SRC-844B83193452"
+      ],
+      "requirementIds": [
+        "R-005"
+      ]
+    },
+    {
+      "factId": "F-036",
+      "category": "action",
+      "statement": "6. **`PasswordRuleChecklist` 组件** 迁移自 `apps/web/src/components/PasswordRuleChecklist.tsx`，或重写为纯函数 + UI。",
+      "sourceIds": [
+        "SRC-4A5D7F46512C"
+      ],
+      "requirementIds": [
+        "R-005"
+      ]
+    },
+    {
+      "factId": "F-037",
+      "category": "navigation",
+      "statement": "7. **`useRedirectIfLogin`** 基于 `useIsLoggedIn` 实现，已登录用户访问 `/login`、`/register` 时重定向。",
+      "sourceIds": [
+        "SRC-1149E7EF213B"
+      ],
+      "requirementIds": [
+        "R-005"
+      ]
+    },
+    {
+      "factId": "F-038",
+      "category": "content",
+      "statement": "8. **`useCode`（邀请码）** 读取 `c` / `inviteCode` query param，回退 localStorage，兼容 legacy 行为。",
+      "sourceIds": [
+        "SRC-409C45F9D37E"
+      ],
+      "requirementIds": [
+        "R-005"
+      ]
+    },
+    {
+      "factId": "F-039",
+      "category": "content",
+      "statement": "9. **`OperationTypeEnum.EmailLogin`** 补充到 `apps/web-next/src/components/CodeVerifyDialog/verificationTypes.ts`。",
+      "sourceIds": [
+        "SRC-A80F7491548F"
+      ],
+      "requirementIds": [
+        "R-005"
+      ]
+    },
+    {
+      "factId": "F-040",
+      "category": "content",
+      "statement": "3. **登录 hooks** - `apps/web-next/src/services/hooks/auth/loginInMutation.ts` - `apps/web-next/src/services/hooks/auth/validateSwitchQuery.ts`",
+      "sourceIds": [
+        "SRC-BF02F28A667D"
+      ],
+      "requirementIds": [
+        "R-005"
+      ]
+    },
+    {
+      "factId": "F-041",
+      "category": "state",
+      "statement": "| 缺失项 | 说明 | 影响范围 | | `VerifyInputs` store | 登录/注册共用的多步验证状态机 store 缺失 | 登录/注册 |",
+      "sourceIds": [
+        "SRC-F3BA9701F5CB"
+      ],
+      "requirementIds": [
+        "R-005"
+      ]
+    },
+    {
+      "factId": "F-042",
+      "category": "content",
+      "statement": "| 缺失项 | 说明 | 影响范围 | | `PasswordRuleChecklist` | 密码规则实时清单组件缺失 | 注册 |",
+      "sourceIds": [
+        "SRC-970FDC475813"
+      ],
+      "requirementIds": [
+        "R-005"
+      ]
+    },
+    {
+      "factId": "F-043",
+      "category": "navigation",
+      "statement": "| 缺失项 | 说明 | 影响范围 | | `useRedirectIfLogin` | 已登录用户访问登录/注册页重定向逻辑缺失 | 登录/注册 |",
+      "sourceIds": [
+        "SRC-258AB7523600"
+      ],
+      "requirementIds": [
+        "R-005"
+      ]
+    },
+    {
+      "factId": "F-044",
+      "category": "content",
+      "statement": "| 缺失项 | 说明 | 影响范围 | | `OperationTypeEnum.EmailLogin` | 当前 `verificationTypes.ts` 没有邮箱登录类型 | 登录 |",
+      "sourceIds": [
+        "SRC-0554283EA428"
+      ],
+      "requirementIds": [
+        "R-005"
+      ]
+    },
+    {
+      "factId": "F-045",
+      "category": "content",
+      "statement": "**目标**：把登录/注册需要的 hooks、store、纯函数补齐。",
+      "sourceIds": [
+        "SRC-EA191F7677C1"
+      ],
+      "requirementIds": [
+        "R-005"
+      ]
+    },
+    {
+      "factId": "F-046",
+      "category": "action",
+      "statement": "**修改目录**： - `apps/web-next/src/services/hooks/auth/` - `apps/web-next/src/components/VerifyInputs/`（新建） - `apps/web-next/src/components/PasswordRuleChecklist/`（新建） - `apps/web-next/src/apps/Login/common/`、`apps/web-next/src/apps/Register/common/`",
+      "sourceIds": [
+        "SRC-C45CCBB90983"
+      ],
+      "requirementIds": [
+        "R-005"
+      ]
+    },
+    {
+      "factId": "F-047",
+      "category": "error",
+      "statement": "**行为契约**： - `loginInMutation` 禁用自动重试。 - `validateSwitchQuery` 返回 `validateSwitch: 0 | 1`。 - `useRedirectIfLogin` 在已登录时 redirect。 - `useResetVerifyOnPathEntry` 进入新路径重置验证状态，同路径 remount 不重置。 - `PasswordRuleChecklist` 实时校验 8–20 字符、字母、数字、特殊符号，特殊符号列表从单一 regex 常量读取。",
+      "sourceIds": [
+        "SRC-84A6B86DD4AF"
+      ],
+      "requirementIds": [
+        "R-005"
+      ]
+    },
+    {
+      "factId": "F-048",
+      "category": "content",
+      "statement": "**测试**： - 纯函数：`buildLoginInPayload`、`buildRegisterCheckPayload`、`resolveVerifyType`、`isEmailAccount`、`normalizePhone`。 - hook 测试使用受控 runtime，不发真实请求。",
+      "sourceIds": [
+        "SRC-B8B9BFC41FBA"
+      ],
+      "requirementIds": [
+        "R-005"
+      ]
+    },
+    {
+      "factId": "F-049",
+      "category": "action",
+      "statement": "**验收**： - 新增测试全绿。 - `biome check` 通过。",
+      "sourceIds": [
+        "SRC-015AE5E64350"
+      ],
+      "requirementIds": [
+        "R-005"
+      ]
+    },
+    {
+      "factId": "F-050",
+      "category": "state",
+      "statement": "| 缺失项 | 说明 | 影响范围 | | 三方登录公共 hook | `HomeSocialLinks.tsx` 内联了三方状态分发，未抽出公共 `useThirdAuth` | 三方登录 |",
+      "sourceIds": [
+        "SRC-8F4AEACF950F"
+      ],
+      "requirementIds": [
+        "R-006"
+      ]
+    },
+    {
+      "factId": "F-051",
+      "category": "collection",
+      "statement": "10. **`useThirdAuth` 公共 hook** 从 `HomeSocialLinks.tsx` 内联逻辑抽出，供 Home / Login / Register 共用。",
+      "sourceIds": [
+        "SRC-C3D1EC246FA9"
+      ],
+      "requirementIds": [
+        "R-006"
+      ]
+    },
+    {
+      "factId": "F-052",
+      "category": "content",
+      "statement": "| 缺失项 | 说明 | 影响范围 | | `thirdLogin.json` 缺失 key | `telegram`、`facebook`、`serviceUnavailable`、`PasswordTips` 等 | 三方登录 |",
+      "sourceIds": [
+        "SRC-A6DDBC437CFB"
+      ],
+      "requirementIds": [
+        "R-006"
+      ]
+    },
+    {
+      "factId": "F-053",
+      "category": "content",
+      "statement": "11. **i18n 资源补齐** - 在 `apps/web-next/src/i18n/core/namespaces.ts` 增加 `loginI18nNamespaces`、`registerI18nNamespaces`。 - 对照 legacy 补齐 `zh-CN/login.json`、`register.json`、`thirdLogin.json` 缺失 key。",
+      "sourceIds": [
+        "SRC-2204920D1C83"
+      ],
+      "requirementIds": [
+        "R-006"
+      ]
+    },
+    {
+      "factId": "F-054",
+      "category": "navigation",
+      "statement": "| 缺失项 | 说明 | 影响范围 | | 登录/注册页面路由 | 当前只有 `routes/dev/login.tsx` 调试用，没有生产 `/login`、`/register` | 入口 |",
+      "sourceIds": [
+        "SRC-63023B5DFD1C"
+      ],
+      "requirementIds": [
+        "R-007"
+      ]
+    },
+    {
+      "factId": "F-055",
+      "category": "navigation",
+      "statement": "``` AccountInput + PasswordInput -> runCaptcha -> login_in -> 2FA 关闭: confirm_login(type=google, authCode='') -> 2FA 开启: CodeVerifyDialog -> confirm_login -> useWriteAuthSession({ accessToken: quicktoken, uid }) -> redirect(from || HOME) ```",
+      "sourceIds": [
+        "SRC-E289CA9A67C5"
+      ],
+      "requirementIds": [
+        "R-007"
+      ]
+    },
+    {
+      "factId": "F-056",
+      "category": "action",
+      "statement": "**目标**：`/login` 页面可用，支持邮箱/手机号 + 密码 + 2FA。",
+      "sourceIds": [
+        "SRC-D85BC8F77DAB"
+      ],
+      "requirementIds": [
+        "R-007"
+      ]
+    },
+    {
+      "factId": "F-057",
+      "category": "visual",
+      "statement": "**修改目录**： - `apps/web-next/src/routes/(auth)/route.tsx`（无 header/footer 的登录/注册布局） - `apps/web-next/src/routes/(auth)/login.tsx` - `apps/web-next/src/apps/Login/components/LoginForm.tsx` - `apps/web-next/src/apps/Login/components/InputAccount.tsx`",
+      "sourceIds": [
+        "SRC-B4DB335ABA28"
+      ],
+      "requirementIds": [
+        "R-007"
+      ]
+    },
+    {
+      "factId": "F-058",
+      "category": "error",
+      "statement": "**行为契约**： - `validateSearch` 读取 `from`、`utm_source`、`hichatToken`、`c`/`inviteCode`。 - `from` 只取当前 public pathname，不带 query/hash（复用 `buildAuthNavigationUrl` 逻辑）。 - 账号输入 blur 时校验邮箱或手机号；手机号时展示 `CountryCallingCodePicker`。 - 密码输入过滤非法字符（复用 `passwordAllowedCharPattern`）。 - 点击登录先调 captcha；若 2FA 关闭，直接 `login_in` + `confirm_login(type=google, authCode='')`；否则进入验证码弹窗。 - 登录成功后 `useWriteAuthSession` 写 session，PostHog 埋点，跳转 `from || HOME`。 - 登录失败按 `code` + `data.loginFailNum/seconds/hours` 显示错误。 - 已登录用户访问 `/login` 重定向。",
+      "sourceIds": [
+        "SRC-651584179D97"
+      ],
+      "requirementIds": [
+        "R-007"
+      ]
+    },
+    {
+      "factId": "F-059",
+      "category": "error",
+      "statement": "**验收**： - 邮箱登录成功/失败。 - 手机登录成功/失败。 - 2FA 邮箱/短信/Google 登录。 - `from` 跳转回原页面。 - 错误提示正确。",
+      "sourceIds": [
+        "SRC-5CB28A7F43E1"
+      ],
+      "requirementIds": [
+        "R-007"
+      ]
+    },
+    {
+      "factId": "F-060",
+      "category": "error",
+      "statement": "| 能力 | Legacy 入口 | Legacy API | web-next 现状 | 主要风险 | | 账号/密码登录 | `apps/web/src/apps/Login/InputAccount.tsx` | `getValidateSwitch`、`login_in`、`confirm_login` | endpoint 已定义未注册；hook 未建 | 2FA 跳过路径、错误码映射、密码加密 |",
+      "sourceIds": [
+        "SRC-434AA2857193"
+      ],
+      "requirementIds": [
+        "R-007"
+      ]
+    },
+    {
+      "factId": "F-061",
+      "category": "error",
+      "statement": "**目标**：把 `CodeVerifyDialog`、`VerifyMan`、错误提示、session 刷新串成完整闭环。",
+      "sourceIds": [
+        "SRC-B03A6035E097"
+      ],
+      "requirementIds": [
+        "R-008"
+      ]
+    },
+    {
+      "factId": "F-062",
+      "category": "action",
+      "statement": "**修改目录**： - `apps/web-next/src/components/CodeVerifyDialog/index.tsx` - `apps/web-next/src/components/VerifyMan/index.tsx` - `apps/web-next/src/services/hooks/auth/useWriteAuthSession.ts`",
+      "sourceIds": [
+        "SRC-ABD801C8579D"
+      ],
+      "requirementIds": [
+        "R-008"
+      ]
+    },
+    {
+      "factId": "F-063",
+      "category": "error",
+      "statement": "**行为契约**： - `CodeVerifyDialog` 在登录场景使用 `OperationTypeEnum.EmailLogin/PhoneLogin`。 - 验证码自动提交、重发倒计时、错误标红。 - `VerifyMan` 在 `doneVerify` 前重置 `authPassed=false`，避免重复触发。 - `confirmLogin` 成功后拿到 `quicktoken` + `uid`，写入 session；写入后 `invalidateQueries` 刷新登录态相关 query。",
+      "sourceIds": [
+        "SRC-3C1592E96B67"
+      ],
+      "requirementIds": [
+        "R-008"
+      ]
+    },
+    {
+      "factId": "F-064",
+      "category": "action",
+      "statement": "**验收**： - 6 位验证码自动提交。 - 重发倒计时 60s。 - 登录成功后 `useIsLoggedIn` 立即为 true，header 切登录态。",
+      "sourceIds": [
+        "SRC-4C2E5AF166FA"
+      ],
+      "requirementIds": [
+        "R-008"
+      ]
+    },
+    {
+      "factId": "F-065",
+      "category": "content",
+      "statement": "**目标**：补齐 legacy 左侧二维码登录。",
+      "sourceIds": [
+        "SRC-DCE6B43A9D03"
+      ],
+      "requirementIds": [
+        "R-009"
+      ]
+    },
+    {
+      "factId": "F-066",
+      "category": "state",
+      "statement": "**修改目录**： - `apps/web-next/src/services/hooks/auth/qrCodeQuery.ts` - `apps/web-next/src/services/hooks/auth/qrStatusMutation.ts` - 复用/迁移 `useLoginQRCodeWS` - `apps/web-next/src/apps/Login/components/ScanCode.tsx`",
+      "sourceIds": [
+        "SRC-2F391BB211A7"
+      ],
+      "requirementIds": [
+        "R-009"
+      ]
+    },
+    {
+      "factId": "F-067",
+      "category": "navigation",
+      "statement": "**行为契约**： - 页面加载请求 `get_login_qrcode_id`，60s 本地过期。 - 同时监听 WS 或轮询 `get_login_qrcode_status`；状态成功后取 `token` 写 session 并跳转。 - 过期后显示刷新按钮，重新请求二维码。",
+      "sourceIds": [
+        "SRC-3C575673783F"
+      ],
+      "requirementIds": [
+        "R-009"
+      ]
+    },
+    {
+      "factId": "F-068",
+      "category": "navigation",
+      "statement": "**验收**： - 生成二维码。 - App 扫码后自动登录跳转。 - 过期刷新有效。",
+      "sourceIds": [
+        "SRC-E50E73C537AD"
+      ],
+      "requirementIds": [
+        "R-009"
+      ]
+    },
+    {
+      "factId": "F-069",
+      "category": "entry",
+      "statement": "| 能力 | Legacy 入口 | Legacy API | web-next 现状 | 主要风险 | | 扫码登录 | `apps/web/src/apps/Login/ScanCode.tsx` | `get_login_qrcode_id`、`get_login_qrcode_status` + WS | 未迁移 | WS 层复用或轮询兜底 |",
+      "sourceIds": [
+        "SRC-6CD082295951"
+      ],
+      "requirementIds": [
+        "R-009"
+      ]
+    },
+    {
+      "factId": "F-070",
+      "category": "entry",
+      "statement": "| 能力 | Legacy 入口 | Legacy API | web-next 现状 | 主要风险 | | 邮箱/手机注册 | `apps/web/src/apps/Register/RegisterV2/*.tsx` | `reg_email_chk_info` 等 | 未迁移 | 奖励侧边栏、邀请码、密码规则 |",
+      "sourceIds": [
+        "SRC-83416533CF21"
+      ],
+      "requirementIds": [
+        "R-010"
+      ]
+    },
+    {
+      "factId": "F-071",
+      "category": "content",
+      "statement": "**目标**：`/register` 页面与注册第一步（CreateAccount）。",
+      "sourceIds": [
+        "SRC-60978AD4830B"
+      ],
+      "requirementIds": [
+        "R-010"
+      ]
+    },
+    {
+      "factId": "F-072",
+      "category": "action",
+      "statement": "**修改目录**： - `apps/web-next/src/routes/(auth)/register.tsx` - `apps/web-next/src/apps/Register/components/RegisterForm.tsx` - `apps/web-next/src/apps/Register/components/CreateAccount.tsx` - `apps/web-next/src/apps/Register/components/RegisterSidebar.tsx`（奖励侧边栏）",
+      "sourceIds": [
+        "SRC-E844E7C96FFE"
+      ],
+      "requirementIds": [
+        "R-010"
+      ]
+    },
+    {
+      "factId": "F-073",
+      "category": "action",
+      "statement": "**行为契约**： - `validateSearch` 读取 `account`、`c`/`inviteCode`、`utm_source`。 - 账号输入与登录共用 `AccountInput`。 - 服务条款默认勾选（保持与 legacy 一致）。 - 邀请码可折叠输入；若 URL 带 `c`，预填且禁用编辑。 - 点击创建账户调 captcha → `reg_email_chk_info` 或 `reg_mobile_chk_info` → 进入验证码弹窗。",
+      "sourceIds": [
+        "SRC-49E8EC7D7337"
+      ],
+      "requirementIds": [
+        "R-010"
+      ]
+    },
+    {
+      "factId": "F-074",
+      "category": "action",
+      "statement": "**验收**： - 页面渲染奖励侧边栏。 - 邮箱/手机账号校验。 - 邀请码预填。 - 提交后进入验证码步骤。",
+      "sourceIds": [
+        "SRC-026FB1197F16"
+      ],
+      "requirementIds": [
+        "R-010"
+      ]
+    },
+    {
+      "factId": "F-075",
+      "category": "navigation",
+      "statement": "``` CreateAccount (account, inviteCode, terms) -> runCaptcha -> reg_email_chk_info / reg_mobile_chk_info -> CodeVerifyDialog -> reg_email_confirm / reg_mobile_confirm -> CreatePassword -> set_email_password / set_mobile_password -> useWriteAuthSession -> redirect ```",
+      "sourceIds": [
+        "SRC-B2149CAAF95C"
+      ],
+      "requirementIds": [
+        "R-010"
+      ]
+    },
+    {
+      "factId": "F-076",
+      "category": "content",
+      "statement": "**目标**：注册验证码确认 + 设置密码 + 注册成功。",
+      "sourceIds": [
+        "SRC-F0FDA4FAB246"
+      ],
+      "requirementIds": [
+        "R-011"
+      ]
+    },
+    {
+      "factId": "F-077",
+      "category": "action",
+      "statement": "**修改目录**： - `apps/web-next/src/apps/Register/components/CreatePassword.tsx` - `apps/web-next/src/components/PasswordRuleChecklist.tsx`",
+      "sourceIds": [
+        "SRC-974F0D3990B3"
+      ],
+      "requirementIds": [
+        "R-011"
+      ]
+    },
+    {
+      "factId": "F-078",
+      "category": "navigation",
+      "statement": "**行为契约**： - 验证码校验通过后进入密码页。 - 密码必须满足 8–20 位、字母、数字、特殊符号；实时展示 `PasswordRuleChecklist`。 - 提交 `set_email_password` / `set_mobile_password`，密码加密。 - 成功后写 session，PostHog `register_complete` + `share_register_success`（若有邀请码），跳转 `from || HOME`。",
+      "sourceIds": [
+        "SRC-A06B1DA51D21"
+      ],
+      "requirementIds": [
+        "R-011"
+      ]
+    },
+    {
+      "factId": "F-079",
+      "category": "content",
+      "statement": "**验收**： - 密码规则实时反馈。 - 邮箱注册完整流程。 - 手机注册完整流程。",
+      "sourceIds": [
+        "SRC-AF89FE3342EB"
+      ],
+      "requirementIds": [
+        "R-011"
+      ]
+    },
+    {
+      "factId": "F-080",
+      "category": "error",
+      "statement": "| 缺失项 | 说明 | 影响范围 | | `page-migration.md` 登记的 6 个 TODO | HiChat `grant_token`/`gToken`、错误反馈、`CreateByThird` 加密、`VerifyMan` 重复提交、`createDesc` 插值、Google clip-path | 三方登录 |",
+      "sourceIds": [
+        "SRC-9B051FB20DF3"
+      ],
+      "requirementIds": [
+        "R-012"
+      ]
+    },
+    {
+      "factId": "F-081",
+      "category": "content",
+      "statement": "**目标**：先关闭 `page-migration.md` 里登记的 6 个 TODO，再让登录/注册页接入三方按钮。",
+      "sourceIds": [
+        "SRC-19A88877D8A9"
+      ],
+      "requirementIds": [
+        "R-012"
+      ]
+    },
+    {
+      "factId": "F-082",
+      "category": "collection",
+      "statement": "**修改目录**： - `apps/web-next/src/apps/Home/components/FafaAndAnniversaryBanner/HomeSocialLinks.tsx` - `apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/CreateByThird.tsx` - `apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/UniteByThird.tsx` - `apps/web-next/src/components/VerifyMan/index.tsx` - `apps/web-next/src/i18n/resources/zh-CN/thirdLogin.json` - 新增 `apps/web-next/src/apps/shared/auth/useThirdAuth.ts`",
+      "sourceIds": [
+        "SRC-8E9D351CC768"
+      ],
+      "requirementIds": [
+        "R-012"
+      ]
+    },
+    {
+      "factId": "F-083",
+      "category": "error",
+      "statement": "**行为契约**： - HiChat 回跳 `validateSearch` 同时识别 `grant_token` / `GRANT_TOKEN` / `gToken`，统一收敛到 `gToken`。 - `hichatUserStatusQuery` 失败时调用错误提示，不能只听 `data`。 - `CreateByThird` 的 `mobileOrEmailNumber` 必须 `encryptPasswordWithKey`。 - `VerifyMan` 在 `authPassed` 翻转时重置 `false`，`UniteByThird` 把 `confirming` pending 传入禁用态。 - `createDesc` 使用插值 `{{thirdName}}`，不能写死 Apple。 - Google GSI 叠层补 `clip-path` + `opacity-[0.01]`。 - 抽出公共 `useThirdAuth` hook，供 Home / Login / Register 共用。",
+      "sourceIds": [
+        "SRC-235C7A402BD1"
+      ],
+      "requirementIds": [
+        "R-012"
+      ]
+    },
+    {
+      "factId": "F-084",
+      "category": "navigation",
+      "statement": "**验收**： - 各 provider SDK 加载成功。 - HiChat redirect 后能正确触发 `check_user_status`。 - `CreateByThird` 在 Telegram/Apple 注册时账号加密成功。",
+      "sourceIds": [
+        "SRC-26BF307BD6C1"
+      ],
+      "requirementIds": [
+        "R-012"
+      ]
+    },
+    {
+      "factId": "F-085",
+      "category": "content",
+      "statement": "**目标**：三方授权后选择注册新账号，或需要手动填账号的 Create 分支。",
+      "sourceIds": [
+        "SRC-133CA65EF0D1"
+      ],
+      "requirementIds": [
+        "R-013"
+      ]
+    },
+    {
+      "factId": "F-086",
+      "category": "action",
+      "statement": "**修改目录**： - `apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/RegByThird.tsx` - `apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/CreateByThird.tsx`",
+      "sourceIds": [
+        "SRC-B16093B785A9"
+      ],
+      "requirementIds": [
+        "R-013"
+      ]
+    },
+    {
+      "factId": "F-087",
+      "category": "action",
+      "statement": "**行为契约**： - `Reg` 分支：勾选条款 → captcha → `authRegister`（Google/Apple/Telegram）或 `hichatRegisterAndBind`（HiChat）。 - `Create` 分支：输入邮箱/手机 → captcha → `newRegisterCheck` → 验证码 → `authRegister`；账号加密。 - 成功后 `useWriteAuthSession` 写 session；HiChat 展示 `HiChatSucModal` 显示账号与预设密码。",
+      "sourceIds": [
+        "SRC-CA549E5FD26F"
+      ],
+      "requirementIds": [
+        "R-013"
+      ]
+    },
+    {
+      "factId": "F-088",
+      "category": "content",
+      "statement": "**验收**： - Google/Apple/Telegram 直接注册。 - 需要手动账号的渠道注册成功。 - HiChat 注册后弹窗可复制密码。",
+      "sourceIds": [
+        "SRC-520C17B89DEB"
+      ],
+      "requirementIds": [
+        "R-013"
+      ]
+    },
+    {
+      "factId": "F-089",
+      "category": "entry",
+      "statement": "| 能力 | Legacy 入口 | Legacy API | web-next 现状 | 主要风险 | | 三方注册/创建/绑定 | 同上 | `authRegister`、`newRegisterCheck`、`joinAddAccount`、`confirmLogin` | 大部分已迁移 | 账号加密、provider 文案插值 |",
+      "sourceIds": [
+        "SRC-805B9F6AE285"
+      ],
+      "requirementIds": [
+        "R-013"
+      ]
+    },
+    {
+      "factId": "F-090",
+      "category": "navigation",
+      "statement": "``` Provider 授权 -> authLogin / check_user_status -> authStatus=1: 写 session，跳转 -> authStatus=2: 强制 Unite -> authStatus=0: SelThirdType -> Reg: authRegister / hichatRegisterAndBind -> Create: newRegisterCheck -> code -> authRegister -> Unite: checkAccount -> password -> joinAddAccount -> VerifyMan -> confirmLogin / hichatBindExistingAccount ```",
+      "sourceIds": [
+        "SRC-EA28C628854E"
+      ],
+      "requirementIds": [
+        "R-013"
+      ]
+    },
+    {
+      "factId": "F-091",
+      "category": "error",
+      "statement": "| 能力 | Legacy 入口 | Legacy API | web-next 现状 | 主要风险 | | Google/Apple/Telegram/HiChat 登录 | `apps/web/src/components/ThirdPartyLogin/**` | `authLogin`、`check_user_status` 等 | 骨架已存在，6 个 TODO 未清 | 参数命名、SDK 白名单、错误反馈 |",
+      "sourceIds": [
+        "SRC-1F96E088D343"
+      ],
+      "requirementIds": [
+        "R-013"
+      ]
+    },
+    {
+      "factId": "F-092",
+      "category": "content",
+      "statement": "**目标**：三方授权后绑定已有 FameEX 账号。",
+      "sourceIds": [
+        "SRC-0BC8E2578776"
+      ],
+      "requirementIds": [
+        "R-014"
+      ]
+    },
+    {
+      "factId": "F-093",
+      "category": "action",
+      "statement": "**修改目录**： - `apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/UniteByThird.tsx`",
+      "sourceIds": [
+        "SRC-AFFA5FD0E293"
+      ],
+      "requirementIds": [
+        "R-014"
+      ]
+    },
+    {
+      "factId": "F-094",
+      "category": "content",
+      "statement": "**行为契约**： - 三步：账号 → 密码 → 多因子验证。 - 账号检查 `checkAccount`，密码加密。 - `joinAddAccount` 后若 `hasGoogleAuth` 需要 Google 验证码，走 `VerifyMan`。 - HiChat 分支用 `hichatBindExistingAccount`，参数兼容 `grantToken`、`email/mobileNumber` 加密。 - 成功后写 session，弹窗关闭。",
+      "sourceIds": [
+        "SRC-D3A73E997B89"
+      ],
+      "requirementIds": [
+        "R-014"
+      ]
+    },
+    {
+      "factId": "F-095",
+      "category": "content",
+      "statement": "**验收**： - 绑定已有邮箱账号。 - 绑定已有手机账号。 - Google 验证绑定流程。",
+      "sourceIds": [
+        "SRC-93FC840F5E3A"
+      ],
+      "requirementIds": [
+        "R-014"
+      ]
+    },
+    {
+      "factId": "F-096",
+      "category": "entry",
+      "statement": "| 能力 | Legacy 入口 | Legacy API | web-next 现状 | 主要风险 | | 登录后 MailBinder | `apps/web/src/components/MailBinder/**` | - | 未迁移 | 是否随登录页一并迁移需确认 |",
+      "sourceIds": [
+        "SRC-9CF5E2F3F337"
+      ],
+      "requirementIds": [
+        "R-015"
+      ]
+    },
+    {
+      "factId": "F-097",
+      "category": "navigation",
+      "statement": "**目标**：登录/注册页在 web-next 内可用后，把 `MainHeader` 的登录/注册按钮切到内部路由。",
+      "sourceIds": [
+        "SRC-DCDB0ED125EF"
+      ],
+      "requirementIds": [
+        "R-016"
+      ]
+    },
+    {
+      "factId": "F-098",
+      "category": "navigation",
+      "statement": "**修改目录**： - `apps/web-next/src/apps/shared/auth/buildAuthNavigationUrl.ts`（保留给受保护页跳转用） - `apps/web-next/src/apps/shared/components/main-header/` 中 login/register 入口 - 路由灰度配置 / feature flag",
+      "sourceIds": [
+        "SRC-F6BB18D6F2FB"
+      ],
+      "requirementIds": [
+        "R-016"
+      ]
+    },
+    {
+      "factId": "F-099",
+      "category": "navigation",
+      "statement": "**行为契约**： - 未登录用户点击 header “登录” → `/zh-CN/login?from=<当前路径>`。 - 未登录用户点击 header “注册” → `/zh-CN/register?from=<当前路径>`。 - 保护页面仍用 `buildAuthNavigationUrl` 生成 `from` 后跳转 `/login`。",
+      "sourceIds": [
+        "SRC-96A79519FF9F"
+      ],
+      "requirementIds": [
+        "R-016"
+      ]
+    },
+    {
+      "factId": "F-100",
+      "category": "entry",
+      "statement": "**验收**： - 从交易页点击登录，成功后回到交易页。 - 移动端 header 登录入口同样生效。",
+      "sourceIds": [
+        "SRC-816ED450CA24"
+      ],
+      "requirementIds": [
+        "R-016"
+      ]
+    },
+    {
+      "factId": "F-101",
+      "category": "navigation",
+      "statement": "**目标**：线上逐步放量，保留 legacy 回跳能力。",
+      "sourceIds": [
+        "SRC-1B10B90FBF18"
+      ],
+      "requirementIds": [
+        "R-017"
+      ]
+    },
+    {
+      "factId": "F-102",
+      "category": "navigation",
+      "statement": "**动作**： - 增加 feature flag（具体配置键与产品/运维确认）。 - flag 关闭时，登录/注册链接仍走 legacy site URL。 - flag 打开时走 web-next 路由。 - 监控埋点：login_page_view / register_page_view / login_complete / register_complete / 各 provider click。",
+      "sourceIds": [
+        "SRC-1DA693906324"
+      ],
+      "requirementIds": [
+        "R-017"
+      ]
+    },
+    {
+      "factId": "F-103",
+      "category": "error",
+      "statement": "**验收**： - flag 可即时回滚到 legacy。 - 错误率不高于 legacy 基线。",
+      "sourceIds": [
+        "SRC-10583981A135"
+      ],
+      "requirementIds": [
+        "R-017"
+      ]
+    },
+    {
+      "factId": "F-104",
+      "category": "navigation",
+      "statement": "**目标**：更新迁移状态，清理临时 dev 路由，最终验收。",
+      "sourceIds": [
+        "SRC-6DBB45D8017A"
+      ],
+      "requirementIds": [
+        "R-018"
+      ]
+    },
+    {
+      "factId": "F-105",
+      "category": "action",
+      "statement": "**修改目录**： - `apps/web-next/docs/page-migration.md` - 视情况删除/保留 `routes/dev/login.tsx`",
+      "sourceIds": [
+        "SRC-937BC06FD74A"
+      ],
+      "requirementIds": [
+        "R-018"
+      ]
+    },
+    {
+      "factId": "F-106",
+      "category": "dependency",
+      "statement": "**验收**： - `page-migration.md` 登记 `/login`、`/register`、三方登录为“已迁移”或“外部阻塞”。 - 全量 `vitest`、`tsc --noEmit`、`biome check src`、`build:test` 通过。 - 真实账号/真实 provider 多语言、移动端验收完成。",
+      "sourceIds": [
+        "SRC-3AA889558590"
+      ],
+      "requirementIds": [
+        "R-018"
+      ]
+    },
+    {
+      "factId": "F-107",
+      "category": "navigation",
+      "statement": "- `apps/web-next` 内 `pnpm exec vitest`、`pnpm exec tsc --noEmit`、`pnpm exec biome check src`、`pnpm build:test` 全部通过。 - 真实邮箱、手机、Google、Apple、Telegram、HiChat 账号完成全流程人工验收。 - 多语言（至少 zh-CN / en-US / ko-KR）验收无缺失 key 显示为 raw namespace:key。 - 移动端 390px 与桌面 1440px 验收通过。 - 登录成功后 `from` 回跳正确，session 刷新后 header 进入登录态。 - feature flag 可一键回滚到 legacy。",
+      "sourceIds": [
+        "SRC-CDC56411FD21"
+      ],
+      "requirementIds": [
+        "R-018",
+        "R-023"
+      ]
+    },
+    {
+      "factId": "F-108",
+      "category": "permission",
+      "statement": "- **SSR 初期不调用需要鉴权的 API**：登录态相关请求先在浏览器侧发起，避免服务端拿不到 session 而失败。 - **列表响应逐行容错**：用 `decodeUnknownEither` 或 `ResilientArray`，坏行最多丢掉该行，不能清空整表。 - **组件 300 行拆分**：复杂表单拆分子组件；不要把 legacy 大组件直接复制过来。 - **外部依赖阻塞要落文档**：例如 provider SDK 加载、origin 白名单、测试 bot 等，必须登记 owner，不能前端硬编码绕过。",
+      "sourceIds": [
+        "SRC-E6118406E657"
+      ],
+      "requirementIds": [
+        "R-019",
+        "R-020",
+        "R-021",
+        "R-022"
+      ]
+    }
+  ]
 }

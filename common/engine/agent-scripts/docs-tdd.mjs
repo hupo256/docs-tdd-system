@@ -248,7 +248,7 @@ if (command === 'rules') {
 }
 
 if (!new RegExp(`^(?:${config.projectIdPattern || '(?:PR|TR)-\\d{5}'})$`).test(projectId || '')) {
-  console.error('usage: docs-tdd.mjs <run|kickoff|status|resume|next|source-update|source-sync|extract|scope-approval|scope-approve|review|review-adjudicate|review-resume|checkpoint|dev-check|commit|worktree-prepare|capability|probe|doctor|release|golden|guard|rule-health|rules|explain|check|gate|evidence|verify|context|changed|recommend> PR-01234 [G0-G8|scenario] [--input file.json] [--evidence evidence.json] [--surfaces surfaces.json] [--plan evidence-plan.json] [--path-map dev-check-path-map.json] [--out file.json] [--kind feature|bugfix] [--dry-run] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|pi|human] [--session-id <id>] [--target path] [--model <name>]')
+  console.error('usage: docs-tdd.mjs <run|kickoff|status|resume|next|source-update|source-sync|extract|coverage-check|scope-approval|scope-approve|review|review-adjudicate|review-resume|checkpoint|dev-check|manual-test|commit|worktree-prepare|capability|probe|doctor|release|golden|guard|rule-health|rules|explain|check|gate|evidence|verify|context|changed|recommend> PR-01234 [G0-G8|scenario] [--input file.json] [--evidence evidence.json] [--surfaces surfaces.json] [--plan evidence-plan.json] [--path-map dev-check-path-map.json] [--out file.json] [--kind feature|bugfix] [--dry-run] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|pi|human] [--session-id <id>] [--target path] [--model <name>]')
   process.exit(1)
 }
 
@@ -256,7 +256,13 @@ if (['run', 'kickoff', 'status', 'resume', 'next', 'source-update', 'checkpoint'
   process.exit(run([join(scriptDir, 'project-orchestrator.mjs'), command, projectId, ...cliArgs.slice(2)]))
 }
 
-const projectWorkflowVersion = workflowVersionForProject(projectId, { resolveProjectRoot })
+let projectWorkflowVersion
+try {
+  projectWorkflowVersion = workflowVersionForProject(projectId, { resolveProjectRoot })
+} catch (error) {
+  console.error(`workflow resolution failed: ${error.message}`)
+  process.exit(1)
+}
 if (projectWorkflowVersion === 2 && command === 'commit') {
   process.exit(run([join(scriptDir, 'vnext-commit.mjs'), '--project', projectId, ...commandArgs], docsRoot))
 }
@@ -319,6 +325,9 @@ if (projectWorkflowVersion === 2 && command === 'extract') {
     ...(outputIndex >= 0 ? ['--out', resolve(commandArgs[outputIndex + 1])] : []),
   ], docsRoot))
 }
+if (projectWorkflowVersion === 2 && command === 'coverage-check') {
+  process.exit(run([join(scriptDir, 'vnext-extract.mjs'), '--project', resolveProjectRoot(projectId), '--check'], docsRoot))
+}
 if (projectWorkflowVersion === 2 && command === 'context') {
   const session = commandArgs.indexOf('--session')
   if (session >= 0 && !commandArgs[session + 1]) {
@@ -332,13 +341,14 @@ if (projectWorkflowVersion === 2 && command === 'context') {
   ]))
 }
 if (projectWorkflowVersion === 2 && command === 'review') {
-  if (!['pi', 'claude'].includes(agentClient)) {
-    console.error('v2 review requires --client pi or --client claude')
+  const reviewClient = clientIndex >= 0 ? agentClient : 'claude'
+  if (!['pi', 'claude'].includes(reviewClient)) {
+    console.error('v2 review uses Claude by default and accepts only --client claude or --client pi')
     process.exit(1)
   }
   const model = modelIndex >= 0 ? commandArgs[modelIndex + 1] : ''
   process.exit(run([
-    join(scriptDir, 'vnext-review.mjs'), '--project', resolveProjectRoot(projectId), '--client', agentClient,
+    join(scriptDir, 'vnext-review.mjs'), '--project', resolveProjectRoot(projectId), '--client', reviewClient,
     ...(model ? ['--model', model] : []),
   ], docsRoot))
 }
@@ -352,6 +362,21 @@ if (projectWorkflowVersion === 2 && command === 'dev-check') {
   process.exit(run([
     join(scriptDir, 'vnext-dev-check.mjs'), '--project', resolveProjectRoot(projectId), '--worktree', worktree, '--base', config.baseRef || 'origin/online',
     ...(pathMapIndex >= 0 ? ['--path-map', resolve(commandArgs[pathMapIndex + 1])] : []),
+  ], docsRoot))
+}
+if (projectWorkflowVersion === 2 && command === 'manual-test') {
+  const inputIndex = commandArgs.indexOf('--input')
+  const outputIndex = commandArgs.indexOf('--out')
+  const hasInput = inputIndex >= 0 && Boolean(commandArgs[inputIndex + 1])
+  const hasOutput = outputIndex >= 0 && Boolean(commandArgs[outputIndex + 1])
+  if (hasInput === hasOutput) {
+    console.error('manual-test requires exactly one of --out <manual-test.json> or --input <manual-test.json>')
+    process.exit(1)
+  }
+  const worktree = safeV2Worktree(projectId, commandArgs)
+  process.exit(run([
+    join(scriptDir, 'vnext-manual-test.mjs'), '--project', resolveProjectRoot(projectId), '--worktree', worktree, '--base', config.baseRef || 'origin/online',
+    ...(hasInput ? ['--input', resolve(commandArgs[inputIndex + 1])] : ['--out', resolve(commandArgs[outputIndex + 1])]),
   ], docsRoot))
 }
 if (projectWorkflowVersion === 2 && command === 'evidence') {
@@ -430,7 +455,7 @@ if (projectWorkflowVersion === 2 && ['gate', 'changed'].includes(command)) {
   console.error(`${command} is a v1-only command; ${projectId} uses workflowVersion 2. Use docs-tdd verify ${projectId} --input <verify-input.json>.`)
   process.exit(1)
 }
-if (['source-sync', 'extract', 'scope-approval', 'scope-approve', 'review', 'review-adjudicate', 'review-resume', 'worktree-prepare', 'evidence', 'verify'].includes(command)) {
+if (['source-sync', 'extract', 'coverage-check', 'scope-approval', 'scope-approve', 'review', 'review-adjudicate', 'review-resume', 'worktree-prepare', 'evidence', 'verify'].includes(command)) {
   console.error(`${command} is a v2-only command; ${projectId} uses workflowVersion 1. Use docs-tdd gate ${projectId} <GATE>.`)
   process.exit(1)
 }

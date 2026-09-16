@@ -1,6 +1,6 @@
-# docs_tdd v3.3 — 可移植的 AI 前端开发规则与门禁系统
+# docs_tdd v3.4 — 可移植的 AI 前端开发规则与门禁系统
 
-> 当前正式发布版本：**v3.3**。v3.3 沿用第二代 work-item 工作流协议；项目文件中的兼容路由标识仍为 `workflowVersion: 2`，它不是产品发布版本。
+> 当前正式发布版本：**v3.4**。v3.4 沿用第二代 work-item 工作流协议；项目文件中的兼容路由标识仍为 `workflowVersion: 2`，它不是产品发布版本。
 
 一套**独立**的 AI 前端开发操作系统：新需求默认使用第二代 work-item 流程的「原始需求 → 独立覆盖审查 → 风险分级 → 当前代码证据 → 单一正式出口」，存量项目兼容第一代 G0–G8 门禁；两条工作流都只认机器可验证证据。引擎与业务仓库通过 `docs-tdd.config.json` + 一个软链解耦；**目前只在一个仓库（`@fameex/web`）真实验证过，移植到第二个仓库需要改动下列锚点**（见[可移植性的真实边界](#可移植性的真实边界)）。
 
@@ -8,7 +8,7 @@
 
 ## 它解决什么
 
-AI 编码的两个顽疾：**跳过需求确认直接写码**、**规则散落导致每次重新解释**。docs_tdd v3.3 用 `work-item.json` 固定原始需求、覆盖审查、风险等级和证据，并由 `latest-result.json` 给出唯一正式结论；抽取先经过确定性 intake audit，独立 Reviewer 在每次人工介入前最多两轮；仍未通过时允许先实现，但测试交接前必须人工逐 finding 核对，第一代 G0–G8 仅作为存量兼容。AI「已读/已注意」不算数，只认执行契约产出的证据。
+AI 编码的两个顽疾：**跳过需求确认直接写码**、**规则散落导致每次重新解释**。docs_tdd v3.4 用 `work-item.json` 固定原始需求、覆盖审查、风险等级和证据，并由 `latest-result.json` 给出唯一正式结论；抽取先经过确定性 intake audit，独立 Reviewer 在同一 source lifecycle 总计最多两轮；仍未通过时允许先实现，但测试交接前必须人工逐 finding 核对并完成一次真实预提测运行（CLI 预填，人工只确认必要结果），第一代 G0–G8 仅作为存量兼容。AI「已读/已注意」不算数，只认执行契约产出的证据。
 
 规则本身遵循「**规则可变多，常驻恒定小**」：AI 开工只常驻读一个路由文件（`common/rules/rule-router.md`，≤5000 字符机器守），其余按场景加载，避免上下文膨胀。v2 实现上下文对 V0/V1 保持 4K 硬上限；V2 使用 8K 目标、24K 硬上限，处于两者之间时显式警告但不中断大型需求。
 
@@ -25,7 +25,7 @@ AI 编码的两个顽疾：**跳过需求确认直接写码**、**规则散落�
 运行环境必须提供 Node.js、Git 与 ripgrep（`rg`）；`docs-tdd doctor` 会对缺失依赖 fail-closed。核心命令统一走 `<mount>/common/engine/agent-scripts/docs-tdd.mjs`。下表中的 `docs-tdd` 是 `node <mount>/common/engine/agent-scripts/docs-tdd.mjs` 的阅读简写：
 
 ```bash
-docs-tdd run <PROJECT-ID> --prd <src>      # v3.3 Autopilot：断点续跑、自动验证/限次修复、按证据路径 commit（不 push）
+docs-tdd run <PROJECT-ID> --prd <src>      # v3.4 Autopilot：断点续跑、自动验证/限次修复、按证据路径 commit（不 push）
 docs-tdd context <PROJECT-ID> <SCENARIO>   # 按场景生成默认 brief/compact 规则包；可显式覆盖模式
 docs-tdd kickoff <PROJECT-ID> --prd <src>  # 默认创建 workflowVersion 2 feature；已定位缺陷可加 --kind bugfix，显式 v1 加 --legacy
 docs-tdd verify  <PROJECT-ID> --input <json> # 第二代协议唯一正式出口，非 PASS 阻断
@@ -33,8 +33,10 @@ vnext-delivery-guard.mjs --project <ID> ... # pre-commit/CI 只读校验 PASS、
 docs-tdd status|next|resume <PROJECT-ID>   # 状态、唯一下一步、断点恢复
 docs-tdd source-update <PROJECT-ID> --input X # 登记后到的 Figma/API 快照并触发增量对齐
 docs-tdd source-sync <PROJECT-ID>          # 原子重拉远端 PRD；有漂移则使旧抽取/审查失效
-docs-tdd extract <PROJECT-ID> --out X      # 生成 source-unit 脚手架；--input X 应用并执行确定性审计
+docs-tdd extract <PROJECT-ID> --out X      # 生成三阶段抽取脚手架；--input X 应用候选
+docs-tdd coverage-check <PROJECT-ID>       # Review 前运行确定性 Coverage Compiler
 docs-tdd dev-check <PROJECT-ID>             # 实现中期检查受审查的非浏览器命令、改动路径与 surface 映射
+docs-tdd manual-test <PROJECT-ID> --out X   # 仅两轮审查未收敛时生成预填人工实跑单；--input X 应用确认
 docs-tdd checkpoint <PROJECT-ID> --input X    # Agent 回写实现/修复 checkpoint；非日常人工操作
 docs-tdd recommend <PROJECT-ID>            # 根据当前改动推荐场景
 docs-tdd changed <PROJECT-ID>              # v1 编辑后增量校验；v2 项目拒绝执行
@@ -54,7 +56,7 @@ docs-tdd rule-health                       # 规则体检：命中分布、warn 
 
 ### 可选 Lark 自动修复链的边界
 
-`common/lark-bot/` 保留独立的消息任务、AI 分析、轻量质量闸和本地提交链，**不接入 v3.3 状态机**。它的 `done` 仅表示候选修复已通过 Worker 最终 diff/Biome 复验并本地提交，审计固定为 `assuranceMode=lark-lightweight`、`deliveryAuthority=false`；高风险改动仍须另取项目级 v3.3 authoritative PASS 才能正式交付。这样既不让群内小修复承担完整项目流程，也不把 Lark 结果误当正式绿灯。
+`common/lark-bot/` 保留独立的消息任务、AI 分析、轻量质量闸和本地提交链，**不接入 v3.4 状态机**。它的 `done` 仅表示候选修复已通过 Worker 最终 diff/Biome 复验并本地提交，审计固定为 `assuranceMode=lark-lightweight`、`deliveryAuthority=false`；高风险改动仍须另取项目级 v3.4 authoritative PASS 才能正式交付。这样既不让群内小修复承担完整项目流程，也不把 Lark 结果误当正式绿灯。
 
 ## 首次接入一个项目
 
@@ -122,16 +124,16 @@ node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs doctor
 
 命令统一走 `<mount>/common/engine/agent-scripts/docs-tdd.mjs`（下文简写 `docs-tdd`）。
 
-### 默认：v3.3 正式工作流
+### 默认：v3.4 正式工作流
 
-v3.3 是当前产品版本；项目文件继续使用 `workflowVersion: 2` 作为第二代协议的稳定兼容标识。风险等级 `V0/V1/V2` 也不是产品版本：V0 是严格受限的局部微改，V1 是多影响面或中等风险，V2 是资金、权限、新 API、跨应用等高风险变更并要求人工确认范围。
+v3.4 是当前产品版本；项目文件继续使用 `workflowVersion: 2` 作为第二代协议的稳定兼容标识。风险等级 `V0/V1/V2` 也不是产品版本：V0 是严格受限的局部微改，V1 是多影响面或中等风险，V2 是资金、权限、新 API、跨应用等高风险变更并要求人工确认范围。
 
 ```text
 输入 PRD
   → 建立 work-item 并规范化文本、表格、图片等来源
   → 由脚手架抽取原子需求、实现 surface 和验收命令
   → 确定性 intake audit 前置拦截结构/锚点/证据计划缺陷
-  → 启动隔离的 source-only 子会话做独立覆盖审查（人工介入前最多两轮）
+  → 启动隔离的 source-only 子会话做独立覆盖审查（同一 source lifecycle 总计最多两轮）
   → 按 scope × risk 路由 V0 / V1 / V2
   → Agent 在 feature worktree 实现并登记 checkpoint
   → CLI 执行已审查的 evidence command plan
@@ -152,7 +154,7 @@ CLI 始终返回带稳定 `actionId` 的唯一 action packet；Agent 只按 `act
 
 #### 2. 结构化需求、确定性前置审计与机器独立审查
 
-PRD 被确定性转换为 source units；表格既保留容器上下文，也逐数据行生成稳定 unit。先用 `docs-tdd extract <ID> --out /tmp/extraction.json` 生成带来源锚点的脚手架，填写 requirements、surfaces、Figma/API 依赖和 `evidenceCommands` 后，以 `--input` 应用。CLI 会先审计重复 ID、语义 unit/表格行覆盖、集合计数、来源锚点和证据命令完整性；失败时不调用 Reviewer。需求作者登记身份后，`docs-tdd review` 才启动另一个 client/session；reviewer 只收到规范化 PRD、候选需求和图片，不得到代码或工具。每次人工介入前最多自动审查两轮：候选未变化禁止重试，相同 finding 再现或两轮未通过会持久化 `human-review-deferred`；实现可以继续，但 evidence / 测试交接前必须人工逐 finding 裁决。Reviewer 启动失败仍立即 `escalated`，在实现前处理，不进入无限循环。审查结果由 CLI 本机签名，手写 reviewer JSON、复用同一 session、未处置 finding 或来源漂移都不能形成有效审查。
+PRD 被确定性转换为 source units；表格既保留容器上下文，也逐数据行生成稳定 unit。先用 `docs-tdd extract <ID> --out /tmp/extraction.json` 生成带来源锚点的脚手架，按 Facts → Atomic Requirements → Surface Candidates 三阶段填写后，以 `--input` 应用。CLI 会先审计重复 ID、语义 unit/表格行反向覆盖、Fact→Requirement 链路、集合计数和 surface 映射；失败时不调用 Reviewer。需求作者登记身份后，`docs-tdd review` 才启动另一个 client/session；reviewer 只审语义范围，不审 evidence plan、代码或工具。每个 source lifecycle 总计最多自动审查两轮，人工介入不重置预算：候选未变化禁止重试，相同 finding 再现或两轮未通过会持久化 `human-review-deferred`；实现可以继续，但 evidence / 测试交接前必须人工逐 finding 裁决。Reviewer 启动失败仍立即 `escalated`，在实现前处理，不进入无限循环。审查结果由 CLI 本机签名，手写 reviewer JSON、复用同一 session、未处置 finding 或来源漂移都不能形成有效审查。
 
 #### 3. 实现与真实覆盖登记
 
@@ -258,7 +260,7 @@ node <mount>/common/engine/agent-scripts/decommission-worktree.mjs PR-01234
 | --- | --- |
 | [common/rules/](./common/rules/) | 跨项目复用的规则与场景路由 |
 | [common/engine/](./common/engine/) | CLI、门禁脚本、schema 与 golden 夹具 |
-| [common/vnext/](./common/vnext/) | v3.3 正式工作流、单一出口、基线、历史灰度与切换决策 |
+| [common/vnext/](./common/vnext/) | v3.4 正式工作流、单一出口、基线、历史灰度与切换决策 |
 | [common/lark-bot/](./common/lark-bot/) | 可选的消息接入与任务执行服务：合并话题上下文/图片、注入项目 scope、预取 Figma 规格、按项目路由 bug 回执并自动清理附件 |
 | [prds/](./prds/) | 各项目的文档、状态与证据 |
 | [common/rules/rule-router.md](./common/rules/rule-router.md) | **开工常驻入口**（渐进披露路由） |

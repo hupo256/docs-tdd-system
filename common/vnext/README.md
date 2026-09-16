@@ -1,14 +1,14 @@
-# docs_tdd v3.3 正式工作流
+# docs_tdd v3.4 正式工作流
 
-> 状态：**正式启用（enforced）**。当前框架发布版本为 **v3.3**，使用第二代 work-item 协议；项目文件中的稳定兼容标识仍为 `workflowVersion: 2`。自 2026-09-08 起，该协议作为新需求默认系统；第一代流程只服务存量 `workflowVersion: 1` 项目和显式 `--legacy` 项目。历史切换决策见 [cutover-decision-20260908.md](./cutover-decision-20260908.md)。
+> 状态：**正式启用（enforced）**。当前框架发布版本为 **v3.4**，使用第二代 work-item 协议；项目文件中的稳定兼容标识仍为 `workflowVersion: 2`。自 2026-09-08 起，该协议作为新需求默认系统；第一代流程只服务存量 `workflowVersion: 1` 项目和显式 `--legacy` 项目。历史切换决策见 [cutover-decision-20260908.md](./cutover-decision-20260908.md)。
 
 项目编号支持大写 `PR-xxxxx` 与 `TR-xxxxx`（五位数字）；本文命令里的 `PR-01234` 仅作示例。
 
 ## 版本边界
 
-- **产品发布版本**：v3.3，表示当前整体能力集合。
+- **产品发布版本**：v3.4，表示当前整体能力集合。
 - **项目协议标识**：`workflowVersion: 2`，只负责区分第二代 work-item 项目与第一代 G0–G8 项目。
-- v3.3 没有引入不兼容的第三代项目数据模型，因此不伪造 `workflowVersion: 3`，也不迁移或重写历史项目。
+- v3.4 没有引入不兼容的第三代项目数据模型，因此不伪造 `workflowVersion: 3`，也不迁移或重写历史项目。
 
 ## 不变量
 
@@ -35,8 +35,10 @@
 
 ## 当前已落地
 
-- `vnext-extract.mjs` + `lib/vnext-intake-audit.mjs`：CLI 先生成 source-unit 抽取脚手架，再对候选 requirements 做确定性前置审计；重复 ID、漏锚语义 unit/表格行、集合计数和证据计划缺陷在调用模型 Reviewer 前失败。
-- `vnext-review.mjs` 的有界审查控制：同一候选禁止无变化重试；每次人工介入前最多两轮。相同 finding 再现或次数耗尽进入 `human-review-deferred`，允许先实现但在 evidence / 测试交接前强制人工逐项裁决；Reviewer 不可用则立即 `escalated`，实现前处理。
+- `vnext-extract.mjs` + `lib/vnext-intake-audit.mjs`：CLI 按“事实清单 → 原子需求 → surface/集合”三阶段生成抽取脚手架，再做确定性 Coverage Compiler；每个语义 source unit 必须进入事实或显式排除，每条事实必须反向关联 requirement，重复 requirement/surface ID、漏锚表格行、集合计数和证据计划缺陷均在调用模型 Reviewer 前失败。
+- scope review 与 evidence plan 使用独立 fingerprint：Reviewer 只接收事实、需求、surface 和范围信息；修改 evidence command/argv 只重跑确定性 evidence-plan audit，不再使已经通过的 scope review 失效。
+- `vnext-review.mjs` 的有界审查控制：同一候选禁止无变化重试；同一 source lifecycle 总计最多两轮，人工介入不重置预算。相同 finding 再现或次数耗尽进入 `human-review-deferred`，允许先实现但在 evidence / 测试交接前强制人工逐项裁决；Reviewer 不可用则立即 `escalated`，实现前处理。隔离 Reviewer 默认使用 Claude，也允许显式切换 Pi。
+- `vnext-manual-test.mjs`：仅当两轮语义审查仍未收敛时启用提测前人工实跑。CLI 自动预填 scope、requirement/surface、环境与时间；人工通常只确认 `confirmedBy + result`。`failed` 才补实际差异，`not-testable` 必须补 blocker 且绝不算通过，截图/录屏/日志与新遗漏按实际情况补充。
 - `vnext-source-sync.mjs`：从既有 Lark source config 拉取到 staging，规范化并比较语义快照；无变化不改文件，有变化才原子替换来源并使旧抽取/审查/结果失效，失败保留旧快照。
 - `lib/vnext-source-units.mjs`：Markdown 表格按容器 + 每个数据行生成稳定 source units，避免一整张表作为一个不可审计黑盒。
 - `lib/playwright-mcp-adapter.mjs`：通过仓外 `@playwright/mcp --extension` 驱动系统 Chrome，按场景 JSON 执行动作和文本断言，为 `browser-interaction` evidence command 提供可执行 argv；token/浏览器不可用时明确失败。
@@ -96,6 +98,8 @@ node common/engine/agent-scripts/lib/vnext-source-units.mjs --self-test
 node common/engine/agent-scripts/lib/vnext-coverage-review.mjs --self-test
 node common/engine/agent-scripts/lib/vnext-work-item.mjs --self-test
 node common/engine/agent-scripts/lib/vnext-metrics.mjs --self-test
+node common/engine/agent-scripts/lib/vnext-manual-test.mjs --self-test
+node common/engine/agent-scripts/vnext-review-benchmark.mjs --self-test
 ```
 
 ## Intake / Autopilot 入口
@@ -150,7 +154,7 @@ node common/engine/agent-scripts/docs-tdd.mjs commit PR-01234 --mode delivery
 
 独立审查 payload 会把 requirement 已锚定的语义单元排在最前，未锚定结构节点仅保留在 `sourceInventory`；所有图片 hash 和 disposition 都保留在 manifest，但仅把 requirement anchor 实际引用的规格图片作为 `reviewAssets` 附件发送。超时时间按 payload 字符数和附件数动态计算；传输失败单独累计 `transportFailures`，不消耗语义审查次数。
 
-本地安装器生成的 pre-commit 会在 `verify-code-rules` 后自动执行 v2 delivery guard。若团队 hook 只通过 JS/TS glob 的 lint-staged 调 wrapper，安装器不会误判为完整接线，而会保留团队 hook并追加无条件的个人兜底。CI 需同时显式接入：
+本地安装器生成的 pre-commit 会在 `verify-code-rules` 后自动执行 v2 **checkpoint** guard（默认不要求系统仓 evidence/verify 或 `latest-result PASS`）。只有存在 passing dev-check 时才校验 staged 路径与其 `pendingCommitPaths` 一致；普通开发提交可直接 commit。最终交付前请运行 `docs-tdd run` / `docs-tdd verify` 取得 authoritative PASS，并用 `DOCS_TDD_COMMIT_MODE=delivery` 或 `docs-tdd commit --mode delivery` 提交。若团队 hook 只通过 JS/TS glob 的 lint-staged 调 wrapper，安装器不会误判为完整接线，而会保留团队 hook并追加无条件的个人兜底。CI 需同时显式接入：
 
 ```bash
 node <docs-root>/common/engine/agent-scripts/verify-code-rules.mjs --project "$DOCS_TDD_PROJECT_ID"
@@ -201,7 +205,7 @@ CLI 执行 evidence 前后仍比较整棵有效代码树，测试命令若改写
 
 ## 独立审查调用边界
 
-独立 Reviewer 不是确定性格式校验器。`docs-tdd extract --input` 必须先产出与当前 source/requirements fingerprint 一致且 `status=pass` 的 `extractionAudit`；否则 `review` 在启动子进程前失败。每次 changes-required 消耗一次审查机会；每次人工介入前累计两轮或相同 finding 再现时进入 `human-review-deferred`。此状态可继续实现当前抽取范围，但必须在运行 evidence、提交测试或声明 ready-to-test 前，由人逐 finding 执行 `review-adjudicate`。Reviewer 不可用属于基础设施失败，立即 `escalated` 并在实现前处理。人工接受 finding 后须修复抽取候选并显式 `review-resume`；该人工动作才重置下一段两轮预算，不能靠重复 review 或手改状态复活。拒绝/不适用/延期全部有依据且无接受项时，裁决 overlay 可形成有效 PASS，但原始签名审查 receipt 与 verdict 保持不变。
+范围与证据使用独立 fingerprint：修改 `evidencePlan` 或 `evidenceCommands` 只会要求重跑确定性 evidence-plan 审计，不会使已通过的语义 scope review 失效。独立 Reviewer 不是确定性格式校验器。`docs-tdd extract --input` 必须先产出与当前 source/requirements fingerprint 一致且 `status=pass` 的 `extractionAudit`；否则 `review` 在启动子进程前失败。每次 changes-required 消耗一次审查机会；同一 source lifecycle 累计两轮或相同 finding 再现时进入 `human-review-deferred`。第二轮 packet 会附带首轮 findings 与 requirement 级 candidate diff，要求先验修复、只报告未解决或重大的新遗漏。此状态可继续实现当前抽取范围，但必须在运行 evidence、提交测试或声明 ready-to-test 前，由人逐 finding 执行 `review-adjudicate`。Reviewer 不可用属于基础设施失败，立即 `escalated` 并在实现前处理。人工接受 finding 后须修复抽取候选；仅在两轮预算尚有余额时才可显式 `review-resume`，且已消费次数保持不变。预算耗尽后不得开启第三轮；若人工接受 finding，修复抽取后必须再次由人以 `resolved` 确认当前 scope；若只是补录三阶段 traceability 等不改变需求/Surface 语义的迁移，也必须由人把原裁决重新绑定到当前 fingerprint。两种路径都继续受 `requiresPretestHumanRun` 约束，并在提测前完成人工实跑。拒绝/不适用/延期全部有依据且无接受项时，裁决 overlay 可形成有效 PASS，但原始签名审查 receipt 与 verdict 保持不变。
 
 ```bash
 # 1. 原始来源 → 稳定 source snapshot + source units
@@ -210,23 +214,30 @@ node common/engine/agent-scripts/vnext-verify.mjs --normalize-sources source-inp
 # 2. 先生成并应用抽取候选；这一步执行确定性 intake audit
 node common/engine/agent-scripts/docs-tdd.mjs extract PR-01234 --out /tmp/extraction.json
 node common/engine/agent-scripts/docs-tdd.mjs extract PR-01234 --input /tmp/extraction.json
+node common/engine/agent-scripts/docs-tdd.mjs coverage-check PR-01234
 
 # 3. 在 requirementsAuthor 已记录后启动真正独立的 source-only reviewer；V1/V2 必须走此入口
-node common/engine/agent-scripts/docs-tdd.mjs review PR-01234 --client pi
+node common/engine/agent-scripts/docs-tdd.mjs review PR-01234
+# 默认使用 Claude；含图片且需要附加图片字节时显式使用 --client pi
 
-# 若升级人工：逐 finding 裁决。接受项先重新 apply extraction，再显式恢复 review
+# 若升级人工：逐 finding 裁决。接受项先重新 apply extraction；尚有预算才 resume
+# 两轮已耗尽则不得 resume，修复后再次 adjudicate，并把原 accepted 项标记 resolved
 node common/engine/agent-scripts/docs-tdd.mjs review-adjudicate PR-01234 --input /tmp/review-adjudication.json --client human
 node common/engine/agent-scripts/docs-tdd.mjs review-resume PR-01234 --input /tmp/review-resume.json --client human
 
-# V2 review PASS，或两轮耗尽进入 bounded human defer 后，执行 fingerprint-bound scope approval
+# V2 review PASS，或两轮耗尽后带明确 provisional 标识，执行 fingerprint-bound scope approval
 node common/engine/agent-scripts/docs-tdd.mjs scope-approval PR-01234 --out /tmp/scope-approval.json
 node common/engine/agent-scripts/docs-tdd.mjs scope-approve PR-01234 --input /tmp/scope-approval.json --client human
 
-# 4. 运行受信 command evidence；命令计划默认取自已审查的 work-item.json evidenceCommands，输出放在被测 worktree 外
+# 4. 仅当两轮审查耗尽触发兜底时：CLI 先预填 scope、环境、时间和 requirement/surface，人工只确认身份与结果
+node common/engine/agent-scripts/docs-tdd.mjs manual-test PR-01234 --out /tmp/manual-test.json
+node common/engine/agent-scripts/docs-tdd.mjs manual-test PR-01234 --input /tmp/manual-test.json
+
+# 5. 运行受信 command evidence；命令计划默认取自已审查的 work-item.json evidenceCommands，输出放在被测 worktree 外
 node common/engine/agent-scripts/docs-tdd.mjs evidence PR-01234 --worktree /absolute/path/to/worktree --out /tmp/evidence.json
 # --plan <evidence-plan.json> 仅作兼容/显式输入保留；若提供，必须与 work-item.evidenceCommands 完全一致，否则 fail-closed
 
-# 5. 组装并跑正式出口：--evidence 自动注入签名 bundle，--surfaces 只提供 agent 实现后无法推导的落点报告
+# 6. 组装并跑正式出口：--evidence 自动注入签名 bundle，--surfaces 只提供 agent 实现后无法推导的落点报告
 #    （discoveredSurfaces = 代码搜索实到的落点；coveredSurfaceIds = 实际实现覆盖的）。workItem/sourceDocuments 由 CLI 从 work-item.json 自动组装。
 node common/engine/agent-scripts/docs-tdd.mjs verify PR-01234 --evidence /tmp/evidence.json --surfaces /tmp/surfaces.json --worktree /absolute/path/to/worktree
 
@@ -234,7 +245,9 @@ node common/engine/agent-scripts/docs-tdd.mjs verify PR-01234 --evidence /tmp/ev
 node common/engine/agent-scripts/vnext-verify.mjs --input verify-input.json --worktree /absolute/path/to/worktree
 ```
 
-`docs-tdd review` 只向子进程提供规范化 source units、候选 requirements 和图片附件，不提供代码仓或工具。含图片的审查当前必须使用 `--client pi`（Claude CLI 路径暂只支持纯文本 packet）。运行前，需求抽取者必须在 work-item 写入 `requirementsAuthor`；模型作者记录 `{ kind, id, client, sessionId }`（Pi 可取 `PI_SESSION_ID`），人工作者记录 `{ kind: "human", id }`。CLI receipt 绑定请求 fingerprint、reviewer client/session、时间和全部图片 hash；相同模型也必须使用不同 session，`pass` 不允许存在 `open` finding。来源、图片字节或需求变化后旧 response 自动失效。`--prepare-review` 仅保留为调试/协议查看入口，不能替代签名审查。
+默认 Reviewer 固定为 Claude，不探测或回退到 Codex。确定性基线用 `node common/engine/agent-scripts/vnext-review-benchmark.mjs --input common/engine/fixtures/vnext-review-benchmark.json --out <report.json>`：当前 oracle 来自三个历史语义场景，覆盖图片需求漏抽、集合第三入口漏 surface、权限与失败重试分支漏项，并用四个 mutation 保证漏项仍可观测；fixture 不伪造模型运行，所以默认 `recommended: null`。需要比较 Claude / Pi 时，在同一 fixture 的 `runs` 中录入真实结果；报告计算 requirement recall、surface recall、误报、首次审查通过率、finding 数、耗时和 token，但不自动修改默认值。token 或耗时拿不到时保留 `null`，不伪造。
+
+`docs-tdd review` 只向子进程提供规范化 source units、候选 requirements 和图片附件，不提供代码仓或工具。Claude CLI 路径暂只支持纯文本 packet；含图片的审查须显式使用 `--client pi`。运行前，需求抽取者必须在 work-item 写入 `requirementsAuthor`；模型作者记录 `{ kind, id, client, sessionId }`（Pi 可取 `PI_SESSION_ID`），人工作者记录 `{ kind: "human", id }`。CLI receipt 绑定请求 fingerprint、reviewer client/session、时间和全部图片 hash；相同模型也必须使用不同 session，`pass` 不允许存在 `open` finding。来源、图片字节或需求变化后旧 response 自动失效。`--prepare-review` 仅保留为调试/协议查看入口，不能替代签名审查。
 
 ## 风险路由约束
 
@@ -287,8 +300,8 @@ node common/engine/agent-scripts/vnext-context.mjs --project /path/to/v2/PR-0123
 ```
 
 - full context 必须包含每条 requirement、surface、evidence plan、coverage finding disposition、API/MSW 策略和最后出口状态；绝不静默截断需求。
-- V0/V1 的目标与硬上限均为 4K 字符；V2 目标预算为 8K，超过 8K 且不超过 24K 时进入 `large-context` 模式并携带 warning 继续运行，超过 24K 才返回 `bound-implementation-scope` 要求建立有 owner/batch/reason 的 `deliveryScope`。
-- 同 work-item fingerprint 下返回 delta/unchanged；session 由调用方临时持有，不增加项目默认文件。
+- V0/V1 的目标与硬上限均为 4K 字符；V2 目标预算为 8K，超过 8K 且不超过 24K 时进入 `large-context` 模式并携带 warning 继续运行，超过 24K 才返回 `bound-implementation-scope` 要求建立 `deliveryScope`。存在剩余批次时 `deferred` 必须填写 owner/batch/reason；本批次已覆盖全部剩余范围时显式写 `deferred: null`。
+- 同 work-item fingerprint 下返回 delta/unchanged；session 由调用方临时持有，不增加项目默认文件。代码指纹审计对 Git 子进程、文件数量、总字节数和哈希耗时均设 fail-closed 上限；极端仓库只能通过 `DOCS_TDD_FINGERPRINT_*` 环境变量显式调高，不能静默截断。
 - 历史 token 没有机器记录，所以不伪造 token 降幅；`context-budget.json` 只报告可复算的 Unicode 字符代理。
 - `apiDependency.mode` 是 work-item 必填事实：无请求或真实 API 时禁止新增 vNext 范围 MSW；只有 `mock-required` 才要求 worker、handler 与 contract 覆盖；`pending-dependency` 必须绑定 open blocker，最终出口保持 blocked。
 - V2 scope approval fingerprint 包含 `apiDependency`，API/MSW 策略变更后旧的人签自动失效。

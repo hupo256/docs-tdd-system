@@ -32,21 +32,24 @@ export function verificationWorkItemFingerprint(workItem) {
 
 export function coverageFingerprints(workItem) {
   const requirements = workItem?.requirements || []
-  // A bounded delivery batch is part of the reviewed requirement boundary. Keep the legacy
-  // fingerprint unchanged when no boundary is declared, but invalidate review/scope approval
-  // whenever a declared batch or its delegated remainder changes.
-  const reviewedRequirements = workItem?.intake || workItem?.deliveryScope || workItem?.sourceUnitDispositions || workItem?.evidenceCommands
+  const scopeRequirements = requirements.map(({ evidencePlan: _evidencePlan, ...requirement }) => requirement)
+  const hasScopeMetadata = workItem?.intake || workItem?.deliveryScope || workItem?.sourceUnitDispositions || workItem?.extractionFacts
+  const reviewedScope = hasScopeMetadata
     ? {
-        requirements,
+        requirements: scopeRequirements,
+        ...(workItem?.extractionFacts ? { extractionFacts: workItem.extractionFacts } : {}),
         ...(workItem?.intake ? { intake: workItem.intake } : {}),
         ...(workItem?.deliveryScope ? { deliveryScope: workItem.deliveryScope } : {}),
         ...(workItem?.sourceUnitDispositions ? { sourceUnitDispositions: workItem.sourceUnitDispositions } : {}),
-        ...(workItem?.evidenceCommands ? { evidenceCommands: workItem.evidenceCommands } : {}),
       }
-    : requirements
+    : scopeRequirements
   return {
     sourceFingerprint: stableFingerprint(workItem?.sourceSnapshot || null),
-    requirementsFingerprint: stableFingerprint(reviewedRequirements),
+    requirementsFingerprint: stableFingerprint(reviewedScope),
+    evidencePlanFingerprint: stableFingerprint({
+      requirementPlans: requirements.map(({ requirementId, evidencePlan }) => ({ requirementId, evidencePlan: evidencePlan || [] })),
+      evidenceCommands: workItem?.evidenceCommands || [],
+    }),
   }
 }
 
@@ -55,7 +58,8 @@ export function effectiveCoverageReview(workItem) {
   const fingerprints = coverageFingerprints(workItem)
   const problems = []
   if (audit.sourceFingerprint !== fingerprints.sourceFingerprint) problems.push('coverage audit source fingerprint is stale')
-  if (audit.requirementsFingerprint !== fingerprints.requirementsFingerprint) problems.push('coverage audit requirements fingerprint is stale')
+  const auditScopeIsCurrent = audit.requirementsFingerprint === fingerprints.requirementsFingerprint
+  if (!auditScopeIsCurrent && !workItem?.reviewAdjudication?.repairConfirmation) problems.push('coverage audit requirements fingerprint is stale')
   if (audit.verdict === 'pass' && !(audit.unresolved || []).length) return { ok: problems.length === 0, mode: 'review', problems }
 
   const adjudication = workItem?.reviewAdjudication
@@ -63,14 +67,15 @@ export function effectiveCoverageReview(workItem) {
   if (adjudication.originalReviewRunId !== audit.reviewRunId) problems.push('review adjudication targets a different review run')
   if (adjudication.sourceFingerprint !== fingerprints.sourceFingerprint) problems.push('review adjudication source fingerprint is stale')
   if (adjudication.requirementsFingerprint !== fingerprints.requirementsFingerprint) problems.push('review adjudication requirements fingerprint is stale')
+  if (!auditScopeIsCurrent && adjudication.baseRequirementsFingerprint !== audit.requirementsFingerprint) problems.push('repair confirmation does not identify the reviewed base scope')
   if (adjudication.effectiveVerdict !== 'pass') problems.push('review adjudication does not pass coverage')
   const findings = audit.findings || []
   const decisions = adjudication.decisions || []
   const expectedIds = findings.map((finding) => finding.findingId).sort()
   const actualIds = decisions.map((decision) => decision.findingId).sort()
   if (JSON.stringify(expectedIds) !== JSON.stringify(actualIds)) problems.push('review adjudication does not cover every finding exactly once')
-  if (decisions.some((decision) => decision.disposition === 'accepted')) problems.push('accepted review findings require extraction repair and a new review')
-  return { ok: problems.length === 0, mode: 'human-adjudication', problems }
+  if (decisions.some((decision) => decision.disposition === 'accepted')) problems.push('accepted review findings require extraction repair and human confirmation')
+  return { ok: problems.length === 0, mode: adjudication.repairConfirmation ? 'human-repair-confirmation' : 'human-adjudication', problems }
 }
 
 // Test/replay helper only. Production callers must use applyCoverageReview(), which validates
@@ -131,7 +136,9 @@ function requirementCoverageProblems(workItem, sourceUnits, sourceOracle) {
   }
 
   const currentFingerprint = coverageFingerprints(workItem).requirementsFingerprint
-  if (workItem.coverageAudit?.requirementsFingerprint !== currentFingerprint) problems.push('coverage audit does not match current requirements')
+  if (workItem.coverageAudit?.requirementsFingerprint !== currentFingerprint && !workItem.reviewAdjudication?.repairConfirmation) {
+    problems.push('coverage audit does not match current requirements')
+  }
   if (workItem.coverageAudit?.reviewMode !== 'independent-cold-read') problems.push('coverage audit was not an independent cold read')
   if (!workItem.coverageAudit?.reviewRunId) problems.push('coverage audit has no review run ID')
   if (!['human', 'model'].includes(workItem.coverageAudit?.reviewer?.kind) || !workItem.coverageAudit?.reviewer?.id) problems.push('coverage audit has no reviewer identity')
@@ -212,10 +219,11 @@ export function verifyVNextCoverage({ workItem, currentSourceSnapshot, sourceUni
   if (workItem?.coverageAudit?.sourceFingerprint !== expectedSource) sourceProblems.push('coverage audit does not match current source snapshot')
   if (workItem?.coverageAudit?.receipt) {
     const extractionAudit = workItem.extractionAudit
-    const expectedRequirements = coverageFingerprints(workItem).requirementsFingerprint
+    const currentFingerprints = coverageFingerprints(workItem)
     if (extractionAudit?.status !== 'pass') sourceProblems.push('signed review requires a passing deterministic extraction audit')
     if (extractionAudit?.sourceFingerprint !== expectedSource) sourceProblems.push('extraction audit does not match current source snapshot')
-    if (extractionAudit?.requirementsFingerprint !== expectedRequirements) sourceProblems.push('extraction audit does not match current requirements')
+    if (extractionAudit?.requirementsFingerprint !== currentFingerprints.requirementsFingerprint) sourceProblems.push('extraction audit does not match current requirements')
+    if (extractionAudit?.evidencePlanFingerprint !== currentFingerprints.evidencePlanFingerprint) sourceProblems.push('extraction audit does not match current evidence plan')
     if (sourceUnits && extractionAudit?.sourceUnitsFingerprint !== stableFingerprint(sourceUnits)) sourceProblems.push('extraction audit does not match current normalized source units')
   }
 
@@ -254,7 +262,12 @@ export function selfTest() {
   }
   const commandBound = { ...base, evidenceCommands: [{ evidenceId: 'E-1', kind: 'directed-tests', argv: ['pnpm', 'test'] }] }
   const commandChanged = { ...base, evidenceCommands: [{ evidenceId: 'E-1', kind: 'directed-tests', argv: ['pnpm', 'test', 'other'] }] }
-  assert.notEqual(coverageFingerprints(commandBound).requirementsFingerprint, coverageFingerprints(commandChanged).requirementsFingerprint)
+  const evidencePlanChanged = structuredClone(commandBound)
+  evidencePlanChanged.requirements[0].evidencePlan = [{ type: 'browser-interaction', runtimeRequired: true }]
+  assert.equal(coverageFingerprints(commandBound).requirementsFingerprint, coverageFingerprints(commandChanged).requirementsFingerprint)
+  assert.equal(coverageFingerprints(commandBound).requirementsFingerprint, coverageFingerprints(evidencePlanChanged).requirementsFingerprint)
+  assert.notEqual(coverageFingerprints(commandBound).evidencePlanFingerprint, coverageFingerprints(commandChanged).evidencePlanFingerprint)
+  assert.notEqual(coverageFingerprints(commandBound).evidencePlanFingerprint, coverageFingerprints(evidencePlanChanged).evidencePlanFingerprint)
   assert.notEqual(
     coverageFingerprints({ ...base, intake: { kind: 'feature', sourceRole: 'prd', sourceFingerprint: 'a', sourcePaths: ['prd.md'] } }).requirementsFingerprint,
     coverageFingerprints({ ...base, intake: { kind: 'bugfix', sourceRole: 'incident', sourceFingerprint: 'a', sourcePaths: ['prd.md'] } }).requirementsFingerprint,

@@ -1,6 +1,5 @@
 #!/usr/bin/env node
-// Pure v2 Autopilot state machine. It decides the next client-neutral action from canonical
-// work-item/result facts; it never edits business code or persists a second workflow truth source.
+// Pure v2 Autopilot state machine over canonical work-item/result facts.
 
 import assert from 'node:assert/strict'
 import { resolve } from 'node:path'
@@ -8,6 +7,7 @@ import { fileURLToPath } from 'node:url'
 import { coverageFingerprints, effectiveCoverageReview, stableFingerprint } from './vnext-work-item.mjs'
 import { deliveryScopePathProblems } from './vnext-delivery-scope.mjs'
 import { largeContextActionFields } from './vnext-context.mjs'
+import { pretestHumanRunAction } from './vnext-manual-test.mjs'
 import { deriveReviewPlanningPolicy } from './vnext-review-policy.mjs'
 import { createScopeApproval, scopeApprovalFingerprint } from './vnext-risk-route.mjs'
 import { evaluateSourceReadiness, reconcileAvailableSources } from './vnext-source-readiness.mjs'
@@ -32,6 +32,7 @@ export const AUTOPILOT_ACTIONS = Object.freeze([
   'resume-review-after-human-repair',
   'escalate-review-failure',
   'complete-deferred-human-review',
+  'complete-pretest-human-run',
   'collect-scope-approval',
   'prepare-coding-worktree',
   'implement-current-scope',
@@ -116,9 +117,9 @@ export function deriveAutopilotAction({
   const extractionAuditCurrent = workItem.extractionAudit?.status === 'pass'
     && workItem.extractionAudit.sourceFingerprint === fingerprints.sourceFingerprint
     && workItem.extractionAudit.requirementsFingerprint === fingerprints.requirementsFingerprint
-  // Already-reviewed v3.1 work items remain readable. Any new/revised candidate must pass the v3.2
-  // deterministic intake audit before spending an isolated reviewer invocation.
-  if (coverage?.verdict !== 'pass' && !extractionAuditCurrent) {
+  // Deterministic extraction integrity is a prerequisite for every later phase. A stale signed
+  // review or verification result must never hide a missing/failed three-stage extraction audit.
+  if (!extractionAuditCurrent) {
     return actionPacket(workItem, {
       action: 'repair-intake-extraction',
       phase: 'intake',
@@ -211,6 +212,8 @@ export function deriveAutopilotAction({
       constraints: ['decide-every-open-finding', 'accepted-findings-return-to-extraction', 'no-evidence-or-test-handoff-before-effective-pass'],
     })
   }
+  const manualTestAction = pretestHumanRunAction(workItem)
+  if (manualTestAction) return actionPacket(workItem, manualTestAction)
   if (!latestResult) {
     return actionPacket(workItem, {
       action: 'capture-cli-evidence',
@@ -413,6 +416,7 @@ export function selfTest() {
   assert.equal(deriveAutopilotAction({ workItem: unclassified }).action, 'classify-scope-and-risk')
 
   const needsReview = { ...unclassified, routing: { riskSignals: [], verificationLevel: 'V0' } }
+  needsReview.extractionAudit = { status: 'pass', ...coverageFingerprints(needsReview) }
   assert.equal(deriveAutopilotAction({ workItem: needsReview }).action, 'complete-independent-review')
   const needsReviewRepair = structuredClone(needsReview)
   needsReviewRepair.reviewControl = {
@@ -441,6 +445,7 @@ export function selfTest() {
   large.routing = { scopeClass: 'multi-surface', riskSignals: ['high-impact'], verificationLevel: 'V2' }
   large.requirements[0].statement = 'x'.repeat(9000)
   large.coverageAudit = { ...large.coverageAudit, ...coverageFingerprints(large) }
+  large.extractionAudit = { status: 'pass', ...coverageFingerprints(large) }
   const largeAction = deriveAutopilotAction({ workItem: large })
   assert.deepEqual([largeAction.action, largeAction.contextBudget.status, largeAction.warnings[0].code], ['collect-scope-approval', 'large-context', 'large-context'])
   const oversized = structuredClone(reviewed)
@@ -480,6 +485,7 @@ export function selfTest() {
     policyPaths: ['src/allowed'],
   }
   scopedReviewed.coverageAudit = { ...scopedReviewed.coverageAudit, ...coverageFingerprints(scopedReviewed) }
+  scopedReviewed.extractionAudit = { status: 'pass', ...coverageFingerprints(scopedReviewed) }
   const scopedAction = deriveAutopilotAction({ workItem: scopedReviewed })
   assert.throws(() => applyAutopilotCheckpoint(scopedReviewed, { actionId: scopedAction.actionId, outcome: 'in-progress', changedPaths: ['src/forbidden.ts'] }), /outside deliveryScope/)
   assert.equal(applyAutopilotCheckpoint(scopedReviewed, { actionId: scopedAction.actionId, outcome: 'in-progress', changedPaths: ['src/allowed/x.ts'] }).autopilot.implementation.changedPaths[0], 'src/allowed/x.ts')
@@ -510,8 +516,11 @@ export function selfTest() {
   assert.equal(deriveAutopilotAction({ workItem: reconciled }).action, 'capture-cli-evidence')
 
   const passed = { mode: 'enforced', status: 'passed', ok: true }
-  const { autopilot: _legacyMissingAutopilot, ...legacyReviewed } = reviewed
-  assert.equal(deriveAutopilotAction({ workItem: legacyReviewed, latestResult: passed, assuranceTrusted: true, deliveryCommitted: true }).action, 'complete')
+  const { autopilot: _legacyMissingAutopilot, extractionAudit: _legacyMissingExtractionAudit, ...legacyReviewed } = reviewed
+  assert.equal(deriveAutopilotAction({ workItem: legacyReviewed, latestResult: passed, assuranceTrusted: true, deliveryCommitted: true }).action, 'repair-intake-extraction')
+  const staleAudit = structuredClone(implemented)
+  staleAudit.extractionAudit.requirementsFingerprint = 'stale'
+  assert.equal(deriveAutopilotAction({ workItem: staleAudit, latestResult: passed, resultIntegrityOk: false }).action, 'repair-intake-extraction')
   assert.equal(deriveAutopilotAction({ workItem: implemented, latestResult: passed, assuranceTrusted: false }).action, 'capture-cli-evidence')
   assert.equal(deriveAutopilotAction({ workItem: implemented, latestResult: passed, assuranceTrusted: true }).action, 'commit-ready-change')
   assert.equal(deriveAutopilotAction({ workItem: implemented, latestResult: passed, assuranceTrusted: true, deliveryCommitted: true }).action, 'complete')

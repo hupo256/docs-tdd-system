@@ -62,7 +62,8 @@ function renderFull(workItem, result) {
     lines.push(approval ? `Scope approval: ${oneLine(approval.confirmedBy)} @ ${oneLine(approval.confirmedAt)} (${short(approval.fingerprint)})` : 'Scope approval: MISSING (must be human and fingerprint-matched)')
   }
   if (workItem.deliveryScope) {
-    lines.push(`Delivery batch: ${oneLine(workItem.deliveryScope.batchId)}; remainder=${oneLine(workItem.deliveryScope.deferred.batch)}; owner=${oneLine(workItem.deliveryScope.deferred.owner)}`)
+    const deferred = workItem.deliveryScope.deferred
+    lines.push(`Delivery batch: ${oneLine(workItem.deliveryScope.batchId)}; remainder=${deferred ? oneLine(deferred.batch) : 'none'}; owner=${deferred ? oneLine(deferred.owner) : 'none'}`)
   }
   lines.push('', 'Requirements:')
   for (const requirement of workItem.requirements) {

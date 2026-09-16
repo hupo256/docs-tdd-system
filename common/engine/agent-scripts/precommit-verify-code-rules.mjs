@@ -1,8 +1,10 @@
 #!/usr/bin/env node
-// precommit-verify-code-rules.mjs — lint-staged glue for code rules plus the v2 delivery guard.
+// precommit-verify-code-rules.mjs — lint-staged glue for code rules plus the v2 commit guard.
 // lint-staged passes each staged file as a separate argv entry; verify-code-rules.mjs wants one
 // --files <comma-list> argument, so this joins argv before dispatching. On v2 project branches the
-// read-only delivery guard additionally requires a current CLI-attested PASS over the full change set.
+// read-only guard defaults to checkpoint mode: only enforce a prior passing dev-check when one
+// exists. Ordinary development commits do not require system-repo evidence/verify or latest-result
+// PASS. Set DOCS_TDD_COMMIT_MODE=delivery to require authoritative CLI-attested PASS (final delivery).
 // Any violation or inability to run either applicable guard blocks the commit.
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -50,9 +52,24 @@ function runCodeRules(files) {
   }
 }
 
+const CHECKPOINT_DEV_CHECK_PROBLEM = 'checkpoint commit requires a passing dev-check'
+const CHECKPOINT_STALE_DEV_CHECK_PROBLEMS = new Set([
+  CHECKPOINT_DEV_CHECK_PROBLEM,
+  'current code content differs from the last passing dev-check',
+  'staged paths differ from the dev-check pending commit paths',
+])
+
+function checkpointGuardSkippable(problems) {
+  return problems.length > 0 && problems.every((problem) => CHECKPOINT_STALE_DEV_CHECK_PROBLEMS.has(problem))
+}
+
 function runVNextDeliveryGuard() {
+  const explicitMode = process.env.DOCS_TDD_COMMIT_MODE
+  if (explicitMode === 'off' || explicitMode === 'skip') return
+
+  const mode = explicitMode || 'checkpoint'
   const script = join(SCRIPT_DIR, 'vnext-delivery-guard.mjs')
-  const result = spawnSync('node', [script, '--worktree', process.cwd(), '--changed-source', 'staged', '--json'], {
+  const result = spawnSync('node', [script, '--worktree', process.cwd(), '--changed-source', 'staged', '--mode', mode, '--json'], {
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
     timeout: T,
@@ -61,12 +78,25 @@ function runVNextDeliveryGuard() {
   if (result.status === 1 && result.stdout) {
     try {
       const payload = JSON.parse(result.stdout)
-      process.stderr.write(`commit blocked by v2 delivery guard for ${payload.projectId || 'unknown project'}:\n${(payload.problems || []).map((problem) => `  - ${problem}`).join('\n')}\n`)
+      if (!payload.applies) return
+
+      const problems = payload.problems || []
+      if (mode === 'checkpoint' && checkpointGuardSkippable(problems)) {
+        process.stderr.write(
+          `v2 pre-commit: checkpoint guard skipped (${problems.includes(CHECKPOINT_DEV_CHECK_PROBLEM) ? 'no passing dev-check' : 'dev-check is stale for staged paths'}); ` +
+          'ordinary commits only require code-rules. Run docs-tdd dev-check for scoped checkpoint commits, ' +
+          'or DOCS_TDD_COMMIT_MODE=delivery / docs-tdd commit --mode delivery before final handoff.\n',
+        )
+        return
+      }
+
+      const label = mode === 'delivery' ? 'delivery guard' : 'checkpoint guard'
+      process.stderr.write(`commit blocked by v2 ${label} for ${payload.projectId || 'unknown project'}:\n${problems.map((problem) => `  - ${problem}`).join('\n')}\n`)
       process.exit(1)
     } catch { /* fall through to fail closed */ }
   }
   const reason = result.error ? result.error.message : result.stderr.trim() || `unexpected exit ${result.status}`
-  process.stderr.write(`v2 delivery guard could not run (${reason}); commit blocked because the result is unknown\n`)
+  process.stderr.write(`v2 commit guard could not run (${reason}); commit blocked because the result is unknown\n`)
   process.exit(1)
 }
 

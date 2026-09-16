@@ -24,13 +24,17 @@ export function prepareScopeApproval(workItem) {
     throw new Error('scope approval can only be prepared for a valid V2 route')
   }
   const review = effectiveCoverageReview(workItem)
-  if (!review.ok) throw new Error(`scope approval requires passed coverage review: ${review.problems.join('; ')}`)
+  const provisional = workItem.reviewControl?.status === 'human-review-deferred'
+    && workItem.reviewControl?.requiresPretestHumanRun === true
+  if (!review.ok && !provisional) throw new Error(`scope approval requires passed or explicitly deferred coverage review: ${review.problems.join('; ')}`)
+  const fingerprints = coverageFingerprints(workItem)
   return {
     schemaVersion: 1,
     projectId: workItem.projectId,
     approvalFingerprint: scopeApprovalFingerprint(workItem, routing.routing),
-    sourceFingerprint: workItem.coverageAudit.sourceFingerprint,
-    requirementsFingerprint: workItem.coverageAudit.requirementsFingerprint,
+    sourceFingerprint: fingerprints.sourceFingerprint,
+    requirementsFingerprint: fingerprints.requirementsFingerprint,
+    reviewStatus: provisional ? 'provisional-human-review-deferred' : 'passed',
     routing: routing.routing,
     requirementCounts: requirementCounts(workItem),
     highRiskSurfaces: (workItem.requirements || []).flatMap((requirement) => (requirement.affectedSurfaces || [])
@@ -42,7 +46,9 @@ export function prepareScopeApproval(workItem) {
       confirmedBy: '',
       confirmedAt: '',
       reason: '',
-      statement: 'I reviewed this exact source, requirement boundary, risk route, and dependency policy and approve implementation of the doing scope.',
+      statement: provisional
+        ? 'I reviewed this exact provisional source, requirement boundary, risk route, and dependency policy and approve implementation before the mandatory pre-test human closure.'
+        : 'I reviewed this exact source, requirement boundary, risk route, and dependency policy and approve implementation of the doing scope.',
     },
   }
 }
@@ -81,6 +87,12 @@ export function selfTest() {
     assert.equal(verifyVNextRouting(approved).ok, true)
     assert.equal(approved.scopeApproval.reason, 'scope reviewed')
     assert.equal(approved.scopeApproval.recordedVia.sessionId, 'session-1')
+    const deferred = structuredClone(workItem)
+    deferred.coverageAudit.verdict = 'changes-required'
+    deferred.coverageAudit.findings = [{ findingId: 'F-1' }]
+    deferred.coverageAudit.unresolved = ['F-1: missing']
+    deferred.reviewControl = { sourceFingerprint: deferred.coverageAudit.sourceFingerprint, attempts: 2, status: 'human-review-deferred', requiresPretestHumanRun: true }
+    assert.equal(prepareScopeApproval(deferred).reviewStatus, 'provisional-human-review-deferred')
     assert.throws(() => applyScopeApproval({ ...workItem, requirements: [...workItem.requirements, { requirementId: 'R-002' }] }, { ...request, confirmation: { confirmedBy: 'owner', confirmedAt: '2026-09-12', reason: 'ok' } }), /stale/)
     persistVNextWorkItem(root, approved)
     assert.equal(existsSync(join(root, 'work-item.json')), true)

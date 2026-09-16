@@ -2,8 +2,10 @@
 
 // v1/v2 判定的单一实现：docs-tdd.mjs 的 workflowVersion(id) 与
 // project-status-report.mjs 的同名逻辑都改为调用这里，避免第三份实现漂移。
-// 判定不出来（无法解析 projectId、README 缺字段且无 work-item.json）一律返回 1（fail-safe 走 v1 现状）。
+// 无 projectId 或无任何 v2 marker 的历史项目兼容 v1；一旦声明版本或存在
+// work-item.json，则未知/缺失版本必须 fail closed，不能静默降级。
 
+import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -41,9 +43,24 @@ export function workflowVersionForProject(projectId, { resolveProjectRoot }) {
   const readmeFile = join(projectRoot, 'README.md')
   if (existsSync(readmeFile)) {
     const value = readFileSync(readmeFile, 'utf8').match(/^workflowVersion:\s*(\d+)$/m)?.[1]
-    if (value) return Number(value)
+    if (value) {
+      const version = Number(value)
+      if (![1, 2].includes(version)) throw new Error(`${projectId} declares unsupported workflowVersion ${version}; expected 1 or 2`)
+      return version
+    }
   }
-  return existsSync(join(projectRoot, 'work-item.json')) ? 2 : 1
+  const workItemFile = join(projectRoot, 'work-item.json')
+  if (!existsSync(workItemFile)) return 1
+  let workItem
+  try {
+    workItem = JSON.parse(readFileSync(workItemFile, 'utf8'))
+  } catch (error) {
+    throw new Error(`${projectId} work-item.json is not valid JSON: ${error.message}`)
+  }
+  if (workItem?.workflowVersion !== 2) {
+    throw new Error(`${projectId} has work-item.json without workflowVersion 2; refusing to infer or downgrade workflow`)
+  }
+  return 2
 }
 
 export function projectIdForWorktree(worktree, config) {
@@ -60,9 +77,6 @@ export function workflowVersionForWorktree(worktree, config, { resolveProjectRoo
 }
 
 function selfTest() {
-  const assert = (condition, message) => {
-    if (!condition) throw new Error(`workflow-version self-test failed: ${message}`)
-  }
   assert(projectIdFromBranch('feature/PR-01234-foo', {}) === 'PR-01234', 'feature/ prefix extraction')
   assert(projectIdFromBranch('feature/TR-02386-login', {}) === 'TR-02386', 'TR feature prefix extraction')
   assert(projectIdFromBranch('fix/PR-05678-bar', {}) === 'PR-05678', 'fix/ prefix extraction')
@@ -84,15 +98,23 @@ function selfTest() {
     writeFileSync(join(v1Project, 'README.md'), '---\nworkflowVersion: 1\n---\n')
     const inferredV2Project = join(root, 'PR-33333')
     mkdirSync(inferredV2Project, { recursive: true })
-    writeFileSync(join(inferredV2Project, 'work-item.json'), '{}')
+    writeFileSync(join(inferredV2Project, 'work-item.json'), '{"workflowVersion":2}')
     const undeclaredProject = join(root, 'PR-44444')
     mkdirSync(undeclaredProject, { recursive: true })
+    const ambiguousProject = join(root, 'PR-55555')
+    mkdirSync(ambiguousProject, { recursive: true })
+    writeFileSync(join(ambiguousProject, 'work-item.json'), '{}')
+    const futureProject = join(root, 'PR-66666')
+    mkdirSync(futureProject, { recursive: true })
+    writeFileSync(join(futureProject, 'README.md'), '---\nworkflowVersion: 3\n---\n')
     const resolveProjectRoot = (id) => join(root, id)
 
     assert(workflowVersionForProject('PR-11111', { resolveProjectRoot }) === 2, 'explicit workflowVersion: 2 read from README frontmatter')
     assert(workflowVersionForProject('PR-22222', { resolveProjectRoot }) === 1, 'explicit workflowVersion: 1 read from README frontmatter')
-    assert(workflowVersionForProject('PR-33333', { resolveProjectRoot }) === 2, 'missing README field falls back to work-item.json presence')
+    assert(workflowVersionForProject('PR-33333', { resolveProjectRoot }) === 2, 'canonical work-item.json identifies v2')
     assert(workflowVersionForProject('PR-44444', { resolveProjectRoot }) === 1, 'no README field and no work-item.json defaults to v1')
+    assert.throws(() => workflowVersionForProject('PR-55555', { resolveProjectRoot }), /without workflowVersion 2/, 'ambiguous work item fails closed')
+    assert.throws(() => workflowVersionForProject('PR-66666', { resolveProjectRoot }), /unsupported workflowVersion 3/, 'future version fails closed')
 
     spawnSync('git', ['init', '-q'], { cwd: root })
     spawnSync('git', ['config', 'user.email', 'self-test@example.invalid'], { cwd: root })

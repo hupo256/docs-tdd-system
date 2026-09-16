@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url'
 import { persistVNextWorkItem } from './lib/vnext-persistence.mjs'
 import { coverageFingerprints, effectiveCoverageReview } from './lib/vnext-work-item.mjs'
 
-const DISPOSITIONS = new Set(['accepted', 'rejected', 'not-applicable', 'deferred'])
+const DISPOSITIONS = new Set(['accepted', 'resolved', 'rejected', 'not-applicable', 'deferred'])
 const MAX_AUTOMATED_REVIEW_ATTEMPTS = 2
 
 function validateHuman(input, verb) {
@@ -29,6 +29,19 @@ export function applyReviewAdjudication(workItem, input, { client = 'human', ses
   if (input.sourceFingerprint !== fingerprints.sourceFingerprint || input.requirementsFingerprint !== fingerprints.requirementsFingerprint) {
     throw new Error('review adjudication fingerprints are stale')
   }
+  const auditScopeIsCurrent = audit.requirementsFingerprint === fingerprints.requirementsFingerprint
+  const priorDecisions = new Map((workItem.reviewAdjudication?.decisions || []).map((decision) => [decision.findingId, decision]))
+  const confirmingExhaustedRepair = !auditScopeIsCurrent
+    && (workItem.reviewControl?.attempts || 0) >= MAX_AUTOMATED_REVIEW_ATTEMPTS
+    && workItem.reviewAdjudication?.originalReviewRunId === audit.reviewRunId
+    && priorDecisions.size > 0
+  if (!auditScopeIsCurrent && !confirmingExhaustedRepair) throw new Error('review adjudication requires the reviewed scope or an exhausted-budget repair/migration confirmation')
+  if (confirmingExhaustedRepair) {
+    const extraction = workItem.extractionAudit
+    if (extraction?.status !== 'pass' || extraction.sourceFingerprint !== fingerprints.sourceFingerprint || extraction.requirementsFingerprint !== fingerprints.requirementsFingerprint) {
+      throw new Error('repair confirmation requires a current passing extraction audit')
+    }
+  }
 
   const findings = audit.findings || []
   const decisions = Array.isArray(input.decisions) ? input.decisions : []
@@ -40,6 +53,9 @@ export function applyReviewAdjudication(workItem, input, { client = 'human', ses
   for (const decision of decisions) {
     if (!DISPOSITIONS.has(decision.disposition)) throw new Error(`${decision.findingId} has invalid adjudication disposition`)
     if (!decision.reason?.trim()) throw new Error(`${decision.findingId} requires an adjudication reason`)
+    if (decision.disposition === 'resolved' && (!confirmingExhaustedRepair || priorDecisions.get(decision.findingId)?.disposition !== 'accepted')) {
+      throw new Error(`${decision.findingId} resolved is only valid for a previously accepted finding after exhausted-budget repair`)
+    }
     if (decision.disposition === 'rejected' && (!Array.isArray(decision.evidenceRefs) || !decision.evidenceRefs.length)) {
       throw new Error(`${decision.findingId} rejected requires at least one evidenceRef`)
     }
@@ -54,6 +70,7 @@ export function applyReviewAdjudication(workItem, input, { client = 'human', ses
     originalReviewRunId: audit.reviewRunId,
     sourceFingerprint: fingerprints.sourceFingerprint,
     requirementsFingerprint: fingerprints.requirementsFingerprint,
+    ...(!auditScopeIsCurrent ? { baseRequirementsFingerprint: audit.requirementsFingerprint, repairConfirmation: true } : {}),
     adjudicatedBy: input.adjudicatedBy.trim(),
     adjudicatedAt: input.adjudicatedAt,
     reason: input.reason.trim(),
@@ -66,7 +83,9 @@ export function applyReviewAdjudication(workItem, input, { client = 'human', ses
     reviewAdjudication,
     reviewControl: {
       ...(workItem.reviewControl || {}),
-      status: effectiveVerdict === 'pass' ? 'adjudicated' : 'changes-required',
+      status: effectiveVerdict === 'pass'
+        ? 'adjudicated'
+        : (workItem.reviewControl?.attempts || 0) >= MAX_AUTOMATED_REVIEW_ATTEMPTS ? 'human-review-deferred' : 'changes-required',
     },
   }
   if (effectiveVerdict === 'pass' && !effectiveCoverageReview(next).ok) throw new Error('internal error: adjudication did not produce effective review PASS')
@@ -90,6 +109,10 @@ export function resumeReview(workItem, input, { client = 'human', sessionId = ''
   if (!infrastructureFailure && !(accepted && candidateChanged)) {
     throw new Error('semantic review resume requires accepted findings and a revised extraction candidate')
   }
+  const attempts = workItem.reviewControl?.attempts || 0
+  if (!infrastructureFailure && attempts >= MAX_AUTOMATED_REVIEW_ATTEMPTS) {
+    throw new Error('review resume blocked: the two-review source-lifecycle budget is exhausted; continue with the required pretest human run')
+  }
   const { reason: _reason, escalatedAt: _escalatedAt, deferredAt: _deferredAt, lastError: _lastError, ...control } = workItem.reviewControl || {}
   return {
     ...workItem,
@@ -97,7 +120,7 @@ export function resumeReview(workItem, input, { client = 'human', sessionId = ''
       ...control,
       sourceFingerprint: fingerprints.sourceFingerprint,
       status: 'active',
-      attempts: 0,
+      attempts,
       maxAttempts: MAX_AUTOMATED_REVIEW_ATTEMPTS,
     },
     reviewAdjudication: workItem.reviewAdjudication ? {
@@ -146,15 +169,42 @@ export function selfTest() {
     const revised = structuredClone(accepted)
     revised.requirements.push({ requirementId: 'R-002' })
     Object.assign(revised.extractionAudit, { status: 'pass', ...coverageFingerprints(revised) })
-    revised.reviewControl.attempts = 2
+    revised.reviewControl.attempts = 1
     const resumed = resumeReview(revised, { schemaVersion: 1, projectId: 'PR-00001', adjudicatedBy: 'owner@example.com', adjudicatedAt: '2026-09-13', reason: 'candidate repaired' })
     assert.equal(resumed.reviewControl.status, 'active')
-    assert.equal(resumed.reviewControl.attempts, 0)
+    assert.equal(resumed.reviewControl.attempts, 1)
+    revised.reviewControl.attempts = 2
+    assert.throws(() => resumeReview(revised, { schemaVersion: 1, projectId: 'PR-00001', adjudicatedBy: 'owner@example.com', adjudicatedAt: '2026-09-13', reason: 'candidate repaired' }), /budget is exhausted/)
+    const repairedFingerprints = coverageFingerprints(revised)
+    const confirmedRepair = applyReviewAdjudication(revised, {
+      ...input,
+      ...repairedFingerprints,
+      adjudicatedAt: '2026-09-14',
+      reason: 'confirmed accepted finding repair against the current extraction',
+      decisions: [{ findingId: 'F-1', disposition: 'resolved', reason: 'covered by R-002', evidenceRefs: ['work-item:R-002'] }],
+    })
+    assert.equal(confirmedRepair.reviewAdjudication.repairConfirmation, true)
+    assert.equal(effectiveCoverageReview(confirmedRepair).mode, 'human-repair-confirmation')
+    assert.equal(effectiveCoverageReview(confirmedRepair).ok, true)
+
+    const previouslyRejected = structuredClone(adjudicated)
+    previouslyRejected.reviewControl.attempts = 2
+    previouslyRejected.requirements[0].statement = 'A migrated three-stage requirement.'
+    Object.assign(previouslyRejected.extractionAudit, { status: 'pass', ...coverageFingerprints(previouslyRejected) })
+    const migratedFingerprints = coverageFingerprints(previouslyRejected)
+    const migrationConfirmation = applyReviewAdjudication(previouslyRejected, {
+      ...input,
+      ...migratedFingerprints,
+      adjudicatedAt: '2026-09-14',
+      reason: 'Confirm the traceability-only migration after the review budget was exhausted.',
+    })
+    assert.equal(migrationConfirmation.reviewAdjudication.repairConfirmation, true)
+    assert.equal(effectiveCoverageReview(migrationConfirmation).ok, true)
 
     const infrastructureFailure = structuredClone(workItem)
-    infrastructureFailure.reviewControl = { ...infrastructureFailure.reviewControl, status: 'escalated', attempts: 2, reason: 'reviewer-unavailable' }
+    infrastructureFailure.reviewControl = { ...infrastructureFailure.reviewControl, status: 'escalated', attempts: 1, reason: 'reviewer-unavailable' }
     const infrastructureResumed = resumeReview(infrastructureFailure, { schemaVersion: 1, projectId: 'PR-00001', adjudicatedBy: 'owner@example.com', adjudicatedAt: '2026-09-13', reason: 'reviewer repaired' })
-    assert.equal(infrastructureResumed.reviewControl.attempts, 0)
+    assert.equal(infrastructureResumed.reviewControl.attempts, 1)
     persistVNextWorkItem(root, resumed)
     assert.equal(existsSync(join(root, 'work-item.json')), true)
     console.log('vnext-review-adjudicate self-test passed')

@@ -137,7 +137,7 @@ ${projectTable(fixtures)}
 ## Notes
 
 - This index is a generated navigation view; its underlying facts remain in each project README / agent state and Git. Active, closed/archived, and diagnostic fixtures are rendered separately from README frontmatter \`status\` / \`indexGroup\`.
-- Workflow 来自 README \`workflowVersion\`；缺字段的历史项目按 v1，存在 \`work-item.json\` 的项目按 v2。v2 状态来自完整性及当前代码指纹均有效的 enforced \`latest-result.json\`；v1 状态才读取 G Gate。
+- Workflow 优先来自 README \`workflowVersion\`；无任何 v2 marker 的缺字段历史项目按 v1，存在 \`work-item.json\` 时必须由文件内 \`workflowVersion: 2\` 明确确认，否则阻断。v2 状态来自完整性及当前代码指纹均有效的 enforced \`latest-result.json\`；v1 状态才读取 G Gate。
 - 对 v1，project status 使用机器行 \`| 最新通过门禁 | GX |\`，再回落到 README frontmatter \`stage\` 和叙述行。G2+ 缺少同阶段成功历史与真实证据时标记 \`self-declared\`（G2-G4）或 \`legacy-unverified\`（G5+）。
 - v1 的 \`self-declared\` 表示 README 声称到了 G2-G4，但 \`agent/gate-history.json\` 没有同阶段真实 PASS；应补跑 \`docs-tdd gate <PR> <Gx>\`，不是改 README。
 - \`legacy-unverified\` = 机制上线（gate-history 机器背书）之前的自声明 G8/G5+，非机器背书。这些旧项目 worktree 多已回收、无真实 gate 运行；**不 backfill 伪造 PASS 历史**（违反"不伪造证据"原则）。要转为机器背书须有真实结构的 \`agent/gate-history.json\` 且其 evidence 路径真实存在。
