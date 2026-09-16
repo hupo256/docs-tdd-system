@@ -6642,15 +6642,15 @@
   ],
   "manualTestRun": {
     "schemaVersion": 1,
-    "runId": "manual-20260916100042-376ce79e",
+    "runId": "manual-20260916100522-8b7acf3f",
     "sourceFingerprint": "2d6f51ac5b1765d36d4848182176f90f27f8db60b11f3a5434bb033a01b048c8",
     "requirementsFingerprint": "ad651bad33ee14d14d079e7c5b3ad80dfbe1365980dab7f86f91dae742133f03",
     "codeFingerprint": {
       "headSha": "6112209b25903d42aff6ae00d094426437b02805",
       "baseSha": "d247c7b576a91ceea5a8a7fadcdefb394575c00b",
-      "contentHash": "95d8f3b7f7d4641327fd24c54a0e2fdd393b7cd270f38990736a50d970e5c659",
-      "dirtyHash": "66ab2499738ec1a950c7bcf7c758f36ab9545ab5b99e49f85d102006cf5b639e",
-      "dirtyFileCount": 0,
+      "contentHash": "2eadcc331747c639adc5f1ec661bf1c89c8a9644ae868dcdfa7359b0b37c4e0b",
+      "dirtyHash": "371ee902a0c0e5057ab931e08b22ad6b5b1fe9e023886f02c292ef098048221e",
+      "dirtyFileCount": 2,
       "untrackedFileCount": 0,
       "isGitRepo": true
     },
@@ -6660,7 +6660,7 @@
       "headSha": "6112209b25903d42aff6ae00d094426437b02805"
     },
     "confirmedBy": "aven",
-    "confirmedAt": "2026-09-16T10:00:42.718Z",
+    "confirmedAt": "2026-09-16T10:05:22.697Z",
     "status": "failed",
     "results": [
       {
@@ -6904,14 +6904,15 @@
           "S-055"
         ],
         "result": "failed",
-        "actualResult": "模块功能均通过，但 UI 验收不通过：登录页手机号输入区的国家码/输入框布局不协调，密码可见性图标区域尺寸异常，第三方登录区域出现空白占位块；注册页账号输入区域及第三方登录区域存在异常空白块和对齐问题，左侧统计信息间出现异常竖向空白；重置密码页输入区域尺寸/对齐异常，底部 footer 内容在当前视口发生横向裁切。",
+        "actualResult": "模块功能均通过，但 UI 验收不通过：登录页手机号输入区的国家码/输入框布局不协调，密码可见性图标区域尺寸异常，第三方登录区域出现空白占位块；注册页账号输入区域及第三方登录区域存在异常空白块和对齐问题，左侧统计信息间出现异常竖向空白；重置密码页输入区域尺寸/对齐异常且 footer 横向裁切；重置密码流程的“安全验证”弹窗左右内边距错误，验证码输入框和确认按钮贴近或溢出弹窗内容边界。",
         "evidenceRefs": [
           "conversation-attachment-1: login-page-ui-issues",
           "conversation-attachment-2: register-page-ui-issues",
-          "conversation-attachment-3: reset-password-page-ui-issues"
+          "conversation-attachment-3: reset-password-page-ui-issues",
+          "conversation-attachment-4: reset-password-security-dialog-horizontal-padding"
         ],
         "newOmissions": [
-          "重置密码页未被当前 R-001～R-023 的需求与 Surface 清单明确覆盖；该页面存在账号输入区域尺寸/对齐异常及 footer 横向裁切，需要回到 extraction 补充 Requirement/Surface 后修复并复测。"
+          "重置密码页及其安全验证弹窗未被当前 R-001～R-023 的需求与 Surface 清单明确覆盖；页面存在输入区域尺寸/对齐异常、footer 横向裁切，弹窗存在左右内边距错误，需要回到 extraction 补充 Requirement/Surface 后修复并复测。"
         ]
       }
     ]
