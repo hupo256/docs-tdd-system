@@ -42,9 +42,44 @@ function hashWorktreePath(worktree, file) {
 }
 
 function hashAtRevision(worktree, revision, file) {
-  if (!revision) return 'missing'
-  const result = spawnSync('git', ['show', `${revision}:${file}`], { cwd: worktree, stdio: 'pipe' })
-  return result.status === 0 ? sha256(result.stdout) : 'missing'
+  return hashFilesAtRevision(worktree, revision, [file]).get(file) || 'missing'
+}
+
+// `recordHeadChangeAudit` can see hundreds of files after a merge. Spawning one
+// `git show` process per file made the synchronous Pi hook exceed its 20 second
+// deadline and left the session unable to write. `cat-file --batch` resolves the
+// same revision contents in one Git process while preserving the existing SHA-256
+// receipt format.
+function hashFilesAtRevision(worktree, revision, files) {
+  const uniqueFiles = [...new Set(files)]
+  const hashes = new Map(uniqueFiles.map((file) => [file, 'missing']))
+  if (!revision || uniqueFiles.length === 0) return hashes
+
+  const input = `${uniqueFiles.map((file) => `${revision}:${file}`).join('\n')}\n`
+  const result = spawnSync('git', ['cat-file', '--batch'], {
+    cwd: worktree,
+    input,
+    stdio: ['pipe', 'pipe', 'pipe'],
+    maxBuffer: 256 * 1024 * 1024,
+  })
+  if (result.status !== 0 || result.error || !Buffer.isBuffer(result.stdout)) return hashes
+
+  let offset = 0
+  for (const file of uniqueFiles) {
+    const headerEnd = result.stdout.indexOf(10, offset)
+    if (headerEnd < 0) return hashes
+    const header = result.stdout.subarray(offset, headerEnd).toString('utf8')
+    offset = headerEnd + 1
+    if (header.endsWith(' missing')) continue
+    const match = /^[0-9a-f]+ blob (\d+)$/.exec(header)
+    if (!match) return hashes
+    const size = Number(match[1])
+    const contentEnd = offset + size
+    if (!Number.isSafeInteger(size) || contentEnd > result.stdout.length) return hashes
+    hashes.set(file, sha256(result.stdout.subarray(offset, contentEnd)))
+    offset = contentEnd + 1 // git appends one LF after every batch payload
+  }
+  return hashes
 }
 
 export function changedFileSnapshot(worktree) {
@@ -127,8 +162,14 @@ function migrateState(state, worktree) {
   state.editAttemptCount ||= 0
   if (legacy && worktree) {
     const current = changedFileSnapshot(worktree)
-    for (const file of changedBetween(state.auditBaselineSnapshot, current)) {
-      const baselineHash = Object.hasOwn(state.auditBaselineSnapshot, file) ? state.auditBaselineSnapshot[file] : hashAtRevision(worktree, state.auditBaselineHead, file)
+    const changedFiles = changedBetween(state.auditBaselineSnapshot, current)
+    const baselineHashes = hashFilesAtRevision(
+      worktree,
+      state.auditBaselineHead,
+      changedFiles.filter((file) => !Object.hasOwn(state.auditBaselineSnapshot, file)),
+    )
+    for (const file of changedFiles) {
+      const baselineHash = Object.hasOwn(state.auditBaselineSnapshot, file) ? state.auditBaselineSnapshot[file] : baselineHashes.get(file) || 'missing'
       const currentHash = hashWorktreePath(worktree, file)
       state.touchedFiles[file] ||= { baselineHash, firstTouchedAt: now() }
       state.lastFileHashes[file] = currentHash
@@ -179,12 +220,18 @@ function resetForHeadChange(state, head, { preserveInjectedRuleHashes = false } 
 function recordHeadChangeAudit(state, worktree, previousHead, head) {
   if (!previousHead || !head) return
   const files = git(['diff', '--name-only', '-z', previousHead, head], worktree).split('\0').filter(Boolean)
+  const baselineHashes = hashFilesAtRevision(
+    worktree,
+    state.auditBaselineHead,
+    files.filter((file) => !Object.hasOwn(state.auditBaselineSnapshot, file)),
+  )
+  const latestReceipts = new Map(state.receipts.map((receipt) => [receipt.file, receipt]))
   for (const file of files) {
-    const baselineHash = Object.hasOwn(state.auditBaselineSnapshot, file) ? state.auditBaselineSnapshot[file] : hashAtRevision(worktree, state.auditBaselineHead, file)
+    const baselineHash = Object.hasOwn(state.auditBaselineSnapshot, file) ? state.auditBaselineSnapshot[file] : baselineHashes.get(file) || 'missing'
     const currentHash = hashWorktreePath(worktree, file)
     state.touchedFiles[file] ||= { baselineHash, firstTouchedAt: now() }
     state.lastFileHashes[file] = currentHash
-    const receipt = [...state.receipts].reverse().find((item) => item.file === file)
+    const receipt = latestReceipts.get(file)
     if (!receipt || receipt.fileHash !== currentHash) {
       state.tainted.push({
         file,
@@ -207,7 +254,10 @@ export function prepareLedger(identity) {
 }
 
 const LOCK_TTL_MS = 60_000
-const LOCK_WAIT_TIMEOUT_MS = 8_000
+// Stay comfortably below the adapter's 20 second subprocess deadline. A busy
+// ledger should fail with its own actionable error instead of being killed by
+// the parent and reported as an opaque spawnSync ETIMEDOUT.
+const LOCK_WAIT_TIMEOUT_MS = 4_000
 const LOCK_BACKOFF_MIN_MS = 15
 const LOCK_BACKOFF_MAX_MS = 150
 
@@ -498,6 +548,9 @@ function selfTest() {
     writeFileSync(join(auditRepo, 'a.txt'), 'before\n')
     spawnSync('git', ['add', 'a.txt'], { cwd: auditRepo })
     spawnSync('git', ['commit', '-qm', 'initial'], { cwd: auditRepo })
+    const revisionHashes = hashFilesAtRevision(auditRepo, currentHead(auditRepo), ['a.txt', 'missing.txt'])
+    assert(revisionHashes.get('a.txt') === sha256('before\n'), 'batch revision hashing preserves file content hashes')
+    assert(revisionHashes.get('missing.txt') === 'missing', 'batch revision hashing preserves missing files')
     process.env.DOCS_TDD_RULE_LEDGER_DIR = auditLedger
     const legacyIdentity = { worktree: auditRepo, sessionId: 'legacy-session', client: 'self-test' }
     const legacy = prepareLedger(legacyIdentity)
