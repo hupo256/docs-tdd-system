@@ -6639,5 +6639,281 @@
         "R-022"
       ]
     }
-  ]
+  ],
+  "manualTestRun": {
+    "schemaVersion": 1,
+    "runId": "manual-20260916100042-376ce79e",
+    "sourceFingerprint": "2d6f51ac5b1765d36d4848182176f90f27f8db60b11f3a5434bb033a01b048c8",
+    "requirementsFingerprint": "ad651bad33ee14d14d079e7c5b3ad80dfbe1365980dab7f86f91dae742133f03",
+    "codeFingerprint": {
+      "headSha": "6112209b25903d42aff6ae00d094426437b02805",
+      "baseSha": "d247c7b576a91ceea5a8a7fadcdefb394575c00b",
+      "contentHash": "95d8f3b7f7d4641327fd24c54a0e2fdd393b7cd270f38990736a50d970e5c659",
+      "dirtyHash": "66ab2499738ec1a950c7bcf7c758f36ab9545ab5b99e49f85d102006cf5b639e",
+      "dirtyFileCount": 0,
+      "untrackedFileCount": 0,
+      "isGitRepo": true
+    },
+    "environment": {
+      "worktree": "/Users/aven/github/TR-02386",
+      "baseRef": "origin/online",
+      "headSha": "6112209b25903d42aff6ae00d094426437b02805"
+    },
+    "confirmedBy": "aven",
+    "confirmedAt": "2026-09-16T10:00:42.718Z",
+    "status": "failed",
+    "results": [
+      {
+        "requirementId": "R-001",
+        "surfaceIds": [
+          "S-001",
+          "S-002",
+          "S-003",
+          "S-004"
+        ],
+        "result": "passed",
+        "actualResult": "符合预期"
+      },
+      {
+        "requirementId": "R-002",
+        "surfaceIds": [
+          "S-005",
+          "S-006",
+          "S-007",
+          "S-008",
+          "S-009",
+          "S-010"
+        ],
+        "result": "passed",
+        "actualResult": "符合预期"
+      },
+      {
+        "requirementId": "R-003",
+        "surfaceIds": [
+          "S-011",
+          "S-012",
+          "S-013"
+        ],
+        "result": "passed",
+        "actualResult": "符合预期"
+      },
+      {
+        "requirementId": "R-004",
+        "surfaceIds": [
+          "S-029",
+          "S-043",
+          "S-044",
+          "S-045",
+          "S-046",
+          "S-047",
+          "S-048",
+          "S-049"
+        ],
+        "result": "passed",
+        "actualResult": "符合预期"
+      },
+      {
+        "requirementId": "R-005",
+        "surfaceIds": [
+          "S-014",
+          "S-050",
+          "S-051",
+          "S-015",
+          "S-016",
+          "S-017",
+          "S-052"
+        ],
+        "result": "passed",
+        "actualResult": "符合预期"
+      },
+      {
+        "requirementId": "R-006",
+        "surfaceIds": [
+          "S-018",
+          "S-019",
+          "S-020"
+        ],
+        "result": "passed",
+        "actualResult": "符合预期"
+      },
+      {
+        "requirementId": "R-007",
+        "surfaceIds": [
+          "S-021",
+          "S-022"
+        ],
+        "result": "passed",
+        "actualResult": "符合预期"
+      },
+      {
+        "requirementId": "R-008",
+        "surfaceIds": [
+          "S-023",
+          "S-024",
+          "S-025"
+        ],
+        "result": "passed",
+        "actualResult": "符合预期"
+      },
+      {
+        "requirementId": "R-009",
+        "surfaceIds": [
+          "S-026"
+        ],
+        "result": "passed",
+        "actualResult": "符合预期"
+      },
+      {
+        "requirementId": "R-010",
+        "surfaceIds": [
+          "S-027",
+          "S-054"
+        ],
+        "result": "passed",
+        "actualResult": "符合预期"
+      },
+      {
+        "requirementId": "R-011",
+        "surfaceIds": [
+          "S-028",
+          "S-056"
+        ],
+        "result": "passed",
+        "actualResult": "符合预期"
+      },
+      {
+        "requirementId": "R-012",
+        "surfaceIds": [
+          "S-030",
+          "S-031",
+          "S-033",
+          "S-057",
+          "S-058",
+          "S-059"
+        ],
+        "result": "passed",
+        "actualResult": "符合预期"
+      },
+      {
+        "requirementId": "R-013",
+        "surfaceIds": [
+          "S-034",
+          "S-060"
+        ],
+        "result": "passed",
+        "actualResult": "符合预期"
+      },
+      {
+        "requirementId": "R-014",
+        "surfaceIds": [
+          "S-061",
+          "S-062"
+        ],
+        "result": "passed",
+        "actualResult": "符合预期"
+      },
+      {
+        "requirementId": "R-015",
+        "surfaceIds": [
+          "S-035"
+        ],
+        "result": "passed",
+        "actualResult": "符合预期"
+      },
+      {
+        "requirementId": "R-016",
+        "surfaceIds": [
+          "S-036",
+          "S-037"
+        ],
+        "result": "passed",
+        "actualResult": "符合预期"
+      },
+      {
+        "requirementId": "R-017",
+        "surfaceIds": [
+          "S-038",
+          "S-063",
+          "S-064"
+        ],
+        "result": "passed",
+        "actualResult": "符合预期"
+      },
+      {
+        "requirementId": "R-018",
+        "surfaceIds": [
+          "S-039",
+          "S-040"
+        ],
+        "result": "passed",
+        "actualResult": "符合预期"
+      },
+      {
+        "requirementId": "R-019",
+        "surfaceIds": [
+          "S-041"
+        ],
+        "result": "passed",
+        "actualResult": "符合预期"
+      },
+      {
+        "requirementId": "R-020",
+        "surfaceIds": [
+          "S-053"
+        ],
+        "result": "passed",
+        "actualResult": "符合预期"
+      },
+      {
+        "requirementId": "R-021",
+        "surfaceIds": [
+          "S-065",
+          "S-066",
+          "S-067",
+          "S-068",
+          "S-069",
+          "S-070",
+          "S-071",
+          "S-072",
+          "S-073",
+          "S-074",
+          "S-075",
+          "S-076",
+          "S-078",
+          "S-079",
+          "S-080",
+          "S-081",
+          "S-082",
+          "S-083",
+          "S-084"
+        ],
+        "result": "passed",
+        "actualResult": "符合预期"
+      },
+      {
+        "requirementId": "R-022",
+        "surfaceIds": [
+          "S-077"
+        ],
+        "result": "passed",
+        "actualResult": "符合预期"
+      },
+      {
+        "requirementId": "R-023",
+        "surfaceIds": [
+          "S-055"
+        ],
+        "result": "failed",
+        "actualResult": "模块功能均通过，但 UI 验收不通过：登录页手机号输入区的国家码/输入框布局不协调，密码可见性图标区域尺寸异常，第三方登录区域出现空白占位块；注册页账号输入区域及第三方登录区域存在异常空白块和对齐问题，左侧统计信息间出现异常竖向空白；重置密码页输入区域尺寸/对齐异常，底部 footer 内容在当前视口发生横向裁切。",
+        "evidenceRefs": [
+          "conversation-attachment-1: login-page-ui-issues",
+          "conversation-attachment-2: register-page-ui-issues",
+          "conversation-attachment-3: reset-password-page-ui-issues"
+        ],
+        "newOmissions": [
+          "重置密码页未被当前 R-001～R-023 的需求与 Surface 清单明确覆盖；该页面存在账号输入区域尺寸/对齐异常及 footer 横向裁切，需要回到 extraction 补充 Requirement/Surface 后修复并复测。"
+        ]
+      }
+    ]
+  }
 }
