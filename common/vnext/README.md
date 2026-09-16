@@ -38,7 +38,7 @@
 - `vnext-extract.mjs` + `lib/vnext-intake-audit.mjs`：CLI 按“事实清单 → 原子需求 → surface/集合”三阶段生成抽取脚手架，再做确定性 Coverage Compiler；每个语义 source unit 必须进入事实或显式排除，每条事实必须反向关联 requirement，重复 requirement/surface ID、漏锚表格行、集合计数和证据计划缺陷均在调用模型 Reviewer 前失败。
 - scope review 与 evidence plan 使用独立 fingerprint：Reviewer 只接收事实、需求、surface 和范围信息；修改 evidence command/argv 只重跑确定性 evidence-plan audit，不再使已经通过的 scope review 失效。
 - `vnext-review.mjs` 的有界审查控制：同一候选禁止无变化重试；同一 source lifecycle 总计最多两轮，人工介入不重置预算。相同 finding 再现或次数耗尽进入 `human-review-deferred`，允许先实现但在 evidence / 测试交接前强制人工逐项裁决；Reviewer 不可用则立即 `escalated`，实现前处理。隔离 Reviewer 默认使用 Claude，也允许显式切换 Pi。
-- `vnext-manual-test.mjs`：仅当两轮语义审查仍未收敛时启用提测前人工实跑。CLI 自动预填 scope、requirement/surface、环境与时间；人工通常只确认 `confirmedBy + result`。`failed` 才补实际差异，`not-testable` 必须补 blocker 且绝不算通过，截图/录屏/日志与新遗漏按实际情况补充。
+- `vnext-manual-test.mjs`：仅当两轮语义审查仍未收敛时启用提测前人工实跑。CLI 只把 `runtimeRequired` 需求转换为场景，并将功能与界面检查拆开；Requirement/Surface 只保留为机器映射，工程契约不再要求人工逐条填写。人工确认 `confirmedBy + 场景结果`；`failed` 补实际差异，`not-testable` 必须补 blocker 且绝不算通过。新遗漏优先路由回 extraction，功能/视觉失败分别路由修复。本地截图/录屏/日志文件在应用表单时复制到项目 `evidence/manual/`，避免仅保存会话临时引用。
 - `vnext-source-sync.mjs`：从既有 Lark source config 拉取到 staging，规范化并比较语义快照；无变化不改文件，有变化才原子替换来源并使旧抽取/审查/结果失效，失败保留旧快照。
 - `lib/vnext-source-units.mjs`：Markdown 表格按容器 + 每个数据行生成稳定 source units，避免一整张表作为一个不可审计黑盒。
 - `lib/playwright-mcp-adapter.mjs`：通过仓外 `@playwright/mcp --extension` 驱动系统 Chrome，按场景 JSON 执行动作和文本断言，为 `browser-interaction` evidence command 提供可执行 argv；token/浏览器不可用时明确失败。
@@ -229,8 +229,9 @@ node common/engine/agent-scripts/docs-tdd.mjs review-resume PR-01234 --input /tm
 node common/engine/agent-scripts/docs-tdd.mjs scope-approval PR-01234 --out /tmp/scope-approval.json
 node common/engine/agent-scripts/docs-tdd.mjs scope-approve PR-01234 --input /tmp/scope-approval.json --client human
 
-# 4. 仅当两轮审查耗尽触发兜底时：CLI 先预填 scope、环境、时间和 requirement/surface，人工只确认身份与结果
+# 4. 仅当两轮审查耗尽触发兜底时：CLI 只展示 runtimeRequired 的人类可执行场景，工程契约不再要求人工逐条确认
 node common/engine/agent-scripts/docs-tdd.mjs manual-test PR-01234 --out /tmp/manual-test.json
+# evidenceRefs 可填 HTTPS/log 引用或本地文件；本地文件在应用时自动复制到项目 evidence/manual/，避免会话附件失效
 node common/engine/agent-scripts/docs-tdd.mjs manual-test PR-01234 --input /tmp/manual-test.json
 
 # 5. 运行受信 command evidence；命令计划默认取自已审查的 work-item.json evidenceCommands，输出放在被测 worktree 外

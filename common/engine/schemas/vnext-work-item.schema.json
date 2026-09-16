@@ -502,9 +502,9 @@
     },
     "manualTestRun": {
       "type": "object",
-      "required": ["schemaVersion", "runId", "sourceFingerprint", "requirementsFingerprint", "codeFingerprint", "environment", "confirmedBy", "confirmedAt", "status", "results"],
+      "required": ["schemaVersion", "runId", "sourceFingerprint", "requirementsFingerprint", "codeFingerprint", "environment", "confirmedBy", "confirmedAt", "status"],
       "properties": {
-        "schemaVersion": { "const": 1 },
+        "schemaVersion": { "enum": [1, 2] },
         "runId": { "type": "string", "minLength": 1 },
         "sourceFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
         "requirementsFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
@@ -538,15 +538,36 @@
               "newOmissions": { "type": "array", "items": { "type": "string", "minLength": 1 } }
             },
             "additionalProperties": false,
-            "allOf": [
-              {
-                "if": { "properties": { "result": { "const": "not-testable" } }, "required": ["result"] },
-                "then": { "required": ["blocker"] }
-              }
-            ]
+            "allOf": [{ "if": { "properties": { "result": { "const": "not-testable" } }, "required": ["result"] }, "then": { "required": ["blocker"] } }]
+          }
+        },
+        "scenarios": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["scenarioId", "kind", "title", "requirementIds", "surfaceIds", "result", "actualResult"],
+            "properties": {
+              "scenarioId": { "type": "string", "pattern": "^MT-\\d{3}$" },
+              "kind": { "enum": ["functional", "visual"] },
+              "title": { "type": "string", "minLength": 1 },
+              "requirementIds": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "pattern": "^R-\\d{3}$" } },
+              "surfaceIds": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^S-\\d{3}$" } },
+              "result": { "enum": ["passed", "failed", "not-testable"] },
+              "actualResult": { "type": "string" },
+              "evidenceRefs": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+              "blocker": { "type": "string", "minLength": 1 },
+              "newOmissions": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+            },
+            "additionalProperties": false,
+            "allOf": [{ "if": { "properties": { "result": { "const": "not-testable" } }, "required": ["result"] }, "then": { "required": ["blocker"] } }]
           }
         }
       },
+      "allOf": [
+        { "if": { "properties": { "schemaVersion": { "const": 1 } }, "required": ["schemaVersion"] }, "then": { "required": ["results"] } },
+        { "if": { "properties": { "schemaVersion": { "const": 2 } }, "required": ["schemaVersion"] }, "then": { "required": ["scenarios"] } }
+      ],
       "additionalProperties": false
     },
     "autopilot": {

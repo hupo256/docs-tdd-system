@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 // Generate a mostly pre-filled human-run checklist, or apply the operator's minimal confirmation.
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { dirname, join, resolve } from 'node:path'
+import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
+import { basename, dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { codeFingerprint } from './lib/fingerprint.mjs'
 import { applyManualTestConfirmation, createManualTestTemplate, selfTest } from './lib/vnext-manual-test.mjs'
@@ -16,6 +17,28 @@ function argumentValue(flag) {
 function writeJson(file, value) {
   mkdirSync(dirname(resolve(file)), { recursive: true })
   writeFileSync(resolve(file), `${JSON.stringify(value, null, 2)}\n`)
+}
+
+function persistLocalEvidenceRefs(input, projectDir, inputDir) {
+  const scenarios = input?.confirmation?.scenarios || []
+  for (const scenario of scenarios) {
+    if (!Array.isArray(scenario.evidenceRefs)) continue
+    scenario.evidenceRefs = scenario.evidenceRefs.map((ref) => {
+      const value = String(ref).trim()
+      if (/^(?:https:\/\/|evidence-run:|log:)/.test(value)) return value
+      const source = resolve(inputDir, value)
+      const existingProjectRef = resolve(projectDir, value)
+      if (!existsSync(source) && existsSync(existingProjectRef)) return value
+      if (!existsSync(source)) return value
+      const digest = createHash('sha256').update(readFileSync(source)).digest('hex').slice(0, 16)
+      const targetDir = join(projectDir, 'evidence', 'manual')
+      const target = join(targetDir, `${digest}-${basename(source)}`)
+      mkdirSync(targetDir, { recursive: true })
+      if (!existsSync(target)) copyFileSync(source, target)
+      return relative(projectDir, target)
+    })
+  }
+  return input
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
@@ -36,10 +59,11 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     if (outputFile) {
       const template = createManualTestTemplate(workItem, code, { worktree, baseRef })
       writeJson(outputFile, template)
-      console.log(JSON.stringify({ projectId: workItem.projectId, output: resolve(outputFile), prefilled: ['scope', 'environment', 'time', 'requirement/surface mapping'], humanRequired: ['confirmedBy', 'result'], conditional: ['actualResult when failed', 'blocker when not-testable', 'evidenceRefs/newOmissions when applicable'] }, null, 2))
+      console.log(JSON.stringify({ projectId: workItem.projectId, output: resolve(outputFile), prefilled: ['runtime scenarios', 'environment', 'time', 'requirement/surface mapping'], humanRequired: ['confirmedBy', 'scenario results'], conditional: ['actualResult when failed', 'blocker when not-testable', 'evidenceRefs/newOmissions when applicable'] }, null, 2))
     } else {
-      const input = JSON.parse(readFileSync(resolve(inputFile), 'utf8'))
-      const manualTestRun = applyManualTestConfirmation(workItem, input, code, { environment: { worktree, baseRef, headSha: code.headSha } })
+      const resolvedInputFile = resolve(inputFile)
+      const input = persistLocalEvidenceRefs(JSON.parse(readFileSync(resolvedInputFile, 'utf8')), projectDir, dirname(resolvedInputFile))
+      const manualTestRun = applyManualTestConfirmation(workItem, input, code, { environment: { worktree, baseRef, headSha: code.headSha }, projectDir })
       const persisted = persistVNextWorkItem(projectDir, { ...workItem, manualTestRun })
       console.log(JSON.stringify({ projectId: workItem.projectId, manualTestRun, persisted }, null, 2))
       process.exitCode = manualTestRun.status === 'passed' ? 0 : 1

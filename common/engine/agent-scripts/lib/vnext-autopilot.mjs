@@ -5,6 +5,7 @@ import assert from 'node:assert/strict'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { coverageFingerprints, effectiveCoverageReview, stableFingerprint } from './vnext-work-item.mjs'
+import { AUTOPILOT_ACTIONS, AUTOPILOT_PHASES } from './vnext-autopilot-actions.mjs'
 import { deliveryScopePathProblems } from './vnext-delivery-scope.mjs'
 import { largeContextActionFields } from './vnext-context.mjs'
 import { pretestHumanRunAction } from './vnext-manual-test.mjs'
@@ -12,41 +13,7 @@ import { deriveReviewPlanningPolicy } from './vnext-review-policy.mjs'
 import { createScopeApproval, scopeApprovalFingerprint } from './vnext-risk-route.mjs'
 import { evaluateSourceReadiness, reconcileAvailableSources } from './vnext-source-readiness.mjs'
 
-export const AUTOPILOT_PHASES = Object.freeze([
-  'intake',
-  'planning',
-  'implementing',
-  'implementation-ready',
-  'validating',
-  'ready-to-test',
-  'blocked',
-])
-
-export const AUTOPILOT_ACTIONS = Object.freeze([
-  'extract-requirements',
-  'repair-intake-extraction',
-  'classify-scope-and-risk',
-  'bound-implementation-scope',
-  'complete-independent-review',
-  'repair-review-findings',
-  'resume-review-after-human-repair',
-  'escalate-review-failure',
-  'complete-deferred-human-review',
-  'complete-pretest-human-run',
-  'collect-scope-approval',
-  'prepare-coding-worktree',
-  'implement-current-scope',
-  'await-late-dependencies',
-  'reconcile-late-sources',
-  'capture-cli-evidence',
-  'repair-failed-checks',
-  'escalate-repair-failure',
-  'resolve-blockers',
-  'refresh-invalid-verification',
-  'revalidate-current-code-evidence',
-  'commit-ready-change',
-  'complete',
-])
+export { AUTOPILOT_ACTIONS, AUTOPILOT_PHASES }
 
 export function initialAutopilotState(generatedAt = new Date().toISOString()) {
   return {
