@@ -1,0 +1,17 @@
+{
+  "sourceName": "需求 PRD",
+  "sourceType": "markdown",
+  "sourceUrl": "/Users/aven/github/docs_tdd/prds/TR-02386/inbox/PLAN.md",
+  "syncedAt": "2026-09-15T10:07:33.689Z",
+  "readOnly": true,
+  "command": [
+    "local-markdown",
+    "../docs_tdd/prds/TR-02386/inbox/PLAN.md"
+  ],
+  "stderr": null,
+  "target": "../docs_tdd/prds/TR-02386/inbox/lark-sync/prd-latest.md",
+  "remoteContentHash": null,
+  "remoteDocumentId": null,
+  "remoteRevisionId": null,
+  "identity": null
+}

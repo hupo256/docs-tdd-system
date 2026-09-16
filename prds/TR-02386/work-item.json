@@ -1,0 +1,5450 @@
+{
+  "schemaVersion": 1,
+  "workflowVersion": 2,
+  "projectId": "TR-02386",
+  "intake": {
+    "kind": "feature",
+    "sourceRole": "prd",
+    "sourceFingerprint": "2d6f51ac5b1765d36d4848182176f90f27f8db60b11f3a5434bb033a01b048c8",
+    "sourcePaths": [
+      "prds/TR-02386/inbox/lark-sync/prd-latest.md"
+    ]
+  },
+  "sourceSnapshot": {
+    "revision": "1",
+    "contentHash": "a1a0e58d702ac38712dc3b67581fafdae7909944686e0017bc6d942e81cddd81",
+    "sources": [
+      {
+        "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+        "contentHash": "2515dabbb83884287d0dcd2b5626b4fc914de55c61f5fa550494f2acaba0f5c0"
+      }
+    ]
+  },
+  "requirements": [
+    {
+      "requirementId": "R-001",
+      "statement": "账号/密码登录契约冻结：login_in、confirm_login、getValidateSwitch 三个 endpoint 在 WebHttpApi group 注册可用；login_in payload 含加密 mobileNumber/loginPword、verificationType=2、token=true、nc=null、极验字段、可选 utm_source/hichatToken；confirm_login 返回 quicktoken 直接作为 accessToken 写 session；附 contract test 断言请求字段与 envelope 形状。",
+      "status": "doing",
+      "sourceAnchors": [
+        {
+          "type": "table",
+          "sourceId": "SRC-F42D9D8D9661",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 160,
+          "lineEnd": 160
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-4733C42AFE5A",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 161,
+          "lineEnd": 161
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-BF1F3098581C",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 162,
+          "lineEnd": 162
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-4311B0668E00",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 164,
+          "lineEnd": 164
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-FC18A19406EB",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 166,
+          "lineEnd": 166
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-9B0D5EADB173",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 128,
+          "lineEnd": 128
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-60DD35892A05",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 255,
+          "lineEnd": 256
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-1A8B4CA3F0CE",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 316,
+          "lineEnd": 316
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-B59F6245F99D",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 318,
+          "lineEnd": 321
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-7F1746136C7E",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 323,
+          "lineEnd": 327
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-5A9BB1236773",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 329,
+          "lineEnd": 329
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-E095C853914B",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 331,
+          "lineEnd": 333
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-511849802C17",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 335,
+          "lineEnd": 335
+        }
+      ],
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 4
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-001",
+          "locator": "apps/web-next/src/platform/domain/web/endpoints/loginInEndpoint.ts",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-002",
+          "locator": "apps/web-next/src/platform/domain/web/endpoints/confirmLoginEndpoint.ts",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-003",
+          "locator": "apps/web-next/src/platform/domain/web/endpoints/getValidateSwitchEndpoint.ts",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-004",
+          "locator": "apps/web-next/src/platform/domain/web/WebHttpApi.ts",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "api-contract",
+          "runtimeRequired": false
+        },
+        {
+          "type": "payload-contract",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-002",
+      "statement": "注册契约冻结：reg_email_chk_info、reg_email_confirm、set_email_password、reg_mobile_chk_info、reg_mobile_confirm、set_mobile_password 六个 endpoint 在 web-next 可用；预检 payload 含加密账号、极验字段、verificationType=2、token=true、可选 invitedCode/countryCode；set_password payload 含加密 loginPword；附 contract test。",
+      "status": "doing",
+      "sourceAnchors": [
+        {
+          "type": "table",
+          "sourceId": "SRC-0FBB0FD0762A",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 172,
+          "lineEnd": 172
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-65DA0490E12B",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 173,
+          "lineEnd": 173
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-5A84CB50A78D",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 174,
+          "lineEnd": 174
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-E6EFCA4AF144",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 175,
+          "lineEnd": 175
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-C418195B9ACA",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 176,
+          "lineEnd": 176
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-A0078BAAC2CE",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 177,
+          "lineEnd": 177
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-9200BDAA12EB",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 129,
+          "lineEnd": 129
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-5D7D53FDC51F",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 248,
+          "lineEnd": 253
+        }
+      ],
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 6
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-005",
+          "locator": "apps/web-next/src/platform/domain/web/endpoints/regEmailChkInfoEndpoint.ts",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-006",
+          "locator": "apps/web-next/src/platform/domain/web/endpoints/regEmailConfirmEndpoint.ts",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-007",
+          "locator": "apps/web-next/src/platform/domain/web/endpoints/setEmailPasswordEndpoint.ts",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-008",
+          "locator": "apps/web-next/src/platform/domain/web/endpoints/regMobileChkInfoEndpoint.ts",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-009",
+          "locator": "apps/web-next/src/platform/domain/web/endpoints/regMobileConfirmEndpoint.ts",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-010",
+          "locator": "apps/web-next/src/platform/domain/web/endpoints/setMobilePasswordEndpoint.ts",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "api-contract",
+          "runtimeRequired": false
+        },
+        {
+          "type": "payload-contract",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-003",
+      "statement": "扫码登录契约与数据层：get_login_qrcode_id、get_login_qrcode_status endpoint 可用；评估复用 web-next 现有 WS 层（wsfapi-public-business/login-qrcode）接收扫码状态，不可复用时实现 get_login_qrcode_status 轮询兜底。",
+      "status": "doing",
+      "sourceAnchors": [
+        {
+          "type": "table",
+          "sourceId": "SRC-D2DDCF891A15",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 183,
+          "lineEnd": 183
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-CFBF9140C765",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 184,
+          "lineEnd": 184
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-3493673A2EA3",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 186,
+          "lineEnd": 186
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-4A3BFD5001EE",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 130,
+          "lineEnd": 130
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-F39EACC1BC98",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 262,
+          "lineEnd": 265
+        }
+      ],
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 3
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-011",
+          "locator": "apps/web-next/src/platform/domain/web/endpoints/getLoginQrcodeIdEndpoint.ts",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-012",
+          "locator": "apps/web-next/src/platform/domain/web/endpoints/getLoginQrcodeStatusEndpoint.ts",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-013",
+          "locator": "apps/web-next/src/services/hooks/auth/ 扫码登录 query/mutation 与 WS 复用层",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "api-contract",
+          "runtimeRequired": false
+        },
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-004",
+      "statement": "三方登录契约冻结：核对/补齐 authLogin、authRegister、newRegisterCheck、joinAddAccount、check_user_status、hichatRegisterAndBind、hichatBindExistingAccount 的 Schema 与 legacy 一致；authStatus 1=已授权自动登录、2=已注册需关联、0=未注册需选择；HiChat 回跳参数收敛 grant_token/GRANT_TOKEN/gToken → gToken。",
+      "status": "doing",
+      "sourceAnchors": [
+        {
+          "type": "table",
+          "sourceId": "SRC-B75B8CB0380C",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 192,
+          "lineEnd": 192
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-403FF684A712",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 193,
+          "lineEnd": 193
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-64BA497DA00C",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 194,
+          "lineEnd": 194
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-C6B472C3F2DB",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 195,
+          "lineEnd": 195
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-19C91D37D93C",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 196,
+          "lineEnd": 196
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-8CCDC0D1B177",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 197,
+          "lineEnd": 197
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-B091F297979C",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 198,
+          "lineEnd": 198
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-6CE04EDAAF04",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 200,
+          "lineEnd": 200
+        }
+      ],
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 8
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-029",
+          "locator": "apps/web-next/src/routes/(main)/(with-footer)/index.tsx validateSearch 等 HiChat 回跳参数解析",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-043",
+          "locator": "apps/web-next/src/platform/domain/web/endpoints/authLoginEndpoint.ts",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-044",
+          "locator": "apps/web-next/src/platform/domain/web/endpoints/authRegisterEndpoint.ts",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-045",
+          "locator": "apps/web-next/src/platform/domain/web/endpoints/newRegisterCheckEndpoint.ts",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-046",
+          "locator": "apps/web-next/src/platform/domain/web/endpoints/joinAddAccountEndpoint.ts",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-047",
+          "locator": "apps/web-next/src/platform/domain/web/endpoints/ HiChat check_user_status endpoint",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-048",
+          "locator": "apps/web-next/src/platform/domain/web/endpoints/ hichatRegisterAndBind endpoint",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-049",
+          "locator": "apps/web-next/src/platform/domain/web/endpoints/ hichatBindExistingAccount endpoint",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "api-contract",
+          "runtimeRequired": false
+        },
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-005",
+      "statement": "登录/注册共享基础设施：loginInMutation（禁用自动重试）、validateSwitchQuery、useRedirectIfLogin（已登录访问 /login /register 重定向）、useCode（c/inviteCode query + localStorage 回退）、VerifyInputs 共用验证状态机 store（含 useResetVerifyOnPathEntry，同路径 remount 不重置）、PasswordRuleChecklist（8-20 位+字母+数字+特殊符号实时校验，特殊符号列表来自单一 regex 常量）、OperationTypeEnum 补 EmailLogin；payload 组装收敛为可测纯函数。",
+      "status": "doing",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-844B83193452",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 267,
+          "lineEnd": 268
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-4A5D7F46512C",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 270,
+          "lineEnd": 271
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-1149E7EF213B",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 273,
+          "lineEnd": 274
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-409C45F9D37E",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 276,
+          "lineEnd": 277
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-A80F7491548F",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 279,
+          "lineEnd": 280
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-BF02F28A667D",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 258,
+          "lineEnd": 260
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-F3BA9701F5CB",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 131,
+          "lineEnd": 131
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-970FDC475813",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 132,
+          "lineEnd": 132
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-258AB7523600",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 133,
+          "lineEnd": 133
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-0554283EA428",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 134,
+          "lineEnd": 134
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-EA191F7677C1",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 341,
+          "lineEnd": 341
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-C45CCBB90983",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 343,
+          "lineEnd": 347
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-84A6B86DD4AF",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 349,
+          "lineEnd": 354
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-B8B9BFC41FBA",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 356,
+          "lineEnd": 358
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-015AE5E64350",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 360,
+          "lineEnd": 362
+        }
+      ],
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 7
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-014",
+          "locator": "apps/web-next/src/services/hooks/auth/loginInMutation.ts + validateSwitchQuery.ts",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-050",
+          "locator": "apps/web-next/src/services/hooks/auth/useRedirectIfLogin.ts",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-051",
+          "locator": "apps/web-next/src/services/hooks/auth/useCode.ts（邀请码 query/localStorage）",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-015",
+          "locator": "apps/web-next/src/components/VerifyInputs/ 共用验证状态机 store + useResetVerifyOnPathEntry",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-016",
+          "locator": "apps/web-next/src/components/PasswordRuleChecklist/",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-017",
+          "locator": "apps/web-next/src/components/CodeVerifyDialog/verificationTypes.ts",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-052",
+          "locator": "apps/web-next/src/apps/Login/common/ 与 apps/Register/common/ payload 组装纯函数",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-006",
+      "statement": "三方登录公共能力：从 HomeSocialLinks 抽出公共 useThirdAuth hook 供 Home/Login/Register 共用；补齐 zh-CN thirdLogin.json 缺失 key（telegram/facebook/serviceUnavailable/PasswordTips 等）与 login.json/register.json；i18n namespaces 增加 login/register。",
+      "status": "doing",
+      "sourceAnchors": [
+        {
+          "type": "table",
+          "sourceId": "SRC-8F4AEACF950F",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 135,
+          "lineEnd": 135
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-C3D1EC246FA9",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 282,
+          "lineEnd": 283
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-A6DDBC437CFB",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 137,
+          "lineEnd": 137
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-2204920D1C83",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 285,
+          "lineEnd": 287
+        }
+      ],
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 3
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-018",
+          "locator": "apps/web-next/src/apps/shared/auth/useThirdAuth.ts",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-019",
+          "locator": "apps/web-next/src/apps/Home/components/FafaAndAnniversaryBanner/HomeSocialLinks.tsx",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-020",
+          "locator": "apps/web-next/src/i18n/resources/zh-CN/{login,register,thirdLogin}.json + i18n/core/namespaces.ts",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        },
+        {
+          "type": "copy-literal",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-007",
+      "statement": "/login 账密登录页：无 header/footer 的 (auth) 布局；validateSearch 读取 from/utm_source/hichatToken/c/inviteCode（from 只取当前 public pathname）；账号输入支持邮箱/手机号（手机号含国家码选择器）blur 校验；密码过滤非法字符；提交先跑极验，2FA 关闭时 login_in 后直接 confirm_login(type=google, authCode=空)，开启时进验证码弹窗；成功后写 session、PostHog 埋点、跳 from||HOME；失败按 code+loginFailNum/seconds/hours 提示；已登录访问 /login 重定向。",
+      "status": "doing",
+      "sourceAnchors": [
+        {
+          "type": "table",
+          "sourceId": "SRC-63023B5DFD1C",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 127,
+          "lineEnd": 127
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-E289CA9A67C5",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 206,
+          "lineEnd": 214
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-D85BC8F77DAB",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 368,
+          "lineEnd": 368
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-B4DB335ABA28",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 370,
+          "lineEnd": 374
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-651584179D97",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 376,
+          "lineEnd": 384
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-5CB28A7F43E1",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 386,
+          "lineEnd": 391
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-434AA2857193",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 143,
+          "lineEnd": 143
+        }
+      ],
+      "collectionSemantics": {
+        "kind": "none",
+        "expectedCount": 0
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-021",
+          "locator": "apps/web-next/src/routes/(auth)/route.tsx + login.tsx",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-022",
+          "locator": "apps/web-next/src/apps/Login/ LoginForm/InputAccount 等页面组件",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-008",
+      "statement": "验证码、Session 与错误反馈闭环：CodeVerifyDialog 登录场景用 OperationTypeEnum.EmailLogin/PhoneLogin，6 位自动提交、60s 重发倒计时、错误标红；VerifyMan 在 doneVerify 前重置 authPassed=false 防重复触发；confirmLogin 成功拿 quicktoken+uid 写 session 并 invalidateQueries 刷新登录态。",
+      "status": "doing",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-B03A6035E097",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 397,
+          "lineEnd": 397
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-ABD801C8579D",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 399,
+          "lineEnd": 402
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-3C1592E96B67",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 404,
+          "lineEnd": 408
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-4C2E5AF166FA",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 410,
+          "lineEnd": 413
+        }
+      ],
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 3
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-023",
+          "locator": "apps/web-next/src/components/CodeVerifyDialog/index.tsx",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-024",
+          "locator": "apps/web-next/src/components/VerifyMan/index.tsx",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-025",
+          "locator": "apps/web-next/src/services/hooks/auth/useWriteAuthSession.ts",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        },
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-009",
+      "statement": "扫码登录 UI：/login 左侧二维码区；加载时请求 get_login_qrcode_id 生成二维码、60s 本地过期；WS 或轮询 get_login_qrcode_status，成功后取 token 写 session 并跳转；过期显示刷新按钮重新获取。",
+      "status": "doing",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-DCE6B43A9D03",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 419,
+          "lineEnd": 419
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-2F391BB211A7",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 421,
+          "lineEnd": 425
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-3C575673783F",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 427,
+          "lineEnd": 430
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-E50E73C537AD",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 432,
+          "lineEnd": 435
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-6CD082295951",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 144,
+          "lineEnd": 144
+        }
+      ],
+      "collectionSemantics": {
+        "kind": "none",
+        "expectedCount": 0
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-026",
+          "locator": "apps/web-next/src/apps/Login/components/ScanCode.tsx",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-010",
+      "statement": "/register 注册页 CreateAccount 步骤：validateSearch 读取 account/c/inviteCode/utm_source；账号输入与登录共用 AccountInput；服务条款默认勾选（同 legacy）；邀请码可折叠输入、URL 带 c 时预填且禁用；点击创建跑极验 → reg_email_chk_info/reg_mobile_chk_info → 进验证码步骤；页面含奖励侧边栏 RegisterSidebar。",
+      "status": "doing",
+      "sourceAnchors": [
+        {
+          "type": "table",
+          "sourceId": "SRC-83416533CF21",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 145,
+          "lineEnd": 145
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-60978AD4830B",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 441,
+          "lineEnd": 441
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-E844E7C96FFE",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 443,
+          "lineEnd": 447
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-49E8EC7D7337",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 449,
+          "lineEnd": 454
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-026FB1197F16",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 456,
+          "lineEnd": 460
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-B2149CAAF95C",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 218,
+          "lineEnd": 228
+        }
+      ],
+      "collectionSemantics": {
+        "kind": "none",
+        "expectedCount": 0
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-027",
+          "locator": "apps/web-next/src/routes/(auth)/register.tsx + apps/Register/components/{RegisterForm,CreateAccount,RegisterSidebar}",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-054",
+          "locator": "apps/web-next/src/services/hooks/auth/regMutation.ts（reg_email/reg_mobile chk/confirm/set_password 注册 mutation hooks）",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-011",
+      "statement": "注册验证码确认与密码设置：验证码通过后进 CreatePassword；密码必须满足 8-20 位、字母、数字、特殊符号并实时展示 PasswordRuleChecklist；提交 set_email_password/set_mobile_password（密码加密）；成功后写 session、PostHog register_complete（有邀请码时 share_register_success）、跳 from||HOME。",
+      "status": "doing",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-F0FDA4FAB246",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 466,
+          "lineEnd": 466
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-974F0D3990B3",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 468,
+          "lineEnd": 470
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-A06B1DA51D21",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 472,
+          "lineEnd": 476
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-AF89FE3342EB",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 478,
+          "lineEnd": 481
+        }
+      ],
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-028",
+          "locator": "apps/web-next/src/apps/Register/components/CreatePassword.tsx",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-056",
+          "locator": "apps/web-next/src/components/PasswordRuleChecklist/",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        },
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-012",
+      "statement": "三方登录基础设施 6 项修复（page-migration.md TODO）：① HiChat 回跳 validateSearch 同时识别 grant_token/GRANT_TOKEN/gToken 统一收敛 gToken；② hichatUserStatusQuery 失败要有错误反馈；③ CreateByThird 的 mobileOrEmailNumber 必须 encryptPasswordWithKey；④ VerifyMan authPassed 翻转先重置 false、UniteByThird 传 confirming pending 禁用；⑤ createDesc 用 {{thirdName}} 插值不写死 Apple；⑥ Google GSI 叠层补 clip-path+opacity。",
+      "status": "doing",
+      "sourceAnchors": [
+        {
+          "type": "table",
+          "sourceId": "SRC-9B051FB20DF3",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 136,
+          "lineEnd": 136
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-19A88877D8A9",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 487,
+          "lineEnd": 487
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-8E9D351CC768",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 489,
+          "lineEnd": 495
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-235C7A402BD1",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 497,
+          "lineEnd": 504
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-26BF307BD6C1",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 506,
+          "lineEnd": 509
+        }
+      ],
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 6
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-030",
+          "locator": "apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/CreateByThird.tsx",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-031",
+          "locator": "apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/UniteByThird.tsx",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-033",
+          "locator": "Google GSI 叠层样式（GSI_OVERLAY_CLASS_NAME 所在组件）+ zh-CN thirdLogin.json createDesc",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-057",
+          "locator": "apps/web-next/src/routes/(main)/(with-footer)/index.tsx validateSearch 等 HiChat 回跳参数解析",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-058",
+          "locator": "apps/web-next/src/apps/Home/components/FafaAndAnniversaryBanner/HomeSocialLinks.tsx",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-059",
+          "locator": "apps/web-next/src/components/VerifyMan/index.tsx + apps/web-next/src/services/hooks/auth/hichatUserStatusQuery.ts（HiChat 用户状态查询失败反馈 + authPassed 翻转防重复提交）",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        },
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        },
+        {
+          "type": "copy-literal",
+          "runtimeRequired": false
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-013",
+      "statement": "三方注册流程 Reg/Create：authStatus=0 进 SelThirdType；Reg 分支勾选条款 → captcha → authRegister（Google/Apple/Telegram）或 hichatRegisterAndBind（HiChat）；Create 分支输入邮箱/手机 → captcha → newRegisterCheck → 验证码 → authRegister，账号加密；成功写 session，HiChat 展示 HiChatSucModal 可复制账号与预设密码。",
+      "status": "doing",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-133CA65EF0D1",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 515,
+          "lineEnd": 515
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-B16093B785A9",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 517,
+          "lineEnd": 519
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-CA549E5FD26F",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 521,
+          "lineEnd": 524
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-520C17B89DEB",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 526,
+          "lineEnd": 529
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-805B9F6AE285",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 147,
+          "lineEnd": 147
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-EA28C628854E",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 232,
+          "lineEnd": 240
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-1F96E088D343",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 146,
+          "lineEnd": 146
+        }
+      ],
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-034",
+          "locator": "apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/RegByThird.tsx + SelThirdType",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-060",
+          "locator": "apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/CreateByThird.tsx",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-014",
+      "statement": "三方绑定已有账号 Unite：账号 → 密码 → 多因子验证三步；账号检查 checkAccount、密码加密；joinAddAccount 后若 hasGoogleAuth 走 VerifyMan Google 验证码；HiChat 用 hichatBindExistingAccount（grantToken + 加密账号/密码 + 验证码）；成功写 session 关弹窗。",
+      "status": "doing",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-0BC8E2578776",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 535,
+          "lineEnd": 535
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-AFFA5FD0E293",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 537,
+          "lineEnd": 538
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-D3A73E997B89",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 540,
+          "lineEnd": 545
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-93FC840F5E3A",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 547,
+          "lineEnd": 550
+        }
+      ],
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-061",
+          "locator": "apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/UniteByThird.tsx",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-062",
+          "locator": "apps/web-next/src/components/VerifyMan/index.tsx",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-015",
+      "statement": "登录后 MailBinder 绑定邮箱引导：登录/注册/三方登录成功后按 legacy 行为弹出绑定邮箱引导弹窗（迁移 components/MailBinder 能力到 web-next）。",
+      "status": "doing",
+      "sourceAnchors": [
+        {
+          "type": "table",
+          "sourceId": "SRC-9CF5E2F3F337",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 148,
+          "lineEnd": 148
+        }
+      ],
+      "collectionSemantics": {
+        "kind": "none",
+        "expectedCount": 0
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-035",
+          "locator": "apps/web-next/src/components/MailBinder/ 或等价登录后绑定邮箱引导组件",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-016",
+      "statement": "全站入口切换：未登录点 header「登录」→ /zh-CN/login?from=<当前路径>、「注册」→ /zh-CN/register?from=<当前路径>；受保护页仍用 buildAuthNavigationUrl 生成 from 后跳 /login；移动端 header 入口同样生效。",
+      "status": "doing",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-DCDB0ED125EF",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 556,
+          "lineEnd": 556
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-F6BB18D6F2FB",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 558,
+          "lineEnd": 561
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-96A79519FF9F",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 563,
+          "lineEnd": 566
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-816ED450CA24",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 568,
+          "lineEnd": 570
+        }
+      ],
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-036",
+          "locator": "apps/web-next/src/apps/shared/components/main-header/ 登录注册入口",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-037",
+          "locator": "apps/web-next/src/apps/shared/auth/buildAuthNavigationUrl.ts",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-017",
+      "statement": "灰度、监控与回滚：新增 feature flag（配置键与产品/运维确认）；flag 关闭时登录/注册链接走 legacy site URL，打开时走 web-next 内部路由，可即时回滚；迁移链路埋点事件 login_page_view/register_page_view/login_complete/register_complete/各 provider click 按 legacy 语义接入 PostHog。",
+      "status": "doing",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-1B10B90FBF18",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 576,
+          "lineEnd": 576
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-1DA693906324",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 578,
+          "lineEnd": 582
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-10583981A135",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 584,
+          "lineEnd": 586
+        }
+      ],
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 3
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-038",
+          "locator": "灰度 feature flag 配置与读取点",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-063",
+          "locator": "apps/web-next/src/apps/shared/components/main-header/ 登录注册入口",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-064",
+          "locator": "登录/注册/三方入口的 PostHog 埋点埋入点",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-018",
+      "statement": "收尾登记：page-migration.md 把 /login、/register、三方登录登记为「已迁移」或「外部阻塞」；处置 routes/dev/login.tsx；apps/web-next 全量 vitest/tsc/biome/build:test 通过（仅修复本次引入问题）。",
+      "status": "doing",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-6DBB45D8017A",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 592,
+          "lineEnd": 592
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-937BC06FD74A",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 594,
+          "lineEnd": 596
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-3AA889558590",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 598,
+          "lineEnd": 601
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-CDC56411FD21",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 621,
+          "lineEnd": 626
+        }
+      ],
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-039",
+          "locator": "apps/web-next/docs/page-migration.md",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-040",
+          "locator": "apps/web-next/src/routes/dev/login.tsx",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "copy-literal",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-019",
+      "status": "doing",
+      "statement": "迁移中凡引入的集合型响应解析必须逐行容错（decodeUnknownEither/ResilientArray），单行字段异常最多丢弃该行，不得清空整个集合或导致整页空白。",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-E6118406E657",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 62,
+          "lineEnd": 65
+        }
+      ],
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 1
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-041",
+          "locator": "apps/web-next/src/platform/domain/shared/ 集合响应逐行容错解析（ResilientArray/decodeUnknownEither 复用或补齐）",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "pure-logic",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-020",
+      "status": "doing",
+      "statement": "SSR 初期不调用需要鉴权的 API：登录态/鉴权相关请求只在浏览器侧发起，服务端渲染路径不得触发需鉴权请求。",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-E6118406E657",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 62,
+          "lineEnd": 65
+        }
+      ],
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 1
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-053",
+          "locator": "apps/web-next/src 鉴权态 query/hook 的客户端边界（routes loader/server 模块不得引入需鉴权请求）",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-021",
+      "status": "doing",
+      "statement": "新增 .tsx 组件单文件 ≤300 行；复杂表单/弹窗先拆子组件、纯函数或常量再落地，不得把 legacy 大组件原样复制。",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-E6118406E657",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 62,
+          "lineEnd": 65
+        }
+      ],
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 19
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-065",
+          "locator": "apps/web-next/src/apps/Home/components/FafaAndAnniversaryBanner/HomeSocialLinks.tsx",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-066",
+          "locator": "apps/web-next/src/routes/(auth)/route.tsx + login.tsx",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-067",
+          "locator": "apps/web-next/src/components/CodeVerifyDialog/index.tsx",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-068",
+          "locator": "apps/web-next/src/components/VerifyMan/index.tsx",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-069",
+          "locator": "apps/web-next/src/apps/Login/components/ScanCode.tsx",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-070",
+          "locator": "apps/web-next/src/routes/(auth)/register.tsx + apps/Register/components/{RegisterForm,CreateAccount,RegisterSidebar}",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-071",
+          "locator": "apps/web-next/src/apps/Register/components/CreatePassword.tsx",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-072",
+          "locator": "apps/web-next/src/routes/(main)/(with-footer)/index.tsx validateSearch 等 HiChat 回跳参数解析",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-073",
+          "locator": "apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/CreateByThird.tsx",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-074",
+          "locator": "apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/UniteByThird.tsx",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-075",
+          "locator": "apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/RegByThird.tsx + SelThirdType",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-076",
+          "locator": "apps/web-next/src/routes/dev/login.tsx",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-078",
+          "locator": "apps/web-next/src/apps/Login/ LoginForm/InputAccount 等页面组件",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-079",
+          "locator": "apps/web-next/src/components/MailBinder/ 或等价登录后绑定邮箱引导组件",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-080",
+          "locator": "apps/web-next/src/apps/shared/components/main-header/ 登录注册入口",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-081",
+          "locator": "apps/web-next/src/components/PasswordRuleChecklist/",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-082",
+          "locator": "Google GSI 叠层样式（GSI_OVERLAY_CLASS_NAME 所在组件）+ zh-CN thirdLogin.json createDesc",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-083",
+          "locator": "apps/web-next/src/components/ThirdPartyLogin/{index,ThirdPartyBtns,ThirdPartyIcon}.tsx 三方登录入口组件",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-084",
+          "locator": "apps/web-next/src/components/PasswordInput.tsx",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-022",
+      "status": "doing",
+      "statement": "外部依赖阻塞（provider SDK 加载、origin 白名单、测试账号/ bot 等）必须登记 owner 到 page-migration.md，不得前端硬编码绕过。",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-E6118406E657",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 62,
+          "lineEnd": 65
+        }
+      ],
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 1
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-077",
+          "locator": "apps/web-next/docs/page-migration.md 外部依赖阻塞登记",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "copy-literal",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-023",
+      "status": "doing",
+      "statement": "验收完整性：登录/注册/三方登录相关页面在 zh-CN / en-US / ko-KR 下渲染无 raw namespace:key 缺失文案；移动端 390px 与桌面 1440px 视口布局验收通过。",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-CDC56411FD21",
+          "path": "prds/TR-02386/inbox/lark-sync/prd-latest.md",
+          "lineStart": 632,
+          "lineEnd": 633
+        }
+      ],
+      "collectionSemantics": {
+        "kind": "none",
+        "expectedCount": 0
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-055",
+          "locator": "apps/web-next/src/routes/(auth)/ 登录/注册页面（多语言渲染与 390px/1440px 响应式）",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    }
+  ],
+  "coverageAudit": {
+    "sourceFingerprint": "2d6f51ac5b1765d36d4848182176f90f27f8db60b11f3a5434bb033a01b048c8",
+    "requirementsFingerprint": "c3164c9e1e0b6234718bedf50ba457c1836eb8ed2d14bdef2028aa2d5e50e4ee",
+    "reviewMode": "independent-cold-read",
+    "reviewRunId": "review-a8779fa3-a63f-48f4-a71a-fb101389d0f4",
+    "reviewer": {
+      "kind": "model",
+      "id": "claude/default"
+    },
+    "completedAt": "2026-09-16T04:34:49.583Z",
+    "verdict": "changes-required",
+    "findings": [
+      {
+        "findingId": "F-001",
+        "code": "inadequate-evidence-command",
+        "message": "E-33 is declared kind=component-dom but its argv runs a component-size/line-count quality script (scripts/quality/tr-02386/component-size.mjs) across ~31 .tsx surfaces to evidence R-021's ≤300-line rule. A line-count scan verifies neither DOM contract nor rendered component behavior, so the kind does not plausibly match the argv, and it functions as a broad quality sweep rather than scoped DOM evidence. R-021's static line-count constraint should be evidenced with a directed-quality/static-scan command whose kind matches (as E-51 does), not mislabeled as component-dom.",
+        "sourceIds": [
+          "SRC-E6118406E657"
+        ],
+        "disposition": "open"
+      }
+    ],
+    "receipt": {
+      "issuedBy": "docs-tdd-review-v1",
+      "client": "claude",
+      "sessionId": "a8779fa3-a63f-48f4-a71a-fb101389d0f4",
+      "sourceIsolation": "source-only-no-code",
+      "requestFingerprint": "0e93ce60c3ac1d0f75781266334039b8c889e552ee86fd9785539a5608ad8b69",
+      "reviewedAssets": [],
+      "startedAt": "2026-09-16T04:13:47.259Z",
+      "completedAt": "2026-09-16T04:34:49.583Z",
+      "signature": "2f00b867fc815f5df4032566a86938c90d9c4e5d73a36615052b69f3dc256ab0"
+    },
+    "unresolved": [
+      "F-001: E-33 is declared kind=component-dom but its argv runs a component-size/line-count quality script (scripts/quality/tr-02386/component-size.mjs) across ~31 .tsx surfaces to evidence R-021's ≤300-line rule. A line-count scan verifies neither DOM contract nor rendered component behavior, so the kind does not plausibly match the argv, and it functions as a broad quality sweep rather than scoped DOM evidence. R-021's static line-count constraint should be evidenced with a directed-quality/static-scan command whose kind matches (as E-51 does), not mislabeled as component-dom."
+    ]
+  },
+  "routing": {
+    "scopeClass": "multi-surface",
+    "riskSignals": [
+      "authentication-surface",
+      "password",
+      "multiple-entry-points",
+      "shared-component",
+      "contract-change",
+      "irreversible"
+    ],
+    "verificationLevel": "V2",
+    "routerVersion": 1
+  },
+  "apiDependency": {
+    "mode": "real-api",
+    "reason": "后端契约全部冻结沿用 legacy apps/web 既有接口（仓库内可读），联调走真实测试环境；按 v2 MSW 政策 real-api 不新增 mock"
+  },
+  "sourceReadiness": {
+    "figma": {
+      "requirement": "not-required",
+      "status": "not-required",
+      "reason": "纯迁移任务，视觉基准为 legacy apps/web 现有页面，无 Figma 设计稿"
+    },
+    "api": {
+      "requirement": "not-required",
+      "status": "not-required",
+      "reason": "后端 API 字段/路径/加密/token 语义全部沿用 legacy，契约真值为仓库内 legacy 源码，无外部 API 文档依赖"
+    }
+  },
+  "scopeApproval": {
+    "confirmationKind": "human",
+    "confirmedBy": "aven",
+    "confirmedAt": "2026-09-16",
+    "reason": "TR-02386 登录/注册迁移范围确认：23 条 doing 需求、contract-change/auth 风险路径，后端契约冻结沿用 legacy，评审已闭环（含 E-33 kind 标注的人工裁定）。",
+    "recordedVia": {
+      "client": "human"
+    },
+    "fingerprint": "a2881a318beac82a0005eca6c47032a8853284d8b6ffab49456164117d9fb283"
+  },
+  "autopilot": {
+    "phase": "validating",
+    "implementation": {
+      "status": "completed",
+      "changedPaths": [
+        ".gitignore",
+        "apps/web-next/.scratch/auth-web-next-migration/PLAN.md",
+        "apps/web-next/docs/page-migration.md",
+        "apps/web-next/public/static/bind_mail_dark.svg",
+        "apps/web-next/public/static/bind_mail_light.svg",
+        "apps/web-next/public/static/public_successful.svg",
+        "apps/web-next/public/static/register_v2_left_d.webp",
+        "apps/web-next/public/static/register_v2_left_l.webp",
+        "apps/web-next/public/static/scan_code_cn.webp",
+        "apps/web-next/public/static/scan_code_en.webp",
+        "apps/web-next/scripts/dom-contract/tr-02386/create-password.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/header-entry.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/i18n-keys.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/lib.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/login-page.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/mail-binder.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/page-migration-doc.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/register-page.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/scan-code.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/ssr-auth-boundary.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/third-fixes.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/third-reg-create.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/third-unite.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/verify-loop.mjs",
+        "apps/web-next/scripts/e2e/tr-02386/header-nav.mjs",
+        "apps/web-next/scripts/e2e/tr-02386/lib.mjs",
+        "apps/web-next/scripts/e2e/tr-02386/locale-responsive.mjs",
+        "apps/web-next/scripts/e2e/tr-02386/login-flow.mjs",
+        "apps/web-next/scripts/e2e/tr-02386/login-state-propagation.mjs",
+        "apps/web-next/scripts/e2e/tr-02386/register-completion.mjs",
+        "apps/web-next/scripts/e2e/tr-02386/register-flow.mjs",
+        "apps/web-next/scripts/e2e/tr-02386/scan-code.mjs",
+        "apps/web-next/scripts/e2e/tr-02386/third-reg.mjs",
+        "apps/web-next/scripts/e2e/tr-02386/third-sdk-overlay.mjs",
+        "apps/web-next/scripts/e2e/tr-02386/third-unite.mjs",
+        "apps/web-next/scripts/quality/tr-02386/component-size.mjs",
+        "apps/web-next/src/apps/Home/components/FafaAndAnniversaryBanner/HomeSocialLinks.tsx",
+        "apps/web-next/src/apps/Login/InputAccount.tsx",
+        "apps/web-next/src/apps/Login/LoginForm.tsx",
+        "apps/web-next/src/apps/Login/ScanCode.tsx",
+        "apps/web-next/src/apps/Login/common/loginSearchParams.ts",
+        "apps/web-next/src/apps/Login/common/test/authPayloads.test.ts",
+        "apps/web-next/src/apps/Login/common/test/loginSearchParams.test.ts",
+        "apps/web-next/src/apps/Login/index.tsx",
+        "apps/web-next/src/apps/Login/shared/loginPayload.ts",
+        "apps/web-next/src/apps/Login/shared/qrLoginStatus.ts",
+        "apps/web-next/src/apps/Login/shared/test/loginPayload.test.ts",
+        "apps/web-next/src/apps/Register/CreateAccount.tsx",
+        "apps/web-next/src/apps/Register/CreatePassword.tsx",
+        "apps/web-next/src/apps/Register/RegisterForm.tsx",
+        "apps/web-next/src/apps/Register/common/registerSearchParams.ts",
+        "apps/web-next/src/apps/Register/index.tsx",
+        "apps/web-next/src/apps/Register/shared/registerPayload.ts",
+        "apps/web-next/src/apps/Register/shared/test/registerPayload.test.ts",
+        "apps/web-next/src/apps/shared/auth/hichatGrantToken.ts",
+        "apps/web-next/src/apps/shared/auth/resolveAuthEntryUrl.ts",
+        "apps/web-next/src/apps/shared/auth/test/authEntryFlag.test.ts",
+        "apps/web-next/src/apps/shared/auth/test/authTrackingEvents.test.ts",
+        "apps/web-next/src/apps/shared/auth/test/useThirdAuth.test.ts",
+        "apps/web-next/src/apps/shared/auth/useAuthNavigationUrl.ts",
+        "apps/web-next/src/apps/shared/auth/useCode.ts",
+        "apps/web-next/src/apps/shared/auth/useRedirectIfLogin.ts",
+        "apps/web-next/src/apps/shared/components/main-header/account/HeaderAccount.tsx",
+        "apps/web-next/src/apps/shared/components/main-header/account/test/HeaderAccount.test.tsx",
+        "apps/web-next/src/apps/shared/components/main-header/mobile/MobileHeaderMenu.tsx",
+        "apps/web-next/src/apps/shared/format/formatSecondsToReadableTime.ts",
+        "apps/web-next/src/components/CodeVerifyDialog/index.tsx",
+        "apps/web-next/src/components/CodeVerifyDialog/verificationTypes.ts",
+        "apps/web-next/src/components/MailBinder/index.tsx",
+        "apps/web-next/src/components/MailBinder/store.ts",
+        "apps/web-next/src/components/PasswordInput.tsx",
+        "apps/web-next/src/components/PasswordRuleChecklist/index.tsx",
+        "apps/web-next/src/components/PasswordRuleChecklist/passwordRules.ts",
+        "apps/web-next/src/components/PasswordRuleChecklist/test/passwordRules.test.ts",
+        "apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/CreateByThird.tsx",
+        "apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/RegByThird.tsx",
+        "apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/UniteByThird.tsx",
+        "apps/web-next/src/components/ThirdPartyLogin/ThirdPartyBtns.tsx",
+        "apps/web-next/src/components/ThirdPartyLogin/ThirdPartyIcon.tsx",
+        "apps/web-next/src/components/ThirdPartyLogin/common/thirdAuthResult.ts",
+        "apps/web-next/src/components/ThirdPartyLogin/index.tsx",
+        "apps/web-next/src/components/ThirdPartyLogin/useThirdAuth.ts",
+        "apps/web-next/src/components/VerifyInputs/index.tsx",
+        "apps/web-next/src/components/VerifyInputs/store.ts",
+        "apps/web-next/src/components/VerifyInputs/test/store.test.ts",
+        "apps/web-next/src/components/VerifyInputs/test/verifyInputsStore.test.ts",
+        "apps/web-next/src/components/VerifyMan/index.tsx",
+        "apps/web-next/src/constants/regex.ts",
+        "apps/web-next/src/i18n/core/namespaces.ts",
+        "apps/web-next/src/i18n/i18next.d.ts",
+        "apps/web-next/src/i18n/resources/zh-CN/common.json",
+        "apps/web-next/src/i18n/resources/zh-CN/register.json",
+        "apps/web-next/src/i18n/resources/zh-CN/thirdLogin.json",
+        "apps/web-next/src/platform/domain/shared/ResilientArray.ts",
+        "apps/web-next/src/platform/domain/shared/test/resilientCollection.test.ts",
+        "apps/web-next/src/platform/domain/web/WebHttpApi.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/getLoginQrcodeIdEndpoint.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/getLoginQrcodeStatusEndpoint.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/getValidateSwitchEndpoint.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/loginInEndpoint.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/regEmailChkInfoEndpoint.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/regEmailConfirmEndpoint.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/regMobileChkInfoEndpoint.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/regMobileConfirmEndpoint.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/setEmailPasswordEndpoint.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/setMobilePasswordEndpoint.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/test/authLoginContract.test.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/test/authRegisterContract.test.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/test/qrLoginContract.test.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/test/thirdAuthContract.test.ts",
+        "apps/web-next/src/platform/domain/web/schema/registerSchemas.ts",
+        "apps/web-next/src/platform/third-party-sdk/googleSdk.ts",
+        "apps/web-next/src/routeTree.gen.ts",
+        "apps/web-next/src/routes/(auth)/login.tsx",
+        "apps/web-next/src/routes/(auth)/register.tsx",
+        "apps/web-next/src/routes/(auth)/route.tsx",
+        "apps/web-next/src/routes/(main)/(with-footer)/index.tsx",
+        "apps/web-next/src/routes/(main)/route.tsx",
+        "apps/web-next/src/services/hooks/auth/authLoginMutation.ts",
+        "apps/web-next/src/services/hooks/auth/authRegisterMutation.ts",
+        "apps/web-next/src/services/hooks/auth/checkAccountMutation.ts",
+        "apps/web-next/src/services/hooks/auth/confirmLoginMutation.ts",
+        "apps/web-next/src/services/hooks/auth/hichatBindExistingAccountMutation.ts",
+        "apps/web-next/src/services/hooks/auth/hichatRegisterAndBindMutation.ts",
+        "apps/web-next/src/services/hooks/auth/joinAddAccountMutation.ts",
+        "apps/web-next/src/services/hooks/auth/loginInMutation.ts",
+        "apps/web-next/src/services/hooks/auth/loginQrcodeIdQuery.ts",
+        "apps/web-next/src/services/hooks/auth/loginQrcodeStatusMutation.ts",
+        "apps/web-next/src/services/hooks/auth/newRegisterCheckMutation.ts",
+        "apps/web-next/src/services/hooks/auth/regEmailChkInfoMutation.ts",
+        "apps/web-next/src/services/hooks/auth/regEmailConfirmMutation.ts",
+        "apps/web-next/src/services/hooks/auth/regMobileChkInfoMutation.ts",
+        "apps/web-next/src/services/hooks/auth/regMobileConfirmMutation.ts",
+        "apps/web-next/src/services/hooks/auth/setEmailPasswordMutation.ts",
+        "apps/web-next/src/services/hooks/auth/setMobilePasswordMutation.ts",
+        "apps/web-next/src/services/hooks/auth/test/authMutationsRetry.test.ts",
+        "apps/web-next/src/services/hooks/auth/test/authSharedHooks.test.ts",
+        "apps/web-next/src/services/hooks/auth/test/qrLoginPolling.test.ts",
+        "apps/web-next/src/services/hooks/auth/validateSwitchQuery.ts",
+        "apps/web-next/src/utils/hooks/useCountdown.ts",
+        "apps/web-next/vitest.config.ts",
+        "packages/figma-icon/output/icon.json",
+        "packages/figma-icon/output/tailwind4-icon-class-map.json",
+        "packages/figma-icon/output/tailwind4-icon-list.json",
+        "packages/figma-icon/svg-files/name/counter.svg"
+      ],
+      "checkpoint": {
+        "actionId": "c340a639a06c496295602e096d64ae9d92ccc251d92a3ba8ed229c79ea239df8",
+        "outcome": "completed",
+        "recordedAt": "2026-09-15T19:07:29.029Z"
+      },
+      "discoveredSurfaces": [],
+      "coveredSurfaceIds": [
+        "S-001",
+        "S-002",
+        "S-003",
+        "S-004",
+        "S-005",
+        "S-006",
+        "S-007",
+        "S-008",
+        "S-009",
+        "S-010",
+        "S-011",
+        "S-012",
+        "S-013",
+        "S-014",
+        "S-015",
+        "S-016",
+        "S-017",
+        "S-018",
+        "S-019",
+        "S-020",
+        "S-021",
+        "S-022",
+        "S-023",
+        "S-024",
+        "S-025",
+        "S-026",
+        "S-027",
+        "S-028",
+        "S-029",
+        "S-030",
+        "S-031",
+        "S-033",
+        "S-034",
+        "S-035",
+        "S-036",
+        "S-037",
+        "S-038",
+        "S-039",
+        "S-040",
+        "S-041",
+        "S-043",
+        "S-044",
+        "S-045",
+        "S-046",
+        "S-047",
+        "S-048",
+        "S-049",
+        "S-050",
+        "S-051",
+        "S-052",
+        "S-053",
+        "S-054",
+        "S-055"
+      ],
+      "completedAt": "2026-09-15T19:07:29.029Z"
+    },
+    "delivery": {
+      "status": "pending"
+    },
+    "repairAttempts": {
+      "code": 0,
+      "browser": 0
+    },
+    "lastCheckpointAt": "2026-09-15T19:07:29.029Z",
+    "lastDevCheck": {
+      "schemaVersion": 1,
+      "projectId": "TR-02386",
+      "runId": "dev-check-20260915185957",
+      "checkedAt": "2026-09-15T18:59:57.836Z",
+      "status": "passed",
+      "ok": true,
+      "codeState": {
+        "headSha": "054af824fab214851501c2d6c6104a5dfdeae8be",
+        "contentHash": "be97ba2e88134324afbab345b2984caf62408de78a5b681c23a079b0a0f734fb",
+        "dirtyHash": "a988bb5afa8459b0650c13d2ba1944a7ea04ed27b9980115afbc90c7cda923e5"
+      },
+      "changedPaths": [
+        ".gitignore",
+        "apps/web-next/.scratch/auth-web-next-migration/PLAN.md",
+        "apps/web-next/docs/page-migration.md",
+        "apps/web-next/public/static/bind_mail_dark.svg",
+        "apps/web-next/public/static/bind_mail_light.svg",
+        "apps/web-next/public/static/public_successful.svg",
+        "apps/web-next/public/static/register_v2_left_d.webp",
+        "apps/web-next/public/static/register_v2_left_l.webp",
+        "apps/web-next/public/static/scan_code_cn.webp",
+        "apps/web-next/public/static/scan_code_en.webp",
+        "apps/web-next/scripts/dom-contract/tr-02386/create-password.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/header-entry.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/i18n-keys.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/lib.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/login-page.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/mail-binder.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/page-migration-doc.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/register-page.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/scan-code.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/ssr-auth-boundary.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/third-fixes.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/third-reg-create.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/third-unite.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/verify-loop.mjs",
+        "apps/web-next/scripts/e2e/tr-02386/header-nav.mjs",
+        "apps/web-next/scripts/e2e/tr-02386/lib.mjs",
+        "apps/web-next/scripts/e2e/tr-02386/locale-responsive.mjs",
+        "apps/web-next/scripts/e2e/tr-02386/login-flow.mjs",
+        "apps/web-next/scripts/e2e/tr-02386/login-state-propagation.mjs",
+        "apps/web-next/scripts/e2e/tr-02386/register-completion.mjs",
+        "apps/web-next/scripts/e2e/tr-02386/register-flow.mjs",
+        "apps/web-next/scripts/e2e/tr-02386/scan-code.mjs",
+        "apps/web-next/scripts/e2e/tr-02386/third-reg.mjs",
+        "apps/web-next/scripts/e2e/tr-02386/third-sdk-overlay.mjs",
+        "apps/web-next/scripts/e2e/tr-02386/third-unite.mjs",
+        "apps/web-next/scripts/quality/tr-02386/component-size.mjs",
+        "apps/web-next/src/apps/Home/components/FafaAndAnniversaryBanner/HomeSocialLinks.tsx",
+        "apps/web-next/src/apps/Login/InputAccount.tsx",
+        "apps/web-next/src/apps/Login/LoginForm.tsx",
+        "apps/web-next/src/apps/Login/ScanCode.tsx",
+        "apps/web-next/src/apps/Login/common/loginSearchParams.ts",
+        "apps/web-next/src/apps/Login/common/test/authPayloads.test.ts",
+        "apps/web-next/src/apps/Login/common/test/loginSearchParams.test.ts",
+        "apps/web-next/src/apps/Login/index.tsx",
+        "apps/web-next/src/apps/Login/shared/loginPayload.ts",
+        "apps/web-next/src/apps/Login/shared/qrLoginStatus.ts",
+        "apps/web-next/src/apps/Login/shared/test/loginPayload.test.ts",
+        "apps/web-next/src/apps/Register/CreateAccount.tsx",
+        "apps/web-next/src/apps/Register/CreatePassword.tsx",
+        "apps/web-next/src/apps/Register/RegisterForm.tsx",
+        "apps/web-next/src/apps/Register/common/registerSearchParams.ts",
+        "apps/web-next/src/apps/Register/index.tsx",
+        "apps/web-next/src/apps/Register/shared/registerPayload.ts",
+        "apps/web-next/src/apps/Register/shared/test/registerPayload.test.ts",
+        "apps/web-next/src/apps/shared/auth/hichatGrantToken.ts",
+        "apps/web-next/src/apps/shared/auth/resolveAuthEntryUrl.ts",
+        "apps/web-next/src/apps/shared/auth/test/authEntryFlag.test.ts",
+        "apps/web-next/src/apps/shared/auth/test/authTrackingEvents.test.ts",
+        "apps/web-next/src/apps/shared/auth/test/useThirdAuth.test.ts",
+        "apps/web-next/src/apps/shared/auth/useAuthNavigationUrl.ts",
+        "apps/web-next/src/apps/shared/auth/useCode.ts",
+        "apps/web-next/src/apps/shared/auth/useRedirectIfLogin.ts",
+        "apps/web-next/src/apps/shared/components/main-header/account/HeaderAccount.tsx",
+        "apps/web-next/src/apps/shared/components/main-header/account/test/HeaderAccount.test.tsx",
+        "apps/web-next/src/apps/shared/components/main-header/mobile/MobileHeaderMenu.tsx",
+        "apps/web-next/src/apps/shared/format/formatSecondsToReadableTime.ts",
+        "apps/web-next/src/components/CodeVerifyDialog/index.tsx",
+        "apps/web-next/src/components/CodeVerifyDialog/verificationTypes.ts",
+        "apps/web-next/src/components/MailBinder/index.tsx",
+        "apps/web-next/src/components/MailBinder/store.ts",
+        "apps/web-next/src/components/PasswordInput.tsx",
+        "apps/web-next/src/components/PasswordRuleChecklist/index.tsx",
+        "apps/web-next/src/components/PasswordRuleChecklist/passwordRules.ts",
+        "apps/web-next/src/components/PasswordRuleChecklist/test/passwordRules.test.ts",
+        "apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/CreateByThird.tsx",
+        "apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/RegByThird.tsx",
+        "apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/UniteByThird.tsx",
+        "apps/web-next/src/components/ThirdPartyLogin/ThirdPartyBtns.tsx",
+        "apps/web-next/src/components/ThirdPartyLogin/ThirdPartyIcon.tsx",
+        "apps/web-next/src/components/ThirdPartyLogin/common/thirdAuthResult.ts",
+        "apps/web-next/src/components/ThirdPartyLogin/index.tsx",
+        "apps/web-next/src/components/ThirdPartyLogin/useThirdAuth.ts",
+        "apps/web-next/src/components/VerifyInputs/index.tsx",
+        "apps/web-next/src/components/VerifyInputs/store.ts",
+        "apps/web-next/src/components/VerifyInputs/test/store.test.ts",
+        "apps/web-next/src/components/VerifyInputs/test/verifyInputsStore.test.ts",
+        "apps/web-next/src/components/VerifyMan/index.tsx",
+        "apps/web-next/src/constants/regex.ts",
+        "apps/web-next/src/i18n/core/namespaces.ts",
+        "apps/web-next/src/i18n/i18next.d.ts",
+        "apps/web-next/src/i18n/resources/zh-CN/common.json",
+        "apps/web-next/src/i18n/resources/zh-CN/register.json",
+        "apps/web-next/src/i18n/resources/zh-CN/thirdLogin.json",
+        "apps/web-next/src/platform/domain/shared/ResilientArray.ts",
+        "apps/web-next/src/platform/domain/shared/test/resilientCollection.test.ts",
+        "apps/web-next/src/platform/domain/web/WebHttpApi.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/getLoginQrcodeIdEndpoint.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/getLoginQrcodeStatusEndpoint.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/getValidateSwitchEndpoint.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/loginInEndpoint.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/regEmailChkInfoEndpoint.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/regEmailConfirmEndpoint.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/regMobileChkInfoEndpoint.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/regMobileConfirmEndpoint.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/setEmailPasswordEndpoint.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/setMobilePasswordEndpoint.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/test/authLoginContract.test.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/test/authRegisterContract.test.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/test/qrLoginContract.test.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/test/thirdAuthContract.test.ts",
+        "apps/web-next/src/platform/domain/web/schema/registerSchemas.ts",
+        "apps/web-next/src/platform/third-party-sdk/googleSdk.ts",
+        "apps/web-next/src/routeTree.gen.ts",
+        "apps/web-next/src/routes/(auth)/login.tsx",
+        "apps/web-next/src/routes/(auth)/register.tsx",
+        "apps/web-next/src/routes/(auth)/route.tsx",
+        "apps/web-next/src/routes/(main)/(with-footer)/index.tsx",
+        "apps/web-next/src/routes/(main)/route.tsx",
+        "apps/web-next/src/services/hooks/auth/authLoginMutation.ts",
+        "apps/web-next/src/services/hooks/auth/authRegisterMutation.ts",
+        "apps/web-next/src/services/hooks/auth/checkAccountMutation.ts",
+        "apps/web-next/src/services/hooks/auth/confirmLoginMutation.ts",
+        "apps/web-next/src/services/hooks/auth/hichatBindExistingAccountMutation.ts",
+        "apps/web-next/src/services/hooks/auth/hichatRegisterAndBindMutation.ts",
+        "apps/web-next/src/services/hooks/auth/joinAddAccountMutation.ts",
+        "apps/web-next/src/services/hooks/auth/loginInMutation.ts",
+        "apps/web-next/src/services/hooks/auth/loginQrcodeIdQuery.ts",
+        "apps/web-next/src/services/hooks/auth/loginQrcodeStatusMutation.ts",
+        "apps/web-next/src/services/hooks/auth/newRegisterCheckMutation.ts",
+        "apps/web-next/src/services/hooks/auth/regEmailChkInfoMutation.ts",
+        "apps/web-next/src/services/hooks/auth/regEmailConfirmMutation.ts",
+        "apps/web-next/src/services/hooks/auth/regMobileChkInfoMutation.ts",
+        "apps/web-next/src/services/hooks/auth/regMobileConfirmMutation.ts",
+        "apps/web-next/src/services/hooks/auth/setEmailPasswordMutation.ts",
+        "apps/web-next/src/services/hooks/auth/setMobilePasswordMutation.ts",
+        "apps/web-next/src/services/hooks/auth/test/authMutationsRetry.test.ts",
+        "apps/web-next/src/services/hooks/auth/test/authSharedHooks.test.ts",
+        "apps/web-next/src/services/hooks/auth/test/qrLoginPolling.test.ts",
+        "apps/web-next/src/services/hooks/auth/validateSwitchQuery.ts",
+        "apps/web-next/src/utils/hooks/useCountdown.ts",
+        "apps/web-next/vitest.config.ts",
+        "packages/figma-icon/output/icon.json",
+        "packages/figma-icon/output/tailwind4-icon-class-map.json",
+        "packages/figma-icon/output/tailwind4-icon-list.json",
+        "packages/figma-icon/svg-files/name/counter.svg"
+      ],
+      "pendingCommitPaths": [
+        ".gitignore",
+        "apps/web-next/.scratch/auth-web-next-migration/PLAN.md",
+        "apps/web-next/docs/page-migration.md",
+        "apps/web-next/public/static/bind_mail_dark.svg",
+        "apps/web-next/public/static/bind_mail_light.svg",
+        "apps/web-next/public/static/public_successful.svg",
+        "apps/web-next/public/static/register_v2_left_d.webp",
+        "apps/web-next/public/static/register_v2_left_l.webp",
+        "apps/web-next/public/static/scan_code_cn.webp",
+        "apps/web-next/public/static/scan_code_en.webp",
+        "apps/web-next/scripts/dom-contract/tr-02386/create-password.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/header-entry.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/i18n-keys.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/lib.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/login-page.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/mail-binder.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/page-migration-doc.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/register-page.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/scan-code.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/ssr-auth-boundary.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/third-fixes.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/third-reg-create.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/third-unite.mjs",
+        "apps/web-next/scripts/dom-contract/tr-02386/verify-loop.mjs",
+        "apps/web-next/scripts/e2e/tr-02386/header-nav.mjs",
+        "apps/web-next/scripts/e2e/tr-02386/lib.mjs",
+        "apps/web-next/scripts/e2e/tr-02386/locale-responsive.mjs",
+        "apps/web-next/scripts/e2e/tr-02386/login-flow.mjs",
+        "apps/web-next/scripts/e2e/tr-02386/login-state-propagation.mjs",
+        "apps/web-next/scripts/e2e/tr-02386/register-completion.mjs",
+        "apps/web-next/scripts/e2e/tr-02386/register-flow.mjs",
+        "apps/web-next/scripts/e2e/tr-02386/scan-code.mjs",
+        "apps/web-next/scripts/e2e/tr-02386/third-reg.mjs",
+        "apps/web-next/scripts/e2e/tr-02386/third-sdk-overlay.mjs",
+        "apps/web-next/scripts/e2e/tr-02386/third-unite.mjs",
+        "apps/web-next/scripts/quality/tr-02386/component-size.mjs",
+        "apps/web-next/src/apps/Home/components/FafaAndAnniversaryBanner/HomeSocialLinks.tsx",
+        "apps/web-next/src/apps/Login/InputAccount.tsx",
+        "apps/web-next/src/apps/Login/LoginForm.tsx",
+        "apps/web-next/src/apps/Login/ScanCode.tsx",
+        "apps/web-next/src/apps/Login/common/loginSearchParams.ts",
+        "apps/web-next/src/apps/Login/common/test/authPayloads.test.ts",
+        "apps/web-next/src/apps/Login/common/test/loginSearchParams.test.ts",
+        "apps/web-next/src/apps/Login/index.tsx",
+        "apps/web-next/src/apps/Login/shared/loginPayload.ts",
+        "apps/web-next/src/apps/Login/shared/qrLoginStatus.ts",
+        "apps/web-next/src/apps/Login/shared/test/loginPayload.test.ts",
+        "apps/web-next/src/apps/Register/CreateAccount.tsx",
+        "apps/web-next/src/apps/Register/CreatePassword.tsx",
+        "apps/web-next/src/apps/Register/RegisterForm.tsx",
+        "apps/web-next/src/apps/Register/common/registerSearchParams.ts",
+        "apps/web-next/src/apps/Register/index.tsx",
+        "apps/web-next/src/apps/Register/shared/registerPayload.ts",
+        "apps/web-next/src/apps/Register/shared/test/registerPayload.test.ts",
+        "apps/web-next/src/apps/shared/auth/hichatGrantToken.ts",
+        "apps/web-next/src/apps/shared/auth/resolveAuthEntryUrl.ts",
+        "apps/web-next/src/apps/shared/auth/test/authEntryFlag.test.ts",
+        "apps/web-next/src/apps/shared/auth/test/authTrackingEvents.test.ts",
+        "apps/web-next/src/apps/shared/auth/test/useThirdAuth.test.ts",
+        "apps/web-next/src/apps/shared/auth/useAuthNavigationUrl.ts",
+        "apps/web-next/src/apps/shared/auth/useCode.ts",
+        "apps/web-next/src/apps/shared/auth/useRedirectIfLogin.ts",
+        "apps/web-next/src/apps/shared/components/main-header/account/HeaderAccount.tsx",
+        "apps/web-next/src/apps/shared/components/main-header/account/test/HeaderAccount.test.tsx",
+        "apps/web-next/src/apps/shared/components/main-header/mobile/MobileHeaderMenu.tsx",
+        "apps/web-next/src/apps/shared/format/formatSecondsToReadableTime.ts",
+        "apps/web-next/src/components/CodeVerifyDialog/index.tsx",
+        "apps/web-next/src/components/CodeVerifyDialog/verificationTypes.ts",
+        "apps/web-next/src/components/MailBinder/index.tsx",
+        "apps/web-next/src/components/MailBinder/store.ts",
+        "apps/web-next/src/components/PasswordInput.tsx",
+        "apps/web-next/src/components/PasswordRuleChecklist/index.tsx",
+        "apps/web-next/src/components/PasswordRuleChecklist/passwordRules.ts",
+        "apps/web-next/src/components/PasswordRuleChecklist/test/passwordRules.test.ts",
+        "apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/CreateByThird.tsx",
+        "apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/RegByThird.tsx",
+        "apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/UniteByThird.tsx",
+        "apps/web-next/src/components/ThirdPartyLogin/ThirdPartyBtns.tsx",
+        "apps/web-next/src/components/ThirdPartyLogin/ThirdPartyIcon.tsx",
+        "apps/web-next/src/components/ThirdPartyLogin/common/thirdAuthResult.ts",
+        "apps/web-next/src/components/ThirdPartyLogin/index.tsx",
+        "apps/web-next/src/components/ThirdPartyLogin/useThirdAuth.ts",
+        "apps/web-next/src/components/VerifyInputs/index.tsx",
+        "apps/web-next/src/components/VerifyInputs/store.ts",
+        "apps/web-next/src/components/VerifyInputs/test/store.test.ts",
+        "apps/web-next/src/components/VerifyInputs/test/verifyInputsStore.test.ts",
+        "apps/web-next/src/components/VerifyMan/index.tsx",
+        "apps/web-next/src/constants/regex.ts",
+        "apps/web-next/src/i18n/core/namespaces.ts",
+        "apps/web-next/src/i18n/i18next.d.ts",
+        "apps/web-next/src/i18n/resources/zh-CN/common.json",
+        "apps/web-next/src/i18n/resources/zh-CN/register.json",
+        "apps/web-next/src/i18n/resources/zh-CN/thirdLogin.json",
+        "apps/web-next/src/platform/domain/shared/ResilientArray.ts",
+        "apps/web-next/src/platform/domain/shared/test/resilientCollection.test.ts",
+        "apps/web-next/src/platform/domain/web/WebHttpApi.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/getLoginQrcodeIdEndpoint.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/getLoginQrcodeStatusEndpoint.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/getValidateSwitchEndpoint.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/loginInEndpoint.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/regEmailChkInfoEndpoint.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/regEmailConfirmEndpoint.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/regMobileChkInfoEndpoint.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/regMobileConfirmEndpoint.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/setEmailPasswordEndpoint.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/setMobilePasswordEndpoint.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/test/authLoginContract.test.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/test/authRegisterContract.test.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/test/qrLoginContract.test.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/test/thirdAuthContract.test.ts",
+        "apps/web-next/src/platform/domain/web/schema/registerSchemas.ts",
+        "apps/web-next/src/platform/third-party-sdk/googleSdk.ts",
+        "apps/web-next/src/routeTree.gen.ts",
+        "apps/web-next/src/routes/(auth)/login.tsx",
+        "apps/web-next/src/routes/(auth)/register.tsx",
+        "apps/web-next/src/routes/(auth)/route.tsx",
+        "apps/web-next/src/routes/(main)/(with-footer)/index.tsx",
+        "apps/web-next/src/routes/(main)/route.tsx",
+        "apps/web-next/src/services/hooks/auth/authLoginMutation.ts",
+        "apps/web-next/src/services/hooks/auth/authRegisterMutation.ts",
+        "apps/web-next/src/services/hooks/auth/checkAccountMutation.ts",
+        "apps/web-next/src/services/hooks/auth/confirmLoginMutation.ts",
+        "apps/web-next/src/services/hooks/auth/hichatBindExistingAccountMutation.ts",
+        "apps/web-next/src/services/hooks/auth/hichatRegisterAndBindMutation.ts",
+        "apps/web-next/src/services/hooks/auth/joinAddAccountMutation.ts",
+        "apps/web-next/src/services/hooks/auth/loginInMutation.ts",
+        "apps/web-next/src/services/hooks/auth/loginQrcodeIdQuery.ts",
+        "apps/web-next/src/services/hooks/auth/loginQrcodeStatusMutation.ts",
+        "apps/web-next/src/services/hooks/auth/newRegisterCheckMutation.ts",
+        "apps/web-next/src/services/hooks/auth/regEmailChkInfoMutation.ts",
+        "apps/web-next/src/services/hooks/auth/regEmailConfirmMutation.ts",
+        "apps/web-next/src/services/hooks/auth/regMobileChkInfoMutation.ts",
+        "apps/web-next/src/services/hooks/auth/regMobileConfirmMutation.ts",
+        "apps/web-next/src/services/hooks/auth/setEmailPasswordMutation.ts",
+        "apps/web-next/src/services/hooks/auth/setMobilePasswordMutation.ts",
+        "apps/web-next/src/services/hooks/auth/test/authMutationsRetry.test.ts",
+        "apps/web-next/src/services/hooks/auth/test/authSharedHooks.test.ts",
+        "apps/web-next/src/services/hooks/auth/test/qrLoginPolling.test.ts",
+        "apps/web-next/src/services/hooks/auth/validateSwitchQuery.ts",
+        "apps/web-next/src/utils/hooks/useCountdown.ts",
+        "apps/web-next/vitest.config.ts",
+        "packages/figma-icon/output/icon.json",
+        "packages/figma-icon/output/tailwind4-icon-class-map.json",
+        "packages/figma-icon/output/tailwind4-icon-list.json",
+        "packages/figma-icon/svg-files/name/counter.svg"
+      ],
+      "pathCoverage": [
+        {
+          "path": ".gitignore",
+          "requirementIds": [
+            "R-022"
+          ],
+          "surfaceIds": [
+            "S-039"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/.scratch/auth-web-next-migration/PLAN.md",
+          "requirementIds": [
+            "R-022"
+          ],
+          "surfaceIds": [
+            "S-039"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/docs/page-migration.md",
+          "requirementIds": [
+            "R-018",
+            "R-022"
+          ],
+          "surfaceIds": [
+            "S-039"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/public/static/bind_mail_dark.svg",
+          "requirementIds": [
+            "R-015"
+          ],
+          "surfaceIds": [
+            "S-035"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/public/static/bind_mail_light.svg",
+          "requirementIds": [
+            "R-015"
+          ],
+          "surfaceIds": [
+            "S-035"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/public/static/public_successful.svg",
+          "requirementIds": [
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-026"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/public/static/register_v2_left_d.webp",
+          "requirementIds": [
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-027"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/public/static/register_v2_left_l.webp",
+          "requirementIds": [
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-027"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/public/static/scan_code_cn.webp",
+          "requirementIds": [
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-026"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/public/static/scan_code_en.webp",
+          "requirementIds": [
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-026"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/scripts/dom-contract/tr-02386/create-password.mjs",
+          "requirementIds": [
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-028"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/scripts/dom-contract/tr-02386/header-entry.mjs",
+          "requirementIds": [
+            "R-017"
+          ],
+          "surfaceIds": [
+            "S-036"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/scripts/dom-contract/tr-02386/i18n-keys.mjs",
+          "requirementIds": [
+            "R-006"
+          ],
+          "surfaceIds": [
+            "S-020"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/scripts/dom-contract/tr-02386/lib.mjs",
+          "requirementIds": [
+            "R-023"
+          ],
+          "surfaceIds": [
+            "S-055"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/scripts/dom-contract/tr-02386/login-page.mjs",
+          "requirementIds": [
+            "R-007"
+          ],
+          "surfaceIds": [
+            "S-022"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/scripts/dom-contract/tr-02386/mail-binder.mjs",
+          "requirementIds": [
+            "R-015"
+          ],
+          "surfaceIds": [
+            "S-035"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/scripts/dom-contract/tr-02386/page-migration-doc.mjs",
+          "requirementIds": [
+            "R-022"
+          ],
+          "surfaceIds": [
+            "S-039"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/scripts/dom-contract/tr-02386/register-page.mjs",
+          "requirementIds": [
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-027"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/scripts/dom-contract/tr-02386/scan-code.mjs",
+          "requirementIds": [
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-026"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/scripts/dom-contract/tr-02386/ssr-auth-boundary.mjs",
+          "requirementIds": [
+            "R-020"
+          ],
+          "surfaceIds": [
+            "S-053"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/scripts/dom-contract/tr-02386/third-fixes.mjs",
+          "requirementIds": [
+            "R-006"
+          ],
+          "surfaceIds": [
+            "S-018"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/scripts/dom-contract/tr-02386/third-reg-create.mjs",
+          "requirementIds": [
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-030"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/scripts/dom-contract/tr-02386/third-unite.mjs",
+          "requirementIds": [
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-031"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/scripts/dom-contract/tr-02386/verify-loop.mjs",
+          "requirementIds": [
+            "R-005"
+          ],
+          "surfaceIds": [
+            "S-015"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/scripts/e2e/tr-02386/header-nav.mjs",
+          "requirementIds": [
+            "R-017"
+          ],
+          "surfaceIds": [
+            "S-036"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/scripts/e2e/tr-02386/lib.mjs",
+          "requirementIds": [
+            "R-023"
+          ],
+          "surfaceIds": [
+            "S-055"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/scripts/e2e/tr-02386/locale-responsive.mjs",
+          "requirementIds": [
+            "R-023"
+          ],
+          "surfaceIds": [
+            "S-055"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/scripts/e2e/tr-02386/login-flow.mjs",
+          "requirementIds": [
+            "R-007"
+          ],
+          "surfaceIds": [
+            "S-022"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/scripts/e2e/tr-02386/login-state-propagation.mjs",
+          "requirementIds": [
+            "R-008"
+          ],
+          "surfaceIds": [
+            "S-025"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/scripts/e2e/tr-02386/register-completion.mjs",
+          "requirementIds": [
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-028"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/scripts/e2e/tr-02386/register-flow.mjs",
+          "requirementIds": [
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-027"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/scripts/e2e/tr-02386/scan-code.mjs",
+          "requirementIds": [
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-026"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/scripts/e2e/tr-02386/third-reg.mjs",
+          "requirementIds": [
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-034"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/scripts/e2e/tr-02386/third-sdk-overlay.mjs",
+          "requirementIds": [
+            "R-012"
+          ],
+          "surfaceIds": [
+            "S-033"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/scripts/e2e/tr-02386/third-unite.mjs",
+          "requirementIds": [
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-031"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/scripts/quality/tr-02386/component-size.mjs",
+          "requirementIds": [
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-021"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/apps/Home/components/FafaAndAnniversaryBanner/HomeSocialLinks.tsx",
+          "requirementIds": [
+            "R-006",
+            "R-012",
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-019"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/apps/Login/InputAccount.tsx",
+          "requirementIds": [
+            "R-007"
+          ],
+          "surfaceIds": [
+            "S-022"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/apps/Login/LoginForm.tsx",
+          "requirementIds": [
+            "R-007"
+          ],
+          "surfaceIds": [
+            "S-022"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/apps/Login/ScanCode.tsx",
+          "requirementIds": [
+            "R-009",
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-026"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/apps/Login/common/loginSearchParams.ts",
+          "requirementIds": [
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-029"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/apps/Login/common/test/authPayloads.test.ts",
+          "requirementIds": [
+            "R-005"
+          ],
+          "surfaceIds": [
+            "S-052"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/apps/Login/common/test/loginSearchParams.test.ts",
+          "requirementIds": [
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-029"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/apps/Login/index.tsx",
+          "requirementIds": [
+            "R-001",
+            "R-003",
+            "R-004",
+            "R-005",
+            "R-006",
+            "R-007",
+            "R-009",
+            "R-012",
+            "R-013",
+            "R-014",
+            "R-018",
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-001",
+            "S-002",
+            "S-011",
+            "S-012",
+            "S-014",
+            "S-020",
+            "S-021",
+            "S-022",
+            "S-026",
+            "S-030",
+            "S-031",
+            "S-033",
+            "S-034",
+            "S-040",
+            "S-043",
+            "S-050",
+            "S-052"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/apps/Login/shared/loginPayload.ts",
+          "requirementIds": [
+            "R-005"
+          ],
+          "surfaceIds": [
+            "S-052"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/apps/Login/shared/qrLoginStatus.ts",
+          "requirementIds": [
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-026"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/apps/Login/shared/test/loginPayload.test.ts",
+          "requirementIds": [
+            "R-005"
+          ],
+          "surfaceIds": [
+            "S-052"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/apps/Register/CreateAccount.tsx",
+          "requirementIds": [
+            "R-010",
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-027"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/apps/Register/CreatePassword.tsx",
+          "requirementIds": [
+            "R-011",
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-028"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/apps/Register/RegisterForm.tsx",
+          "requirementIds": [
+            "R-010",
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-027"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/apps/Register/common/registerSearchParams.ts",
+          "requirementIds": [
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-029"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/apps/Register/index.tsx",
+          "requirementIds": [
+            "R-004",
+            "R-005",
+            "R-006",
+            "R-010",
+            "R-011",
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-020",
+            "S-027",
+            "S-028",
+            "S-044",
+            "S-045",
+            "S-048",
+            "S-052"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/apps/Register/shared/registerPayload.ts",
+          "requirementIds": [
+            "R-005"
+          ],
+          "surfaceIds": [
+            "S-052"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/apps/Register/shared/test/registerPayload.test.ts",
+          "requirementIds": [
+            "R-005"
+          ],
+          "surfaceIds": [
+            "S-052"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/apps/shared/auth/hichatGrantToken.ts",
+          "requirementIds": [
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-029"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/apps/shared/auth/resolveAuthEntryUrl.ts",
+          "requirementIds": [
+            "R-016"
+          ],
+          "surfaceIds": [
+            "S-037"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/apps/shared/auth/test/authEntryFlag.test.ts",
+          "requirementIds": [
+            "R-016"
+          ],
+          "surfaceIds": [
+            "S-037"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/apps/shared/auth/test/authTrackingEvents.test.ts",
+          "requirementIds": [
+            "R-017"
+          ],
+          "surfaceIds": [
+            "S-054"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/apps/shared/auth/test/useThirdAuth.test.ts",
+          "requirementIds": [
+            "R-006"
+          ],
+          "surfaceIds": [
+            "S-018"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/apps/shared/auth/useAuthNavigationUrl.ts",
+          "requirementIds": [
+            "R-016"
+          ],
+          "surfaceIds": [
+            "S-037"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/apps/shared/auth/useCode.ts",
+          "requirementIds": [
+            "R-005"
+          ],
+          "surfaceIds": [
+            "S-051"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/apps/shared/auth/useRedirectIfLogin.ts",
+          "requirementIds": [
+            "R-005"
+          ],
+          "surfaceIds": [
+            "S-050"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/apps/shared/components/main-header/account/HeaderAccount.tsx",
+          "requirementIds": [
+            "R-017"
+          ],
+          "surfaceIds": [
+            "S-036"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/apps/shared/components/main-header/account/test/HeaderAccount.test.tsx",
+          "requirementIds": [
+            "R-017"
+          ],
+          "surfaceIds": [
+            "S-036"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/apps/shared/components/main-header/mobile/MobileHeaderMenu.tsx",
+          "requirementIds": [
+            "R-017"
+          ],
+          "surfaceIds": [
+            "S-036"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/apps/shared/format/formatSecondsToReadableTime.ts",
+          "requirementIds": [
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-027"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/components/CodeVerifyDialog/index.tsx",
+          "requirementIds": [
+            "R-005",
+            "R-008",
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-017",
+            "S-023"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/components/CodeVerifyDialog/verificationTypes.ts",
+          "requirementIds": [
+            "R-005"
+          ],
+          "surfaceIds": [
+            "S-017"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/components/MailBinder/index.tsx",
+          "requirementIds": [
+            "R-015"
+          ],
+          "surfaceIds": [
+            "S-035"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/components/MailBinder/store.ts",
+          "requirementIds": [
+            "R-005"
+          ],
+          "surfaceIds": [
+            "S-015"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/components/PasswordInput.tsx",
+          "requirementIds": [
+            "R-011"
+          ],
+          "surfaceIds": [
+            "S-016"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/components/PasswordRuleChecklist/index.tsx",
+          "requirementIds": [
+            "R-005",
+            "R-011"
+          ],
+          "surfaceIds": [
+            "S-016"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/components/PasswordRuleChecklist/passwordRules.ts",
+          "requirementIds": [
+            "R-011"
+          ],
+          "surfaceIds": [
+            "S-016"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/components/PasswordRuleChecklist/test/passwordRules.test.ts",
+          "requirementIds": [
+            "R-011"
+          ],
+          "surfaceIds": [
+            "S-016"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/CreateByThird.tsx",
+          "requirementIds": [
+            "R-012",
+            "R-013",
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-030"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/RegByThird.tsx",
+          "requirementIds": [
+            "R-013",
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-034"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/UniteByThird.tsx",
+          "requirementIds": [
+            "R-012",
+            "R-014",
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-031"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/components/ThirdPartyLogin/ThirdPartyBtns.tsx",
+          "requirementIds": [
+            "R-006"
+          ],
+          "surfaceIds": [
+            "S-018"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/components/ThirdPartyLogin/ThirdPartyIcon.tsx",
+          "requirementIds": [
+            "R-006"
+          ],
+          "surfaceIds": [
+            "S-018"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/components/ThirdPartyLogin/common/thirdAuthResult.ts",
+          "requirementIds": [
+            "R-006"
+          ],
+          "surfaceIds": [
+            "S-018"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/components/ThirdPartyLogin/index.tsx",
+          "requirementIds": [
+            "R-012",
+            "R-013",
+            "R-014",
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-030",
+            "S-031",
+            "S-034"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/components/ThirdPartyLogin/useThirdAuth.ts",
+          "requirementIds": [
+            "R-006"
+          ],
+          "surfaceIds": [
+            "S-018"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/components/VerifyInputs/index.tsx",
+          "requirementIds": [
+            "R-005"
+          ],
+          "surfaceIds": [
+            "S-015"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/components/VerifyInputs/store.ts",
+          "requirementIds": [
+            "R-005"
+          ],
+          "surfaceIds": [
+            "S-015"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/components/VerifyInputs/test/store.test.ts",
+          "requirementIds": [
+            "R-005"
+          ],
+          "surfaceIds": [
+            "S-015"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/components/VerifyInputs/test/verifyInputsStore.test.ts",
+          "requirementIds": [
+            "R-005"
+          ],
+          "surfaceIds": [
+            "S-015"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/components/VerifyMan/index.tsx",
+          "requirementIds": [
+            "R-008",
+            "R-012",
+            "R-014",
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-024"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/constants/regex.ts",
+          "requirementIds": [
+            "R-011"
+          ],
+          "surfaceIds": [
+            "S-016"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/i18n/core/namespaces.ts",
+          "requirementIds": [
+            "R-006"
+          ],
+          "surfaceIds": [
+            "S-020"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/i18n/i18next.d.ts",
+          "requirementIds": [
+            "R-006"
+          ],
+          "surfaceIds": [
+            "S-020"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/i18n/resources/zh-CN/common.json",
+          "requirementIds": [
+            "R-006"
+          ],
+          "surfaceIds": [
+            "S-020"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/i18n/resources/zh-CN/register.json",
+          "requirementIds": [
+            "R-006"
+          ],
+          "surfaceIds": [
+            "S-020"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/i18n/resources/zh-CN/thirdLogin.json",
+          "requirementIds": [
+            "R-012"
+          ],
+          "surfaceIds": [
+            "S-033"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/platform/domain/shared/ResilientArray.ts",
+          "requirementIds": [
+            "R-019"
+          ],
+          "surfaceIds": [
+            "S-041"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/platform/domain/shared/test/resilientCollection.test.ts",
+          "requirementIds": [
+            "R-019"
+          ],
+          "surfaceIds": [
+            "S-041"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/platform/domain/web/WebHttpApi.ts",
+          "requirementIds": [
+            "R-001"
+          ],
+          "surfaceIds": [
+            "S-004"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/platform/domain/web/endpoints/getLoginQrcodeIdEndpoint.ts",
+          "requirementIds": [
+            "R-003"
+          ],
+          "surfaceIds": [
+            "S-011"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/platform/domain/web/endpoints/getLoginQrcodeStatusEndpoint.ts",
+          "requirementIds": [
+            "R-003"
+          ],
+          "surfaceIds": [
+            "S-012"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/platform/domain/web/endpoints/getValidateSwitchEndpoint.ts",
+          "requirementIds": [
+            "R-001"
+          ],
+          "surfaceIds": [
+            "S-003"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/platform/domain/web/endpoints/loginInEndpoint.ts",
+          "requirementIds": [
+            "R-001"
+          ],
+          "surfaceIds": [
+            "S-001"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/platform/domain/web/endpoints/regEmailChkInfoEndpoint.ts",
+          "requirementIds": [
+            "R-002"
+          ],
+          "surfaceIds": [
+            "S-005"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/platform/domain/web/endpoints/regEmailConfirmEndpoint.ts",
+          "requirementIds": [
+            "R-002"
+          ],
+          "surfaceIds": [
+            "S-006"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/platform/domain/web/endpoints/regMobileChkInfoEndpoint.ts",
+          "requirementIds": [
+            "R-002"
+          ],
+          "surfaceIds": [
+            "S-008"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/platform/domain/web/endpoints/regMobileConfirmEndpoint.ts",
+          "requirementIds": [
+            "R-002"
+          ],
+          "surfaceIds": [
+            "S-009"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/platform/domain/web/endpoints/setEmailPasswordEndpoint.ts",
+          "requirementIds": [
+            "R-002"
+          ],
+          "surfaceIds": [
+            "S-007"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/platform/domain/web/endpoints/setMobilePasswordEndpoint.ts",
+          "requirementIds": [
+            "R-002"
+          ],
+          "surfaceIds": [
+            "S-010"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/platform/domain/web/endpoints/test/authLoginContract.test.ts",
+          "requirementIds": [
+            "R-001"
+          ],
+          "surfaceIds": [
+            "S-001"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/platform/domain/web/endpoints/test/authRegisterContract.test.ts",
+          "requirementIds": [
+            "R-002"
+          ],
+          "surfaceIds": [
+            "S-005"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/platform/domain/web/endpoints/test/qrLoginContract.test.ts",
+          "requirementIds": [
+            "R-003"
+          ],
+          "surfaceIds": [
+            "S-011"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/platform/domain/web/endpoints/test/thirdAuthContract.test.ts",
+          "requirementIds": [
+            "R-004"
+          ],
+          "surfaceIds": [
+            "S-043"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/platform/domain/web/schema/registerSchemas.ts",
+          "requirementIds": [
+            "R-002"
+          ],
+          "surfaceIds": [
+            "S-005"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/platform/third-party-sdk/googleSdk.ts",
+          "requirementIds": [
+            "R-012"
+          ],
+          "surfaceIds": [
+            "S-033"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/routeTree.gen.ts",
+          "requirementIds": [
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-021"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/routes/(auth)/login.tsx",
+          "requirementIds": [
+            "R-001",
+            "R-003",
+            "R-004",
+            "R-005",
+            "R-006",
+            "R-007",
+            "R-009",
+            "R-012",
+            "R-013",
+            "R-014",
+            "R-018",
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-001",
+            "S-002",
+            "S-011",
+            "S-012",
+            "S-014",
+            "S-020",
+            "S-021",
+            "S-022",
+            "S-026",
+            "S-030",
+            "S-031",
+            "S-033",
+            "S-034",
+            "S-040",
+            "S-043",
+            "S-050",
+            "S-052"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/routes/(auth)/register.tsx",
+          "requirementIds": [
+            "R-004",
+            "R-005",
+            "R-006",
+            "R-010",
+            "R-011",
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-020",
+            "S-027",
+            "S-028",
+            "S-044",
+            "S-045",
+            "S-048",
+            "S-052"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/routes/(auth)/route.tsx",
+          "requirementIds": [
+            "R-004",
+            "R-007",
+            "R-010",
+            "R-012",
+            "R-018",
+            "R-020",
+            "R-021",
+            "R-023"
+          ],
+          "surfaceIds": [
+            "S-021",
+            "S-027",
+            "S-029",
+            "S-040",
+            "S-053",
+            "S-055"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/routes/(main)/(with-footer)/index.tsx",
+          "requirementIds": [
+            "R-004",
+            "R-012",
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-029"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/routes/(main)/route.tsx",
+          "requirementIds": [
+            "R-004",
+            "R-007",
+            "R-010",
+            "R-012",
+            "R-018",
+            "R-020",
+            "R-021",
+            "R-023"
+          ],
+          "surfaceIds": [
+            "S-021",
+            "S-027",
+            "S-029",
+            "S-040",
+            "S-053",
+            "S-055"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/services/hooks/auth/authLoginMutation.ts",
+          "requirementIds": [
+            "R-004"
+          ],
+          "surfaceIds": [
+            "S-043"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/services/hooks/auth/authRegisterMutation.ts",
+          "requirementIds": [
+            "R-004"
+          ],
+          "surfaceIds": [
+            "S-044"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/services/hooks/auth/checkAccountMutation.ts",
+          "requirementIds": [
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-031"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/services/hooks/auth/confirmLoginMutation.ts",
+          "requirementIds": [
+            "R-001"
+          ],
+          "surfaceIds": [
+            "S-002"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/services/hooks/auth/hichatBindExistingAccountMutation.ts",
+          "requirementIds": [
+            "R-004"
+          ],
+          "surfaceIds": [
+            "S-049"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/services/hooks/auth/hichatRegisterAndBindMutation.ts",
+          "requirementIds": [
+            "R-004"
+          ],
+          "surfaceIds": [
+            "S-048"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/services/hooks/auth/joinAddAccountMutation.ts",
+          "requirementIds": [
+            "R-004"
+          ],
+          "surfaceIds": [
+            "S-046"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/services/hooks/auth/loginInMutation.ts",
+          "requirementIds": [
+            "R-005"
+          ],
+          "surfaceIds": [
+            "S-014"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/services/hooks/auth/loginQrcodeIdQuery.ts",
+          "requirementIds": [
+            "R-003"
+          ],
+          "surfaceIds": [
+            "S-013"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/services/hooks/auth/loginQrcodeStatusMutation.ts",
+          "requirementIds": [
+            "R-003"
+          ],
+          "surfaceIds": [
+            "S-013"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/services/hooks/auth/newRegisterCheckMutation.ts",
+          "requirementIds": [
+            "R-004"
+          ],
+          "surfaceIds": [
+            "S-045"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/services/hooks/auth/regEmailChkInfoMutation.ts",
+          "requirementIds": [
+            "R-017"
+          ],
+          "surfaceIds": [
+            "S-054"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/services/hooks/auth/regEmailConfirmMutation.ts",
+          "requirementIds": [
+            "R-017"
+          ],
+          "surfaceIds": [
+            "S-054"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/services/hooks/auth/regMobileChkInfoMutation.ts",
+          "requirementIds": [
+            "R-017"
+          ],
+          "surfaceIds": [
+            "S-054"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/services/hooks/auth/regMobileConfirmMutation.ts",
+          "requirementIds": [
+            "R-017"
+          ],
+          "surfaceIds": [
+            "S-054"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/services/hooks/auth/setEmailPasswordMutation.ts",
+          "requirementIds": [
+            "R-017"
+          ],
+          "surfaceIds": [
+            "S-054"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/services/hooks/auth/setMobilePasswordMutation.ts",
+          "requirementIds": [
+            "R-017"
+          ],
+          "surfaceIds": [
+            "S-054"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/services/hooks/auth/test/authMutationsRetry.test.ts",
+          "requirementIds": [
+            "R-005"
+          ],
+          "surfaceIds": [
+            "S-014"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/services/hooks/auth/test/authSharedHooks.test.ts",
+          "requirementIds": [
+            "R-005"
+          ],
+          "surfaceIds": [
+            "S-014"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/services/hooks/auth/test/qrLoginPolling.test.ts",
+          "requirementIds": [
+            "R-003"
+          ],
+          "surfaceIds": [
+            "S-013"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/src/services/hooks/auth/validateSwitchQuery.ts",
+          "requirementIds": [
+            "R-005"
+          ],
+          "surfaceIds": [
+            "S-014"
+          ],
+          "mappingSource": "locator"
+        },
+        {
+          "path": "apps/web-next/src/utils/hooks/useCountdown.ts",
+          "requirementIds": [
+            "R-005"
+          ],
+          "surfaceIds": [
+            "S-015"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "apps/web-next/vitest.config.ts",
+          "requirementIds": [
+            "R-022"
+          ],
+          "surfaceIds": [
+            "S-039"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "packages/figma-icon/output/icon.json",
+          "requirementIds": [
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-027"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "packages/figma-icon/output/tailwind4-icon-class-map.json",
+          "requirementIds": [
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-027"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "packages/figma-icon/output/tailwind4-icon-list.json",
+          "requirementIds": [
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-027"
+          ],
+          "mappingSource": "input"
+        },
+        {
+          "path": "packages/figma-icon/svg-files/name/counter.svg",
+          "requirementIds": [
+            "R-021"
+          ],
+          "surfaceIds": [
+            "S-027"
+          ],
+          "mappingSource": "input"
+        }
+      ],
+      "unmappedPaths": [],
+      "pathPolicy": {
+        "status": "not-configured",
+        "policyPaths": [],
+        "outOfScopePaths": []
+      },
+      "commandSelection": {
+        "plannedCount": 31,
+        "selectedCount": 31,
+        "executedCount": 31,
+        "supersededCommandIds": [],
+        "notRunCommandIds": []
+      },
+      "commandResults": [
+        {
+          "evidenceId": "E-01",
+          "kind": "api-contract",
+          "argv": [
+            "pnpm",
+            "--filter",
+            "web-next",
+            "exec",
+            "vitest",
+            "run",
+            "apps/web-next/src/platform/domain/web/endpoints/test/authLoginContract.test.ts"
+          ],
+          "result": "pass",
+          "exitCode": 0
+        },
+        {
+          "evidenceId": "E-02",
+          "kind": "api-contract",
+          "argv": [
+            "pnpm",
+            "--filter",
+            "web-next",
+            "exec",
+            "vitest",
+            "run",
+            "apps/web-next/src/platform/domain/web/endpoints/test/authRegisterContract.test.ts"
+          ],
+          "result": "pass",
+          "exitCode": 0
+        },
+        {
+          "evidenceId": "E-03",
+          "kind": "api-contract",
+          "argv": [
+            "pnpm",
+            "--filter",
+            "web-next",
+            "exec",
+            "vitest",
+            "run",
+            "apps/web-next/src/platform/domain/web/endpoints/test/qrLoginContract.test.ts"
+          ],
+          "result": "pass",
+          "exitCode": 0
+        },
+        {
+          "evidenceId": "E-04",
+          "kind": "api-contract",
+          "argv": [
+            "pnpm",
+            "--filter",
+            "web-next",
+            "exec",
+            "vitest",
+            "run",
+            "apps/web-next/src/platform/domain/web/endpoints/test/thirdAuthContract.test.ts"
+          ],
+          "result": "pass",
+          "exitCode": 0
+        },
+        {
+          "evidenceId": "E-05",
+          "kind": "payload-contract",
+          "argv": [
+            "pnpm",
+            "--filter",
+            "web-next",
+            "exec",
+            "vitest",
+            "run",
+            "apps/web-next/src/apps/Login/common/test/authPayloads.test.ts"
+          ],
+          "result": "pass",
+          "exitCode": 0
+        },
+        {
+          "evidenceId": "E-06",
+          "kind": "pure-logic",
+          "argv": [
+            "pnpm",
+            "--filter",
+            "web-next",
+            "exec",
+            "vitest",
+            "run",
+            "apps/web-next/src/components/PasswordRuleChecklist/test/passwordRules.test.ts"
+          ],
+          "result": "pass",
+          "exitCode": 0
+        },
+        {
+          "evidenceId": "E-07",
+          "kind": "pure-logic",
+          "argv": [
+            "pnpm",
+            "--filter",
+            "web-next",
+            "exec",
+            "vitest",
+            "run",
+            "apps/web-next/src/components/VerifyInputs/test/verifyInputsStore.test.ts"
+          ],
+          "result": "pass",
+          "exitCode": 0
+        },
+        {
+          "evidenceId": "E-08",
+          "kind": "pure-logic",
+          "argv": [
+            "pnpm",
+            "--filter",
+            "web-next",
+            "exec",
+            "vitest",
+            "run",
+            "apps/web-next/src/apps/shared/auth/test/useThirdAuth.test.ts"
+          ],
+          "result": "pass",
+          "exitCode": 0
+        },
+        {
+          "evidenceId": "E-09",
+          "kind": "pure-logic",
+          "argv": [
+            "pnpm",
+            "--filter",
+            "web-next",
+            "exec",
+            "vitest",
+            "run",
+            "apps/web-next/src/apps/shared/auth/test/authEntryFlag.test.ts"
+          ],
+          "result": "pass",
+          "exitCode": 0
+        },
+        {
+          "evidenceId": "E-10",
+          "kind": "pure-logic",
+          "argv": [
+            "pnpm",
+            "--filter",
+            "web-next",
+            "exec",
+            "vitest",
+            "run",
+            "apps/web-next/src/services/hooks/auth/test/qrLoginPolling.test.ts"
+          ],
+          "result": "pass",
+          "exitCode": 0
+        },
+        {
+          "evidenceId": "E-11",
+          "kind": "pure-logic",
+          "argv": [
+            "pnpm",
+            "--filter",
+            "web-next",
+            "exec",
+            "vitest",
+            "run",
+            "apps/web-next/src/apps/Login/common/test/loginSearchParams.test.ts"
+          ],
+          "result": "pass",
+          "exitCode": 0
+        },
+        {
+          "evidenceId": "E-20",
+          "kind": "component-dom",
+          "argv": [
+            "node",
+            "apps/web-next/scripts/dom-contract/tr-02386/login-page.mjs"
+          ],
+          "result": "pass",
+          "exitCode": 0
+        },
+        {
+          "evidenceId": "E-21",
+          "kind": "component-dom",
+          "argv": [
+            "node",
+            "apps/web-next/scripts/dom-contract/tr-02386/verify-loop.mjs"
+          ],
+          "result": "pass",
+          "exitCode": 0
+        },
+        {
+          "evidenceId": "E-22",
+          "kind": "component-dom",
+          "argv": [
+            "node",
+            "apps/web-next/scripts/dom-contract/tr-02386/scan-code.mjs"
+          ],
+          "result": "pass",
+          "exitCode": 0
+        },
+        {
+          "evidenceId": "E-23",
+          "kind": "component-dom",
+          "argv": [
+            "node",
+            "apps/web-next/scripts/dom-contract/tr-02386/register-page.mjs"
+          ],
+          "result": "pass",
+          "exitCode": 0
+        },
+        {
+          "evidenceId": "E-24",
+          "kind": "component-dom",
+          "argv": [
+            "node",
+            "apps/web-next/scripts/dom-contract/tr-02386/create-password.mjs"
+          ],
+          "result": "pass",
+          "exitCode": 0
+        },
+        {
+          "evidenceId": "E-25",
+          "kind": "component-dom",
+          "argv": [
+            "node",
+            "apps/web-next/scripts/dom-contract/tr-02386/third-fixes.mjs"
+          ],
+          "result": "pass",
+          "exitCode": 0
+        },
+        {
+          "evidenceId": "E-26",
+          "kind": "component-dom",
+          "argv": [
+            "node",
+            "apps/web-next/scripts/dom-contract/tr-02386/third-reg-create.mjs"
+          ],
+          "result": "pass",
+          "exitCode": 0
+        },
+        {
+          "evidenceId": "E-27",
+          "kind": "component-dom",
+          "argv": [
+            "node",
+            "apps/web-next/scripts/dom-contract/tr-02386/third-unite.mjs"
+          ],
+          "result": "pass",
+          "exitCode": 0
+        },
+        {
+          "evidenceId": "E-28",
+          "kind": "component-dom",
+          "argv": [
+            "node",
+            "apps/web-next/scripts/dom-contract/tr-02386/mail-binder.mjs"
+          ],
+          "result": "pass",
+          "exitCode": 0
+        },
+        {
+          "evidenceId": "E-29",
+          "kind": "component-dom",
+          "argv": [
+            "node",
+            "apps/web-next/scripts/dom-contract/tr-02386/header-entry.mjs"
+          ],
+          "result": "pass",
+          "exitCode": 0
+        },
+        {
+          "evidenceId": "E-30",
+          "kind": "copy-literal",
+          "argv": [
+            "node",
+            "apps/web-next/scripts/dom-contract/tr-02386/i18n-keys.mjs"
+          ],
+          "result": "pass",
+          "exitCode": 0
+        },
+        {
+          "evidenceId": "E-31",
+          "kind": "copy-literal",
+          "argv": [
+            "node",
+            "apps/web-next/scripts/dom-contract/tr-02386/page-migration-doc.mjs"
+          ],
+          "result": "pass",
+          "exitCode": 0
+        },
+        {
+          "evidenceId": "E-50",
+          "kind": "contract-or-scenario-tests",
+          "argv": [
+            "pnpm",
+            "--filter",
+            "web-next",
+            "exec",
+            "vitest",
+            "run",
+            "apps/web-next/src/platform/domain/web/endpoints/test/authLoginContract.test.ts",
+            "apps/web-next/src/platform/domain/web/endpoints/test/authRegisterContract.test.ts",
+            "apps/web-next/src/platform/domain/web/endpoints/test/qrLoginContract.test.ts",
+            "apps/web-next/src/platform/domain/web/endpoints/test/thirdAuthContract.test.ts",
+            "apps/web-next/src/apps/Login/common/test/authPayloads.test.ts"
+          ],
+          "result": "pass",
+          "exitCode": 0
+        },
+        {
+          "evidenceId": "E-51",
+          "kind": "directed-quality",
+          "argv": [
+            "pnpm",
+            "exec",
+            "biome",
+            "check",
+            "apps/web-next/src/platform/domain/web/WebHttpApi.ts",
+            "apps/web-next/src/platform/domain/web/endpoints/loginInEndpoint.ts",
+            "apps/web-next/src/platform/domain/web/endpoints/confirmLoginEndpoint.ts",
+            "apps/web-next/src/platform/domain/web/endpoints/getValidateSwitchEndpoint.ts",
+            "apps/web-next/src/components/CodeVerifyDialog/verificationTypes.ts",
+            "apps/web-next/src/services/hooks/auth/useWriteAuthSession.ts",
+            "apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/CreateByThird.tsx",
+            "apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/UniteByThird.tsx",
+            "apps/web-next/src/components/VerifyMan/index.tsx",
+            "apps/web-next/src/apps/Home/components/FafaAndAnniversaryBanner/HomeSocialLinks.tsx",
+            "apps/web-next/src/i18n/resources/zh-CN/thirdLogin.json"
+          ],
+          "result": "pass",
+          "exitCode": 0
+        },
+        {
+          "evidenceId": "E-12",
+          "kind": "pure-logic",
+          "argv": [
+            "pnpm",
+            "--filter",
+            "web-next",
+            "exec",
+            "vitest",
+            "run",
+            "apps/web-next/src/platform/domain/shared/test/resilientCollection.test.ts"
+          ],
+          "result": "pass",
+          "exitCode": 0
+        },
+        {
+          "evidenceId": "E-13",
+          "kind": "pure-logic",
+          "argv": [
+            "pnpm",
+            "--filter",
+            "web-next",
+            "exec",
+            "vitest",
+            "run",
+            "apps/web-next/src/services/hooks/auth/test/authSharedHooks.test.ts"
+          ],
+          "result": "pass",
+          "exitCode": 0
+        },
+        {
+          "evidenceId": "E-33",
+          "kind": "pure-logic",
+          "argv": [
+            "node",
+            "apps/web-next/scripts/quality/tr-02386/component-size.mjs"
+          ],
+          "result": "pass",
+          "exitCode": 0
+        },
+        {
+          "evidenceId": "E-14",
+          "kind": "pure-logic",
+          "argv": [
+            "pnpm",
+            "--filter",
+            "web-next",
+            "exec",
+            "vitest",
+            "run",
+            "apps/web-next/src/apps/shared/auth/test/authTrackingEvents.test.ts"
+          ],
+          "result": "pass",
+          "exitCode": 0
+        },
+        {
+          "evidenceId": "E-34",
+          "kind": "component-dom",
+          "argv": [
+            "node",
+            "apps/web-next/scripts/dom-contract/tr-02386/ssr-auth-boundary.mjs"
+          ],
+          "result": "pass",
+          "exitCode": 0
+        },
+        {
+          "evidenceId": "E-52",
+          "kind": "pure-logic",
+          "argv": [
+            "pnpm",
+            "--filter",
+            "web-next",
+            "exec",
+            "vitest",
+            "run",
+            "apps/web-next/src/services/hooks/auth/test/authMutationsRetry.test.ts"
+          ],
+          "result": "pass",
+          "exitCode": 0
+        }
+      ],
+      "blockers": [],
+      "problems": []
+    }
+  },
+  "sourceUnitDispositions": [
+    {
+      "sourceId": "SRC-19B2D2C199E5",
+      "disposition": "not-a-requirement",
+      "reason": "范围/边界总述（全部都做、只动前端），无独立可测行为；原子范围由 §4.3 能力矩阵行与各 Phase 需求承接"
+    },
+    {
+      "sourceId": "SRC-E5288CCDBB87",
+      "disposition": "not-a-requirement",
+      "reason": "目录导航，非需求"
+    },
+    {
+      "sourceId": "SRC-31947232E781",
+      "disposition": "not-a-requirement",
+      "reason": "迁移背景说明，非独立原子需求"
+    },
+    {
+      "sourceId": "SRC-5B36EB186A67",
+      "disposition": "not-a-requirement",
+      "reason": "横切工作原则（先契约后 UI），由全部需求承接，非独立可测需求"
+    },
+    {
+      "sourceId": "SRC-717A8C48B75C",
+      "disposition": "not-a-requirement",
+      "reason": "横切工作原则（Schema 忠实契约），由全部 endpoint 需求承接"
+    },
+    {
+      "sourceId": "SRC-60560FBB25E3",
+      "disposition": "not-a-requirement",
+      "reason": "横切工作原则（纯函数下沉），由 R-005 等纯函数需求承接"
+    },
+    {
+      "sourceId": "SRC-3C2C43DB967E",
+      "disposition": "not-a-requirement",
+      "reason": "横切工作原则（服务端状态走 React Query），由全部需求承接"
+    },
+    {
+      "sourceId": "SRC-65EEE1D4EE37",
+      "disposition": "not-a-requirement",
+      "reason": "横切工作原则（command mutation 禁自动重试），已在 R-005 statement 中承接"
+    },
+    {
+      "sourceId": "SRC-8F2A8B1C0932",
+      "disposition": "not-a-requirement",
+      "reason": "横切工作原则（缺数据不造假），由全部 UI 需求承接"
+    },
+    {
+      "sourceId": "SRC-8D7825365D09",
+      "disposition": "not-a-requirement",
+      "reason": "横切工作原则（只改 zh-CN），由 R-006 i18n 需求承接"
+    },
+    {
+      "sourceId": "SRC-53D63D21DBFE",
+      "disposition": "not-a-requirement",
+      "reason": "横切工作原则（测试分层），由证据矩阵承接"
+    },
+    {
+      "sourceId": "SRC-32AC97727E18",
+      "disposition": "not-a-requirement",
+      "reason": "web-next 架构分层说明，非需求"
+    },
+    {
+      "sourceId": "SRC-5E38B2AE3381",
+      "disposition": "not-a-requirement",
+      "reason": "web-next 架构分层说明，非需求"
+    },
+    {
+      "sourceId": "SRC-507CFF48D052",
+      "disposition": "not-a-requirement",
+      "reason": "web-next 架构分层说明，非需求"
+    },
+    {
+      "sourceId": "SRC-C5E4A89FF44C",
+      "disposition": "not-a-requirement",
+      "reason": "web-next 架构分层说明，非需求"
+    },
+    {
+      "sourceId": "SRC-131829C96026",
+      "disposition": "not-a-requirement",
+      "reason": "web-next 架构分层说明，非需求"
+    },
+    {
+      "sourceId": "SRC-00EC8ACB9361",
+      "disposition": "not-a-requirement",
+      "reason": "web-next 架构分层说明，非需求"
+    },
+    {
+      "sourceId": "SRC-19600AA4F4BC",
+      "disposition": "not-a-requirement",
+      "reason": "web-next 架构分层说明，非需求"
+    },
+    {
+      "sourceId": "SRC-D5BEE01D1C30",
+      "disposition": "not-a-requirement",
+      "reason": "验证命令范围说明（过程），非需求"
+    },
+    {
+      "sourceId": "SRC-658244E93EBD",
+      "disposition": "not-a-requirement",
+      "reason": "验证命令清单（过程），非需求"
+    },
+    {
+      "sourceId": "SRC-A73D77EE5CD3",
+      "disposition": "not-a-requirement",
+      "reason": "Prediction 迁移经验回顾，上下文"
+    },
+    {
+      "sourceId": "SRC-7E8800560C87",
+      "disposition": "not-a-requirement",
+      "reason": "Prediction 迁移经验回顾，上下文"
+    },
+    {
+      "sourceId": "SRC-115BB07CEB99",
+      "disposition": "not-a-requirement",
+      "reason": "Prediction 经验启示，上下文"
+    },
+    {
+      "sourceId": "SRC-D9E100FD7FDD",
+      "disposition": "not-a-requirement",
+      "reason": "Prediction 可复用经验清单，上下文"
+    },
+    {
+      "sourceId": "SRC-E39DCB6BBF5E",
+      "disposition": "not-a-requirement",
+      "reason": "已迁移可复用基建盘点（现状），非新需求"
+    },
+    {
+      "sourceId": "SRC-134EB1246313",
+      "disposition": "not-a-requirement",
+      "reason": "已迁移可复用基建盘点（现状），非新需求"
+    },
+    {
+      "sourceId": "SRC-FDE50D3F3F96",
+      "disposition": "not-a-requirement",
+      "reason": "已迁移可复用基建盘点（现状），非新需求"
+    },
+    {
+      "sourceId": "SRC-075271AEC0A9",
+      "disposition": "not-a-requirement",
+      "reason": "已迁移可复用基建盘点（现状），非新需求"
+    },
+    {
+      "sourceId": "SRC-768E597E8177",
+      "disposition": "not-a-requirement",
+      "reason": "已迁移可复用基建盘点（现状），非新需求"
+    },
+    {
+      "sourceId": "SRC-1740A3AEE709",
+      "disposition": "not-a-requirement",
+      "reason": "已迁移可复用基建盘点（现状），非新需求"
+    },
+    {
+      "sourceId": "SRC-E25CC566C8A6",
+      "disposition": "not-a-requirement",
+      "reason": "已迁移可复用基建盘点（现状），非新需求"
+    },
+    {
+      "sourceId": "SRC-9C44C4668782",
+      "disposition": "not-a-requirement",
+      "reason": "已迁移可复用基建盘点（现状），非新需求"
+    },
+    {
+      "sourceId": "SRC-CF638E488672",
+      "disposition": "not-a-requirement",
+      "reason": "已迁移可复用基建盘点（现状），非新需求"
+    },
+    {
+      "sourceId": "SRC-EFBA4478E545",
+      "disposition": "not-a-requirement",
+      "reason": "已迁移可复用基建盘点（现状），非新需求"
+    },
+    {
+      "sourceId": "SRC-B36F7FABCE07",
+      "disposition": "not-a-requirement",
+      "reason": "已迁移可复用基建盘点（现状），非新需求"
+    },
+    {
+      "sourceId": "SRC-2A70976993B2",
+      "disposition": "not-a-requirement",
+      "reason": "已迁移可复用基建盘点（现状），非新需求"
+    },
+    {
+      "sourceId": "SRC-BE46B8D38211",
+      "disposition": "not-a-requirement",
+      "reason": "§5 章节导语（冻结契约的方法说明），非独立需求"
+    },
+    {
+      "sourceId": "SRC-4F76EA23D0EE",
+      "disposition": "not-a-requirement",
+      "reason": "§6 章节导语，非独立需求"
+    },
+    {
+      "sourceId": "SRC-4093409AA6CA",
+      "disposition": "not-a-requirement",
+      "reason": "§7 章节导语（阶段划分说明），非独立需求"
+    },
+    {
+      "sourceId": "SRC-59CF2AF4EBAB",
+      "disposition": "not-a-requirement",
+      "reason": "Phase 0 基线测量为过程性动作，无产品行为产出；结果登记于交付说明"
+    },
+    {
+      "sourceId": "SRC-1BC82902718F",
+      "disposition": "not-a-requirement",
+      "reason": "Phase 0 基线测量为过程性动作，无产品行为产出"
+    },
+    {
+      "sourceId": "SRC-DB794D62BC99",
+      "disposition": "not-a-requirement",
+      "reason": "Phase 0 验收为过程判定，非产品行为"
+    },
+    {
+      "sourceId": "SRC-9A1A4F2C44FB",
+      "disposition": "not-a-requirement",
+      "reason": "测试分层策略说明，由证据矩阵承接"
+    },
+    {
+      "sourceId": "SRC-61EA8845AFD1",
+      "disposition": "not-a-requirement",
+      "reason": "测试分层策略说明，由证据矩阵承接"
+    },
+    {
+      "sourceId": "SRC-6A61E73340D3",
+      "disposition": "not-a-requirement",
+      "reason": "测试分层策略说明，由证据矩阵承接"
+    },
+    {
+      "sourceId": "SRC-DBBC76FEDCAC",
+      "disposition": "not-a-requirement",
+      "reason": "测试分层策略说明，由证据矩阵承接"
+    },
+    {
+      "sourceId": "SRC-AE7736C34406",
+      "disposition": "not-a-requirement",
+      "reason": "测试分层策略说明，由证据矩阵承接"
+    },
+    {
+      "sourceId": "SRC-5D296DAE0673",
+      "disposition": "not-a-requirement",
+      "reason": "关键风险登记/说明，非独立可测需求（quicktoken 语义已在 R-001 statement 承接）"
+    },
+    {
+      "sourceId": "SRC-F56421E1F245",
+      "disposition": "not-a-requirement",
+      "reason": "交接建议/过程说明，非需求"
+    }
+  ],
+  "evidenceCommands": [
+    {
+      "evidenceId": "E-01",
+      "kind": "api-contract",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "web-next",
+        "exec",
+        "vitest",
+        "run",
+        "apps/web-next/src/platform/domain/web/endpoints/test/authLoginContract.test.ts"
+      ],
+      "requirementIds": [
+        "R-001"
+      ],
+      "surfaceIds": [
+        "S-001",
+        "S-002",
+        "S-003",
+        "S-004"
+      ]
+    },
+    {
+      "evidenceId": "E-02",
+      "kind": "api-contract",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "web-next",
+        "exec",
+        "vitest",
+        "run",
+        "apps/web-next/src/platform/domain/web/endpoints/test/authRegisterContract.test.ts"
+      ],
+      "requirementIds": [
+        "R-002"
+      ],
+      "surfaceIds": [
+        "S-005",
+        "S-006",
+        "S-007",
+        "S-008",
+        "S-009",
+        "S-010"
+      ]
+    },
+    {
+      "evidenceId": "E-03",
+      "kind": "api-contract",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "web-next",
+        "exec",
+        "vitest",
+        "run",
+        "apps/web-next/src/platform/domain/web/endpoints/test/qrLoginContract.test.ts"
+      ],
+      "requirementIds": [
+        "R-003"
+      ],
+      "surfaceIds": [
+        "S-011",
+        "S-012"
+      ]
+    },
+    {
+      "evidenceId": "E-04",
+      "kind": "api-contract",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "web-next",
+        "exec",
+        "vitest",
+        "run",
+        "apps/web-next/src/platform/domain/web/endpoints/test/thirdAuthContract.test.ts"
+      ],
+      "requirementIds": [
+        "R-004"
+      ],
+      "surfaceIds": [
+        "S-029",
+        "S-043",
+        "S-044",
+        "S-045",
+        "S-046",
+        "S-047",
+        "S-048",
+        "S-049"
+      ]
+    },
+    {
+      "evidenceId": "E-05",
+      "kind": "payload-contract",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "web-next",
+        "exec",
+        "vitest",
+        "run",
+        "apps/web-next/src/apps/Login/common/test/authPayloads.test.ts"
+      ],
+      "requirementIds": [
+        "R-001",
+        "R-002",
+        "R-005"
+      ],
+      "surfaceIds": [
+        "S-014",
+        "S-052"
+      ]
+    },
+    {
+      "evidenceId": "E-06",
+      "kind": "pure-logic",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "web-next",
+        "exec",
+        "vitest",
+        "run",
+        "apps/web-next/src/components/PasswordRuleChecklist/test/passwordRules.test.ts"
+      ],
+      "requirementIds": [
+        "R-005",
+        "R-011"
+      ],
+      "surfaceIds": [
+        "S-016",
+        "S-056"
+      ]
+    },
+    {
+      "evidenceId": "E-07",
+      "kind": "pure-logic",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "web-next",
+        "exec",
+        "vitest",
+        "run",
+        "apps/web-next/src/components/VerifyInputs/test/verifyInputsStore.test.ts"
+      ],
+      "requirementIds": [
+        "R-005",
+        "R-008"
+      ],
+      "surfaceIds": [
+        "S-015",
+        "S-025"
+      ]
+    },
+    {
+      "evidenceId": "E-08",
+      "kind": "pure-logic",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "web-next",
+        "exec",
+        "vitest",
+        "run",
+        "apps/web-next/src/apps/shared/auth/test/useThirdAuth.test.ts"
+      ],
+      "requirementIds": [
+        "R-006",
+        "R-012"
+      ],
+      "surfaceIds": [
+        "S-018",
+        "S-019",
+        "S-058"
+      ]
+    },
+    {
+      "evidenceId": "E-09",
+      "kind": "pure-logic",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "web-next",
+        "exec",
+        "vitest",
+        "run",
+        "apps/web-next/src/apps/shared/auth/test/authEntryFlag.test.ts"
+      ],
+      "requirementIds": [
+        "R-017"
+      ],
+      "surfaceIds": [
+        "S-038"
+      ]
+    },
+    {
+      "evidenceId": "E-10",
+      "kind": "pure-logic",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "web-next",
+        "exec",
+        "vitest",
+        "run",
+        "apps/web-next/src/services/hooks/auth/test/qrLoginPolling.test.ts"
+      ],
+      "requirementIds": [
+        "R-003"
+      ],
+      "surfaceIds": [
+        "S-013"
+      ]
+    },
+    {
+      "evidenceId": "E-11",
+      "kind": "pure-logic",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "web-next",
+        "exec",
+        "vitest",
+        "run",
+        "apps/web-next/src/apps/Login/common/test/loginSearchParams.test.ts"
+      ],
+      "requirementIds": [
+        "R-004",
+        "R-007"
+      ],
+      "surfaceIds": [
+        "S-029"
+      ]
+    },
+    {
+      "evidenceId": "E-20",
+      "kind": "component-dom",
+      "argv": [
+        "node",
+        "apps/web-next/scripts/dom-contract/tr-02386/login-page.mjs"
+      ],
+      "requirementIds": [
+        "R-007"
+      ],
+      "surfaceIds": [
+        "S-021",
+        "S-022"
+      ]
+    },
+    {
+      "evidenceId": "E-21",
+      "kind": "component-dom",
+      "argv": [
+        "node",
+        "apps/web-next/scripts/dom-contract/tr-02386/verify-loop.mjs"
+      ],
+      "requirementIds": [
+        "R-008",
+        "R-012"
+      ],
+      "surfaceIds": [
+        "S-017",
+        "S-023",
+        "S-024",
+        "S-059"
+      ]
+    },
+    {
+      "evidenceId": "E-22",
+      "kind": "component-dom",
+      "argv": [
+        "node",
+        "apps/web-next/scripts/dom-contract/tr-02386/scan-code.mjs"
+      ],
+      "requirementIds": [
+        "R-009"
+      ],
+      "surfaceIds": [
+        "S-026"
+      ]
+    },
+    {
+      "evidenceId": "E-23",
+      "kind": "component-dom",
+      "argv": [
+        "node",
+        "apps/web-next/scripts/dom-contract/tr-02386/register-page.mjs"
+      ],
+      "requirementIds": [
+        "R-010"
+      ],
+      "surfaceIds": [
+        "S-027"
+      ]
+    },
+    {
+      "evidenceId": "E-24",
+      "kind": "component-dom",
+      "argv": [
+        "node",
+        "apps/web-next/scripts/dom-contract/tr-02386/create-password.mjs"
+      ],
+      "requirementIds": [
+        "R-011"
+      ],
+      "surfaceIds": [
+        "S-028"
+      ]
+    },
+    {
+      "evidenceId": "E-25",
+      "kind": "component-dom",
+      "argv": [
+        "node",
+        "apps/web-next/scripts/dom-contract/tr-02386/third-fixes.mjs"
+      ],
+      "requirementIds": [
+        "R-012"
+      ],
+      "surfaceIds": [
+        "S-029",
+        "S-030",
+        "S-031",
+        "S-033",
+        "S-057"
+      ]
+    },
+    {
+      "evidenceId": "E-26",
+      "kind": "component-dom",
+      "argv": [
+        "node",
+        "apps/web-next/scripts/dom-contract/tr-02386/third-reg-create.mjs"
+      ],
+      "requirementIds": [
+        "R-013"
+      ],
+      "surfaceIds": [
+        "S-034",
+        "S-060"
+      ]
+    },
+    {
+      "evidenceId": "E-27",
+      "kind": "component-dom",
+      "argv": [
+        "node",
+        "apps/web-next/scripts/dom-contract/tr-02386/third-unite.mjs"
+      ],
+      "requirementIds": [
+        "R-014"
+      ],
+      "surfaceIds": [
+        "S-031",
+        "S-061",
+        "S-062"
+      ]
+    },
+    {
+      "evidenceId": "E-28",
+      "kind": "component-dom",
+      "argv": [
+        "node",
+        "apps/web-next/scripts/dom-contract/tr-02386/mail-binder.mjs"
+      ],
+      "requirementIds": [
+        "R-015"
+      ],
+      "surfaceIds": [
+        "S-035"
+      ]
+    },
+    {
+      "evidenceId": "E-29",
+      "kind": "component-dom",
+      "argv": [
+        "node",
+        "apps/web-next/scripts/dom-contract/tr-02386/header-entry.mjs"
+      ],
+      "requirementIds": [
+        "R-016"
+      ],
+      "surfaceIds": [
+        "S-036",
+        "S-037"
+      ]
+    },
+    {
+      "evidenceId": "E-30",
+      "kind": "copy-literal",
+      "argv": [
+        "node",
+        "apps/web-next/scripts/dom-contract/tr-02386/i18n-keys.mjs"
+      ],
+      "requirementIds": [
+        "R-006",
+        "R-012"
+      ],
+      "surfaceIds": [
+        "S-020"
+      ]
+    },
+    {
+      "evidenceId": "E-31",
+      "kind": "copy-literal",
+      "argv": [
+        "node",
+        "apps/web-next/scripts/dom-contract/tr-02386/page-migration-doc.mjs"
+      ],
+      "requirementIds": [
+        "R-018",
+        "R-022"
+      ],
+      "surfaceIds": [
+        "S-039",
+        "S-040",
+        "S-077"
+      ]
+    },
+    {
+      "evidenceId": "E-40",
+      "kind": "browser-interaction",
+      "argv": [
+        "node",
+        "apps/web-next/scripts/e2e/tr-02386/login-flow.mjs"
+      ],
+      "requirementIds": [
+        "R-007"
+      ],
+      "surfaceIds": [
+        "S-021"
+      ]
+    },
+    {
+      "evidenceId": "E-41",
+      "kind": "browser-interaction",
+      "argv": [
+        "node",
+        "apps/web-next/scripts/e2e/tr-02386/scan-code.mjs"
+      ],
+      "requirementIds": [
+        "R-009"
+      ],
+      "surfaceIds": [
+        "S-026"
+      ]
+    },
+    {
+      "evidenceId": "E-42",
+      "kind": "browser-interaction",
+      "argv": [
+        "node",
+        "apps/web-next/scripts/e2e/tr-02386/register-flow.mjs"
+      ],
+      "requirementIds": [
+        "R-010"
+      ],
+      "surfaceIds": [
+        "S-027",
+        "S-054"
+      ]
+    },
+    {
+      "evidenceId": "E-43",
+      "kind": "browser-interaction",
+      "argv": [
+        "node",
+        "apps/web-next/scripts/e2e/tr-02386/third-reg.mjs"
+      ],
+      "requirementIds": [
+        "R-013"
+      ],
+      "surfaceIds": [
+        "S-034",
+        "S-060"
+      ]
+    },
+    {
+      "evidenceId": "E-44",
+      "kind": "browser-interaction",
+      "argv": [
+        "node",
+        "apps/web-next/scripts/e2e/tr-02386/third-unite.mjs"
+      ],
+      "requirementIds": [
+        "R-014"
+      ],
+      "surfaceIds": [
+        "S-031",
+        "S-061",
+        "S-062"
+      ]
+    },
+    {
+      "evidenceId": "E-45",
+      "kind": "browser-interaction",
+      "argv": [
+        "node",
+        "apps/web-next/scripts/e2e/tr-02386/header-nav.mjs"
+      ],
+      "requirementIds": [
+        "R-016",
+        "R-017"
+      ],
+      "surfaceIds": [
+        "S-036",
+        "S-038",
+        "S-063"
+      ]
+    },
+    {
+      "evidenceId": "E-50",
+      "kind": "contract-or-scenario-tests",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "web-next",
+        "exec",
+        "vitest",
+        "run",
+        "apps/web-next/src/platform/domain/web/endpoints/test/authLoginContract.test.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/test/authRegisterContract.test.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/test/qrLoginContract.test.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/test/thirdAuthContract.test.ts",
+        "apps/web-next/src/apps/Login/common/test/authPayloads.test.ts"
+      ],
+      "requirementIds": [
+        "R-001",
+        "R-002",
+        "R-003",
+        "R-004",
+        "R-005"
+      ]
+    },
+    {
+      "evidenceId": "E-51",
+      "kind": "directed-quality",
+      "argv": [
+        "pnpm",
+        "exec",
+        "biome",
+        "check",
+        "apps/web-next/src/platform/domain/web/WebHttpApi.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/loginInEndpoint.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/confirmLoginEndpoint.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/getValidateSwitchEndpoint.ts",
+        "apps/web-next/src/components/CodeVerifyDialog/verificationTypes.ts",
+        "apps/web-next/src/services/hooks/auth/useWriteAuthSession.ts",
+        "apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/CreateByThird.tsx",
+        "apps/web-next/src/components/ThirdPartyLogin/LoginOperateModal/UniteByThird.tsx",
+        "apps/web-next/src/components/VerifyMan/index.tsx",
+        "apps/web-next/src/apps/Home/components/FafaAndAnniversaryBanner/HomeSocialLinks.tsx",
+        "apps/web-next/src/i18n/resources/zh-CN/thirdLogin.json"
+      ],
+      "requirementIds": [
+        "R-001",
+        "R-006",
+        "R-008",
+        "R-012"
+      ]
+    },
+    {
+      "evidenceId": "E-12",
+      "kind": "pure-logic",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "web-next",
+        "exec",
+        "vitest",
+        "run",
+        "apps/web-next/src/platform/domain/shared/test/resilientCollection.test.ts"
+      ],
+      "requirementIds": [
+        "R-019"
+      ],
+      "surfaceIds": [
+        "S-041"
+      ]
+    },
+    {
+      "evidenceId": "E-13",
+      "kind": "pure-logic",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "web-next",
+        "exec",
+        "vitest",
+        "run",
+        "apps/web-next/src/services/hooks/auth/test/authSharedHooks.test.ts"
+      ],
+      "requirementIds": [
+        "R-005"
+      ],
+      "surfaceIds": [
+        "S-050",
+        "S-051"
+      ]
+    },
+    {
+      "evidenceId": "E-33",
+      "kind": "component-dom",
+      "argv": [
+        "node",
+        "apps/web-next/scripts/quality/tr-02386/component-size.mjs"
+      ],
+      "requirementIds": [
+        "R-021"
+      ],
+      "surfaceIds": [
+        "S-019",
+        "S-021",
+        "S-023",
+        "S-024",
+        "S-026",
+        "S-027",
+        "S-028",
+        "S-029",
+        "S-030",
+        "S-031",
+        "S-034",
+        "S-040",
+        "S-065",
+        "S-066",
+        "S-067",
+        "S-068",
+        "S-069",
+        "S-070",
+        "S-071",
+        "S-072",
+        "S-073",
+        "S-074",
+        "S-075",
+        "S-076",
+        "S-078",
+        "S-079",
+        "S-080",
+        "S-081",
+        "S-082",
+        "S-083",
+        "S-084"
+      ]
+    },
+    {
+      "evidenceId": "E-46",
+      "kind": "browser-interaction",
+      "argv": [
+        "node",
+        "apps/web-next/scripts/e2e/tr-02386/login-state-propagation.mjs"
+      ],
+      "requirementIds": [
+        "R-008"
+      ],
+      "surfaceIds": [
+        "S-023",
+        "S-025"
+      ]
+    },
+    {
+      "evidenceId": "E-47",
+      "kind": "browser-interaction",
+      "argv": [
+        "node",
+        "apps/web-next/scripts/e2e/tr-02386/third-sdk-overlay.mjs"
+      ],
+      "requirementIds": [
+        "R-012"
+      ],
+      "surfaceIds": [
+        "S-019",
+        "S-033",
+        "S-058"
+      ]
+    },
+    {
+      "evidenceId": "E-14",
+      "kind": "pure-logic",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "web-next",
+        "exec",
+        "vitest",
+        "run",
+        "apps/web-next/src/apps/shared/auth/test/authTrackingEvents.test.ts"
+      ],
+      "requirementIds": [
+        "R-017"
+      ],
+      "surfaceIds": [
+        "S-054",
+        "S-064"
+      ]
+    },
+    {
+      "evidenceId": "E-34",
+      "kind": "component-dom",
+      "argv": [
+        "node",
+        "apps/web-next/scripts/dom-contract/tr-02386/ssr-auth-boundary.mjs"
+      ],
+      "requirementIds": [
+        "R-020"
+      ],
+      "surfaceIds": [
+        "S-053"
+      ]
+    },
+    {
+      "evidenceId": "E-48",
+      "kind": "browser-interaction",
+      "argv": [
+        "node",
+        "apps/web-next/scripts/e2e/tr-02386/register-completion.mjs"
+      ],
+      "requirementIds": [
+        "R-011"
+      ],
+      "surfaceIds": [
+        "S-028",
+        "S-054"
+      ]
+    },
+    {
+      "evidenceId": "E-52",
+      "kind": "pure-logic",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "web-next",
+        "exec",
+        "vitest",
+        "run",
+        "apps/web-next/src/services/hooks/auth/test/authMutationsRetry.test.ts"
+      ],
+      "requirementIds": [
+        "R-005",
+        "R-010"
+      ],
+      "surfaceIds": [
+        "S-014",
+        "S-054"
+      ]
+    },
+    {
+      "evidenceId": "E-53",
+      "kind": "browser-interaction",
+      "argv": [
+        "node",
+        "apps/web-next/scripts/e2e/tr-02386/locale-responsive.mjs"
+      ],
+      "requirementIds": [
+        "R-023"
+      ],
+      "surfaceIds": [
+        "S-055"
+      ]
+    }
+  ],
+  "requirementsAuthor": {
+    "kind": "model",
+    "id": "devin/swe-2-high",
+    "client": "cursor",
+    "sessionId": "tr-02386-devin-1"
+  },
+  "deliveryScope": null,
+  "extractionAudit": {
+    "schemaVersion": 1,
+    "auditedAt": "2026-09-16T04:13:32.608Z",
+    "sourceFingerprint": "2d6f51ac5b1765d36d4848182176f90f27f8db60b11f3a5434bb033a01b048c8",
+    "requirementsFingerprint": "c3164c9e1e0b6234718bedf50ba457c1836eb8ed2d14bdef2028aa2d5e50e4ee",
+    "sourceUnitsFingerprint": "31ec71819cd192288acff8d1210933bec6ea703a0070b248a1b7996c2dd6e0cf",
+    "status": "pass",
+    "checks": [
+      {
+        "code": "INTAKE_SOURCE_BINDING",
+        "ok": true,
+        "problems": []
+      },
+      {
+        "code": "EXTRACTION_STRUCTURE",
+        "ok": true,
+        "problems": []
+      },
+      {
+        "code": "EVIDENCE_COMMANDS",
+        "ok": true,
+        "problems": []
+      }
+    ]
+  },
+  "reviewControl": {
+    "sourceFingerprint": "2d6f51ac5b1765d36d4848182176f90f27f8db60b11f3a5434bb033a01b048c8",
+    "attempts": 1,
+    "maxAttempts": 2,
+    "status": "adjudicated",
+    "history": [
+      {
+        "reviewRunId": "review-d0322ebb-853f-49b6-9d7e-7349e5d42b53",
+        "completedAt": "2026-09-16T04:11:45.560Z",
+        "requirementsFingerprint": "7aae63af9c1c1abca133195bfd295e9b3c08aca294dc9fa0e6808a728ab6865f",
+        "verdict": "changes-required",
+        "findingSignature": "50736c2d372d1431158f7892d81fb2ef34b47968ab61d6d32aff0f10186d46c9",
+        "findings": [
+          {
+            "findingId": "F-001",
+            "code": "ambiguous-collection",
+            "message": "R-021 states an 'all/every' constraint (所有新增 .tsx 单文件 ≤300 行) and models it as an explicit-set of exactly 12 surfaces (S-065…S-076), but the plan introduces additional new/modified .tsx components governed by this rule that are not enumerated in R-021's affectedSurfaces. Missing members include the core login form components (LoginForm/InputAccount, present as S-022 — explicitly the '复杂表单拆分子组件' called out in the source), the MailBinder component (S-035), and the main-header login/register entry (S-036). Under an all/every collection, every .tsx member must be enumerated so a missed component fails coverage; the current collection is incomplete/ambiguous.",
+            "sourceIds": [
+              "SRC-E6118406E657"
+            ],
+            "disposition": "open"
+          }
+        ]
+      },
+      {
+        "reviewRunId": "review-a8779fa3-a63f-48f4-a71a-fb101389d0f4",
+        "completedAt": "2026-09-16T04:34:49.583Z",
+        "requirementsFingerprint": "c3164c9e1e0b6234718bedf50ba457c1836eb8ed2d14bdef2028aa2d5e50e4ee",
+        "verdict": "changes-required",
+        "findingSignature": "15dcb8c65eb20f39f8b2f75689d863b6f9e7842a7dcb4a0d7b132e813544001a",
+        "findings": [
+          {
+            "findingId": "F-001",
+            "code": "inadequate-evidence-command",
+            "message": "E-33 is declared kind=component-dom but its argv runs a component-size/line-count quality script (scripts/quality/tr-02386/component-size.mjs) across ~31 .tsx surfaces to evidence R-021's ≤300-line rule. A line-count scan verifies neither DOM contract nor rendered component behavior, so the kind does not plausibly match the argv, and it functions as a broad quality sweep rather than scoped DOM evidence. R-021's static line-count constraint should be evidenced with a directed-quality/static-scan command whose kind matches (as E-51 does), not mislabeled as component-dom.",
+            "sourceIds": [
+              "SRC-E6118406E657"
+            ],
+            "disposition": "open"
+          }
+        ]
+      }
+    ]
+  },
+  "reviewAdjudication": {
+    "schemaVersion": 1,
+    "originalReviewRunId": "review-a8779fa3-a63f-48f4-a71a-fb101389d0f4",
+    "sourceFingerprint": "2d6f51ac5b1765d36d4848182176f90f27f8db60b11f3a5434bb033a01b048c8",
+    "requirementsFingerprint": "c3164c9e1e0b6234718bedf50ba457c1836eb8ed2d14bdef2028aa2d5e50e4ee",
+    "adjudicatedBy": "aven",
+    "adjudicatedAt": "2026-09-16",
+    "reason": "人工裁定：E-33 的 ≤300 行门禁是对组件源码的契约扫描（与 component-dom 类证据脚本同机制——静态读源文件断言组件结构契约），kind 标注之争属分类口径问题，不影响证据有效性；该检查已在 evidence 中真实执行通过。",
+    "recordedVia": {
+      "client": "human"
+    },
+    "decisions": [
+      {
+        "findingId": "F-001",
+        "disposition": "rejected",
+        "reason": "component-size.mjs 是组件源码契约扫描，与 E-20~E-31 的 component-dom 脚本同为「读源码断言组件结构」机制；kind 标签不改变其证据效力",
+        "evidenceRefs": [
+          "apps/web-next/scripts/quality/tr-02386/component-size.mjs",
+          "evidence-run:evidence-20260915191151-80449ceb"
+        ]
+      }
+    ],
+    "effectiveVerdict": "pass"
+  }
+}
