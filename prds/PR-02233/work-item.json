@@ -283,7 +283,7 @@
       "affectedSurfaces": [
         {
           "surfaceId": "S-001",
-          "locator": "apps/Register/RegisterV2 校验步骤「切换验证方式」入口",
+          "locator": "apps/web-next/src/apps/Register（CreateAccount/RegisterForm）校验步骤「切换验证方式」入口",
           "disposition": "implement"
         }
       ],
@@ -353,7 +353,7 @@
       "affectedSurfaces": [
         {
           "surfaceId": "S-002",
-          "locator": "apps/Login/LoginForm + VerifyInputs 登录校验区旧入口",
+          "locator": "apps/web-next/src/apps/Login/LoginForm.tsx + 封装件 登录校验区旧入口",
           "disposition": "implement"
         }
       ],
@@ -398,7 +398,7 @@
       "affectedSurfaces": [
         {
           "surfaceId": "S-003",
-          "locator": "apps/web VerifyInputs 登录校验区【切换验证方式】入口(展示条件)",
+          "locator": "apps/web-next 封装件 + apps/Login 登录校验区【切换验证方式】入口(展示条件)",
           "disposition": "implement"
         },
         {
@@ -469,12 +469,12 @@
       "affectedSurfaces": [
         {
           "surfaceId": "S-004",
-          "locator": "apps/web 新组件 SwitchVerifyMethodDialog",
+          "locator": "apps/web-next/src/components/verification/SwitchVerifyMethodDialog 新组件",
           "disposition": "implement"
         },
         {
           "surfaceId": "S-066",
-          "locator": "apps/web SwitchVerifyMethodDialog 列表不展示未绑定方式(边界)",
+          "locator": "apps/web-next/src/components/verification/SwitchVerifyMethodDialog 列表不展示未绑定方式(边界)",
           "disposition": "implement"
         },
         {
@@ -519,7 +519,7 @@
       "affectedSurfaces": [
         {
           "surfaceId": "S-005",
-          "locator": "apps/web VerifyInputs 方式切换后的输入区状态",
+          "locator": "apps/web-next 封装件 + apps/Login VerifyInputs 方式切换后的输入区状态",
           "disposition": "implement"
         },
         {
@@ -656,18 +656,24 @@
       "affectedSurfaces": [
         {
           "surfaceId": "S-006",
-          "locator": "apps/web 新增验证方式优先级 resolver(util/hook)",
+          "locator": "apps/web-next/src/components/verification/methodResolver.ts 验证方式优先级 resolver",
           "disposition": "implement"
         },
         {
           "surfaceId": "S-007",
           "locator": "apps/Balance/Trade 提币仅绑定一种方式时的提示(边界)",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "owner": "PR-02233 后续批次(待 Account/Assets 迁移)",
+          "batch": "web-next-account-assets-migration",
+          "reason": "Account/Assets 尚未迁移到 web-next；随迁移批次接入本 PR 已完成的验证封装件"
         },
         {
           "surfaceId": "S-086",
           "locator": "apps/Account 修改密码仅绑定一种方式时的提示(边界)",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "owner": "PR-02233 后续批次(待 Account/Assets 迁移)",
+          "batch": "web-next-account-assets-migration",
+          "reason": "Account/Assets 尚未迁移到 web-next；随迁移批次接入本 PR 已完成的验证封装件"
         },
         {
           "surfaceId": "S-069",
@@ -678,28 +684,37 @@
         },
         {
           "surfaceId": "S-095",
-          "locator": "apps/Register 注册校验：使用注册时选择的邮箱或手机",
+          "locator": "apps/web-next/src/apps/Register 注册校验：使用注册时选择的邮箱或手机",
           "disposition": "implement"
         },
         {
           "surfaceId": "S-096",
-          "locator": "apps/Login 登录校验：GA > 邮箱 > 手机默认优先级及切换",
+          "locator": "apps/web-next/src/apps/Login 登录校验：GA > 邮箱 > 手机默认优先级及切换",
           "disposition": "implement"
         },
         {
           "surfaceId": "S-097",
           "locator": "apps/Balance/Trade 提币：正常双重校验组合矩阵",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "owner": "PR-02233 后续批次(待 Account/Assets 迁移)",
+          "batch": "web-next-account-assets-migration",
+          "reason": "Account/Assets 尚未迁移到 web-next；随迁移批次接入本 PR 已完成的验证封装件"
         },
         {
           "surfaceId": "S-098",
           "locator": "apps/Account 修改密码：正常双重校验组合矩阵",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "owner": "PR-02233 后续批次(待 Account/Assets 迁移)",
+          "batch": "web-next-account-assets-migration",
+          "reason": "Account/Assets 尚未迁移到 web-next；随迁移批次接入本 PR 已完成的验证封装件"
         },
         {
           "surfaceId": "S-099",
           "locator": "apps/web 其他敏感操作：单绑单一、双绑及以上双重校验矩阵",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "owner": "PR-02233 后续批次(待 Account/Assets 迁移)",
+          "batch": "web-next-account-assets-migration",
+          "reason": "Account/Assets 尚未迁移到 web-next；随迁移批次接入本 PR 已完成的验证封装件"
         }
       ],
       "evidencePlan": [
@@ -890,7 +905,7 @@
         }
       ],
       "statement": "除登录/注册保留页面形式外，其余所有校验场景统一优化为弹窗模式（逐场景实现，防漏）。",
-      "status": "doing",
+      "status": "deferred",
       "collectionSemantics": {
         "kind": "explicit-set",
         "expectedCount": 16
@@ -899,72 +914,114 @@
         {
           "surfaceId": "S-030",
           "locator": "apps/Balance/Trade/components/SecurityVerificationModal.tsx#提币(含内部)",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "owner": "PR-02233 后续批次(待 Account/Assets 迁移)",
+          "batch": "web-next-account-assets-migration",
+          "reason": "Account/Assets 尚未迁移到 web-next；随迁移批次接入本 PR 已完成的验证封装件"
         },
         {
           "surfaceId": "S-031",
           "locator": "apps/Account 修改密码/设置密码 校验弹窗",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "owner": "PR-02233 后续批次(待 Account/Assets 迁移)",
+          "batch": "web-next-account-assets-migration",
+          "reason": "Account/Assets 尚未迁移到 web-next；随迁移批次接入本 PR 已完成的验证封装件"
         },
         {
           "surfaceId": "S-032",
           "locator": "apps/Account 修改邮箱/设置邮箱 提交后校验弹窗",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "owner": "PR-02233 后续批次(待 Account/Assets 迁移)",
+          "batch": "web-next-account-assets-migration",
+          "reason": "Account/Assets 尚未迁移到 web-next；随迁移批次接入本 PR 已完成的验证封装件"
         },
         {
           "surfaceId": "S-033",
           "locator": "apps/Account 修改手机/设置手机 提交后校验弹窗",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "owner": "PR-02233 后续批次(待 Account/Assets 迁移)",
+          "batch": "web-next-account-assets-migration",
+          "reason": "Account/Assets 尚未迁移到 web-next；随迁移批次接入本 PR 已完成的验证封装件"
         },
         {
           "surfaceId": "S-034",
           "locator": "apps/Account 绑定/解绑第三方 校验弹窗",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "owner": "PR-02233 后续批次(待 Account/Assets 迁移)",
+          "batch": "web-next-account-assets-migration",
+          "reason": "Account/Assets 尚未迁移到 web-next；随迁移批次接入本 PR 已完成的验证封装件"
         },
         {
           "surfaceId": "S-035",
           "locator": "apps/BindGoogle 关闭谷歌验证 校验弹窗",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "owner": "PR-02233 后续批次(待 Account/Assets 迁移)",
+          "batch": "web-next-account-assets-migration",
+          "reason": "Account/Assets 尚未迁移到 web-next；随迁移批次接入本 PR 已完成的验证封装件"
         },
         {
           "surfaceId": "S-036",
           "locator": "apps/Account 关闭手机验证 校验弹窗",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "owner": "PR-02233 后续批次(待 Account/Assets 迁移)",
+          "batch": "web-next-account-assets-migration",
+          "reason": "Account/Assets 尚未迁移到 web-next；随迁移批次接入本 PR 已完成的验证封装件"
         },
         {
           "surfaceId": "S-037",
           "locator": "apps/Account 提币白名单开启/关闭 校验弹窗",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "owner": "PR-02233 后续批次(待 Account/Assets 迁移)",
+          "batch": "web-next-account-assets-migration",
+          "reason": "Account/Assets 尚未迁移到 web-next；随迁移批次接入本 PR 已完成的验证封装件"
         },
         {
           "surfaceId": "S-038",
           "locator": "apps/AddressManagement 添加/修改地址(含内部) 校验弹窗",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "owner": "PR-02233 后续批次(待 Account/Assets 迁移)",
+          "batch": "web-next-account-assets-migration",
+          "reason": "Account/Assets 尚未迁移到 web-next；随迁移批次接入本 PR 已完成的验证封装件"
         },
         {
           "surfaceId": "S-039",
           "locator": "apps/DeleteAccount 注销账号 校验弹窗",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "owner": "PR-02233 后续批次(待 Account/Assets 迁移)",
+          "batch": "web-next-account-assets-migration",
+          "reason": "Account/Assets 尚未迁移到 web-next；随迁移批次接入本 PR 已完成的验证封装件"
         },
         {
           "surfaceId": "S-040",
           "locator": "apps/ApiManagement 创建API 校验弹窗",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "owner": "PR-02233 后续批次(待 Account/Assets 迁移)",
+          "batch": "web-next-account-assets-migration",
+          "reason": "Account/Assets 尚未迁移到 web-next；随迁移批次接入本 PR 已完成的验证封装件"
         },
         {
           "surfaceId": "S-043",
           "locator": "apps/ApiUpdate 修改API 校验弹窗",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "owner": "PR-02233 后续批次(待 Account/Assets 迁移)",
+          "batch": "web-next-account-assets-migration",
+          "reason": "Account/Assets 尚未迁移到 web-next；随迁移批次接入本 PR 已完成的验证封装件"
         },
         {
           "surfaceId": "S-041",
           "locator": "apps/ApiManagementView 查看API 校验弹窗",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "owner": "PR-02233 后续批次(待 Account/Assets 迁移)",
+          "batch": "web-next-account-assets-migration",
+          "reason": "Account/Assets 尚未迁移到 web-next；随迁移批次接入本 PR 已完成的验证封装件"
         },
         {
           "surfaceId": "S-042",
           "locator": "apps/BuyCrypto 共享安全校验组件矩阵：三个板块 × 购买/出售两个方向（6 个成员）",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "owner": "PR-02233 后续批次(待 Account/Assets 迁移)",
+          "batch": "web-next-account-assets-migration",
+          "reason": "Account/Assets 尚未迁移到 web-next；随迁移批次接入本 PR 已完成的验证封装件"
         },
         {
           "surfaceId": "S-077",
@@ -1105,7 +1162,7 @@
         }
       ],
       "statement": "改/绑邮箱手机表单页只验证\"新绑定目标\"(新邮箱/手机输入+验证码四态)；账户身份安全校验移到提交通过后的弹窗，弹窗方式按优先级：改邮箱/手机(有旧联系方式)=GA+邮箱/手机可切换；首次绑手机(仅有邮箱)=邮箱单一固定；首次绑邮箱(有手机+GA)=GA+手机固定。流系与回退：表单校验通过→关闭表单→弹出安全校验弹窗→弹窗内校验通过→修改/绑定生效；弹窗内取消或校验失败→修改/绑定操作不生效，可重新发起。",
-      "status": "doing",
+      "status": "deferred",
       "collectionSemantics": {
         "kind": "explicit-set",
         "expectedCount": 7
@@ -1114,27 +1171,42 @@
         {
           "surfaceId": "S-050",
           "locator": "apps/BindEmail 首次绑邮箱表单→提交后弹窗(GA+手机固定)",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "owner": "PR-02233 后续批次(待 Account/Assets 迁移)",
+          "batch": "web-next-account-assets-migration",
+          "reason": "Account/Assets 尚未迁移到 web-next；随迁移批次接入本 PR 已完成的验证封装件"
         },
         {
           "surfaceId": "S-051",
           "locator": "apps/Account 修改邮箱表单→提交后弹窗(GA+邮箱/手机可切换)",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "owner": "PR-02233 后续批次(待 Account/Assets 迁移)",
+          "batch": "web-next-account-assets-migration",
+          "reason": "Account/Assets 尚未迁移到 web-next；随迁移批次接入本 PR 已完成的验证封装件"
         },
         {
           "surfaceId": "S-052",
           "locator": "apps/Account 修改手机表单→提交后弹窗(GA+邮箱/手机可切换)",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "owner": "PR-02233 后续批次(待 Account/Assets 迁移)",
+          "batch": "web-next-account-assets-migration",
+          "reason": "Account/Assets 尚未迁移到 web-next；随迁移批次接入本 PR 已完成的验证封装件"
         },
         {
           "surfaceId": "S-053",
           "locator": "apps/Account 首次绑手机(仅邮箱)表单→提交后弹窗(邮箱单一固定)",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "owner": "PR-02233 后续批次(待 Account/Assets 迁移)",
+          "batch": "web-next-account-assets-migration",
+          "reason": "Account/Assets 尚未迁移到 web-next；随迁移批次接入本 PR 已完成的验证封装件"
         },
         {
           "surfaceId": "S-054",
           "locator": "表单→弹窗流系与取消/校验失败回退(适用于 S-050~S-053)",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "owner": "PR-02233 后续批次(待 Account/Assets 迁移)",
+          "batch": "web-next-account-assets-migration",
+          "reason": "Account/Assets 尚未迁移到 web-next；随迁移批次接入本 PR 已完成的验证封装件"
         },
         {
           "surfaceId": "S-109",
@@ -1192,7 +1264,7 @@
       "affectedSurfaces": [
         {
           "surfaceId": "S-009",
-          "locator": "apps/web VerifyInputs/CodeVerifyDialog 没收到验证码入口位置",
+          "locator": "apps/web-next 封装件(对齐既有 CodeVerifyDialog+store) 没收到验证码入口位置",
           "disposition": "implement"
         },
         {
@@ -1201,6 +1273,11 @@
           "disposition": "deferred",
           "owner": "App 团队",
           "batch": "App 交接批次"
+        },
+        {
+          "surfaceId": "S-113",
+          "locator": "apps/web-next/src/apps/ResetPassword 没收到验证码入口位置(应用)",
+          "disposition": "implement"
         }
       ],
       "evidencePlan": [
@@ -1211,7 +1288,7 @@
       ],
       "collectionSemantics": {
         "kind": "explicit-set",
-        "expectedCount": 2
+        "expectedCount": 3
       }
     },
     {
@@ -1370,7 +1447,7 @@
       "affectedSurfaces": [
         {
           "surfaceId": "S-010",
-          "locator": "apps/web 新组件 NoCodeGuideDialog",
+          "locator": "apps/web-next/src/components/verification/NoCodeGuideDialog 新组件",
           "disposition": "implement"
         },
         {
@@ -1379,6 +1456,11 @@
           "disposition": "deferred",
           "owner": "App 团队",
           "batch": "App 交接批次"
+        },
+        {
+          "surfaceId": "S-114",
+          "locator": "apps/web-next/src/apps/ResetPassword NoCodeGuideDialog 应用",
+          "disposition": "implement"
         }
       ],
       "evidencePlan": [
@@ -1393,7 +1475,7 @@
       ],
       "collectionSemantics": {
         "kind": "explicit-set",
-        "expectedCount": 2
+        "expectedCount": 3
       }
     },
     {
@@ -1468,7 +1550,7 @@
       "affectedSurfaces": [
         {
           "surfaceId": "S-011",
-          "locator": "apps/web i18n codeVerify.json + NoCodeGuideDialog 文案",
+          "locator": "apps/web-next/src/i18n/resources/zh-CN/codeVerify.json + NoCodeGuideDialog 文案",
           "disposition": "implement"
         },
         {
@@ -1477,6 +1559,11 @@
           "disposition": "deferred",
           "owner": "App 团队",
           "batch": "App 交接批次"
+        },
+        {
+          "surfaceId": "S-115",
+          "locator": "apps/web-next/src/apps/ResetPassword 没收到验证码 Tab 文案应用",
+          "disposition": "implement"
         }
       ],
       "evidencePlan": [
@@ -1487,7 +1574,7 @@
       ],
       "collectionSemantics": {
         "kind": "explicit-set",
-        "expectedCount": 2
+        "expectedCount": 3
       }
     },
     {
@@ -1583,7 +1670,7 @@
       "affectedSurfaces": [
         {
           "surfaceId": "S-012",
-          "locator": "apps/web VerifyInputs 获取验证码按钮四态 + useCountdown",
+          "locator": "apps/web-next 封装件 SendCodeButton 四态 + web-next useCountdown",
           "disposition": "implement"
         },
         {
@@ -1592,6 +1679,11 @@
           "disposition": "deferred",
           "owner": "App 团队",
           "batch": "App 交接批次"
+        },
+        {
+          "surfaceId": "S-116",
+          "locator": "apps/web-next/src/apps/ResetPassword 获取验证码按钮四态应用",
+          "disposition": "implement"
         }
       ],
       "evidencePlan": [
@@ -1606,7 +1698,7 @@
       ],
       "collectionSemantics": {
         "kind": "explicit-set",
-        "expectedCount": 2
+        "expectedCount": 3
       }
     },
     {
@@ -1646,7 +1738,12 @@
       "affectedSurfaces": [
         {
           "surfaceId": "S-013",
-          "locator": "apps/web VerifyInputs 已发送态 icon tooltip(Web 悬浮)",
+          "locator": "apps/web-next 封装件 已发送态 icon tooltip(Web 悬浮)",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-117",
+          "locator": "apps/web-next/src/apps/ResetPassword tooltip 应用",
           "disposition": "implement"
         }
       ],
@@ -1661,8 +1758,8 @@
         }
       ],
       "collectionSemantics": {
-        "kind": "none",
-        "expectedCount": 0
+        "kind": "explicit-set",
+        "expectedCount": 2
       }
     },
     {
@@ -1723,7 +1820,7 @@
       "affectedSurfaces": [
         {
           "surfaceId": "S-014",
-          "locator": "apps/web VerifyInputs/useCountdown 多方式独立倒计时 + 冷却时间戳恢复",
+          "locator": "apps/web-next 封装件(基于 web-next useCountdown) 多方式独立倒计时 + 冷却时间戳恢复",
           "disposition": "implement"
         },
         {
@@ -1739,6 +1836,11 @@
           "disposition": "deferred",
           "owner": "验证码后端团队",
           "batch": "PR-02189/PR-02235 API contract prerequisite"
+        },
+        {
+          "surfaceId": "S-118",
+          "locator": "apps/web-next/src/apps/ResetPassword 独立倒计时应用",
+          "disposition": "implement"
         }
       ],
       "evidencePlan": [
@@ -1757,7 +1859,7 @@
       ],
       "collectionSemantics": {
         "kind": "explicit-set",
-        "expectedCount": 3
+        "expectedCount": 4
       }
     },
     {
@@ -1817,17 +1919,17 @@
       "status": "doing",
       "collectionSemantics": {
         "kind": "explicit-set",
-        "expectedCount": 3
+        "expectedCount": 4
       },
       "affectedSurfaces": [
         {
           "surfaceId": "S-015",
-          "locator": "apps/web VerifyInputs + useSmsErrorBar 限频拦截与冷却",
+          "locator": "apps/web-next 封装件 限频拦截与冷却",
           "disposition": "implement"
         },
         {
           "surfaceId": "S-088",
-          "locator": "apps/web IP/UID/60秒限频类型区分性提示渲染(回归)",
+          "locator": "apps/web-next 封装件 IP/UID/60秒限频类型区分性提示渲染(回归)",
           "disposition": "implement"
         },
         {
@@ -1836,6 +1938,11 @@
           "disposition": "deferred",
           "owner": "App 团队",
           "batch": "App 交接批次"
+        },
+        {
+          "surfaceId": "S-119",
+          "locator": "apps/web-next/src/apps/ResetPassword 限频拦截应用",
+          "disposition": "implement"
         }
       ],
       "evidencePlan": [
@@ -1900,7 +2007,7 @@
       "affectedSurfaces": [
         {
           "surfaceId": "S-016",
-          "locator": "apps/web VerifyInputs 服务异常回退处理",
+          "locator": "apps/web-next 封装件 服务异常回退处理",
           "disposition": "implement"
         },
         {
@@ -1909,6 +2016,11 @@
           "disposition": "deferred",
           "owner": "App 团队",
           "batch": "App 交接批次"
+        },
+        {
+          "surfaceId": "S-120",
+          "locator": "apps/web-next/src/apps/ResetPassword 服务异常回退应用",
+          "disposition": "implement"
         }
       ],
       "evidencePlan": [
@@ -1923,7 +2035,7 @@
       ],
       "collectionSemantics": {
         "kind": "explicit-set",
-        "expectedCount": 2
+        "expectedCount": 3
       }
     },
     {
@@ -1997,47 +2109,47 @@
       "status": "doing",
       "collectionSemantics": {
         "kind": "explicit-set",
-        "expectedCount": 9
+        "expectedCount": 10
       },
       "affectedSurfaces": [
         {
           "surfaceId": "S-017",
-          "locator": "posthog: verification_scene_view",
+          "locator": "apps/web-next/src/platform/posthog/postHog.ts: verification_scene_view",
           "disposition": "implement"
         },
         {
           "surfaceId": "S-070",
-          "locator": "posthog: click_get_code",
+          "locator": "apps/web-next/src/platform/posthog/postHog.ts: click_get_code",
           "disposition": "implement"
         },
         {
           "surfaceId": "S-071",
-          "locator": "posthog: code_send_result",
+          "locator": "apps/web-next/src/platform/posthog/postHog.ts: code_send_result",
           "disposition": "implement"
         },
         {
           "surfaceId": "S-072",
-          "locator": "posthog: hit_rate_limit",
+          "locator": "apps/web-next/src/platform/posthog/postHog.ts: hit_rate_limit",
           "disposition": "implement"
         },
         {
           "surfaceId": "S-073",
-          "locator": "posthog: switch_channel",
+          "locator": "apps/web-next/src/platform/posthog/postHog.ts: switch_channel",
           "disposition": "implement"
         },
         {
           "surfaceId": "S-074",
-          "locator": "posthog: view_no_code_guide",
+          "locator": "apps/web-next/src/platform/posthog/postHog.ts: view_no_code_guide",
           "disposition": "implement"
         },
         {
           "surfaceId": "S-075",
-          "locator": "posthog: code_verify_submit",
+          "locator": "apps/web-next/src/platform/posthog/postHog.ts: code_verify_submit",
           "disposition": "implement"
         },
         {
           "surfaceId": "S-076",
-          "locator": "posthog: code_verify_result",
+          "locator": "apps/web-next/src/platform/posthog/postHog.ts: code_verify_result",
           "disposition": "implement"
         },
         {
@@ -2046,6 +2158,11 @@
           "disposition": "deferred",
           "owner": "App 团队",
           "batch": "App 交接批次"
+        },
+        {
+          "surfaceId": "S-121",
+          "locator": "apps/web-next/src/apps/ResetPassword 埋点应用",
+          "disposition": "implement"
         }
       ],
       "evidencePlan": [
@@ -2400,32 +2517,38 @@
       "affectedSurfaces": [
         {
           "surfaceId": "S-060",
-          "locator": "apps/Login 登录全链路回归（Web H5/PC 共享实现）",
+          "locator": "apps/web-next/src/apps/Login 登录全链路回归（Web H5/PC 共享实现）",
           "disposition": "implement"
         },
         {
           "surfaceId": "S-061",
-          "locator": "apps/Register 注册全链路回归（Web H5/PC 共享实现）",
+          "locator": "apps/web-next/src/apps/Register 注册全链路回归（Web H5/PC 共享实现）",
           "disposition": "implement"
         },
         {
           "surfaceId": "S-062",
           "locator": "apps/Balance/Trade 提币全链路回归(双重校验)（Web H5/PC 共享实现）",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "owner": "PR-02233 后续批次(待 Account/Assets 迁移)",
+          "batch": "web-next-account-assets-migration",
+          "reason": "Account/Assets 尚未迁移到 web-next；随迁移批次接入本 PR 已完成的验证封装件"
         },
         {
           "surfaceId": "S-063",
           "locator": "apps/Account 修改安全设置全链路回归（Web H5/PC 共享实现）",
-          "disposition": "implement"
+          "disposition": "deferred",
+          "owner": "PR-02233 后续批次(待 Account/Assets 迁移)",
+          "batch": "web-next-account-assets-migration",
+          "reason": "Account/Assets 尚未迁移到 web-next；随迁移批次接入本 PR 已完成的验证封装件"
         },
         {
           "surfaceId": "S-064",
-          "locator": "GA 校验在登录/提币场景不受本次交互改动影响(回归)（Web H5/PC 共享实现）",
+          "locator": "GA 校验在登录场景不受本次交互改动影响(回归；提币场景随 Assets 迁移批次覆盖)（Web H5/PC 共享实现）",
           "disposition": "implement"
         },
         {
           "surfaceId": "S-065",
-          "locator": "后台验证码下发(短信/邮件)不因前端交互改动中断(回归)（Web H5/PC 共享实现）",
+          "locator": "后台验证码下发(短信/邮件)不因前端交互改动中断(回归，覆盖登录/注册/重置密码)（Web H5/PC 共享实现）",
           "disposition": "implement"
         },
         {
@@ -2444,7 +2567,7 @@
         },
         {
           "surfaceId": "S-102",
-          "locator": "Web H5 + PC 双视口全链路浏览器场景矩阵",
+          "locator": "Web H5 + PC 双视口全链路浏览器场景矩阵(登录/注册/重置密码)",
           "disposition": "implement"
         }
       ],
@@ -2538,7 +2661,7 @@
       "affectedSurfaces": [
         {
           "surfaceId": "S-089",
-          "locator": "apps/web public/locales/zh-CN：PR-02233 全部新增文案及稳定 i18n key",
+          "locator": "apps/web-next/src/i18n/resources/zh-CN：PR-02233 全部新增文案及稳定 i18n key",
           "disposition": "implement"
         },
         {
@@ -2830,151 +2953,18 @@
     "sessionId": "01a091f1-6d50-77a0-93a4-b740d1592eae"
   },
   "coverageAudit": {
-    "sourceFingerprint": "c9c32b814a286dca6b092ebf4e11ab3730441c7b0915a85470b28c5452efe09d",
-    "requirementsFingerprint": "3673a3a29ce3662ff0a8b79eae1474e0dd5dd3d47677e1b2cca72b63a59cf3e7",
+    "sourceFingerprint": "pending",
+    "requirementsFingerprint": "pending",
     "reviewMode": "independent-cold-read",
-    "reviewRunId": "review-86f1107e-e91f-4166-add1-2d7415a8c33f",
+    "reviewRunId": "pending",
     "reviewer": {
       "kind": "model",
-      "id": "pi/uniaix/gpt-5.6-sol"
+      "id": "pending"
     },
-    "completedAt": "2026-09-12T10:29:59.684Z",
+    "completedAt": "2000-01-01T00:00:00Z",
     "verdict": "changes-required",
-    "findings": [
-      {
-        "findingId": "F-001",
-        "code": "missing-surface",
-        "message": "The popup-conversion collection is incomplete. The source states that only login and registration retain page-based verification, while the scene inventory explicitly includes forgot-password verification. Therefore forgot password falls within the non-login/registration scenarios that must use a verification popup. R-028 instead marks it not applicable based on an unsupported “user confirmation,” and R-007 has no implementing surface or evidence command for this flow. Add the forgot-password verification surface to the popup collection and provide corresponding evidence.",
-        "sourceIds": [
-          "SRC-D8B6CC68C4FF",
-          "SRC-610E293D8B8C",
-          "SRC-F11347F738C9"
-        ],
-        "disposition": "open"
-      }
-    ],
-    "receipt": {
-      "issuedBy": "docs-tdd-review-v1",
-      "client": "pi",
-      "sessionId": "86f1107e-e91f-4166-add1-2d7415a8c33f",
-      "sourceIsolation": "source-only-no-code",
-      "requestFingerprint": "a4758fea98136947cf99715cca5d2ed4d5145b88e4ee360912978c8ee0688035",
-      "reviewedAssets": [
-        {
-          "sourceId": "SRC-E9340E359735",
-          "assetHash": "1e2dc37779c55d4f44fd09d09abb00ca59cbfe06a29844c08b4093d12c02bb8b"
-        },
-        {
-          "sourceId": "SRC-88AE784CEEE0",
-          "assetHash": "fe4b12ee82fafe443db222b0374330978a5f59db6983df2b20327a10850af983"
-        },
-        {
-          "sourceId": "SRC-4E02866959D4",
-          "assetHash": "f0ba206aa93815de2b0928aed89f1397632c56e600b418e421e6547a739b19be"
-        },
-        {
-          "sourceId": "SRC-0CC76D6FFA98",
-          "assetHash": "9b1b92f88281ecd36ff5c17f7311c3e5c307c40a55975d9b3b607731d296c022"
-        },
-        {
-          "sourceId": "SRC-064CB027CFB3",
-          "assetHash": "8d20e4e9a374a29331e604d2e3ac3018a349e03a0883a53942363525c2a8a62b"
-        },
-        {
-          "sourceId": "SRC-CB7B1EE252FC",
-          "assetHash": "379806e79bcf3f03139cc46f02bf87cb2e2e6ee9d49a8079b25ea8a93fd94a77"
-        },
-        {
-          "sourceId": "SRC-38BD411AB7FA",
-          "assetHash": "c99967dd7a026e691cf5149bfccdd36c0732cf735a2b94d86f0c5404ba4d3d3b"
-        },
-        {
-          "sourceId": "SRC-E4376240B527",
-          "assetHash": "719bbda98fa6b3cd11ef6427822404c2b338a65a1057a6012bfed0f665da3506"
-        },
-        {
-          "sourceId": "SRC-384DA8CDFDA5",
-          "assetHash": "16f9e29157c0aae3189fc14f9047fef4edb32a2ce7c483f1219e65f6c9cb8bb4"
-        },
-        {
-          "sourceId": "SRC-41A6E5ADEDB7",
-          "assetHash": "b2bb7d5e4492fdc3a9483dda13b5050db07961c46fd1a44b5d60d6abce5972b7"
-        },
-        {
-          "sourceId": "SRC-EFAA92690017",
-          "assetHash": "5816502a8f9ac0bb05e56672546cb252354cfdded9de512fba73f62242aa7f28"
-        },
-        {
-          "sourceId": "SRC-10609BC6D905",
-          "assetHash": "f1442bd9de2d487aba71c2ba3b3b5263179ebb9c10d276900bd8b69f28255d92"
-        },
-        {
-          "sourceId": "SRC-4C392AEEDDA4",
-          "assetHash": "10aa9baab044e323548cc5b6df7dd33f94f37b6269e59d1460cbbe67b35084df"
-        },
-        {
-          "sourceId": "SRC-8DF0199AEEF6",
-          "assetHash": "ffa3b993c9f95a6a90787c167ab4da9643d32619e9a5405aeb783b2b5aa1c77c"
-        },
-        {
-          "sourceId": "SRC-B6FE06D4DAD0",
-          "assetHash": "9dc1948d91c58ce85ecb03ab8e2bb89219cfd59f73e58972674809d56d1ca0b8"
-        },
-        {
-          "sourceId": "SRC-ED9295E2DD4D",
-          "assetHash": "ed5e76e737e4562b6eef899a4429e42e236a14c7cd0b1a5c309b21df6b667a99"
-        },
-        {
-          "sourceId": "SRC-85551C5A7606",
-          "assetHash": "42413d9c76bba547048071ce0d86735d0930a7ef573b2cc4b5410b2c3cf75784"
-        },
-        {
-          "sourceId": "SRC-2CE1D6D045D6",
-          "assetHash": "c4685732ce3e67fc4607e729206c20c8069f8d681f010e49fe0562b53ef2cda2"
-        },
-        {
-          "sourceId": "SRC-7F0D479471E2",
-          "assetHash": "a02fc14b9ab07a82abcb77c1c1ee9cb34322001ae8f3a4913ff1b13334dc90fc"
-        },
-        {
-          "sourceId": "SRC-CBBB8578D775",
-          "assetHash": "fe504f4763f12d6237f2aaa371f4ec86f230b1d59b56a9426df00d7326d6d61f"
-        },
-        {
-          "sourceId": "SRC-F11347F738C9",
-          "assetHash": "4fc21639a0a8be16b615ba4fdc783fdb894543d543066194f245df3e504443e2"
-        },
-        {
-          "sourceId": "SRC-92A84661A698",
-          "assetHash": "46ba6dde9770d4164c0b519700c87490e95d08d70465174b0f353223a8ec67b6"
-        },
-        {
-          "sourceId": "SRC-88D08D558049",
-          "assetHash": "017a5c79dc668b8517278cd1ffa1a83586af739af3ec9bbb22c1ac7ae9a998b0"
-        },
-        {
-          "sourceId": "SRC-2D8E58E20C07",
-          "assetHash": "591f8458969671183cc31208977e90b2007249fc4b838de8dbd69ed843b6e0e5"
-        },
-        {
-          "sourceId": "SRC-FB35C5272486",
-          "assetHash": "881b541eceb281ad5fcb1ae8e3ac724595cc556e64b8ac041e6543553d560a29"
-        },
-        {
-          "sourceId": "SRC-88BBE9AC8B14",
-          "assetHash": "b22be9d1163f52f9d9c12c4069e51800ae7f1b3a0a1a64ede2e6ee1fe9f217f4"
-        },
-        {
-          "sourceId": "SRC-00EDCEFE08AC",
-          "assetHash": "8aa78a1c51a29ec6b6415c594e53bab48854ec4f46c16230af4d335480e0da86"
-        }
-      ],
-      "startedAt": "2026-09-12T10:25:39.770Z",
-      "completedAt": "2026-09-12T10:29:59.684Z",
-      "signature": "50f8468987527108504537b0160fa9695122b06f0b74223e6e01df233ebdd84d"
-    },
     "unresolved": [
-      "F-001: The popup-conversion collection is incomplete. The source states that only login and registration retain page-based verification, while the scene inventory explicitly includes forgot-password verification. Therefore forgot password falls within the non-login/registration scenarios that must use a verification popup. R-028 instead marks it not applicable based on an unsupported “user confirmation,” and R-007 has no implementing surface or evidence command for this flow. Add the forgot-password verification surface to the popup collection and provide corresponding evidence."
+      "deterministic intake passed; independent review is pending"
     ]
   },
   "routing": {
@@ -3011,12 +3001,10 @@
       "evidenceId": "E-01",
       "kind": "copy-literal",
       "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-001-S-001-copy-literal-apps-Register-RegisterV2.spec.ts"
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-001-S-001-dom-contract.json"
       ],
       "requirementIds": [
         "R-001"
@@ -3029,12 +3017,10 @@
       "evidenceId": "E-02",
       "kind": "component-dom",
       "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-001-S-001-component-dom-apps-Register-RegisterV2.spec.ts"
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-001-S-001-dom-contract.json"
       ],
       "requirementIds": [
         "R-001"
@@ -3047,12 +3033,10 @@
       "evidenceId": "E-03",
       "kind": "component-dom",
       "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-002-S-002-component-dom-apps-Login-LoginForm-VerifyInputs.spec.ts"
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-002-S-002-dom-contract.json"
       ],
       "requirementIds": [
         "R-002"
@@ -3065,12 +3049,10 @@
       "evidenceId": "E-04",
       "kind": "component-dom",
       "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-003-S-003-component-dom-apps-web-VerifyInputs.spec.ts"
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-003-S-003-dom-contract.json"
       ],
       "requirementIds": [
         "R-003"
@@ -3085,10 +3067,10 @@
       "argv": [
         "pnpm",
         "--filter",
-        "@fameex/web",
+        "web-next",
         "test",
         "--run",
-        "apps/web/src/__tests__/PR-02233/R-003-S-003-pure-logic-apps-web-VerifyInputs.spec.ts"
+        "apps/web-next/src/apps/Login/test/R-003-S-003-pure-logic-apps-web-VerifyInputs.test.ts"
       ],
       "requirementIds": [
         "R-003"
@@ -3101,12 +3083,10 @@
       "evidenceId": "E-06",
       "kind": "copy-literal",
       "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-003-S-003-copy-literal-apps-web-VerifyInputs.spec.ts"
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-003-S-003-dom-contract.json"
       ],
       "requirementIds": [
         "R-003"
@@ -3119,12 +3099,10 @@
       "evidenceId": "E-07",
       "kind": "copy-literal",
       "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-004-S-004-copy-literal-apps-web-SwitchVerifyMethodDialog.spec.ts"
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-004-S-004-dom-contract.json"
       ],
       "requirementIds": [
         "R-004"
@@ -3137,12 +3115,10 @@
       "evidenceId": "E-08",
       "kind": "component-dom",
       "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-004-S-004-component-dom-apps-web-SwitchVerifyMethodDialog.spec.ts"
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-004-S-004-dom-contract.json"
       ],
       "requirementIds": [
         "R-004"
@@ -3155,12 +3131,10 @@
       "evidenceId": "E-09",
       "kind": "copy-literal",
       "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-004-S-066-copy-literal-apps-web-SwitchVerifyMethodDialog.spec.ts"
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-004-S-066-dom-contract.json"
       ],
       "requirementIds": [
         "R-004"
@@ -3173,12 +3147,10 @@
       "evidenceId": "E-10",
       "kind": "component-dom",
       "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-004-S-066-component-dom-apps-web-SwitchVerifyMethodDialog.spec.ts"
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-004-S-066-dom-contract.json"
       ],
       "requirementIds": [
         "R-004"
@@ -3193,10 +3165,10 @@
       "argv": [
         "pnpm",
         "--filter",
-        "@fameex/web",
+        "web-next",
         "test",
         "--run",
-        "apps/web/src/__tests__/PR-02233/R-005-S-005-pure-logic-apps-web-VerifyInputs.spec.ts"
+        "apps/web-next/src/apps/Login/test/R-005-S-005-pure-logic-apps-web-VerifyInputs.test.ts"
       ],
       "requirementIds": [
         "R-005"
@@ -3209,12 +3181,10 @@
       "evidenceId": "E-12",
       "kind": "component-dom",
       "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-005-S-005-component-dom-apps-web-VerifyInputs.spec.ts"
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-005-S-005-dom-contract.json"
       ],
       "requirementIds": [
         "R-005"
@@ -3229,10 +3199,10 @@
       "argv": [
         "pnpm",
         "--filter",
-        "@fameex/web",
+        "web-next",
         "test",
         "--run",
-        "apps/web/src/__tests__/PR-02233/R-006-S-006-pure-logic-apps-web-resolver-util-hook.spec.ts"
+        "apps/web-next/src/components/verification/test/R-006-S-006-pure-logic-apps-web-resolver-util-hook.test.ts"
       ],
       "requirementIds": [
         "R-006"
@@ -3245,12 +3215,10 @@
       "evidenceId": "E-14",
       "kind": "component-dom",
       "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-006-S-006-component-dom-apps-web-resolver-util-hook.spec.ts"
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-006-S-006-dom-contract.json"
       ],
       "requirementIds": [
         "R-006"
@@ -3263,12 +3231,10 @@
       "evidenceId": "E-15",
       "kind": "copy-literal",
       "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-006-S-006-copy-literal-apps-web-resolver-util-hook.spec.ts"
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-006-S-006-dom-contract.json"
       ],
       "requirementIds": [
         "R-006"
@@ -3278,555 +3244,13 @@
       ]
     },
     {
-      "evidenceId": "E-16",
-      "kind": "pure-logic",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-006-S-007-pure-logic-apps-Balance-Trade.spec.ts"
-      ],
-      "requirementIds": [
-        "R-006"
-      ],
-      "surfaceIds": [
-        "S-007"
-      ]
-    },
-    {
-      "evidenceId": "E-17",
-      "kind": "component-dom",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-006-S-007-component-dom-apps-Balance-Trade.spec.ts"
-      ],
-      "requirementIds": [
-        "R-006"
-      ],
-      "surfaceIds": [
-        "S-007"
-      ]
-    },
-    {
-      "evidenceId": "E-18",
-      "kind": "copy-literal",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-006-S-007-copy-literal-apps-Balance-Trade.spec.ts"
-      ],
-      "requirementIds": [
-        "R-006"
-      ],
-      "surfaceIds": [
-        "S-007"
-      ]
-    },
-    {
-      "evidenceId": "E-19",
-      "kind": "pure-logic",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-006-S-086-pure-logic-apps-Account.spec.ts"
-      ],
-      "requirementIds": [
-        "R-006"
-      ],
-      "surfaceIds": [
-        "S-086"
-      ]
-    },
-    {
-      "evidenceId": "E-20",
-      "kind": "component-dom",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-006-S-086-component-dom-apps-Account.spec.ts"
-      ],
-      "requirementIds": [
-        "R-006"
-      ],
-      "surfaceIds": [
-        "S-086"
-      ]
-    },
-    {
-      "evidenceId": "E-21",
-      "kind": "copy-literal",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-006-S-086-copy-literal-apps-Account.spec.ts"
-      ],
-      "requirementIds": [
-        "R-006"
-      ],
-      "surfaceIds": [
-        "S-086"
-      ]
-    },
-    {
-      "evidenceId": "E-22",
-      "kind": "component-dom",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-007-S-030-component-dom-apps-Balance-Trade-components-SecurityVe.spec.ts"
-      ],
-      "requirementIds": [
-        "R-007"
-      ],
-      "surfaceIds": [
-        "S-030"
-      ]
-    },
-    {
-      "evidenceId": "E-23",
-      "kind": "component-dom",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-007-S-031-component-dom-apps-Account.spec.ts"
-      ],
-      "requirementIds": [
-        "R-007"
-      ],
-      "surfaceIds": [
-        "S-031"
-      ]
-    },
-    {
-      "evidenceId": "E-24",
-      "kind": "component-dom",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-007-S-032-component-dom-apps-Account.spec.ts"
-      ],
-      "requirementIds": [
-        "R-007"
-      ],
-      "surfaceIds": [
-        "S-032"
-      ]
-    },
-    {
-      "evidenceId": "E-25",
-      "kind": "component-dom",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-007-S-033-component-dom-apps-Account.spec.ts"
-      ],
-      "requirementIds": [
-        "R-007"
-      ],
-      "surfaceIds": [
-        "S-033"
-      ]
-    },
-    {
-      "evidenceId": "E-26",
-      "kind": "component-dom",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-007-S-034-component-dom-apps-Account.spec.ts"
-      ],
-      "requirementIds": [
-        "R-007"
-      ],
-      "surfaceIds": [
-        "S-034"
-      ]
-    },
-    {
-      "evidenceId": "E-27",
-      "kind": "component-dom",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-007-S-035-component-dom-apps-BindGoogle.spec.ts"
-      ],
-      "requirementIds": [
-        "R-007"
-      ],
-      "surfaceIds": [
-        "S-035"
-      ]
-    },
-    {
-      "evidenceId": "E-28",
-      "kind": "component-dom",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-007-S-036-component-dom-apps-Account.spec.ts"
-      ],
-      "requirementIds": [
-        "R-007"
-      ],
-      "surfaceIds": [
-        "S-036"
-      ]
-    },
-    {
-      "evidenceId": "E-29",
-      "kind": "component-dom",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-007-S-037-component-dom-apps-Account.spec.ts"
-      ],
-      "requirementIds": [
-        "R-007"
-      ],
-      "surfaceIds": [
-        "S-037"
-      ]
-    },
-    {
-      "evidenceId": "E-30",
-      "kind": "component-dom",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-007-S-038-component-dom-apps-AddressManagement.spec.ts"
-      ],
-      "requirementIds": [
-        "R-007"
-      ],
-      "surfaceIds": [
-        "S-038"
-      ]
-    },
-    {
-      "evidenceId": "E-31",
-      "kind": "component-dom",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-007-S-039-component-dom-apps-DeleteAccount.spec.ts"
-      ],
-      "requirementIds": [
-        "R-007"
-      ],
-      "surfaceIds": [
-        "S-039"
-      ]
-    },
-    {
-      "evidenceId": "E-32",
-      "kind": "component-dom",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-007-S-040-component-dom-apps-ApiManagement-API.spec.ts"
-      ],
-      "requirementIds": [
-        "R-007"
-      ],
-      "surfaceIds": [
-        "S-040"
-      ]
-    },
-    {
-      "evidenceId": "E-33",
-      "kind": "component-dom",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-007-S-043-component-dom-apps-ApiUpdate-API.spec.ts"
-      ],
-      "requirementIds": [
-        "R-007"
-      ],
-      "surfaceIds": [
-        "S-043"
-      ]
-    },
-    {
-      "evidenceId": "E-34",
-      "kind": "component-dom",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-007-S-041-component-dom-apps-ApiManagementView-API.spec.ts"
-      ],
-      "requirementIds": [
-        "R-007"
-      ],
-      "surfaceIds": [
-        "S-041"
-      ]
-    },
-    {
-      "evidenceId": "E-35",
-      "kind": "component-dom",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-007-S-042-buy-crypto-3x2-matrix.spec.ts"
-      ],
-      "requirementIds": [
-        "R-007"
-      ],
-      "surfaceIds": [
-        "S-042"
-      ]
-    },
-    {
-      "evidenceId": "E-36",
-      "kind": "component-dom",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-008-S-050-component-dom-apps-BindEmail-GA.spec.ts"
-      ],
-      "requirementIds": [
-        "R-008"
-      ],
-      "surfaceIds": [
-        "S-050"
-      ]
-    },
-    {
-      "evidenceId": "E-37",
-      "kind": "pure-logic",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-008-S-050-pure-logic-apps-BindEmail-GA.spec.ts"
-      ],
-      "requirementIds": [
-        "R-008"
-      ],
-      "surfaceIds": [
-        "S-050"
-      ]
-    },
-    {
-      "evidenceId": "E-38",
-      "kind": "component-dom",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-008-S-051-component-dom-apps-Account-GA.spec.ts"
-      ],
-      "requirementIds": [
-        "R-008"
-      ],
-      "surfaceIds": [
-        "S-051"
-      ]
-    },
-    {
-      "evidenceId": "E-39",
-      "kind": "pure-logic",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-008-S-051-pure-logic-apps-Account-GA.spec.ts"
-      ],
-      "requirementIds": [
-        "R-008"
-      ],
-      "surfaceIds": [
-        "S-051"
-      ]
-    },
-    {
-      "evidenceId": "E-40",
-      "kind": "component-dom",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-008-S-052-component-dom-apps-Account-GA.spec.ts"
-      ],
-      "requirementIds": [
-        "R-008"
-      ],
-      "surfaceIds": [
-        "S-052"
-      ]
-    },
-    {
-      "evidenceId": "E-41",
-      "kind": "pure-logic",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-008-S-052-pure-logic-apps-Account-GA.spec.ts"
-      ],
-      "requirementIds": [
-        "R-008"
-      ],
-      "surfaceIds": [
-        "S-052"
-      ]
-    },
-    {
-      "evidenceId": "E-42",
-      "kind": "component-dom",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-008-S-053-component-dom-apps-Account.spec.ts"
-      ],
-      "requirementIds": [
-        "R-008"
-      ],
-      "surfaceIds": [
-        "S-053"
-      ]
-    },
-    {
-      "evidenceId": "E-43",
-      "kind": "pure-logic",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-008-S-053-pure-logic-apps-Account.spec.ts"
-      ],
-      "requirementIds": [
-        "R-008"
-      ],
-      "surfaceIds": [
-        "S-053"
-      ]
-    },
-    {
-      "evidenceId": "E-44",
-      "kind": "component-dom",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-008-S-054-component-dom-S-050-S-053.spec.ts"
-      ],
-      "requirementIds": [
-        "R-008"
-      ],
-      "surfaceIds": [
-        "S-054"
-      ]
-    },
-    {
-      "evidenceId": "E-45",
-      "kind": "pure-logic",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-008-S-054-pure-logic-S-050-S-053.spec.ts"
-      ],
-      "requirementIds": [
-        "R-008"
-      ],
-      "surfaceIds": [
-        "S-054"
-      ]
-    },
-    {
       "evidenceId": "E-46",
       "kind": "component-dom",
       "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-009-S-009-component-dom-apps-web-VerifyInputs-CodeVerifyDialog.spec.ts"
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-009-S-009-dom-contract.json"
       ],
       "requirementIds": [
         "R-009"
@@ -3839,12 +3263,10 @@
       "evidenceId": "E-47",
       "kind": "component-dom",
       "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-010-S-010-component-dom-apps-web-NoCodeGuideDialog.spec.ts"
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-010-S-010-dom-contract.json"
       ],
       "requirementIds": [
         "R-010"
@@ -3857,12 +3279,10 @@
       "evidenceId": "E-48",
       "kind": "copy-literal",
       "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-010-S-010-copy-literal-apps-web-NoCodeGuideDialog.spec.ts"
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-010-S-010-dom-contract.json"
       ],
       "requirementIds": [
         "R-010"
@@ -3875,12 +3295,10 @@
       "evidenceId": "E-49",
       "kind": "copy-literal",
       "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-011-S-011-copy-literal-apps-web-i18n-codeVerify-json-NoCodeGuid.spec.ts"
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-011-S-011-dom-contract.json"
       ],
       "requirementIds": [
         "R-011"
@@ -3893,12 +3311,10 @@
       "evidenceId": "E-50",
       "kind": "component-dom",
       "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-012-S-012-component-dom-apps-web-VerifyInputs-useCountdown.spec.ts"
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-012-S-012-dom-contract.json"
       ],
       "requirementIds": [
         "R-012"
@@ -3913,10 +3329,10 @@
       "argv": [
         "pnpm",
         "--filter",
-        "@fameex/web",
+        "web-next",
         "test",
         "--run",
-        "apps/web/src/__tests__/PR-02233/R-012-S-012-pure-logic-apps-web-VerifyInputs-useCountdown.spec.ts"
+        "apps/web-next/src/components/verification/test/R-012-S-012-pure-logic-apps-web-VerifyInputs-useCountdown.test.ts"
       ],
       "requirementIds": [
         "R-012"
@@ -3929,12 +3345,10 @@
       "evidenceId": "E-52",
       "kind": "copy-literal",
       "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-013-S-013-copy-literal-apps-web-VerifyInputs-icon-tooltip-Web.spec.ts"
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-013-S-013-dom-contract.json"
       ],
       "requirementIds": [
         "R-013"
@@ -3947,12 +3361,10 @@
       "evidenceId": "E-53",
       "kind": "component-dom",
       "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-013-S-013-component-dom-apps-web-VerifyInputs-icon-tooltip-Web.spec.ts"
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-013-S-013-dom-contract.json"
       ],
       "requirementIds": [
         "R-013"
@@ -3967,10 +3379,10 @@
       "argv": [
         "pnpm",
         "--filter",
-        "@fameex/web",
+        "web-next",
         "test",
         "--run",
-        "apps/web/src/__tests__/PR-02233/R-014-S-014-pure-logic-apps-web-VerifyInputs-useCountdown.spec.ts"
+        "apps/web-next/src/components/verification/test/R-014-S-014-pure-logic-apps-web-VerifyInputs-useCountdown.test.ts"
       ],
       "requirementIds": [
         "R-014"
@@ -3985,10 +3397,10 @@
       "argv": [
         "pnpm",
         "--filter",
-        "@fameex/web",
+        "web-next",
         "test",
         "--run",
-        "apps/web/src/__tests__/PR-02233/R-014-S-014-payload-contract-apps-web-VerifyInputs-useCountdown.spec.ts"
+        "apps/web-next/src/components/verification/test/R-014-S-014-payload-contract-apps-web-VerifyInputs-useCountdown.test.ts"
       ],
       "requirementIds": [
         "R-014"
@@ -4019,10 +3431,10 @@
       "argv": [
         "pnpm",
         "--filter",
-        "@fameex/web",
+        "web-next",
         "test",
         "--run",
-        "apps/web/src/__tests__/PR-02233/R-015-S-015-pure-logic-apps-web-VerifyInputs-useSmsErrorBar.spec.ts"
+        "apps/web-next/src/components/verification/test/R-015-S-015-pure-logic-apps-web-VerifyInputs-useSmsErrorBar.test.ts"
       ],
       "requirementIds": [
         "R-015"
@@ -4035,12 +3447,10 @@
       "evidenceId": "E-58",
       "kind": "component-dom",
       "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-015-S-015-component-dom-apps-web-VerifyInputs-useSmsErrorBar.spec.ts"
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-015-S-015-dom-contract.json"
       ],
       "requirementIds": [
         "R-015"
@@ -4055,10 +3465,10 @@
       "argv": [
         "pnpm",
         "--filter",
-        "@fameex/web",
+        "web-next",
         "test",
         "--run",
-        "apps/web/src/__tests__/PR-02233/R-015-S-088-pure-logic-apps-web-IP-UID-60.spec.ts"
+        "apps/web-next/src/components/verification/test/R-015-S-088-pure-logic-apps-web-IP-UID-60.test.ts"
       ],
       "requirementIds": [
         "R-015"
@@ -4071,12 +3481,10 @@
       "evidenceId": "E-60",
       "kind": "component-dom",
       "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-015-S-088-component-dom-apps-web-IP-UID-60.spec.ts"
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-015-S-088-dom-contract.json"
       ],
       "requirementIds": [
         "R-015"
@@ -4091,10 +3499,10 @@
       "argv": [
         "pnpm",
         "--filter",
-        "@fameex/web",
+        "web-next",
         "test",
         "--run",
-        "apps/web/src/__tests__/PR-02233/R-016-S-016-pure-logic-apps-web-VerifyInputs.spec.ts"
+        "apps/web-next/src/components/verification/test/R-016-S-016-pure-logic-apps-web-VerifyInputs.test.ts"
       ],
       "requirementIds": [
         "R-016"
@@ -4107,12 +3515,10 @@
       "evidenceId": "E-62",
       "kind": "component-dom",
       "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-016-S-016-component-dom-apps-web-VerifyInputs.spec.ts"
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-016-S-016-dom-contract.json"
       ],
       "requirementIds": [
         "R-016"
@@ -4127,10 +3533,10 @@
       "argv": [
         "pnpm",
         "--filter",
-        "@fameex/web",
+        "web-next",
         "test",
         "--run",
-        "apps/web/src/__tests__/PR-02233/R-017-S-017-pure-logic-posthog-verification-scene-view.spec.ts"
+        "apps/web-next/src/components/verification/test/R-017-S-017-pure-logic-posthog-verification-scene-view.tracking.test.ts"
       ],
       "requirementIds": [
         "R-017"
@@ -4145,10 +3551,10 @@
       "argv": [
         "pnpm",
         "--filter",
-        "@fameex/web",
+        "web-next",
         "test",
         "--run",
-        "apps/web/src/__tests__/PR-02233/R-017-S-017-payload-contract-posthog-verification-scene-view.spec.ts"
+        "apps/web-next/src/components/verification/test/R-017-S-017-payload-contract-posthog-verification-scene-view.tracking.test.ts"
       ],
       "requirementIds": [
         "R-017"
@@ -4163,10 +3569,10 @@
       "argv": [
         "pnpm",
         "--filter",
-        "@fameex/web",
+        "web-next",
         "test",
         "--run",
-        "apps/web/src/__tests__/PR-02233/R-017-S-070-pure-logic-posthog-click-get-code.spec.ts"
+        "apps/web-next/src/components/verification/test/R-017-S-070-pure-logic-posthog-click-get-code.tracking.test.ts"
       ],
       "requirementIds": [
         "R-017"
@@ -4181,10 +3587,10 @@
       "argv": [
         "pnpm",
         "--filter",
-        "@fameex/web",
+        "web-next",
         "test",
         "--run",
-        "apps/web/src/__tests__/PR-02233/R-017-S-070-payload-contract-posthog-click-get-code.spec.ts"
+        "apps/web-next/src/components/verification/test/R-017-S-070-payload-contract-posthog-click-get-code.tracking.test.ts"
       ],
       "requirementIds": [
         "R-017"
@@ -4199,10 +3605,10 @@
       "argv": [
         "pnpm",
         "--filter",
-        "@fameex/web",
+        "web-next",
         "test",
         "--run",
-        "apps/web/src/__tests__/PR-02233/R-017-S-071-pure-logic-posthog-code-send-result.spec.ts"
+        "apps/web-next/src/components/verification/test/R-017-S-071-pure-logic-posthog-code-send-result.tracking.test.ts"
       ],
       "requirementIds": [
         "R-017"
@@ -4217,10 +3623,10 @@
       "argv": [
         "pnpm",
         "--filter",
-        "@fameex/web",
+        "web-next",
         "test",
         "--run",
-        "apps/web/src/__tests__/PR-02233/R-017-S-071-payload-contract-posthog-code-send-result.spec.ts"
+        "apps/web-next/src/components/verification/test/R-017-S-071-payload-contract-posthog-code-send-result.tracking.test.ts"
       ],
       "requirementIds": [
         "R-017"
@@ -4235,10 +3641,10 @@
       "argv": [
         "pnpm",
         "--filter",
-        "@fameex/web",
+        "web-next",
         "test",
         "--run",
-        "apps/web/src/__tests__/PR-02233/R-017-S-072-pure-logic-posthog-hit-rate-limit.spec.ts"
+        "apps/web-next/src/components/verification/test/R-017-S-072-pure-logic-posthog-hit-rate-limit.tracking.test.ts"
       ],
       "requirementIds": [
         "R-017"
@@ -4253,10 +3659,10 @@
       "argv": [
         "pnpm",
         "--filter",
-        "@fameex/web",
+        "web-next",
         "test",
         "--run",
-        "apps/web/src/__tests__/PR-02233/R-017-S-072-payload-contract-posthog-hit-rate-limit.spec.ts"
+        "apps/web-next/src/components/verification/test/R-017-S-072-payload-contract-posthog-hit-rate-limit.tracking.test.ts"
       ],
       "requirementIds": [
         "R-017"
@@ -4271,10 +3677,10 @@
       "argv": [
         "pnpm",
         "--filter",
-        "@fameex/web",
+        "web-next",
         "test",
         "--run",
-        "apps/web/src/__tests__/PR-02233/R-017-S-073-pure-logic-posthog-switch-channel.spec.ts"
+        "apps/web-next/src/components/verification/test/R-017-S-073-pure-logic-posthog-switch-channel.tracking.test.ts"
       ],
       "requirementIds": [
         "R-017"
@@ -4289,10 +3695,10 @@
       "argv": [
         "pnpm",
         "--filter",
-        "@fameex/web",
+        "web-next",
         "test",
         "--run",
-        "apps/web/src/__tests__/PR-02233/R-017-S-073-payload-contract-posthog-switch-channel.spec.ts"
+        "apps/web-next/src/components/verification/test/R-017-S-073-payload-contract-posthog-switch-channel.tracking.test.ts"
       ],
       "requirementIds": [
         "R-017"
@@ -4307,10 +3713,10 @@
       "argv": [
         "pnpm",
         "--filter",
-        "@fameex/web",
+        "web-next",
         "test",
         "--run",
-        "apps/web/src/__tests__/PR-02233/R-017-S-074-pure-logic-posthog-view-no-code-guide.spec.ts"
+        "apps/web-next/src/components/verification/test/R-017-S-074-pure-logic-posthog-view-no-code-guide.tracking.test.ts"
       ],
       "requirementIds": [
         "R-017"
@@ -4325,10 +3731,10 @@
       "argv": [
         "pnpm",
         "--filter",
-        "@fameex/web",
+        "web-next",
         "test",
         "--run",
-        "apps/web/src/__tests__/PR-02233/R-017-S-074-payload-contract-posthog-view-no-code-guide.spec.ts"
+        "apps/web-next/src/components/verification/test/R-017-S-074-payload-contract-posthog-view-no-code-guide.tracking.test.ts"
       ],
       "requirementIds": [
         "R-017"
@@ -4343,10 +3749,10 @@
       "argv": [
         "pnpm",
         "--filter",
-        "@fameex/web",
+        "web-next",
         "test",
         "--run",
-        "apps/web/src/__tests__/PR-02233/R-017-S-075-pure-logic-posthog-code-verify-submit.spec.ts"
+        "apps/web-next/src/components/verification/test/R-017-S-075-pure-logic-posthog-code-verify-submit.tracking.test.ts"
       ],
       "requirementIds": [
         "R-017"
@@ -4361,10 +3767,10 @@
       "argv": [
         "pnpm",
         "--filter",
-        "@fameex/web",
+        "web-next",
         "test",
         "--run",
-        "apps/web/src/__tests__/PR-02233/R-017-S-075-payload-contract-posthog-code-verify-submit.spec.ts"
+        "apps/web-next/src/components/verification/test/R-017-S-075-payload-contract-posthog-code-verify-submit.tracking.test.ts"
       ],
       "requirementIds": [
         "R-017"
@@ -4379,10 +3785,10 @@
       "argv": [
         "pnpm",
         "--filter",
-        "@fameex/web",
+        "web-next",
         "test",
         "--run",
-        "apps/web/src/__tests__/PR-02233/R-017-S-076-pure-logic-posthog-code-verify-result.spec.ts"
+        "apps/web-next/src/components/verification/test/R-017-S-076-pure-logic-posthog-code-verify-result.tracking.test.ts"
       ],
       "requirementIds": [
         "R-017"
@@ -4397,10 +3803,10 @@
       "argv": [
         "pnpm",
         "--filter",
-        "@fameex/web",
+        "web-next",
         "test",
         "--run",
-        "apps/web/src/__tests__/PR-02233/R-017-S-076-payload-contract-posthog-code-verify-result.spec.ts"
+        "apps/web-next/src/components/verification/test/R-017-S-076-payload-contract-posthog-code-verify-result.tracking.test.ts"
       ],
       "requirementIds": [
         "R-017"
@@ -4442,38 +3848,6 @@
       ]
     },
     {
-      "evidenceId": "E-81",
-      "kind": "browser-interaction",
-      "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-027-S-062.json"
-      ],
-      "requirementIds": [
-        "R-027"
-      ],
-      "surfaceIds": [
-        "S-062"
-      ]
-    },
-    {
-      "evidenceId": "E-82",
-      "kind": "browser-interaction",
-      "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-027-S-063.json"
-      ],
-      "requirementIds": [
-        "R-027"
-      ],
-      "surfaceIds": [
-        "S-063"
-      ]
-    },
-    {
       "evidenceId": "E-83",
       "kind": "browser-interaction",
       "argv": [
@@ -4506,199 +3880,13 @@
       ]
     },
     {
-      "evidenceId": "E-85",
-      "kind": "contract-or-scenario-tests",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233"
-      ],
-      "requirementIds": [
-        "R-001",
-        "R-002",
-        "R-003",
-        "R-004",
-        "R-005",
-        "R-006",
-        "R-007",
-        "R-008",
-        "R-009",
-        "R-010",
-        "R-011",
-        "R-012",
-        "R-013",
-        "R-014",
-        "R-015",
-        "R-016",
-        "R-017",
-        "R-027",
-        "R-029"
-      ],
-      "surfaceIds": [
-        "S-001",
-        "S-002",
-        "S-003",
-        "S-004",
-        "S-066",
-        "S-005",
-        "S-006",
-        "S-007",
-        "S-086",
-        "S-095",
-        "S-096",
-        "S-097",
-        "S-098",
-        "S-099",
-        "S-030",
-        "S-031",
-        "S-032",
-        "S-033",
-        "S-034",
-        "S-035",
-        "S-036",
-        "S-037",
-        "S-038",
-        "S-039",
-        "S-040",
-        "S-043",
-        "S-041",
-        "S-042",
-        "S-050",
-        "S-051",
-        "S-052",
-        "S-053",
-        "S-054",
-        "S-009",
-        "S-010",
-        "S-011",
-        "S-012",
-        "S-013",
-        "S-014",
-        "S-015",
-        "S-088",
-        "S-016",
-        "S-017",
-        "S-070",
-        "S-071",
-        "S-072",
-        "S-073",
-        "S-074",
-        "S-075",
-        "S-076",
-        "S-060",
-        "S-061",
-        "S-062",
-        "S-063",
-        "S-064",
-        "S-065",
-        "S-102",
-        "S-089"
-      ]
-    },
-    {
-      "evidenceId": "E-86",
-      "kind": "directed-quality",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "typecheck"
-      ],
-      "requirementIds": [
-        "R-001",
-        "R-002",
-        "R-003",
-        "R-004",
-        "R-005",
-        "R-006",
-        "R-007",
-        "R-008",
-        "R-009",
-        "R-010",
-        "R-011",
-        "R-012",
-        "R-013",
-        "R-014",
-        "R-015",
-        "R-016",
-        "R-017",
-        "R-027",
-        "R-029"
-      ],
-      "surfaceIds": [
-        "S-001",
-        "S-002",
-        "S-003",
-        "S-004",
-        "S-066",
-        "S-005",
-        "S-006",
-        "S-007",
-        "S-086",
-        "S-095",
-        "S-096",
-        "S-097",
-        "S-098",
-        "S-099",
-        "S-030",
-        "S-031",
-        "S-032",
-        "S-033",
-        "S-034",
-        "S-035",
-        "S-036",
-        "S-037",
-        "S-038",
-        "S-039",
-        "S-040",
-        "S-043",
-        "S-041",
-        "S-042",
-        "S-050",
-        "S-051",
-        "S-052",
-        "S-053",
-        "S-054",
-        "S-009",
-        "S-010",
-        "S-011",
-        "S-012",
-        "S-013",
-        "S-014",
-        "S-015",
-        "S-088",
-        "S-016",
-        "S-017",
-        "S-070",
-        "S-071",
-        "S-072",
-        "S-073",
-        "S-074",
-        "S-075",
-        "S-076",
-        "S-060",
-        "S-061",
-        "S-062",
-        "S-063",
-        "S-064",
-        "S-065",
-        "S-102",
-        "S-089"
-      ]
-    },
-    {
       "evidenceId": "E-87",
       "kind": "copy-literal",
       "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-029-i18n-coverage.spec.ts"
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-029-S-089-dom-contract.json"
       ],
       "requirementIds": [
         "R-029"
@@ -4713,20 +3901,17 @@
       "argv": [
         "pnpm",
         "--filter",
-        "@fameex/web",
+        "web-next",
         "test",
         "--run",
-        "apps/web/src/__tests__/PR-02233/R-006-verification-priority-consumer-matrix.spec.ts"
+        "apps/web-next/src/components/verification/test/R-006-verification-priority-consumer-matrix.test.ts"
       ],
       "requirementIds": [
         "R-006"
       ],
       "surfaceIds": [
         "S-095",
-        "S-096",
-        "S-097",
-        "S-098",
-        "S-099"
+        "S-096"
       ]
     },
     {
@@ -4749,22 +3934,17 @@
       "evidenceId": "E-90",
       "kind": "component-dom",
       "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-006-consumer-dom-matrix.spec.ts"
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-006-S-095-dom-contract.json"
       ],
       "requirementIds": [
         "R-006"
       ],
       "surfaceIds": [
         "S-095",
-        "S-096",
-        "S-097",
-        "S-098",
-        "S-099"
+        "S-096"
       ]
     },
     {
@@ -4773,42 +3953,178 @@
       "argv": [
         "pnpm",
         "--filter",
-        "@fameex/web",
+        "web-next",
         "test",
         "--run",
-        "apps/web/src/__tests__/PR-02233/R-006-consumer-priority-matrix.spec.ts"
+        "apps/web-next/src/components/verification/test/R-006-consumer-priority-matrix.test.ts"
       ],
       "requirementIds": [
         "R-006"
       ],
       "surfaceIds": [
         "S-095",
-        "S-096",
-        "S-097",
-        "S-098",
-        "S-099"
+        "S-096"
       ]
     },
     {
       "evidenceId": "E-92",
       "kind": "copy-literal",
       "argv": [
-        "pnpm",
-        "--filter",
-        "@fameex/web",
-        "test",
-        "--run",
-        "apps/web/src/__tests__/PR-02233/R-006-consumer-copy-matrix.spec.ts"
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-006-S-095-dom-contract.json"
       ],
       "requirementIds": [
         "R-006"
       ],
       "surfaceIds": [
         "S-095",
-        "S-096",
-        "S-097",
-        "S-098",
-        "S-099"
+        "S-096"
+      ]
+    },
+    {
+      "evidenceId": "E-93",
+      "kind": "component-dom",
+      "argv": [
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-009-S-113-dom-contract.json"
+      ],
+      "requirementIds": [
+        "R-009"
+      ],
+      "surfaceIds": [
+        "S-113"
+      ]
+    },
+    {
+      "evidenceId": "E-94",
+      "kind": "component-dom",
+      "argv": [
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-010-S-114-dom-contract.json"
+      ],
+      "requirementIds": [
+        "R-010"
+      ],
+      "surfaceIds": [
+        "S-114"
+      ]
+    },
+    {
+      "evidenceId": "E-95",
+      "kind": "component-dom",
+      "argv": [
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-011-S-115-dom-contract.json"
+      ],
+      "requirementIds": [
+        "R-011"
+      ],
+      "surfaceIds": [
+        "S-115"
+      ]
+    },
+    {
+      "evidenceId": "E-96",
+      "kind": "component-dom",
+      "argv": [
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-012-S-116-dom-contract.json"
+      ],
+      "requirementIds": [
+        "R-012"
+      ],
+      "surfaceIds": [
+        "S-116"
+      ]
+    },
+    {
+      "evidenceId": "E-97",
+      "kind": "component-dom",
+      "argv": [
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-013-S-117-dom-contract.json"
+      ],
+      "requirementIds": [
+        "R-013"
+      ],
+      "surfaceIds": [
+        "S-117"
+      ]
+    },
+    {
+      "evidenceId": "E-98",
+      "kind": "component-dom",
+      "argv": [
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-014-S-118-dom-contract.json"
+      ],
+      "requirementIds": [
+        "R-014"
+      ],
+      "surfaceIds": [
+        "S-118"
+      ]
+    },
+    {
+      "evidenceId": "E-99",
+      "kind": "component-dom",
+      "argv": [
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-015-S-119-dom-contract.json"
+      ],
+      "requirementIds": [
+        "R-015"
+      ],
+      "surfaceIds": [
+        "S-119"
+      ]
+    },
+    {
+      "evidenceId": "E-100",
+      "kind": "component-dom",
+      "argv": [
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-016-S-120-dom-contract.json"
+      ],
+      "requirementIds": [
+        "R-016"
+      ],
+      "surfaceIds": [
+        "S-120"
+      ]
+    },
+    {
+      "evidenceId": "E-101",
+      "kind": "component-dom",
+      "argv": [
+        "node",
+        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
+        "--scenario",
+        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-017-S-121-dom-contract.json"
+      ],
+      "requirementIds": [
+        "R-017"
+      ],
+      "surfaceIds": [
+        "S-121"
       ]
     }
   ],
@@ -4924,17 +4240,7 @@
       "reason": "版本元数据或评审过程记录，不是实现需求"
     }
   ],
-  "scopeApproval": {
-    "confirmationKind": "human",
-    "confirmedBy": "project-owner-via-chat",
-    "confirmedAt": "2026-09-12",
-    "reason": "Approved the current PR-02233 doing scope and accepted fail-closed blocking while required Figma/API dependencies remain unavailable.",
-    "recordedVia": {
-      "client": "human",
-      "sessionId": "v3-3-completion"
-    },
-    "fingerprint": "e6e01c1f0e45f574b4ed072bf92c5504cfadedac43715bc9f6df0ba01163098a"
-  },
+  "scopeApproval": null,
   "autopilot": {
     "phase": "intake",
     "implementation": {
@@ -5318,21 +4624,34 @@
   },
   "extractionAudit": {
     "schemaVersion": 1,
-    "auditedAt": "2026-09-12T10:25:38.896Z",
+    "auditedAt": "2026-09-16T10:30:39.533Z",
     "sourceFingerprint": "c9c32b814a286dca6b092ebf4e11ab3730441c7b0915a85470b28c5452efe09d",
-    "requirementsFingerprint": "3673a3a29ce3662ff0a8b79eae1474e0dd5dd3d47677e1b2cca72b63a59cf3e7",
+    "requirementsFingerprint": "1f3384bdc7224ee59cb622cd61d74bf7ebc9120794e9d3012d66c9775b264d16",
+    "evidencePlanFingerprint": "b55e831fe6a04e935b30b375e72221a2a8833dc314fb33f733e8eb02b6b83283",
     "sourceUnitsFingerprint": "1baa83316e03ef19b24561d3e625488c9bf0494b168e68e20939f134c27db54c",
-    "status": "pass",
+    "status": "fail",
     "checks": [
+      {
+        "code": "INTAKE_SOURCE_BINDING",
+        "ok": true,
+        "problems": []
+      },
       {
         "code": "EXTRACTION_STRUCTURE",
         "ok": true,
         "problems": []
       },
       {
-        "code": "EVIDENCE_COMMANDS",
+        "code": "EXTRACTION_TRACEABILITY",
         "ok": true,
         "problems": []
+      },
+      {
+        "code": "EVIDENCE_COMMANDS",
+        "ok": false,
+        "problems": [
+          "evidence plan does not cover required directed-quality"
+        ]
       }
     ]
   },
@@ -5514,30 +4833,562 @@
       }
     ]
   },
-  "reviewAdjudication": {
-    "schemaVersion": 1,
-    "originalReviewRunId": "review-86f1107e-e91f-4166-add1-2d7415a8c33f",
-    "sourceFingerprint": "c9c32b814a286dca6b092ebf4e11ab3730441c7b0915a85470b28c5452efe09d",
-    "requirementsFingerprint": "3673a3a29ce3662ff0a8b79eae1474e0dd5dd3d47677e1b2cca72b63a59cf3e7",
-    "adjudicatedBy": "project-owner-prior-confirmation",
-    "adjudicatedAt": "2026-09-12",
-    "reason": "Preserve the previously confirmed forgot-password page-form exception recorded in R-028; the independent reviewer correctly identified the source-level tension, which is resolved by explicit human scope authority.",
-    "recordedVia": {
-      "client": "human",
-      "sessionId": "v3-3-completion"
+  "reviewAdjudication": null,
+  "extractionFacts": [
+    {
+      "factId": "F-001",
+      "category": "action",
+      "statement": "Web 注册校验页「切换验证方式」文案改为「没收到验证码？尝试邮箱注册」，点击回到注册页第一步且不保留已填验证码；该 Web 文案使用稳定 i18n key、无 hardcode。App 的独立不变回归义务由 R-031 承接。",
+      "sourceIds": [
+        "SRC-4CBCA7640099",
+        "SRC-976BC1717B44",
+        "SRC-A10EDBB3130B",
+        "SRC-E9340E359735",
+        "SRC-88AE784CEEE0",
+        "SRC-888E04AA8464",
+        "SRC-11AB5AA644E3",
+        "SRC-1D9E0D0F96DF",
+        "SRC-6DF4C0A2605F",
+        "SRC-CD10F9CB66B0"
+      ],
+      "requirementIds": [
+        "R-001"
+      ]
     },
-    "decisions": [
-      {
-        "findingId": "F-001",
-        "disposition": "rejected",
-        "reason": "Forgot-password verification remains page-based by explicit project-owner decision; it is intentionally excluded from the popup-conversion implementation collection.",
-        "evidenceRefs": [
-          "work-item:R-028",
-          "source:SRC-F11347F738C9",
-          "decision:project-owner-forgot-password-page-exception"
-        ]
-      }
+    {
+      "factId": "F-002",
+      "category": "action",
+      "statement": "Web 登录校验页移除旧的、点击后仅跳回登录页的无效「切换验证方式」实现；最终态不是完全移除切换能力，而是由 R-003～R-005 在确认按钮下提供仅对绑定 ≥2 种方式用户展示的真实切换入口。旧验收表中“登录校验区域不再展示任何切换入口”的行已被后续内审结论和详细流程取代。",
+      "sourceIds": [
+        "SRC-069875091668",
+        "SRC-15FEF963C1CB",
+        "SRC-4E02866959D4",
+        "SRC-AC4BD5C0303D",
+        "SRC-C1989E5A2246",
+        "SRC-8A57819ED822"
+      ],
+      "requirementIds": [
+        "R-002"
+      ]
+    },
+    {
+      "factId": "F-003",
+      "category": "action",
+      "statement": "登录校验区【确认】按钮下方新增【切换验证方式】入口，仅当用户绑定 ≥2 种方式时展示，单一方式隐藏。该入口按钮文案需在所有支持语言下正确展示，无 hardcode 中文。",
+      "sourceIds": [
+        "SRC-766B6B55EA75",
+        "SRC-A3D32D48F59C",
+        "SRC-CD10F9CB66B0"
+      ],
+      "requirementIds": [
+        "R-003"
+      ]
+    },
+    {
+      "factId": "F-004",
+      "category": "action",
+      "statement": "点击【切换验证方式】弹出弹窗：标题「切换验证方式」/副标题「选择一种已绑定的验证方式完成登录」；列表项含图标+方式名称+说明(邮箱/手机脱敏；GA 显示“30秒自动更新,无需发送”)；当前方式同时显示【当前】标记和明确的选中高亮边框；排序 GA→邮箱→手机；✕或点遮罩关闭且不改当前方式。列表仅展示用户已绑定的方式，不展示未绑定的方式。所有新增文案使用稳定 i18n key、无 hardcode。",
+      "sourceIds": [
+        "SRC-0CC76D6FFA98",
+        "SRC-D1C2FCC8327C",
+        "SRC-ACF9FEEB80B5",
+        "SRC-CD10F9CB66B0"
+      ],
+      "requirementIds": [
+        "R-004"
+      ]
+    },
+    {
+      "factId": "F-005",
+      "category": "action",
+      "statement": "在切换弹窗选择某方式后弹窗关闭、校验区切换为所选方式输入样式；进入登录默认取最高优先级(GA>邮箱>手机)，切换是用户主动改用其他已绑定方式。",
+      "sourceIds": [
+        "SRC-32BB33C415FE",
+        "SRC-2C809FE54A7D"
+      ],
+      "requirementIds": [
+        "R-005"
+      ]
+    },
+    {
+      "factId": "F-006",
+      "category": "action",
+      "statement": "验证方式默认优先级规则解析：注册=单一(注册所选手机/邮箱)；登录=单一可切换 GA>邮箱>手机；提币/改密等强制双重取已绑定前两位(GA+邮箱>GA+手机>邮箱+手机)；其他敏感操作单绑单一、双绑及以上双重。边界：提币/双重校验场景若用户仅绑定一种验证方式，需提示用户需绑定至少两种验证方式方可提币(或走现有业务兜底策略)。修改密码场景与提币共用同一条边界规则：仅绑定一种验证方式时同样需提示需绑定至少两种验证方式方可继续(或走现有业务兜底策略)。提示文案需在所有支持语言下正确展示，无 hardcode 中文。",
+      "sourceIds": [
+        "SRC-E98FF0CAE893",
+        "SRC-5B31D0A17CD5",
+        "SRC-BCDD9CCDFBD9",
+        "SRC-E39CF1EC41D5",
+        "SRC-DE873CBBC6C4",
+        "SRC-83D2F0FC8202",
+        "SRC-19DB5086B468",
+        "SRC-7100F25E8992",
+        "SRC-6B74259F46BC",
+        "SRC-153253CA3A3B",
+        "SRC-B3E6F8C2E8F4",
+        "SRC-0E73C3FFC609",
+        "SRC-86E7F5C1BABA",
+        "SRC-CD10F9CB66B0"
+      ],
+      "requirementIds": [
+        "R-006"
+      ]
+    },
+    {
+      "factId": "F-007",
+      "category": "action",
+      "statement": "除登录/注册保留页面形式外，其余所有校验场景统一优化为弹窗模式（逐场景实现，防漏）。",
+      "sourceIds": [
+        "SRC-55D95BA8AC0B",
+        "SRC-064CB027CFB3",
+        "SRC-CB7B1EE252FC",
+        "SRC-38BD411AB7FA",
+        "SRC-E4376240B527",
+        "SRC-384DA8CDFDA5",
+        "SRC-41A6E5ADEDB7",
+        "SRC-EFAA92690017",
+        "SRC-10609BC6D905",
+        "SRC-4C392AEEDDA4",
+        "SRC-8DF0199AEEF6",
+        "SRC-B6FE06D4DAD0",
+        "SRC-ED9295E2DD4D",
+        "SRC-85551C5A7606",
+        "SRC-2CE1D6D045D6",
+        "SRC-7F0D479471E2",
+        "SRC-CBBB8578D775",
+        "SRC-F11347F738C9",
+        "SRC-D50B055E27B2",
+        "SRC-D8B6CC68C4FF",
+        "SRC-F8F4F5748F9C",
+        "SRC-9D5D2E334A10",
+        "SRC-2D93FAA3A2F7",
+        "SRC-99E6C7B114AE"
+      ],
+      "requirementIds": [
+        "R-007"
+      ]
+    },
+    {
+      "factId": "F-008",
+      "category": "action",
+      "statement": "改/绑邮箱手机表单页只验证\"新绑定目标\"(新邮箱/手机输入+验证码四态)；账户身份安全校验移到提交通过后的弹窗，弹窗方式按优先级：改邮箱/手机(有旧联系方式)=GA+邮箱/手机可切换；首次绑手机(仅有邮箱)=邮箱单一固定；首次绑邮箱(有手机+GA)=GA+手机固定。流系与回退：表单校验通过→关闭表单→弹出安全校验弹窗→弹窗内校验通过→修改/绑定生效；弹窗内取消或校验失败→修改/绑定操作不生效，可重新发起。",
+      "sourceIds": [
+        "SRC-92A84661A698",
+        "SRC-88D08D558049",
+        "SRC-2D8E58E20C07",
+        "SRC-FB35C5272486",
+        "SRC-9897ABA8C170",
+        "SRC-E7C6B3BB5974",
+        "SRC-043DED7A08A0",
+        "SRC-FAF9FEB8357B",
+        "SRC-561DCD64606F",
+        "SRC-51446BA1564A",
+        "SRC-218A9FA3A6FE",
+        "SRC-5C25B615F9F0",
+        "SRC-CB427AB579AE",
+        "SRC-BA9BDC13F94E",
+        "SRC-E4A84160AB9D",
+        "SRC-B31667AAD714"
+      ],
+      "requirementIds": [
+        "R-008"
+      ]
+    },
+    {
+      "factId": "F-009",
+      "category": "action",
+      "statement": "【没有收到验证码？】入口固定展示在验证码输入区域下方，一个验证场景只出现一次(双重校验两个验证码框也只展示一个入口)。",
+      "sourceIds": [
+        "SRC-D02ADA9DD1B7",
+        "SRC-5B4DB6029369",
+        "SRC-30D6AB99E561"
+      ],
+      "requirementIds": [
+        "R-009"
+      ]
+    },
+    {
+      "factId": "F-010",
+      "category": "action",
+      "statement": "点击【没有收到验证码？】弹出引导弹窗：标题固定；邮箱/手机双 Tab 恒显；默认 Tab 按当前请求验证码类型定位(邮箱+手机场景默认邮箱)；底部左客服 icon 右已知晓；点 Tab 仅切换正文不影响背后表单；点客服打开客服；点已知晓关闭。弹窗内所有文案(标题/Tab/正文/客服icon/已知晓按钮)需在所有支持语言下正确展示，无 hardcode 中文。",
+      "sourceIds": [
+        "SRC-D02ADA9DD1B7",
+        "SRC-D45835AF504D",
+        "SRC-F0DD46F2CF92",
+        "SRC-803C0C33923D",
+        "SRC-88BBE9AC8B14",
+        "SRC-00EDCEFE08AC",
+        "SRC-30B0E6B1EF50",
+        "SRC-E7C249802078",
+        "SRC-842262C4C28A",
+        "SRC-AD7A80D96AF6",
+        "SRC-3CCD3F0ABA76",
+        "SRC-51F931EADAFD",
+        "SRC-2361D084FC6E",
+        "SRC-FEEB903BA9E4",
+        "SRC-F5CFBE361A0C",
+        "SRC-3180FAA1AA02",
+        "SRC-A6F4AF3BCD6A",
+        "SRC-F4404B0B2AF9",
+        "SRC-B2484CB39C3C",
+        "SRC-292A2650BA83",
+        "SRC-CD10F9CB66B0"
+      ],
+      "requirementIds": [
+        "R-010"
+      ]
+    },
+    {
+      "factId": "F-011",
+      "category": "action",
+      "statement": "「没有收到验证码？」弹窗邮箱 Tab / 手机 Tab 排查文案按 PRD 逐字实现；Web 业务开发只维护 zh-CN 并使用 i18n key、禁止 hardcode，其他语言由国际化团队补齐。",
+      "sourceIds": [
+        "SRC-DD654CA0800F",
+        "SRC-C7F19E38BEF0",
+        "SRC-F4D864E9F7B6",
+        "SRC-D468D1439B42",
+        "SRC-AB80A4AE2880",
+        "SRC-BB45F7C18D26",
+        "SRC-95016299905F",
+        "SRC-5BA7813ECEED",
+        "SRC-35B83D4A991B"
+      ],
+      "requirementIds": [
+        "R-011"
+      ]
+    },
+    {
+      "factId": "F-012",
+      "category": "action",
+      "statement": "获取验证码按钮四态：初始「获取验证码」(可点)→加载(三跳动圆点,禁用)→已发送「验证码已发送」+ icon(禁用；剩余倒计时在 R-013 Tooltip 动态展示)→「重新发送」(可点)；加载态与已发送态在代码层禁用 onclick 防重复触发。",
+      "sourceIds": [
+        "SRC-F1E335E224CA",
+        "SRC-D64833C649BF",
+        "SRC-30C7ECC18211",
+        "SRC-25BAE0C9633A",
+        "SRC-2A562D5B7CF5",
+        "SRC-37642C53DCFB",
+        "SRC-D007C3260213",
+        "SRC-74621C5522D0",
+        "SRC-2B2F7ED3C449",
+        "SRC-3716EBDB13D1",
+        "SRC-4183F21A1BB5",
+        "SRC-0726E491424A"
+      ],
+      "requirementIds": [
+        "R-012"
+      ]
+    },
+    {
+      "factId": "F-013",
+      "category": "action",
+      "statement": "已发送态 icon tooltip 文案「{n}秒后可重新发送验证码，有效期为10分钟」，{n} 每秒动态刷新；Web 端鼠标悬浮 icon 显示、移出隐藏。该 tooltip 文案需在所有支持语言下正确展示，无 hardcode 中文。",
+      "sourceIds": [
+        "SRC-F1E335E224CA",
+        "SRC-7668A8B65525",
+        "SRC-B0D4E0AAF621",
+        "SRC-CD10F9CB66B0"
+      ],
+      "requirementIds": [
+        "R-013"
+      ]
+    },
+    {
+      "factId": "F-014",
+      "category": "action",
+      "statement": "邮箱与手机验证码倒计时彼此独立，切换后保留各自剩余时间；同一种验证码方式跨业务场景继续共用后端冷却（例如修改邮箱后进入提币仍受同一冷却截止时间约束）。页面刷新或离开重进时，前端依据后端返回的冷却截止时间戳恢复已发送态和剩余秒数。",
+      "sourceIds": [
+        "SRC-E16FF335C138",
+        "SRC-A3D32D48F59C",
+        "SRC-ACF9FEEB80B5",
+        "SRC-1589EBCDCC66",
+        "SRC-B244782C4028",
+        "SRC-D04A2445B410",
+        "SRC-D4F22F901A7E"
+      ],
+      "requirementIds": [
+        "R-014"
+      ]
+    },
+    {
+      "factId": "F-015",
+      "category": "action",
+      "statement": "限频类失败：命中频繁/上限时先 Toast 提示原因并对按钮做冷却禁用；禁用期间再次点击由前端拦截不发起后端请求并再次 Toast 告知，冷却时长/截止时间以后端返回为准。IP 限频/UID 限频/60秒限频需有区分性提示（前端根据后端返回的限频类型渲染对应文案，使用户和客服能看懂被拦截原因；限频类型本体的判定/错误码由 PR-02235 交付，本 PR 仅负责前端区分性渲染）。",
+      "sourceIds": [
+        "SRC-31EE6F0F4EA3",
+        "SRC-728F13C27762",
+        "SRC-812F2921CD45",
+        "SRC-C5979406ACDE",
+        "SRC-A78B1264377D",
+        "SRC-F801244EBD28",
+        "SRC-32334CDE9D08"
+      ],
+      "requirementIds": [
+        "R-015"
+      ]
+    },
+    {
+      "factId": "F-016",
+      "category": "action",
+      "statement": "服务异常时按钮从加载态回退到初始态或重新发送态，不进入 60 秒倒计时并可立即重试：无后端响应的网络异常由前端展示本地化「网络异常」Toast；服务端返回异常时透传后端错误码/错误信息。",
+      "sourceIds": [
+        "SRC-84C804D128DD",
+        "SRC-F4B85BAE1FC7",
+        "SRC-D11B2F8CD9FF",
+        "SRC-7F28D72D0EDE",
+        "SRC-2D8D131E6FC5",
+        "SRC-0F450B9EA57B"
+      ],
+      "requirementIds": [
+        "R-016"
+      ]
+    },
+    {
+      "factId": "F-017",
+      "category": "action",
+      "statement": "验证交互全事件埋点上报，8 个结构不同的事件各自独立触发时机与参数契约：verification_scene_view(interaction_type/verify_methods) / click_get_code(method/button_state/attempt_count) / code_send_result(method/result/fail_reason/fail_code/duration_ms/attempt_count) / hit_rate_limit(method/limit_type/cooldown_seconds) / switch_channel(from_method/to_method) / view_no_code_guide(current_method) / code_verify_submit(method) / code_verify_result(method/verify_mode/result/fail_reason)。",
+      "sourceIds": [
+        "SRC-23CCBF76B484",
+        "SRC-6F93F95A872D",
+        "SRC-7AC0EB7F0BDD",
+        "SRC-50A8F1CAC93A",
+        "SRC-7E7F0E1FA494",
+        "SRC-374D8CCEE017",
+        "SRC-8036D2C461DA",
+        "SRC-963A1F665E81",
+        "SRC-D32140823F42"
+      ],
+      "requirementIds": [
+        "R-017"
+      ]
+    },
+    {
+      "factId": "F-018",
+      "category": "action",
+      "statement": "[App] 全部短信验证码输入入口的「快捷填充」重复填入(如 12341234)修复：填充为替换而非追加、只填一次、位数正确可校验；iOS 与 Android 各自通过共享验证码输入控件覆盖所有入口。",
+      "sourceIds": [
+        "SRC-E4A700D2F82D",
+        "SRC-73D64CB69F5F",
+        "SRC-83AF8F66B3E0"
+      ],
+      "requirementIds": [
+        "R-018"
+      ]
+    },
+    {
+      "factId": "F-019",
+      "category": "action",
+      "statement": "[App] 登录校验新增真正的验证方式切换入口和选择弹窗，仅展示已绑定方式；由 App 团队在 App 交接批次交付。",
+      "sourceIds": [
+        "SRC-15FEF963C1CB",
+        "SRC-766B6B55EA75"
+      ],
+      "requirementIds": [
+        "R-019"
+      ]
+    },
+    {
+      "factId": "F-020",
+      "category": "action",
+      "statement": "[他 PR] PR-02235 负责限频策略本体、限频类型判定、错误码以及返回给前端的提示内容；本 PR 不推导限频类型或自造错误文案，但由 R-015 消费其返回的类型/文案/冷却时间，并完成 IP/UID/60 秒限频的前端差异化渲染和交互。 同时由 PR-02235/验证码后端补齐触发限频的 IP 与请求记录链路，供客服后台追溯具体拦截原因。",
+      "sourceIds": [
+        "SRC-F5646D2E67BA",
+        "SRC-32334CDE9D08"
+      ],
+      "requirementIds": [
+        "R-020"
+      ]
+    },
+    {
+      "factId": "F-021",
+      "category": "action",
+      "statement": "[他 PR] PR-02189 负责短信渠道资产与智能路由：移除或过滤不再使用的渠道，并按国家、运营商或邮箱后缀选择可用渠道。",
+      "sourceIds": [
+        "SRC-E1B451445429",
+        "SRC-F3D910888827"
+      ],
+      "requirementIds": [
+        "R-021"
+      ]
+    },
+    {
+      "factId": "F-022",
+      "category": "action",
+      "statement": "[他 PR] 通行密钥(passkey)作为备用验证方式由 PR-02234【用户端】新增通行密钥 交付；本 PR 不实现通行密钥本身。",
+      "sourceIds": [
+        "SRC-32334CDE9D08",
+        "SRC-E1B451445429"
+      ],
+      "requirementIds": [
+        "R-026"
+      ]
+    },
+    {
+      "factId": "F-023",
+      "category": "action",
+      "statement": "忘记密码验证码校验流精保持页面形式(与登录/注册一致)，不纳入本次弹窗化改造范围；行为不变。(用户确认)",
+      "sourceIds": [
+        "SRC-D50B055E27B2",
+        "SRC-610E293D8B8C"
+      ],
+      "requirementIds": [
+        "R-028"
+      ]
+    },
+    {
+      "factId": "F-024",
+      "category": "action",
+      "statement": "验收标准回归项全链路回归：登录→验证码校验→登录成功/失败；注册→验证码校验→注册成功/失败；提币→双重校验→提币成功/失败；修改安全设置→校验→修改成功/失败，交互改动后链路仍完整；GA 校验在登录/提币等场景不受本次交互改动影响；后台验证码下发功能不因前端交互改动导致下发中断。 Web H5 与 PC 使用同一实现但必须通过双视口场景矩阵；App iOS 与 Android 的同组全链路回归分别交接。",
+      "sourceIds": [
+        "SRC-87CD64CAB9DF",
+        "SRC-39F15B295F10",
+        "SRC-1FE715049BF2",
+        "SRC-0F79C545C922",
+        "SRC-4F48C4F035F0",
+        "SRC-679C32DB40DE",
+        "SRC-E65C2D44E3D2",
+        "SRC-4943E58EC0E3",
+        "SRC-0C62739FEFE4",
+        "SRC-32D265D18E61"
+      ],
+      "requirementIds": [
+        "R-027"
+      ]
+    },
+    {
+      "factId": "F-025",
+      "category": "action",
+      "statement": "所有本 PR 新增或修改的用户可见文案均覆盖平台支持语言：Web 业务开发提交稳定 i18n key 与 zh-CN 源文案，禁止 hardcode；其余支持语言由国际化团队通过统一翻译交付物补齐，owner=国际化团队，batch=PR-02233 locale handoff。范围包括注册/登录切换入口与弹窗、验证优先级边界提示、未收到验证码弹窗、验证码按钮四态、Tooltip、网络异常和限频展示。",
+      "sourceIds": [
+        "SRC-CD10F9CB66B0",
+        "SRC-30C7ECC18211",
+        "SRC-25BAE0C9633A",
+        "SRC-2A562D5B7CF5",
+        "SRC-37642C53DCFB",
+        "SRC-842262C4C28A",
+        "SRC-AD7A80D96AF6",
+        "SRC-2361D084FC6E",
+        "SRC-4183F21A1BB5",
+        "SRC-6DF4C0A2605F"
+      ],
+      "requirementIds": [
+        "R-029"
+      ]
+    },
+    {
+      "factId": "F-026",
+      "category": "action",
+      "statement": "[App] 已发送态 icon 点击显示动态倒计时 Tooltip；再次点击 icon 或点击页面其他区域关闭。",
+      "sourceIds": [
+        "SRC-7668A8B65525"
+      ],
+      "requirementIds": [
+        "R-030"
+      ]
+    },
+    {
+      "factId": "F-027",
+      "category": "action",
+      "statement": "[App] 注册验证码页面保持现有切换注册方式引导和返回注册页行为不变，作为 App 回归项。",
+      "sourceIds": [
+        "SRC-A10EDBB3130B",
+        "SRC-1D9E0D0F96DF"
+      ],
+      "requirementIds": [
+        "R-031"
+      ]
+    },
+    {
+      "factId": "F-028",
+      "category": "action",
+      "statement": "[后台交接] 建立短信主动监控与告警，覆盖到达率、投递延迟、失败率以及运营商侧日上限；不得仅依赖用户投诉后被动排查。",
+      "sourceIds": [
+        "SRC-E1B451445429",
+        "SRC-F3D910888827"
+      ],
+      "requirementIds": [
+        "R-032"
+      ]
+    },
+    {
+      "factId": "F-029",
+      "category": "action",
+      "statement": "[后台/产品交接] 明确延迟验证码与重新发送后的验证码签发、失效及用户提示语义，避免旧码仍在途时生成多个有效码而使用户无法判断应使用哪一个。",
+      "sourceIds": [
+        "SRC-F3D910888827"
+      ],
+      "requirementIds": [
+        "R-033"
+      ]
+    },
+    {
+      "factId": "F-030",
+      "category": "action",
+      "statement": "[他 PR] 短信主渠道异常时自动降级到下一可用渠道并重新签发验证码；验证码有效期为 10 分钟。",
+      "sourceIds": [
+        "SRC-E1B451445429",
+        "SRC-F3D910888827"
+      ],
+      "requirementIds": [
+        "R-034"
+      ]
+    },
+    {
+      "factId": "F-031",
+      "category": "action",
+      "statement": "[运营交接] 人工下发按渠道以 3～5 分钟间隔依次尝试；全部失败后进入人工提币与人工冲销 SOP。",
+      "sourceIds": [
+        "SRC-E1B451445429"
+      ],
+      "requirementIds": [
+        "R-035"
+      ]
+    },
+    {
+      "factId": "F-032",
+      "category": "action",
+      "statement": "[后台交接] 暴露第三方短信渠道的发送返回状态或可查询详情，供客服定位每次投递故障。",
+      "sourceIds": [
+        "SRC-E1B451445429",
+        "SRC-F3D910888827"
+      ],
+      "requirementIds": [
+        "R-036"
+      ]
+    }
+  ],
+  "deliveryScope": {
+    "kind": "bounded-batch",
+    "batchId": "PR-02233-web-next-auth-verification",
+    "includedRequirementIds": [
+      "R-001",
+      "R-002",
+      "R-003",
+      "R-004",
+      "R-005",
+      "R-006",
+      "R-009",
+      "R-010",
+      "R-011",
+      "R-012",
+      "R-013",
+      "R-014",
+      "R-015",
+      "R-016",
+      "R-017",
+      "R-027",
+      "R-029"
     ],
-    "effectiveVerdict": "pass"
+    "policyPaths": [
+      "apps/web-next/src/components/verification",
+      "apps/web-next/src/apps/Login",
+      "apps/web-next/src/apps/Register",
+      "apps/web-next/src/apps/ResetPassword"
+    ],
+    "deferred": {
+      "owner": "PR-02233 后续批次(待 Account/Assets 迁移)",
+      "batch": "web-next-account-assets-migration",
+      "reason": "Account/Assets 消费面(提币/改密/绑定邮箱手机/API管理/地址管理/注销/BuyCrypto)尚未迁移到 web-next，随迁移批次接入本 PR 已完成的验证封装件(methodResolver/SwitchVerifyMethodDialog/NoCodeGuideDialog/SendCodeButton/tracking)"
+    }
   }
 }

@@ -1,0 +1,23 @@
+{
+  "note": "R-016/S-120 DOM 契约验证草稿（锚点/class/文案取值比对）；实现后按真实选择器/URL 完善，替换 TBD 占位。定位：apps/web-next/src/apps/ResetPassword 服务异常回退应用",
+  "steps": [
+    {
+      "tool": "browser_navigate",
+      "arguments": {
+        "url": "${BASE_URL}/zh-CN/TBD-实现后回填"
+      },
+      "assert": {
+        "contains": "TBD-实现后回填"
+      }
+    },
+    {
+      "tool": "browser_evaluate",
+      "arguments": {
+        "function": "() => ({ /* TBD: 实现后取 anchor/class/computed style/文案 */ })"
+      },
+      "assert": {
+        "contains": "TBD-实现后回填"
+      }
+    }
+  ]
+}
