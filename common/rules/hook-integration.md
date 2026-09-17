@@ -27,7 +27,7 @@ node apps/web/docs_tdd/common/engine/agent-scripts/rule-context.mjs resolve --fi
 
 Resolver 逐字读取当前 worktree 的 MDC：`alwaysApply: true` 总是命中，其余按仓库相对路径匹配 `globs`。`PreToolUse` 首次命中新规则时 deny-and-retry 注入正文，同一 epoch 按内容 hash 去重。96 KiB 内按稳定顺序分批注入；单条自身超限则点名要求拆分，不截断。Shell 目标分仓内、仓外、未知三态：明确写 `/dev/null` 或仓外绝对路径不触发规则，仓内照常注入，动态/不透明落点 fail-closed。
 
-重试放行前记录 pending tool，`PostToolUse` 再把文件内容 hash、规则包 fingerprint、规则 hash 和 session/context epoch 写入 `output-tdd/rule-consumption/`。`changed` 与 G5+ 对 Claude/Codex 校验当前 session 的**累计**回执；未经过 hook 的额外写入、过期内容或规则变化均阻断。SessionStart、PreCompact 和 Git HEAD 变化只开启新的**注入 epoch**（清规则注入缓存与未完成 pending），不重置会话审计基线、已消费回执、touched files 或 taint；因此压缩上下文和中途 commit 都不能洗白未覆盖写入。文件恢复到会话基线内容时可自动解除该文件 taint。账本锁带 PID/时间戳、8 秒有界退避等待和 stale 抢占；并发 hook 可排队写入且不丢更新，进程异常退出也不会永久卡死后续 hook。
+重试放行前记录 pending tool，`PostToolUse` 再把文件内容 hash、规则包 fingerprint、规则 hash 和 session/context epoch 写入 `output-tdd/rule-consumption/`。若客户端在 `PreToolUse` 暴露 wrapper tool、却在 `PostToolUse` 暴露内部 `apply_patch` 等不同 tool id，账本在 10 分钟有界窗口内按「同 epoch + PreToolUse 明确批准的目标 + 连续文件 hash 链」关联，并同时保留 pre/post tool id；未被 wrapper 明确批准的兄弟文件仍 fail-closed，避免因客户端嵌套事件模型产生假 taint，也不放宽目标边界。`changed` 与 G5+ 对 Claude/Codex 校验当前 session 的**累计**回执；未经过 hook 的额外写入、过期内容或规则变化均阻断。若确认是 Hook 漏记，使用受支持编辑工具对受影响文件显式重试；即使内容无需再变，当前 epoch 的直接 pre/post 回执也会以 `reconciledTaint` 留痕并解除该文件假 taint，不能借 wrapper 回执替其他文件恢复。SessionStart、PreCompact 和 Git HEAD 变化只开启新的**注入 epoch**（清规则注入缓存与未完成 pending），不重置会话审计基线、已消费回执、touched files 或 taint；因此压缩上下文和中途 commit 都不能洗白未覆盖写入。文件恢复到会话基线内容时也可自动解除该文件 taint。账本锁带 PID/时间戳、8 秒有界退避等待和 stale 抢占；并发 hook 可排队写入且不丢更新，进程异常退出也不会永久卡死后续 hook。`changed` 的 workflow-rule-audit 只读取业务 worktree 的回执和变更，不读取 `docs_tdd` 系统仓 dirty 状态；审计失败必须标为「代码检查未运行」，不能误报为 lint/type/test 失败或系统仓改动阻塞业务仓。
 
 没有 `globs` 且非 `alwaysApply` 的 MDC 无法按文件路径机械触发，Resolver 必须在 `unscopedRules` 中如实报告。目前已知为 `async-api-routes.mdc`；在补充明确 glob 前不宣称该条已与 Cursor 自动行为对齐。
 
@@ -93,7 +93,8 @@ Codex 配置字段名是 `timeout`（秒），不是 `hooks/list` 输出中的 `
 1. 在带 `.cursor/rules` 的临时 Git 仓库请求编辑一个 `.tsx` 文件。
 2. 首次编辑必须被拒绝并出现完整的匹配规则上下文；同一工具调用未经重试不得写入。
 3. 重试后允许写入，`rule-context.mjs status --session-id <id>` 应有对应 receipt。
-4. 绕过 hook 再改另一个文件后，`rule-context.mjs verify --session-id <id> --client <client>` 必须失败。
+4. wrapper PreToolUse + nested PostToolUse 使用不同 tool id 时，已批准目标应生成同时保留 pre/post id 的 receipt；同一 wrapper 未批准的另一文件必须失败。
+5. 绕过 hook 再改另一个文件后，`rule-context.mjs verify --session-id <id> --client <client>` 必须失败。
 
 不要在真实业务文件里保留 smoke test 代码。
 

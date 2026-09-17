@@ -100,3 +100,11 @@
 | `verify-project-gate.mjs PR-02074 G6` | G6 阶段门 | ✅ PASS 40/42 | 2 WARN：rg 环境缺失、scope 越界已登记 |
 | 人工 code-review（501 行/12 文件）| 阶段3-5 diff | ✅ 0 阻断，1 待对账观察点 | 见上方 Code Review 明细 |
 | Browser / L2 对图走查（22 张 bitmart）| 三卡形态+进行中两区块+搜索弹窗/更多页 | ⏳ 待人工 | 视觉/手感人工跑（memory 验证分工）|
+
+## 2026-09-16 test 构建热修越界说明
+
+- **越界文件**：`apps/web-next/src/platform/runtime/Runtime.ts`（全局 Runtime 组合根）。
+- **必要性**：PR-02074 合入 `test` 后，`Runtime.ts -> ServerContext -> ServerCmsBaseUrl` 将 `@tanstack/react-start/server` 带入客户端依赖图；Prediction 模块内无法切断该依赖。
+- **影响面**：所有由 router context 创建的浏览器/SSR Effect runtime；`makeRuntime` 的公开签名、target 分支与 Layer 内容保持不变。
+- **处理**：仅用 TanStack `createServerOnlyFn` 标记 `ServerContext.layer` 读取边界；不改 CMS host 规则、API 契约或业务状态。
+- **验证**：当前 feature 的 Runtime 聚焦测试、typecheck、`build:test` 通过；在 `origin/test` 临时检出上确认原 import-protection 错误消失。该检出随后暴露 `MyOrdersLink.tsx` 引用已删除 `useIsLoggedIn` 的独立构建问题，需由对应集成改动处理。

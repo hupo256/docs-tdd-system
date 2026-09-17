@@ -7,6 +7,11 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-09-16（Hook 嵌套事件兼容与审计诊断解耦）
+
+- **嵌套 tool id 对齐**：客户端以 wrapper tool 触发 `PreToolUse`、却以内层 `apply_patch` 等不同 id 触发 `PostToolUse` 时，规则消费账本按已批准目标和连续 hash 链配对，并保留 pre/post 双 id；未批准文件继续 fail-closed，避免合法编辑被误记为无回执写入。
+- **失败语义解耦**：`changed` 将此类失败明确标记为 `workflow-rule-audit`，同时输出业务 worktree、代码检查 `not-run`、恢复动作，以及“不读取 docs_tdd 系统仓 dirty 状态”的边界，避免把 Hook 基础设施异常误报为业务代码检查失败或跨仓耦合。
+
 ## 2026-09-15（验证经济与响应韧性收口）
 
 - **批次化、定向验证**：Biome / TypeScript / tests 改为相关改动稳定后集中执行；Biome 和测试必须显式指向 touched files / 直接相关测试，禁止每个小改动重复跑完整检查，也禁止整仓、整包或整目录测试。TypeScript 保持项目依赖图正确性，但只以 touched-file diagnostics 归因本次门禁。

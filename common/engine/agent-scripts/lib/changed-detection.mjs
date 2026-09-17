@@ -102,6 +102,19 @@ function changedFingerprint(id, worktree, effectiveFingerprint) {
   return createHash('sha256').update(`changed-v2\n${id}\n${effectiveFingerprint}\n${prdHash}\n${projectDocs}\n${trackedDiff}\n${untrackedPayload}`).digest('hex').slice(0, 16)
 }
 
+export function workflowRuleAuditFailure({ id, worktree, errors }) {
+  return [
+    'FAIL workflow-rule-audit',
+    `  business worktree: ${worktree}`,
+    '  scope: edit receipts in the business worktree; dirty files in the docs_tdd system repository are not evaluated',
+    '  code checks: not-run (this is workflow audit infrastructure, not a lint/type/test failure)',
+    ...errors.map((error) => `  ${error}`),
+    `  recovery: retry the affected edit with Edit/Write/apply_patch, then rerun docs-tdd changed ${id}`,
+    '  if a supported tool was already used, report a docs-tdd hook/receipt defect; do not report a business-code check failure',
+    `changed: ${id} — BLOCK (workflow-rule-audit)`,
+  ]
+}
+
 // `docs-tdd changed`：跑 code-rules（+ 按 manifest pilot 开关跑 msw-manifest / prd-intake），带指纹缓存。
 // 返回退出码：任一子检非 0 即非 0。noCache=true 跳过读写缓存（强制实跑）。
 export function runChanged(id, worktree, effectiveFingerprint, { noCache = false, client = 'human', sessionId = null } = {}) {
@@ -114,9 +127,7 @@ export function runChanged(id, worktree, effectiveFingerprint, { noCache = false
       conflictOverrides: config.ruleConflictOverrides || [],
     })
     if (!consumption.ok) {
-      console.error('FAIL rule-consumption')
-      for (const error of consumption.errors) console.error(`  ${error}`)
-      console.error(`changed: ${id} — BLOCK (rule-consumption)`)
+      for (const line of workflowRuleAuditFailure({ id, worktree, errors: consumption.errors })) console.error(line)
       return 1
     }
     console.log(`PASS rule-consumption (files=${consumption.files.length})`)
@@ -210,7 +221,10 @@ function selfTest() {
   assert(picked.length === 2 && picked[0] === 'ERROR: boom' && picked[1] === 'missing field', 'actionable lines picked')
   const fallback = conciseFailure({ stderr: '', stdout: 'line a\nline b\nline c' }, 2)
   assert(fallback.length === 2 && fallback[0] === 'line a', 'fallback to all lines + limit')
-  console.log('PASS changed-detection (safeLogLabel + conciseFailure)')
+  const auditFailure = workflowRuleAuditFailure({ id: 'PR-00001', worktree: '/worktree', errors: ['missing receipt'] }).join('\n')
+  assert(auditFailure.includes('dirty files in the docs_tdd system repository are not evaluated'), 'audit message explicitly rules out cross-repository dirty-state coupling')
+  assert(auditFailure.includes('code checks: not-run') && auditFailure.includes('hook/receipt defect'), 'audit message distinguishes infrastructure from code-check failure')
+  console.log('PASS changed-detection (safeLogLabel + conciseFailure + audit diagnostics)')
 }
 
 if (process.argv[1] && process.argv[1].endsWith('changed-detection.mjs') && process.argv.includes('--self-test')) selfTest()

@@ -4,4 +4,4 @@
 
 ## 项目特殊约束
 
-暂无。（若本期确无特殊约束，保留本文件并写「暂无」；不要删除此文件，否则 G0 gate 会报缺失。）
+- test 环境集成若使共享 Runtime 静态连到 server-only 模块，只允许在 Runtime 组合根增加 TanStack server/client 边界；不得在 Prediction 业务模块复制 Runtime、修改 CMS host 规则或关闭 import protection。

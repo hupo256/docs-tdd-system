@@ -415,10 +415,6 @@
           "runtimeRequired": false
         },
         {
-          "type": "pure-logic",
-          "runtimeRequired": false
-        },
-        {
           "type": "copy-literal",
           "runtimeRequired": false
         }
@@ -531,10 +527,6 @@
         }
       ],
       "evidencePlan": [
-        {
-          "type": "pure-logic",
-          "runtimeRequired": false
-        },
         {
           "type": "component-dom",
           "runtimeRequired": false
@@ -1689,10 +1681,6 @@
       "evidencePlan": [
         {
           "type": "component-dom",
-          "runtimeRequired": false
-        },
-        {
-          "type": "pure-logic",
           "runtimeRequired": false
         }
       ],
@@ -2998,1133 +2986,240 @@
   },
   "evidenceCommands": [
     {
-      "evidenceId": "E-01",
-      "kind": "copy-literal",
-      "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-001-S-001-dom-contract.json"
-      ],
-      "requirementIds": [
-        "R-001"
-      ],
-      "surfaceIds": [
-        "S-001"
-      ]
-    },
-    {
-      "evidenceId": "E-02",
+      "evidenceId": "E-201",
       "kind": "component-dom",
       "argv": [
         "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-001-S-001-dom-contract.json"
+        "apps/web-next/scripts/dom-contract/pr-02233/verification-components.mjs"
       ],
       "requirementIds": [
-        "R-001"
-      ],
-      "surfaceIds": [
-        "S-001"
-      ]
-    },
-    {
-      "evidenceId": "E-03",
-      "kind": "component-dom",
-      "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-002-S-002-dom-contract.json"
-      ],
-      "requirementIds": [
-        "R-002"
-      ],
-      "surfaceIds": [
-        "S-002"
-      ]
-    },
-    {
-      "evidenceId": "E-04",
-      "kind": "component-dom",
-      "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-003-S-003-dom-contract.json"
-      ],
-      "requirementIds": [
-        "R-003"
-      ],
-      "surfaceIds": [
-        "S-003"
-      ]
-    },
-    {
-      "evidenceId": "E-05",
-      "kind": "pure-logic",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "web-next",
-        "test",
-        "--run",
-        "apps/web-next/src/apps/Login/test/R-003-S-003-pure-logic-apps-web-VerifyInputs.test.ts"
-      ],
-      "requirementIds": [
-        "R-003"
-      ],
-      "surfaceIds": [
-        "S-003"
-      ]
-    },
-    {
-      "evidenceId": "E-06",
-      "kind": "copy-literal",
-      "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-003-S-003-dom-contract.json"
-      ],
-      "requirementIds": [
-        "R-003"
-      ],
-      "surfaceIds": [
-        "S-003"
-      ]
-    },
-    {
-      "evidenceId": "E-07",
-      "kind": "copy-literal",
-      "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-004-S-004-dom-contract.json"
-      ],
-      "requirementIds": [
-        "R-004"
-      ],
-      "surfaceIds": [
-        "S-004"
-      ]
-    },
-    {
-      "evidenceId": "E-08",
-      "kind": "component-dom",
-      "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-004-S-004-dom-contract.json"
-      ],
-      "requirementIds": [
-        "R-004"
-      ],
-      "surfaceIds": [
-        "S-004"
-      ]
-    },
-    {
-      "evidenceId": "E-09",
-      "kind": "copy-literal",
-      "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-004-S-066-dom-contract.json"
-      ],
-      "requirementIds": [
-        "R-004"
-      ],
-      "surfaceIds": [
-        "S-066"
-      ]
-    },
-    {
-      "evidenceId": "E-10",
-      "kind": "component-dom",
-      "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-004-S-066-dom-contract.json"
-      ],
-      "requirementIds": [
-        "R-004"
-      ],
-      "surfaceIds": [
-        "S-066"
-      ]
-    },
-    {
-      "evidenceId": "E-11",
-      "kind": "pure-logic",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "web-next",
-        "test",
-        "--run",
-        "apps/web-next/src/apps/Login/test/R-005-S-005-pure-logic-apps-web-VerifyInputs.test.ts"
-      ],
-      "requirementIds": [
-        "R-005"
-      ],
-      "surfaceIds": [
-        "S-005"
-      ]
-    },
-    {
-      "evidenceId": "E-12",
-      "kind": "component-dom",
-      "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-005-S-005-dom-contract.json"
-      ],
-      "requirementIds": [
-        "R-005"
-      ],
-      "surfaceIds": [
-        "S-005"
-      ]
-    },
-    {
-      "evidenceId": "E-13",
-      "kind": "pure-logic",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "web-next",
-        "test",
-        "--run",
-        "apps/web-next/src/components/verification/test/R-006-S-006-pure-logic-apps-web-resolver-util-hook.test.ts"
-      ],
-      "requirementIds": [
-        "R-006"
-      ],
-      "surfaceIds": [
-        "S-006"
-      ]
-    },
-    {
-      "evidenceId": "E-14",
-      "kind": "component-dom",
-      "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-006-S-006-dom-contract.json"
-      ],
-      "requirementIds": [
-        "R-006"
-      ],
-      "surfaceIds": [
-        "S-006"
-      ]
-    },
-    {
-      "evidenceId": "E-15",
-      "kind": "copy-literal",
-      "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-006-S-006-dom-contract.json"
-      ],
-      "requirementIds": [
-        "R-006"
-      ],
-      "surfaceIds": [
-        "S-006"
-      ]
-    },
-    {
-      "evidenceId": "E-46",
-      "kind": "component-dom",
-      "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-009-S-009-dom-contract.json"
-      ],
-      "requirementIds": [
-        "R-009"
-      ],
-      "surfaceIds": [
-        "S-009"
-      ]
-    },
-    {
-      "evidenceId": "E-47",
-      "kind": "component-dom",
-      "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-010-S-010-dom-contract.json"
-      ],
-      "requirementIds": [
-        "R-010"
-      ],
-      "surfaceIds": [
-        "S-010"
-      ]
-    },
-    {
-      "evidenceId": "E-48",
-      "kind": "copy-literal",
-      "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-010-S-010-dom-contract.json"
-      ],
-      "requirementIds": [
-        "R-010"
-      ],
-      "surfaceIds": [
-        "S-010"
-      ]
-    },
-    {
-      "evidenceId": "E-49",
-      "kind": "copy-literal",
-      "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-011-S-011-dom-contract.json"
-      ],
-      "requirementIds": [
-        "R-011"
-      ],
-      "surfaceIds": [
-        "S-011"
-      ]
-    },
-    {
-      "evidenceId": "E-50",
-      "kind": "component-dom",
-      "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-012-S-012-dom-contract.json"
-      ],
-      "requirementIds": [
-        "R-012"
-      ],
-      "surfaceIds": [
-        "S-012"
-      ]
-    },
-    {
-      "evidenceId": "E-51",
-      "kind": "pure-logic",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "web-next",
-        "test",
-        "--run",
-        "apps/web-next/src/components/verification/test/R-012-S-012-pure-logic-apps-web-VerifyInputs-useCountdown.test.ts"
-      ],
-      "requirementIds": [
-        "R-012"
-      ],
-      "surfaceIds": [
-        "S-012"
-      ]
-    },
-    {
-      "evidenceId": "E-52",
-      "kind": "copy-literal",
-      "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-013-S-013-dom-contract.json"
-      ],
-      "requirementIds": [
-        "R-013"
-      ],
-      "surfaceIds": [
-        "S-013"
-      ]
-    },
-    {
-      "evidenceId": "E-53",
-      "kind": "component-dom",
-      "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-013-S-013-dom-contract.json"
-      ],
-      "requirementIds": [
-        "R-013"
-      ],
-      "surfaceIds": [
-        "S-013"
-      ]
-    },
-    {
-      "evidenceId": "E-54",
-      "kind": "pure-logic",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "web-next",
-        "test",
-        "--run",
-        "apps/web-next/src/components/verification/test/R-014-S-014-pure-logic-apps-web-VerifyInputs-useCountdown.test.ts"
-      ],
-      "requirementIds": [
-        "R-014"
-      ],
-      "surfaceIds": [
-        "S-014"
-      ]
-    },
-    {
-      "evidenceId": "E-55",
-      "kind": "payload-contract",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "web-next",
-        "test",
-        "--run",
-        "apps/web-next/src/components/verification/test/R-014-S-014-payload-contract-apps-web-VerifyInputs-useCountdown.test.ts"
-      ],
-      "requirementIds": [
-        "R-014"
-      ],
-      "surfaceIds": [
-        "S-014"
-      ]
-    },
-    {
-      "evidenceId": "E-56",
-      "kind": "browser-interaction",
-      "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-014-S-014.json"
-      ],
-      "requirementIds": [
-        "R-014"
-      ],
-      "surfaceIds": [
-        "S-014"
-      ]
-    },
-    {
-      "evidenceId": "E-57",
-      "kind": "pure-logic",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "web-next",
-        "test",
-        "--run",
-        "apps/web-next/src/components/verification/test/R-015-S-015-pure-logic-apps-web-VerifyInputs-useSmsErrorBar.test.ts"
-      ],
-      "requirementIds": [
-        "R-015"
-      ],
-      "surfaceIds": [
-        "S-015"
-      ]
-    },
-    {
-      "evidenceId": "E-58",
-      "kind": "component-dom",
-      "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-015-S-015-dom-contract.json"
-      ],
-      "requirementIds": [
-        "R-015"
-      ],
-      "surfaceIds": [
-        "S-015"
-      ]
-    },
-    {
-      "evidenceId": "E-59",
-      "kind": "pure-logic",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "web-next",
-        "test",
-        "--run",
-        "apps/web-next/src/components/verification/test/R-015-S-088-pure-logic-apps-web-IP-UID-60.test.ts"
-      ],
-      "requirementIds": [
-        "R-015"
-      ],
-      "surfaceIds": [
-        "S-088"
-      ]
-    },
-    {
-      "evidenceId": "E-60",
-      "kind": "component-dom",
-      "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-015-S-088-dom-contract.json"
-      ],
-      "requirementIds": [
-        "R-015"
-      ],
-      "surfaceIds": [
-        "S-088"
-      ]
-    },
-    {
-      "evidenceId": "E-61",
-      "kind": "pure-logic",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "web-next",
-        "test",
-        "--run",
-        "apps/web-next/src/components/verification/test/R-016-S-016-pure-logic-apps-web-VerifyInputs.test.ts"
-      ],
-      "requirementIds": [
+        "R-003",
+        "R-004",
+        "R-005",
+        "R-006",
+        "R-009",
+        "R-010",
+        "R-012",
+        "R-013",
+        "R-015",
         "R-016"
       ],
       "surfaceIds": [
-        "S-016"
+        "S-003",
+        "S-004",
+        "S-005",
+        "S-009",
+        "S-010",
+        "S-012",
+        "S-013",
+        "S-014",
+        "S-015",
+        "S-016",
+        "S-066",
+        "S-088",
+        "S-113",
+        "S-114",
+        "S-115",
+        "S-116",
+        "S-117",
+        "S-118",
+        "S-119",
+        "S-120",
+        "S-121"
       ]
     },
     {
-      "evidenceId": "E-62",
+      "evidenceId": "E-202",
       "kind": "component-dom",
       "argv": [
         "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-016-S-016-dom-contract.json"
+        "apps/web-next/scripts/dom-contract/pr-02233/auth-flows.mjs"
       ],
       "requirementIds": [
-        "R-016"
+        "R-001",
+        "R-002",
+        "R-003",
+        "R-005",
+        "R-006"
       ],
       "surfaceIds": [
-        "S-016"
+        "S-001",
+        "S-002",
+        "S-005",
+        "S-064",
+        "S-065",
+        "S-095",
+        "S-096"
       ]
     },
     {
-      "evidenceId": "E-63",
-      "kind": "pure-logic",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "web-next",
-        "test",
-        "--run",
-        "apps/web-next/src/components/verification/test/R-017-S-017-pure-logic-posthog-verification-scene-view.tracking.test.ts"
-      ],
-      "requirementIds": [
-        "R-017"
-      ],
-      "surfaceIds": [
-        "S-017"
-      ]
-    },
-    {
-      "evidenceId": "E-64",
-      "kind": "payload-contract",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "web-next",
-        "test",
-        "--run",
-        "apps/web-next/src/components/verification/test/R-017-S-017-payload-contract-posthog-verification-scene-view.tracking.test.ts"
-      ],
-      "requirementIds": [
-        "R-017"
-      ],
-      "surfaceIds": [
-        "S-017"
-      ]
-    },
-    {
-      "evidenceId": "E-65",
-      "kind": "pure-logic",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "web-next",
-        "test",
-        "--run",
-        "apps/web-next/src/components/verification/test/R-017-S-070-pure-logic-posthog-click-get-code.tracking.test.ts"
-      ],
-      "requirementIds": [
-        "R-017"
-      ],
-      "surfaceIds": [
-        "S-070"
-      ]
-    },
-    {
-      "evidenceId": "E-66",
-      "kind": "payload-contract",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "web-next",
-        "test",
-        "--run",
-        "apps/web-next/src/components/verification/test/R-017-S-070-payload-contract-posthog-click-get-code.tracking.test.ts"
-      ],
-      "requirementIds": [
-        "R-017"
-      ],
-      "surfaceIds": [
-        "S-070"
-      ]
-    },
-    {
-      "evidenceId": "E-67",
-      "kind": "pure-logic",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "web-next",
-        "test",
-        "--run",
-        "apps/web-next/src/components/verification/test/R-017-S-071-pure-logic-posthog-code-send-result.tracking.test.ts"
-      ],
-      "requirementIds": [
-        "R-017"
-      ],
-      "surfaceIds": [
-        "S-071"
-      ]
-    },
-    {
-      "evidenceId": "E-68",
-      "kind": "payload-contract",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "web-next",
-        "test",
-        "--run",
-        "apps/web-next/src/components/verification/test/R-017-S-071-payload-contract-posthog-code-send-result.tracking.test.ts"
-      ],
-      "requirementIds": [
-        "R-017"
-      ],
-      "surfaceIds": [
-        "S-071"
-      ]
-    },
-    {
-      "evidenceId": "E-69",
-      "kind": "pure-logic",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "web-next",
-        "test",
-        "--run",
-        "apps/web-next/src/components/verification/test/R-017-S-072-pure-logic-posthog-hit-rate-limit.tracking.test.ts"
-      ],
-      "requirementIds": [
-        "R-017"
-      ],
-      "surfaceIds": [
-        "S-072"
-      ]
-    },
-    {
-      "evidenceId": "E-70",
-      "kind": "payload-contract",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "web-next",
-        "test",
-        "--run",
-        "apps/web-next/src/components/verification/test/R-017-S-072-payload-contract-posthog-hit-rate-limit.tracking.test.ts"
-      ],
-      "requirementIds": [
-        "R-017"
-      ],
-      "surfaceIds": [
-        "S-072"
-      ]
-    },
-    {
-      "evidenceId": "E-71",
-      "kind": "pure-logic",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "web-next",
-        "test",
-        "--run",
-        "apps/web-next/src/components/verification/test/R-017-S-073-pure-logic-posthog-switch-channel.tracking.test.ts"
-      ],
-      "requirementIds": [
-        "R-017"
-      ],
-      "surfaceIds": [
-        "S-073"
-      ]
-    },
-    {
-      "evidenceId": "E-72",
-      "kind": "payload-contract",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "web-next",
-        "test",
-        "--run",
-        "apps/web-next/src/components/verification/test/R-017-S-073-payload-contract-posthog-switch-channel.tracking.test.ts"
-      ],
-      "requirementIds": [
-        "R-017"
-      ],
-      "surfaceIds": [
-        "S-073"
-      ]
-    },
-    {
-      "evidenceId": "E-73",
-      "kind": "pure-logic",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "web-next",
-        "test",
-        "--run",
-        "apps/web-next/src/components/verification/test/R-017-S-074-pure-logic-posthog-view-no-code-guide.tracking.test.ts"
-      ],
-      "requirementIds": [
-        "R-017"
-      ],
-      "surfaceIds": [
-        "S-074"
-      ]
-    },
-    {
-      "evidenceId": "E-74",
-      "kind": "payload-contract",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "web-next",
-        "test",
-        "--run",
-        "apps/web-next/src/components/verification/test/R-017-S-074-payload-contract-posthog-view-no-code-guide.tracking.test.ts"
-      ],
-      "requirementIds": [
-        "R-017"
-      ],
-      "surfaceIds": [
-        "S-074"
-      ]
-    },
-    {
-      "evidenceId": "E-75",
-      "kind": "pure-logic",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "web-next",
-        "test",
-        "--run",
-        "apps/web-next/src/components/verification/test/R-017-S-075-pure-logic-posthog-code-verify-submit.tracking.test.ts"
-      ],
-      "requirementIds": [
-        "R-017"
-      ],
-      "surfaceIds": [
-        "S-075"
-      ]
-    },
-    {
-      "evidenceId": "E-76",
-      "kind": "payload-contract",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "web-next",
-        "test",
-        "--run",
-        "apps/web-next/src/components/verification/test/R-017-S-075-payload-contract-posthog-code-verify-submit.tracking.test.ts"
-      ],
-      "requirementIds": [
-        "R-017"
-      ],
-      "surfaceIds": [
-        "S-075"
-      ]
-    },
-    {
-      "evidenceId": "E-77",
-      "kind": "pure-logic",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "web-next",
-        "test",
-        "--run",
-        "apps/web-next/src/components/verification/test/R-017-S-076-pure-logic-posthog-code-verify-result.tracking.test.ts"
-      ],
-      "requirementIds": [
-        "R-017"
-      ],
-      "surfaceIds": [
-        "S-076"
-      ]
-    },
-    {
-      "evidenceId": "E-78",
-      "kind": "payload-contract",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "web-next",
-        "test",
-        "--run",
-        "apps/web-next/src/components/verification/test/R-017-S-076-payload-contract-posthog-code-verify-result.tracking.test.ts"
-      ],
-      "requirementIds": [
-        "R-017"
-      ],
-      "surfaceIds": [
-        "S-076"
-      ]
-    },
-    {
-      "evidenceId": "E-79",
-      "kind": "browser-interaction",
-      "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-027-S-060.json"
-      ],
-      "requirementIds": [
-        "R-027"
-      ],
-      "surfaceIds": [
-        "S-060"
-      ]
-    },
-    {
-      "evidenceId": "E-80",
-      "kind": "browser-interaction",
-      "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-027-S-061.json"
-      ],
-      "requirementIds": [
-        "R-027"
-      ],
-      "surfaceIds": [
-        "S-061"
-      ]
-    },
-    {
-      "evidenceId": "E-83",
-      "kind": "browser-interaction",
-      "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-027-S-064.json"
-      ],
-      "requirementIds": [
-        "R-027"
-      ],
-      "surfaceIds": [
-        "S-064"
-      ]
-    },
-    {
-      "evidenceId": "E-84",
-      "kind": "browser-interaction",
-      "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-027-S-065.json"
-      ],
-      "requirementIds": [
-        "R-027"
-      ],
-      "surfaceIds": [
-        "S-065"
-      ]
-    },
-    {
-      "evidenceId": "E-87",
+      "evidenceId": "E-203",
       "kind": "copy-literal",
       "argv": [
         "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-029-S-089-dom-contract.json"
+        "apps/web-next/scripts/dom-contract/pr-02233/i18n-copy.mjs"
       ],
       "requirementIds": [
+        "R-001",
+        "R-003",
+        "R-004",
+        "R-006",
+        "R-010",
+        "R-011",
+        "R-013",
         "R-029"
       ],
       "surfaceIds": [
+        "S-011",
         "S-089"
       ]
     },
     {
-      "evidenceId": "E-88",
-      "kind": "contract-or-scenario-tests",
-      "argv": [
-        "pnpm",
-        "--filter",
-        "web-next",
-        "test",
-        "--run",
-        "apps/web-next/src/components/verification/test/R-006-verification-priority-consumer-matrix.test.ts"
-      ],
-      "requirementIds": [
-        "R-006"
-      ],
-      "surfaceIds": [
-        "S-095",
-        "S-096"
-      ]
-    },
-    {
-      "evidenceId": "E-89",
-      "kind": "browser-interaction",
-      "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-027-S-102-h5-pc-matrix.json"
-      ],
-      "requirementIds": [
-        "R-027"
-      ],
-      "surfaceIds": [
-        "S-102"
-      ]
-    },
-    {
-      "evidenceId": "E-90",
-      "kind": "component-dom",
-      "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-006-S-095-dom-contract.json"
-      ],
-      "requirementIds": [
-        "R-006"
-      ],
-      "surfaceIds": [
-        "S-095",
-        "S-096"
-      ]
-    },
-    {
-      "evidenceId": "E-91",
+      "evidenceId": "E-204",
       "kind": "pure-logic",
       "argv": [
         "pnpm",
         "--filter",
         "web-next",
-        "test",
-        "--run",
-        "apps/web-next/src/components/verification/test/R-006-consumer-priority-matrix.test.ts"
+        "exec",
+        "vitest",
+        "run",
+        "apps/web-next/src/components/verification/test/methodResolver.test.ts",
+        "apps/web-next/src/components/verification/test/sendCodeError.test.ts",
+        "apps/web-next/src/components/verification/test/countdown.test.ts",
+        "apps/web-next/src/components/verification/test/tracking.test.ts"
       ],
       "requirementIds": [
-        "R-006"
+        "R-006",
+        "R-014",
+        "R-015",
+        "R-016",
+        "R-017"
       ],
       "surfaceIds": [
-        "S-095",
-        "S-096"
+        "S-006",
+        "S-014",
+        "S-015",
+        "S-016",
+        "S-017",
+        "S-070",
+        "S-071",
+        "S-072",
+        "S-073",
+        "S-074",
+        "S-075",
+        "S-076"
       ]
     },
     {
-      "evidenceId": "E-92",
-      "kind": "copy-literal",
+      "evidenceId": "E-205",
+      "kind": "payload-contract",
       "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-006-S-095-dom-contract.json"
+        "pnpm",
+        "--filter",
+        "web-next",
+        "exec",
+        "vitest",
+        "run",
+        "apps/web-next/src/platform/domain/web/endpoints/test/authLoginContract.test.ts"
       ],
       "requirementIds": [
-        "R-006"
-      ],
-      "surfaceIds": [
-        "S-095",
-        "S-096"
+        "R-014"
       ]
     },
     {
-      "evidenceId": "E-93",
-      "kind": "component-dom",
+      "evidenceId": "E-209",
+      "kind": "payload-contract",
       "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-009-S-113-dom-contract.json"
+        "pnpm",
+        "--filter",
+        "web-next",
+        "exec",
+        "vitest",
+        "run",
+        "apps/web-next/src/components/verification/test/tracking.test.ts"
       ],
       "requirementIds": [
-        "R-009"
-      ],
-      "surfaceIds": [
-        "S-113"
+        "R-017"
       ]
     },
     {
-      "evidenceId": "E-94",
-      "kind": "component-dom",
+      "evidenceId": "E-206",
+      "kind": "browser-interaction",
       "argv": [
         "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-010-S-114-dom-contract.json"
+        "apps/web-next/scripts/e2e/pr-02233/auth-entry-regression.mjs"
       ],
       "requirementIds": [
-        "R-010"
+        "R-027"
       ],
       "surfaceIds": [
-        "S-114"
+        "S-060",
+        "S-061",
+        "S-102"
       ]
     },
     {
-      "evidenceId": "E-95",
-      "kind": "component-dom",
+      "evidenceId": "E-207",
+      "kind": "contract-or-scenario-tests",
       "argv": [
         "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-011-S-115-dom-contract.json"
-      ],
-      "requirementIds": [
-        "R-011"
-      ],
-      "surfaceIds": [
-        "S-115"
+        "apps/web-next/scripts/dom-contract/pr-02233/all-contracts.mjs"
       ]
     },
     {
-      "evidenceId": "E-96",
-      "kind": "component-dom",
+      "evidenceId": "E-210",
+      "kind": "browser-interaction",
       "argv": [
         "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-012-S-116-dom-contract.json"
-      ],
-      "requirementIds": [
-        "R-012"
-      ],
-      "surfaceIds": [
-        "S-116"
-      ]
-    },
-    {
-      "evidenceId": "E-97",
-      "kind": "component-dom",
-      "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-013-S-117-dom-contract.json"
-      ],
-      "requirementIds": [
-        "R-013"
-      ],
-      "surfaceIds": [
-        "S-117"
-      ]
-    },
-    {
-      "evidenceId": "E-98",
-      "kind": "component-dom",
-      "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-014-S-118-dom-contract.json"
+        "apps/web-next/scripts/e2e/pr-02233/verification-msw.mjs"
       ],
       "requirementIds": [
         "R-014"
       ],
       "surfaceIds": [
-        "S-118"
+        "S-014"
       ]
     },
     {
-      "evidenceId": "E-99",
-      "kind": "component-dom",
+      "evidenceId": "E-208",
+      "kind": "directed-quality",
       "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-015-S-119-dom-contract.json"
-      ],
-      "requirementIds": [
-        "R-015"
-      ],
-      "surfaceIds": [
-        "S-119"
-      ]
-    },
-    {
-      "evidenceId": "E-100",
-      "kind": "component-dom",
-      "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-016-S-120-dom-contract.json"
-      ],
-      "requirementIds": [
-        "R-016"
-      ],
-      "surfaceIds": [
-        "S-120"
-      ]
-    },
-    {
-      "evidenceId": "E-101",
-      "kind": "component-dom",
-      "argv": [
-        "node",
-        "apps/web/docs_tdd/common/engine/agent-scripts/lib/playwright-mcp-adapter.mjs",
-        "--scenario",
-        "apps/web/docs_tdd/prds/PR-02233/agent/browser-scenarios/R-017-S-121-dom-contract.json"
-      ],
-      "requirementIds": [
-        "R-017"
-      ],
-      "surfaceIds": [
-        "S-121"
+        "pnpm",
+        "exec",
+        "biome",
+        "check",
+        "apps/web-next/src/apps/Login/InputAccount.tsx",
+        "apps/web-next/src/apps/Register/CreateAccount.tsx",
+        "apps/web-next/src/apps/ResetPassword/CodeVerifyDialog/index.tsx",
+        "apps/web-next/src/components/CodeVerifyDialog/index.tsx",
+        "apps/web-next/src/components/VerifyInputs/index.tsx",
+        "apps/web-next/src/components/VerifyInputs/store.ts",
+        "apps/web-next/src/components/verification/NoCodeGuideDialog.tsx",
+        "apps/web-next/src/components/verification/SendCodeButton.tsx",
+        "apps/web-next/src/components/verification/SwitchVerifyMethodDialog.tsx",
+        "apps/web-next/src/components/verification/countdown.ts",
+        "apps/web-next/src/components/verification/methodResolver.ts",
+        "apps/web-next/src/components/verification/sendCodeError.ts",
+        "apps/web-next/src/components/verification/tracking.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/loginInEndpoint.ts",
+        "apps/web-next/src/platform/domain/web/endpoints/test/authLoginContract.test.ts",
+        "apps/web-next/src/platform/domain/web/schema/oauthCommonSchemas.ts",
+        "apps/web-next/src/utils/hooks/useCountdown.ts",
+        "apps/web-next/src/i18n/resources/zh-CN/codeVerify.json",
+        "apps/web-next/src/mocks/pr02233/browser.ts",
+        "apps/web-next/src/mocks/pr02233/handlers.ts",
+        "apps/web-next/src/mocks/pr02233/scenario.ts",
+        "apps/web-next/src/mocks/pr02233/useVerificationMockWorker.ts",
+        "apps/web-next/src/routes/__root.tsx",
+        "apps/web-next/scripts/dom-contract/pr-02233/verification-components.mjs",
+        "apps/web-next/scripts/dom-contract/pr-02233/auth-flows.mjs",
+        "apps/web-next/scripts/dom-contract/pr-02233/i18n-copy.mjs",
+        "apps/web-next/scripts/dom-contract/pr-02233/all-contracts.mjs",
+        "apps/web-next/scripts/e2e/pr-02233/auth-entry-regression.mjs",
+        "apps/web-next/scripts/e2e/pr-02233/reset-password-flow.mjs",
+        "apps/web-next/scripts/e2e/pr-02233/verification-msw.mjs",
+        "apps/web-next/package.json"
       ]
     }
   ],
@@ -4624,12 +3719,12 @@
   },
   "extractionAudit": {
     "schemaVersion": 1,
-    "auditedAt": "2026-09-16T10:30:39.533Z",
+    "auditedAt": "2026-09-16T13:31:55.981Z",
     "sourceFingerprint": "c9c32b814a286dca6b092ebf4e11ab3730441c7b0915a85470b28c5452efe09d",
-    "requirementsFingerprint": "1f3384bdc7224ee59cb622cd61d74bf7ebc9120794e9d3012d66c9775b264d16",
-    "evidencePlanFingerprint": "b55e831fe6a04e935b30b375e72221a2a8833dc314fb33f733e8eb02b6b83283",
+    "requirementsFingerprint": "668e64424acfb3f4b25958eab97bba233fd61bd295f1f331c831b8fdd4581fe9",
+    "evidencePlanFingerprint": "c2890e9f1dc996e7ac0470f4bd23e244e602ff91b35aabe07bb734b90b7a5d5b",
     "sourceUnitsFingerprint": "1baa83316e03ef19b24561d3e625488c9bf0494b168e68e20939f134c27db54c",
-    "status": "fail",
+    "status": "pass",
     "checks": [
       {
         "code": "INTAKE_SOURCE_BINDING",
@@ -4648,10 +3743,8 @@
       },
       {
         "code": "EVIDENCE_COMMANDS",
-        "ok": false,
-        "problems": [
-          "evidence plan does not cover required directed-quality"
-        ]
+        "ok": true,
+        "problems": []
       }
     ]
   },
@@ -5367,6 +4460,8 @@
       "R-004",
       "R-005",
       "R-006",
+      "R-007",
+      "R-008",
       "R-009",
       "R-010",
       "R-011",
@@ -5376,14 +4471,34 @@
       "R-015",
       "R-016",
       "R-017",
+      "R-018",
+      "R-019",
+      "R-020",
+      "R-021",
+      "R-026",
+      "R-028",
       "R-027",
-      "R-029"
+      "R-029",
+      "R-030",
+      "R-031",
+      "R-032",
+      "R-033",
+      "R-034",
+      "R-035",
+      "R-036"
     ],
     "policyPaths": [
       "apps/web-next/src/components/verification",
+      "apps/web-next/src/components/VerifyInputs",
+      "apps/web-next/src/components/AccountInput",
+      "apps/web-next/src/components/ThirdPartyLogin",
       "apps/web-next/src/apps/Login",
       "apps/web-next/src/apps/Register",
-      "apps/web-next/src/apps/ResetPassword"
+      "apps/web-next/src/apps/ResetPassword",
+      "apps/web-next/src/mocks/pr02233",
+      "apps/web-next/src/i18n/resources/zh-CN/codeVerify.json",
+      "apps/web-next/src/platform/domain/web/endpoints/loginInEndpoint.ts",
+      "apps/web-next/src/styles/tailwind-theme-legacy.css"
     ],
     "deferred": {
       "owner": "PR-02233 后续批次(待 Account/Assets 迁移)",

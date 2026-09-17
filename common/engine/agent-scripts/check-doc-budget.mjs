@@ -100,6 +100,7 @@ const SELF_TEST_SCRIPTS = [
   ['lib/effective-doctor.mjs', '--self-test'],
   ['lib/rule-maturity.mjs', '--self-test'],
   ['lib/rule-consumption.mjs', '--self-test'],
+  ['lib/rule-consumption-pairing.mjs', '--self-test'],
   ['lib/rule-injection-telemetry.mjs', '--self-test'],
   ['lib/rule-consumption-regression.mjs', '--self-test'],
   ['lib/pinned-source.mjs', '--self-test'],

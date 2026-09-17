@@ -6,6 +6,7 @@ import { closeSync, existsSync, lstatSync, mkdirSync, mkdtempSync, openSync, rea
 import { tmpdir } from 'node:os'
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
 import { resolveRulePack } from './l2-rule-resolver.mjs'
+import { matchingPendingTool } from './rule-consumption-pairing.mjs'
 
 const sha256 = (value) => createHash('sha256').update(value).digest('hex')
 const now = () => new Date().toISOString()
@@ -394,21 +395,40 @@ export function recordPendingTool(identity, { toolUseId, targets, perFile, packF
 export function recordPostTool(identity, { toolUseId }) {
   return updateLedger(identity, (state) => {
     const current = changedFileSnapshot(identity.worktree)
-    const pending = state.pendingTools[toolUseId]
-    const expected = new Set(pending?.targets || [])
-    const candidates = new Set([...changedBetween(state.lastSnapshot, current), ...expected])
+    const directPending = state.pendingTools[toolUseId]
+    const directExpected = new Set(directPending?.targets || [])
+    const candidates = new Set([...changedBetween(state.lastSnapshot, current), ...directExpected])
     for (const file of candidates) {
       const currentHash = hashWorktreePath(identity.worktree, file)
       const baselineHash = Object.hasOwn(state.auditBaselineSnapshot, file) ? state.auditBaselineSnapshot[file] : hashAtRevision(identity.worktree, state.auditBaselineHead, file)
-      const previousHash = pending?.beforeHashes?.[file] ?? state.lastFileHashes[file] ?? baselineHash
+      const previousHash = directPending?.beforeHashes?.[file] ?? state.lastFileHashes[file] ?? baselineHash
       state.lastFileHashes[file] = currentHash
-      if (previousHash === currentHash) continue
+      if (previousHash === currentHash) {
+        const tainted = state.tainted.some((item) => item.file === file)
+        if (tainted && directPending?.contextEpoch === state.contextEpoch && directExpected.has(file) && directPending.perFile?.[file]) {
+          const rule = directPending.perFile[file]
+          state.receipts.push({
+            file,
+            fileHash: currentHash,
+            toolUseId,
+            contextEpoch: state.contextEpoch,
+            head: state.head,
+            packFingerprint: rule.packFingerprint,
+            ruleHashes: rule.ruleHashes,
+            reconciledTaint: true,
+            at: now(),
+          })
+          state.tainted = state.tainted.filter((item) => item.file !== file)
+        }
+        continue
+      }
       state.touchedFiles[file] ||= { baselineHash, firstTouchedAt: now() }
       if (currentHash === state.touchedFiles[file].baselineHash) {
         state.tainted = state.tainted.filter((item) => item.file !== file)
         continue
       }
-      if (!pending || pending.contextEpoch !== state.contextEpoch || !expected.has(file)) {
+      const match = matchingPendingTool(state, { toolUseId, file, previousHash })
+      if (!match) {
         state.tainted.push({
           file,
           toolUseId,
@@ -418,11 +438,12 @@ export function recordPostTool(identity, { toolUseId }) {
         })
         continue
       }
-      const rule = pending.perFile[file]
+      const rule = match.pending.perFile[file]
       state.receipts.push({
         file,
         fileHash: currentHash,
         toolUseId,
+        ...(match.preToolUseId !== toolUseId ? { preToolUseId: match.preToolUseId } : {}),
         contextEpoch: state.contextEpoch,
         head: state.head,
         packFingerprint: rule.packFingerprint,
@@ -609,6 +630,36 @@ function selfTest() {
     writeFileSync(join(auditRepo, 'a.txt'), 'before\n')
     recordPostTool(identity, { toolUseId: 'restore-1' })
     assert(verifyConsumption({ ...identity, resolveFile }).ok, 'restoring baseline content clears taint')
+
+    const nestedIdentity = { worktree: auditRepo, sessionId: 'nested-tool-session', client: 'self-test', workflowVersion: 1 }
+    recordPendingTool(nestedIdentity, {
+      toolUseId: 'wrapper-tool',
+      targets: ['a.txt'],
+      perFile: { 'a.txt': { packFingerprint: 'pack', ruleHashes: ['rule'] } },
+      packFingerprint: 'pack',
+    })
+    writeFileSync(join(auditRepo, 'a.txt'), 'nested-one\n')
+    recordPostTool(nestedIdentity, { toolUseId: 'nested-apply-patch-1' })
+    writeFileSync(join(auditRepo, 'a.txt'), 'nested-two\n')
+    recordPostTool(nestedIdentity, { toolUseId: 'nested-apply-patch-2' })
+    recordPostTool(nestedIdentity, { toolUseId: 'wrapper-tool' })
+    const nestedState = readLedger(auditRepo, nestedIdentity.sessionId)
+    assert(nestedState.tainted.length === 0, 'nested post-tool ids reuse the wrapper pre-tool target without false taint')
+    assert(nestedState.receipts.some((receipt) => receipt.preToolUseId === 'wrapper-tool' && receipt.toolUseId === 'nested-apply-patch-2'), 'nested edits retain both pre-tool and post-tool ids for audit')
+    assert(verifyConsumption({ ...nestedIdentity, resolveFile }).ok, 'nested wrapper edits produce a valid current-content receipt')
+    writeFileSync(join(auditRepo, 'not-approved.txt'), 'uncovered\n')
+    recordPostTool(nestedIdentity, { toolUseId: 'nested-unapproved-write' })
+    assert(!verifyConsumption({ ...nestedIdentity, resolveFile }).ok, 'nested id reconciliation remains fail-closed for targets absent from PreToolUse')
+    recordPendingTool(nestedIdentity, {
+      toolUseId: 'explicit-recovery',
+      targets: ['not-approved.txt'],
+      perFile: { 'not-approved.txt': { packFingerprint: 'pack', ruleHashes: ['rule'] } },
+      packFingerprint: 'pack',
+    })
+    recordPostTool(nestedIdentity, { toolUseId: 'explicit-recovery' })
+    const recoveredState = readLedger(auditRepo, nestedIdentity.sessionId)
+    assert(recoveredState.receipts.some((receipt) => receipt.reconciledTaint === true), 'an explicit supported-tool retry records taint recovery')
+    assert(verifyConsumption({ ...nestedIdentity, resolveFile }).ok, 'an explicit supported-tool retry can recover false taint without changing file content')
   } finally {
     rmSync(auditRepo, { recursive: true, force: true })
     rmSync(auditLedger, { recursive: true, force: true })
