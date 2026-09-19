@@ -1,0 +1,300 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "PR-02233-pivot-consumer-dependency",
+      "input": {
+        "workItem": {
+          "workflowVersion": 2,
+          "projectId": "PR-02233",
+          "deliveryTarget": {
+            "app": "apps/web-next",
+            "history": [{ "app": "apps/web", "reason": "pivot to web-next" }]
+          },
+          "apiDependency": {
+            "mode": "pending-dependency",
+            "reason": "API pending",
+            "blockerId": "API-COOLDOWN-TS",
+            "dependencies": [{ "id": "API-COOLDOWN-TS", "ready": false }]
+          },
+          "requirements": [
+            {
+              "requirementId": "R-001",
+              "status": "doing",
+              "statement": "Provide verification controls.",
+              "evidencePlan": [{ "type": "component-dom", "runtimeRequired": false }],
+              "affectedSurfaces": [
+                {
+                  "surfaceId": "S-001",
+                  "disposition": "implement",
+                  "codeLocator": { "kind": "component", "app": "apps/web-next", "symbol": "SendCodeButton", "expectPath": "src/**/*.tsx", "role": "provider" }
+                },
+                {
+                  "surfaceId": "S-004",
+                  "disposition": "implement",
+                  "codeLocator": { "kind": "component", "app": "apps/web-next", "symbol": "SwitchVerifyMethodDialog", "expectPath": "src/**/*.tsx", "role": "provider" }
+                },
+                {
+                  "surfaceId": "S-005",
+                  "disposition": "implement",
+                  "codeLocator": { "kind": "component", "app": "apps/web-next", "symbol": "LoginPage", "expectPath": "src/**/*.tsx", "role": "consumer" },
+                  "wiring": { "role": "consumer", "dependsOn": ["S-004"], "wiringEvidence": "browser" }
+                },
+                {
+                  "surfaceId": "S-014",
+                  "disposition": "implement",
+                  "codeLocator": { "kind": "function", "app": "apps/web-next", "symbol": "resolveCooldownRemaining", "expectPath": "src/**/*.ts", "role": "standalone" },
+                  "blockedBy": ["API-COOLDOWN-TS"]
+                }
+              ]
+            }
+          ]
+        },
+        "codeState": { "headSha": "head-1", "dirtyHash": "dirty-1", "contentHash": "content-1", "isGitRepo": true },
+        "treeFiles": [
+          "apps/web-next/src/SendCodeButton.tsx",
+          "apps/web-next/src/LoginPage.tsx",
+          "apps/web-next/src/cooldown.ts"
+        ],
+        "fileContents": {
+          "apps/web-next/src/SendCodeButton.tsx": "export function SendCodeButton() { return null }",
+          "apps/web-next/src/LoginPage.tsx": "export function LoginPage() { return null }",
+          "apps/web-next/src/cooldown.ts": "export function resolveCooldownRemaining() { return 0 }"
+        }
+      },
+      "expected": {
+        "overall": "partially-implemented",
+        "surfaces": [
+          { "surfaceId": "S-001", "codeStatus": "covered", "wiringStatus": "n/a" },
+          { "surfaceId": "S-004", "codeStatus": "missing", "wiringStatus": "n/a" },
+          { "surfaceId": "S-005", "codeStatus": "covered", "wiringStatus": "missing", "runtimeStatus": "not-verified" },
+          { "surfaceId": "S-014", "codeStatus": "covered", "integrationStatus": "pending", "blockedBy": ["API-COOLDOWN-TS"] }
+        ]
+      }
+    },
+    {
+      "id": "provider-covered-consumer-missing",
+      "input": {
+        "workItem": {
+          "workflowVersion": 2,
+          "projectId": "PR-00001",
+          "deliveryTarget": { "app": "apps/web-next", "history": [] },
+          "apiDependency": { "mode": "no-request", "reason": "none" },
+          "requirements": [{
+            "requirementId": "R-001",
+            "status": "doing",
+            "statement": "Render the guide.",
+            "evidencePlan": [{ "type": "component-dom", "runtimeRequired": false }],
+            "affectedSurfaces": [
+              { "surfaceId": "S-010", "disposition": "implement", "codeLocator": { "kind": "component", "app": "apps/web-next", "symbol": "GuideDialog", "expectPath": "src/**/*.tsx", "role": "provider" } },
+              { "surfaceId": "S-011", "disposition": "implement", "codeLocator": { "kind": "component", "app": "apps/web-next", "symbol": "LoginPage", "expectPath": "src/**/*.tsx", "role": "consumer" }, "wiring": { "role": "consumer", "dependsOn": ["S-010"], "wiringEvidence": "render" } }
+            ]
+          }]
+        },
+        "codeState": { "headSha": "head-2", "dirtyHash": "dirty-2", "contentHash": "content-2", "isGitRepo": true },
+        "treeFiles": ["apps/web-next/src/GuideDialog.tsx", "apps/web-next/src/LoginPage.tsx"],
+        "fileContents": {
+          "apps/web-next/src/GuideDialog.tsx": "export function GuideDialog() { return null }",
+          "apps/web-next/src/LoginPage.tsx": "export function LoginPage() { return null }"
+        }
+      },
+      "expected": {
+        "overall": "partially-implemented",
+        "surfaces": [
+          { "surfaceId": "S-010", "codeStatus": "covered", "wiringStatus": "n/a" },
+          { "surfaceId": "S-011", "codeStatus": "covered", "wiringStatus": "missing" }
+        ]
+      }
+    },
+    {
+      "id": "provider-and-consumer-covered",
+      "input": {
+        "workItem": {
+          "workflowVersion": 2,
+          "projectId": "PR-00002",
+          "deliveryTarget": { "app": "apps/web-next", "history": [] },
+          "apiDependency": { "mode": "no-request", "reason": "none" },
+          "requirements": [{
+            "requirementId": "R-001",
+            "status": "doing",
+            "statement": "Show the guide.",
+            "evidencePlan": [{ "type": "component-dom", "runtimeRequired": false }],
+            "affectedSurfaces": [
+              { "surfaceId": "S-010", "disposition": "implement", "codeLocator": { "kind": "component", "app": "apps/web-next", "symbol": "GuideDialog", "expectPath": "src/**/*.tsx", "role": "provider" } },
+              { "surfaceId": "S-011", "disposition": "implement", "codeLocator": { "kind": "component", "app": "apps/web-next", "symbol": "LoginPage", "expectPath": "src/**/*.tsx", "role": "consumer" }, "wiring": { "role": "consumer", "dependsOn": ["S-010"], "wiringEvidence": "render" } }
+            ]
+          }]
+        },
+        "codeState": { "headSha": "head-3", "dirtyHash": "dirty-3", "contentHash": "content-3", "isGitRepo": true },
+        "treeFiles": ["apps/web-next/src/GuideDialog.tsx", "apps/web-next/src/LoginPage.tsx"],
+        "fileContents": {
+          "apps/web-next/src/GuideDialog.tsx": "export function GuideDialog() { return null }",
+          "apps/web-next/src/LoginPage.tsx": "import { GuideDialog } from './GuideDialog'; export function LoginPage() { return <GuideDialog /> }"
+        }
+      },
+      "expected": {
+        "overall": "ready-for-human-acceptance",
+        "surfaces": [
+          { "surfaceId": "S-010", "codeStatus": "covered", "wiringStatus": "n/a" },
+          { "surfaceId": "S-011", "codeStatus": "covered", "wiringStatus": "covered" }
+        ]
+      }
+    },
+    {
+      "id": "pivot-invalidates-old-coverage",
+      "input": {
+        "workItem": {
+          "workflowVersion": 2,
+          "projectId": "PR-00003",
+          "deliveryTarget": { "app": "apps/web-next", "history": [{ "app": "apps/web", "reason": "pivot" }] },
+          "apiDependency": { "mode": "no-request", "reason": "none" },
+          "requirements": [{
+            "requirementId": "R-001",
+            "status": "doing",
+            "statement": "Move the existing flow.",
+            "evidencePlan": [{ "type": "pure-logic", "runtimeRequired": false }],
+            "affectedSurfaces": [
+              { "surfaceId": "S-020", "disposition": "implement", "codeLocator": { "kind": "component", "app": "apps/web-next", "symbol": "NewPage", "role": "standalone" } },
+              { "surfaceId": "S-021", "disposition": "implement", "codeLocator": { "kind": "function", "app": "apps/web-next", "symbol": "newResolver", "role": "standalone" } }
+            ]
+          }]
+        },
+        "codeState": { "headSha": "head-4", "dirtyHash": "dirty-4", "contentHash": "content-4", "isGitRepo": true },
+        "treeFiles": [],
+        "fileContents": {},
+        "previousResult": { "deliveryTargetApp": "apps/web", "surfaces": [{ "surfaceId": "S-020", "codeStatus": "covered" }, { "surfaceId": "S-021", "codeStatus": "covered" }] }
+      },
+      "expected": {
+        "overall": "implementing",
+        "surfaces": [
+          { "surfaceId": "S-020", "codeStatus": "stale", "runtimeStatus": "not-verified" },
+          { "surfaceId": "S-021", "codeStatus": "stale", "runtimeStatus": "not-verified" }
+        ]
+      }
+    },
+    {
+      "id": "dependency-does-not-hide-missing-frontend",
+      "input": {
+        "workItem": {
+          "workflowVersion": 2,
+          "projectId": "PR-00004",
+          "deliveryTarget": { "app": "apps/web-next", "history": [] },
+          "apiDependency": { "mode": "pending-dependency", "reason": "API-X pending", "blockerId": "API-X", "dependencies": [{ "id": "API-X", "ready": false }] },
+          "requirements": [{
+            "requirementId": "R-001",
+            "status": "doing",
+            "statement": "Implement three independent surfaces.",
+            "evidencePlan": [{ "type": "pure-logic", "runtimeRequired": false }],
+            "affectedSurfaces": [
+              { "surfaceId": "S-030", "disposition": "implement", "codeLocator": { "kind": "function", "app": "apps/web-next", "symbol": "apiBound", "role": "standalone" }, "blockedBy": ["API-X"] },
+              { "surfaceId": "S-031", "disposition": "implement", "codeLocator": { "kind": "function", "app": "apps/web-next", "symbol": "frontEndReady", "role": "standalone" } },
+              { "surfaceId": "S-032", "disposition": "implement", "codeLocator": { "kind": "function", "app": "apps/web-next", "symbol": "frontEndMissing", "role": "standalone" } }
+            ]
+          }]
+        },
+        "codeState": { "headSha": "head-5", "dirtyHash": "dirty-5", "contentHash": "content-5", "isGitRepo": true },
+        "treeFiles": ["apps/web-next/src/logic.ts"],
+        "fileContents": { "apps/web-next/src/logic.ts": "export function apiBound() {} export function frontEndReady() {}" }
+      },
+      "expected": {
+        "overall": "partially-implemented",
+        "surfaces": [
+          { "surfaceId": "S-030", "codeStatus": "covered", "integrationStatus": "pending" },
+          { "surfaceId": "S-031", "codeStatus": "covered", "integrationStatus": "ready" },
+          { "surfaceId": "S-032", "codeStatus": "missing", "integrationStatus": "ready" }
+        ]
+      }
+    },
+    {
+      "id": "only-integration-remains",
+      "input": {
+        "workItem": {
+          "workflowVersion": 2,
+          "projectId": "PR-00005",
+          "deliveryTarget": { "app": "apps/web-next", "history": [] },
+          "apiDependency": { "mode": "pending-dependency", "reason": "API-X pending", "blockerId": "API-X", "dependencies": [{ "id": "API-X", "ready": false }] },
+          "requirements": [{
+            "requirementId": "R-001",
+            "status": "doing",
+            "statement": "Implement available logic.",
+            "evidencePlan": [{ "type": "pure-logic", "runtimeRequired": false }],
+            "affectedSurfaces": [
+              { "surfaceId": "S-030", "disposition": "implement", "codeLocator": { "kind": "function", "app": "apps/web-next", "symbol": "apiBound", "role": "standalone" }, "blockedBy": ["API-X"] },
+              { "surfaceId": "S-031", "disposition": "implement", "codeLocator": { "kind": "function", "app": "apps/web-next", "symbol": "frontEndReady", "role": "standalone" } }
+            ]
+          }]
+        },
+        "codeState": { "headSha": "head-6", "dirtyHash": "dirty-6", "contentHash": "content-6", "isGitRepo": true },
+        "treeFiles": ["apps/web-next/src/logic.ts"],
+        "fileContents": { "apps/web-next/src/logic.ts": "export function apiBound() {} export function frontEndReady() {}" }
+      },
+      "expected": {
+        "overall": "integration-pending",
+        "surfaces": [
+          { "surfaceId": "S-030", "codeStatus": "covered", "integrationStatus": "pending" },
+          { "surfaceId": "S-031", "codeStatus": "covered", "integrationStatus": "ready" }
+        ]
+      }
+    },
+    {
+      "id": "runtime-critical-static-evidence-insufficient",
+      "input": {
+        "workItem": {
+          "workflowVersion": 2,
+          "projectId": "PR-00006",
+          "deliveryTarget": { "app": "apps/web-next", "history": [] },
+          "apiDependency": { "mode": "no-request", "reason": "none" },
+          "requirements": [{
+            "requirementId": "R-040",
+            "status": "doing",
+            "statement": "Switch the input area after selection.",
+            "evidencePlan": [{ "type": "component-dom", "runtimeRequired": false }],
+            "affectedSurfaces": [
+              { "surfaceId": "S-040", "disposition": "implement", "codeLocator": { "kind": "component", "app": "apps/web-next", "symbol": "SwitchArea", "role": "standalone" } }
+            ]
+          }]
+        },
+        "codeState": { "headSha": "head-7", "dirtyHash": "dirty-7", "contentHash": "content-7", "isGitRepo": true },
+        "treeFiles": ["apps/web-next/src/SwitchArea.tsx"],
+        "fileContents": { "apps/web-next/src/SwitchArea.tsx": "export function SwitchArea() { return null }" },
+        "evidenceFacts": [{ "evidenceId": "E-static", "kind": "component-dom", "result": "pass", "requirementIds": ["R-040"], "surfaceIds": ["S-040"] }]
+      },
+      "expected": {
+        "overall": "implementation-complete",
+        "surfaces": [
+          { "surfaceId": "S-040", "codeStatus": "covered", "runtimeStatus": "not-verified", "verifiedBy": null }
+        ]
+      }
+    },
+    {
+      "id": "runtime-critical-browser-verified",
+      "input": {
+        "workItem": {
+          "workflowVersion": 2,
+          "projectId": "PR-00007",
+          "deliveryTarget": { "app": "apps/web-next", "history": [] },
+          "apiDependency": { "mode": "no-request", "reason": "none" },
+          "requirements": [{
+            "requirementId": "R-040",
+            "status": "doing",
+            "statement": "Switch the input area after selection.",
+            "evidencePlan": [{ "type": "browser-interaction", "runtimeRequired": true }],
+            "affectedSurfaces": [
+              { "surfaceId": "S-040", "disposition": "implement", "codeLocator": { "kind": "component", "app": "apps/web-next", "symbol": "SwitchArea", "role": "standalone" } }
+            ]
+          }]
+        },
+        "codeState": { "headSha": "head-8", "dirtyHash": "dirty-8", "contentHash": "content-8", "isGitRepo": true },
+        "treeFiles": ["apps/web-next/src/SwitchArea.tsx"],
+        "fileContents": { "apps/web-next/src/SwitchArea.tsx": "export function SwitchArea() { return null }" },
+        "evidenceFacts": [{ "evidenceId": "E-browser", "kind": "browser-interaction", "result": "pass", "requirementIds": ["R-040"], "surfaceIds": ["S-040"] }]
+      },
+      "expected": {
+        "overall": "ready-for-human-acceptance",
+        "surfaces": [
+          { "surfaceId": "S-040", "codeStatus": "covered", "runtimeStatus": "verified", "verifiedBy": "browser" }
+        ]
+      }
+    }
+  ]
+}

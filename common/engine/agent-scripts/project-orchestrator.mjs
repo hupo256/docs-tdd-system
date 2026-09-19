@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { spawnSync } from 'node:child_process'
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
-import { homedir } from 'node:os'
 import { fileURLToPath } from 'node:url'
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 import { inspectProjectWorktree, requireProjectWorktree } from './lib/project-status-report.mjs'
@@ -17,6 +16,8 @@ import { verifyExitResultIntegrity } from './lib/vnext-exit.mjs'
 import { initializeVNextArtifacts, persistVNextWorkItem } from './lib/vnext-persistence.mjs'
 import { applyAutopilotCheckpoint, applyDeliveryCommit, deriveAutopilotAction, initialAutopilotState } from './lib/vnext-autopilot.mjs'
 import { applySourceUpdate, initialSourceReadiness } from './lib/vnext-source-readiness.mjs'
+import { inspectSurfaceReconciliation, executeSurfaceReconciliation } from './lib/vnext-reconcile-runtime.mjs'
+import { runAutonomousValidation as executeAutonomousValidation } from './lib/vnext-autonomous-validation.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, config } = resolveRoots()
@@ -287,19 +288,27 @@ export function inspectVNext(id) {
   let codeStateFresh = true
   let codeStateProblem = ''
   let deliveryCommitted = true
-  if (latest) {
-    try {
+  let safeWorktree = ''
+  try {
+    safeWorktree = requireProjectWorktree(id)
+    if (latest) {
       const scopePaths = latest.codeFingerprint?.scopeMode === 'path-set-v1' ? latest.codeFingerprint.scopePaths : null
-      const safeWorktree = requireProjectWorktree(id)
       const current = codeFingerprint(safeWorktree, config.baseRef || 'origin/online', { scopePaths })
       codeStateFresh = matchesEffectiveCodeState(current, latest.codeFingerprint)
       deliveryCommitted = scopedDeliveryCommitted(safeWorktree, latest.codeFingerprint)
       if (!codeStateFresh) codeStateProblem = 'code content changed; revalidate evidence only (the signed source review remains reusable while the work item is unchanged)'
-    } catch (error) {
+    }
+  } catch (error) {
+    if (latest) {
       codeStateFresh = false
       codeStateProblem = `cannot measure current worktree code state: ${error.message}`
     }
   }
+  const reconciliation = worktreeInspection.ok
+    ? inspectSurfaceReconciliation({ projectDir, workItem, worktree: safeWorktree, baseRef: config.baseRef || 'origin/online' })
+    : { result: null, current: false, problem: '' }
+  const reconciliationResult = reconciliation.result
+  const reconciliationCurrent = reconciliation.current
   const assuranceTrusted = latest?.mode === 'enforced'
     && latest?.assuranceMode === 'autonomous'
     && latest?.evidenceTrust === 'cli-attested'
@@ -311,6 +320,8 @@ export function inspectVNext(id) {
     assuranceTrusted,
     deliveryCommitted,
     worktreeReady: worktreeInspection.ok,
+    reconciliationResult,
+    reconciliationCurrent,
   })
   return {
     projectId: id,
@@ -320,12 +331,18 @@ export function inspectVNext(id) {
     currentStage: `V2-${actionPacket.phase}`,
     nextAction: actionPacket.action,
     command: actionPacket.command,
-    blockers: [...failedChecks.flatMap((check) => check.problems || [check.code]), ...integrity.problems, ...worktreeInspection.problems, ...(codeStateProblem ? [codeStateProblem] : [])],
+    blockers: [...failedChecks.flatMap((check) => check.problems || [check.code]), ...integrity.problems, ...worktreeInspection.problems, ...(codeStateProblem ? [codeStateProblem] : []), ...(reconciliation.problem ? [reconciliation.problem] : [])],
     actionPacket,
     lifecycle: {
       implementationCheckpoint: workItem.autopilot?.implementation?.checkpoint || null,
       checkpointCommit: workItem.autopilot?.checkpointCommit || null,
       deliveryCommit: workItem.autopilot?.delivery || { status: 'pending' },
+      reconciliation: reconciliationResult ? {
+        current: reconciliationCurrent,
+        overall: reconciliationResult.rollup?.overall,
+        runtimeCriticalPending: reconciliationResult.rollup?.runtimeCriticalPending || [],
+        integrationPending: reconciliationResult.rollup?.integrationPending || [],
+      } : null,
     },
     ...(latest ? {
       latestResult: {
@@ -451,71 +468,28 @@ function checkpoint() {
     const unverifiedPaths = (checkpointInput.changedPaths || []).filter((path) => !actualChangedPaths.has(path))
     if (unverifiedPaths.length) throw new Error(`checkpoint paths are not changed from ${config.baseRef || 'origin/online'}: ${unverifiedPaths.join(', ')}`)
   }
-  const next = applyAutopilotCheckpoint(workItem, checkpointInput, { latestResult })
+  const currentAction = inspectVNext(projectId).actionPacket
+  const next = applyAutopilotCheckpoint(workItem, checkpointInput, { latestResult, expectedAction: currentAction })
   persistVNextWorkItem(projectDir, next)
   print(inspectVNext(projectId))
 }
 
 function runAutonomousValidation(id) {
   const projectDir = resolveProjectRoot(id)
-  const workItem = readJson(join(projectDir, 'work-item.json'))
-  const implementation = workItem?.autopilot?.implementation
-  if (!implementation || implementation.status !== 'completed') {
-    return { ok: false, step: 'preflight', error: 'implementation checkpoint is not complete' }
-  }
   let worktree
   try {
     worktree = requireProjectWorktree(id)
   } catch (error) {
     return { ok: false, step: 'worktree', error: error.message }
   }
-
-  const evidenceRoot = join(homedir(), '.cache/docs-tdd/evidence', id)
-  mkdirSync(evidenceRoot, { recursive: true })
-  const runDir = mkdtempSync(join(evidenceRoot, 'run-'))
-  const evidenceFile = join(runDir, 'evidence.json')
-  const surfacesFile = join(runDir, 'surfaces.json')
-  writeFileSync(surfacesFile, `${JSON.stringify({
-    discoveredSurfaces: implementation.discoveredSurfaces || [],
-    coveredSurfaceIds: implementation.coveredSurfaceIds || [],
-    ...(implementation.msw ? { msw: implementation.msw } : {}),
-    blockers: implementation.blockers || [],
-  }, null, 2)}\n`)
-
-  const evidence = executeScript('vnext-evidence.mjs', [
-    '--project', projectDir,
-    '--worktree', worktree,
-    '--base', config.baseRef || 'origin/online',
-    '--out', evidenceFile,
-  ])
-  // Exit 1 means commands ran and produced an attested failing bundle. Feed it into verify so the
-  // persisted result can drive the bounded repair loop. Exit 2 is a runner/protocol failure.
-  if (evidence.status !== 0 && evidence.status !== 1) {
-    return {
-      ok: false,
-      step: 'evidence',
-      evidenceDir: runDir,
-      error: (evidence.stderr || evidence.stdout).trim().slice(0, 2000),
-    }
-  }
-
-  const verify = executeScript('vnext-verify.mjs', [
-    '--evidence', evidenceFile,
-    '--surfaces', surfacesFile,
-    '--project', projectDir,
-    '--worktree', worktree,
-    '--base', config.baseRef || 'origin/online',
-    '--write',
-    '--out', projectDir,
-  ])
-  return {
-    ok: verify.status === 0,
-    step: 'verify',
-    evidenceExitCode: evidence.status,
-    evidenceDir: runDir,
-    output: (verify.stdout || '').trim().slice(0, 4000),
-    error: verify.status === 0 ? '' : (verify.stderr || verify.stdout).trim().slice(0, 2000),
-  }
+  return executeAutonomousValidation({
+    id,
+    projectDir,
+    worktree,
+    workItem: readJson(join(projectDir, 'work-item.json')),
+    baseRef: config.baseRef || 'origin/online',
+    executeScript,
+  })
 }
 
 export function commitScopedPaths(worktree, id, paths, spawn = spawnSync, mode = 'delivery') {
@@ -555,6 +529,18 @@ function autopilotRun() {
     return
   }
   const before = inspectVNext(projectId)
+  if (before.nextAction === 'reconcile-current-code') {
+    const worktree = requireProjectWorktree(projectId)
+    const reconciliation = executeSurfaceReconciliation({
+      projectDir,
+      worktree,
+      baseRef: config.baseRef || 'origin/online',
+      executeScript,
+    })
+    const after = inspectVNext(projectId)
+    print({ ...after, automation: reconciliation })
+    return
+  }
   if (before.nextAction === 'commit-ready-change') {
     const automation = commitEvidenceScope(projectId)
     const after = inspectVNext(projectId)

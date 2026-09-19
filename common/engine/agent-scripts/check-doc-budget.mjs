@@ -1,12 +1,5 @@
 #!/usr/bin/env node
-// 常驻上下文预算校验：确保 docs_tdd 规则体系"规则可变多，常驻恒定小"不漂移。
-// 用法：node apps/web/docs_tdd/common/engine/agent-scripts/check-doc-budget.mjs
-// 不变量（见 common/rules/rule-router.md §3）：
-//   1. 常驻文件 = 且仅 = 带 <!-- RESIDENT-DOC --> 标记的文件，且只能有一个（当前 rule-router.md）。
-//   2. 该常驻文件 ≤ RESIDENT_BUDGET 字符（码点数，Array.from 计，与"字符数"直觉一致；不用 wc -m，后者受 locale 影响会按字节膨胀）。
-//   3. 每个 common/*.md（除常驻文件与 README）都必须被 rule-index 和 README 收录，否则入口会漂移。
-//   4. rule-index、rule ID 台账、核心模板、核心脚本、自测入口和本地链接策略必须有效。
-// 退出码 0 = 通过；1 = 任一不变量失败。CI / pre-commit 可挂此脚本。
+// 文档/脚本预算与覆盖校验：常驻小，按需文档和执行器均有硬上限。
 
 import { spawnSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
@@ -21,6 +14,7 @@ import { undeclaredErrorRules } from './lib/rule-ledger.mjs'
 import { CODING_SCENARIOS } from './lib/rule-session.mjs'
 import { loadCursorRules, renderRuleContext, resolveRulePack } from './lib/l2-rule-resolver.mjs'
 import { resolveRoots } from './lib/roots.mjs'
+import { artifactCompatibilitySchemaDiagnostic } from './lib/vnext-artifact-compat.mjs'
 
 const COMMON_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const DOCS_TDD_DIR = join(COMMON_DIR, '..')
@@ -127,6 +121,13 @@ const SELF_TEST_SCRIPTS = [
   ['verify-code-rules.mjs', '--self-test'],
   ['verify-project-gate.mjs', '--self-test'],
   ['vnext-self-test.mjs', '--self-test'],
+  ['lib/vnext-artifact-compat.mjs', '--self-test'],
+  ['vnext-artifact-compat.mjs', '--self-test'],
+  ['vnext-reconcile.mjs', '--self-test'],
+  ['vnext-reconcile-e2e.mjs', '--self-test'],
+  ['lib/vnext-reconcile-runtime.mjs', '--self-test'],
+  ['lib/vnext-reconcile-actions.mjs', '--self-test'],
+  ['lib/vnext-autonomous-validation.mjs', '--self-test'],
   ['verify-msw-manifest.mjs', '--self-test'],
   ['warn-ledger.mjs', '--self-test'],
 ]
@@ -140,9 +141,7 @@ const RESIDENT_BUDGET = 5000 // 码点；改此值须同步 rule-router.md §4 �
 const L1_FILE = join(homedir(), '.ai-rules', 'AGENT.md')
 const L1_RESIDENT_BUDGET = 7000
 const RESIDENT_ENVELOPE_BUDGET = 16000 // L1 + L3 router + L2 alwaysApply bodies
-// per-file on-demand 预算（码点）：常驻恒定小之外，按需专题也要有天花板，防单文件无限膨胀挤爆 context pack。
-// warn = 超过即告警（不阻断，提示该拆分/归档）；fail = 硬上限（阻断，必须瘦身）。
-// 少数「引用型大文件」（rule ID 台账、架构专题、变更日志）grandfather 一个带余量的上限：允许随规则自然增长，但仍有界。
+// 按需文档仍须有界；warn 提醒拆分，fail 阻断。引用型大文件可使用有余量的 override。
 const DOC_BUDGET_DEFAULT = { warn: 9000, fail: 13000 }
 const DOC_BUDGET_OVERRIDES = {
   // §5 完整 ID 台账已拆到 rule-id-ledger.md（单调增长、从不路由进 context），本文只剩 §1-4（会进上下文/被人读）。
@@ -152,8 +151,7 @@ const DOC_BUDGET_OVERRIDES = {
   'CHANGELOG.md': { warn: 15000, fail: 18000 }, // 轮转后保留近期条目；历史在 CHANGELOG-archive.md
 }
 const BUDGET_EXEMPT = new Set(['CHANGELOG-archive.md']) // 纯历史归档，不进 context、不参与覆盖/预算
-// 门禁脚本体量预算（码点）：脚本天然比文档大，但仍需天花板，防单个 gate 脚本无限膨胀——它们恰是 AI 最难 review、
-// 出错影响最大的部分。warn = 告警（提示拆分/抽 lib），fail = 硬上限（阻断）。大执行器 grandfather 一个带余量的上限。
+// 门禁脚本须有界；大执行器可用 override。
 const SCRIPT_BUDGET_DEFAULT = { warn: 24000, fail: 30000 }
 const SCRIPT_BUDGET_OVERRIDES = {
   'verify-project-gate.mjs': { warn: 52000, fail: 58000 }, // 全 gate 判定聚合入口
@@ -972,6 +970,7 @@ if (missingTemplateRefs.length) {
     vnextWorkItem: { file: 'vnext-work-item.schema.json', data: null },
     vnextCoverageReview: { file: 'vnext-coverage-review.schema.json', data: null },
     vnextExitResult: { file: 'vnext-exit-result.schema.json', data: null },
+    vnextReconcileResult: { file: 'vnext-reconcile-result.schema.json', data: null },
   }
   const schemaLoadErrors = []
   for (const [key, { file }] of Object.entries(schemas)) {
@@ -995,6 +994,9 @@ if (missingTemplateRefs.length) {
     const schemaErrors = []
     for (const name of projectNames) {
       const projectDir = join(PRDS_DIR, name)
+      const compatibility = artifactCompatibilitySchemaDiagnostic({ projectDir, projectId: name })
+      const skipExitResultSchema = compatibility.skipExitResultSchema
+      if (compatibility.problem) schemaErrors.push(compatibility.problem)
       const readmePath = join(projectDir, 'README.md')
       if (existsSync(readmePath)) {
         const fm = parseFrontmatter(readFileSync(readmePath, 'utf8'))
@@ -1004,7 +1006,7 @@ if (missingTemplateRefs.length) {
           schemaErrors.push(...validateSchema(fm, schemas.frontmatter.data, `${name}/README.md frontmatter`).map((msg) => `❌ ${msg}`))
         }
       }
-      for (const [fileName, schemaKey] of [
+      for (const [fileName, schemaKey, location = 'agent'] of [
         ['gate-results.json', 'gateResults'],
         ['rule-waivers.json', 'ruleWaivers'],
         ['lark-sources.json', 'larkSources'],
@@ -1020,17 +1022,21 @@ if (missingTemplateRefs.length) {
         ['acceptance-results.json', 'acceptanceResults'],
         ['delivery-status.json', 'deliveryStatus'],
         ['run-state.json', 'runState'],
-        ['work-item.json', 'vnextWorkItem'],
-        ['coverage-review.json', 'vnextCoverageReview'],
-        ['latest-result.json', 'vnextExitResult'],
+        ['work-item.json', 'vnextWorkItem', 'root'],
+        ['coverage-review.json', 'vnextCoverageReview', 'root'],
+        ['latest-result.json', 'vnextExitResult', 'root'],
+        ['reconcile-result.json', 'vnextReconcileResult', 'root'],
       ]) {
-        const file = join(projectDir, 'agent', fileName)
+        const file = join(projectDir, location === 'root' ? '' : 'agent', fileName)
         if (!existsSync(file)) continue
+        if (schemaKey === 'vnextExitResult' && skipExitResultSchema) continue
         try {
           const data = JSON.parse(readFileSync(file, 'utf8'))
-          schemaErrors.push(...validateSchema(data, schemas[schemaKey].data, `${name}/agent/${fileName}`).map((msg) => `❌ ${msg}`))
+          const format = location === 'root' ? fileName : `agent/${fileName}`
+          const schemaPath = `${name}/${format}`
+          schemaErrors.push(...validateSchema(data, schemas[schemaKey].data, schemaPath).map((msg) => `❌ ${msg}`))
         } catch (error) {
-          schemaErrors.push(`❌ ${name}/agent/${fileName} JSON 解析失败：${error.message}`)
+          schemaErrors.push(`❌ ${name}/${location === 'root' ? fileName : `agent/${fileName}`} JSON 解析失败：${error.message}`)
         }
       }
     }

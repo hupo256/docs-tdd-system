@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "vnext-reconcile-result.schema.json",
+  "title": "docs_tdd vNext Surface Reconciliation Result",
+  "type": "object",
+  "required": ["schemaVersion", "projectId", "reconciledAt", "headSha", "dirtyHash", "contentHash", "deliveryTargetApp", "pivoted", "surfaces", "rollup"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "projectId": { "type": "string", "pattern": "^(?:PR|TR)-\\d{5}$" },
+    "reconciledAt": { "type": "string", "format": "date-time" },
+    "headSha": { "type": "string", "minLength": 1 },
+    "dirtyHash": { "type": "string", "minLength": 1 },
+    "contentHash": { "type": "string" },
+    "scopeMode": { "const": "path-set-v1" },
+    "scopePaths": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "deliveryTargetApp": { "type": "string" },
+    "pivoted": { "type": "boolean" },
+    "surfaces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["surfaceId", "requirementId", "codeStatus", "wiringStatus", "runtimeStatus", "verifiedBy", "integrationStatus", "blockedBy", "resolvedPaths", "matchedSymbol", "notes"],
+        "properties": {
+          "surfaceId": { "type": "string", "pattern": "^S-\\d{3}$" },
+          "requirementId": { "type": "string", "pattern": "^R-\\d{3}$" },
+          "codeStatus": { "enum": ["covered", "partial", "missing", "stale"] },
+          "wiringStatus": { "enum": ["covered", "partial", "missing", "n/a"] },
+          "runtimeStatus": { "enum": ["verified", "not-verified", "n/a"] },
+          "verifiedBy": { "type": ["string", "null"], "enum": ["human", "browser", null] },
+          "integrationStatus": { "enum": ["ready", "pending"] },
+          "blockedBy": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+          "resolvedPaths": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+          "matchedSymbol": { "type": "boolean" },
+          "notes": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "rollup": {
+      "type": "object",
+      "required": ["overall", "coveredCount", "partialCount", "missingCount", "staleCount", "runtimeCriticalPending", "integrationPending"],
+      "properties": {
+        "overall": { "enum": ["implementing", "partially-implemented", "implementation-complete", "integration-pending", "ready-for-human-acceptance", "delivery-ready", "delivered"] },
+        "coveredCount": { "type": "integer", "minimum": 0 },
+        "partialCount": { "type": "integer", "minimum": 0 },
+        "missingCount": { "type": "integer", "minimum": 0 },
+        "staleCount": { "type": "integer", "minimum": 0 },
+        "runtimeCriticalPending": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^S-\\d{3}$" } },
+        "integrationPending": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^S-\\d{3}$" } }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

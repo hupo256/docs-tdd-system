@@ -12,6 +12,8 @@ import { pretestHumanRunAction } from './vnext-manual-test.mjs'
 import { deriveReviewPlanningPolicy } from './vnext-review-policy.mjs'
 import { createScopeApproval, scopeApprovalFingerprint } from './vnext-risk-route.mjs'
 import { evaluateSourceReadiness, reconcileAvailableSources } from './vnext-source-readiness.mjs'
+import { requiresSurfaceReconciliation } from './vnext-reconcile.mjs'
+import { deriveSurfaceReconciliationAction } from './vnext-reconcile-actions.mjs'
 
 export { AUTOPILOT_ACTIONS, AUTOPILOT_PHASES }
 
@@ -27,8 +29,7 @@ export function initialAutopilotState(generatedAt = new Date().toISOString()) {
 
 function implementationState(workItem, latestResult) {
   if (workItem?.autopilot?.implementation) return workItem.autopilot.implementation
-  // Work items created before Autopilot had no implementation checkpoint. A real persisted result
-  // proves that they already crossed implementation, so migration must not send them backwards.
+  // A persisted result proves pre-Autopilot work already crossed implementation.
   return latestResult ? { status: 'completed', changedPaths: [] } : { status: 'pending', changedPaths: [] }
 }
 
@@ -62,6 +63,8 @@ export function deriveAutopilotAction({
   assuranceTrusted = false,
   deliveryCommitted = false,
   worktreeReady = true,
+  reconciliationResult = null,
+  reconciliationCurrent = false,
 } = {}) {
   if (workItem?.workflowVersion !== 2 || !workItem?.projectId) throw new Error('Autopilot requires a workflowVersion=2 work item')
   const projectId = workItem.projectId
@@ -84,8 +87,7 @@ export function deriveAutopilotAction({
   const extractionAuditCurrent = workItem.extractionAudit?.status === 'pass'
     && workItem.extractionAudit.sourceFingerprint === fingerprints.sourceFingerprint
     && workItem.extractionAudit.requirementsFingerprint === fingerprints.requirementsFingerprint
-  // Deterministic extraction integrity is a prerequisite for every later phase. A stale signed
-  // review or verification result must never hide a missing/failed three-stage extraction audit.
+  // Extraction integrity precedes every later phase.
   if (!extractionAuditCurrent) {
     return actionPacket(workItem, {
       action: 'repair-intake-extraction',
@@ -143,7 +145,9 @@ export function deriveAutopilotAction({
       ],
       checkpoint: {
         command: `docs-tdd checkpoint ${projectId} --input <checkpoint.json>`,
-        requiredFields: ['actionId', 'outcome', 'changedPaths', 'discoveredSurfaces', 'coveredSurfaceIds'],
+        requiredFields: requiresSurfaceReconciliation(workItem)
+          ? ['actionId', 'outcome', 'changedPaths']
+          : ['actionId', 'outcome', 'changedPaths', 'discoveredSurfaces', 'coveredSurfaceIds'],
         optionalFields: ['integratedSourceKinds', 'msw', 'blockers'],
       },
     })
@@ -179,6 +183,8 @@ export function deriveAutopilotAction({
       constraints: ['decide-every-open-finding', 'accepted-findings-return-to-extraction', 'no-evidence-or-test-handoff-before-effective-pass'],
     })
   }
+  const surfaceAction = deriveSurfaceReconciliationAction({ workItem, reconciliationResult, reconciliationCurrent })
+  if (surfaceAction) return actionPacket(workItem, surfaceAction)
   const manualTestAction = pretestHumanRunAction(workItem)
   if (manualTestAction) return actionPacket(workItem, manualTestAction)
   if (!latestResult) {
@@ -263,9 +269,9 @@ export function deriveAutopilotAction({
   })
 }
 
-export function applyAutopilotCheckpoint(workItem, checkpoint, { latestResult = null, generatedAt = new Date().toISOString() } = {}) {
+export function applyAutopilotCheckpoint(workItem, checkpoint, { latestResult = null, expectedAction = null, generatedAt = new Date().toISOString() } = {}) {
   if (!checkpoint || !['in-progress', 'completed'].includes(checkpoint.outcome)) throw new Error('checkpoint outcome must be in-progress or completed')
-  const expected = deriveAutopilotAction({ workItem, latestResult })
+  const expected = expectedAction || deriveAutopilotAction({ workItem, latestResult })
   if (checkpoint.actionId !== expected.actionId) throw new Error('checkpoint actionId is stale or does not match the current Autopilot action')
   if (!['implement-current-scope', 'reconcile-late-sources', 'repair-failed-checks'].includes(expected.action)) throw new Error(`action ${expected.action} does not accept an implementation checkpoint`)
   if (['reconcile-late-sources', 'repair-failed-checks'].includes(expected.action) && checkpoint.outcome !== 'completed') throw new Error(`${expected.action} checkpoint must be completed`)
@@ -291,9 +297,9 @@ export function applyAutopilotCheckpoint(workItem, checkpoint, { latestResult = 
   if (checkpoint.outcome === 'completed' && expected.action === 'implement-current-scope' && !changedPaths.length) {
     throw new Error('completed implementation checkpoint requires at least one real changed path')
   }
-  if (checkpoint.outcome === 'completed' && expected.action === 'implement-current-scope') {
+  if (checkpoint.outcome === 'completed' && expected.action === 'implement-current-scope' && !requiresSurfaceReconciliation(next)) {
     if (!Array.isArray(checkpoint.discoveredSurfaces) || !Array.isArray(checkpoint.coveredSurfaceIds)) {
-      throw new Error('completed implementation checkpoint requires discoveredSurfaces and coveredSurfaceIds arrays')
+      throw new Error('completed legacy implementation checkpoint requires discoveredSurfaces and coveredSurfaceIds arrays')
     }
   }
   const pathProblems = deliveryScopePathProblems(next, changedPaths)

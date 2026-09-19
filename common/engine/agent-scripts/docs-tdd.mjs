@@ -79,7 +79,7 @@ try {
   console.error(error.message)
   process.exit(1)
 }
-const valueOptions = new Set(['--client', '--session-id', '--target', '--model', '--input', '--plan', '--out', '--worktree', '--session', '--evidence', '--surfaces'])
+const valueOptions = new Set(['--client', '--session-id', '--target', '--model', '--input', '--plan', '--out', '--worktree', '--session', '--evidence', '--surfaces', '--base'])
 const positional = commandArgs.filter((arg, index) => !arg.startsWith('--') && !valueOptions.has(commandArgs[index - 1]))
 const detail = positional[0]
 const noCache = cliArgs.includes('--no-cache')
@@ -248,7 +248,7 @@ if (command === 'rules') {
 }
 
 if (!new RegExp(`^(?:${config.projectIdPattern || '(?:PR|TR)-\\d{5}'})$`).test(projectId || '')) {
-  console.error('usage: docs-tdd.mjs <run|kickoff|status|resume|next|source-update|source-sync|extract|coverage-check|scope-approval|scope-approve|review|review-adjudicate|review-resume|checkpoint|dev-check|manual-test|commit|worktree-prepare|capability|probe|doctor|release|golden|guard|rule-health|rules|explain|check|gate|evidence|verify|context|changed|recommend> PR-01234 [G0-G8|scenario] [--input file.json] [--evidence evidence.json] [--surfaces surfaces.json] [--plan evidence-plan.json] [--path-map dev-check-path-map.json] [--out file.json] [--kind feature|bugfix] [--dry-run] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|pi|human] [--session-id <id>] [--target path] [--model <name>]')
+  console.error('usage: docs-tdd.mjs <run|kickoff|status|resume|next|source-update|source-sync|extract|coverage-check|scope-approval|scope-approve|review|review-adjudicate|review-resume|checkpoint|dev-check|manual-test|commit|worktree-prepare|capability|probe|doctor|release|golden|guard|rule-health|rules|explain|check|gate|evidence|reconcile|artifact-compat|verify|context|changed|recommend> PR-01234 [G0-G8|scenario] [--input file.json] [--evidence evidence.json] [--surfaces surfaces.json] [--plan evidence-plan.json] [--path-map dev-check-path-map.json] [--out file.json] [--kind feature|bugfix] [--write] [--json] [--dry-run] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|pi|human] [--session-id <id>] [--target path] [--model <name>]')
   process.exit(1)
 }
 
@@ -397,6 +397,32 @@ if (projectWorkflowVersion === 2 && command === 'evidence') {
     ...(outputIndex >= 0 ? ['--out', resolve(commandArgs[outputIndex + 1])] : []),
   ], docsRoot))
 }
+if (projectWorkflowVersion === 2 && command === 'reconcile') {
+  const evidenceIndex = commandArgs.indexOf('--evidence')
+  const outputIndex = commandArgs.indexOf('--out')
+  if (evidenceIndex >= 0 && !commandArgs[evidenceIndex + 1]) {
+    console.error('--evidence requires <evidence.json>')
+    process.exit(1)
+  }
+  if (outputIndex >= 0 && !commandArgs[outputIndex + 1]) {
+    console.error('--out requires <reconcile-result.json>')
+    process.exit(1)
+  }
+  const worktree = safeV2Worktree(projectId, commandArgs)
+  process.exit(run([
+    join(scriptDir, 'vnext-reconcile.mjs'), '--project', resolveProjectRoot(projectId), '--worktree', worktree, '--base', config.baseRef || 'origin/online',
+    ...(evidenceIndex >= 0 ? ['--evidence', resolve(commandArgs[evidenceIndex + 1])] : []),
+    ...(outputIndex >= 0 ? ['--out', resolve(commandArgs[outputIndex + 1])] : []),
+  ], docsRoot))
+}
+if (projectWorkflowVersion === 2 && command === 'artifact-compat') {
+  process.exit(run([
+    join(scriptDir, 'vnext-artifact-compat.mjs'),
+    '--project', resolveProjectRoot(projectId),
+    ...(commandArgs.includes('--write') ? ['--write'] : []),
+    ...(commandArgs.includes('--json') ? ['--json'] : []),
+  ], docsRoot))
+}
 if (projectWorkflowVersion === 2 && command === 'verify') {
   if (commandArgs.includes('--shadow')) {
     console.error('docs-tdd verify is always enforced; --shadow is reserved for direct historical pilot replay')
@@ -455,7 +481,7 @@ if (projectWorkflowVersion === 2 && ['gate', 'changed'].includes(command)) {
   console.error(`${command} is a v1-only command; ${projectId} uses workflowVersion 2. Use docs-tdd verify ${projectId} --input <verify-input.json>.`)
   process.exit(1)
 }
-if (['source-sync', 'extract', 'coverage-check', 'scope-approval', 'scope-approve', 'review', 'review-adjudicate', 'review-resume', 'worktree-prepare', 'evidence', 'verify'].includes(command)) {
+if (['source-sync', 'extract', 'coverage-check', 'scope-approval', 'scope-approve', 'review', 'review-adjudicate', 'review-resume', 'worktree-prepare', 'evidence', 'reconcile', 'artifact-compat', 'verify'].includes(command)) {
   console.error(`${command} is a v2-only command; ${projectId} uses workflowVersion 1. Use docs-tdd gate ${projectId} <GATE>.`)
   process.exit(1)
 }

@@ -2,7 +2,7 @@
 // Formal vNext verifier. It reads one explicit JSON input and emits the authoritative v2 delivery result without mutating v1 state.
 
 import assert from 'node:assert/strict'
-import { readFileSync, unlinkSync } from 'node:fs'
+import { existsSync, readFileSync, unlinkSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { isAbsolute, join, relative, resolve, sep } from 'node:path'
 import { docsSystemRoot } from './lib/roots.mjs'
@@ -18,6 +18,7 @@ import { signEvidenceBundle } from './lib/vnext-evidence-receipt.mjs'
 import { verifyReviewReceipt } from './lib/vnext-review-receipt.mjs'
 import { coverageFingerprints, verifyVNextCoverage } from './lib/vnext-work-item.mjs'
 import { evaluateSourceReadiness } from './lib/vnext-source-readiness.mjs'
+import { reconcileResultProblems } from './lib/vnext-reconcile.mjs'
 
 function normalizeCurrentSources(workItem, sourceDocuments, revision) {
   if (!revision?.trim()) throw new Error('currentRevision is required')
@@ -68,6 +69,8 @@ export function assembleVerifyInput({ projectDir, worktreePath, evidence, surfac
     return { path: source.path, content: readFileSync(fullPath, 'utf8') }
   })
   const { discoveredSurfaces = [], coveredSurfaceIds = [], msw, blockers = [] } = surfacesReport
+  const reconciliationFile = join(projectDir, 'reconcile-result.json')
+  const reconciliation = existsSync(reconciliationFile) ? JSON.parse(readFileSync(reconciliationFile, 'utf8')) : null
   return {
     workItem,
     currentRevision: workItem.sourceSnapshot?.revision,
@@ -76,6 +79,7 @@ export function assembleVerifyInput({ projectDir, worktreePath, evidence, surfac
     implementation: { coveredSurfaceIds, ...(msw ? { msw } : {}) },
     evidence,
     blockers,
+    ...(reconciliation ? { reconciliation } : {}),
   }
 }
 
@@ -137,7 +141,20 @@ export function runVNextVerification(input, { currentCodeState, generatedAt, mod
     sourceUnits: normalized.sourceUnits,
     discoveredSurfaces: input.discoveredSurfaces,
     implementation: input.implementation,
+    reconciliation: input.reconciliation,
   })
+  const reconciliationProblems = reconcileResultProblems({
+    workItem: reviewedWorkItem,
+    result: input.reconciliation,
+    currentCodeState,
+    requireDeliveryReady: true,
+  })
+  const reconciliationCheck = {
+    code: 'SURFACE_RECONCILIATION',
+    ok: reconciliationProblems.length === 0,
+    problems: reconciliationProblems,
+    evidenceIds: [],
+  }
   const routing = verifyVNextRouting(reviewedWorkItem)
   const mswPolicy = evaluateVNextMswPolicy({ workItem: reviewedWorkItem, implementation: input.implementation, blockers: input.blockers })
   const sourceReadiness = evaluateSourceReadiness(reviewedWorkItem)
@@ -150,7 +167,7 @@ export function runVNextVerification(input, { currentCodeState, generatedAt, mod
   }
   return buildVNextExitResult({
     workItem: reviewedWorkItem,
-    preflightChecks: [...coverage.checks, ...routing.checks, mswPolicy, sourceReadiness, manualTestCheck],
+    preflightChecks: [...coverage.checks, reconciliationCheck, ...routing.checks, mswPolicy, sourceReadiness, manualTestCheck],
     currentCodeState,
     evidence: input.evidence,
     blockers: input.blockers,
@@ -366,6 +383,8 @@ if (process.argv.includes('--self-test')) {
         })
       } else {
         input = loadInput(inputPath)
+        const reconciliationFile = outDir ? join(outDir, 'reconcile-result.json') : ''
+        if (!input.reconciliation && reconciliationFile && existsSync(reconciliationFile)) input.reconciliation = loadInput(reconciliationFile)
       }
       const mode = process.argv.includes('--shadow') ? 'shadow' : 'enforced'
       const scopePaths = input.evidence?.codeFingerprint?.scopeMode === 'path-set-v1'

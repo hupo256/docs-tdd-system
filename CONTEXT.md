@@ -5,7 +5,7 @@
 ## 本地环境
 
 - 主仓库路径：`/Users/aven/github/fameex-web`（文档在此演进）
-- 当前工作重点：**PR-02074 预测市场三期**——最近工作流结果 G8 BLOCK (fail=0, warn=2)（2026-09-12），worktree `/Users/aven/github/PR-02074`。本行由 `update-project-index.mjs --write` 从最近 Gate / verify 活动派生，勿手改。
+- 当前工作重点：**TR-02386 登录/注册/三方登录迁移到 web-next**——最近工作流结果 V2 enforced passed（2026-09-16），worktree `/Users/aven/github/TR-02386`。本行由 `update-project-index.mjs --write` 从最近 Gate / verify 活动派生，勿手改。
 - 本地文档目录（唯一真实路径）：`/Users/aven/github/fameex-web/apps/web/docs_tdd/`
 - 文档跟踪：本目录为独立本地 Git 仓库；业务仓挂载路径继续保持 ignore，不提交到业务仓。
 - 当前框架：docs_tdd v3.3；新需求默认使用第二代 work-item 协议（`workflowVersion: 2`），存量项目按 README `workflowVersion` 继续第一代流程。

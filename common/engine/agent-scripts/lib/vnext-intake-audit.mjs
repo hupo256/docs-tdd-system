@@ -44,7 +44,22 @@ function requirementProblems(workItem, sourceUnits) {
     if (requirement?.status === 'doing' && !surfaces.length) problems.push(`${label} requires at least one affected surface`)
     for (const [surfaceIndex, surface] of surfaces.entries()) {
       const surfaceLabel = surface?.surfaceId || `${label}.affectedSurfaces[${surfaceIndex}]`
-      if (!/^S-\d{3}$/.test(surface?.surfaceId || '') || !surface?.locator?.trim() || !SURFACE_DISPOSITIONS.has(surface?.disposition)) problems.push(`${surfaceLabel} requires a valid ID, locator, and disposition`)
+      const hasLocator = Boolean(surface?.locator?.trim() || surface?.codeLocator)
+      if (!/^S-\d{3}$/.test(surface?.surfaceId || '') || !hasLocator || !SURFACE_DISPOSITIONS.has(surface?.disposition)) {
+        problems.push(`${surfaceLabel} requires a valid ID, locator/codeLocator, and disposition`)
+      }
+      if (surface?.codeLocator) {
+        const locator = surface.codeLocator
+        if (!locator.kind || !locator.app?.trim() || !locator.symbol?.trim() || !['provider', 'consumer', 'standalone'].includes(locator.role)) {
+          problems.push(`${surfaceLabel} has an invalid codeLocator`)
+        }
+        if (workItem.deliveryTarget?.app && locator.app !== workItem.deliveryTarget.app) {
+          problems.push(`${surfaceLabel} codeLocator app ${locator.app} differs from deliveryTarget ${workItem.deliveryTarget.app}`)
+        }
+        if (locator.role === 'consumer' && (!surface.wiring || surface.wiring.role !== 'consumer' || !(surface.wiring.dependsOn || []).length)) {
+          problems.push(`${surfaceLabel} consumer requires wiring.dependsOn`)
+        }
+      }
     }
     if (!Array.isArray(requirement?.evidencePlan) || !requirement.evidencePlan.length) problems.push(`${label} requires an evidencePlan`)
     for (const evidence of requirement?.evidencePlan || []) {
@@ -52,9 +67,21 @@ function requirementProblems(workItem, sourceUnits) {
     }
   }
 
-  const surfaceIds = requirements.flatMap((requirement) => requirement.affectedSurfaces || []).map((surface) => surface.surfaceId).filter(Boolean)
+  const allSurfaces = requirements.flatMap((requirement) => requirement.affectedSurfaces || [])
+  if (allSurfaces.some((surface) => surface.codeLocator) && !workItem.deliveryTarget?.app) {
+    problems.push('structured codeLocator surfaces require deliveryTarget.app')
+  }
+  const surfaceIds = allSurfaces.map((surface) => surface.surfaceId).filter(Boolean)
   const duplicateSurfaces = duplicateValues(surfaceIds)
   if (duplicateSurfaces.length) problems.push(`duplicate surface IDs: ${duplicateSurfaces.join(', ')}`)
+  const surfaceById = new Map(allSurfaces.map((surface) => [surface.surfaceId, surface]))
+  for (const surface of allSurfaces.filter((item) => item.codeLocator?.role === 'consumer')) {
+    for (const providerId of surface.wiring?.dependsOn || []) {
+      const provider = surfaceById.get(providerId)
+      if (!provider) problems.push(`${surface.surfaceId} depends on unknown provider surface ${providerId}`)
+      else if (provider.codeLocator?.role !== 'provider') problems.push(`${surface.surfaceId} dependency ${providerId} is not a provider`)
+    }
+  }
 
   const anchored = new Set(requirements.flatMap((requirement) => (requirement.sourceAnchors || []).map((anchor) => anchor.sourceId)))
   const dispositions = new Map((workItem?.sourceUnitDispositions || []).map((item) => [item.sourceId, item]))

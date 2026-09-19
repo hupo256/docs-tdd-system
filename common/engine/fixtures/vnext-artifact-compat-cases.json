@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "PR-99997-missing-content-hash",
+      "expected": {
+        "blocked": true,
+        "requiresReverification": true
+      },
+      "result": {
+        "schemaVersion": 1,
+        "workflowVersion": 2,
+        "tool": "vnext-verify.mjs",
+        "mode": "enforced",
+        "runId": "sentinel-verify-2026-09-10-v0",
+        "generatedAt": "2026-09-09T18:32:15.663Z",
+        "projectId": "PR-99997",
+        "level": "V0",
+        "status": "passed",
+        "ok": true,
+        "workItemFingerprint": "5ed0d8a45e32a1d156f075c3102540c4249da238ffe59d4f9bfe09f1a5eb54bf",
+        "codeFingerprint": {
+          "headSha": "a679f74d85612043cc27294a014bb070f2e70861",
+          "baseSha": "c0079d5e591e9ef2308a5ef26f2efee707addf22",
+          "dirtyHash": "fab7caa53bc99c935bb80cfd284549db763cf3444f3e5d4ad3d585fa2ff91bc6",
+          "dirtyFileCount": 1,
+          "untrackedFileCount": 0,
+          "isGitRepo": true
+        },
+        "checks": [
+          {
+            "code": "MSW_POLICY",
+            "ok": true,
+            "problems": [],
+            "mode": "no-request",
+            "required": false,
+            "blocked": false
+          },
+          {
+            "code": "CODE_STATE",
+            "ok": true,
+            "problems": [],
+            "evidenceIds": []
+          }
+        ],
+        "summary": {
+          "total": 2,
+          "passed": 2,
+          "failed": 0
+        },
+        "blockedBy": []
+      }
+    },
+    {
+      "id": "TR-02386-deprecated-check-fields",
+      "expected": {
+        "blocked": false,
+        "requiresReverification": false
+      },
+      "result": {
+        "schemaVersion": 1,
+        "workflowVersion": 2,
+        "tool": "vnext-verify.mjs",
+        "mode": "enforced",
+        "assuranceMode": "assisted-pilot",
+        "evidenceTrust": "caller-supplied",
+        "runId": "evidence-20260916050717-253c5a75",
+        "generatedAt": "2026-09-16T05:07:23.141Z",
+        "projectId": "TR-02386",
+        "level": "V2",
+        "status": "passed",
+        "ok": true,
+        "workItemFingerprint": "fdb73993e9e15f656dca1ad360bdda2b52859c056cc9ab0f89fac52692cd8099",
+        "codeFingerprint": {
+          "headSha": "054af824fab214851501c2d6c6104a5dfdeae8be",
+          "baseSha": "054af824fab214851501c2d6c6104a5dfdeae8be",
+          "contentHash": "cda3f8cb4bfe7ada0837850ca60b88941ac3074d29f536054a31f8b445e56ffe",
+          "dirtyHash": "62384455e8ae8416e4d5e4688b80c7d7c0157b132732561ec9b9b3877c39b59f",
+          "dirtyFileCount": 151,
+          "untrackedFileCount": 0,
+          "isGitRepo": true
+        },
+        "checks": [
+          {
+            "code": "MSW_POLICY",
+            "ok": true,
+            "problems": [],
+            "mode": "real-api",
+            "required": false,
+            "blocked": false
+          },
+          {
+            "code": "SOURCE_READINESS",
+            "ok": true,
+            "problems": [],
+            "unknownKinds": [],
+            "pendingRequiredKinds": [],
+            "reconciliationKinds": [],
+            "implementationCanProceed": true,
+            "readyToTest": true
+          }
+        ],
+        "summary": {
+          "total": 2,
+          "passed": 2,
+          "failed": 0
+        },
+        "blockedBy": [],
+        "failureDomains": []
+      }
+    }
+  ]
+}

@@ -40,57 +40,28 @@ export function parseFrontmatter(text) {
 // 轻量 JSON Schema 校验（draft-07 子集）。不引入外部依赖，覆盖 docs_tdd 所需类型/必填/枚举/模式/数组/对象。
 export function validateSchema(value, schema, path = '') {
   const errors = []
-  if (schema.type === 'object') {
-    if (value === null || typeof value !== 'object' || Array.isArray(value)) {
-      errors.push(`${path || 'root'} 必须是 object`)
-      return errors
-    }
-    for (const key of schema.required || []) {
-      if (!(key in value)) errors.push(`${path || 'root'} 缺少必填字段 ${key}`)
-    }
-    for (const [key, propSchema] of Object.entries(schema.properties || {})) {
-      if (key in value) errors.push(...validateSchema(value[key], propSchema, `${path}.${key}`))
-    }
-    if (schema.additionalProperties === false) {
-      for (const key of Object.keys(value)) {
-        if (!schema.properties || !(key in schema.properties)) {
-          errors.push(`${path || 'root'} 包含未声明字段 ${key}`)
-        }
-      }
-    }
-  } else if (schema.type === 'array') {
-    if (!Array.isArray(value)) {
-      errors.push(`${path || 'root'} 必须是 array`)
-      return errors
-    }
-    for (let i = 0; i < value.length; i += 1) {
-      errors.push(...validateSchema(value[i], schema.items, `${path}[${i}]`))
-    }
-  } else if (schema.type === 'string') {
-    if (typeof value !== 'string') {
-      errors.push(`${path || 'root'} 必须是 string`)
-      return errors
-    }
-    if (schema.enum && !schema.enum.includes(value)) {
-      errors.push(`${path} 值 "${value}" 不在枚举 [${schema.enum.join(', ')}] 中`)
-    }
-    if (schema.pattern && !new RegExp(schema.pattern).test(value)) {
-      errors.push(`${path} 值 "${value}" 不匹配模式 ${schema.pattern}`)
-    }
-    if (schema.minLength && value.length < schema.minLength) {
-      errors.push(`${path} 长度必须 ≥ ${schema.minLength}`)
-    }
-  } else if (schema.type === 'integer') {
-    if (!Number.isInteger(value)) {
-      errors.push(`${path || 'root'} 必须是 integer`)
-      return errors
-    }
-    if (schema.minimum !== undefined && value < schema.minimum) {
-      errors.push(`${path} 必须 ≥ ${schema.minimum}`)
-    }
-  } else if (schema.type === 'boolean') {
-    if (typeof value !== 'boolean') errors.push(`${path || 'root'} 必须是 boolean`)
+  if (Array.isArray(schema.type)) {
+    const valid = schema.type.some((type) => type === 'null' ? value === null : validateSchema(value, { ...schema, type }, path).length === 0)
+    if (!valid) errors.push(`${path || 'root'} 类型不匹配`)
+    return errors
   }
+  if (schema.type === 'object') {
+    if (value === null || typeof value !== 'object' || Array.isArray(value)) return [`${path || 'root'} 必须是 object`]
+    for (const key of schema.required || []) if (!(key in value)) errors.push(`${path || 'root'} 缺少必填字段 ${key}`)
+    for (const [key, propSchema] of Object.entries(schema.properties || {})) if (key in value) errors.push(...validateSchema(value[key], propSchema, `${path}.${key}`))
+    if (schema.additionalProperties === false) for (const key of Object.keys(value)) if (!schema.properties || !(key in schema.properties)) errors.push(`${path || 'root'} 包含未声明字段 ${key}`)
+  } else if (schema.type === 'array') {
+    if (!Array.isArray(value)) return [`${path || 'root'} 必须是 array`]
+    for (let i = 0; i < value.length; i += 1) errors.push(...validateSchema(value[i], schema.items, `${path}[${i}]`))
+  } else if (schema.type === 'string') {
+    if (typeof value !== 'string') return [`${path || 'root'} 必须是 string`]
+    if (schema.enum && !schema.enum.includes(value)) errors.push(`${path} 值 "${value}" 不在枚举 [${schema.enum.join(', ')}] 中`)
+    if (schema.pattern && !new RegExp(schema.pattern).test(value)) errors.push(`${path} 值 "${value}" 不匹配模式 ${schema.pattern}`)
+    if (schema.minLength && value.length < schema.minLength) errors.push(`${path} 长度必须 ≥ ${schema.minLength}`)
+  } else if (schema.type === 'integer') {
+    if (!Number.isInteger(value)) return [`${path || 'root'} 必须是 integer`]
+    if (schema.minimum !== undefined && value < schema.minimum) errors.push(`${path} 必须 ≥ ${schema.minimum}`)
+  } else if (schema.type === 'boolean' && typeof value !== 'boolean') errors.push(`${path || 'root'} 必须是 boolean`)
   return errors
 }
 

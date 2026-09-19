@@ -27,6 +27,8 @@ export const AUTOPILOT_ACTIONS = Object.freeze([
   'collect-scope-approval',
   'prepare-coding-worktree',
   'implement-current-scope',
+  'reconcile-current-code',
+  'await-surface-dependencies',
   'await-late-dependencies',
   'reconcile-late-sources',
   'capture-cli-evidence',

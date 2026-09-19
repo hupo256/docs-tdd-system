@@ -176,7 +176,7 @@ function requirementCoverageProblems(workItem, sourceUnits, sourceOracle) {
   return problems
 }
 
-function surfaceCoverageProblems(workItem, discoveredSurfaces, implementation) {
+function surfaceCoverageProblems(workItem, discoveredSurfaces, implementation, reconciliation) {
   const requirements = workItem.requirements || []
   const surfaces = requirements.flatMap((requirement) => (requirement.affectedSurfaces || []).map((surface) => ({ ...surface, requirementId: requirement.requirementId })))
   const problems = []
@@ -202,14 +202,21 @@ function surfaceCoverageProblems(workItem, discoveredSurfaces, implementation) {
 
   if (implementation) {
     const covered = new Set(implementation.coveredSurfaceIds || [])
+    const reconciled = new Map((reconciliation?.surfaces || []).map((surface) => [surface.surfaceId, surface]))
     for (const surface of surfaces.filter((item) => item.disposition === 'implement')) {
-      if (!covered.has(surface.surfaceId)) problems.push(`implementation/evidence does not cover ${surface.surfaceId}`)
+      if (surface.codeLocator) {
+        const derived = reconciled.get(surface.surfaceId)
+        if (!derived) problems.push(`surface reconciliation has no result for ${surface.surfaceId}`)
+        else if (derived.codeStatus !== 'covered' || !['covered', 'n/a'].includes(derived.wiringStatus)) {
+          problems.push(`surface reconciliation does not cover ${surface.surfaceId}: code=${derived.codeStatus}, wiring=${derived.wiringStatus}`)
+        }
+      } else if (!covered.has(surface.surfaceId)) problems.push(`implementation/evidence does not cover ${surface.surfaceId}`)
     }
   }
   return problems
 }
 
-export function verifyVNextCoverage({ workItem, currentSourceSnapshot, sourceUnits, sourceOracle, discoveredSurfaces = [], implementation } = {}) {
+export function verifyVNextCoverage({ workItem, currentSourceSnapshot, sourceUnits, sourceOracle, discoveredSurfaces = [], implementation, reconciliation } = {}) {
   const expectedSource = coverageFingerprints(workItem).sourceFingerprint
   const actualSource = stableFingerprint(currentSourceSnapshot || workItem?.sourceSnapshot || null)
   const sourceProblems = []
@@ -228,7 +235,7 @@ export function verifyVNextCoverage({ workItem, currentSourceSnapshot, sourceUni
   }
 
   const requirementProblems = requirementCoverageProblems(workItem || {}, sourceUnits, sourceOracle)
-  const surfaceProblems = surfaceCoverageProblems(workItem || {}, discoveredSurfaces, implementation)
+  const surfaceProblems = surfaceCoverageProblems(workItem || {}, discoveredSurfaces, implementation, reconciliation)
   const checks = [
     { code: 'SOURCE_FRESH', ok: sourceProblems.length === 0, problems: sourceProblems },
     { code: 'REQUIREMENT_COVERAGE', ok: requirementProblems.length === 0, problems: requirementProblems },

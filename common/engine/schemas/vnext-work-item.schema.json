@@ -35,7 +35,7 @@
       ]
     },
     "deliveryScope": {
-      "type": "object",
+      "type": ["object", "null"],
       "required": ["kind", "batchId", "includedRequirementIds", "deferred"],
       "properties": {
         "kind": { "const": "bounded-batch" },
@@ -67,6 +67,27 @@
               "additionalProperties": false
             }
           ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "deliveryTarget": {
+      "type": "object",
+      "required": ["app", "history"],
+      "properties": {
+        "app": { "type": "string", "pattern": "^(?:apps|packages)/[^/]+$" },
+        "history": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["app", "reason"],
+            "properties": {
+              "app": { "type": "string", "pattern": "^(?:apps|packages)/[^/]+$" },
+              "invalidatedAt": { "type": "string", "format": "date-time" },
+              "reason": { "type": "string", "minLength": 1 }
+            },
+            "additionalProperties": false
+          }
         }
       },
       "additionalProperties": false
@@ -173,15 +194,53 @@
             "type": "array",
             "items": {
               "type": "object",
-              "required": ["surfaceId", "locator", "disposition"],
+              "required": ["surfaceId", "disposition"],
               "properties": {
                 "surfaceId": { "type": "string", "pattern": "^S-\\d{3}$" },
-                "locator": { "type": "string", "minLength": 1 },
+                "locator": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Legacy display-only locator. Structured code proof requires codeLocator."
+                },
+                "displayHint": { "type": "string", "minLength": 1 },
+                "codeLocator": {
+                  "type": "object",
+                  "required": ["kind", "app", "symbol", "role"],
+                  "properties": {
+                    "kind": { "enum": ["component", "hook", "function", "export", "route", "style-token", "copy-key", "api-call", "test", "browser-scenario"] },
+                    "app": { "type": "string", "pattern": "^(?:apps|packages)/[^/]+$" },
+                    "symbol": { "type": "string", "minLength": 1 },
+                    "expectPath": { "type": "string", "minLength": 1 },
+                    "role": { "enum": ["provider", "consumer", "standalone"] }
+                  },
+                  "additionalProperties": false
+                },
+                "wiring": {
+                  "type": "object",
+                  "required": ["role", "dependsOn", "wiringEvidence"],
+                  "properties": {
+                    "role": { "enum": ["provider", "consumer", "standalone"] },
+                    "dependsOn": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^S-\\d{3}$" } },
+                    "wiringEvidence": { "enum": ["import", "render", "event-binding", "browser"] }
+                  },
+                  "additionalProperties": false
+                },
+                "blockedBy": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
                 "disposition": { "type": "string", "enum": ["implement", "already-covered", "not-applicable", "deferred"] },
                 "reason": { "type": "string" },
                 "owner": { "type": "string" },
                 "batch": { "type": "string" }
               },
+              "anyOf": [
+                { "required": ["locator"] },
+                { "required": ["codeLocator"] }
+              ],
+              "allOf": [
+                {
+                  "if": { "properties": { "codeLocator": { "properties": { "role": { "const": "consumer" } }, "required": ["role"] } }, "required": ["codeLocator"] },
+                  "then": { "required": ["wiring"], "properties": { "wiring": { "properties": { "role": { "const": "consumer" }, "dependsOn": { "minItems": 1 } } } } }
+                }
+              ],
               "additionalProperties": false
             }
           },
@@ -255,7 +314,24 @@
               "requirementsFingerprint": { "type": "string", "minLength": 1 },
               "verdict": { "enum": ["pass", "changes-required"] },
               "findingSignature": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
-              "findings": { "type": "array" },
+              "findings": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["findingId", "code", "message", "sourceIds", "disposition"],
+                  "properties": {
+                    "findingId": { "type": "string", "minLength": 1 },
+                    "code": { "type": "string", "minLength": 1 },
+                    "message": { "type": "string", "minLength": 1 },
+                    "sourceIds": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+                    "disposition": { "type": "string", "minLength": 1 },
+                    "reason": { "type": "string" },
+                    "owner": { "type": "string" },
+                    "batch": { "type": "string" }
+                  },
+                  "additionalProperties": false
+                }
+              },
               "candidateRequirements": {
                 "type": "array",
                 "items": {
@@ -365,7 +441,22 @@
         "mode": { "type": "string", "enum": ["no-request", "real-api", "mock-required", "pending-dependency"] },
         "reason": { "type": "string", "minLength": 1 },
         "contractIds": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
-        "blockerId": { "type": "string", "minLength": 1 }
+        "blockerId": { "type": "string", "minLength": 1 },
+        "dependencies": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "required": ["id", "ready"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "ready": { "type": "boolean" },
+              "reason": { "type": "string", "minLength": 1 },
+              "owner": { "type": "string", "minLength": 1 }
+            },
+            "additionalProperties": false
+          }
+        }
       },
       "allOf": [
         {
@@ -463,7 +554,7 @@
       "additionalProperties": false
     },
     "reviewAdjudication": {
-      "type": "object",
+      "type": ["object", "null"],
       "required": ["schemaVersion", "originalReviewRunId", "sourceFingerprint", "requirementsFingerprint", "adjudicatedBy", "adjudicatedAt", "reason", "recordedVia", "decisions", "effectiveVerdict"],
       "properties": {
         "schemaVersion": { "const": 1 },
