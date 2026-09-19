@@ -74,7 +74,7 @@
     "failureDomains": {
       "type": "array",
       "uniqueItems": true,
-      "items": { "type": "string", "enum": ["code", "browser"] }
+      "items": { "type": "string", "enum": ["source", "scope", "code", "browser", "environment", "external-dependency"] }
     },
     "evidenceAttestation": {
       "type": "object",

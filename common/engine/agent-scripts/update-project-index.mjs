@@ -19,9 +19,10 @@ import {
   selfTest,
   stripMd,
 } from './lib/project-index.mjs'
-import { codeFingerprint } from './lib/fingerprint.mjs'
+import { codeFingerprint, matchesEffectiveCodeState } from './lib/fingerprint.mjs'
 import { verifyExitResultIntegrity } from './lib/vnext-exit.mjs'
 import { deriveAutopilotAction } from './lib/vnext-autopilot.mjs'
+import { deriveDeliveryTruth } from './lib/vnext-delivery-truth.mjs'
 
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, config } = resolveRoots()
 const args = process.argv.slice(2)
@@ -58,6 +59,15 @@ function read(file) {
 
 function readJsonFile(file) {
   try { return JSON.parse(read(file) || 'null') } catch { return null }
+}
+
+function scopedGitClean(worktree, codeState) {
+  if (!worktree || codeState?.scopeMode !== 'path-set-v1' || !codeState.scopePaths?.length) return false
+  const result = spawnSync('git', ['status', '--porcelain=v1', '-z', '--', ...codeState.scopePaths], {
+    cwd: worktree,
+    encoding: 'utf8',
+  })
+  return result.status === 0 && result.stdout.length === 0
 }
 
 // worktree 归属是运行时事实：直接从 `git worktree list` 派生，禁止手抄。返回 { branch: path }。
@@ -162,15 +172,26 @@ function projectInfo(name, byBranch) {
     const latest = readJsonFile(join(dir, 'latest-result.json'))
     const integrity = latest && workItem ? verifyExitResultIntegrity(latest, workItem) : { ok: false }
     let fresh = false
-    if (latest?.codeFingerprint) {
+    if (latest?.codeFingerprint && worktree) {
       try {
-        const current = codeFingerprint(worktree || repoRoot)
-        fresh = current.headSha === latest.codeFingerprint.headSha && current.baseSha === latest.codeFingerprint.baseSha && current.dirtyHash === latest.codeFingerprint.dirtyHash
+        const current = codeFingerprint(worktree, config.baseRef || 'origin/online', {
+          scopePaths: latest.codeFingerprint.scopePaths,
+        })
+        fresh = matchesEffectiveCodeState(current, latest.codeFingerprint)
       } catch { fresh = false }
     }
     const assuranceTrusted = latest?.mode === 'enforced' && latest?.assuranceMode === 'autonomous' && latest?.evidenceTrust === 'cli-attested'
-    const deliveryCommitted = workItem?.autopilot?.delivery?.status === 'committed'
-    const complete = latest?.mode === 'enforced' && latest?.status === 'passed' && latest?.ok === true && integrity.ok && fresh && assuranceTrusted && deliveryCommitted
+    const gitScopeClean = scopedGitClean(worktree, latest?.codeFingerprint)
+    const truth = deriveDeliveryTruth({
+      workItem,
+      latestResult: latest,
+      integrityOk: integrity.ok,
+      codeStateFresh: latest ? fresh : true,
+      assuranceTrusted,
+      gitScopeClean,
+      changedPaths: latest?.codeFingerprint?.scopePaths || [],
+    })
+    const complete = truth.authoritativeCompletion
     let v2Status = 'V2 invalid work item'
     try {
       const action = deriveAutopilotAction({
@@ -179,7 +200,8 @@ function projectInfo(name, byBranch) {
         resultIntegrityOk: integrity.ok,
         codeStateFresh: latest ? fresh : true,
         assuranceTrusted,
-        deliveryCommitted,
+        deliveryCommitted: gitScopeClean,
+        deliveryTruth: truth,
         worktreeReady: Boolean(worktree),
       })
       v2Status = complete ? 'V2 complete' : `V2 ${action.phase}/${action.action}`

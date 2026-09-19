@@ -19,7 +19,7 @@
           "taskId": { "type": "string", "pattern": "^T\\d+[a-z]?$" },
           "evidenceType": {
             "type": "string",
-            "enum": ["copy-literal", "component-dom", "pure-logic", "payload-contract", "api-contract", "browser-interaction", "visual"]
+            "enum": ["copy-literal", "component-dom", "pure-logic", "payload-contract", "api-contract", "browser-interaction", "human-check", "structural", "quality", "touched-file-quality", "visual"]
           },
           "scenario": { "type": "string", "minLength": 1 },
           "method": { "type": "string", "enum": ["vitest", "browser", "contract", "manual-visual", "manual", "not-applicable"] },

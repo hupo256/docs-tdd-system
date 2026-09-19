@@ -5,6 +5,7 @@ export const AUTOPILOT_PHASES = Object.freeze([
   'implementation-ready',
   'validating',
   'ready-to-test',
+  'delivered',
   'blocked',
 ])
 
@@ -34,6 +35,9 @@ export const AUTOPILOT_ACTIONS = Object.freeze([
   'capture-cli-evidence',
   'repair-failed-checks',
   'escalate-repair-failure',
+  'blocked-user-decision',
+  'blocked-external-dependency',
+  'failed-infrastructure',
   'resolve-blockers',
   'refresh-invalid-verification',
   'revalidate-current-code-evidence',

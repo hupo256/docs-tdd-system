@@ -4,13 +4,13 @@
 > `node common/engine/agent-scripts/vnext-pilot.mjs --write` 刷新报告。
 > 未真实完成的字段必须保持 `null`，禁止为补齐 R-13 追认历史样本或预填零逃逸。
 
-## 1. v3.3 公共命令执行证明
+## 1. v3.5 公共命令执行证明
 
 只有样本已经通过公共 `docs-tdd` 命令完成 intake、review、implementation checkpoint、CLI evidence、enforced verify 和 delivery commit 后，才填写：
 
 ```json
 {
-  "release": "autopilot-v3.3",
+  "release": "autopilot-v3.5",
   "publicCommandsOnly": true,
   "attestedBy": "填写人姓名/工号",
   "attestedAt": "YYYY-MM-DDTHH:mm:ssZ"
@@ -46,7 +46,7 @@
 
 1. 三文件出口完整、签名与 run history 一致，结果为 authoritative PASS；
 2. post-test observation 已由负责人填写；
-3. `executionAttestation.release=autopilot-v3.3`；
+3. `executionAttestation.release=autopilot-v3.5`；
 4. `executionAttestation.publicCommandsOnly=true`。
 
-当前历史 V0/V1 样本不自动追认为 v3.3；已纳入但尚未完成的项目允许保持 collecting。
+当前历史 V0/V1 样本不自动追认为 v3.5；已纳入但尚未完成的项目允许保持 collecting。真实 clean-project/public-command V0/V1/V2 pilot 尚未完成，不得把 synthetic fixture 或旧快照填成执行证明。

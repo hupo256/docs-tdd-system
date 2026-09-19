@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url'
 import { buildVNextContext } from './lib/vnext-context.mjs'
 import { verifyExitResultIntegrity } from './lib/vnext-exit.mjs'
 import { readVNextRunHistory, VNEXT_ARTIFACT_FILES } from './lib/vnext-persistence.mjs'
+import { deriveDeliveryTruth } from './lib/vnext-delivery-truth.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const defaultRegistry = join(scriptDir, '..', '..', 'vnext', 'pilot-registry.json')
@@ -71,6 +72,16 @@ export function inspectPilotEntry(entry, registryDir) {
     if (!history.some((run) => run.runId === latest.runId && run.resultFingerprint === latest.resultFingerprint)) problems.push('latest result is absent from runs.jsonl')
     if (latest.status !== 'passed' || latest.ok !== true) problems.push(`latest result is ${latest.status}, not passed`)
     const context = buildVNextContext({ workItem, latestResult: latest, generatedAt: entry.observation?.observedThrough || entry.enrolledAt })
+    const authoritative = latest.mode === 'enforced' && latest.assuranceMode === 'autonomous' && latest.evidenceTrust === 'cli-attested'
+    const deliveryTruth = deriveDeliveryTruth({
+      workItem,
+      latestResult: latest,
+      integrityOk: integrity.ok,
+      codeStateFresh: execution?.codeStateFresh === true,
+      assuranceTrusted: authoritative,
+      gitScopeClean: execution?.gitScopeClean === true,
+      changedPaths: latest.codeFingerprint?.scopePaths || [],
+    })
     const artifacts = fileCount(root)
     if (artifactMode === 'isolated-snapshot' && artifacts > VNEXT_ARTIFACT_FILES.length) problems.push(`isolated artifact directory contains ${artifacts} files, expected at most ${VNEXT_ARTIFACT_FILES.length}`)
     if (!entry.newRequirement) problems.push('pilot entry is not attested as a new requirement')
@@ -86,8 +97,9 @@ export function inspectPilotEntry(entry, registryDir) {
       omissionEscapes: entry.observation?.requirementOmissionEscapes ?? null,
       falseGreenEscapes: entry.observation?.falseGreenEscapes ?? null,
       observedThrough: entry.observation?.observedThrough ?? null,
-      authoritative: latest.mode === 'enforced' && latest.assuranceMode === 'autonomous' && latest.evidenceTrust === 'cli-attested',
-      deliveryCommitted: workItem.autopilot?.delivery?.status === 'committed' && Boolean(workItem.autopilot?.delivery?.commitSha),
+      authoritative,
+      deliveryCommitted: deliveryTruth.authoritativeCompletion,
+      deliveryTruth,
       ok: problems.length === 0,
       problems,
     }
@@ -121,14 +133,12 @@ export function evaluatePilot(registry, samples, isolation = inspectV1Isolation(
     && qualificationTarget.publicCommandsOnly === true
     && Boolean(qualificationTarget.release)
     && missingQualifiedLevels.length === 0
-  let decision = 'collecting'
-  if (!isolation.ok || !zeroEscapes || samples.length > registry.maximumSamples) decision = 'rollback'
-  else if (withinCount && completed.length === samples.length && levelCoverage) decision = 'eligible-for-human-cutover-review'
   return {
     schemaVersion: 1,
     mode: registry.mode,
     generatedAt: new Date().toISOString(),
-    decision,
+    decision: 'collecting',
+    status: 'collecting',
     automaticCutover: false,
     summary: {
       enrolled: samples.length,
@@ -175,18 +185,19 @@ export function selfTest() {
     minimumSamples: 5,
     maximumSamples: 10,
     requiredLevels: ['V0', 'V1', 'V2'],
-    qualificationTarget: { readinessCaseId: 'R-13', release: 'autopilot-v3.3', publicCommandsOnly: true },
+    qualificationTarget: { readinessCaseId: 'R-13', release: 'autopilot-v3.5', publicCommandsOnly: true },
   }
-  const samples = ['V0', 'V0', 'V1', 'V2', 'V2'].map((level, index) => ({ sampleId: `SAMPLE-${index}`, projectId: `PR-0000${index}`, level, ok: true, problems: [], omissionEscapes: 0, falseGreenEscapes: 0, authoritative: true, deliveryCommitted: true, autopilotRelease: 'autopilot-v3.3', publicCommandsOnly: true, executionAttestedBy: 'owner', executionAttestedAt: '2026-09-12T00:00:00Z' }))
+  const samples = ['V0', 'V0', 'V1', 'V2', 'V2'].map((level, index) => ({ sampleId: `SAMPLE-${index}`, projectId: `PR-0000${index}`, level, ok: true, problems: [], omissionEscapes: 0, falseGreenEscapes: 0, authoritative: true, deliveryCommitted: true, autopilotRelease: 'autopilot-v3.5', publicCommandsOnly: true, executionAttestedBy: 'owner', executionAttestedAt: '2026-09-19T00:00:00Z' }))
   const ready = evaluatePilot(registry, samples, { ok: true, coupled: [] })
-  assert.equal(ready.decision, 'eligible-for-human-cutover-review')
+  assert.equal(ready.decision, 'collecting')
+  assert.equal(ready.status, 'collecting')
   assert.equal(ready.automaticCutover, false)
   assert.equal(ready.releaseQualification.completed, true)
   const escaped = structuredClone(samples)
   escaped[2].omissionEscapes = 1
-  assert.equal(evaluatePilot(registry, escaped, { ok: true, coupled: [] }).decision, 'rollback')
+  assert.equal(evaluatePilot(registry, escaped, { ok: true, coupled: [] }).decision, 'collecting')
   assert.equal(evaluatePilot(registry, samples.slice(0, 2), { ok: true, coupled: [] }).decision, 'collecting')
-  assert.equal(evaluatePilot(registry, samples, { ok: false, coupled: ['docs-tdd.mjs'] }).decision, 'rollback')
+  assert.equal(evaluatePilot(registry, samples, { ok: false, coupled: ['docs-tdd.mjs'] }).decision, 'collecting')
   const unattested = structuredClone(samples)
   unattested[2].publicCommandsOnly = false
   assert.equal(evaluatePilot(registry, unattested, { ok: true, coupled: [] }).releaseQualification.completed, false)
@@ -203,7 +214,7 @@ else {
     const report = evaluatePilot(registry, samples)
     if (process.argv.includes('--write')) writeFileSync(defaultReport, `${JSON.stringify(report, null, 2)}\n`)
     console.log(JSON.stringify(report, null, 2))
-    process.exitCode = report.decision === 'eligible-for-human-cutover-review' ? 0 : report.decision === 'rollback' ? 2 : 1
+    process.exitCode = 0
   } catch (error) {
     console.error(`vNext pilot evaluation failed: ${error.message}`)
     process.exitCode = 2

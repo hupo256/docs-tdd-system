@@ -40,7 +40,7 @@ export function buildContextBudget() {
     { label: 'V0-low-risk', workItem: p0WorkItem() },
     { label: 'V1-PR-02306', workItem: load(join(fixturesDir, 'PR-02306-missing-password-surfaces.json')).workItem },
     { label: 'V2-PR-01930', workItem: load(join(fixturesDir, 'PR-01930-missing-fund-flow-entry.json')).workItem },
-    { label: 'V2-PR-02265', workItem: load(join(fixturesDir, 'PR-02265-stale-prd-revision.json')).workItem },
+    { label: 'V2-PR-02265', workItem: load(join(fixturesDir, 'PR-02265-exit-evidence-gaps.json')).workItem },
   ].map(({ label, workItem }) => {
     const context = buildVNextContext({ workItem, generatedAt: '2026-09-04T00:00:00Z' })
     return {

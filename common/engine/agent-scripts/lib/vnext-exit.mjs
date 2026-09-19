@@ -8,6 +8,7 @@ import { resolve } from 'node:path'
 import { matchesEffectiveCodeState } from './fingerprint.mjs'
 import { stableFingerprint, verificationWorkItemFingerprint } from './vnext-work-item.mjs'
 import { evidenceBundleFingerprint, signEvidenceBundle, verifyEvidenceAttestation, verifyEvidenceReceipt } from './vnext-evidence-receipt.mjs'
+import { auditEvidenceSufficiency, manualRunEvidenceFacts } from './vnext-evidence-sufficiency.mjs'
 
 export const EXIT_EVIDENCE_REQUIREMENTS = Object.freeze({
   V0: Object.freeze(['touched-file-quality']),
@@ -18,6 +19,7 @@ export const EXIT_EVIDENCE_REQUIREMENTS = Object.freeze({
 const evidenceResults = new Set(['pass', 'fail', 'blocked', 'not-applicable'])
 const producerKinds = new Set(['command', 'human'])
 const browserEvidenceKinds = new Set(['browser-interaction'])
+const failureDomains = new Set(['source', 'scope', 'code', 'browser', 'environment', 'external-dependency'])
 
 function check(code, problems, evidenceIds = []) {
   return { code, ok: problems.length === 0, problems, evidenceIds }
@@ -90,21 +92,39 @@ function requirementEvidenceProblems(workItem, evidence) {
   const problems = []
   for (const requirement of (workItem?.requirements || []).filter((item) => item.status === 'doing')) {
     for (const plan of requirement.evidencePlan || []) {
-      const covered = facts.some((fact) => fact.kind === plan.type && (fact.requirementIds || []).includes(requirement.requirementId))
+      const covered = facts.some((fact) => (
+        fact.kind === plan.type
+        || (plan.type === 'browser-interaction' && fact.kind === 'human-check')
+      ) && (fact.requirementIds || []).includes(requirement.requirementId))
       if (!covered) problems.push(`${requirement.requirementId} has no passing ${plan.type} evidence on current code state`)
-      if (plan.runtimeRequired && !facts.some((fact) => fact.kind === 'browser-interaction' && (fact.requirementIds || []).includes(requirement.requirementId))) {
-        problems.push(`${requirement.requirementId}:${plan.type} requires passing browser-interaction evidence`)
+      if (plan.runtimeRequired && !facts.some((fact) => ['browser-interaction', 'human-check'].includes(fact.kind) && (fact.requirementIds || []).includes(requirement.requirementId))) {
+        problems.push(`${requirement.requirementId}:${plan.type} requires passing browser-interaction or human-check evidence`)
       }
     }
   }
   return problems
 }
 
-function failureDomainsFor(evidence, ok, blockedBy) {
+function failureDomainForCheck(code = '') {
+  if (/^(?:SOURCE|EXTRACTION)/.test(code)) return 'source'
+  if (/^(?:SCOPE|REQUIREMENT|SURFACE|COVERAGE)/.test(code)) return 'scope'
+  if (/^(?:ENVIRONMENT|WORKTREE|COMMAND_RUNTIME|INFRASTRUCTURE)/.test(code)) return 'environment'
+  if (/^(?:EXTERNAL|DEPENDENCY)/.test(code)) return 'external-dependency'
+  return 'code'
+}
+
+function failureDomainsFor(evidence, ok, blockedBy, checks = []) {
   if (ok || blockedBy.length) return []
   const failedFacts = (evidence?.facts || []).filter((fact) => fact.result === 'fail')
-  if (!failedFacts.length) return ['code']
-  const domains = new Set(failedFacts.map((fact) => browserEvidenceKinds.has(fact.kind) ? 'browser' : 'code'))
+  const domains = new Set(failedFacts.map((fact) => (
+    failureDomains.has(fact.failureDomain)
+      ? fact.failureDomain
+      : browserEvidenceKinds.has(fact.kind)
+        ? 'browser'
+        : 'code'
+  )))
+  for (const failedCheck of checks.filter((item) => !item.ok)) domains.add(failureDomainForCheck(failedCheck.code))
+  if (!domains.size) domains.add('code')
   return [...domains].sort()
 }
 
@@ -147,8 +167,11 @@ export function buildVNextExitResult({ workItem, preflightChecks = [], currentCo
   const trustedEvidence = Boolean(evidence?.receipt) && attestationProblems.length === 0
   const freshnessProblems = evidenceFreshnessProblems(evidence, currentCodeState)
   const requiredProblems = requiredEvidenceProblems(level, evidence)
-  const requirementProblems = requirementEvidenceProblems(workItem, evidence)
-  const surfaceProblems = surfaceEvidenceProblems(workItem, evidence)
+  const humanFacts = manualRunEvidenceFacts(workItem, currentCodeState)
+  const combinedEvidence = { ...evidence, facts: [...(evidence?.facts || []), ...humanFacts] }
+  const requirementProblems = requirementEvidenceProblems(workItem, combinedEvidence)
+  const surfaceProblems = surfaceEvidenceProblems(workItem, combinedEvidence)
+  const sufficiency = auditEvidenceSufficiency({ workItem, evidence, currentCodeState })
   const blockedProblems = blockerProblems(blockers)
   const openBlockerIds = Array.isArray(blockers) ? blockers.filter((item) => item.status === 'open').map((item) => item.blockerId) : []
   const blockedEvidenceIds = (evidence?.facts || []).filter((fact) => fact.result === 'blocked').map((fact) => fact.evidenceId)
@@ -160,13 +183,14 @@ export function buildVNextExitResult({ workItem, preflightChecks = [], currentCo
     check('EVIDENCE_INTEGRITY', integrityProblems, (evidence?.facts || []).map((fact) => fact.evidenceId)),
     check('EVIDENCE_FRESHNESS', freshnessProblems, (evidence?.facts || []).map((fact) => fact.evidenceId)),
     check('REQUIRED_EVIDENCE', requiredProblems),
+    check(sufficiency.code, sufficiency.problems, [...sufficiency.humanEvidenceIds, ...(evidence?.facts || []).map((fact) => fact.evidenceId)]),
     check('REQUIREMENT_EVIDENCE', requirementProblems),
     check('SURFACE_EVIDENCE', surfaceProblems),
     check('BLOCKERS', blockedProblems, [...openBlockerIds, ...blockedEvidenceIds]),
   ]
   const blockedBy = [...new Set([...openBlockerIds, ...blockedEvidenceIds])]
   const ok = checks.every((item) => item.ok) && blockedBy.length === 0
-  const failureDomains = failureDomainsFor(evidence, ok, blockedBy)
+  const failureDomains = failureDomainsFor(evidence, ok, blockedBy, checks)
   const result = {
     schemaVersion: 1,
     workflowVersion: 2,
@@ -216,8 +240,8 @@ export function verifyExitResultIntegrity(result, workItem = null) {
   if (result?.failureDomains !== undefined) {
     const validDomains = Array.isArray(result.failureDomains)
       && new Set(result.failureDomains).size === result.failureDomains.length
-      && result.failureDomains.every((domain) => ['code', 'browser'].includes(domain))
-    if (!validDomains) problems.push('failureDomains must contain unique code/browser values')
+      && result.failureDomains.every((domain) => failureDomains.has(domain))
+    if (!validDomains) problems.push('failureDomains must contain unique supported failure-domain values')
     if (result.status === 'passed' && result.failureDomains.length) problems.push('passed result cannot have failureDomains')
     if (result.status === 'failed' && !result.failureDomains.length) problems.push('failed result requires at least one failureDomain')
   }
@@ -284,7 +308,7 @@ export function selfTest() {
     ? { ...fact, kind: 'browser-interaction', result: 'fail', producer: { ...fact.producer, exitCode: 1 } }
     : fact)
   const browserFailure = buildVNextExitResult({ workItem, currentCodeState: code, evidence: browserEvidence, blockers: [] })
-  assert.deepEqual(browserFailure.failureDomains, ['browser'])
+  assert.deepEqual(browserFailure.failureDomains, ['browser', 'scope'])
   const runtimeWorkItem = structuredClone(workItem)
   runtimeWorkItem.requirements[0].evidencePlan = [{ type: 'pure-logic', runtimeRequired: true }]
   const runtimeMissing = buildVNextExitResult({ workItem: runtimeWorkItem, currentCodeState: code, evidence, blockers: [] })

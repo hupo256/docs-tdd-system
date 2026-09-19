@@ -59,7 +59,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     if (outputFile) {
       const template = createManualTestTemplate(workItem, code, { worktree, baseRef })
       writeJson(outputFile, template)
-      console.log(JSON.stringify({ projectId: workItem.projectId, output: resolve(outputFile), prefilled: ['runtime scenarios', 'environment', 'time', 'requirement/surface mapping'], humanRequired: ['confirmedBy', 'scenario results'], conditional: ['actualResult when failed', 'blocker when not-testable', 'evidenceRefs/newOmissions when applicable'] }, null, 2))
+      console.log(JSON.stringify({ projectId: workItem.projectId, output: resolve(outputFile), prefilled: ['runtime scenarios', 'steps', 'expected', 'environment', 'time', 'requirement/surface mapping'], humanRequired: ['confirmedBy', 'scenario result', 'actual for passed/failed', 'unresolved items'], conditional: ['blocker when not-testable', 'evidenceRefs when applicable'] }, null, 2))
     } else {
       const resolvedInputFile = resolve(inputFile)
       const input = persistLocalEvidenceRefs(JSON.parse(readFileSync(resolvedInputFile, 'utf8')), projectDir, dirname(resolvedInputFile))

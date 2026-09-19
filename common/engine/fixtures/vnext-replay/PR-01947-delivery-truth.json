@@ -1,0 +1,101 @@
+{
+  "evaluator": "delivery-truth",
+  "name": "PR-01947 historical gates are not delivery truth",
+  "incident": "A historical release marker plus G5/G6 records must not be reported as authoritative workflowVersion 2 completion.",
+  "expectedFailures": [
+    "AUTHORITATIVE_COMPLETION"
+  ],
+  "deliveryInput": {
+    "workItem": {
+      "schemaVersion": 1,
+      "workflowVersion": 2,
+      "projectId": "PR-01947",
+      "deliveryTarget": {
+        "app": "apps/web",
+        "history": [
+          {
+            "release": "historical",
+            "gates": [
+              "G5",
+              "G6"
+            ]
+          }
+        ]
+      },
+      "requirements": [],
+      "autopilot": {
+        "implementation": {
+          "status": "completed",
+          "changedPaths": [
+            "apps/web/src/order.ts"
+          ]
+        },
+        "delivery": {
+          "status": "pending"
+        }
+      }
+    },
+    "latestResult": null,
+    "integrityOk": false,
+    "codeStateFresh": false,
+    "assuranceTrusted": false,
+    "gitScopeClean": false,
+    "changedPaths": [
+      "apps/web/src/order.ts"
+    ]
+  },
+  "positiveControl": {
+    "deliveryInput": {
+      "workItem": {
+        "schemaVersion": 1,
+        "workflowVersion": 2,
+        "projectId": "PR-01947",
+        "deliveryTarget": {
+          "app": "apps/web",
+          "history": []
+        },
+        "requirements": [],
+        "autopilot": {
+          "implementation": {
+            "status": "completed",
+            "changedPaths": [
+              "apps/web/src/order.ts"
+            ]
+          },
+          "delivery": {
+            "status": "committed",
+            "commitSha": "delivery-commit-sha",
+            "paths": [
+              "apps/web/src/order.ts"
+            ]
+          }
+        }
+      },
+      "latestResult": {
+        "mode": "enforced",
+        "assuranceMode": "autonomous",
+        "evidenceTrust": "cli-attested",
+        "status": "passed",
+        "ok": true,
+        "codeFingerprint": {
+          "headSha": "verified-head",
+          "baseSha": "verified-base",
+          "contentHash": "verified-content",
+          "dirtyHash": "verified-dirty",
+          "isGitRepo": true,
+          "scopeMode": "path-set-v1",
+          "scopePaths": [
+            "apps/web/src/order.ts"
+          ]
+        }
+      },
+      "integrityOk": true,
+      "codeStateFresh": true,
+      "assuranceTrusted": true,
+      "gitScopeClean": true,
+      "changedPaths": [
+        "apps/web/src/order.ts"
+      ]
+    }
+  }
+}

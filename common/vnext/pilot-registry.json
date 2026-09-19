@@ -10,7 +10,7 @@
   ],
   "qualificationTarget": {
     "readinessCaseId": "R-13",
-    "release": "autopilot-v3.3",
+    "release": "autopilot-v3.5",
     "publicCommandsOnly": true
   },
   "entries": [

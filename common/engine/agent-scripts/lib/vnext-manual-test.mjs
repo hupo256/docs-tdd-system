@@ -45,6 +45,12 @@ export function createManualTestScenarios(workItem) {
   const scenarios = runtimeRequirements(workItem).flatMap((requirement) => scenarioKinds(requirement).map((kind) => ({
     kind,
     title: '',
+    steps: [
+      'Prepare the stated precondition and open every mapped surface.',
+      'Perform the requirement action on the real UI path.',
+      'Observe the visible result and any state or data side effect.',
+      'Check the relevant negative or boundary case when applicable.',
+    ],
     expected: requirement.statement,
     requirementIds: [requirement.requirementId],
     surfaceIds: (requirement.affectedSurfaces || []).filter((surface) => surface.disposition === 'implement').map((surface) => surface.surfaceId),
@@ -81,7 +87,7 @@ export function pretestHumanRunAction(workItem) {
     const requirementsById = new Map(doingRequirements(workItem).map((item) => [item.requirementId, item]))
     const failedKinds = new Set(runEntries(run).filter((item) => item.result === 'failed').flatMap((item) => {
       if (item.kind) return [item.kind]
-      if (VISUAL_WORDS.test(item.actualResult || '')) return ['visual']
+      if (VISUAL_WORDS.test(item.actual || item.actualResult || '')) return ['visual']
       return scenarioKinds(requirementsById.get(item.requirementId) || {})
     }))
     const visualOnly = failedKinds.size === 1 && failedKinds.has('visual')
@@ -116,7 +122,15 @@ export function createManualTestTemplate(workItem, codeFingerprint, { worktree, 
     environment: { worktree: resolve(worktree), baseRef, headSha: codeFingerprint.headSha },
     confirmation: {
       confirmedBy: '',
-      scenarios: createManualTestScenarios(workItem).map((scenario) => ({ ...scenario, result: 'pending', actualResult: '', evidenceRefs: [], blocker: '', newOmissions: [] })),
+      scenarios: createManualTestScenarios(workItem).map((scenario) => ({
+        ...scenario,
+        result: 'pending',
+        actual: '',
+        unresolved: [],
+        newOmissions: [],
+        evidenceRefs: [],
+        blocker: '',
+      })),
     },
   }
 }
@@ -130,8 +144,39 @@ function validateEvidenceRef(ref, projectDir) {
   return path.startsWith(`${resolve(projectDir)}/`) && existsSync(path)
 }
 
-export function applyManualTestConfirmation(workItem, input, currentCodeFingerprint, { confirmedAt = new Date().toISOString(), environment = input?.environment, projectDir } = {}) {
+function upgradeManualTestInput(workItem, input) {
+  if (input?.schemaVersion !== 1) return input
+  const expected = createManualTestScenarios(workItem)
+  const legacyResults = Array.isArray(input?.confirmation?.results)
+    ? input.confirmation.results
+    : Array.isArray(input?.results)
+      ? input.results
+      : []
+  const resultByRequirement = new Map(legacyResults.map((item) => [item.requirementId, item]))
+  return {
+    ...input,
+    schemaVersion: 2,
+    confirmation: {
+      confirmedBy: input.confirmation?.confirmedBy || input.confirmedBy || '',
+      scenarios: expected.map((scenario) => {
+        const legacy = resultByRequirement.get(scenario.requirementIds[0]) || {}
+        return {
+          ...scenario,
+          result: legacy.result || 'pending',
+          actual: legacy.actual || legacy.actualResult || '',
+          unresolved: [],
+          newOmissions: Array.isArray(legacy.newOmissions) ? legacy.newOmissions : [],
+          evidenceRefs: legacy.evidenceRefs || [],
+          blocker: legacy.blocker || '',
+        }
+      }),
+    },
+  }
+}
+
+export function applyManualTestConfirmation(workItem, rawInput, currentCodeFingerprint, { confirmedAt = new Date().toISOString(), environment = rawInput?.environment, projectDir } = {}) {
   if (!requiresPretestHumanRun(workItem)) throw new Error('manual pre-test run is not required for this work item')
+  const input = upgradeManualTestInput(workItem, rawInput)
   if (input?.schemaVersion !== 2 || input?.projectId !== workItem?.projectId) throw new Error('manual test schemaVersion/projectId does not match work item')
   const fingerprints = coverageFingerprints(workItem)
   if (input.sourceFingerprint !== fingerprints.sourceFingerprint || input.requirementsFingerprint !== fingerprints.requirementsFingerprint) throw new Error('manual test template is stale because source or requirements changed')
@@ -145,22 +190,30 @@ export function applyManualTestConfirmation(workItem, input, currentCodeFingerpr
   const expectedById = new Map(expected.map((item) => [item.scenarioId, item]))
   for (const item of scenarios) {
     if (!RESULTS.has(item.result)) throw new Error(`${item.scenarioId} result must be passed, failed, or not-testable`)
-    if (item.result === 'failed' && !item.actualResult?.trim()) throw new Error(`${item.scenarioId} failed requires actualResult`)
+    if (!Array.isArray(item.steps) || !item.steps.length || item.steps.some((step) => !String(step).trim())) throw new Error(`${item.scenarioId} requires non-empty steps`)
+    if (!item.expected?.trim()) throw new Error(`${item.scenarioId} requires expected`)
+    if (['passed', 'failed'].includes(item.result) && !item.actual?.trim()) throw new Error(`${item.scenarioId} ${item.result} requires actual`)
+    if (!Array.isArray(item.unresolved) || item.unresolved.some((value) => !String(value).trim())) throw new Error(`${item.scenarioId} unresolved must be an array of non-empty strings`)
+    if (!Array.isArray(item.newOmissions) || item.newOmissions.some((value) => !String(value).trim())) throw new Error(`${item.scenarioId} newOmissions must be an array of non-empty strings`)
+    if (item.result === 'passed' && item.unresolved.length) throw new Error(`${item.scenarioId} passed cannot have unresolved items`)
     if (item.result === 'not-testable' && !item.blocker?.trim()) throw new Error(`${item.scenarioId} not-testable requires blocker`)
     if (item.evidenceRefs !== undefined && (!Array.isArray(item.evidenceRefs) || item.evidenceRefs.some((ref) => !validateEvidenceRef(ref, projectDir)))) throw new Error(`${item.scenarioId} evidenceRefs must be durable HTTPS/log refs or existing project-relative files`)
-    if (item.newOmissions !== undefined && (!Array.isArray(item.newOmissions) || item.newOmissions.some((value) => !String(value).trim()))) throw new Error(`${item.scenarioId} newOmissions must contain non-empty strings`)
   }
   const hasBlocked = scenarios.some((item) => item.result === 'not-testable')
-  const hasFailure = scenarios.some((item) => item.result === 'failed' || item.newOmissions?.length)
+  const hasFailure = scenarios.some((item) => item.result === 'failed' || item.unresolved.length || item.newOmissions.length)
   const persistedScenarios = scenarios.map((item) => {
     const definition = expectedById.get(item.scenarioId)
     return {
       scenarioId: item.scenarioId, kind: definition.kind, title: definition.title,
       requirementIds: definition.requirementIds, surfaceIds: definition.surfaceIds,
-      result: item.result, actualResult: item.actualResult?.trim() || (item.result === 'passed' ? '符合预期' : ''),
+      steps: item.steps.map((step) => step.trim()),
+      expected: item.expected.trim(),
+      result: item.result,
+      actual: item.actual?.trim() || '',
+      unresolved: item.unresolved.map((value) => value.trim()),
+      newOmissions: item.newOmissions.map((value) => value.trim()),
       ...(item.evidenceRefs?.length ? { evidenceRefs: item.evidenceRefs.map((ref) => ref.trim()) } : {}),
       ...(item.blocker?.trim() ? { blocker: item.blocker.trim() } : {}),
-      ...(item.newOmissions?.length ? { newOmissions: item.newOmissions.map((value) => value.trim()) } : {}),
     }
   })
   return {
@@ -201,28 +254,55 @@ export function selfTest() {
   assert.equal(template.confirmation.scenarios.length, 3)
   assert.equal(template.confirmation.scenarios[2].kind, 'visual')
   template.confirmation.confirmedBy = 'tester@example.com'
-  template.confirmation.scenarios.forEach((scenario) => { scenario.result = 'passed' })
+  template.confirmation.scenarios.forEach((scenario) => {
+    scenario.result = 'passed'
+    scenario.actual = 'Observed the expected result.'
+  })
   const run = applyManualTestConfirmation(workItem, template, code, { confirmedAt: '2026-09-14T00:01:00Z' })
   assert.equal(run.status, 'passed')
   assert.deepEqual(manualTestProblems({ ...workItem, manualTestRun: run }, code), [])
   const visualFailure = structuredClone(template)
   visualFailure.confirmation.scenarios[2].result = 'failed'
-  visualFailure.confirmation.scenarios[2].actualResult = '间距错误'
+  visualFailure.confirmation.scenarios[2].actual = '间距错误'
   const visualRun = applyManualTestConfirmation(workItem, visualFailure, code)
   assert.equal(pretestHumanRunAction({ ...workItem, manualTestRun: visualRun }).action, 'repair-manual-visual-failures')
   const functionalFailure = structuredClone(template)
   functionalFailure.confirmation.scenarios[0].result = 'failed'
-  functionalFailure.confirmation.scenarios[0].actualResult = '登录失败'
+  functionalFailure.confirmation.scenarios[0].actual = '登录失败'
   const functionalRun = applyManualTestConfirmation(workItem, functionalFailure, code)
   assert.equal(pretestHumanRunAction({ ...workItem, manualTestRun: functionalRun }).action, 'repair-manual-functional-failures')
   const mixedFailure = structuredClone(visualFailure)
   mixedFailure.confirmation.scenarios[0].result = 'failed'
-  mixedFailure.confirmation.scenarios[0].actualResult = '登录失败'
+  mixedFailure.confirmation.scenarios[0].actual = '登录失败'
   const mixedRun = applyManualTestConfirmation(workItem, mixedFailure, code)
   assert.equal(pretestHumanRunAction({ ...workItem, manualTestRun: mixedRun }).action, 'repair-manual-test-failures')
-  visualFailure.confirmation.scenarios[2].newOmissions = ['缺少重置密码页']
-  const omissionRun = applyManualTestConfirmation(workItem, visualFailure, code)
+  visualFailure.confirmation.scenarios[2].unresolved = ['缺少重置密码页']
+  const unresolvedRun = applyManualTestConfirmation(workItem, visualFailure, code)
+  assert.equal(pretestHumanRunAction({ ...workItem, manualTestRun: unresolvedRun }).action, 'repair-manual-visual-failures')
+  const omissionFailure = structuredClone(visualFailure)
+  omissionFailure.confirmation.scenarios[2].unresolved = []
+  omissionFailure.confirmation.scenarios[2].newOmissions = ['缺少重置密码页']
+  const omissionRun = applyManualTestConfirmation(workItem, omissionFailure, code)
   assert.equal(pretestHumanRunAction({ ...workItem, manualTestRun: omissionRun }).action, 'repair-manual-test-omissions')
+  const legacy = {
+    ...template,
+    schemaVersion: 1,
+    confirmation: {
+      confirmedBy: 'legacy-tester',
+      results: template.confirmation.scenarios
+        .filter((scenario) => scenario.kind === 'functional')
+        .map((scenario) => ({
+          requirementId: scenario.requirementIds[0],
+          surfaceIds: scenario.surfaceIds,
+          result: 'passed',
+          actualResult: 'Legacy result passed.',
+          newOmissions: [],
+        })),
+    },
+  }
+  const legacyRun = applyManualTestConfirmation(workItem, legacy, code)
+  assert.equal(legacyRun.schemaVersion, 2)
+  assert.equal(legacyRun.status, 'passed')
   const blocked = structuredClone(template)
   blocked.confirmation.scenarios[0].result = 'not-testable'
   assert.throws(() => applyManualTestConfirmation(workItem, blocked, code), /requires blocker/)

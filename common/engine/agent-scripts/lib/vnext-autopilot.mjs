@@ -14,6 +14,17 @@ import { createScopeApproval, scopeApprovalFingerprint } from './vnext-risk-rout
 import { evaluateSourceReadiness, reconcileAvailableSources } from './vnext-source-readiness.mjs'
 import { requiresSurfaceReconciliation } from './vnext-reconcile.mjs'
 import { deriveSurfaceReconciliationAction } from './vnext-reconcile-actions.mjs'
+import { createEfficiencyBudget, deriveEfficiencyRoute, budgetStatus } from './vnext-efficiency-policy.mjs'
+import { deriveDeliveryTruth } from './vnext-delivery-truth.mjs'
+import {
+  evaluateRepairPolicy,
+  initialRepairState,
+  normalizeRepairState,
+  recordRepairAttempt,
+  repairFailureFingerprint,
+  repairInputFingerprint,
+  resetRepairDomains,
+} from './vnext-repair-policy.mjs'
 
 export { AUTOPILOT_ACTIONS, AUTOPILOT_PHASES }
 
@@ -22,7 +33,7 @@ export function initialAutopilotState(generatedAt = new Date().toISOString()) {
     phase: 'intake',
     implementation: { status: 'pending', changedPaths: [] },
     delivery: { status: 'pending' },
-    repairAttempts: { code: 0, browser: 0 },
+    repair: initialRepairState(),
     lastCheckpointAt: generatedAt,
   }
 }
@@ -35,6 +46,12 @@ function implementationState(workItem, latestResult) {
 
 function actionPacket(workItem, { action, phase, reason, command = '', status = 'active', constraints = [], checkpoint = null }) {
   const projectId = workItem?.projectId || ''
+  const efficiencyDecision = deriveEfficiencyRoute(workItem)
+  const persistedBudget = workItem?.autopilot?.efficiency?.budget
+  const efficiencyBudget = persistedBudget || createEfficiencyBudget(efficiencyDecision, {
+    inputFingerprint: stableFingerprint(workItem),
+  })
+  const efficiencyState = budgetStatus(efficiencyBudget)
   return {
     schemaVersion: 1,
     actionId: stableFingerprint({ projectId, workItem: stableFingerprint(workItem), action }),
@@ -45,6 +62,10 @@ function actionPacket(workItem, { action, phase, reason, command = '', status = 
     action,
     reason,
     command,
+    executionRoute: efficiencyDecision.route,
+    routeReasons: efficiencyDecision.reasons,
+    efficiencyBudget,
+    budgetStatus: efficiencyState,
     ...largeContextActionFields(workItem, constraints),
     ...(checkpoint ? { checkpoint } : {}),
   }
@@ -62,6 +83,7 @@ export function deriveAutopilotAction({
   codeStateFresh = true,
   assuranceTrusted = false,
   deliveryCommitted = false,
+  deliveryTruth = null,
   worktreeReady = true,
   reconciliationResult = null,
   reconciliationCurrent = false,
@@ -73,6 +95,15 @@ export function deriveAutopilotAction({
   const coverage = workItem.coverageAudit
   const effectiveReview = effectiveCoverageReview(workItem)
   const sourceReadiness = evaluateSourceReadiness(workItem)
+  const truth = deliveryTruth || deriveDeliveryTruth({
+    workItem,
+    latestResult,
+    integrityOk: resultIntegrityOk,
+    codeStateFresh,
+    assuranceTrusted,
+    reconciliationResult,
+    gitScopeClean: deliveryCommitted,
+  })
 
   if (!doing.length) {
     return actionPacket(workItem, {
@@ -230,42 +261,62 @@ export function deriveAutopilotAction({
   }
   if (latestResult.status !== 'passed' || latestResult.ok !== true) {
     const domains = failedDomains(latestResult)
-    const attempts = workItem.autopilot?.repairAttempts || { code: 0, browser: 0 }
-    const exhausted = domains.filter((domain) => (attempts[domain] || 0) >= 2)
-    if (exhausted.length) {
+    const inputFingerprint = repairInputFingerprint({ workItem, latestResult })
+    const failureFingerprint = repairFailureFingerprint(latestResult)
+    const repairDecision = evaluateRepairPolicy({
+      repairState: workItem.autopilot?.repair,
+      legacyAttempts: workItem.autopilot?.repairAttempts,
+      failureDomains: domains,
+      inputFingerprint,
+      failureFingerprint,
+    })
+    if (!repairDecision.allowed) {
+      const action = repairDecision.recoveryAction || repairDecision.terminalState || 'escalate-repair-failure'
       return actionPacket(workItem, {
-        action: 'escalate-repair-failure',
+        action,
         phase: 'blocked',
         status: 'blocked',
-        reason: `Two automatic repair attempts failed for: ${exhausted.join(', ')}; human diagnosis is required.`,
-        constraints: ['do-not-loop', 'report-last-failed-checks'],
+        command: (repairDecision.recoveryCommand || '').replace('<PROJECT-ID>', projectId),
+        reason: repairDecision.unchangedFailure
+          ? `The ${domains.join(' + ')} failure is unchanged for the same input fingerprint; another repair is prohibited until facts change.`
+          : `Automatic repair budget is exhausted for: ${repairDecision.exhaustedDomains.join(', ')}.`,
+        constraints: ['do-not-loop', 'report-last-failed-checks', 'resume-only-after-input-or-failure-fingerprint-changes'],
       })
     }
     return actionPacket(workItem, {
       action: 'repair-failed-checks',
       phase: 'validating',
       reason: `The latest enforced verification contains failed ${domains.join(' + ')} checks.`,
-      constraints: domains.map((domain) => `maximum-two-automatic-${domain}-repairs`),
+      constraints: domains.map((domain) => `maximum-${repairDecision.budgets[domain]}-automatic-${domain}-repairs`),
       checkpoint: {
         command: `docs-tdd checkpoint ${projectId} --input <checkpoint.json>`,
         requiredFields: ['actionId', 'outcome', 'changedPaths'],
       },
     })
   }
-  if (!deliveryCommitted) {
+  if (truth.lifecycle === 'delivery-ready') {
     return actionPacket(workItem, {
       action: 'commit-ready-change',
       phase: 'validating',
-      reason: 'Authoritative checks passed; commit only the evidence-scoped paths before handoff.',
+      reason: truth.statusText,
       command: `docs-tdd run ${projectId}`,
       constraints: ['stage-only-evidence-scoped-paths', 'do-not-push'],
     })
   }
+  if (!truth.authoritativeCompletion) {
+    return actionPacket(workItem, {
+      action: 'escalate-repair-failure',
+      phase: 'blocked',
+      status: 'blocked',
+      reason: truth.statusText,
+      constraints: ['completion-must-come-from-delivery-rollup', ...truth.blockers],
+    })
+  }
   return actionPacket(workItem, {
     action: 'complete',
-    phase: 'ready-to-test',
+    phase: 'delivered',
     status: 'complete',
-    reason: 'The current work item has an authoritative PASS bound to the current effective code state.',
+    reason: truth.statusText,
   })
 }
 
@@ -305,6 +356,17 @@ export function applyAutopilotCheckpoint(workItem, checkpoint, { latestResult = 
   const pathProblems = deliveryScopePathProblems(next, changedPaths)
   if (pathProblems.length) throw new Error(pathProblems.join('; '))
 
+  let repair = normalizeRepairState(next.autopilot?.repair, next.autopilot?.repairAttempts)
+  if (expected.action === 'repair-failed-checks' && checkpoint.outcome === 'completed') {
+    repair = recordRepairAttempt(repair, {
+      failureDomains: failedDomains(latestResult),
+      inputFingerprint: repairInputFingerprint({ workItem, latestResult }),
+      failureFingerprint: repairFailureFingerprint(latestResult),
+      generatedAt,
+    })
+  } else if (expected.action === 'reconcile-late-sources') {
+    repair = resetRepairDomains(repair, ['source', 'code', 'browser'])
+  }
   next.autopilot = {
     ...initialAutopilotState(generatedAt),
     ...(next.autopilot || {}),
@@ -321,13 +383,8 @@ export function applyAutopilotCheckpoint(workItem, checkpoint, { latestResult = 
       ...(checkpoint.outcome === 'completed' ? { completedAt: generatedAt } : {}),
     },
     delivery: { status: 'pending' },
-    repairAttempts: {
-      ...(next.autopilot?.repairAttempts || { code: 0, browser: 0 }),
-      ...(expected.action === 'repair-failed-checks' && checkpoint.outcome === 'completed'
-        ? Object.fromEntries(failedDomains(latestResult).map((domain) => [domain, (next.autopilot?.repairAttempts?.[domain] || 0) + 1]))
-        : {}),
-      ...(expected.action === 'reconcile-late-sources' ? { code: 0, browser: 0 } : {}),
-    },
+    repair,
+    repairAttempts: { code: repair.attempts.code, browser: repair.attempts.browser },
     lastCheckpointAt: generatedAt,
   }
   return next
@@ -488,7 +545,12 @@ export function selfTest() {
   assert.equal(reconciled.apiDependency.mode, 'real-api')
   assert.equal(deriveAutopilotAction({ workItem: reconciled }).action, 'capture-cli-evidence')
 
-  const passed = { mode: 'enforced', status: 'passed', ok: true }
+  const passed = {
+    mode: 'enforced',
+    status: 'passed',
+    ok: true,
+    codeFingerprint: { scopeMode: 'path-set-v1', scopePaths: ['src/x.ts'] },
+  }
   const { autopilot: _legacyMissingAutopilot, extractionAudit: _legacyMissingExtractionAudit, ...legacyReviewed } = reviewed
   assert.equal(deriveAutopilotAction({ workItem: legacyReviewed, latestResult: passed, assuranceTrusted: true, deliveryCommitted: true }).action, 'repair-intake-extraction')
   const staleAudit = structuredClone(implemented)
@@ -496,14 +558,18 @@ export function selfTest() {
   assert.equal(deriveAutopilotAction({ workItem: staleAudit, latestResult: passed, resultIntegrityOk: false }).action, 'repair-intake-extraction')
   assert.equal(deriveAutopilotAction({ workItem: implemented, latestResult: passed, assuranceTrusted: false }).action, 'capture-cli-evidence')
   assert.equal(deriveAutopilotAction({ workItem: implemented, latestResult: passed, assuranceTrusted: true }).action, 'commit-ready-change')
-  assert.equal(deriveAutopilotAction({ workItem: implemented, latestResult: passed, assuranceTrusted: true, deliveryCommitted: true }).action, 'complete')
+  assert.equal(deriveAutopilotAction({ workItem: committed, latestResult: passed, assuranceTrusted: true, deliveryCommitted: true }).action, 'complete')
   assert.equal(deriveAutopilotAction({ workItem: implemented, latestResult: { status: 'blocked', ok: false } }).action, 'resolve-blockers')
   const failed = { status: 'failed', ok: false, failureDomains: ['code'] }
   const repairAction = deriveAutopilotAction({ workItem: implemented, latestResult: failed })
   assert.equal(repairAction.action, 'repair-failed-checks')
   const repairedOnce = applyAutopilotCheckpoint(implemented, { actionId: repairAction.actionId, outcome: 'completed', changedPaths: ['src/x.ts'] }, { latestResult: failed })
   const secondRepairAction = deriveAutopilotAction({ workItem: repairedOnce, latestResult: failed })
-  const repairedTwice = applyAutopilotCheckpoint(repairedOnce, { actionId: secondRepairAction.actionId, outcome: 'completed', changedPaths: ['src/x.ts'] }, { latestResult: failed })
+  assert.equal(secondRepairAction.action, 'escalate-repair-failure')
+  assert.equal(secondRepairAction.command, 'docs-tdd dev-check PR-00001')
+  const changedFailureInput = { ...failed, codeFingerprint: { contentHash: 'changed-code' } }
+  const changedRepairAction = deriveAutopilotAction({ workItem: repairedOnce, latestResult: changedFailureInput })
+  const repairedTwice = applyAutopilotCheckpoint(repairedOnce, { actionId: changedRepairAction.actionId, outcome: 'completed', changedPaths: ['src/x.ts'] }, { latestResult: changedFailureInput })
   assert.equal(deriveAutopilotAction({ workItem: repairedTwice, latestResult: failed }).action, 'escalate-repair-failure')
   const browserFailed = { status: 'failed', ok: false, failureDomains: ['browser'] }
   const browserRepair = deriveAutopilotAction({ workItem: implemented, latestResult: browserFailed })

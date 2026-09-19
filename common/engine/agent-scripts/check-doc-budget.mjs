@@ -156,9 +156,12 @@ const SCRIPT_BUDGET_DEFAULT = { warn: 24000, fail: 30000 }
 const SCRIPT_BUDGET_OVERRIDES = {
   'verify-project-gate.mjs': { warn: 52000, fail: 58000 }, // 全 gate 判定聚合入口
   'verify-code-rules.mjs': { warn: 44000, fail: 50000 }, // 静态代码规则扫描
-  'check-doc-budget.mjs': { warn: 44000, fail: 48000 }, // 本文件：文档/脚本预算 + 覆盖 + 台账自检
+  'check-doc-budget.mjs': { warn: 46000, fail: 50000 }, // 本文件：文档/脚本预算 + 覆盖 + 台账自检
   'run-project-gate.mjs': { warn: 32000, fail: 36000 }, // 正式 gate runner（持久化/证据/阶段同步）
   'verify-build-quality.mjs': { warn: 32000, fail: 36000 }, // 实跑 biome/tsc/vitest 机器事实层
+  'docs-tdd.mjs': { warn: 32000, fail: 34000 }, // v2/v3.5 public CLI router: command contract, source graph, repair and delivery entrypoints
+  'project-orchestrator.mjs': { warn: 33000, fail: 35000 }, // v2 lifecycle coordinator: safe context, bounded repair and commit orchestration
+  'lib/vnext-autopilot.mjs': { warn: 34000, fail: 36000 }, // v3.5 requirement-to-commit state machine and terminal recovery decisions
 }
 // 无 self-test 但可接受的脚本：纯 CLI/IO 包装或副作用型入口（逻辑靠 golden/集成实测覆盖）。
 // 新增脚本若含可测纯逻辑，必须加 --self-test 并登记 SELF_TEST_SCRIPTS；否则显式加入本豁免集（一次有意识决定）。

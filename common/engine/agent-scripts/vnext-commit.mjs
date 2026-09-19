@@ -38,7 +38,11 @@ export function commitVNextProject(projectId, mode) {
   const currentCodeState = codeFingerprint(worktree, config.baseRef || 'origin/online')
   const problems = checkpointCommitProblems({ projectId, workItem, currentCodeState, changedPaths: paths, baseAvailable: Boolean(currentCodeState.baseSha) })
   if (problems.length) throw new Error(`checkpoint commit blocked:\n- ${problems.join('\n- ')}`)
-  const commit = commitScopedPaths(worktree, projectId, paths, undefined, 'checkpoint')
+  const commit = commitScopedPaths(worktree, projectId, paths, undefined, 'checkpoint', {
+    workItem,
+    actionId: workItem?.autopilot?.implementation?.checkpoint?.actionId || '',
+    baseRef: config.baseRef || 'origin/online',
+  })
   if (!commit.ok) throw new Error(commit.error)
   persistVNextWorkItem(projectDir, applyCheckpointCommit(workItem, commit))
   return { ...inspectVNext(projectId), automation: commit }

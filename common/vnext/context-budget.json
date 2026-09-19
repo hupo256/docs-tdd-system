@@ -11,22 +11,22 @@
   "v1Packs": [
     {
       "scenario": "g0_g2_scope",
-      "chars": 28037
+      "chars": 28061
     },
     {
       "scenario": "g4_coding_worktree",
-      "chars": 18192
+      "chars": 18214
     },
     {
       "scenario": "g6_code_review",
-      "chars": 20011
+      "chars": 19937
     },
     {
       "scenario": "g6_contract",
-      "chars": 21148
+      "chars": 21321
     }
   ],
-  "v1PerProjectChars": 87388,
+  "v1PerProjectChars": 87533,
   "vnextCases": [
     {
       "label": "V0-low-risk",
@@ -61,7 +61,7 @@
     {
       "label": "V2-PR-02265",
       "level": "V2",
-      "chars": 780,
+      "chars": 953,
       "targetBudget": 8000,
       "budget": 24000,
       "budgetStatus": "standard",
@@ -71,9 +71,9 @@
   ],
   "comparison": {
     "projectCount": 4,
-    "v1ComparableChars": 349552,
-    "vnextComparableChars": 2998,
-    "reductionPercent": 99.14,
+    "v1ComparableChars": 350132,
+    "vnextComparableChars": 3171,
+    "reductionPercent": 99.09,
     "targetReductionPercent": 60,
     "ok": true
   },

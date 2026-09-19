@@ -1,0 +1,352 @@
+{
+  "evaluator": "exit-evidence",
+  "name": "PR-02265 exit evidence gaps",
+  "incident": "Historical implementation notes did not prove the V2 required evidence kinds, requirement claims, or mapped surfaces.",
+  "expectedFailures": [
+    "REQUIRED_EVIDENCE",
+    "REQUIREMENT_EVIDENCE",
+    "SURFACE_EVIDENCE"
+  ],
+  "generatedAt": "2026-09-19T00:00:00.000Z",
+  "currentCodeState": {
+    "headSha": "fixture-head",
+    "baseSha": "fixture-base",
+    "contentHash": "fixture-content",
+    "dirtyHash": "fixture-dirty",
+    "dirtyFileCount": 1,
+    "untrackedFileCount": 0,
+    "isGitRepo": true,
+    "scopeMode": "path-set-v1",
+    "scopePaths": [
+      "apps/web/src/fee.ts"
+    ]
+  },
+  "evidence": {
+    "runId": "pr-02265-incident",
+    "capturedAt": "2026-09-19T00:00:00.000Z",
+    "codeFingerprint": {
+      "headSha": "fixture-head",
+      "baseSha": "fixture-base",
+      "contentHash": "fixture-content",
+      "dirtyHash": "fixture-dirty",
+      "dirtyFileCount": 1,
+      "untrackedFileCount": 0,
+      "isGitRepo": true,
+      "scopeMode": "path-set-v1",
+      "scopePaths": [
+        "apps/web/src/fee.ts"
+      ]
+    },
+    "facts": []
+  },
+  "blockers": [],
+  "workItem": {
+    "schemaVersion": 1,
+    "workflowVersion": 2,
+    "projectId": "PR-02265",
+    "sourceSnapshot": {
+      "revision": "historical-replay",
+      "contentHash": "fixture-pr-02265-prd",
+      "sources": [
+        {
+          "path": "inbox/lark-sync/prd-latest.extracted.md",
+          "contentHash": "fixture-pr-02265-prd"
+        }
+      ]
+    },
+    "routing": {
+      "scopeClass": "cross-boundary",
+      "riskSignals": [
+        "fee-semantics"
+      ],
+      "verificationLevel": "V2"
+    },
+    "apiDependency": {
+      "mode": "real-api",
+      "reason": "Fixture uses an existing fee API contract."
+    },
+    "coverageAudit": {
+      "sourceFingerprint": "fixture-pr-02265-source",
+      "requirementsFingerprint": "fixture-pr-02265-requirements",
+      "reviewMode": "independent-cold-read",
+      "reviewRunId": "exit-evidence-fixture",
+      "reviewer": {
+        "kind": "model",
+        "id": "deterministic-replay-fixture"
+      },
+      "verdict": "pass",
+      "findings": []
+    },
+    "requirements": [
+      {
+        "requirementId": "R-004",
+        "sourceAnchors": [
+          {
+            "sourceId": "PRD-FEE-TABLE"
+          }
+        ],
+        "status": "doing",
+        "statement": "Display the fee amount with the approved sign and amount semantics.",
+        "evidencePlan": [
+          {
+            "type": "pure-logic",
+            "runtimeRequired": false
+          }
+        ],
+        "affectedSurfaces": [
+          {
+            "surfaceId": "S-004",
+            "locator": "apps/web/src/fee.ts#amount",
+            "disposition": "implement"
+          }
+        ]
+      },
+      {
+        "requirementId": "R-013",
+        "sourceAnchors": [
+          {
+            "sourceId": "PRD-FEE-EXPLANATION"
+          }
+        ],
+        "status": "doing",
+        "statement": "Show the approved fee explanation copy.",
+        "evidencePlan": [
+          {
+            "type": "human-check",
+            "runtimeRequired": false
+          }
+        ],
+        "affectedSurfaces": [
+          {
+            "surfaceId": "S-013",
+            "locator": "apps/web/src/fee.ts#explanation",
+            "disposition": "implement"
+          }
+        ]
+      }
+    ]
+  },
+  "positiveControl": {
+    "evidence": {
+      "runId": "pr-02265-positive",
+      "capturedAt": "2026-09-19T00:01:00.000Z",
+      "codeFingerprint": {
+        "headSha": "fixture-head",
+        "baseSha": "fixture-base",
+        "contentHash": "fixture-content",
+        "dirtyHash": "fixture-dirty",
+        "dirtyFileCount": 1,
+        "untrackedFileCount": 0,
+        "isGitRepo": true,
+        "scopeMode": "path-set-v1",
+        "scopePaths": [
+          "apps/web/src/fee.ts"
+        ]
+      },
+      "facts": [
+        {
+          "evidenceId": "F04",
+          "kind": "pure-logic",
+          "result": "pass",
+          "codeFingerprint": {
+            "headSha": "fixture-head",
+            "baseSha": "fixture-base",
+            "contentHash": "fixture-content",
+            "dirtyHash": "fixture-dirty",
+            "dirtyFileCount": 1,
+            "untrackedFileCount": 0,
+            "isGitRepo": true,
+            "scopeMode": "path-set-v1",
+            "scopePaths": [
+              "apps/web/src/fee.ts"
+            ]
+          },
+          "requirementIds": [
+            "R-004"
+          ],
+          "surfaceIds": [
+            "S-004"
+          ],
+          "evidenceRefs": [
+            "log:F04"
+          ],
+          "producer": {
+            "kind": "command",
+            "command": "node fee-contract.mjs",
+            "exitCode": 0,
+            "startedAt": "2026-09-19T00:00:01.000Z",
+            "finishedAt": "2026-09-19T00:00:02.000Z"
+          }
+        },
+        {
+          "evidenceId": "AC-4",
+          "kind": "human-check",
+          "result": "pass",
+          "codeFingerprint": {
+            "headSha": "fixture-head",
+            "baseSha": "fixture-base",
+            "contentHash": "fixture-content",
+            "dirtyHash": "fixture-dirty",
+            "dirtyFileCount": 1,
+            "untrackedFileCount": 0,
+            "isGitRepo": true,
+            "scopeMode": "path-set-v1",
+            "scopePaths": [
+              "apps/web/src/fee.ts"
+            ]
+          },
+          "requirementIds": [
+            "R-004"
+          ],
+          "surfaceIds": [
+            "S-004"
+          ],
+          "evidenceRefs": [
+            "log:AC-4"
+          ],
+          "producer": {
+            "kind": "human",
+            "confirmedBy": "fixture-reviewer",
+            "confirmedAt": "2026-09-19T00:00:03.000Z",
+            "steps": [
+              "Open the fee detail.",
+              "Inspect the rendered amount."
+            ],
+            "expected": "The approved sign and amount are visible.",
+            "actual": "The approved sign and amount are visible.",
+            "unresolved": []
+          }
+        },
+        {
+          "evidenceId": "AC-13",
+          "kind": "human-check",
+          "result": "pass",
+          "codeFingerprint": {
+            "headSha": "fixture-head",
+            "baseSha": "fixture-base",
+            "contentHash": "fixture-content",
+            "dirtyHash": "fixture-dirty",
+            "dirtyFileCount": 1,
+            "untrackedFileCount": 0,
+            "isGitRepo": true,
+            "scopeMode": "path-set-v1",
+            "scopePaths": [
+              "apps/web/src/fee.ts"
+            ]
+          },
+          "requirementIds": [
+            "R-013"
+          ],
+          "surfaceIds": [
+            "S-013"
+          ],
+          "evidenceRefs": [
+            "log:AC-13"
+          ],
+          "producer": {
+            "kind": "human",
+            "confirmedBy": "fixture-reviewer",
+            "confirmedAt": "2026-09-19T00:00:04.000Z",
+            "steps": [
+              "Open the fee explanation.",
+              "Compare the visible copy with the approved wording."
+            ],
+            "expected": "The approved explanation is visible.",
+            "actual": "The approved explanation is visible.",
+            "unresolved": []
+          }
+        },
+        {
+          "evidenceId": "QUALITY-TOUCHED",
+          "kind": "touched-file-quality",
+          "result": "pass",
+          "codeFingerprint": {
+            "headSha": "fixture-head",
+            "baseSha": "fixture-base",
+            "contentHash": "fixture-content",
+            "dirtyHash": "fixture-dirty",
+            "dirtyFileCount": 1,
+            "untrackedFileCount": 0,
+            "isGitRepo": true,
+            "scopeMode": "path-set-v1",
+            "scopePaths": [
+              "apps/web/src/fee.ts"
+            ]
+          },
+          "requirementIds": [],
+          "surfaceIds": [],
+          "evidenceRefs": [
+            "log:quality-touched"
+          ],
+          "producer": {
+            "kind": "command",
+            "command": "node touched-quality.mjs",
+            "exitCode": 0,
+            "startedAt": "2026-09-19T00:00:05.000Z",
+            "finishedAt": "2026-09-19T00:00:06.000Z"
+          }
+        },
+        {
+          "evidenceId": "V2-CONTRACT",
+          "kind": "contract-or-scenario-tests",
+          "result": "pass",
+          "codeFingerprint": {
+            "headSha": "fixture-head",
+            "baseSha": "fixture-base",
+            "contentHash": "fixture-content",
+            "dirtyHash": "fixture-dirty",
+            "dirtyFileCount": 1,
+            "untrackedFileCount": 0,
+            "isGitRepo": true,
+            "scopeMode": "path-set-v1",
+            "scopePaths": [
+              "apps/web/src/fee.ts"
+            ]
+          },
+          "requirementIds": [],
+          "surfaceIds": [],
+          "evidenceRefs": [
+            "log:v2-contract"
+          ],
+          "producer": {
+            "kind": "command",
+            "command": "node contract-scenarios.mjs",
+            "exitCode": 0,
+            "startedAt": "2026-09-19T00:00:07.000Z",
+            "finishedAt": "2026-09-19T00:00:08.000Z"
+          }
+        },
+        {
+          "evidenceId": "V2-DIRECTED-QUALITY",
+          "kind": "directed-quality",
+          "result": "pass",
+          "codeFingerprint": {
+            "headSha": "fixture-head",
+            "baseSha": "fixture-base",
+            "contentHash": "fixture-content",
+            "dirtyHash": "fixture-dirty",
+            "dirtyFileCount": 1,
+            "untrackedFileCount": 0,
+            "isGitRepo": true,
+            "scopeMode": "path-set-v1",
+            "scopePaths": [
+              "apps/web/src/fee.ts"
+            ]
+          },
+          "requirementIds": [],
+          "surfaceIds": [],
+          "evidenceRefs": [
+            "log:v2-directed-quality"
+          ],
+          "producer": {
+            "kind": "command",
+            "command": "node directed-quality.mjs",
+            "exitCode": 0,
+            "startedAt": "2026-09-19T00:00:09.000Z",
+            "finishedAt": "2026-09-19T00:00:10.000Z"
+          }
+        }
+      ]
+    }
+  }
+}

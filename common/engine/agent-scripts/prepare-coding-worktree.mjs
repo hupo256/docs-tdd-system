@@ -5,6 +5,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn, spawnSync } from 'node:child_process';
 import { listProjectIds, resolveProjectRoot, resolveRoots } from './lib/roots.mjs';
+import { assertSafeWorkContext } from './lib/vnext-work-context-runtime.mjs';
 
 const scriptPath = fileURLToPath(import.meta.url);
 const { docsSystemRoot, consumerRoot: repoRoot, config } = resolveRoots();
@@ -179,6 +180,17 @@ if (!dryRun) {
     );
   }
   console.log(`baseline check passed: HEAD descends from ${baseRef}`);
+  const workItemFile = join(resolveProjectRoot(projectId), 'work-item.json');
+  const workItem = existsSync(workItemFile) ? JSON.parse(readFileSync(workItemFile, 'utf8')) : { workflowVersion: 2, projectId };
+  assertSafeWorkContext({
+    projectId,
+    workItem,
+    worktree: worktreeDir,
+    baseRef,
+    commitMode: 'no-commit',
+    actionId: 'prepare-coding-worktree',
+    targetPaths: [],
+  });
 }
 
 if (dryRun) {

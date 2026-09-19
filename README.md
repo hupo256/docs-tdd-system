@@ -1,6 +1,6 @@
-# docs_tdd v3.4 — 可移植的 AI 前端开发规则与门禁系统
+# docs_tdd v3.5 — 可移植的 AI 前端开发规则与门禁系统
 
-> 当前正式发布版本：**v3.4**。v3.4 沿用第二代 work-item 工作流协议；项目文件中的兼容路由标识仍为 `workflowVersion: 2`，它不是产品发布版本。
+> 当前正式发布版本：**v3.5**。v3.5 沿用第二代 work-item 工作流协议；项目文件中的兼容路由标识仍为 `workflowVersion: 2`，它不是产品发布版本。
 
 一套**独立**的 AI 前端开发操作系统：新需求默认使用第二代 work-item 流程的「原始需求 → 独立覆盖审查 → 风险分级 → 当前代码证据 → 单一正式出口」，存量项目兼容第一代 G0–G8 门禁；两条工作流都只认机器可验证证据。引擎与业务仓库通过 `docs-tdd.config.json` + 一个软链解耦；**目前只在一个仓库（`@fameex/web`）真实验证过，移植到第二个仓库需要改动下列锚点**（见[可移植性的真实边界](#可移植性的真实边界)）。
 
@@ -8,7 +8,9 @@
 
 ## 它解决什么
 
-AI 编码的两个顽疾：**跳过需求确认直接写码**、**规则散落导致每次重新解释**。docs_tdd v3.4 用 `work-item.json` 固定原始需求、覆盖审查、风险等级和证据，并由 `latest-result.json` 给出唯一正式结论；抽取先经过确定性 intake audit，独立 Reviewer 在同一 source lifecycle 总计最多两轮；仍未通过时允许先实现，但测试交接前必须人工逐 finding 核对并完成一次真实预提测运行（CLI 预填，人工只确认必要结果），第一代 G0–G8 仅作为存量兼容。AI「已读/已注意」不算数，只认执行契约产出的证据。
+AI 编码的两个顽疾：**跳过需求确认直接写码**、**规则散落导致每次重新解释**。docs_tdd v3.5 用 `work-item.json` 固定原始需求、覆盖审查、风险等级和证据，并由 `latest-result.json` 给出唯一正式结论；抽取先经过确定性 intake audit，独立 Reviewer 在同一 source lifecycle 总计最多两轮；仍未通过时允许先实现，但测试交接前必须人工逐 finding 核对并完成一次真实预提测运行（CLI 预填，人工只确认必要结果），第一代 G0–G8 仅作为存量兼容。AI「已读/已注意」不算数，只认执行契约产出的证据。
+
+v3.5 把流程继续收敛为 requirement-to-commit：四档效率路由（`micro`、`lite`、`standard`、`high-risk`）带显式预算；safe work context、隔离 worktree、环境分支和路径边界共同阻断越界写入；source graph、requirement/surface/evidence 对账和四项目 replay 用于发现漏项与漂移；`source`、`review`、`code`、`browser`、`environment`、`external-dependency` 六类失败进入有界修复，同指纹不重复重试，预算耗尽只给唯一恢复命令。交付真值只接受当前 enforced PASS、`autonomous/cli-attested`、完整性与新鲜度、匹配的冻结路径、非空 delivery commit SHA 和 clean Git scope。pilot 仍为 `collecting`，尚未宣称 production-ready。
 
 规则本身遵循「**规则可变多，常驻恒定小**」：AI 开工只常驻读一个路由文件（`common/rules/rule-router.md`，≤5000 字符机器守），其余按场景加载，避免上下文膨胀。v2 实现上下文对 V0/V1 保持 4K 硬上限；V2 使用 8K 目标、24K 硬上限，处于两者之间时显式警告但不中断大型需求。
 
@@ -25,7 +27,7 @@ AI 编码的两个顽疾：**跳过需求确认直接写码**、**规则散落�
 运行环境必须提供 Node.js、Git 与 ripgrep（`rg`）；`docs-tdd doctor` 会对缺失依赖 fail-closed。核心命令统一走 `<mount>/common/engine/agent-scripts/docs-tdd.mjs`。下表中的 `docs-tdd` 是 `node <mount>/common/engine/agent-scripts/docs-tdd.mjs` 的阅读简写：
 
 ```bash
-docs-tdd run <PROJECT-ID> --prd <src>      # v3.4 Autopilot：断点续跑、自动验证/限次修复、按证据路径 commit（不 push）
+docs-tdd run <PROJECT-ID> --prd <src>      # v3.5 Autopilot：断点续跑、自动验证/限次修复、按证据路径 commit（不 push）
 docs-tdd context <PROJECT-ID> <SCENARIO>   # 按场景生成默认 brief/compact 规则包；可显式覆盖模式
 docs-tdd kickoff <PROJECT-ID> --prd <src>  # 默认创建 workflowVersion 2 feature；已定位缺陷可加 --kind bugfix，显式 v1 加 --legacy
 docs-tdd verify  <PROJECT-ID> --input <json> # 第二代协议唯一正式出口，非 PASS 阻断
@@ -33,6 +35,7 @@ vnext-delivery-guard.mjs --project <ID> ... # pre-commit/CI 只读校验 PASS、
 docs-tdd status|next|resume <PROJECT-ID>   # 状态、唯一下一步、断点恢复
 docs-tdd source-update <PROJECT-ID> --input X # 登记后到的 Figma/API 快照并触发增量对齐
 docs-tdd source-sync <PROJECT-ID>          # 原子重拉远端 PRD；有漂移则使旧抽取/审查失效
+docs-tdd source-graph <PROJECT-ID>         # 编译当前 source graph 并检查冻结 source fingerprint
 docs-tdd extract <PROJECT-ID> --out X      # 生成三阶段抽取脚手架；--input X 应用候选
 docs-tdd coverage-check <PROJECT-ID>       # Review 前运行确定性 Coverage Compiler
 docs-tdd dev-check <PROJECT-ID>             # 实现中期检查受审查的非浏览器命令、改动路径与 surface 映射
@@ -56,7 +59,7 @@ docs-tdd rule-health                       # 规则体检：命中分布、warn 
 
 ### 可选 Lark 自动修复链的边界
 
-`common/lark-bot/` 保留独立的消息任务、AI 分析、轻量质量闸和本地提交链，**不接入 v3.4 状态机**。它的 `done` 仅表示候选修复已通过 Worker 最终 diff/Biome 复验并本地提交，审计固定为 `assuranceMode=lark-lightweight`、`deliveryAuthority=false`；高风险改动仍须另取项目级 v3.4 authoritative PASS 才能正式交付。这样既不让群内小修复承担完整项目流程，也不把 Lark 结果误当正式绿灯。
+`common/lark-bot/` 保留独立的消息任务、AI 分析、轻量质量闸和本地提交链，**不接入 v3.5 状态机**。它的 `done` 仅表示候选修复已通过 Worker 最终 diff/Biome 复验并本地提交，审计固定为 `assuranceMode=lark-lightweight`、`deliveryAuthority=false`；高风险改动仍须另取项目级 v3.5 authoritative PASS 才能正式交付。这样既不让群内小修复承担完整项目流程，也不把 Lark 结果误当正式绿灯。
 
 ## 首次接入一个项目
 
@@ -124,9 +127,9 @@ node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs doctor
 
 命令统一走 `<mount>/common/engine/agent-scripts/docs-tdd.mjs`（下文简写 `docs-tdd`）。
 
-### 默认：v3.4 正式工作流
+### 默认：v3.5 正式工作流
 
-v3.4 是当前产品版本；项目文件继续使用 `workflowVersion: 2` 作为第二代协议的稳定兼容标识。风险等级 `V0/V1/V2` 也不是产品版本：V0 是严格受限的局部微改，V1 是多影响面或中等风险，V2 是资金、权限、新 API、跨应用等高风险变更并要求人工确认范围。
+v3.5 是当前产品版本；项目文件继续使用 `workflowVersion: 2` 作为第二代协议的稳定兼容标识。风险等级 `V0/V1/V2` 也不是产品版本：V0 是严格受限的局部微改，V1 是多影响面或中等风险，V2 是资金、权限、新 API、跨应用等高风险变更并要求人工确认范围。效率路由会在这些风险等级内进一步选择 `micro`、`lite`、`standard` 或 `high-risk`，并为 context、规则、命令、evidence、repair 和 elapsed 设置预算。
 
 ```text
 输入 PRD
@@ -156,9 +159,9 @@ CLI 始终返回带稳定 `actionId` 的唯一 action packet；Agent 只按 `act
 
 PRD 被确定性转换为 source units；表格既保留容器上下文，也逐数据行生成稳定 unit。先用 `docs-tdd extract <ID> --out /tmp/extraction.json` 生成带来源锚点的脚手架，按 Facts → Atomic Requirements → Surface Candidates 三阶段填写后，以 `--input` 应用。CLI 会先审计重复 ID、语义 unit/表格行反向覆盖、Fact→Requirement 链路、集合计数和 surface 映射；失败时不调用 Reviewer。需求作者登记身份后，`docs-tdd review` 才启动另一个 client/session；reviewer 只审语义范围，不审 evidence plan、代码或工具。每个 source lifecycle 总计最多自动审查两轮，人工介入不重置预算：候选未变化禁止重试，相同 finding 再现或两轮未通过会持久化 `human-review-deferred`；实现可以继续，但 evidence / 测试交接前必须人工逐 finding 裁决。Reviewer 启动失败仍立即 `escalated`，在实现前处理，不进入无限循环。审查结果由 CLI 本机签名，手写 reviewer JSON、复用同一 session、未处置 finding 或来源漂移都不能形成有效审查。
 
-#### 3. 实现与真实覆盖登记
+#### 3. 安全上下文、实现与真实覆盖登记
 
-范围审查通过后，Agent 在 `feature/<PROJECT-ID>` worktree 实现，并通过 checkpoint 回写当前 `actionId`、真实 `changedPaths`、代码搜索得到的 `discoveredSurfaces` 和实际完成的 `coveredSurfaceIds`。CLI 使用 Git 机械核验路径，不接受不存在或未变化的文件凑数。
+范围审查通过后，Agent 在安全绑定的 `feature/<PROJECT-ID>` worktree 实现，并通过 checkpoint 回写当前 `actionId`、真实 `changedPaths`、代码搜索得到的 `discoveredSurfaces` 和实际完成的 `coveredSurfaceIds`。消费仓、环境分支、worktree、路径穿越、越界写入和已有文件覆盖均由 safe work context fail-closed 校验；CLI 使用 Git 机械核验路径，不接受不存在或未变化的文件凑数。
 
 ```bash
 docs-tdd checkpoint PR-01234 --input /tmp/checkpoint.json
@@ -181,7 +184,9 @@ assuranceMode=autonomous
 evidenceTrust=cli-attested
 ```
 
-`failed` 或 `blocked` 均不可交付；外部手填证据只能得到 `assisted-pilot / caller-supplied`，不能成为正式绿灯。代码检查和 browser 检查分别最多自动修复两轮，耗尽后明确升级人工处理，不无限循环。
+`failed` 或 `blocked` 均不可交付；外部手填证据只能得到 `assisted-pilot / caller-supplied`，不能成为正式绿灯。当前 delivery truth 还要求 evidence/result integrity 与 freshness 通过、delivery commit 的 SHA 非空且路径集合匹配冻结集合、Git scope clean。代码检查和 browser 检查分别最多自动修复两轮，六类失败域按同一失败指纹去重，预算耗尽后明确升级人工处理，不无限循环。
+
+人工验收中，普通 `unresolved` 表示当前场景未解决，路由到实现修复；只有 `newOmissions` 表示需求范围出现新遗漏，才回到 extraction 并重新审查。字符串 locator 仍保留为兼容 fallback，不作为已移除能力宣称。
 
 #### 5. 晚到资料与精确提交
 
@@ -260,7 +265,7 @@ node <mount>/common/engine/agent-scripts/decommission-worktree.mjs PR-01234
 | --- | --- |
 | [common/rules/](./common/rules/) | 跨项目复用的规则与场景路由 |
 | [common/engine/](./common/engine/) | CLI、门禁脚本、schema 与 golden 夹具 |
-| [common/vnext/](./common/vnext/) | v3.4 正式工作流、单一出口、基线、历史灰度与切换决策 |
+| [common/vnext/](./common/vnext/) | v3.5 正式工作流、单一出口、基线、历史灰度与切换决策 |
 | [common/lark-bot/](./common/lark-bot/) | 可选的消息接入与任务执行服务：合并话题上下文/图片、注入项目 scope、预取 Figma 规格、按项目路由 bug 回执并自动清理附件 |
 | [prds/](./prds/) | 各项目的文档、状态与证据 |
 | [common/rules/rule-router.md](./common/rules/rule-router.md) | **开工常驻入口**（渐进披露路由） |

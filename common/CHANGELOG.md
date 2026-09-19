@@ -7,6 +7,14 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-09-19（v3.5 Requirement-to-Commit）
+
+- **版本与协议**：当前入口升级为 docs_tdd v3.5 / ruleset 3.5；新项目继续使用 `workflowVersion: 2`，不迁移历史项目。
+- **Requirement-to-commit**：新增四档效率路由和预算、safe work context、隔离 worktree/环境分支/路径边界校验、source graph 与 `source-graph` CLI，并用 requirement/surface/evidence 对账和四项目 replay 防止漏项、漂移、假完成。
+- **有界修复**：`source`、`review`、`code`、`browser`、`environment`、`external-dependency` 六类失败按输入/失败指纹去重；预算耗尽进入终态并提供唯一恢复命令，避免无限重试。
+- **交付真值**：正式 delivery 只接受当前 enforced PASS、`autonomous/cli-attested`、integrity/freshness、匹配冻结路径、非空 delivery commit SHA 和 clean Git scope。人工验收的普通 `unresolved` 留在 implementation repair，只有 `newOmissions` 回到 extraction；string locator 保留兼容 fallback。
+- **Pilot 边界**：pilot release 为 `autopilot-v3.5`，状态仍为 `collecting`，历史样本不能追认，真实 clean-project/public-command V0/V1/V2 pilot 尚未完成；系统不自动 push，也不宣称 production-ready 或 Phase 8 全部升级完成。
+
 ## 2026-09-16（Hook 嵌套事件兼容与审计诊断解耦）
 
 - **嵌套 tool id 对齐**：客户端以 wrapper tool 触发 `PreToolUse`、却以内层 `apply_patch` 等不同 id 触发 `PostToolUse` 时，规则消费账本按已批准目标和连续 hash 链配对，并保留 pre/post 双 id；未批准文件继续 fail-closed，避免合法编辑被误记为无回执写入。

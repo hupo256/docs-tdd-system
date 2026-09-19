@@ -9,7 +9,7 @@
 ## 专题全索引（查阅用）
 
 1. [rule-router.md](./rules/rule-router.md)：**渐进披露路由表**（开工唯一常驻入口，按场景命中才读正文）。
-2. [new-project-kickoff.md](./rules/new-project-kickoff.md)：新 chat 一句话启动项目的双协议自动链路（v3.1 默认创建 `workflowVersion: 2`，第一代流程需 `--legacy`）。
+2. [new-project-kickoff.md](./rules/new-project-kickoff.md)：新 chat 一句话启动项目的双协议自动链路（v3.5 默认创建 `workflowVersion: 2`，第一代流程需 `--legacy`）。
 3. [startup-prompt.md](./rules/startup-prompt.md)：新需求启动口令模板。
 4. [rule-index.json](./rules/rule-index.json)：机器可读场景路由索引。
    - [rule-ownership.json](./rules/rule-ownership.json)：专题唯一正文所有权表；Router、Gate、模板只消费，不复制正文。
@@ -79,14 +79,15 @@
 | 发送 Lark 阶段卡片 | `node apps/web/docs_tdd/common/engine/agent-scripts/notify-lark.mjs G6 已完成 "摘要" --config apps/web/docs_tdd/prds/PR-01234/agent/scripts/pr-01234.json` |
 | 创建编码 worktree | `node apps/web/docs_tdd/common/engine/agent-scripts/prepare-coding-worktree.mjs PR-01234` |
 | 字段对账（schema vs fixture） | `node apps/web/docs_tdd/common/engine/agent-scripts/schema-fixture-reconcile.mjs` |
-| 新建项目（默认 v3.1 / `workflowVersion: 2`） | `node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs kickoff PR-01234 --prd <Lark URL 或本地 md>`；显式第一代流程加 `--legacy` |
+| 新建项目（默认 v3.5 / `workflowVersion: 2`） | `node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs kickoff PR-01234 --prd <Lark URL 或本地 md>`；显式第一代流程加 `--legacy` |
+| source graph 检查 | `node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs source-graph PR-01234 [--json]` |
 | 第二代协议正式交付验证 | `node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs verify PR-01234 --input <verify-input.json>` |
 | 只读同步 Lark 资料 | `node apps/web/docs_tdd/common/engine/agent-scripts/sync-lark-docs.mjs --config apps/web/docs_tdd/prds/PR-01234/agent/lark-sources.json` |
 | PRD 图片/表格/嵌入盘点与漂移检查 | `node apps/web/docs_tdd/common/engine/agent-scripts/prd-intake.mjs PR-01234 --init --source <repo-relative-prd.md>`；旧 manifest 按稳定指纹公式就地迁移用 `--remigrate` |
 | 生成项目恢复摘要 | `node apps/web/docs_tdd/common/engine/agent-scripts/update-context-summary.mjs PR-01234 --stage G6 --write` |
 | 静态代码规则扫描 | `node apps/web/docs_tdd/common/engine/agent-scripts/verify-code-rules.mjs --project PR-01234` |
 
-正式出口按项目 `workflowVersion` 硬路由：v2 只认 `docs-tdd.mjs verify` 写出的 `mode=enforced` `latest-result.json`，failed/blocked 返回非零并阻断交付；对 v2 运行 `gate`/`changed` 会直接拒绝。v1 继续以 `docs-tdd.mjs gate` 为唯一阶段推进入口，持久化 `agent/gate-results.json`、gate evidence 与成功历史；G6/G7/G8 禁止跳级，`set-project-stage.mjs` 仅供回退/排障。
+正式出口按项目 `workflowVersion` 硬路由：v2 只认 `docs-tdd.mjs verify` 写出的 `mode=enforced` `latest-result.json`，failed/blocked 返回非零并阻断交付；delivery truth 还要求 `autonomous/cli-attested`、integrity/freshness、匹配冻结路径、非空 delivery commit SHA 和 clean Git scope。对 v2 运行 `gate`/`changed` 会直接拒绝。v1 继续以 `docs-tdd.mjs gate` 为唯一阶段推进入口，持久化 `agent/gate-results.json`、gate evidence 与成功历史；G6/G7/G8 禁止跳级，`set-project-stage.mjs` 仅供回退/排障。
 
 `context` 默认生成按原文章节裁剪的 compact pack；`--full` 只用于歧义和失败调查。`changed`/非写入 gate 只缓存同指纹 PASS，`--write`、`--no-cache` 和失败结果始终实跑；完整子检查日志写 `/tmp/docs-tdd-logs/`，项目证据只保留摘要与日志路径。
 
@@ -99,7 +100,7 @@
 - 项目 `engineering/development-rules.md` 只写特殊约束，不复制整份公共规则。
 - 每次发现“以前定过但新项目没继承”，视为文档流程缺陷，先补 `common/`。
 - 维护 `docs_tdd` 时先按 [rule-inheritance.md](./rules/rule-inheritance.md) §0.1/§0.2 判断载体；不要把 L1/L2 代码规范正文复制进 L3。
-- 新需求默认按 [new-project-kickoff.md](./rules/new-project-kickoff.md) 使用 v3.1 创建 `workflowVersion: 2` 项目；原子需求、coverage review、风险路由完成后再写代码，V2 额外要求 human scope approval。
+- 新需求默认按 [new-project-kickoff.md](./rules/new-project-kickoff.md) 使用 v3.5 创建 `workflowVersion: 2` 项目；原子需求、coverage review、风险路由完成后再写代码，V2 额外要求 human scope approval。
 - 存量 v1 / 显式 `--legacy` 项目才执行 [prd-feature-inventory.md](./rules/prd-feature-inventory.md) §3 和 G0–G8；不把 v1 产物要求施加到 v2。
 - 项目正式出口按版本选择：v2 运行 `docs-tdd.mjs verify <PROJECT-ID> --input <verify-input.json>`；v1 运行 `docs-tdd.mjs gate <PROJECT-ID> <GATE>`。二者不可混用。
 - 新需求进入编码前：Agent 必须按 [coding-worktree.md](./rules/coding-worktree.md) 创建或确认同级 worktree，不在主仓直接改业务代码。

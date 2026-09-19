@@ -15,7 +15,7 @@ const engineDir = resolve(scriptDir, '..')
 export function runReadiness() {
   const cases = JSON.parse(readFileSync(join(engineDir, 'schemas/vnext-readiness-cases.json'), 'utf8'))
   assert.equal(cases.schemaVersion, 1)
-  assert.equal(cases.cases.filter((item) => item.required).length, 12)
+  assert.equal(cases.cases.filter((item) => item.required).length, 16)
   assert.equal(new Set(cases.cases.map((item) => item.id)).size, cases.cases.length)
   const r13 = cases.cases.find((item) => item.id === 'R-13')
   assert.equal(r13?.required, false)

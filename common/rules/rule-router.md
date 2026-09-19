@@ -5,7 +5,7 @@
 
 ## 1. 启动协议
 
-0. **新需求路由（2026-09-08 起正式生效）**：docs_tdd **v3.4** 的全新项目/独立微变更默认使用第二代协议（`workflowVersion: 2`）。`docs-tdd kickoff` 建立最小三文件工作流；`docs-tdd extract` 生成/应用脚手架并通过确定性 intake audit 后，才执行同一 source lifecycle 总计最多两轮的隔离 `docs-tdd review`（人工介入不重置预算）；两轮仍未通过可先实现，但必须在 evidence / 测试交接前完成人工逐 finding 裁决，并在实现后完成一次 CLI 预填、人工确认的真实预提测运行；再由 `evidence` 与 `verify` 形成唯一正式出口；只有 enforced PASS 且 `autonomous/cli-attested` 可交付。存量 `workflowVersion: 1` 项目继续走 v1 G0–G8，不静默迁移；只有明确要求 `--legacy` 才新建 v1。切换记录见 [../vnext/cutover-decision-20260908.md](../vnext/cutover-decision-20260908.md)，操作规则见 [../vnext/README.md](../vnext/README.md)。
+0. **新需求路由（2026-09-08 起正式生效）**：docs_tdd **v3.5** 的全新项目/独立微变更默认使用第二代协议（`workflowVersion: 2`）。`docs-tdd kickoff` 建立最小三文件工作流；`docs-tdd extract` 生成/应用脚手架并通过确定性 intake audit 后，才执行同一 source lifecycle 总计最多两轮的隔离 `docs-tdd review`（人工介入不重置预算）；两轮仍未通过可先实现，但必须在 evidence / 测试交接前完成人工逐 finding 裁决，并在实现后完成一次 CLI 预填、人工确认的真实预提测运行；再由 `evidence` 与 `verify` 形成唯一正式出口；只有 enforced PASS 且 `autonomous/cli-attested` 可交付。v3.5 另提供四档效率路由、safe work context、source graph 与六类有界修复。存量 `workflowVersion: 1` 项目继续走 v1 G0–G8，不静默迁移；只有明确要求 `--legacy` 才新建 v1。切换记录见 [../vnext/cutover-decision-20260908.md](../vnext/cutover-decision-20260908.md)，操作规则见 [../vnext/README.md](../vnext/README.md)。
 1. 先读取 README `workflowVersion`。v2 恢复时读 `work-item.json` 与 `latest-result.json`（若存在）；v1 恢复时读 `agent/context-summary.md`。
 2. 执行 `docs-tdd context <PROJECT-ID> <SCENARIO>`：v2 返回最小 work-item context；v1 返回场景规则包并在编码场景签发 rule session。禁止自行全读规则。
 3. v2 编辑后执行 `docs-tdd evidence <PROJECT-ID> --out <evidence.json>`（命令计划取自 work-item），再用 `docs-tdd verify <PROJECT-ID> --evidence <evidence.json> --surfaces <surfaces.json>` 一步组装并写入正式出口（workItem/sourceDocuments 自动从 work-item 组装，只需 agent 提供 `discoveredSurfaces`+`coveredSurfaceIds` 落点报告）；兼容旧路仍可用 `--input <verify-input.json>`。v1 编辑后执行 `changed`，阶段交付执行 `gate`。CLI 会拒绝混用。
@@ -31,6 +31,8 @@
 - PRD 验收下沉到原子 requirement：v2 requirement 直接绑定 source/surface/evidence；v1 维持 requirement ID ↔ 单一 Task。一个 PASS 不得覆盖多个可独立失败的子点。
 - v2 的 coverage findings 必须处置且正式 verify 通过；v1 G6 必须 code review。质量检查在一批相关改动稳定后集中执行，范围限 touched files 与直接相关测试；小步编辑期间不重复跑完整 Biome/typecheck/test。
 - v1 新功能 MSW 继续按 manifest 强制验证；v2 只有 `apiDependency.mode=mock-required` 时要求 handler/worker/contract 覆盖，其他模式禁止无必要新增 mock。
+- v2 以 safe work context 绑定消费仓、环境分支、worktree 和允许路径；source graph 漂移、越界写入或冻结路径不一致必须 fail-closed。
+- 失败域仅允许 `source`、`review`、`code`、`browser`、`environment`、`external-dependency` 六类有界修复；同一失败指纹不重试，预算耗尽进入终态并给唯一恢复命令。
 
 ## 3. 场景
 

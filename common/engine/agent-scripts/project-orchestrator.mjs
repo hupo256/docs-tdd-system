@@ -18,6 +18,8 @@ import { applyAutopilotCheckpoint, applyDeliveryCommit, deriveAutopilotAction, i
 import { applySourceUpdate, initialSourceReadiness } from './lib/vnext-source-readiness.mjs'
 import { inspectSurfaceReconciliation, executeSurfaceReconciliation } from './lib/vnext-reconcile-runtime.mjs'
 import { runAutonomousValidation as executeAutonomousValidation } from './lib/vnext-autonomous-validation.mjs'
+import { assertSafeWorkContext } from './lib/vnext-work-context-runtime.mjs'
+import { deriveDeliveryTruth } from './lib/vnext-delivery-truth.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, config } = resolveRoots()
@@ -287,7 +289,7 @@ export function inspectVNext(id) {
   const worktreeInspection = inspectProjectWorktree(id)
   let codeStateFresh = true
   let codeStateProblem = ''
-  let deliveryCommitted = true
+  let gitScopeClean = false
   let safeWorktree = ''
   try {
     safeWorktree = requireProjectWorktree(id)
@@ -295,7 +297,7 @@ export function inspectVNext(id) {
       const scopePaths = latest.codeFingerprint?.scopeMode === 'path-set-v1' ? latest.codeFingerprint.scopePaths : null
       const current = codeFingerprint(safeWorktree, config.baseRef || 'origin/online', { scopePaths })
       codeStateFresh = matchesEffectiveCodeState(current, latest.codeFingerprint)
-      deliveryCommitted = scopedDeliveryCommitted(safeWorktree, latest.codeFingerprint)
+      gitScopeClean = scopedDeliveryCommitted(safeWorktree, latest.codeFingerprint)
       if (!codeStateFresh) codeStateProblem = 'code content changed; revalidate evidence only (the signed source review remains reusable while the work item is unchanged)'
     }
   } catch (error) {
@@ -312,13 +314,24 @@ export function inspectVNext(id) {
   const assuranceTrusted = latest?.mode === 'enforced'
     && latest?.assuranceMode === 'autonomous'
     && latest?.evidenceTrust === 'cli-attested'
+  const deliveryTruth = deriveDeliveryTruth({
+    workItem,
+    latestResult: latest,
+    integrityOk: integrity.ok,
+    codeStateFresh,
+    assuranceTrusted,
+    reconciliationResult,
+    gitScopeClean,
+    changedPaths: latest?.codeFingerprint?.scopePaths || workItem.autopilot?.implementation?.changedPaths || [],
+  })
   const actionPacket = deriveAutopilotAction({
     workItem,
     latestResult: latest,
     resultIntegrityOk: integrity.ok,
     codeStateFresh,
     assuranceTrusted,
-    deliveryCommitted,
+    deliveryCommitted: gitScopeClean,
+    deliveryTruth,
     worktreeReady: worktreeInspection.ok,
     reconciliationResult,
     reconciliationCurrent,
@@ -327,6 +340,9 @@ export function inspectVNext(id) {
     projectId: id,
     workflowVersion: 2,
     verificationLevel: latest?.level || workItem.routing?.verificationLevel || 'unclassified',
+    executionRoute: actionPacket.executionRoute,
+    routeReasons: actionPacket.routeReasons,
+    budgetStatus: actionPacket.budgetStatus,
     status: actionPacket.status,
     currentStage: `V2-${actionPacket.phase}`,
     nextAction: actionPacket.action,
@@ -334,6 +350,7 @@ export function inspectVNext(id) {
     blockers: [...failedChecks.flatMap((check) => check.problems || [check.code]), ...integrity.problems, ...worktreeInspection.problems, ...(codeStateProblem ? [codeStateProblem] : []), ...(reconciliation.problem ? [reconciliation.problem] : [])],
     actionPacket,
     lifecycle: {
+      deliveryTruth,
       implementationCheckpoint: workItem.autopilot?.implementation?.checkpoint || null,
       checkpointCommit: workItem.autopilot?.checkpointCommit || null,
       deliveryCommit: workItem.autopilot?.delivery || { status: 'pending' },
@@ -354,8 +371,9 @@ export function inspectVNext(id) {
         ok: latest.ok,
         integrity: integrity.ok,
         codeStateFresh,
-        authoritative: actionPacket.action === 'complete',
-        deliveryCommitted,
+        authoritative: deliveryTruth.authoritativeCompletion,
+        gitScopeClean,
+        deliveryRecordCommitted: deliveryTruth.deliveryRecordCommitted,
         runId: latest.runId,
         generatedAt: latest.generatedAt,
       },
@@ -464,7 +482,18 @@ function checkpoint() {
   const checkpointInput = readJson(inputFile)
   if (!checkpointInput) throw new Error(`cannot read checkpoint: ${inputFile}`)
   if (checkpointInput.outcome === 'completed') {
-    const actualChangedPaths = new Set(changedCodePaths(requireProjectWorktree(projectId), config.baseRef || 'origin/online'))
+    const worktree = requireProjectWorktree(projectId)
+    const actionId = checkpointInput.actionId || ''
+    assertSafeWorkContext({
+      projectId,
+      workItem,
+      worktree,
+      baseRef: config.baseRef || 'origin/online',
+      commitMode: 'no-commit',
+      actionId,
+      targetPaths: checkpointInput.changedPaths || [],
+    })
+    const actualChangedPaths = new Set(changedCodePaths(worktree, config.baseRef || 'origin/online'))
     const unverifiedPaths = (checkpointInput.changedPaths || []).filter((path) => !actualChangedPaths.has(path))
     if (unverifiedPaths.length) throw new Error(`checkpoint paths are not changed from ${config.baseRef || 'origin/online'}: ${unverifiedPaths.join(', ')}`)
   }
@@ -492,16 +521,36 @@ function runAutonomousValidation(id) {
   })
 }
 
-export function commitScopedPaths(worktree, id, paths, spawn = spawnSync, mode = 'delivery') {
+export function commitScopedPaths(worktree, id, paths, spawn = spawnSync, mode = 'delivery', options = {}) {
   if (!paths?.length) return { ok: false, step: 'commit', error: 'automatic commit requires a non-empty path scope' }
   if (!['checkpoint', 'delivery'].includes(mode)) return { ok: false, step: 'commit', error: `unknown commit mode: ${mode}` }
   try {
+    if (!options.workItem) throw new Error('automatic commit requires the canonical work item')
+    const safety = (options.assertSafety || assertSafeWorkContext)({
+      projectId: id,
+      workItem: options.workItem,
+      worktree,
+      baseRef: options.baseRef || config.baseRef || 'origin/online',
+      commitMode: mode === 'delivery' ? 'delivery-commit' : 'checkpoint',
+      actionId: options.actionId || '',
+      targetPaths: paths,
+    })
     const env = { ...process.env, DOCS_TDD_COMMIT_MODE: mode }
     runGit(worktree, ['add', '--', ...paths], spawn, env)
-    const message = mode === 'checkpoint' ? `chore: checkpoint ${id} [non-delivery]` : `feat: implement ${id}`
+    const truth = deriveDeliveryTruth({
+      workItem: options.workItem,
+      latestResult: options.latestResult || null,
+      integrityOk: options.integrityOk,
+      codeStateFresh: options.codeStateFresh,
+      assuranceTrusted: options.assuranceTrusted,
+      reconciliationResult: options.reconciliationResult || null,
+      gitScopeClean: false,
+      changedPaths: paths,
+    })
+    const message = options.subject || truth.commitSubjects[mode]
     runGit(worktree, ['commit', '--only', '-m', message, '--', ...paths], spawn, env)
     const commitSha = runGit(worktree, ['rev-parse', 'HEAD'], spawn, env).trim()
-    return { ok: true, step: 'commit', mode, commitSha, paths, pushed: false }
+    return { ok: true, step: 'commit', mode, commitSha, subject: message, paths, pushed: false, workContext: safety }
   } catch (error) {
     return { ok: false, step: 'commit', error: error.message, paths, pushed: false }
   }
@@ -510,10 +559,18 @@ export function commitScopedPaths(worktree, id, paths, spawn = spawnSync, mode =
 export function commitEvidenceScope(id) {
   const projectDir = resolveProjectRoot(id)
   const latest = readJson(join(projectDir, 'latest-result.json'))
-  const paths = latest?.codeFingerprint?.scopeMode === 'path-set-v1' ? latest.codeFingerprint.scopePaths : []
-  const commit = commitScopedPaths(requireProjectWorktree(id), id, paths, spawnSync, 'delivery')
-  if (!commit.ok) return commit
   const workItem = readJson(join(projectDir, 'work-item.json'))
+  const paths = latest?.codeFingerprint?.scopeMode === 'path-set-v1' ? latest.codeFingerprint.scopePaths : []
+  const commit = commitScopedPaths(requireProjectWorktree(id), id, paths, spawnSync, 'delivery', {
+    workItem,
+    latestResult: latest,
+    integrityOk: verifyExitResultIntegrity(latest, workItem).ok,
+    codeStateFresh: true,
+    assuranceTrusted: latest?.mode === 'enforced' && latest?.assuranceMode === 'autonomous' && latest?.evidenceTrust === 'cli-attested',
+    actionId: workItem?.autopilot?.implementation?.checkpoint?.actionId || '',
+    baseRef: config.baseRef || 'origin/online',
+  })
+  if (!commit.ok) return commit
   const persisted = persistVNextWorkItem(projectDir, applyDeliveryCommit(workItem, commit))
   return { ...commit, persisted }
 }
@@ -568,6 +625,9 @@ function selfTest() {
   const commit = commitScopedPaths('/tmp/worktree', 'PR-00001', ['src/a.ts'], (_command, gitArgs) => {
     gitCalls.push(gitArgs)
     return { status: 0, stdout: gitArgs[0] === 'rev-parse' ? 'abc123\n' : '', stderr: '' }
+  }, 'delivery', {
+    workItem: { workflowVersion: 2, projectId: 'PR-00001' },
+    assertSafety: () => ({ ok: true, branch: 'feature/PR-00001' }),
   })
   if (
     a.nextAction !== 'scaffold_project'

@@ -16,6 +16,9 @@ import { verifyExitResultIntegrity } from './lib/vnext-exit.mjs'
 import { projectIdForWorktree, projectIdFromBranch, workflowVersionForProject } from './lib/workflow-version.mjs'
 import { coverageFingerprints } from './lib/vnext-work-item.mjs'
 import { checkpointCommitProblems } from './vnext-dev-check.mjs'
+import { inspectProjectWorktree } from './lib/project-status-report.mjs'
+import { inspectSafeWorkContext } from './lib/vnext-work-context-runtime.mjs'
+import { deriveDeliveryTruth } from './lib/vnext-delivery-truth.mjs'
 
 function option(name) {
   const index = process.argv.indexOf(name)
@@ -56,6 +59,17 @@ export function deliveryGuardProblems({
   if (!matchesCode(currentCodeState, recordedCode)) problems.push('current code content differs from the verified path set')
   if (!samePaths(changedPaths, recordedCode?.scopePaths)) problems.push('changed paths differ from the verified path set')
   problems.push(...deliveryScopePathProblems(workItem, changedPaths))
+  const truth = deriveDeliveryTruth({
+    workItem,
+    latestResult,
+    integrityOk: integrity.ok,
+    codeStateFresh: matchesCode(currentCodeState, recordedCode),
+    assuranceTrusted: latestResult.assuranceMode === 'autonomous' && latestResult.evidenceTrust === 'cli-attested',
+    gitScopeClean: false,
+    changedPaths,
+  })
+  if (!truth.authoritativeVerification) problems.push('delivery truth does not have an authoritative current verification')
+  if (truth.ownership.unownedPaths.length) problems.push(`delivery truth found unowned paths: ${truth.ownership.unownedPaths.join(', ')}`)
   return [...new Set(problems)]
 }
 
@@ -166,9 +180,25 @@ function main() {
   const scopePaths = latestResult?.codeFingerprint?.scopeMode === 'path-set-v1' ? latestResult.codeFingerprint.scopePaths : []
   const currentCodeState = codeFingerprint(worktree, baseRef, commitMode === 'delivery' ? { scopePaths } : {})
   const changedPaths = deliveryChangedPaths(worktree, baseRef, changedSource)
-  const problems = commitMode === 'checkpoint'
+  const worktreeInspection = inspectProjectWorktree(projectId, { requestedWorktree: worktree })
+  const safeContext = worktreeInspection.ok
+    ? inspectSafeWorkContext({
+        projectId,
+        workItem,
+        worktree,
+        baseRef,
+        commitMode: commitMode === 'delivery' ? 'delivery-commit' : 'checkpoint',
+        actionId: workItem?.autopilot?.implementation?.checkpoint?.actionId || '',
+        targetPaths: changedPaths,
+      })
+    : { problems: [] }
+  const problems = [
+    ...worktreeInspection.problems,
+    ...safeContext.problems,
+    ...(commitMode === 'checkpoint'
     ? checkpointCommitProblems({ projectId, workItem, currentCodeState, changedPaths, baseAvailable })
-    : deliveryGuardProblems({ projectId, workItem, latestResult, currentCodeState, changedPaths, baseAvailable })
+    : deliveryGuardProblems({ projectId, workItem, latestResult, currentCodeState, changedPaths, baseAvailable })),
+  ]
   const result = { ok: problems.length === 0, applies: true, projectId, workflowVersion, commitMode, baseRef, changedSource, problems }
   console.log(json ? JSON.stringify(result) : result.ok
     ? `vnext ${commitMode} guard: PASS ${projectId}`

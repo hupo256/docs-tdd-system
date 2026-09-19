@@ -5,6 +5,7 @@
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
 import { isStructuralSourceUnit } from './vnext-source-units.mjs'
+import { sourceGraphCheck } from './vnext-source-graph.mjs'
 
 function canonicalize(value) {
   if (Array.isArray(value)) return value.map(canonicalize)
@@ -238,6 +239,7 @@ export function verifyVNextCoverage({ workItem, currentSourceSnapshot, sourceUni
   const surfaceProblems = surfaceCoverageProblems(workItem || {}, discoveredSurfaces, implementation, reconciliation)
   const checks = [
     { code: 'SOURCE_FRESH', ok: sourceProblems.length === 0, problems: sourceProblems },
+    ...(Array.isArray(sourceUnits) ? [sourceGraphCheck({ sourceUnits, workItem })] : []),
     { code: 'REQUIREMENT_COVERAGE', ok: requirementProblems.length === 0, problems: requirementProblems },
     { code: 'SURFACE_COVERAGE', ok: surfaceProblems.length === 0, problems: surfaceProblems },
   ]

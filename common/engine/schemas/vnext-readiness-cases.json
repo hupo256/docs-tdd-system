@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "release": "autopilot-v3.3",
+  "release": "autopilot-v3.5",
   "cases": [
     { "id": "R-01", "scenario": "V2 scope approval is generated and applied through public CLI", "phase": "p0", "required": true },
     { "id": "R-02", "scenario": "changes-required review can be human-adjudicated without mutating the signed reviewer receipt", "phase": "p0", "required": true },
@@ -14,6 +14,10 @@
     { "id": "R-10", "scenario": "checkpoint and delivery commits are represented independently", "phase": "p1", "required": true },
     { "id": "R-11", "scenario": "deliveryScope accepts relative policy paths and rejects out-of-scope writes", "phase": "p1", "required": true },
     { "id": "R-12", "scenario": "review payload prioritizes semantic evidence without losing source anchors", "phase": "p1", "required": true },
+    { "id": "R-14", "scenario": "safe work context rejects environment branches, path traversal, and writes outside the frozen scope", "phase": "p1", "required": true },
+    { "id": "R-15", "scenario": "source graph detects source drift and preserves requirement, surface, and evidence coverage links", "phase": "p1", "required": true },
+    { "id": "R-16", "scenario": "bounded repair deduplicates identical failure fingerprints and ends with one recovery command when budget is exhausted", "phase": "p1", "required": true },
+    { "id": "R-17", "scenario": "delivery truth rejects legacy or empty delivery commit identity and requires a matching clean frozen path set", "phase": "p1", "required": true },
     { "id": "R-13", "scenario": "V0, V1 and V2 projects reach verified commit through public commands only", "phase": "pilot", "required": false }
   ]
 }

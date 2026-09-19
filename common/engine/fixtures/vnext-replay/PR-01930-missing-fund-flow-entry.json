@@ -1,4 +1,5 @@
 {
+  "evaluator": "coverage",
   "name": "PR-01930 fund-flow surface omission",
   "incident": "The PRD required the same fund-flow type across a set of entry points, while the implementation/evidence covered only two of three discovered web surfaces.",
   "expectedFailures": [

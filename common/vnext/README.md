@@ -1,14 +1,14 @@
-# docs_tdd v3.4 正式工作流
+# docs_tdd v3.5 正式工作流
 
-> 状态：**正式启用（enforced）**。当前框架发布版本为 **v3.4**，使用第二代 work-item 协议；项目文件中的稳定兼容标识仍为 `workflowVersion: 2`。自 2026-09-08 起，该协议作为新需求默认系统；第一代流程只服务存量 `workflowVersion: 1` 项目和显式 `--legacy` 项目。历史切换决策见 [cutover-decision-20260908.md](./cutover-decision-20260908.md)。
+> 状态：**正式启用（enforced）**。当前框架发布版本为 **v3.5**，使用第二代 work-item 协议；项目文件中的稳定兼容标识仍为 `workflowVersion: 2`。自 2026-09-08 起，该协议作为新需求默认系统；第一代流程只服务存量 `workflowVersion: 1` 项目和显式 `--legacy` 项目。历史切换决策见 [cutover-decision-20260908.md](./cutover-decision-20260908.md)。
 
 项目编号支持大写 `PR-xxxxx` 与 `TR-xxxxx`（五位数字）；本文命令里的 `PR-01234` 仅作示例。
 
 ## 版本边界
 
-- **产品发布版本**：v3.4，表示当前整体能力集合。
+- **产品发布版本**：v3.5，表示当前整体能力集合。
 - **项目协议标识**：`workflowVersion: 2`，只负责区分第二代 work-item 项目与第一代 G0–G8 项目。
-- v3.4 没有引入不兼容的第三代项目数据模型，因此不伪造 `workflowVersion: 3`，也不迁移或重写历史项目。
+- v3.5 没有引入不兼容的第三代项目数据模型，因此不伪造 `workflowVersion: 3`，也不迁移或重写历史项目。
 
 ## 不变量
 
@@ -66,6 +66,13 @@
 - `vnext-context-budget.mjs` + `context-budget.json`：V0/V1 4K 硬预算；V2 以 8K 为目标预算、24K 为硬上限，超过 8K 且不超过 24K 时标记 `large-context` 但不阻断；四案例同口径字符代理减少 99.14%，历史 token 继续明确记为 null。
 - `lib/vnext-msw-policy.mjs`：按 API 依赖选择 no-request / real-api / mock-required / pending-dependency；无通用 MSW 仪式，也无 waiver 旁路。
 - `vnext-pilot.mjs` + `pilot-registry.json` / `pilot-report.json`：保留历史双轨样本与质量观察；它不再决定当前工作流，且永不自动切流。正式状态只由 owner 决策记录和 CLI 路由定义。
+- requirement-to-commit 运行时按 `micro` / `lite` / `standard` / `high-risk` 四档效率路由分配预算；路由只升不降，未知风险和边界不明时自动保守升级。
+- safe work context 在执行前绑定仓库、分支、worktree、环境和绝对路径边界；环境分支、隔离 worktree 与越界写入均由运行时阻断，不能仅靠提示词约束。
+- source graph 与 `source-graph` CLI 将 source、requirement、surface、evidence、changed path 和 delivery path 关联成可审计图；source 漂移、覆盖缺口和证据缺口在出口前对账。
+- 四项目 replay 已覆盖零 silent omission 与零 false completion；string locator 仍保留为兼容 fallback，不能替代结构化 source graph。
+- delivery truth 要求 authoritative PASS、真实非空 delivery commit SHA、冻结路径完整且 clean scope；legacy/空 SHA、脏冻结路径和范围越界均拒绝交付。
+- bounded repair 只允许 `source`、`review`、`code`、`browser`、`environment`、`external-dependency` 六类；同指纹失败去重、域预算耗尽和 terminal recovery 状态都会停止无限重试。
+- manual acceptance 中普通 `unresolved` 进入 implementation repair；只有 `newOmissions` 回到 extraction，避免把普通实现缺陷误判为需求遗漏。
 
 ## 当前基线摘要
 
@@ -90,6 +97,7 @@ node common/engine/agent-scripts/vnext-artifact-budget.mjs
 node common/engine/agent-scripts/vnext-context-budget.mjs
 node common/engine/agent-scripts/vnext-pilot.mjs --self-test
 node common/engine/agent-scripts/vnext-readiness.mjs
+node common/engine/agent-scripts/vnext-source-graph-report.mjs --help
 # 登记真实新需求后；collecting 返回 1、rollback 返回 2、具备人工评审资格返回 0
 node common/engine/agent-scripts/vnext-pilot.mjs --write
 node common/engine/agent-scripts/vnext-verify.mjs --self-test
@@ -307,11 +315,11 @@ node common/engine/agent-scripts/vnext-context.mjs --project /path/to/v2/PR-0123
 - `apiDependency.mode` 是 work-item 必填事实：无请求或真实 API 时禁止新增 vNext 范围 MSW；只有 `mock-required` 才要求 worker、handler 与 contract 覆盖；`pending-dependency` 必须绑定 open blocker，最终出口保持 blocked。
 - V2 scope approval fingerprint 包含 `apiDependency`，API/MSW 策略变更后旧的人签自动失效。
 
-## Pilot 质量观察与 v3.3 R-13（非当前切流条件）
+## Pilot 质量观察与 v3.5 R-13（非当前切流条件）
 
 1. Pilot 必须是 `newRequirement: true` 的真实需求；V0 可以是现有项目下的独立微变更。`artifactMode=isolated-snapshot` 只允许三份规范状态文件，`artifactMode=project` 可直接读取公共 CLI 管理的真实项目目录及其 source/support files。
 2. 每个样本从三文件机器读取 level、出口完整性和 context 预算；提测后的漏项/假绿由负责人填写带姓名和观察截止时间的 observation。
 3. 历史质量观察达到 3–10 个 completed 样本、覆盖 V0/V1/V2 且零逃逸时，仍只输出 `eligible-for-human-cutover-review`；`automaticCutover` 永远为 false，pilot 不控制 Router 或正式出口。
-4. R-13 是独立的 v3.3 release qualification：V0/V1/V2 各至少一个样本必须取得 authoritative PASS、完成 post-test observation，并由实际核对人证明全流程只使用公共 `docs-tdd` 命令。旧版历史 PASS、未完成项目和 synthetic fixture 均不计数。
-5. 当前 PR-02074（V0）与 PR-02172（V1）仅是历史样本，不能追认为 v3.3；PR-02233（V2）已纳入真实项目观察，但在实现、依赖、验证、交付和 post-test 观察完成前保持 collecting。PR-02118 作为“仅运营 SOP、无明确软件交付”的负向候选保留，不计入编码样本。
+4. R-13 是独立的 v3.5 release qualification：V0/V1/V2 各至少一个样本必须取得 authoritative PASS、完成 post-test observation，并由实际核对人证明全流程只使用公共 `docs-tdd` 命令。旧版历史 PASS、未完成项目和 synthetic fixture 均不计数。
+5. 当前 PR-02074（V0）与 PR-02172（V1）仅是历史样本，不能追认为 v3.5；PR-02233（V2）已纳入真实项目观察，但在实现、依赖、验证、交付和 post-test 观察完成前保持 collecting。PR-02118 作为“仅运营 SOP、无明确软件交付”的负向候选保留，不计入编码样本。
 6. 执行证明和 observation 的填写格式见 `pilots/observation-template.md`；任何未发生的事实保持 `null`。

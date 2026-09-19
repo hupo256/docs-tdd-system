@@ -13,6 +13,13 @@ import { normalizeSourceDocuments, readLocalSourceAsset } from './lib/vnext-sour
 import { bindVNextIntake } from './lib/vnext-intake.mjs'
 import { stableFingerprint } from './lib/vnext-work-item.mjs'
 import { runSyncLarkDocs } from './sync-lark-docs.mjs'
+import { initialAutopilotState } from './lib/vnext-autopilot.mjs'
+import {
+  evaluateRepairPolicy,
+  initialRepairState,
+  normalizeRepairState,
+  recordRepairAttempt,
+} from './lib/vnext-repair-policy.mjs'
 
 const { consumerRoot, config: bindingConfig } = resolveRoots()
 
@@ -65,6 +72,52 @@ function pendingCoverage(reason) {
   }
 }
 
+function sourceRepairInputFingerprint(workItem, sourceConfig) {
+  return stableFingerprint({
+    sourceSnapshot: workItem?.sourceSnapshot || null,
+    sourceConfig,
+  })
+}
+
+function sourceFailureFingerprint(error) {
+  return stableFingerprint({
+    name: error?.name || 'Error',
+    message: error?.message || String(error),
+  })
+}
+
+function persistSourceFailure(projectDir, workItem, sourceConfig, error, generatedAt = new Date().toISOString()) {
+  const repair = normalizeRepairState(workItem.autopilot?.repair, workItem.autopilot?.repairAttempts)
+  const inputFingerprint = sourceRepairInputFingerprint(workItem, sourceConfig)
+  const failureFingerprint = sourceFailureFingerprint(error)
+  const decision = evaluateRepairPolicy({
+    repairState: repair,
+    failureDomains: ['source'],
+    inputFingerprint,
+    failureFingerprint,
+  })
+  const nextRepair = decision.allowed
+    ? recordRepairAttempt(repair, {
+      failureDomains: ['source'],
+      inputFingerprint,
+      failureFingerprint,
+      generatedAt,
+    })
+    : repair
+  const next = structuredClone(workItem)
+  next.autopilot = {
+    ...initialAutopilotState(generatedAt),
+    ...(next.autopilot || {}),
+    repair: nextRepair,
+    repairAttempts: {
+      code: nextRepair.attempts.code,
+      browser: nextRepair.attempts.browser,
+    },
+  }
+  persistVNextWorkItem(projectDir, next)
+  return { decision, repair: nextRepair }
+}
+
 export function sourceDriftSummary(oldSnapshot, normalized) {
   const before = new Map((oldSnapshot?.sources || []).map((item) => [item.path, item.contentHash]))
   const after = new Map((normalized.sourceSnapshot.sources || []).map((item) => [item.path, item.contentHash]))
@@ -100,7 +153,12 @@ export async function syncVNextSource(projectDir, { dryRun = false, sync = runSy
   writeFileSync(stagedConfigFile, `${JSON.stringify({ ...sourceConfig, outputDir: stageDir }, null, 2)}\n`)
   let swapped = false
   try {
-    await sync({ argv: ['--config', stagedConfigFile] })
+    try {
+      await sync({ argv: ['--config', stagedConfigFile] })
+    } catch (error) {
+      persistSourceFailure(absoluteProject, workItem, sourceConfig, error)
+      throw error
+    }
     const normalized = normalizeStaged(sourceConfig, stageDir)
     const summary = sourceDriftSummary(workItem.sourceSnapshot, normalized)
     if (stableFingerprint(snapshotSemantics(workItem.sourceSnapshot)) === stableFingerprint(snapshotSemantics(normalized.sourceSnapshot))) {
@@ -120,6 +178,7 @@ export async function syncVNextSource(projectDir, { dryRun = false, sync = runSy
     if (next.autopilot) {
       next.autopilot.phase = 'intake'
       next.autopilot.implementation = { status: 'pending', changedPaths: [] }
+      next.autopilot.repair = initialRepairState()
       next.autopilot.repairAttempts = { code: 0, browser: 0 }
       next.autopilot.lastCheckpointAt = new Date().toISOString()
     }
@@ -188,9 +247,16 @@ export async function selfTest() {
     assert.equal(readFileSync(join(outputDir, 'prd.md'), 'utf8'), 'New requirement.\n')
     const refreshed = JSON.parse(readFileSync(join(projectDir, 'work-item.json'), 'utf8'))
     assert.equal(refreshed.intake.sourceFingerprint, stableFingerprint(refreshed.sourceSnapshot))
-    const beforeFailure = readFileSync(join(projectDir, 'work-item.json'), 'utf8')
     await assert.rejects(() => syncVNextSource(projectDir, { sync: async () => { throw new Error('network unavailable') } }), /network unavailable/)
-    assert.equal(readFileSync(join(projectDir, 'work-item.json'), 'utf8'), beforeFailure)
+    const afterFailure = JSON.parse(readFileSync(join(projectDir, 'work-item.json'), 'utf8'))
+    assert.equal(afterFailure.autopilot.phase, 'intake')
+    assert.deepEqual(afterFailure.autopilot.implementation, { status: 'pending', changedPaths: [] })
+    assert.equal(afterFailure.autopilot.repair.attempts.source, 1)
+    assert.equal(afterFailure.autopilot.repair.terminalState, 'blocked-user-decision')
+    await assert.rejects(() => syncVNextSource(projectDir, { sync: async () => { throw new Error('network unavailable') } }), /network unavailable/)
+    const afterRepeatedFailure = JSON.parse(readFileSync(join(projectDir, 'work-item.json'), 'utf8'))
+    assert.equal(afterRepeatedFailure.autopilot.repair.attempts.source, 1)
+    assert.equal(afterRepeatedFailure.sourceSnapshot.contentHash, refreshed.sourceSnapshot.contentHash)
     assert.equal(readFileSync(join(outputDir, 'prd.md'), 'utf8'), 'New requirement.\n')
     console.log('vnext-source-sync self-test passed')
   } finally {

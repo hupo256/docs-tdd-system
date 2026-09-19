@@ -5,6 +5,65 @@ import assert from 'node:assert/strict'
 
 const sum = (values) => values.reduce((total, value) => total + (Number(value) || 0), 0)
 
+export function normalizeCompactRunRecord(record = {}) {
+  return {
+    schemaVersion: 1,
+    runId: record.runId || null,
+    projectId: record.projectId || null,
+    route: record.route || null,
+    routeReasons: Array.isArray(record.routeReasons) ? [...new Set(record.routeReasons.filter(Boolean))] : [],
+    contextChars: Number.isFinite(record.contextChars) ? record.contextChars : null,
+    estimatedInputTokens: null,
+    ruleFiles: Number.isFinite(record.ruleFiles) ? record.ruleFiles : null,
+    sourceUnits: Number.isFinite(record.sourceUnits) ? record.sourceUnits : null,
+    actionCount: Number.isFinite(record.actionCount) ? record.actionCount : 0,
+    commandCount: Number.isFinite(record.commandCount) ? record.commandCount : 0,
+    reviewRounds: Number.isFinite(record.reviewRounds) ? record.reviewRounds : 0,
+    evidenceCount: Number.isFinite(record.evidenceCount) ? record.evidenceCount : 0,
+    repairAttempts: Number.isFinite(record.repairAttempts) ? record.repairAttempts : 0,
+    elapsedMs: Number.isFinite(record.elapsedMs) ? record.elapsedMs : null,
+    userInterruptCount: Number.isFinite(record.userInterruptCount) ? record.userInterruptCount : 0,
+    necessaryInterruptCount: Number.isFinite(record.necessaryInterruptCount) ? record.necessaryInterruptCount : 0,
+    silentOmissionCount: Number.isFinite(record.silentOmissionCount) ? record.silentOmissionCount : 0,
+    falseCompletionCount: Number.isFinite(record.falseCompletionCount) ? record.falseCompletionCount : 0,
+    terminalState: record.terminalState || null,
+    budgetStatus: record.budgetStatus || null,
+    generatedAt: record.generatedAt || null,
+  }
+}
+
+function percentile(values, ratio) {
+  const sorted = values.filter(Number.isFinite).sort((a, b) => a - b)
+  if (!sorted.length) return null
+  return sorted[Math.min(sorted.length - 1, Math.floor((sorted.length - 1) * ratio))]
+}
+
+export function summarizeCompactRuns(records = []) {
+  const normalized = records.map(normalizeCompactRunRecord)
+  const elapsed = normalized.map((record) => record.elapsedMs).filter(Number.isFinite)
+  const contexts = normalized.map((record) => record.contextChars).filter(Number.isFinite)
+  return {
+    runCount: normalized.length,
+    routes: [...new Set(normalized.map((record) => record.route).filter(Boolean))].sort(),
+    p50ElapsedMs: percentile(elapsed, 0.5),
+    p90ElapsedMs: percentile(elapsed, 0.9),
+    p50ContextChars: percentile(contexts, 0.5),
+    p90ContextChars: percentile(contexts, 0.9),
+    totals: {
+      actions: sum(normalized.map((record) => record.actionCount)),
+      commands: sum(normalized.map((record) => record.commandCount)),
+      reviews: sum(normalized.map((record) => record.reviewRounds)),
+      evidence: sum(normalized.map((record) => record.evidenceCount)),
+      repairs: sum(normalized.map((record) => record.repairAttempts)),
+      necessaryInterrupts: sum(normalized.map((record) => record.necessaryInterruptCount)),
+      silentOmissions: sum(normalized.map((record) => record.silentOmissionCount)),
+      falseCompletions: sum(normalized.map((record) => record.falseCompletionCount)),
+    },
+    terminalStates: [...new Set(normalized.map((record) => record.terminalState).filter(Boolean))].sort(),
+    estimatedInputTokens: null,
+  }
+}
+
 export function summarizeProjectBaseline({ projectId, files = [], gateRuns = [], latestGate = null, contextInjections = null, observation = {} }) {
   const processFiles = files.filter((file) => !file.relativePath.startsWith('inbox/'))
   const evidenceFiles = files.filter((file) => file.relativePath.startsWith('evidence/'))
@@ -102,6 +161,15 @@ export function selfTest() {
   assert.equal(summary.machineRecorded.contextPackCalls, 1)
   assert.equal(summary.unavailableHistoricalMetrics.docsTddTokens, null)
   assert.equal(summarizePortfolio([summary]).reportedRequirementOmissionFixes, 1)
+  const compact = summarizeCompactRuns([
+    { runId: 'a', route: 'micro', contextChars: 100, elapsedMs: 1000, commandCount: 2, terminalState: 'complete' },
+    { runId: 'b', route: 'lite', contextChars: 200, elapsedMs: 3000, commandCount: 4, necessaryInterruptCount: 1, terminalState: 'blocked' },
+  ])
+  assert.deepEqual(compact.routes, ['lite', 'micro'])
+  assert.equal(compact.p50ElapsedMs, 1000)
+  assert.equal(compact.p90ElapsedMs, 1000)
+  assert.equal(compact.p90ContextChars, 100)
+  assert.equal(compact.estimatedInputTokens, null)
   assert.deepEqual(artifactConvergence({ baselineProcessFiles: 263, projectCount: 4 }), {
     baselineProcessFiles: 263, projectCount: 4, vnextFilesPerProject: 3, projectedVNextFiles: 12,
     reductionPercent: 95.44, targetReductionPercent: 80, ok: true,

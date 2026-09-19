@@ -35,6 +35,8 @@ import { resolveRuleSessionClient } from './lib/rule-session.mjs'
 import { latestReleasePin, resolveRulePin, upgradeRulePin } from './lib/rule-pin.mjs'
 import { stableFingerprint } from './lib/vnext-work-item.mjs'
 import { workflowVersionForProject } from './lib/workflow-version.mjs'
+import { appendRuntimeDecision, readRuntimeDecisions } from './lib/vnext-runtime-decisions.mjs'
+import { budgetStatus } from './lib/vnext-efficiency-policy.mjs'
 import { CODING_SCENARIOS, requireRuleSession, verifyG2Ready, writeRuleSession } from './lib/rule-session-runtime.mjs'
 import { runRuleContextProbe } from './rule-context-probe.mjs'
 
@@ -248,7 +250,7 @@ if (command === 'rules') {
 }
 
 if (!new RegExp(`^(?:${config.projectIdPattern || '(?:PR|TR)-\\d{5}'})$`).test(projectId || '')) {
-  console.error('usage: docs-tdd.mjs <run|kickoff|status|resume|next|source-update|source-sync|extract|coverage-check|scope-approval|scope-approve|review|review-adjudicate|review-resume|checkpoint|dev-check|manual-test|commit|worktree-prepare|capability|probe|doctor|release|golden|guard|rule-health|rules|explain|check|gate|evidence|reconcile|artifact-compat|verify|context|changed|recommend> PR-01234 [G0-G8|scenario] [--input file.json] [--evidence evidence.json] [--surfaces surfaces.json] [--plan evidence-plan.json] [--path-map dev-check-path-map.json] [--out file.json] [--kind feature|bugfix] [--write] [--json] [--dry-run] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|pi|human] [--session-id <id>] [--target path] [--model <name>]')
+  console.error('usage: docs-tdd.mjs <run|kickoff|status|resume|next|source-update|source-sync|source-graph|extract|coverage-check|scope-approval|scope-approve|review|review-adjudicate|review-resume|checkpoint|decision|efficiency|dev-check|manual-test|commit|worktree-prepare|capability|probe|doctor|release|golden|guard|rule-health|rules|explain|check|gate|evidence|reconcile|artifact-compat|verify|context|changed|recommend> PR-01234 [G0-G8|scenario] [--input file.json] [--evidence evidence.json] [--surfaces surfaces.json] [--plan evidence-plan.json] [--path-map dev-check-path-map.json] [--out file.json] [--kind feature|bugfix] [--write] [--json] [--dry-run] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|pi|human] [--session-id <id>] [--target path] [--model <name>]')
   process.exit(1)
 }
 
@@ -268,6 +270,42 @@ if (projectWorkflowVersion === 2 && command === 'commit') {
 }
 if (projectWorkflowVersion === 2 && command === 'worktree-prepare') {
   process.exit(run([join(scriptDir, 'prepare-coding-worktree.mjs'), projectId, ...commandArgs], repoRoot))
+}
+if (projectWorkflowVersion === 2 && command === 'decision') {
+  const decisionFile = join(resolveProjectRoot(projectId), 'runtime-decisions.jsonl')
+  if (detail === 'replay' || !detail) {
+    console.log(JSON.stringify(readRuntimeDecisions(decisionFile), null, 2))
+    process.exit(0)
+  }
+  if (detail !== 'append') {
+    console.error('decision requires append or replay')
+    process.exit(1)
+  }
+  const inputIndex = commandArgs.indexOf('--input')
+  if (inputIndex < 0 || !commandArgs[inputIndex + 1]) {
+    console.error('decision append requires --input <runtime-decision.json>')
+    process.exit(1)
+  }
+  const decision = readJson(resolve(commandArgs[inputIndex + 1]))
+  console.log(JSON.stringify(appendRuntimeDecision(decisionFile, decision), null, 2))
+  process.exit(0)
+}
+if (projectWorkflowVersion === 2 && command === 'efficiency') {
+  const projectDir = resolveProjectRoot(projectId)
+  const workItem = readJson(join(projectDir, 'work-item.json'))
+  const inspection = JSON.parse(JSON.stringify(inspectVNext(projectId)))
+  if (inspection.actionPacket?.efficiencyBudget) {
+    inspection.budgetStatus = budgetStatus(inspection.actionPacket.efficiencyBudget)
+  }
+  console.log(JSON.stringify({
+    projectId,
+    executionRoute: inspection.executionRoute,
+    routeReasons: inspection.routeReasons,
+    budgetStatus: inspection.budgetStatus,
+    action: inspection.nextAction,
+    workItemFingerprint: stableFingerprint(workItem),
+  }, null, 2))
+  process.exit(0)
 }
 if (projectWorkflowVersion === 2 && ['scope-approval', 'scope-approve'].includes(command)) {
   const inputIndex = commandArgs.indexOf('--input')
@@ -306,6 +344,12 @@ if (projectWorkflowVersion === 2 && command === 'source-sync') {
   process.exit(run([
     join(scriptDir, 'vnext-source-sync.mjs'), '--project', resolveProjectRoot(projectId),
     ...(commandArgs.includes('--dry-run') ? ['--dry-run'] : []),
+  ], docsRoot))
+}
+if (projectWorkflowVersion === 2 && command === 'source-graph') {
+  process.exit(run([
+    join(scriptDir, 'vnext-source-graph-report.mjs'), '--project', resolveProjectRoot(projectId),
+    ...(commandArgs.includes('--json') ? ['--json'] : []),
   ], docsRoot))
 }
 if (projectWorkflowVersion === 2 && command === 'extract') {
@@ -481,7 +525,7 @@ if (projectWorkflowVersion === 2 && ['gate', 'changed'].includes(command)) {
   console.error(`${command} is a v1-only command; ${projectId} uses workflowVersion 2. Use docs-tdd verify ${projectId} --input <verify-input.json>.`)
   process.exit(1)
 }
-if (['source-sync', 'extract', 'coverage-check', 'scope-approval', 'scope-approve', 'review', 'review-adjudicate', 'review-resume', 'worktree-prepare', 'evidence', 'reconcile', 'artifact-compat', 'verify'].includes(command)) {
+if (['source-sync', 'source-graph', 'extract', 'coverage-check', 'scope-approval', 'scope-approve', 'review', 'review-adjudicate', 'review-resume', 'worktree-prepare', 'evidence', 'reconcile', 'artifact-compat', 'verify'].includes(command)) {
   console.error(`${command} is a v2-only command; ${projectId} uses workflowVersion 1. Use docs-tdd gate ${projectId} <GATE>.`)
   process.exit(1)
 }
