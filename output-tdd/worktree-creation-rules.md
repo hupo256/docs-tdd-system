@@ -349,31 +349,39 @@ branch: feature/PR-02440-custom-name
 
 ---
 
-## 📊 与 PR-02440 的对比
+## 📊 与 PR-02440 的经验教训
 
-### PR-02440 实际使用的流程
+### PR-02440 最初的错误
 
-**我们使用的**:
+**错误做法**（已纠正）:
 ```bash
-# 直接使用 git worktree add
+# ❌ 错误：在 .claude/worktrees 下创建
 git worktree add -b feature/PR-02440 .claude/worktrees/PR-02440 origin/online
 ```
 
-**标准流程应该是**:
+**正确做法**:
 ```bash
-# 使用 prepare-coding-worktree.mjs
+# ✅ 正确：在父目录下创建（与其他项目一致）
+git worktree add -b feature/PR-02440 /Users/aven/github/PR-02440 origin/online
+
+# 或使用标准脚本
 node common/engine/agent-scripts/prepare-coding-worktree.mjs PR-02440
 ```
 
-**差异**:
-1. ❌ 我们用了 `.claude/worktrees/PR-02440`（非标准位置）
-2. ✅ 标准位置是 `/Users/aven/github/PR-02440`（父目录下）
-3. ❌ 我们没有运行依赖安装
-4. ❌ 我们没有验证 dev server
+**已纠正**:
+- ✅ 删除了错误位置的 worktree
+- ✅ 在正确位置重新创建
+- ✅ 现在与其他项目位置一致
 
-**建议**:
-- 使用 `prepare-coding-worktree.mjs` 来创建 worktree
-- 或者统一 worktree 位置为标准的父目录模式
+**正确的 worktree 列表**:
+```
+/Users/aven/github/fameex-web  [online]
+/Users/aven/github/PR-02074    [feature/PR-02074]
+/Users/aven/github/PR-02233    [feature/PR-02233]
+/Users/aven/github/PR-02440    [feature/PR-02440] ✅
+/Users/aven/github/TR-02385    [feature/TR-02385]
+/Users/aven/github/TR-02386    [feature/TR-02386]
+```
 
 ---
 
