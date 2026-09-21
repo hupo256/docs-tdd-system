@@ -12,6 +12,7 @@ import { runIntakeAudit } from './lib/vnext-intake-audit.mjs'
 import { persistVNextWorkItem } from './lib/vnext-persistence.mjs'
 import { normalizeSourceDocuments, readLocalSourceAsset } from './lib/vnext-source-units.mjs'
 import { coverageFingerprints } from './lib/vnext-work-item.mjs'
+import { EXTRACTION_GUIDANCE_V2, detectDomainSignals, formatDomainGuidance } from './lib/extraction-guidance.mjs'
 
 const CANDIDATE_FIELDS = [
   'extractionFacts', 'requirements', 'sourceUnitDispositions', 'evidenceCommands', 'requirementsAuthor',
@@ -35,11 +36,25 @@ export function scaffoldExtraction(workItem, { root = docsSystemRoot } = {}) {
   const expected = coverageFingerprints(workItem).sourceFingerprint
   const actual = coverageFingerprints({ sourceSnapshot: normalized.sourceSnapshot }).sourceFingerprint
   if (expected !== actual) throw new Error('current source/assets differ from workItem.sourceSnapshot; run docs-tdd source-sync first')
+
+  // Detect domain signals and generate tailored guidance
+  const domainSignals = detectDomainSignals(normalized.sourceUnits)
+  const domainGuidance = formatDomainGuidance(domainSignals)
+  const fullGuidance = EXTRACTION_GUIDANCE_V2 + domainGuidance
+
   return {
     schemaVersion: 1,
     projectId: workItem.projectId,
     sourceFingerprint: expected,
+    extractionGuidance: fullGuidance,
     instructions: [
+      '请严格按照 extractionGuidance 中的"四遍精读法"进行抽取。',
+      '第一遍：全局扫描（5 分钟），建立整体认知',
+      '第二遍：分主题深入理解，高风险优先、集合强制枚举',
+      '第三遍：富媒体深度解读（图片提取需求，不只描述元素；表格逐行处理）',
+      '第四遍：自我完整性检查（反向、正向、边界、高风险四个维度）',
+      '参考历史遗漏案例（PR-02306/01930/02265），避免重蹈覆辙。',
+      '完成后自评：完整性、准确性、深度各项必须 ≥8/10，否则重新精读。',
       'Stage A — facts: enumerate source-grounded actions, content, states, constraints, dependencies, permissions, navigation, errors, collections, entries, and visual facts in extractionFacts.',
       'Stage B — requirements: map every fact to one or more independently testable atomic requirements; every semantic source unit must appear in a fact or have an explicit exclusion.',
       'Stage C — surfaces: expand every doing requirement into explicit affectedSurfaces, including every member of all/every sets and symmetric sibling entry points.',
@@ -131,6 +146,57 @@ function argumentValue(flag) {
   return index < 0 ? '' : process.argv[index + 1] || ''
 }
 
+/**
+ * Generate a user-friendly understanding summary for quick confirmation (10 seconds).
+ * @param {object} workItem - The work item after extraction
+ * @returns {string} Formatted summary text
+ */
+function generateUnderstandingSummary(workItem) {
+  const doing = workItem.requirements?.filter((r) => r.status === 'doing') || []
+  const surfaces = doing.flatMap((r) => r.affectedSurfaces || []).filter((s) => s.disposition === 'implement')
+  const highRisk = workItem.routing?.riskSignals || []
+  const imageRequirements = workItem.requirements?.filter((r) => r.sourceAnchors?.some((a) => a.type === 'image')) || []
+
+  let summary = '\n【核心功能】\n'
+  if (doing.length === 0) {
+    summary += '- （无 doing 状态需求）\n'
+  } else {
+    summary += doing.slice(0, 5).map((r) => `- ${r.statement}`).join('\n')
+    if (doing.length > 5) summary += `\n- ... 共 ${doing.length} 条需求\n`
+  }
+
+  summary += '\n【关键落点】\n'
+  if (surfaces.length === 0) {
+    summary += '- （无 implement 落点）\n'
+  } else {
+    summary += surfaces.slice(0, 8).map((s) => `- ${s.locator}`).join('\n')
+    if (surfaces.length > 8) summary += `\n- ... 共 ${surfaces.length} 个落点\n`
+  }
+
+  if (highRisk.length > 0) {
+    summary += '\n【高风险点】\n'
+    summary += highRisk.map((r) => `- ${r}`).join('\n') + '\n'
+  } else {
+    summary += '\n【高风险点】\n- 无\n'
+  }
+
+  if (imageRequirements.length > 0) {
+    summary += '\n【图片独有需求】\n'
+    summary += imageRequirements.slice(0, 3).map((r) => `- ${r.statement}`).join('\n')
+    if (imageRequirements.length > 3) summary += `\n- ... 共 ${imageRequirements.length} 条图片需求\n`
+  }
+
+  const collections = workItem.requirements?.filter((r) => r.collectionSemantics?.kind !== 'none' && (r.collectionSemantics?.expectedCount || 0) > 1) || []
+  if (collections.length > 0) {
+    summary += '\n【集合枚举】\n'
+    collections.forEach((r) => {
+      summary += `- ${r.statement}：${r.collectionSemantics.expectedCount} 个成员\n`
+    })
+  }
+
+  return summary
+}
+
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   if (process.argv.includes('--self-test')) selfTest()
   else {
@@ -153,6 +219,16 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
         const candidate = JSON.parse(readFileSync(resolve(input), 'utf8'))
         const next = applyExtractionCandidate(workItem, candidate)
         const persisted = persistVNextWorkItem(projectDir, next)
+
+        // Generate understanding summary for user confirmation
+        const summary = generateUnderstandingSummary(next)
+        console.error('\n' + '='.repeat(60))
+        console.error('需求理解摘要（请确认是否遗漏）')
+        console.error('='.repeat(60))
+        console.error(summary)
+        console.error('='.repeat(60))
+        console.error('\n请确认：✅ 理解正确 / ⚠️ 有遗漏（如有遗漏请指出）\n')
+
         console.log(JSON.stringify({ projectId: next.projectId, extractionAudit: next.extractionAudit, persisted }, null, 2))
         process.exitCode = next.extractionAudit.status === 'pass' ? 0 : 1
       }

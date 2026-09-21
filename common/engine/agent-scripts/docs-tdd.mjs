@@ -39,6 +39,7 @@ import { appendRuntimeDecision, readRuntimeDecisions } from './lib/vnext-runtime
 import { budgetStatus } from './lib/vnext-efficiency-policy.mjs'
 import { CODING_SCENARIOS, requireRuleSession, verifyG2Ready, writeRuleSession } from './lib/rule-session-runtime.mjs'
 import { runRuleContextProbe } from './rule-context-probe.mjs'
+import { routeExtract } from './lib/lite-path-integration.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, consumerWorktree, config } = resolveRoots()
@@ -353,6 +354,17 @@ if (projectWorkflowVersion === 2 && command === 'source-graph') {
   ], docsRoot))
 }
 if (projectWorkflowVersion === 2 && command === 'extract') {
+  // 快速通道路由：在标准流程前评估是否适合快速通道
+  if (!process.env.LITE_PATH_DISABLED) {
+    const routeResult = await routeExtract(projectId, resolveProjectRoot(projectId))
+
+    if (routeResult.litePathSuccess) {
+      console.log('\n✅ 快速通道完成\n')
+      process.exit(0)
+    }
+    // 如果快速通道失败或不适用，继续标准流程
+  }
+
   const inputIndex = commandArgs.indexOf('--input')
   const outputIndex = commandArgs.indexOf('--out')
   if (inputIndex >= 0 && !commandArgs[inputIndex + 1]) {
