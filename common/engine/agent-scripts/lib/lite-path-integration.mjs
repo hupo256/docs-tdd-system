@@ -4,8 +4,8 @@
 
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { evaluateLitePath, generateLitePathSummary } from './lib/lite-path-router.mjs'
-import { executeLitePath } from './lib/lite-path-executor.mjs'
+import { evaluateLitePath, generateLitePathSummary } from './lite-path-router.mjs'
+import { executeLitePath } from './lite-path-executor.mjs'
 
 /**
  * 集成快速通道评估到 extract 流程
