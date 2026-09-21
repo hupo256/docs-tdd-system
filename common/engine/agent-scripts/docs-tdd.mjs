@@ -12,6 +12,8 @@
  *   · run-project-gate.mjs      gate 正式落证据；verify-* / golden-run / publish-* 各自的机器判定
  *
  * 逐字段 console.log 已收敛：状态报告在 project-status-report、context 指标在 context-pack（都经 lib/cli-report）。
+ *
+ * @version v3.5.0
  */
 
 import assert from 'node:assert/strict'
