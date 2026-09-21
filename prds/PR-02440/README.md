@@ -3,7 +3,7 @@ projectId: PR-02440
 status: active
 stage: G1
 branch: feature/PR-02440
-worktree: ""
+worktree: "/Users/aven/github/PR-02440"
 port: ""
 visualFidelity: standard
 prdSource: https://qfglxo2m3dc.sg.larksuite.com/wiki/ZD3kw2H19isuUYk1vF8l9vIAgkh
