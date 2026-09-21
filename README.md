@@ -1,6 +1,6 @@
-# docs_tdd v3.5 — 可移植的 AI 前端开发规则与门禁系统
+# docs_tdd v3.5 - 可移植的 AI 前端开发规则与门禁系统
 
-> 当前正式发布版本：**v3.5**。v3.5 沿用第二代 work-item 工作流协议；项目文件中的兼容路由标识仍为 `workflowVersion: 2`，它不是产品发布版本。
+> 当前产品能力线：**v3.5**。截至 2026-09-21，发布资格状态为 **v3.5.0-rc / blocked**；只有 `docs-tdd guard --strict` 通过并重新发布规则事实后，才可标记正式 release。项目文件中的兼容路由标识仍为 `workflowVersion: 2`，它不是产品发布版本。
 
 一套**独立**的 AI 前端开发操作系统：新需求默认使用第二代 work-item 流程的「原始需求 → 独立覆盖审查 → 风险分级 → 当前代码证据 → 单一正式出口」，存量项目兼容第一代 G0–G8 门禁；两条工作流都只认机器可验证证据。引擎与业务仓库通过 `docs-tdd.config.json` + 一个软链解耦；**目前只在一个仓库（`@fameex/web`）真实验证过，移植到第二个仓库需要改动下列锚点**（见[可移植性的真实边界](#可移植性的真实边界)）。
 
@@ -127,7 +127,7 @@ node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs doctor
 
 命令统一走 `<mount>/common/engine/agent-scripts/docs-tdd.mjs`（下文简写 `docs-tdd`）。
 
-### 默认：v3.5 正式工作流
+### 默认：v3.5 工作流
 
 v3.5 是当前产品版本；项目文件继续使用 `workflowVersion: 2` 作为第二代协议的稳定兼容标识。风险等级 `V0/V1/V2` 也不是产品版本：V0 是严格受限的局部微改，V1 是多影响面或中等风险，V2 是资金、权限、新 API、跨应用等高风险变更并要求人工确认范围。效率路由会在这些风险等级内进一步选择 `micro`、`lite`、`standard` 或 `high-risk`，并为 context、规则、命令、evidence、repair 和 elapsed 设置预算。
 

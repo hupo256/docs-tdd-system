@@ -41,7 +41,7 @@ import { appendRuntimeDecision, readRuntimeDecisions } from './lib/vnext-runtime
 import { budgetStatus } from './lib/vnext-efficiency-policy.mjs'
 import { CODING_SCENARIOS, requireRuleSession, verifyG2Ready, writeRuleSession } from './lib/rule-session-runtime.mjs'
 import { runRuleContextProbe } from './rule-context-probe.mjs'
-import { routeExtract } from './lib/lite-path-integration.mjs'
+import { SYSTEM_VERSION, printVersion, printVersionHistory } from './lib/system-version.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, consumerWorktree, config } = resolveRoots()
@@ -123,6 +123,21 @@ if (process.argv.includes('--self-test')) {
   assert.deepEqual(coordinatorSteps(index, 'g6_verify'), G6_CONTEXT_SCENARIOS)
   assert(expandScenarioRefs(index, 'g6_code_review').some((ref) => ref.file === 'quality-checklist.md'))
   console.log('docs-tdd self-test passed.')
+  process.exit(0)
+}
+
+if (['--version', '-v'].includes(command)) {
+  console.log(SYSTEM_VERSION)
+  process.exit(0)
+}
+
+if (command === '--info') {
+  printVersion()
+  process.exit(0)
+}
+
+if (command === '--history') {
+  printVersionHistory()
   process.exit(0)
 }
 
@@ -269,37 +284,6 @@ try {
   process.exit(1)
 }
 
-// Worktree 流程检查：对于会修改代码的命令，确保不在主分支上工作
-const codeModifyingCommands = ['extract', 'review', 'checkpoint', 'commit', 'dev-check', 'manual-test']
-if (codeModifyingCommands.includes(command)) {
-  try {
-    const currentBranch = spawnSync('git', ['branch', '--show-current'], {
-      cwd: repoRoot,
-      encoding: 'utf8'
-    }).stdout.trim()
-
-    const protectedBranches = ['online', 'main', 'master', 'develop']
-    if (protectedBranches.includes(currentBranch)) {
-      console.error(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`)
-      console.error(`❌ 不能直接在 ${currentBranch} 分支工作`)
-      console.error(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`)
-      console.error(``)
-      console.error(`请使用 worktree 创建隔离的工作环境：`)
-      console.error(``)
-      console.error(`  node common/engine/agent-scripts/prepare-coding-worktree.mjs ${projectId}`)
-      console.error(``)
-      console.error(`或手动创建 worktree：`)
-      console.error(``)
-      console.error(`  git worktree add -b feature/${projectId} /Users/aven/github/${projectId} origin/online`)
-      console.error(``)
-      console.error(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`)
-      process.exit(1)
-    }
-  } catch (error) {
-    // Git 命令失败，可能不在 git 仓库中，跳过检查
-  }
-}
-
 if (projectWorkflowVersion === 2 && command === 'commit') {
   process.exit(run([join(scriptDir, 'vnext-commit.mjs'), '--project', projectId, ...commandArgs], docsRoot))
 }
@@ -388,17 +372,6 @@ if (projectWorkflowVersion === 2 && command === 'source-graph') {
   ], docsRoot))
 }
 if (projectWorkflowVersion === 2 && command === 'extract') {
-  // 快速通道路由：在标准流程前评估是否适合快速通道
-  if (!process.env.LITE_PATH_DISABLED) {
-    const routeResult = await routeExtract(projectId, resolveProjectRoot(projectId))
-
-    if (routeResult.litePathSuccess) {
-      console.log('\n✅ 快速通道完成\n')
-      process.exit(0)
-    }
-    // 如果快速通道失败或不适用，继续标准流程
-  }
-
   const inputIndex = commandArgs.indexOf('--input')
   const outputIndex = commandArgs.indexOf('--out')
   if (inputIndex >= 0 && !commandArgs[inputIndex + 1]) {

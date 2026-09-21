@@ -37,7 +37,7 @@ export const LITE_PATH_CRITERIA = {
   ],
 
   // 黑名单信号（任一匹配 → 禁止快速通道）
-  // 一票否决：高风险操作
+  // 一票否决：高风险操作不能被“前端文案”或“纯展示”措辞覆盖。
   blacklistSignals: [
     // 资金相关
     { keyword: '资金', category: 'funds' },
@@ -114,50 +114,12 @@ export function evaluateLitePath(prdText, userIntent) {
     }
   }
 
-  // 检查黑名单（有条件的一票否决）
-  // 如果是纯文案/样式修改，黑名单关键词的存在不应该直接否决
-  const isContentOnlyChange = signals.whitelistMatch &&
-    (signals.whitelistMatch.description === '纯文案修改' ||
-     signals.whitelistMatch.description === '样式调整' ||
-     signals.whitelistMatch.description === '拼写修复')
-
-  // 检测行为变更关键词（真正的开发工作）
-  const behaviorChangeKeywords = [
-    '修改逻辑', '改逻辑', '增加校验', '增加验证',
-    '实现', '新增功能', '开发', '实现功能',
-    'API变更', '接口变更', '后端变更', '数据库',
-    '修改接口', '新增接口', '调整接口',
-    '实现API', '开发API', '调用API',
-    '修改schema', '新增字段', '修改字段'
-  ]
-  const hasBehaviorChange = behaviorChangeKeywords.some(kw => fullText.includes(kw.toLowerCase()))
-
-  // 检测纯前端关键词（不涉及后端）
-  const frontendOnlyKeywords = [
-    '前端文案', '前端提示', '前端展示', '前端页面',
-    '只做前端', '仅前端', '纯前端',
-    '文案修改', '提示文案', '显示文案', '页面文案',
-    '提示信息', '错误提示', '成功提示'
-  ]
-  const isFrontendOnly = frontendOnlyKeywords.some(kw => fullText.includes(kw.toLowerCase()))
-
+  // 任意高风险信号都一票否决。路由器不推断“只是前端提示”，避免把资金、
+  // 权限、后端或不可逆操作隐藏在低风险文案描述后。
   for (const { keyword, category } of LITE_PATH_CRITERIA.blacklistSignals) {
     if (fullText.includes(keyword.toLowerCase())) {
       signals.blacklistMatches.push({ keyword, category })
-
-      // 智能判断：
-      // 1. 如果是纯内容修改 + 前端工作 → 不否决
-      // 2. 如果明确有行为变更关键词 → 否决
-      // 3. 否则按原逻辑处理
-
-      if (isContentOnlyChange && isFrontendOnly && !hasBehaviorChange) {
-        // 纯前端文案修改，即使提到了 API/权限等词，也允许快速通道
-        continue
-      }
-
-      if (!isContentOnlyChange || hasBehaviorChange) {
-        signals.confidence = 0
-      }
+      signals.confidence = 0
     }
   }
 
@@ -170,6 +132,8 @@ export function evaluateLitePath(prdText, userIntent) {
   const eligible =
     signals.whitelistMatch !== null &&
     signals.confidence > 0 &&
+    Number.isInteger(signals.estimatedFileCount) &&
+    signals.estimatedFileCount > 0 &&
     signals.estimatedFileCount <= LITE_PATH_CRITERIA.maxFiles &&
     signals.confidence >= LITE_PATH_CRITERIA.minConfidence
 
@@ -180,6 +144,8 @@ export function evaluateLitePath(prdText, userIntent) {
     reason = `blacklist-signal-detected:${signals.blacklistMatches.map(m => m.keyword).join(',')}`
   } else if (signals.estimatedFileCount > LITE_PATH_CRITERIA.maxFiles) {
     reason = `too-many-files:${signals.estimatedFileCount}`
+  } else if (!Number.isInteger(signals.estimatedFileCount) || signals.estimatedFileCount < 1) {
+    reason = 'unknown-file-count'
   } else if (signals.confidence < LITE_PATH_CRITERIA.minConfidence) {
     reason = `low-confidence:${signals.confidence.toFixed(2)}`
   } else {
@@ -203,6 +169,9 @@ export function evaluateLitePath(prdText, userIntent) {
  * @returns {number} 估算的文件数量
  */
 function estimateFileCount(text) {
+  const explicitFiles = text.match(/\b[a-zA-Z0-9_.\-/]+\.(?:tsx?|jsx?|css|scss)\b/g) || []
+  if (explicitFiles.length > 0) return new Set(explicitFiles).size
+
   // 需要探索/查找的信号（通常意味着多文件）
   const explorationSignals = [
     /查找.*组件|搜索.*组件|找到.*组件/i,
@@ -238,8 +207,8 @@ function estimateFileCount(text) {
     if (pattern.test(text)) return 1
   }
 
-  // 默认假设单文件（保守估计）
-  return 1
+  // 未给出明确影响范围时拒绝候选，不能把未知范围当成单文件。
+  return 0
 }
 
 /**
@@ -275,18 +244,10 @@ ${prdSummary}
 ✓ 信心度: ${(evaluation.confidence * 100).toFixed(0)}%
 ✓ 预估文件数: ${evaluation.signals.estimatedFileCount}
 
-【快速通道流程】
-1. 快速理解需求（不走三阶段抽取）
-2. 直接实现改动
-3. 定向验证（Lint + 类型检查）
-4. 自动提交
-
-【预期耗时】2-5 分钟
-
-【安全保障】
-- 验证失败自动转标准流程
-- 完整 audit trail
-- 事后可复核
+【实验边界】
+- 仅作为只读候选评估
+- 不跳过 extraction、review、scope approval 或 verify
+- 不修改文件、不运行验证、不暂存、不提交
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `
@@ -299,21 +260,21 @@ export function selfTest() {
   const testCases = [
     {
       name: '纯文案修改（应该通过）',
-      prd: '把登录按钮文案从"登录"改成"立即登录"',
+      prd: '把 Home.tsx 首页按钮文案从"开始"改成"立即开始"',
       intent: '改文案',
       expectedEligible: true,
       expectedConfidence: 0.95,
     },
     {
       name: '样式调整（应该通过）',
-      prd: '调整按钮颜色为蓝色',
+      prd: '调整 Home.tsx 按钮颜色为蓝色',
       intent: '样式调整',
       expectedEligible: true,
       expectedConfidence: 0.95,
     },
     {
       name: '修复拼写错误（应该通过）',
-      prd: '修复注册页的拼写错误：regiter → register',
+      prd: '修复 Home.tsx 首页的拼写错误：welcom → welcome',
       intent: '修复typo',
       expectedEligible: true,
       expectedConfidence: 0.95,
@@ -346,6 +307,30 @@ export function selfTest() {
       name: '单文件文案（明确单文件）',
       prd: '在登录页（Login.tsx）把"登录"改成"立即登录"',
       intent: '改文案',
+      expectedEligible: false,
+    },
+    {
+      name: '前端支付失败提示（高风险一票否决）',
+      prd: '前端文案修改支付失败提示',
+      intent: '只改提示文案',
+      expectedEligible: false,
+    },
+    {
+      name: '前端权限提示（高风险一票否决）',
+      prd: '前端文案修改权限不足提示',
+      intent: '只改提示文案',
+      expectedEligible: false,
+    },
+    {
+      name: '没有影响文件范围（必须拒绝）',
+      prd: '修改首页显示文案',
+      intent: '文案调整',
+      expectedEligible: false,
+    },
+    {
+      name: '明确单文件低风险文案',
+      prd: '修改 Home.tsx 的页面文案',
+      intent: '只改文案',
       expectedEligible: true,
     },
   ]

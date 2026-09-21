@@ -204,20 +204,12 @@
     {
       "code": "MSW_POLICY",
       "ok": true,
-      "problems": [],
-      "mode": "real-api",
-      "required": false,
-      "blocked": false
+      "problems": []
     },
     {
       "code": "SOURCE_READINESS",
       "ok": true,
-      "problems": [],
-      "unknownKinds": [],
-      "pendingRequiredKinds": [],
-      "reconciliationKinds": [],
-      "implementationCanProceed": true,
-      "readyToTest": true
+      "problems": []
     },
     {
       "code": "CODE_STATE",
@@ -365,5 +357,5 @@
     "signature": "526ad8abb5a0abadbdff4aa2ed281bfdae65471c4403bc0dfe9b66715cf5e908",
     "bundleFingerprint": "ca8dc714599cb2cd54d0440176a786a78d331bc9c1f7b1a382e24f6e2b6199b2"
   },
-  "resultFingerprint": "af886aa6f8bff87773963a2955eaf92d77b1b6938d54c5ebbd74eddb91ed5b10"
+  "resultFingerprint": "da2ed42790c4bd3601937340ad2faf65c7808168718b9ad494d618ee0ed40add"
 }

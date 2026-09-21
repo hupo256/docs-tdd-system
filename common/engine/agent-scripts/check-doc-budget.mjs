@@ -92,6 +92,7 @@ const SELF_TEST_SCRIPTS = [
   ['lib/l2-conflict-detect.mjs', '--self-test'],
   ['lib/effective-snapshot.mjs', '--self-test'],
   ['lib/effective-doctor.mjs', '--self-test'],
+  ['lib/extraction-guidance.mjs', '--self-test'],
   ['lib/rule-maturity.mjs', '--self-test'],
   ['lib/rule-consumption.mjs', '--self-test'],
   ['lib/rule-consumption-pairing.mjs', '--self-test'],
@@ -104,6 +105,14 @@ const SELF_TEST_SCRIPTS = [
   ['lib/warn-retirement.mjs', '--self-test'],
   ['lib/workflow-version.mjs', '--self-test'],
   ['lib/confirmation.mjs', '--self-test'],
+  ['lib/lite-path-executor.mjs', '--self-test'],
+  ['lib/lite-path-integration.mjs', '--self-test'],
+  ['lib/lite-path-router.mjs', '--self-test'],
+  ['lib/progressive-verify.mjs', '--self-test'],
+  ['lib/smart-approval.mjs', '--self-test'],
+  ['lib/smart-review.mjs', '--self-test'],
+  ['lib/smart-rules.mjs', '--self-test'],
+  ['lib/system-version.mjs', '--self-test'],
   ['install-local-agent-rules.mjs', '--self-test'],
   ['prd-intake.mjs', '--self-test'],
   ['project-orchestrator.mjs', '--self-test'],
@@ -133,7 +142,10 @@ const SELF_TEST_SCRIPTS = [
 ]
 // PR-00000 是 golden-run 的保留夹具 ID：它只在 golden-run 运行的几秒内物化在 docs_tdd 下，
 // 不是真实项目。若正好被扫到（并发/异常退出残留），阶段链/schema 类检查会误报。
-const RESERVED_FIXTURE_IDS = new Set(['PR-00000'])
+const RESERVED_FIXTURE_IDS = new Set([
+  'PR-00000',
+  'PR-99997', // vNext sentinel project: intentionally exercises stale/invalid delivery artifacts.
+])
 const isRealProjectDir = (entry, pattern) => entry.isDirectory() && pattern.test(entry.name) && !RESERVED_FIXTURE_IDS.has(entry.name)
 
 const RESIDENT_MARKER = '<!-- RESIDENT-DOC'

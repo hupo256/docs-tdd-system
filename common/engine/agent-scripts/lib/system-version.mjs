@@ -2,6 +2,8 @@
 // docs_tdd 系统版本管理
 // 记录系统的主要版本演进和功能特性
 
+import assert from 'node:assert/strict'
+
 /**
  * 系统版本号规范：v<major>.<minor>.<patch>
  *
@@ -16,14 +18,14 @@ export const VERSION_HISTORY = [
   {
     version: 'v3.5.0',
     date: '2026-09-21',
-    codename: 'Phase 1-5 优化完成',
+    codename: 'Phase 1-5 实验候选',
     type: 'minor',
     features: [
-      'Phase 1: extraction-guidance（第一次理解准确，准确率 +30%）',
-      'Phase 2: 快速通道（lite-path-*，效率 +85%）',
-      'Phase 3: 智能提问（smart-approval + smart-review，人工介入 -70%）',
-      'Phase 4: 渐进式验证（progressive-verify，反馈 <10秒）',
-      'Phase 5: 规则系统简化（smart-rules，Token -60%）',
+      'Phase 1: extraction-guidance 实验模块',
+      'Phase 2: lite-path 只读候选评估，不具备交付权限',
+      'Phase 3: smart-approval 与 smart-review 实验模块',
+      'Phase 4: progressive-verify 预检模块，正式出口仍为 vnext-verify',
+      'Phase 5: smart-rules 实验模块',
     ],
     modules: [
       'extraction-guidance.mjs',
@@ -36,21 +38,16 @@ export const VERSION_HISTORY = [
       'smart-rules.mjs',
     ],
     status: {
-      phase1: 'completed, pending integration',
-      phase2: 'completed, integrated, verified in production (PR-02233)',
-      phase3: 'completed, pending integration',
-      phase4: 'completed, pending integration',
-      phase5: 'completed, pending integration',
-    },
-    metrics: {
-      accuracyImprovement: '+30%',
-      efficiencyImprovement: '+85%',
-      costReduction: '-70%',
-      humanInterventionReduction: '-70%',
-      tokenReduction: '-60%',
+      release: 'v3.5.0-rc / blocked',
+      phase1: 'experimental, not integrated',
+      phase2: 'read-only evaluation, not integrated into extract',
+      phase3: 'experimental, not integrated',
+      phase4: 'preflight only, no delivery authority',
+      phase5: 'experimental, not integrated',
+      pilot: 'collecting; no production attestation',
     },
     breaking: false,
-    notes: '核心功能全部完成，Phase 2 已实战验证成功',
+    notes: '当前版本仍在修复与门禁复核中；正式 release 取决于 guard --strict 结果。',
   },
   {
     version: 'v3.0.0',
@@ -182,11 +179,24 @@ export function printVersionHistory() {
   }
 }
 
+export function selfTest() {
+  const latest = getLatestVersion()
+  assert.equal(getVersion(), 'v3.5.0')
+  assert.equal(latest.version, getVersion())
+  assert.equal(latest.status.release, 'v3.5.0-rc / blocked')
+  assert.equal(latest.status.pilot, 'collecting; no production attestation')
+  assert.equal(Object.hasOwn(latest, 'metrics'), false)
+  assert.match(formatVersionInfo(latest), /formal release depends on guard --strict|正式 release 取决于 guard --strict/)
+  console.log('system-version self-test passed')
+}
+
 // CLI entry point
 if (import.meta.url === `file://${process.argv[1]}`) {
   const args = process.argv.slice(2)
 
-  if (args.includes('--version') || args.includes('-v')) {
+  if (args.includes('--self-test')) {
+    selfTest()
+  } else if (args.includes('--version') || args.includes('-v')) {
     console.log(SYSTEM_VERSION)
   } else if (args.includes('--info')) {
     printVersion()
@@ -195,6 +205,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   } else {
     console.log(`
 Usage:
+  node system-version.mjs --self-test    # Run version truth assertions
   node system-version.mjs --version      # Print version number
   node system-version.mjs --info         # Print latest version info
   node system-version.mjs --history      # Print version history
