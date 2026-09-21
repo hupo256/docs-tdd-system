@@ -1,0 +1,2187 @@
+{
+  "schemaVersion": 1,
+  "workflowVersion": 2,
+  "projectId": "PR-02440",
+  "intake": {
+    "kind": "feature",
+    "sourceRole": "prd",
+    "sourceFingerprint": "753f24bcaf6daca56b20ce25b7dce552a2f3ce587933c3b3bd5d4df733771465",
+    "sourcePaths": [
+      "prds/PR-02440/inbox/lark-sync/prd-latest.extracted.md"
+    ]
+  },
+  "sourceSnapshot": {
+    "revision": "1",
+    "contentHash": "76d0d8e29c2778002564b26c4d501f0004a4d0166a534c08d84fabdf14bfabee",
+    "sources": [
+      {
+        "path": "prds/PR-02440/inbox/lark-sync/prd-latest.extracted.md",
+        "contentHash": "294d24478286148189da132f64ac217a470fc6d1c5f32b933d0d7ef1e9f031fa"
+      }
+    ],
+    "assets": [
+      {
+        "sourceId": "SRC-8DCD51DE0226",
+        "path": "prds/PR-02440/inbox/lark-sync/assets/img-001.png",
+        "assetHash": "a22f726fea85a3a95d20ce00c9719711cd9059107160053eccf84a4ec7e9db26",
+        "assetStatus": "local",
+        "mediaType": "image/png"
+      },
+      {
+        "sourceId": "SRC-7E19CB7D2B13",
+        "path": "prds/PR-02440/inbox/lark-sync/assets/img-002.png",
+        "assetHash": "14ab0d232420ec66f68550081dd29b97d9c1a42688e9558b2db57e410a6c514f",
+        "assetStatus": "local",
+        "mediaType": "image/png"
+      },
+      {
+        "sourceId": "SRC-087B52F6981D",
+        "path": "prds/PR-02440/inbox/lark-sync/assets/img-003.png",
+        "assetHash": "2254eb14e8602df95ae5f26d2ef2ad65e9805cac8fdb6c2b136cbd265dfdd3e5",
+        "assetStatus": "local",
+        "mediaType": "image/png"
+      },
+      {
+        "sourceId": "SRC-88B66D377029",
+        "path": "prds/PR-02440/inbox/lark-sync/assets/img-004.png",
+        "assetHash": "f544d2aae4027cfa502ebc2629575324856733afaff472919024cd4a68d4d53c",
+        "assetStatus": "local",
+        "mediaType": "image/png"
+      }
+    ]
+  },
+  "requirements": [
+    {
+      "requirementId": "R-001",
+      "sourceAnchors": [
+        {
+          "type": "table",
+          "sourceId": "SRC-16ACB2DE34C1"
+        }
+      ],
+      "statement": "福利中心活动规则“1. 报名与参与要求”新增第（4）条固定文案“（4）通过 API 产生的交易不计入福利中心交易类任务的任务进度及活动交易统计。”，桌面平铺与移动折叠展示使用同一 zh-CN 文案源。",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 3
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-001",
+          "locator": "apps/web/src/i18n/locales/zh-CN/rewards.json welfareRules.registration.item4",
+          "disposition": "already-covered",
+          "reason": "当前 HEAD 40458e4375 已按 PRD 增加固定文案。"
+        },
+        {
+          "surfaceId": "S-002",
+          "locator": "apps/web/src/apps/Rewards/components/task/WelfareActivityRulesFlat.tsx 报名与参与要求平铺规则",
+          "disposition": "already-covered",
+          "reason": "当前 HEAD 40458e4375 已消费共享 item4 文案。"
+        },
+        {
+          "surfaceId": "S-003",
+          "locator": "apps/web/src/apps/Rewards/components/task/WelfareActivityRulesAccordion.tsx 报名与参与要求折叠规则",
+          "disposition": "already-covered",
+          "reason": "当前 HEAD 40458e4375 已消费共享 item4 文案。"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "copy-literal",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-002",
+      "sourceAnchors": [
+        {
+          "type": "table",
+          "sourceId": "SRC-FCD2D4E42B7F"
+        }
+      ],
+      "statement": "福利中心活动规则“5. 奖励发放与使用说明”替换为 PRD 指定的三段完整固定文案，桌面平铺与移动折叠展示复用同一 zh-CN 文案源。",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 3
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-004",
+          "locator": "apps/web/src/i18n/locales/zh-CN/rewards.json welfareRules.rewardUsage",
+          "disposition": "already-covered",
+          "reason": "当前 HEAD 40458e4375 已按 PRD 替换为 intro/detail/apiRestriction 三段文案。"
+        },
+        {
+          "surfaceId": "S-005",
+          "locator": "apps/web/src/apps/Rewards/components/task/WelfareActivityRulesFlat.tsx 奖励发放与使用说明平铺规则",
+          "disposition": "already-covered",
+          "reason": "当前 HEAD 40458e4375 已渲染三段共享文案。"
+        },
+        {
+          "surfaceId": "S-006",
+          "locator": "apps/web/src/apps/Rewards/components/task/WelfareActivityRulesAccordion.tsx 奖励发放与使用说明折叠规则",
+          "disposition": "already-covered",
+          "reason": "当前 HEAD 40458e4375 已渲染三段共享文案。"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "copy-literal",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-003",
+      "sourceAnchors": [
+        {
+          "type": "table",
+          "sourceId": "SRC-F19728194BB5"
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-36B1E8BD2663"
+        }
+      ],
+      "statement": "已创建 API 的用户点击领取普通合约体验金时，在打开领取弹窗前阻断，并 Toast“已创建 API ，暂无法领取体验金。请删除 API 后重试。”",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-007",
+          "locator": "apps/web/src/apps/MyRewards/index.tsx handleActivateExperience 普通合约体验金领取入口",
+          "disposition": "implement",
+          "blockedBy": [
+            "API-PR-02440-MUTUAL-EXCLUSION-CONTRACT"
+          ],
+          "reason": "需在 setActivateModalOpen(true) 前依据后端权威状态阻断。"
+        },
+        {
+          "surfaceId": "S-008",
+          "locator": "apps/web/src/services/api/trial-fee.ts 普通合约体验金领取前 API/API-Key 存在状态契约",
+          "disposition": "implement",
+          "blockedBy": [
+            "API-PR-02440-MUTUAL-EXCLUSION-CONTRACT"
+          ],
+          "reason": "当前 activate-check 契约未定义已创建 API 的字段、查询接口或稳定错误码。"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        },
+        {
+          "type": "api-contract",
+          "runtimeRequired": false
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-004",
+      "sourceAnchors": [
+        {
+          "type": "table",
+          "sourceId": "SRC-F19728194BB5"
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-36B1E8BD2663"
+        }
+      ],
+      "statement": "已创建 API 的用户点击领取合约增强体验金时，在打开领取弹窗前阻断，并 Toast“已创建 API ，暂无法领取体验金。请删除 API 后重试。”",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-009",
+          "locator": "apps/web/src/apps/MyRewards/index.tsx handleActivateExperience 合约增强体验金领取入口",
+          "disposition": "implement",
+          "blockedBy": [
+            "API-PR-02440-MUTUAL-EXCLUSION-CONTRACT"
+          ],
+          "reason": "需在 setActivateModalOpen(true) 前依据后端权威状态阻断。"
+        },
+        {
+          "surfaceId": "S-010",
+          "locator": "apps/web/src/services/api/trial-fee.ts 合约增强体验金领取前 API/API-Key 存在状态契约",
+          "disposition": "implement",
+          "blockedBy": [
+            "API-PR-02440-MUTUAL-EXCLUSION-CONTRACT"
+          ],
+          "reason": "当前 activate-check 契约未定义已创建 API 的字段、查询接口或稳定错误码。"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        },
+        {
+          "type": "api-contract",
+          "runtimeRequired": false
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-005",
+      "sourceAnchors": [
+        {
+          "type": "table",
+          "sourceId": "SRC-F19728194BB5"
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-36B1E8BD2663"
+        },
+        {
+          "type": "image",
+          "sourceId": "SRC-087B52F6981D"
+        }
+      ],
+      "statement": "用户存在使用中的普通合约体验金时提交创建 API，创建请求必须被阻断，并 Toast“存在使用中的体验金，暂无法创建 API，请在体验金使用结束后重试。”",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-011",
+          "locator": "apps/web/src/apps/ApiManagement/components/CreateApi.tsx CreateApiForm.onSubmit 普通合约体验金互斥校验",
+          "disposition": "implement",
+          "blockedBy": [
+            "API-PR-02440-MUTUAL-EXCLUSION-CONTRACT"
+          ],
+          "reason": "需在 useCreateApi 调用前或按稳定后端错误码阻断。"
+        },
+        {
+          "surfaceId": "S-012",
+          "locator": "apps/web/src/services/api/user.ts useCreateApi 普通合约体验金使用中状态/错误码契约",
+          "disposition": "implement",
+          "blockedBy": [
+            "API-PR-02440-MUTUAL-EXCLUSION-CONTRACT"
+          ],
+          "reason": "当前 create_open_api 契约未定义普通合约体验金使用中字段或稳定错误码。"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        },
+        {
+          "type": "api-contract",
+          "runtimeRequired": false
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-006",
+      "sourceAnchors": [
+        {
+          "type": "table",
+          "sourceId": "SRC-F19728194BB5"
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-36B1E8BD2663"
+        },
+        {
+          "type": "image",
+          "sourceId": "SRC-087B52F6981D"
+        }
+      ],
+      "statement": "用户存在使用中的合约增强体验金时提交创建 API，创建请求必须被阻断，并 Toast“存在使用中的体验金，暂无法创建 API，请在体验金使用结束后重试。”",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 2
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-013",
+          "locator": "apps/web/src/apps/ApiManagement/components/CreateApi.tsx CreateApiForm.onSubmit 合约增强体验金互斥校验",
+          "disposition": "implement",
+          "blockedBy": [
+            "API-PR-02440-MUTUAL-EXCLUSION-CONTRACT"
+          ],
+          "reason": "需在 useCreateApi 调用前或按稳定后端错误码阻断。"
+        },
+        {
+          "surfaceId": "S-014",
+          "locator": "apps/web/src/services/api/user.ts useCreateApi 合约增强体验金使用中状态/错误码契约",
+          "disposition": "implement",
+          "blockedBy": [
+            "API-PR-02440-MUTUAL-EXCLUSION-CONTRACT"
+          ],
+          "reason": "当前 create_open_api 契约未定义合约增强体验金使用中字段或稳定错误码。"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "component-dom",
+          "runtimeRequired": false
+        },
+        {
+          "type": "api-contract",
+          "runtimeRequired": false
+        },
+        {
+          "type": "browser-interaction",
+          "runtimeRequired": true
+        }
+      ]
+    },
+    {
+      "requirementId": "R-007",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-7E2A757FC8EB"
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-09649B7EB416"
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-FF32480E3895"
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-8BB7F5817641"
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-EF8391F5DDE1"
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-C90FBBCA9CFF"
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-877EDC3CF15B"
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-784EED4C2E11"
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-2C305BC923BB"
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-4C1163EC35F2"
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-EE9EC7B6239C"
+        },
+        {
+          "type": "image",
+          "sourceId": "SRC-8DCD51DE0226"
+        },
+        {
+          "type": "image",
+          "sourceId": "SRC-7E19CB7D2B13"
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-3550BAB23320"
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-EE2D6BCB24A3"
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-F2FC2C8BB43F"
+        },
+        {
+          "type": "image",
+          "sourceId": "SRC-88B66D377029"
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-EA51BFE5771B"
+        }
+      ],
+      "statement": "后端交易与活动统计需从福利中心交易类任务和相关活动中剔除 API 现货/合约交易笔数、交易额、任务进度和奖励达成条件，仅继续累计非 API 交易；非交易类任务不受影响。",
+      "status": "deferred",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 6
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-015",
+          "locator": "backend welfare statistics: spot trade count",
+          "disposition": "deferred",
+          "reason": "后端统计责任，不在当前 Web 仓实现。",
+          "owner": "福利中心后端/数据 owner",
+          "batch": "PR-02440-backend"
+        },
+        {
+          "surfaceId": "S-016",
+          "locator": "backend welfare statistics: futures trade count",
+          "disposition": "deferred",
+          "reason": "后端统计责任，不在当前 Web 仓实现。",
+          "owner": "福利中心后端/数据 owner",
+          "batch": "PR-02440-backend"
+        },
+        {
+          "surfaceId": "S-017",
+          "locator": "backend welfare statistics: spot trade amount",
+          "disposition": "deferred",
+          "reason": "后端统计责任，不在当前 Web 仓实现。",
+          "owner": "福利中心后端/数据 owner",
+          "batch": "PR-02440-backend"
+        },
+        {
+          "surfaceId": "S-018",
+          "locator": "backend welfare statistics: futures trade amount",
+          "disposition": "deferred",
+          "reason": "后端统计责任，不在当前 Web 仓实现。",
+          "owner": "福利中心后端/数据 owner",
+          "batch": "PR-02440-backend"
+        },
+        {
+          "surfaceId": "S-019",
+          "locator": "backend welfare task progress aggregation",
+          "disposition": "deferred",
+          "reason": "后端任务进度责任，不在当前 Web 仓实现。",
+          "owner": "福利中心后端/数据 owner",
+          "batch": "PR-02440-backend"
+        },
+        {
+          "surfaceId": "S-020",
+          "locator": "backend welfare reward eligibility evaluation",
+          "disposition": "deferred",
+          "reason": "后端奖励达成判断责任，不在当前 Web 仓实现。",
+          "owner": "福利中心后端/数据 owner",
+          "batch": "PR-02440-backend"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "api-contract",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-008",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-7E2A757FC8EB"
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-09649B7EB416"
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-FF32480E3895"
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-8BB7F5817641"
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-EF8391F5DDE1"
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-C90FBBCA9CFF"
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-877EDC3CF15B"
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-A226800BB652"
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-AD42F2A779BF"
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-81410B742DED"
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-1C5AB450445B"
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-E33904B657B6"
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-FCB381B19D3F"
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-944FD2B517C9"
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-6B581F1702E7"
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-F2FC2C8BB43F"
+        },
+        {
+          "type": "image",
+          "sourceId": "SRC-88B66D377029"
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-EA51BFE5771B"
+        }
+      ],
+      "statement": "后端交易下单与结算需保证 API 交易不能使用福利中心六类卡券权益：手续费抵扣金（现货/合约）、手续费返现卡（现货/合约）、合约体验金、合约增强体验金、合约赠金、合约抵扣金；非 API 交易维持原规则。",
+      "status": "deferred",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 6
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-021",
+          "locator": "backend settlement: spot/futures fee deduction credit",
+          "disposition": "deferred",
+          "reason": "交易结算后端责任，不在当前 Web 仓实现。",
+          "owner": "交易/卡券后端 owner",
+          "batch": "PR-02440-backend"
+        },
+        {
+          "surfaceId": "S-022",
+          "locator": "backend settlement: spot/futures fee cashback card",
+          "disposition": "deferred",
+          "reason": "交易结算后端责任，不在当前 Web 仓实现。",
+          "owner": "交易/卡券后端 owner",
+          "batch": "PR-02440-backend"
+        },
+        {
+          "surfaceId": "S-023",
+          "locator": "backend settlement: contract trial bonus",
+          "disposition": "deferred",
+          "reason": "交易结算后端责任，不在当前 Web 仓实现。",
+          "owner": "交易/卡券后端 owner",
+          "batch": "PR-02440-backend"
+        },
+        {
+          "surfaceId": "S-024",
+          "locator": "backend settlement: enhanced contract trial bonus",
+          "disposition": "deferred",
+          "reason": "交易结算后端责任，不在当前 Web 仓实现。",
+          "owner": "交易/卡券后端 owner",
+          "batch": "PR-02440-backend"
+        },
+        {
+          "surfaceId": "S-025",
+          "locator": "backend order and settlement: contract gift bonus",
+          "disposition": "deferred",
+          "reason": "交易下单/结算后端责任，不在当前 Web 仓实现。",
+          "owner": "交易/卡券后端 owner",
+          "batch": "PR-02440-backend"
+        },
+        {
+          "surfaceId": "S-026",
+          "locator": "backend settlement: contract deduction credit",
+          "disposition": "deferred",
+          "reason": "交易结算后端责任，不在当前 Web 仓实现。",
+          "owner": "交易/卡券后端 owner",
+          "batch": "PR-02440-backend"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "api-contract",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-009",
+      "sourceAnchors": [
+        {
+          "type": "table",
+          "sourceId": "SRC-8BB7F5817641"
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-EF8391F5DDE1"
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-C90FBBCA9CFF"
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-877EDC3CF15B"
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-F2FC2C8BB43F"
+        },
+        {
+          "type": "image",
+          "sourceId": "SRC-88B66D377029"
+        },
+        {
+          "type": "text",
+          "sourceId": "SRC-2BBF7B8A3B2E"
+        }
+      ],
+      "statement": "后端按上线生效点执行新旧数据兼容：规则自实际上线起生效；生效前 API 交易进度不追溯、不重算、不回退；已完成状态和已发奖励不受影响；生效后 API 交易不再累计；跨生效点任务保留旧进度并仅继续累计非 API 交易。",
+      "status": "deferred",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 5
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-027",
+          "locator": "backend rollout rule: effective-at-production-release",
+          "disposition": "deferred",
+          "reason": "上线生效点由后端/发布配置执行。",
+          "owner": "福利中心后端/发布 owner",
+          "batch": "PR-02440-backend"
+        },
+        {
+          "surfaceId": "S-028",
+          "locator": "backend migration rule: no historical recalculation or rollback",
+          "disposition": "deferred",
+          "reason": "历史进度处理属于后端数据策略。",
+          "owner": "福利中心后端/数据 owner",
+          "batch": "PR-02440-backend"
+        },
+        {
+          "surfaceId": "S-029",
+          "locator": "backend migration rule: completed tasks and issued rewards unchanged",
+          "disposition": "deferred",
+          "reason": "历史任务与奖励状态属于后端数据策略。",
+          "owner": "福利中心后端/数据 owner",
+          "batch": "PR-02440-backend"
+        },
+        {
+          "surfaceId": "S-030",
+          "locator": "backend post-release aggregation: exclude new API trades",
+          "disposition": "deferred",
+          "reason": "生效后聚合逻辑属于后端统计责任。",
+          "owner": "福利中心后端/数据 owner",
+          "batch": "PR-02440-backend"
+        },
+        {
+          "surfaceId": "S-031",
+          "locator": "backend in-progress task migration: preserve old progress and accumulate non-API only",
+          "disposition": "deferred",
+          "reason": "跨生效点任务聚合属于后端统计责任。",
+          "owner": "福利中心后端/数据 owner",
+          "batch": "PR-02440-backend"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "api-contract",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-010",
+      "sourceAnchors": [
+        {
+          "type": "table",
+          "sourceId": "SRC-F19728194BB5"
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-36B1E8BD2663"
+        }
+      ],
+      "statement": "上线前由后端/运营排查同时存在 API 与使用中体验金的存量用户数量、体验金有效期和持仓情况，并依据排查结果确定存量处置方案。",
+      "status": "deferred",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 3
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-032",
+          "locator": "operations audit: affected user count",
+          "disposition": "deferred",
+          "reason": "需查询生产存量数据。",
+          "owner": "福利中心后端/运营",
+          "batch": "PR-02440-pre-release"
+        },
+        {
+          "surfaceId": "S-033",
+          "locator": "operations audit: active trial bonus expiry",
+          "disposition": "deferred",
+          "reason": "需查询生产存量数据。",
+          "owner": "福利中心后端/运营",
+          "batch": "PR-02440-pre-release"
+        },
+        {
+          "surfaceId": "S-034",
+          "locator": "operations audit: affected users' positions",
+          "disposition": "deferred",
+          "reason": "需查询生产持仓数据。",
+          "owner": "福利中心后端/运营",
+          "batch": "PR-02440-pre-release"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "api-contract",
+          "runtimeRequired": false
+        }
+      ]
+    },
+    {
+      "requirementId": "R-011",
+      "sourceAnchors": [
+        {
+          "type": "table",
+          "sourceId": "SRC-F19728194BB5"
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-FCB381B19D3F"
+        },
+        {
+          "type": "table",
+          "sourceId": "SRC-36B1E8BD2663"
+        }
+      ],
+      "statement": "本期不在 API 合约开仓、加仓、减仓、平仓或反向开仓链路新增“使用中体验金”校验，原 PRD 中对应的 API 下单前阻断方案不实施。",
+      "status": "not-doing",
+      "collectionSemantics": {
+        "kind": "explicit-set",
+        "expectedCount": 5
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-035",
+          "locator": "API futures open-position path",
+          "disposition": "not-applicable",
+          "reason": "2026-09-18 变更明确改为创建/领取互斥，不在交易链路补校验。"
+        },
+        {
+          "surfaceId": "S-036",
+          "locator": "API futures add-position path",
+          "disposition": "not-applicable",
+          "reason": "2026-09-18 变更明确改为创建/领取互斥，不在交易链路补校验。"
+        },
+        {
+          "surfaceId": "S-037",
+          "locator": "API futures reduce-position path",
+          "disposition": "not-applicable",
+          "reason": "2026-09-18 变更明确改为创建/领取互斥，不在交易链路补校验。"
+        },
+        {
+          "surfaceId": "S-038",
+          "locator": "API futures close-position path",
+          "disposition": "not-applicable",
+          "reason": "2026-09-18 变更明确改为创建/领取互斥，不在交易链路补校验。"
+        },
+        {
+          "surfaceId": "S-039",
+          "locator": "API futures reverse-position path",
+          "disposition": "not-applicable",
+          "reason": "2026-09-18 变更明确改为创建/领取互斥，不在交易链路补校验。"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "api-contract",
+          "runtimeRequired": false
+        }
+      ]
+    }
+  ],
+  "coverageAudit": {
+    "sourceFingerprint": "753f24bcaf6daca56b20ce25b7dce552a2f3ce587933c3b3bd5d4df733771465",
+    "requirementsFingerprint": "a1eac80ecb9cf0216a33144d011ef19de39aeacdbe89c5f9707f30b3c7b79f08",
+    "reviewMode": "independent-cold-read",
+    "reviewRunId": "review-f367a1df-cfff-46a4-8beb-ff32497e9cc2",
+    "reviewer": {
+      "kind": "model",
+      "id": "pi/default"
+    },
+    "completedAt": "2026-09-21T11:33:57.399Z",
+    "verdict": "changes-required",
+    "findings": [
+      {
+        "findingId": "FIND-001",
+        "code": "missing-requirement",
+        "message": "缺少可执行的 API/非 API 交易识别要求。候选需求虽引用了相关来源并使用“API 交易”概念，但未规定：应依据交易系统现有订单类型/订单来源字段分类；只有订单来源标识为 API、由有效 API Key 产生的有效成交才属于 API 交易；Web、App 及其他非 API 渠道的有效成交属于非 API 交易。也未列出负责该分类逻辑的后端受影响面。",
+        "sourceIds": [
+          "SRC-8BB7F5817641",
+          "SRC-EF8391F5DDE1",
+          "SRC-C90FBBCA9CFF",
+          "SRC-877EDC3CF15B",
+          "SRC-F2FC2C8BB43F",
+          "SRC-88B66D377029"
+        ],
+        "disposition": "open"
+      },
+      {
+        "findingId": "FIND-002",
+        "code": "missing-requirement",
+        "message": "合约赠金规则覆盖不完整。R-008 仅概括 API 交易不能使用合约赠金，并列出笼统的下单/结算面；来源还明确要求赠金仓位不支持通过 API 开仓或平仓、必须通过 Web/App 操作，返回固定文案“合约赠金暂不支持 API 交易，请前往 Web/App 操作。”，且仅持有未使用的赠金卡券不得影响普通 API 合约交易。这些状态条件、例外和提示文案均未形成候选需求。",
+        "sourceIds": [
+          "SRC-E33904B657B6",
+          "SRC-FCB381B19D3F"
+        ],
+        "disposition": "open"
+      },
+      {
+        "findingId": "FIND-003",
+        "code": "missing-surface",
+        "message": "R-010 要求排查后由运营依据存量情况确定处置方案，但受影响面只覆盖用户数量、体验金有效期和持仓三项查询，没有覆盖排查结果汇总、运营决策及存量处置方案的记录/执行面。",
+        "sourceIds": [
+          "SRC-36B1E8BD2663"
+        ],
+        "disposition": "open"
+      }
+    ],
+    "receipt": {
+      "issuedBy": "docs-tdd-review-v1",
+      "client": "pi",
+      "sessionId": "f367a1df-cfff-46a4-8beb-ff32497e9cc2",
+      "sourceIsolation": "source-only-no-code",
+      "requestFingerprint": "69c68f380e9ffc00d24ce679e135db18f8d1b1f51201af5e5b6ba6cc56c6867e",
+      "reviewedAssets": [
+        {
+          "sourceId": "SRC-8DCD51DE0226",
+          "assetHash": "a22f726fea85a3a95d20ce00c9719711cd9059107160053eccf84a4ec7e9db26"
+        },
+        {
+          "sourceId": "SRC-7E19CB7D2B13",
+          "assetHash": "14ab0d232420ec66f68550081dd29b97d9c1a42688e9558b2db57e410a6c514f"
+        },
+        {
+          "sourceId": "SRC-087B52F6981D",
+          "assetHash": "2254eb14e8602df95ae5f26d2ef2ad65e9805cac8fdb6c2b136cbd265dfdd3e5"
+        },
+        {
+          "sourceId": "SRC-88B66D377029",
+          "assetHash": "f544d2aae4027cfa502ebc2629575324856733afaff472919024cd4a68d4d53c"
+        }
+      ],
+      "startedAt": "2026-09-21T11:33:10.367Z",
+      "completedAt": "2026-09-21T11:33:57.399Z",
+      "signature": "5d628545805af11997ebf77109991ae87fd3bb28b078ed1cfdaf0e2aaf922361"
+    },
+    "unresolved": [
+      "FIND-001: 缺少可执行的 API/非 API 交易识别要求。候选需求虽引用了相关来源并使用“API 交易”概念，但未规定：应依据交易系统现有订单类型/订单来源字段分类；只有订单来源标识为 API、由有效 API Key 产生的有效成交才属于 API 交易；Web、App 及其他非 API 渠道的有效成交属于非 API 交易。也未列出负责该分类逻辑的后端受影响面。",
+      "FIND-002: 合约赠金规则覆盖不完整。R-008 仅概括 API 交易不能使用合约赠金，并列出笼统的下单/结算面；来源还明确要求赠金仓位不支持通过 API 开仓或平仓、必须通过 Web/App 操作，返回固定文案“合约赠金暂不支持 API 交易，请前往 Web/App 操作。”，且仅持有未使用的赠金卡券不得影响普通 API 合约交易。这些状态条件、例外和提示文案均未形成候选需求。",
+      "FIND-003: R-010 要求排查后由运营依据存量情况确定处置方案，但受影响面只覆盖用户数量、体验金有效期和持仓三项查询，没有覆盖排查结果汇总、运营决策及存量处置方案的记录/执行面。"
+    ]
+  },
+  "routing": {
+    "scopeClass": "cross-boundary",
+    "riskSignals": [
+      "contract-change",
+      "funds",
+      "multiple-entry-points",
+      "permission",
+      "trading"
+    ],
+    "verificationLevel": "V2",
+    "routerVersion": 1
+  },
+  "apiDependency": {
+    "mode": "pending-dependency",
+    "reason": "当前 Web 契约未定义领取体验金前如何权威判断已创建 API，也未定义创建 API 前如何权威判断普通/增强体验金处于使用中；需要后端提供字段、查询接口或稳定错误码，前端不得从展示状态推断。",
+    "blockerId": "API-PR-02440-MUTUAL-EXCLUSION-CONTRACT",
+    "dependencies": [
+      {
+        "id": "API-PR-02440-MUTUAL-EXCLUSION-CONTRACT",
+        "ready": false,
+        "reason": "待明确领取普通/增强体验金与创建 API 两个方向的权威状态来源、请求时点、响应字段或稳定错误码。",
+        "owner": "后端/API owner"
+      }
+    ]
+  },
+  "sourceReadiness": {
+    "figma": {
+      "requirement": "not-required",
+      "status": "not-required",
+      "reason": "PRD 图片仅标识现有任务、API 创建入口和订单来源数据口径，没有新增视觉设计或 Figma 规格。"
+    },
+    "api": {
+      "requirement": "required",
+      "status": "pending",
+      "reason": "API 与使用中普通/增强体验金的双向互斥契约尚未定义，无法安全实现前端阻断。"
+    }
+  },
+  "scopeApproval": null,
+  "autopilot": {
+    "phase": "intake",
+    "implementation": {
+      "status": "pending",
+      "changedPaths": []
+    },
+    "delivery": {
+      "status": "pending"
+    },
+    "repair": {
+      "attempts": {
+        "source": 0,
+        "scope": 0,
+        "code": 0,
+        "browser": 0,
+        "environment": 0,
+        "external-dependency": 0
+      },
+      "lastFailure": null,
+      "terminalState": null
+    },
+    "lastCheckpointAt": "2026-09-21T11:11:28.765Z"
+  },
+  "extractionFacts": [
+    {
+      "factId": "F-001",
+      "category": "constraint",
+      "statement": "2026-09-18 的变更将原先 API 合约下单前校验改为 API 权限与使用中体验金互斥；最终规则以该变更为准。",
+      "sourceIds": [
+        "SRC-F19728194BB5",
+        "SRC-A2CEE3EBCE89",
+        "SRC-36B1E8BD2663"
+      ],
+      "requirementIds": [
+        "R-003",
+        "R-004",
+        "R-005",
+        "R-006",
+        "R-010",
+        "R-011"
+      ]
+    },
+    {
+      "factId": "F-002",
+      "category": "constraint",
+      "statement": "API 交易按交易系统现有订单类型或交易来源字段识别；有效 API Key 产生且订单来源标识为 API 的有效成交属于 API 交易，Web、App 及其他非 API 渠道的有效成交属于非 API 交易。",
+      "sourceIds": [
+        "SRC-8BB7F5817641",
+        "SRC-EF8391F5DDE1",
+        "SRC-C90FBBCA9CFF",
+        "SRC-877EDC3CF15B",
+        "SRC-F2FC2C8BB43F",
+        "SRC-88B66D377029"
+      ],
+      "requirementIds": [
+        "R-007",
+        "R-008",
+        "R-009"
+      ]
+    },
+    {
+      "factId": "F-003",
+      "category": "action",
+      "statement": "福利中心新手活动、福利任务及相关活动的交易统计只累计非 API 交易；API 现货/合约交易笔数、交易额、任务进度和奖励达成条件均不计入。",
+      "sourceIds": [
+        "SRC-FF32480E3895",
+        "SRC-784EED4C2E11",
+        "SRC-2C305BC923BB",
+        "SRC-4C1163EC35F2",
+        "SRC-3550BAB23320",
+        "SRC-EE2D6BCB24A3",
+        "SRC-EA51BFE5771B"
+      ],
+      "requirementIds": [
+        "R-007"
+      ]
+    },
+    {
+      "factId": "F-004",
+      "category": "collection",
+      "statement": "API 交易不得享受福利中心卡券权益，范围包括现货/合约手续费抵扣金、现货/合约手续费返现卡、合约体验金、合约增强体验金、合约赠金和合约抵扣金；非 API 交易保持原规则。",
+      "sourceIds": [
+        "SRC-FF32480E3895",
+        "SRC-A226800BB652",
+        "SRC-AD42F2A779BF",
+        "SRC-81410B742DED",
+        "SRC-1C5AB450445B",
+        "SRC-E33904B657B6",
+        "SRC-FCB381B19D3F",
+        "SRC-944FD2B517C9",
+        "SRC-6B581F1702E7",
+        "SRC-EA51BFE5771B"
+      ],
+      "requirementIds": [
+        "R-008"
+      ]
+    },
+    {
+      "factId": "F-005",
+      "category": "action",
+      "statement": "用户已创建 API 时领取普通合约体验金必须被阻断，不打开领取弹窗，并直接 Toast“已创建 API ，暂无法领取体验金。请删除 API 后重试。”",
+      "sourceIds": [
+        "SRC-36B1E8BD2663"
+      ],
+      "requirementIds": [
+        "R-003"
+      ]
+    },
+    {
+      "factId": "F-006",
+      "category": "action",
+      "statement": "用户已创建 API 时领取合约增强体验金必须被阻断，不打开领取弹窗，并直接 Toast“已创建 API ，暂无法领取体验金。请删除 API 后重试。”",
+      "sourceIds": [
+        "SRC-36B1E8BD2663"
+      ],
+      "requirementIds": [
+        "R-004"
+      ]
+    },
+    {
+      "factId": "F-007",
+      "category": "action",
+      "statement": "用户存在使用中的普通合约体验金时创建 API 必须被阻断，并直接 Toast“存在使用中的体验金，暂无法创建 API，请在体验金使用结束后重试。”",
+      "sourceIds": [
+        "SRC-36B1E8BD2663",
+        "SRC-087B52F6981D"
+      ],
+      "requirementIds": [
+        "R-005"
+      ]
+    },
+    {
+      "factId": "F-008",
+      "category": "action",
+      "statement": "用户存在使用中的合约增强体验金时创建 API 必须被阻断，并直接 Toast“存在使用中的体验金，暂无法创建 API，请在体验金使用结束后重试。”",
+      "sourceIds": [
+        "SRC-36B1E8BD2663",
+        "SRC-087B52F6981D"
+      ],
+      "requirementIds": [
+        "R-006"
+      ]
+    },
+    {
+      "factId": "F-009",
+      "category": "dependency",
+      "statement": "上线前需排查同时存在 API 与使用中体验金的存量用户数量、体验金有效期和持仓情况，再由运营根据存量情况确定处理方案。",
+      "sourceIds": [
+        "SRC-36B1E8BD2663"
+      ],
+      "requirementIds": [
+        "R-010"
+      ]
+    },
+    {
+      "factId": "F-010",
+      "category": "constraint",
+      "statement": "最终方案明确不在 API 开仓、加仓、减仓、平仓或反向开仓链路补充体验金校验；文档中原 API 下单前阻断方案已删除。",
+      "sourceIds": [
+        "SRC-FCB381B19D3F",
+        "SRC-36B1E8BD2663"
+      ],
+      "requirementIds": [
+        "R-011"
+      ]
+    },
+    {
+      "factId": "F-011",
+      "category": "state",
+      "statement": "API 交易剔除从实际上线时点生效；上线前数据不追溯、不重算、不回退，已完成状态及已发奖励不受影响；跨生效点的进行中任务保留已有进度，上线后仅累计非 API 交易。",
+      "sourceIds": [
+        "SRC-2BBF7B8A3B2E"
+      ],
+      "requirementIds": [
+        "R-009"
+      ]
+    },
+    {
+      "factId": "F-012",
+      "category": "content",
+      "statement": "活动规则“1. 报名与参与要求”新增第（4）条：“（4）通过 API 产生的交易不计入福利中心交易类任务的任务进度及活动交易统计。”",
+      "sourceIds": [
+        "SRC-16ACB2DE34C1"
+      ],
+      "requirementIds": [
+        "R-001"
+      ]
+    },
+    {
+      "factId": "F-013",
+      "category": "content",
+      "statement": "活动规则“5. 奖励发放与使用说明”替换为 PRD 指定的三段完整文案，并明确交易类卡券权益仅支持非 API 交易。",
+      "sourceIds": [
+        "SRC-FCD2D4E42B7F"
+      ],
+      "requirementIds": [
+        "R-002"
+      ]
+    },
+    {
+      "factId": "F-014",
+      "category": "constraint",
+      "statement": "非交易类任务不受 API 交易剔除规则影响；PRD 图片仅用于标识现有的新手、每日和挑战任务入口，没有新增视觉设计要求。",
+      "sourceIds": [
+        "SRC-EE9EC7B6239C",
+        "SRC-8DCD51DE0226",
+        "SRC-7E19CB7D2B13"
+      ],
+      "requirementIds": [
+        "R-007"
+      ]
+    },
+    {
+      "factId": "F-015",
+      "category": "constraint",
+      "statement": "需求目的是区分真实用户交易与 API 自动化交易，对两类交易执行差异化的任务统计和卡券权益规则。",
+      "sourceIds": [
+        "SRC-7E2A757FC8EB",
+        "SRC-09649B7EB416"
+      ],
+      "requirementIds": [
+        "R-007",
+        "R-008"
+      ]
+    }
+  ],
+  "sourceUnitDispositions": [
+    {
+      "sourceId": "SRC-F75AA105A4A3",
+      "disposition": "not-a-requirement",
+      "reason": "文档标题和内审状态，不是独立交付需求。"
+    },
+    {
+      "sourceId": "SRC-64793AD72554",
+      "disposition": "not-a-requirement",
+      "reason": "版本号、创建日期和审核人元信息。"
+    },
+    {
+      "sourceId": "SRC-F7FF8F845F96",
+      "disposition": "not-a-requirement",
+      "reason": "变更日志容器，关键最终变更已由 2026-09-18 行单独锚定。"
+    },
+    {
+      "sourceId": "SRC-CE2ADFD86D07",
+      "disposition": "not-a-requirement",
+      "reason": "创建文稿记录，不是业务需求。"
+    },
+    {
+      "sourceId": "SRC-726EC9EFF7E1",
+      "disposition": "not-a-requirement",
+      "reason": "评审记录容器，仅提供会议链接。"
+    },
+    {
+      "sourceId": "SRC-C9DC4017A5A8",
+      "disposition": "not-a-requirement",
+      "reason": "2026-09-16 评审会议链接，不含文档内独立验收口径。"
+    },
+    {
+      "sourceId": "SRC-662F61CDB9B1",
+      "disposition": "not-a-requirement",
+      "reason": "2026-09-18 评审会议链接，不含文档内独立验收口径。"
+    },
+    {
+      "sourceId": "SRC-40DDB8A8F040",
+      "disposition": "not-a-requirement",
+      "reason": "空评审记录行。"
+    },
+    {
+      "sourceId": "SRC-9BA3AD4000EC",
+      "disposition": "not-a-requirement",
+      "reason": "数据定义表容器，两个数据行已分别锚定。"
+    },
+    {
+      "sourceId": "SRC-DF78F45B7965",
+      "disposition": "not-a-requirement",
+      "reason": "文档栅格列分隔标记，无业务语义。"
+    },
+    {
+      "sourceId": "SRC-FAA0361C207E",
+      "disposition": "not-a-requirement",
+      "reason": "文档栅格结束标记，无业务语义。"
+    },
+    {
+      "sourceId": "SRC-A7F66BE3C581",
+      "disposition": "not-a-requirement",
+      "reason": "卡券规则表容器，业务行已分别锚定。"
+    },
+    {
+      "sourceId": "SRC-900F35C7D02D",
+      "disposition": "not-a-requirement",
+      "reason": "卡券规则表头。"
+    },
+    {
+      "sourceId": "SRC-722B39FF9C0B",
+      "disposition": "not-a-requirement",
+      "reason": "0918 规则表容器，唯一业务行已单独锚定。"
+    },
+    {
+      "sourceId": "SRC-58CC3F6C0458",
+      "disposition": "not-a-requirement",
+      "reason": "0918 规则表头。"
+    },
+    {
+      "sourceId": "SRC-62C41575868F",
+      "disposition": "not-a-requirement",
+      "reason": "数据口径表容器，三个场景行已分别处理。"
+    },
+    {
+      "sourceId": "SRC-5299DE896FE1",
+      "disposition": "not-a-requirement",
+      "reason": "活动规则提示表容器，两条文案行已分别锚定。"
+    },
+    {
+      "sourceId": "SRC-A2CEE3EBCE89",
+      "disposition": "not-a-requirement",
+      "reason": "“0918改动”是版本变更说明标题，具体最终规则已由后续表格行锚定。"
+    },
+    {
+      "sourceId": "SRC-E598B18AB0B1",
+      "disposition": "not-a-requirement",
+      "reason": "“API类型订单区分参考如下”是数据口径示例标题，具体订单来源口径已由后续表格行锚定。"
+    }
+  ],
+  "evidenceCommands": [
+    {
+      "evidenceId": "E-001",
+      "kind": "copy-literal",
+      "argv": [
+        "node",
+        "apps/web/scripts/dom-contract/pr-02440/activity-rules.mjs"
+      ],
+      "requirementIds": [
+        "R-001",
+        "R-002"
+      ],
+      "surfaceIds": [
+        "S-001",
+        "S-002",
+        "S-003",
+        "S-004",
+        "S-005",
+        "S-006"
+      ]
+    },
+    {
+      "evidenceId": "E-002",
+      "kind": "component-dom",
+      "argv": [
+        "node",
+        "apps/web/scripts/dom-contract/pr-02440/mutual-exclusion-ui.mjs"
+      ],
+      "requirementIds": [
+        "R-003",
+        "R-004",
+        "R-005",
+        "R-006"
+      ],
+      "surfaceIds": [
+        "S-007",
+        "S-009",
+        "S-011",
+        "S-013"
+      ]
+    },
+    {
+      "evidenceId": "E-003",
+      "kind": "api-contract",
+      "argv": [
+        "pnpm",
+        "--filter",
+        "@fameex/web",
+        "exec",
+        "vitest",
+        "run",
+        "apps/web/src/services/api/pr02440MutualExclusion.test.ts"
+      ],
+      "requirementIds": [
+        "R-003",
+        "R-004",
+        "R-005",
+        "R-006"
+      ],
+      "surfaceIds": [
+        "S-008",
+        "S-010",
+        "S-012",
+        "S-014"
+      ]
+    },
+    {
+      "evidenceId": "E-004",
+      "kind": "browser-interaction",
+      "argv": [
+        "node",
+        "apps/web/scripts/e2e/pr-02440/mutual-exclusion.mjs"
+      ],
+      "requirementIds": [
+        "R-003",
+        "R-004",
+        "R-005",
+        "R-006"
+      ],
+      "surfaceIds": [
+        "S-007",
+        "S-009",
+        "S-011",
+        "S-013"
+      ]
+    },
+    {
+      "evidenceId": "E-005",
+      "kind": "contract-or-scenario-tests",
+      "argv": [
+        "node",
+        "apps/web/scripts/dom-contract/pr-02440/all-contracts.mjs"
+      ],
+      "requirementIds": [
+        "R-001",
+        "R-002",
+        "R-003",
+        "R-004",
+        "R-005",
+        "R-006"
+      ],
+      "surfaceIds": [
+        "S-001",
+        "S-002",
+        "S-003",
+        "S-004",
+        "S-005",
+        "S-006",
+        "S-007",
+        "S-008",
+        "S-009",
+        "S-010",
+        "S-011",
+        "S-012",
+        "S-013",
+        "S-014"
+      ]
+    },
+    {
+      "evidenceId": "E-006",
+      "kind": "directed-quality",
+      "argv": [
+        "pnpm",
+        "exec",
+        "biome",
+        "check",
+        "apps/web/src/apps/ApiManagement/components/CreateApi.tsx",
+        "apps/web/src/apps/MyRewards/index.tsx",
+        "apps/web/src/services/api/user.ts",
+        "apps/web/src/services/api/trial-fee.ts",
+        "apps/web/src/services/api/pr02440MutualExclusion.test.ts",
+        "apps/web/src/apps/Rewards/components/task/WelfareActivityRulesFlat.tsx",
+        "apps/web/src/apps/Rewards/components/task/WelfareActivityRulesAccordion.tsx",
+        "apps/web/src/i18n/locales/zh-CN/rewards.json",
+        "apps/web/scripts/dom-contract/pr-02440/activity-rules.mjs",
+        "apps/web/scripts/dom-contract/pr-02440/mutual-exclusion-ui.mjs",
+        "apps/web/scripts/dom-contract/pr-02440/all-contracts.mjs",
+        "apps/web/scripts/e2e/pr-02440/mutual-exclusion.mjs"
+      ]
+    }
+  ],
+  "requirementsAuthor": {
+    "kind": "model",
+    "id": "codex/gpt-5",
+    "client": "codex",
+    "sessionId": "01a0c380-7d5d-77e0-9bf2-60e9fddbb343"
+  },
+  "reviewAdjudication": null,
+  "extractionAudit": {
+    "schemaVersion": 1,
+    "auditedAt": "2026-09-21T11:31:00.846Z",
+    "sourceFingerprint": "753f24bcaf6daca56b20ce25b7dce552a2f3ce587933c3b3bd5d4df733771465",
+    "requirementsFingerprint": "a1eac80ecb9cf0216a33144d011ef19de39aeacdbe89c5f9707f30b3c7b79f08",
+    "evidencePlanFingerprint": "a55e61296415556ef4573a5cf63927f0bf13995e84117d38158f7d807ff3bd5f",
+    "sourceUnitsFingerprint": "76b83cdbb15e46afa20088cd4e7198d58188b4c266a6dd4f798ed3a3a9e9214e",
+    "status": "pass",
+    "checks": [
+      {
+        "code": "INTAKE_SOURCE_BINDING",
+        "ok": true,
+        "problems": []
+      },
+      {
+        "code": "EXTRACTION_STRUCTURE",
+        "ok": true,
+        "problems": []
+      },
+      {
+        "code": "EXTRACTION_TRACEABILITY",
+        "ok": true,
+        "problems": []
+      },
+      {
+        "code": "EVIDENCE_COMMANDS",
+        "ok": true,
+        "problems": []
+      }
+    ]
+  },
+  "reviewControl": {
+    "sourceFingerprint": "753f24bcaf6daca56b20ce25b7dce552a2f3ce587933c3b3bd5d4df733771465",
+    "attempts": 1,
+    "maxAttempts": 2,
+    "status": "changes-required",
+    "history": [
+      {
+        "reviewRunId": "review-f367a1df-cfff-46a4-8beb-ff32497e9cc2",
+        "completedAt": "2026-09-21T11:33:57.399Z",
+        "requirementsFingerprint": "a1eac80ecb9cf0216a33144d011ef19de39aeacdbe89c5f9707f30b3c7b79f08",
+        "verdict": "changes-required",
+        "findingSignature": "07a61f6b7899dc3b2fb0fb572a645b51feb0a42f65d8bf6c481fc03244059aca",
+        "findings": [
+          {
+            "findingId": "FIND-001",
+            "code": "missing-requirement",
+            "message": "缺少可执行的 API/非 API 交易识别要求。候选需求虽引用了相关来源并使用“API 交易”概念，但未规定：应依据交易系统现有订单类型/订单来源字段分类；只有订单来源标识为 API、由有效 API Key 产生的有效成交才属于 API 交易；Web、App 及其他非 API 渠道的有效成交属于非 API 交易。也未列出负责该分类逻辑的后端受影响面。",
+            "sourceIds": [
+              "SRC-8BB7F5817641",
+              "SRC-EF8391F5DDE1",
+              "SRC-C90FBBCA9CFF",
+              "SRC-877EDC3CF15B",
+              "SRC-F2FC2C8BB43F",
+              "SRC-88B66D377029"
+            ],
+            "disposition": "open"
+          },
+          {
+            "findingId": "FIND-002",
+            "code": "missing-requirement",
+            "message": "合约赠金规则覆盖不完整。R-008 仅概括 API 交易不能使用合约赠金，并列出笼统的下单/结算面；来源还明确要求赠金仓位不支持通过 API 开仓或平仓、必须通过 Web/App 操作，返回固定文案“合约赠金暂不支持 API 交易，请前往 Web/App 操作。”，且仅持有未使用的赠金卡券不得影响普通 API 合约交易。这些状态条件、例外和提示文案均未形成候选需求。",
+            "sourceIds": [
+              "SRC-E33904B657B6",
+              "SRC-FCB381B19D3F"
+            ],
+            "disposition": "open"
+          },
+          {
+            "findingId": "FIND-003",
+            "code": "missing-surface",
+            "message": "R-010 要求排查后由运营依据存量情况确定处置方案，但受影响面只覆盖用户数量、体验金有效期和持仓三项查询，没有覆盖排查结果汇总、运营决策及存量处置方案的记录/执行面。",
+            "sourceIds": [
+              "SRC-36B1E8BD2663"
+            ],
+            "disposition": "open"
+          }
+        ],
+        "candidateRequirements": [
+          {
+            "requirementId": "R-001",
+            "sourceAnchors": [
+              {
+                "type": "table",
+                "sourceId": "SRC-16ACB2DE34C1"
+              }
+            ],
+            "statement": "福利中心活动规则“1. 报名与参与要求”新增第（4）条固定文案“（4）通过 API 产生的交易不计入福利中心交易类任务的任务进度及活动交易统计。”，桌面平铺与移动折叠展示使用同一 zh-CN 文案源。",
+            "status": "doing",
+            "collectionSemantics": {
+              "kind": "explicit-set",
+              "expectedCount": 3
+            },
+            "affectedSurfaces": [
+              {
+                "surfaceId": "S-001",
+                "locator": "apps/web/src/i18n/locales/zh-CN/rewards.json welfareRules.registration.item4",
+                "disposition": "already-covered",
+                "reason": "当前 HEAD 40458e4375 已按 PRD 增加固定文案。"
+              },
+              {
+                "surfaceId": "S-002",
+                "locator": "apps/web/src/apps/Rewards/components/task/WelfareActivityRulesFlat.tsx 报名与参与要求平铺规则",
+                "disposition": "already-covered",
+                "reason": "当前 HEAD 40458e4375 已消费共享 item4 文案。"
+              },
+              {
+                "surfaceId": "S-003",
+                "locator": "apps/web/src/apps/Rewards/components/task/WelfareActivityRulesAccordion.tsx 报名与参与要求折叠规则",
+                "disposition": "already-covered",
+                "reason": "当前 HEAD 40458e4375 已消费共享 item4 文案。"
+              }
+            ]
+          },
+          {
+            "requirementId": "R-002",
+            "sourceAnchors": [
+              {
+                "type": "table",
+                "sourceId": "SRC-FCD2D4E42B7F"
+              }
+            ],
+            "statement": "福利中心活动规则“5. 奖励发放与使用说明”替换为 PRD 指定的三段完整固定文案，桌面平铺与移动折叠展示复用同一 zh-CN 文案源。",
+            "status": "doing",
+            "collectionSemantics": {
+              "kind": "explicit-set",
+              "expectedCount": 3
+            },
+            "affectedSurfaces": [
+              {
+                "surfaceId": "S-004",
+                "locator": "apps/web/src/i18n/locales/zh-CN/rewards.json welfareRules.rewardUsage",
+                "disposition": "already-covered",
+                "reason": "当前 HEAD 40458e4375 已按 PRD 替换为 intro/detail/apiRestriction 三段文案。"
+              },
+              {
+                "surfaceId": "S-005",
+                "locator": "apps/web/src/apps/Rewards/components/task/WelfareActivityRulesFlat.tsx 奖励发放与使用说明平铺规则",
+                "disposition": "already-covered",
+                "reason": "当前 HEAD 40458e4375 已渲染三段共享文案。"
+              },
+              {
+                "surfaceId": "S-006",
+                "locator": "apps/web/src/apps/Rewards/components/task/WelfareActivityRulesAccordion.tsx 奖励发放与使用说明折叠规则",
+                "disposition": "already-covered",
+                "reason": "当前 HEAD 40458e4375 已渲染三段共享文案。"
+              }
+            ]
+          },
+          {
+            "requirementId": "R-003",
+            "sourceAnchors": [
+              {
+                "type": "table",
+                "sourceId": "SRC-F19728194BB5"
+              },
+              {
+                "type": "table",
+                "sourceId": "SRC-36B1E8BD2663"
+              }
+            ],
+            "statement": "已创建 API 的用户点击领取普通合约体验金时，在打开领取弹窗前阻断，并 Toast“已创建 API ，暂无法领取体验金。请删除 API 后重试。”",
+            "status": "doing",
+            "collectionSemantics": {
+              "kind": "explicit-set",
+              "expectedCount": 2
+            },
+            "affectedSurfaces": [
+              {
+                "surfaceId": "S-007",
+                "locator": "apps/web/src/apps/MyRewards/index.tsx handleActivateExperience 普通合约体验金领取入口",
+                "disposition": "implement",
+                "blockedBy": [
+                  "API-PR-02440-MUTUAL-EXCLUSION-CONTRACT"
+                ],
+                "reason": "需在 setActivateModalOpen(true) 前依据后端权威状态阻断。"
+              },
+              {
+                "surfaceId": "S-008",
+                "locator": "apps/web/src/services/api/trial-fee.ts 普通合约体验金领取前 API/API-Key 存在状态契约",
+                "disposition": "implement",
+                "blockedBy": [
+                  "API-PR-02440-MUTUAL-EXCLUSION-CONTRACT"
+                ],
+                "reason": "当前 activate-check 契约未定义已创建 API 的字段、查询接口或稳定错误码。"
+              }
+            ]
+          },
+          {
+            "requirementId": "R-004",
+            "sourceAnchors": [
+              {
+                "type": "table",
+                "sourceId": "SRC-F19728194BB5"
+              },
+              {
+                "type": "table",
+                "sourceId": "SRC-36B1E8BD2663"
+              }
+            ],
+            "statement": "已创建 API 的用户点击领取合约增强体验金时，在打开领取弹窗前阻断，并 Toast“已创建 API ，暂无法领取体验金。请删除 API 后重试。”",
+            "status": "doing",
+            "collectionSemantics": {
+              "kind": "explicit-set",
+              "expectedCount": 2
+            },
+            "affectedSurfaces": [
+              {
+                "surfaceId": "S-009",
+                "locator": "apps/web/src/apps/MyRewards/index.tsx handleActivateExperience 合约增强体验金领取入口",
+                "disposition": "implement",
+                "blockedBy": [
+                  "API-PR-02440-MUTUAL-EXCLUSION-CONTRACT"
+                ],
+                "reason": "需在 setActivateModalOpen(true) 前依据后端权威状态阻断。"
+              },
+              {
+                "surfaceId": "S-010",
+                "locator": "apps/web/src/services/api/trial-fee.ts 合约增强体验金领取前 API/API-Key 存在状态契约",
+                "disposition": "implement",
+                "blockedBy": [
+                  "API-PR-02440-MUTUAL-EXCLUSION-CONTRACT"
+                ],
+                "reason": "当前 activate-check 契约未定义已创建 API 的字段、查询接口或稳定错误码。"
+              }
+            ]
+          },
+          {
+            "requirementId": "R-005",
+            "sourceAnchors": [
+              {
+                "type": "table",
+                "sourceId": "SRC-F19728194BB5"
+              },
+              {
+                "type": "table",
+                "sourceId": "SRC-36B1E8BD2663"
+              },
+              {
+                "type": "image",
+                "sourceId": "SRC-087B52F6981D"
+              }
+            ],
+            "statement": "用户存在使用中的普通合约体验金时提交创建 API，创建请求必须被阻断，并 Toast“存在使用中的体验金，暂无法创建 API，请在体验金使用结束后重试。”",
+            "status": "doing",
+            "collectionSemantics": {
+              "kind": "explicit-set",
+              "expectedCount": 2
+            },
+            "affectedSurfaces": [
+              {
+                "surfaceId": "S-011",
+                "locator": "apps/web/src/apps/ApiManagement/components/CreateApi.tsx CreateApiForm.onSubmit 普通合约体验金互斥校验",
+                "disposition": "implement",
+                "blockedBy": [
+                  "API-PR-02440-MUTUAL-EXCLUSION-CONTRACT"
+                ],
+                "reason": "需在 useCreateApi 调用前或按稳定后端错误码阻断。"
+              },
+              {
+                "surfaceId": "S-012",
+                "locator": "apps/web/src/services/api/user.ts useCreateApi 普通合约体验金使用中状态/错误码契约",
+                "disposition": "implement",
+                "blockedBy": [
+                  "API-PR-02440-MUTUAL-EXCLUSION-CONTRACT"
+                ],
+                "reason": "当前 create_open_api 契约未定义普通合约体验金使用中字段或稳定错误码。"
+              }
+            ]
+          },
+          {
+            "requirementId": "R-006",
+            "sourceAnchors": [
+              {
+                "type": "table",
+                "sourceId": "SRC-F19728194BB5"
+              },
+              {
+                "type": "table",
+                "sourceId": "SRC-36B1E8BD2663"
+              },
+              {
+                "type": "image",
+                "sourceId": "SRC-087B52F6981D"
+              }
+            ],
+            "statement": "用户存在使用中的合约增强体验金时提交创建 API，创建请求必须被阻断，并 Toast“存在使用中的体验金，暂无法创建 API，请在体验金使用结束后重试。”",
+            "status": "doing",
+            "collectionSemantics": {
+              "kind": "explicit-set",
+              "expectedCount": 2
+            },
+            "affectedSurfaces": [
+              {
+                "surfaceId": "S-013",
+                "locator": "apps/web/src/apps/ApiManagement/components/CreateApi.tsx CreateApiForm.onSubmit 合约增强体验金互斥校验",
+                "disposition": "implement",
+                "blockedBy": [
+                  "API-PR-02440-MUTUAL-EXCLUSION-CONTRACT"
+                ],
+                "reason": "需在 useCreateApi 调用前或按稳定后端错误码阻断。"
+              },
+              {
+                "surfaceId": "S-014",
+                "locator": "apps/web/src/services/api/user.ts useCreateApi 合约增强体验金使用中状态/错误码契约",
+                "disposition": "implement",
+                "blockedBy": [
+                  "API-PR-02440-MUTUAL-EXCLUSION-CONTRACT"
+                ],
+                "reason": "当前 create_open_api 契约未定义合约增强体验金使用中字段或稳定错误码。"
+              }
+            ]
+          },
+          {
+            "requirementId": "R-007",
+            "sourceAnchors": [
+              {
+                "type": "text",
+                "sourceId": "SRC-7E2A757FC8EB"
+              },
+              {
+                "type": "text",
+                "sourceId": "SRC-09649B7EB416"
+              },
+              {
+                "type": "text",
+                "sourceId": "SRC-FF32480E3895"
+              },
+              {
+                "type": "table",
+                "sourceId": "SRC-8BB7F5817641"
+              },
+              {
+                "type": "table",
+                "sourceId": "SRC-EF8391F5DDE1"
+              },
+              {
+                "type": "text",
+                "sourceId": "SRC-C90FBBCA9CFF"
+              },
+              {
+                "type": "text",
+                "sourceId": "SRC-877EDC3CF15B"
+              },
+              {
+                "type": "text",
+                "sourceId": "SRC-784EED4C2E11"
+              },
+              {
+                "type": "text",
+                "sourceId": "SRC-2C305BC923BB"
+              },
+              {
+                "type": "text",
+                "sourceId": "SRC-4C1163EC35F2"
+              },
+              {
+                "type": "text",
+                "sourceId": "SRC-EE9EC7B6239C"
+              },
+              {
+                "type": "image",
+                "sourceId": "SRC-8DCD51DE0226"
+              },
+              {
+                "type": "image",
+                "sourceId": "SRC-7E19CB7D2B13"
+              },
+              {
+                "type": "table",
+                "sourceId": "SRC-3550BAB23320"
+              },
+              {
+                "type": "table",
+                "sourceId": "SRC-EE2D6BCB24A3"
+              },
+              {
+                "type": "text",
+                "sourceId": "SRC-F2FC2C8BB43F"
+              },
+              {
+                "type": "image",
+                "sourceId": "SRC-88B66D377029"
+              },
+              {
+                "type": "text",
+                "sourceId": "SRC-EA51BFE5771B"
+              }
+            ],
+            "statement": "后端交易与活动统计需从福利中心交易类任务和相关活动中剔除 API 现货/合约交易笔数、交易额、任务进度和奖励达成条件，仅继续累计非 API 交易；非交易类任务不受影响。",
+            "status": "deferred",
+            "collectionSemantics": {
+              "kind": "explicit-set",
+              "expectedCount": 6
+            },
+            "affectedSurfaces": [
+              {
+                "surfaceId": "S-015",
+                "locator": "backend welfare statistics: spot trade count",
+                "disposition": "deferred",
+                "reason": "后端统计责任，不在当前 Web 仓实现。",
+                "owner": "福利中心后端/数据 owner",
+                "batch": "PR-02440-backend"
+              },
+              {
+                "surfaceId": "S-016",
+                "locator": "backend welfare statistics: futures trade count",
+                "disposition": "deferred",
+                "reason": "后端统计责任，不在当前 Web 仓实现。",
+                "owner": "福利中心后端/数据 owner",
+                "batch": "PR-02440-backend"
+              },
+              {
+                "surfaceId": "S-017",
+                "locator": "backend welfare statistics: spot trade amount",
+                "disposition": "deferred",
+                "reason": "后端统计责任，不在当前 Web 仓实现。",
+                "owner": "福利中心后端/数据 owner",
+                "batch": "PR-02440-backend"
+              },
+              {
+                "surfaceId": "S-018",
+                "locator": "backend welfare statistics: futures trade amount",
+                "disposition": "deferred",
+                "reason": "后端统计责任，不在当前 Web 仓实现。",
+                "owner": "福利中心后端/数据 owner",
+                "batch": "PR-02440-backend"
+              },
+              {
+                "surfaceId": "S-019",
+                "locator": "backend welfare task progress aggregation",
+                "disposition": "deferred",
+                "reason": "后端任务进度责任，不在当前 Web 仓实现。",
+                "owner": "福利中心后端/数据 owner",
+                "batch": "PR-02440-backend"
+              },
+              {
+                "surfaceId": "S-020",
+                "locator": "backend welfare reward eligibility evaluation",
+                "disposition": "deferred",
+                "reason": "后端奖励达成判断责任，不在当前 Web 仓实现。",
+                "owner": "福利中心后端/数据 owner",
+                "batch": "PR-02440-backend"
+              }
+            ]
+          },
+          {
+            "requirementId": "R-008",
+            "sourceAnchors": [
+              {
+                "type": "text",
+                "sourceId": "SRC-7E2A757FC8EB"
+              },
+              {
+                "type": "text",
+                "sourceId": "SRC-09649B7EB416"
+              },
+              {
+                "type": "text",
+                "sourceId": "SRC-FF32480E3895"
+              },
+              {
+                "type": "table",
+                "sourceId": "SRC-8BB7F5817641"
+              },
+              {
+                "type": "table",
+                "sourceId": "SRC-EF8391F5DDE1"
+              },
+              {
+                "type": "text",
+                "sourceId": "SRC-C90FBBCA9CFF"
+              },
+              {
+                "type": "text",
+                "sourceId": "SRC-877EDC3CF15B"
+              },
+              {
+                "type": "text",
+                "sourceId": "SRC-A226800BB652"
+              },
+              {
+                "type": "text",
+                "sourceId": "SRC-AD42F2A779BF"
+              },
+              {
+                "type": "text",
+                "sourceId": "SRC-81410B742DED"
+              },
+              {
+                "type": "text",
+                "sourceId": "SRC-1C5AB450445B"
+              },
+              {
+                "type": "table",
+                "sourceId": "SRC-E33904B657B6"
+              },
+              {
+                "type": "table",
+                "sourceId": "SRC-FCB381B19D3F"
+              },
+              {
+                "type": "table",
+                "sourceId": "SRC-944FD2B517C9"
+              },
+              {
+                "type": "table",
+                "sourceId": "SRC-6B581F1702E7"
+              },
+              {
+                "type": "text",
+                "sourceId": "SRC-F2FC2C8BB43F"
+              },
+              {
+                "type": "image",
+                "sourceId": "SRC-88B66D377029"
+              },
+              {
+                "type": "text",
+                "sourceId": "SRC-EA51BFE5771B"
+              }
+            ],
+            "statement": "后端交易下单与结算需保证 API 交易不能使用福利中心六类卡券权益：手续费抵扣金（现货/合约）、手续费返现卡（现货/合约）、合约体验金、合约增强体验金、合约赠金、合约抵扣金；非 API 交易维持原规则。",
+            "status": "deferred",
+            "collectionSemantics": {
+              "kind": "explicit-set",
+              "expectedCount": 6
+            },
+            "affectedSurfaces": [
+              {
+                "surfaceId": "S-021",
+                "locator": "backend settlement: spot/futures fee deduction credit",
+                "disposition": "deferred",
+                "reason": "交易结算后端责任，不在当前 Web 仓实现。",
+                "owner": "交易/卡券后端 owner",
+                "batch": "PR-02440-backend"
+              },
+              {
+                "surfaceId": "S-022",
+                "locator": "backend settlement: spot/futures fee cashback card",
+                "disposition": "deferred",
+                "reason": "交易结算后端责任，不在当前 Web 仓实现。",
+                "owner": "交易/卡券后端 owner",
+                "batch": "PR-02440-backend"
+              },
+              {
+                "surfaceId": "S-023",
+                "locator": "backend settlement: contract trial bonus",
+                "disposition": "deferred",
+                "reason": "交易结算后端责任，不在当前 Web 仓实现。",
+                "owner": "交易/卡券后端 owner",
+                "batch": "PR-02440-backend"
+              },
+              {
+                "surfaceId": "S-024",
+                "locator": "backend settlement: enhanced contract trial bonus",
+                "disposition": "deferred",
+                "reason": "交易结算后端责任，不在当前 Web 仓实现。",
+                "owner": "交易/卡券后端 owner",
+                "batch": "PR-02440-backend"
+              },
+              {
+                "surfaceId": "S-025",
+                "locator": "backend order and settlement: contract gift bonus",
+                "disposition": "deferred",
+                "reason": "交易下单/结算后端责任，不在当前 Web 仓实现。",
+                "owner": "交易/卡券后端 owner",
+                "batch": "PR-02440-backend"
+              },
+              {
+                "surfaceId": "S-026",
+                "locator": "backend settlement: contract deduction credit",
+                "disposition": "deferred",
+                "reason": "交易结算后端责任，不在当前 Web 仓实现。",
+                "owner": "交易/卡券后端 owner",
+                "batch": "PR-02440-backend"
+              }
+            ]
+          },
+          {
+            "requirementId": "R-009",
+            "sourceAnchors": [
+              {
+                "type": "table",
+                "sourceId": "SRC-8BB7F5817641"
+              },
+              {
+                "type": "table",
+                "sourceId": "SRC-EF8391F5DDE1"
+              },
+              {
+                "type": "text",
+                "sourceId": "SRC-C90FBBCA9CFF"
+              },
+              {
+                "type": "text",
+                "sourceId": "SRC-877EDC3CF15B"
+              },
+              {
+                "type": "text",
+                "sourceId": "SRC-F2FC2C8BB43F"
+              },
+              {
+                "type": "image",
+                "sourceId": "SRC-88B66D377029"
+              },
+              {
+                "type": "text",
+                "sourceId": "SRC-2BBF7B8A3B2E"
+              }
+            ],
+            "statement": "后端按上线生效点执行新旧数据兼容：规则自实际上线起生效；生效前 API 交易进度不追溯、不重算、不回退；已完成状态和已发奖励不受影响；生效后 API 交易不再累计；跨生效点任务保留旧进度并仅继续累计非 API 交易。",
+            "status": "deferred",
+            "collectionSemantics": {
+              "kind": "explicit-set",
+              "expectedCount": 5
+            },
+            "affectedSurfaces": [
+              {
+                "surfaceId": "S-027",
+                "locator": "backend rollout rule: effective-at-production-release",
+                "disposition": "deferred",
+                "reason": "上线生效点由后端/发布配置执行。",
+                "owner": "福利中心后端/发布 owner",
+                "batch": "PR-02440-backend"
+              },
+              {
+                "surfaceId": "S-028",
+                "locator": "backend migration rule: no historical recalculation or rollback",
+                "disposition": "deferred",
+                "reason": "历史进度处理属于后端数据策略。",
+                "owner": "福利中心后端/数据 owner",
+                "batch": "PR-02440-backend"
+              },
+              {
+                "surfaceId": "S-029",
+                "locator": "backend migration rule: completed tasks and issued rewards unchanged",
+                "disposition": "deferred",
+                "reason": "历史任务与奖励状态属于后端数据策略。",
+                "owner": "福利中心后端/数据 owner",
+                "batch": "PR-02440-backend"
+              },
+              {
+                "surfaceId": "S-030",
+                "locator": "backend post-release aggregation: exclude new API trades",
+                "disposition": "deferred",
+                "reason": "生效后聚合逻辑属于后端统计责任。",
+                "owner": "福利中心后端/数据 owner",
+                "batch": "PR-02440-backend"
+              },
+              {
+                "surfaceId": "S-031",
+                "locator": "backend in-progress task migration: preserve old progress and accumulate non-API only",
+                "disposition": "deferred",
+                "reason": "跨生效点任务聚合属于后端统计责任。",
+                "owner": "福利中心后端/数据 owner",
+                "batch": "PR-02440-backend"
+              }
+            ]
+          },
+          {
+            "requirementId": "R-010",
+            "sourceAnchors": [
+              {
+                "type": "table",
+                "sourceId": "SRC-F19728194BB5"
+              },
+              {
+                "type": "table",
+                "sourceId": "SRC-36B1E8BD2663"
+              }
+            ],
+            "statement": "上线前由后端/运营排查同时存在 API 与使用中体验金的存量用户数量、体验金有效期和持仓情况，并依据排查结果确定存量处置方案。",
+            "status": "deferred",
+            "collectionSemantics": {
+              "kind": "explicit-set",
+              "expectedCount": 3
+            },
+            "affectedSurfaces": [
+              {
+                "surfaceId": "S-032",
+                "locator": "operations audit: affected user count",
+                "disposition": "deferred",
+                "reason": "需查询生产存量数据。",
+                "owner": "福利中心后端/运营",
+                "batch": "PR-02440-pre-release"
+              },
+              {
+                "surfaceId": "S-033",
+                "locator": "operations audit: active trial bonus expiry",
+                "disposition": "deferred",
+                "reason": "需查询生产存量数据。",
+                "owner": "福利中心后端/运营",
+                "batch": "PR-02440-pre-release"
+              },
+              {
+                "surfaceId": "S-034",
+                "locator": "operations audit: affected users' positions",
+                "disposition": "deferred",
+                "reason": "需查询生产持仓数据。",
+                "owner": "福利中心后端/运营",
+                "batch": "PR-02440-pre-release"
+              }
+            ]
+          },
+          {
+            "requirementId": "R-011",
+            "sourceAnchors": [
+              {
+                "type": "table",
+                "sourceId": "SRC-F19728194BB5"
+              },
+              {
+                "type": "table",
+                "sourceId": "SRC-FCB381B19D3F"
+              },
+              {
+                "type": "table",
+                "sourceId": "SRC-36B1E8BD2663"
+              }
+            ],
+            "statement": "本期不在 API 合约开仓、加仓、减仓、平仓或反向开仓链路新增“使用中体验金”校验，原 PRD 中对应的 API 下单前阻断方案不实施。",
+            "status": "not-doing",
+            "collectionSemantics": {
+              "kind": "explicit-set",
+              "expectedCount": 5
+            },
+            "affectedSurfaces": [
+              {
+                "surfaceId": "S-035",
+                "locator": "API futures open-position path",
+                "disposition": "not-applicable",
+                "reason": "2026-09-18 变更明确改为创建/领取互斥，不在交易链路补校验。"
+              },
+              {
+                "surfaceId": "S-036",
+                "locator": "API futures add-position path",
+                "disposition": "not-applicable",
+                "reason": "2026-09-18 变更明确改为创建/领取互斥，不在交易链路补校验。"
+              },
+              {
+                "surfaceId": "S-037",
+                "locator": "API futures reduce-position path",
+                "disposition": "not-applicable",
+                "reason": "2026-09-18 变更明确改为创建/领取互斥，不在交易链路补校验。"
+              },
+              {
+                "surfaceId": "S-038",
+                "locator": "API futures close-position path",
+                "disposition": "not-applicable",
+                "reason": "2026-09-18 变更明确改为创建/领取互斥，不在交易链路补校验。"
+              },
+              {
+                "surfaceId": "S-039",
+                "locator": "API futures reverse-position path",
+                "disposition": "not-applicable",
+                "reason": "2026-09-18 变更明确改为创建/领取互斥，不在交易链路补校验。"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
