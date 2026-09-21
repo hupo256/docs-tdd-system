@@ -268,6 +268,38 @@ try {
   console.error(`workflow resolution failed: ${error.message}`)
   process.exit(1)
 }
+
+// Worktree 流程检查：对于会修改代码的命令，确保不在主分支上工作
+const codeModifyingCommands = ['extract', 'review', 'checkpoint', 'commit', 'dev-check', 'manual-test']
+if (codeModifyingCommands.includes(command)) {
+  try {
+    const currentBranch = spawnSync('git', ['branch', '--show-current'], {
+      cwd: repoRoot,
+      encoding: 'utf8'
+    }).stdout.trim()
+
+    const protectedBranches = ['online', 'main', 'master', 'develop']
+    if (protectedBranches.includes(currentBranch)) {
+      console.error(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`)
+      console.error(`❌ 不能直接在 ${currentBranch} 分支工作`)
+      console.error(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`)
+      console.error(``)
+      console.error(`请使用 worktree 创建隔离的工作环境：`)
+      console.error(``)
+      console.error(`  node common/engine/agent-scripts/prepare-coding-worktree.mjs ${projectId}`)
+      console.error(``)
+      console.error(`或手动创建 worktree：`)
+      console.error(``)
+      console.error(`  git worktree add -b feature/${projectId} /Users/aven/github/${projectId} origin/online`)
+      console.error(``)
+      console.error(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`)
+      process.exit(1)
+    }
+  } catch (error) {
+    // Git 命令失败，可能不在 git 仓库中，跳过检查
+  }
+}
+
 if (projectWorkflowVersion === 2 && command === 'commit') {
   process.exit(run([join(scriptDir, 'vnext-commit.mjs'), '--project', projectId, ...commandArgs], docsRoot))
 }

@@ -203,6 +203,19 @@ export function evaluateLitePath(prdText, userIntent) {
  * @returns {number} 估算的文件数量
  */
 function estimateFileCount(text) {
+  // 需要探索/查找的信号（通常意味着多文件）
+  const explorationSignals = [
+    /查找.*组件|搜索.*组件|找到.*组件/i,
+    /查找.*文件|搜索.*文件|找到.*文件/i,
+    /相关的.*页面|相关的.*组件/i,
+    /活动.*规则|福利.*规则/i, // PR-02440 的案例
+    /同步.*修改|一起.*修改/i,
+  ]
+
+  for (const pattern of explorationSignals) {
+    if (pattern.test(text)) return 5 // 需要探索通常涉及多文件
+  }
+
   // 多文件信号
   const multiFileSignals = [
     { pattern: /多个.*文件|多个.*页面|多个.*组件/i, count: 5 },
