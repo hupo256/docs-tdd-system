@@ -53,7 +53,7 @@ export function prepareScopeApproval(workItem) {
   }
 }
 
-export function applyScopeApproval(workItem, input, { client = 'human', sessionId = '' } = {}) {
+export function applyScopeApproval(workItem, input, { client = 'cursor', sessionId = '' } = {}) {
   const request = prepareScopeApproval(workItem)
   if (input?.schemaVersion !== 1 || input?.projectId !== workItem.projectId) throw new Error('scope approval schemaVersion/projectId does not match work item')
   if (input.approvalFingerprint !== request.approvalFingerprint) throw new Error('scope approval fingerprint is stale; regenerate the approval request')
@@ -122,7 +122,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
         else console.log(JSON.stringify(request, null, 2))
       } else {
         const input = JSON.parse(readFileSync(resolve(inputFile), 'utf8'))
-        const next = applyScopeApproval(workItem, input, { client: argumentValue('--client') || 'human', sessionId: argumentValue('--session-id') })
+        const next = applyScopeApproval(workItem, input, { client: argumentValue('--client') || 'cursor', sessionId: argumentValue('--session-id') })
         const persisted = persistVNextWorkItem(projectDir, next)
         console.log(JSON.stringify({ projectId: next.projectId, scopeApproval: next.scopeApproval, persisted }, null, 2))
       }

@@ -19,7 +19,7 @@ function validateHuman(input, verb) {
   if (!input.reason?.trim()) throw new Error(`${verb} requires a reason`)
 }
 
-export function applyReviewAdjudication(workItem, input, { client = 'human', sessionId = '' } = {}) {
+export function applyReviewAdjudication(workItem, input, { client = 'cursor', sessionId = '' } = {}) {
   if (input?.schemaVersion !== 1 || input?.projectId !== workItem?.projectId) throw new Error('review adjudication schemaVersion/projectId does not match work item')
   validateHuman(input, 'review adjudication')
   const audit = workItem.coverageAudit
@@ -92,7 +92,7 @@ export function applyReviewAdjudication(workItem, input, { client = 'human', ses
   return next
 }
 
-export function resumeReview(workItem, input, { client = 'human', sessionId = '' } = {}) {
+export function resumeReview(workItem, input, { client = 'cursor', sessionId = '' } = {}) {
   if (input?.schemaVersion !== 1 || input?.projectId !== workItem?.projectId) throw new Error('review resume schemaVersion/projectId does not match work item')
   validateHuman(input, 'review resume')
   if (!['escalated', 'human-review-deferred', 'changes-required'].includes(workItem.reviewControl?.status)) {
@@ -227,7 +227,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       const inputFile = argumentValue('--input')
       if (!inputFile) throw new Error('--input is required')
       const input = JSON.parse(readFileSync(resolve(inputFile), 'utf8'))
-      const actor = { client: argumentValue('--client') || 'human', sessionId: argumentValue('--session-id') }
+      const actor = { client: argumentValue('--client') || 'cursor', sessionId: argumentValue('--session-id') }
       const next = process.argv.includes('--resume') ? resumeReview(workItem, input, actor) : applyReviewAdjudication(workItem, input, actor)
       const persisted = persistVNextWorkItem(projectDir, next)
       console.log(JSON.stringify({ projectId: next.projectId, reviewControl: next.reviewControl, reviewAdjudication: next.reviewAdjudication, persisted }, null, 2))

@@ -26,7 +26,7 @@ export function resolveRuleSessionClient({ requested, env = process.env } = {}) 
     if (detected && explicit !== detected) throw new Error(`agent client mismatch: runtime is ${detected}, requested ${explicit}`)
     return explicit
   }
-  return detected || 'human'
+  return detected || 'cursor'
 }
 
 /** Fingerprint the project inputs that authorize business coding. */
@@ -119,7 +119,8 @@ function selfTest() {
   assert.equal(resolveRuleSessionClient({ env: { CODEX_THREAD_ID: 'thread' } }), 'codex')
   assert.equal(resolveRuleSessionClient({ env: { CLAUDE_PROJECT_DIR: '/repo' } }), 'claude')
   assert.equal(resolveRuleSessionClient({ requested: 'cursor', env: {} }), 'cursor')
-  assert.equal(resolveRuleSessionClient({ env: {} }), 'human')
+  assert.equal(resolveRuleSessionClient({ env: {} }), 'cursor')
+  assert.equal(resolveRuleSessionClient({ requested: 'human', env: {} }), 'human')
   assert.throws(() => resolveRuleSessionClient({ requested: 'human', env: { CODEX_SHELL: '1' } }), /agent client mismatch/)
   assert.throws(() => resolveRuleSessionClient({ requested: 'manual', env: {} }), /invalid agent client/)
   assert.throws(() => resolveRuleSessionClient({ requested: 'unknown', env: {} }), /invalid agent client/)
