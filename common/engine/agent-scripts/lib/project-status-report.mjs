@@ -16,6 +16,7 @@ import { resolveProjectRoot, resolveRoots } from './roots.mjs'
 import { inspectEffectiveRules, inspectRuleRelease } from './context-pack.mjs'
 import { printReport, printWarnings } from './cli-report.mjs'
 import { workflowVersionForProject } from './workflow-version.mjs'
+import { classifyBaseline } from './gate-doc-parsers.mjs'
 
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, consumerWorktree, config } = resolveRoots()
 const readJson = (file) => JSON.parse(readFileSync(file, 'utf8'))
@@ -45,6 +46,17 @@ function gitOutput(cwd, args) {
   return { ok: result.status === 0, stdout: (result.stdout || '').trim(), stderr: (result.stderr || '').trim() }
 }
 
+/** 与 GIT-G4-002 / classifyBaseline 一致：online 前进后 feature 不必包含最新 online。 */
+export function evaluateWorktreeBaseline(worktree, baseRef) {
+  const baseExists = gitOutput(worktree, ['rev-parse', '--verify', `${baseRef}^{commit}`]).ok
+  if (!baseExists) {
+    return { baseExists: false, ok: false, severity: 'error', note: `configured base ref does not exist: ${baseRef}` }
+  }
+  const hasCommonBase = gitOutput(worktree, ['merge-base', baseRef, 'HEAD']).ok
+  const onlineIsAncestorOfHead = gitOutput(worktree, ['merge-base', '--is-ancestor', baseRef, 'HEAD']).ok
+  return { baseExists: true, ...classifyBaseline(hasCommonBase, onlineIsAncestorOfHead) }
+}
+
 export function validateProjectWorktreeFacts(facts) {
   const problems = []
   if (!facts.configuredPath) problems.push('project README has no worktree binding')
@@ -56,7 +68,7 @@ export function validateProjectWorktreeFacts(facts) {
   if (facts.branch && facts.branch !== facts.expectedBranch) problems.push(`worktree branch ${facts.branch} does not match expected ${facts.expectedBranch}`)
   if (facts.branch && !facts.branch.includes(facts.projectId)) problems.push(`worktree branch is not bound to ${facts.projectId}`)
   if (facts.exists && !facts.baseExists) problems.push(`configured base ref does not exist: ${facts.baseRef}`)
-  if (facts.exists && facts.baseExists && !facts.descendsFromBase) problems.push(`worktree HEAD is not a descendant of ${facts.baseRef}`)
+  if (facts.exists && facts.baseExists && facts.baseline && !facts.baseline.ok) problems.push(facts.baseline.note)
   if (facts.requireClean && facts.dirty) problems.push('worktree has unowned changes; checkpoint or clean them before implementation')
   return problems
 }
@@ -75,13 +87,13 @@ export function inspectProjectWorktree(projectId, { requestedWorktree = '', requ
   const exists = Boolean(worktree && existsSync(worktree))
   const top = exists ? gitOutput(worktree, ['rev-parse', '--show-toplevel']) : { ok: false, stdout: '' }
   const branchResult = exists ? gitOutput(worktree, ['branch', '--show-current']) : { ok: false, stdout: '' }
-  const base = exists ? gitOutput(worktree, ['rev-parse', '--verify', `${baseRef}^{commit}`]) : { ok: false }
+  const baseline = exists ? evaluateWorktreeBaseline(worktree, baseRef) : { baseExists: false, ok: false, severity: 'error', note: '' }
   const facts = {
     projectId, configuredPath, requestedWorktree, worktree, exists,
     topMatches: top.ok && resolve(top.stdout) === worktree,
     branch: branchResult.ok ? branchResult.stdout : '', expectedBranch, baseRef,
-    baseExists: base.ok,
-    descendsFromBase: base.ok && gitOutput(worktree, ['merge-base', '--is-ancestor', baseRef, 'HEAD']).ok,
+    baseExists: baseline.baseExists,
+    baseline,
     requireClean,
     dirty: exists && Boolean(gitOutput(worktree, ['status', '--porcelain']).stdout),
   }

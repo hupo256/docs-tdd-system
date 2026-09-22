@@ -4488,6 +4488,7 @@
       "R-036"
     ],
     "policyPaths": [
+      "apps/web-next/docs/page-migration.md",
       "apps/web-next/src/components/verification",
       "apps/web-next/src/components/VerifyInputs",
       "apps/web-next/src/components/AccountInput",
@@ -4497,7 +4498,17 @@
       "apps/web-next/src/apps/ResetPassword",
       "apps/web-next/src/mocks/pr02233",
       "apps/web-next/src/i18n/resources/zh-CN/codeVerify.json",
+      "apps/web-next/src/i18n/resources/zh-CN/register.json",
+      "apps/web-next/src/platform/domain/web/WebHttpApi.ts",
       "apps/web-next/src/platform/domain/web/endpoints/loginInEndpoint.ts",
+      "apps/web-next/src/platform/domain/web/endpoints/getLoginVerificationSwitchEndpoint.ts",
+      "apps/web-next/src/platform/domain/web/endpoints/postRegisterInviterInfoEndpoint.ts",
+      "apps/web-next/src/platform/domain/web/schema/loginVerificationSchemas.ts",
+      "apps/web-next/src/platform/domain/web/endpoints/test/authLoginContract.test.ts",
+      "apps/web-next/src/platform/domain/web/endpoints/test/postRegisterInviterInfoEndpoint.test.ts",
+      "apps/web-next/src/services/hooks/auth",
+      "apps/web-next/src/routes/join",
+      "apps/web-next/src/routeTree.gen.ts",
       "apps/web-next/src/styles/tailwind-theme-legacy.css"
     ],
     "deferred": {

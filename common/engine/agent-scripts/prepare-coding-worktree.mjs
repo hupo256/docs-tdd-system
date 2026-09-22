@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { spawn, spawnSync } from 'node:child_process';
 import { listProjectIds, resolveProjectRoot, resolveRoots } from './lib/roots.mjs';
 import { assertSafeWorkContext } from './lib/vnext-work-context-runtime.mjs';
+import { evaluateWorktreeBaseline } from './lib/project-status-report.mjs';
 
 const scriptPath = fileURLToPath(import.meta.url);
 const { docsSystemRoot, consumerRoot: repoRoot, config } = resolveRoots();
@@ -143,12 +144,12 @@ if (!existsSync(worktreeDir)) {
   const localBranches = output('git', ['branch', '--list', branchName]);
   if (localBranches) {
     // 已存在同名本地分支：校验其基线是否落在 baseRef 上，避免复用一条切错基线的旧分支。
-    const isOnBase =
-      spawnSync('git', ['merge-base', '--is-ancestor', baseRef, branchName], { cwd: repoRoot }).status === 0;
-    if (!isOnBase) {
+    const sharesHistoryWithBase =
+      spawnSync('git', ['merge-base', baseRef, branchName], { cwd: repoRoot }).status === 0;
+    if (!sharesHistoryWithBase) {
       fail(
-        `local branch ${branchName} is not based on ${baseRef}. ` +
-          `Per git-branch-flow.md §1 every feature branch must branch from latest ${baseRef}. ` +
+        `local branch ${branchName} shares no history with ${baseRef}. ` +
+          `Per git-branch-flow.md §1 feature branches must fork from ${baseRef} lineage (not dev/test). ` +
           `Delete/rename the stale branch, then re-run.`,
       );
     }
@@ -165,21 +166,17 @@ if (!existsSync(worktreeDir)) {
   }
 }
 
-// 基线校验（落地铁律）：worktree 当前分支必须是 baseRef 的后代，否则视为切错基线，立即失败。
+// 基线校验：须与 baseRef 有共同历史；不要求 HEAD 包含最新 online（online 正常前进不算失败）。
 if (!dryRun) {
-  const verifyBase = spawnSync('git', ['merge-base', '--is-ancestor', baseRef, 'HEAD'], {
-    cwd: worktreeDir,
-    stdio: 'pipe',
-    encoding: 'utf8',
-  });
-  if (verifyBase.status !== 0) {
+  const baseline = evaluateWorktreeBaseline(worktreeDir, baseRef);
+  if (!baseline.ok) {
     fail(
-      `baseline check failed: ${branchName} HEAD is not a descendant of ${baseRef}. ` +
-        `This branch was cut from the wrong base (likely an env branch like test/dev). ` +
-        `Per git-branch-flow.md §1 it must branch from latest ${baseRef}. Fix the base before coding.`,
+      `baseline check failed: ${baseline.note} ` +
+        `Per git-branch-flow.md §1 fix the branch base before coding.`,
     );
   }
-  console.log(`baseline check passed: HEAD descends from ${baseRef}`);
+  if (baseline.severity === 'warn') console.log(`baseline note: ${baseline.note}`);
+  else console.log(`baseline check passed: HEAD shares history with ${baseRef}`);
   const workItemFile = join(resolveProjectRoot(projectId), 'work-item.json');
   const workItem = existsSync(workItemFile) ? JSON.parse(readFileSync(workItemFile, 'utf8')) : { workflowVersion: 2, projectId };
   assertSafeWorkContext({

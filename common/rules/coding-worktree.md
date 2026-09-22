@@ -105,7 +105,7 @@ node apps/web/docs_tdd/common/engine/agent-scripts/prepare-coding-worktree.mjs P
 
 1. 编号格式为 `PR-xxxxx` 或 `TR-xxxxx`。
 2. 新分支 `feature/<PROJECT-ID>`，**从最新 `origin/online` 切出**（默认 `--base-ref origin/online`，切前先 `git fetch origin online`）。
-3. **基线校验**：`git merge-base --is-ancestor origin/online HEAD` 通过（基线方向语义见 [git-branch-flow.md](./git-branch-flow.md) §1）；不通过即切错基线，脚本立即失败。
+3. **基线校验**：与 GIT-G4-002 相同——`git merge-base origin/online HEAD` 必须成功；**不要求** HEAD 始终包含最新 online（见 [git-branch-flow.md](./git-branch-flow.md) §1）。无共同历史才失败。
 4. worktree 与主仓同级，目录名 `<PROJECT-ID>`。
 5. worktree 内 `apps/web/docs_tdd` 是指向主仓的软链。
 6. 依赖就绪，优先 `pnpm install --frozen-lockfile`。
@@ -125,10 +125,10 @@ cd /Users/aven/github/fameex-web
 git fetch origin online
 git worktree add ../PR-01234 -b feature/PR-01234 origin/online
 cd ../PR-01234
-# 基线校验：HEAD 必须是 origin/online 后代，否则切错基线，停止
-git merge-base --is-ancestor origin/online HEAD \
+# 基线校验：须与 origin/online 有共同历史（切错分支会失败）；online 前进不算失败
+git merge-base origin/online HEAD \
   && echo "baseline OK" \
-  || { echo "ERROR: feature 分支未基于 origin/online，禁止编码"; exit 1; }
+  || { echo "ERROR: feature 与 origin/online 无共同历史，禁止编码"; exit 1; }
 rm -rf apps/web/docs_tdd
 ln -s /Users/aven/github/fameex-web/apps/web/docs_tdd apps/web/docs_tdd
 pnpm install --frozen-lockfile
@@ -146,7 +146,7 @@ curl -i http://localhost:4001/zh-CN
 
 ## 5. Agent 执行约束
 
-- **基线校验是 worktree ready 前置硬条件**：进编码前确认当前分支基于最新 `origin/online`（`git merge-base --is-ancestor origin/online HEAD`，基线方向语义见 [git-branch-flow.md](./git-branch-flow.md) §1）。基线不对一律不算 ready。
+- **基线校验是 worktree ready 前置硬条件**：进编码前确认与 `origin/online` **有共同历史**（`git merge-base origin/online HEAD`）；不要求 HEAD 已包含最新 online。无共同历史一律不算 ready（见 [git-branch-flow.md](./git-branch-flow.md) §1）。
 - G4-G8 的业务代码修改、Biome、typecheck、test、dev server、Playwright 自测都在项目 worktree 执行。
 - worktree ready = 基线校验通过 + 依赖装完 + dev server 可启 + 基础页非 404/空白；只建目录分支不算 ready。
 - `docs_tdd` 以主仓为准，worktree 只软链读取，不复制新副本。

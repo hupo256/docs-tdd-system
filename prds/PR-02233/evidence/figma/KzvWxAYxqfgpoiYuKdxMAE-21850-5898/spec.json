@@ -1,0 +1,927 @@
+{
+  "meta": {
+    "fileKey": "KzvWxAYxqfgpoiYuKdxMAE",
+    "nodeIds": [
+      "21850:5898"
+    ],
+    "fetchedAt": "2026-09-22T07:49:09.243Z",
+    "source": "https://www.figma.com/design/KzvWxAYxqfgpoiYuKdxMAE?node-id=21850-5898",
+    "depth": 8
+  },
+  "nodes": [
+    {
+      "id": "21850:5898",
+      "type": "FRAME",
+      "name": "Modal",
+      "size": {
+        "w": 400,
+        "h": 395
+      },
+      "cornerRadius": 16,
+      "fills": [
+        "#ffffff"
+      ],
+      "layout": {
+        "mode": "VERTICAL",
+        "gap": 8,
+        "padding": {
+          "t": 0,
+          "r": 0,
+          "b": 0,
+          "l": 0
+        },
+        "align": "-/CENTER"
+      },
+      "effects": [
+        {
+          "type": "DROP_SHADOW",
+          "color": "#0b0c0e@0.08",
+          "offset": {
+            "x": 0,
+            "y": 4
+          },
+          "radius": 8,
+          "spread": null
+        },
+        {
+          "type": "DROP_SHADOW",
+          "color": "#0b0c0e@0.20",
+          "offset": {
+            "x": 0,
+            "y": 0
+          },
+          "radius": 1,
+          "spread": null
+        }
+      ],
+      "children": [
+        {
+          "id": "21850:5899",
+          "type": "INSTANCE",
+          "name": ".MOL/header",
+          "size": {
+            "w": 400,
+            "h": 63
+          },
+          "cornerRadius": [
+            12,
+            12,
+            0,
+            0
+          ],
+          "fills": [
+            "#ffffff"
+          ],
+          "layout": {
+            "mode": "HORIZONTAL",
+            "gap": 0,
+            "padding": {
+              "t": 20,
+              "r": 24,
+              "b": 16,
+              "l": 24
+            },
+            "align": "-/CENTER"
+          },
+          "children": [
+            {
+              "id": "I21850:5899;10524:9086",
+              "type": "TEXT",
+              "name": "Title",
+              "size": {
+                "w": 328,
+                "h": 27
+              },
+              "fills": [
+                "#241259"
+              ],
+              "text": "安全验证要求",
+              "font": {
+                "size": 18,
+                "weight": 700,
+                "family": "HarmonyOS Sans SC",
+                "lineHeight": 27,
+                "letterSpacing": 0
+              }
+            },
+            {
+              "id": "I21850:5899;10524:9087",
+              "type": "INSTANCE",
+              "name": "icon / 返回",
+              "size": {
+                "w": 24,
+                "h": 24
+              },
+              "children": [
+                {
+                  "id": "I21850:5899;10524:9087;0:4318",
+                  "type": "VECTOR",
+                  "name": "路径",
+                  "size": {
+                    "w": 24,
+                    "h": 24
+                  }
+                },
+                {
+                  "id": "I21850:5899;10524:9087;2736:17585",
+                  "type": "VECTOR",
+                  "name": "Union",
+                  "size": {
+                    "w": 13,
+                    "h": 13
+                  },
+                  "fills": [
+                    "#241259"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "21850:5900",
+          "type": "TEXT",
+          "name": "Sign in to continue",
+          "size": {
+            "w": 352,
+            "h": 21
+          },
+          "fills": [
+            "#8d91a5"
+          ],
+          "text": "为保障账户安全 本次操作需同时完成以下两项验证",
+          "font": {
+            "size": 14,
+            "weight": 400,
+            "family": "HarmonyOS Sans SC",
+            "lineHeight": 21,
+            "letterSpacing": 0
+          }
+        },
+        {
+          "id": "21850:15550",
+          "type": "FRAME",
+          "name": "Frame 2147223599",
+          "size": {
+            "w": 400,
+            "h": 207
+          },
+          "layout": {
+            "mode": "VERTICAL",
+            "gap": 12,
+            "padding": {
+              "t": 0,
+              "r": 0,
+              "b": 0,
+              "l": 0
+            },
+            "align": "-/-"
+          },
+          "children": [
+            {
+              "id": "21850:5929",
+              "type": "INSTANCE",
+              "name": "input/trade",
+              "size": {
+                "w": 400,
+                "h": 62
+              },
+              "layout": {
+                "mode": "VERTICAL",
+                "gap": 4,
+                "padding": {
+                  "t": 0,
+                  "r": 24,
+                  "b": 0,
+                  "l": 24
+                },
+                "align": "-/-"
+              },
+              "children": [
+                {
+                  "id": "I21850:5929;273:7680",
+                  "type": "TEXT",
+                  "name": "label",
+                  "size": {
+                    "w": 352,
+                    "h": 18
+                  },
+                  "fills": [
+                    "#5a5e72"
+                  ],
+                  "text": "身份验证器App验证码",
+                  "font": {
+                    "size": 12,
+                    "weight": 500,
+                    "family": "HarmonyOS Sans SC",
+                    "lineHeight": 18,
+                    "letterSpacing": 0
+                  }
+                },
+                {
+                  "id": "I21850:5929;273:7681",
+                  "type": "FRAME",
+                  "name": "Frame 2147223298",
+                  "size": {
+                    "w": 352,
+                    "h": 40
+                  },
+                  "cornerRadius": 8,
+                  "fills": [
+                    "#f9f9fb"
+                  ],
+                  "layout": {
+                    "mode": "HORIZONTAL",
+                    "gap": 12,
+                    "padding": {
+                      "t": 8,
+                      "r": 12,
+                      "b": 8,
+                      "l": 12
+                    },
+                    "align": "-/CENTER"
+                  },
+                  "children": [
+                    {
+                      "id": "I21850:5929;273:7914",
+                      "type": "FRAME",
+                      "name": "Frame 2147223304",
+                      "size": {
+                        "w": 328,
+                        "h": 24
+                      },
+                      "layout": {
+                        "mode": "HORIZONTAL",
+                        "gap": 8,
+                        "padding": {
+                          "t": 0,
+                          "r": 0,
+                          "b": 0,
+                          "l": 0
+                        },
+                        "align": "-/CENTER"
+                      },
+                      "children": [
+                        {
+                          "id": "I21850:5929;273:7683",
+                          "type": "TEXT",
+                          "name": "Email",
+                          "size": {
+                            "w": 122,
+                            "h": 24
+                          },
+                          "fills": [
+                            "#8d91a5"
+                          ],
+                          "text": "请输入6位验证码",
+                          "font": {
+                            "size": 16,
+                            "weight": 400,
+                            "family": "HarmonyOS Sans SC",
+                            "lineHeight": 24,
+                            "letterSpacing": 0
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "I21850:5929;273:7684",
+                  "type": "TEXT",
+                  "name": "Withdrawals will be",
+                  "size": {
+                    "w": 480,
+                    "h": 18
+                  },
+                  "fills": [
+                    "#eb4747"
+                  ],
+                  "text": "提示文案 提示文案 提示文案",
+                  "font": {
+                    "size": 12,
+                    "weight": 400,
+                    "family": "HarmonyOS Sans SC",
+                    "lineHeight": 18,
+                    "letterSpacing": 0
+                  }
+                }
+              ]
+            },
+            {
+              "id": "21850:15549",
+              "type": "FRAME",
+              "name": "Frame 2147223598",
+              "size": {
+                "w": 400,
+                "h": 37
+              },
+              "layout": {
+                "mode": "VERTICAL",
+                "gap": 10,
+                "padding": {
+                  "t": 0,
+                  "r": 24,
+                  "b": 0,
+                  "l": 24
+                },
+                "align": "-/-"
+              },
+              "children": [
+                {
+                  "id": "21850:15543",
+                  "type": "INSTANCE",
+                  "name": "提醒",
+                  "size": {
+                    "w": 352,
+                    "h": 37
+                  },
+                  "cornerRadius": 8,
+                  "fills": [
+                    "#fef8ec"
+                  ],
+                  "layout": {
+                    "mode": "HORIZONTAL",
+                    "gap": 8,
+                    "padding": {
+                      "t": 8,
+                      "r": 12,
+                      "b": 8,
+                      "l": 12
+                    },
+                    "align": "-/CENTER"
+                  },
+                  "children": [
+                    {
+                      "id": "I21850:15543;7489:80678",
+                      "type": "INSTANCE",
+                      "name": "Warning",
+                      "size": {
+                        "w": 20,
+                        "h": 20
+                      },
+                      "children": [
+                        {
+                          "id": "I21850:15543;7489:80678;0:3771",
+                          "type": "VECTOR",
+                          "name": "路径",
+                          "size": {
+                            "w": 20,
+                            "h": 20
+                          }
+                        },
+                        {
+                          "id": "I21850:15543;7489:80678;5493:8972",
+                          "type": "VECTOR",
+                          "name": "Subtract",
+                          "size": {
+                            "w": 15,
+                            "h": 15
+                          },
+                          "fills": [
+                            "#f5b83d"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "I21850:15543;7489:80679",
+                      "type": "TEXT",
+                      "name": "登录密码重置后，账户48小时内禁止提现。",
+                      "size": {
+                        "w": 328,
+                        "h": 21
+                      },
+                      "fills": [
+                        "#f5b83d"
+                      ],
+                      "text": "验证码每30秒自动更新",
+                      "font": {
+                        "size": 14,
+                        "weight": 500,
+                        "family": "HarmonyOS Sans SC",
+                        "lineHeight": 21,
+                        "letterSpacing": 0
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "21850:6154",
+              "type": "FRAME",
+              "name": "input/trade",
+              "size": {
+                "w": 400,
+                "h": 84
+              },
+              "layout": {
+                "mode": "VERTICAL",
+                "gap": 4,
+                "padding": {
+                  "t": 0,
+                  "r": 24,
+                  "b": 0,
+                  "l": 24
+                },
+                "align": "-/-"
+              },
+              "children": [
+                {
+                  "id": "21850:6167",
+                  "type": "FRAME",
+                  "name": "Frame 2147223597",
+                  "size": {
+                    "w": 352,
+                    "h": 18
+                  },
+                  "layout": {
+                    "mode": "HORIZONTAL",
+                    "gap": 4,
+                    "padding": {
+                      "t": 0,
+                      "r": 0,
+                      "b": 0,
+                      "l": 0
+                    },
+                    "align": "SPACE_BETWEEN/-"
+                  },
+                  "children": [
+                    {
+                      "id": "21850:6155",
+                      "type": "TEXT",
+                      "name": "邮箱验证码",
+                      "size": {
+                        "w": 60,
+                        "h": 18
+                      },
+                      "fills": [
+                        "#5a5e72"
+                      ],
+                      "text": "邮箱验证码",
+                      "font": {
+                        "size": 12,
+                        "weight": 500,
+                        "family": "HarmonyOS Sans SC",
+                        "lineHeight": 18,
+                        "letterSpacing": 0
+                      }
+                    },
+                    {
+                      "id": "21850:6165",
+                      "type": "TEXT",
+                      "name": "切换为手机验证",
+                      "size": {
+                        "w": 84,
+                        "h": 18
+                      },
+                      "fills": [
+                        "#7132f4"
+                      ],
+                      "text": "切换为手机验证",
+                      "font": {
+                        "size": 12,
+                        "weight": 500,
+                        "family": "HarmonyOS Sans SC",
+                        "lineHeight": 18,
+                        "letterSpacing": 0
+                      }
+                    }
+                  ]
+                },
+                {
+                  "id": "21850:6156",
+                  "type": "FRAME",
+                  "name": "Frame 2147223298",
+                  "size": {
+                    "w": 352,
+                    "h": 40
+                  },
+                  "cornerRadius": 8,
+                  "fills": [
+                    "#f9f9fb"
+                  ],
+                  "layout": {
+                    "mode": "HORIZONTAL",
+                    "gap": 12,
+                    "padding": {
+                      "t": 8,
+                      "r": 12,
+                      "b": 8,
+                      "l": 12
+                    },
+                    "align": "-/CENTER"
+                  },
+                  "children": [
+                    {
+                      "id": "21850:6157",
+                      "type": "FRAME",
+                      "name": "Frame 2147223304",
+                      "size": {
+                        "w": 246,
+                        "h": 24
+                      },
+                      "layout": {
+                        "mode": "HORIZONTAL",
+                        "gap": 8,
+                        "padding": {
+                          "t": 0,
+                          "r": 0,
+                          "b": 0,
+                          "l": 0
+                        },
+                        "align": "-/CENTER"
+                      },
+                      "children": [
+                        {
+                          "id": "21850:6158",
+                          "type": "TEXT",
+                          "name": "Email",
+                          "size": {
+                            "w": 128,
+                            "h": 24
+                          },
+                          "fills": [
+                            "#8d91a5"
+                          ],
+                          "text": "请输入邮箱验证码",
+                          "font": {
+                            "size": 16,
+                            "weight": 400,
+                            "family": "HarmonyOS Sans SC",
+                            "lineHeight": 24,
+                            "letterSpacing": 0
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "id": "21850:6159",
+                      "type": "INSTANCE",
+                      "name": "suffix",
+                      "size": {
+                        "w": 70,
+                        "h": 21
+                      },
+                      "layout": {
+                        "mode": "VERTICAL",
+                        "gap": 8,
+                        "padding": {
+                          "t": 0,
+                          "r": 0,
+                          "b": 0,
+                          "l": 0
+                        },
+                        "align": "-/-"
+                      },
+                      "children": [
+                        {
+                          "id": "I21850:6159;287:12457",
+                          "type": "FRAME",
+                          "name": "Frame 2087325568",
+                          "size": {
+                            "w": 70,
+                            "h": 21
+                          },
+                          "layout": {
+                            "mode": "HORIZONTAL",
+                            "gap": 8,
+                            "padding": {
+                              "t": 0,
+                              "r": 0,
+                              "b": 0,
+                              "l": 0
+                            },
+                            "align": "-/CENTER"
+                          },
+                          "children": [
+                            {
+                              "id": "I21850:6159;287:12458",
+                              "type": "TEXT",
+                              "name": "BTC",
+                              "size": {
+                                "w": 26,
+                                "h": 21
+                              },
+                              "fills": [
+                                "#c2c5d6"
+                              ],
+                              "text": "BTC",
+                              "font": {
+                                "size": 14,
+                                "weight": 500,
+                                "family": "HarmonyOS Sans SC",
+                                "lineHeight": 21,
+                                "letterSpacing": 0
+                              }
+                            },
+                            {
+                              "id": "I21850:6159;287:12459",
+                              "type": "LINE",
+                              "name": "Line 197",
+                              "size": {
+                                "w": 0,
+                                "h": 12
+                              },
+                              "stroke": {
+                                "colors": [
+                                  "#e1e3eb"
+                                ],
+                                "weight": 1,
+                                "align": "CENTER"
+                              }
+                            },
+                            {
+                              "id": "I21850:6159;287:12460",
+                              "type": "TEXT",
+                              "name": "最大",
+                              "size": {
+                                "w": 70,
+                                "h": 21
+                              },
+                              "fills": [
+                                "#7132f4"
+                              ],
+                              "text": "获取验证码",
+                              "font": {
+                                "size": 14,
+                                "weight": 500,
+                                "family": "HarmonyOS Sans SC",
+                                "lineHeight": 21,
+                                "letterSpacing": 0
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "21850:6160",
+                  "type": "TEXT",
+                  "name": "Withdrawals will be",
+                  "size": {
+                    "w": 187,
+                    "h": 18
+                  },
+                  "fills": [
+                    "#c2c5d6"
+                  ],
+                  "text": "验证码将发送至kev****8@kkk.com",
+                  "font": {
+                    "size": 12,
+                    "weight": 400,
+                    "family": "HarmonyOS Sans SC",
+                    "lineHeight": 18,
+                    "letterSpacing": 0
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "21850:5902",
+          "type": "FRAME",
+          "name": ".MOL/Initial",
+          "size": {
+            "w": 400,
+            "h": 80
+          },
+          "cornerRadius": [
+            0,
+            0,
+            12,
+            12
+          ],
+          "fills": [
+            "#ffffff"
+          ],
+          "layout": {
+            "mode": "VERTICAL",
+            "gap": 12,
+            "padding": {
+              "t": 16,
+              "r": 24,
+              "b": 24,
+              "l": 24
+            },
+            "align": "CENTER/CENTER"
+          },
+          "children": [
+            {
+              "id": "21850:5904",
+              "type": "INSTANCE",
+              "name": "button",
+              "size": {
+                "w": 352,
+                "h": 40
+              },
+              "cornerRadius": 8,
+              "fills": [
+                "#7132f4"
+              ],
+              "layout": {
+                "mode": "HORIZONTAL",
+                "gap": 4,
+                "padding": {
+                  "t": 8,
+                  "r": 16,
+                  "b": 8,
+                  "l": 16
+                },
+                "align": "CENTER/CENTER"
+              },
+              "children": [
+                {
+                  "id": "I21850:5904;162:24859",
+                  "type": "INSTANCE",
+                  "name": "loading",
+                  "size": {
+                    "w": 24,
+                    "h": 24
+                  },
+                  "children": [
+                    {
+                      "id": "I21850:5904;162:24859;0:3991",
+                      "type": "VECTOR",
+                      "name": "路径",
+                      "size": {
+                        "w": 24,
+                        "h": 24
+                      }
+                    },
+                    {
+                      "id": "I21850:5904;162:24859;3065:15155",
+                      "type": "VECTOR",
+                      "name": "Ellipse 1 (Stroke)",
+                      "size": {
+                        "w": 18,
+                        "h": 18
+                      },
+                      "fills": [
+                        "#0b0c0e"
+                      ]
+                    },
+                    {
+                      "id": "I21850:5904;162:24859;3065:15156",
+                      "type": "VECTOR",
+                      "name": "Subtract",
+                      "size": {
+                        "w": 16,
+                        "h": 9
+                      },
+                      "cornerRadius": [
+                        0,
+                        0,
+                        0,
+                        0
+                      ],
+                      "fills": [
+                        "#ffffff"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "I21850:5904;162:24860",
+                  "type": "TEXT",
+                  "name": "label",
+                  "size": {
+                    "w": 32,
+                    "h": 24
+                  },
+                  "fills": [
+                    "#ffffff"
+                  ],
+                  "text": "确认",
+                  "font": {
+                    "size": 16,
+                    "weight": 700,
+                    "family": "HarmonyOS Sans SC",
+                    "lineHeight": 24,
+                    "letterSpacing": 0
+                  }
+                },
+                {
+                  "id": "I21850:5904;162:24861",
+                  "type": "INSTANCE",
+                  "name": "loading",
+                  "size": {
+                    "w": 24,
+                    "h": 24
+                  },
+                  "children": [
+                    {
+                      "id": "I21850:5904;162:24861;0:3991",
+                      "type": "VECTOR",
+                      "name": "路径",
+                      "size": {
+                        "w": 24,
+                        "h": 24
+                      }
+                    },
+                    {
+                      "id": "I21850:5904;162:24861;3065:15155",
+                      "type": "VECTOR",
+                      "name": "Ellipse 1 (Stroke)",
+                      "size": {
+                        "w": 18,
+                        "h": 18
+                      },
+                      "fills": [
+                        "#0b0c0e"
+                      ]
+                    },
+                    {
+                      "id": "I21850:5904;162:24861;3065:15156",
+                      "type": "VECTOR",
+                      "name": "Subtract",
+                      "size": {
+                        "w": 16,
+                        "h": 9
+                      },
+                      "cornerRadius": [
+                        0,
+                        0,
+                        0,
+                        0
+                      ],
+                      "fills": [
+                        "#ffffff"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "styles": {
+    "8:3685": {
+      "key": "1a1db542e047b2081c953b0bb255fdb5f2d05bf0",
+      "name": "Bold/H5",
+      "styleType": "TEXT",
+      "remote": true,
+      "description": ""
+    },
+    "8:82": {
+      "key": "8d3009e4d022b817d5e8917d73b9288083a950bf",
+      "name": "Regular/Body-Regular",
+      "styleType": "TEXT",
+      "remote": true,
+      "description": ""
+    },
+    "8:1245": {
+      "key": "3fdc500246edc63368b61f00003fbb29df3e699b",
+      "name": "Medium/Body-S 12px",
+      "styleType": "TEXT",
+      "remote": true,
+      "description": ""
+    },
+    "8:7": {
+      "key": "9d0da34074eb8d3d31149e0431314c95d4669c0a",
+      "name": "Regular/Subtitle",
+      "styleType": "TEXT",
+      "remote": true,
+      "description": ""
+    },
+    "8:1241": {
+      "key": "3672451fb03329985cfeb9bd4b5390284ab9d8f1",
+      "name": "Regular/Body-S 12px",
+      "styleType": "TEXT",
+      "remote": true,
+      "description": ""
+    },
+    "8:73": {
+      "key": "c63d677aef7136bc485b4a151ca5695c6ce7b9e1",
+      "name": "Medium/Body-Regular",
+      "styleType": "TEXT",
+      "remote": true,
+      "description": ""
+    },
+    "8:80": {
+      "key": "24c366c02f264670ca118d053dfca75bff01a617",
+      "name": "Bold/H6",
+      "styleType": "TEXT",
+      "remote": true,
+      "description": ""
+    },
+    "8:1136": {
+      "key": "8dea7898869f80e9e01f19f9b79a69cd2832782d",
+      "name": "Light/Depth-Z200",
+      "styleType": "EFFECT",
+      "remote": true,
+      "description": ""
+    }
+  },
+  "variables": {
+    "error": "403 Figma API 403 Forbidden for /files/KzvWxAYxqfgpoiYuKdxMAE/variables/local",
+    "note": "variables/local unavailable (needs Enterprise plan + variables:read scope); tokens omitted"
+  }
+}

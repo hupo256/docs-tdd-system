@@ -32,15 +32,25 @@ function runCodeRules(files) {
     timeout: T,
   })
   if (result.status === 1 && result.stdout) {
-    let findings = []
-    try { findings = JSON.parse(result.stdout).findings || [] }
-    catch {
+    let payload
+    try {
+      payload = JSON.parse(result.stdout)
+    } catch {
       process.stderr.write('verify-code-rules returned unparseable output; commit blocked because the result is unknown\n')
       process.exit(1)
     }
-    if (findings.length) {
+    const errors = (payload.findings || []).filter((v) => v.severity === 'error')
+    const warns = (payload.findings || []).filter((v) => v.severity === 'warn')
+    if (warns.length) {
+      process.stderr.write(
+        `verify-code-rules: ${warns.length} warn-first finding(s) (commit allowed):\n` +
+          warns.map((v) => `  - [${v.ruleId}] ${v.file}:${v.line} - ${v.message}`).join('\n') +
+          '\n',
+      )
+    }
+    if (!payload.ok || errors.length) {
       process.stderr.write('commit blocked by verify-code-rules, fix before committing:\n' +
-        findings.map((v) => `  - [${v.ruleId}] ${v.file}:${v.line} - ${v.message}`).join('\n') + '\n')
+        errors.map((v) => `  - [${v.ruleId}] ${v.file}:${v.line} - ${v.message}`).join('\n') + '\n')
       process.exit(1)
     }
     return
@@ -59,8 +69,12 @@ const CHECKPOINT_STALE_DEV_CHECK_PROBLEMS = new Set([
   'staged paths differ from the dev-check pending commit paths',
 ])
 
+function isCheckpointOrdinaryCommitSkippableProblem(problem) {
+  return CHECKPOINT_STALE_DEV_CHECK_PROBLEMS.has(problem)
+}
+
 function checkpointGuardSkippable(problems) {
-  return problems.length > 0 && problems.every((problem) => CHECKPOINT_STALE_DEV_CHECK_PROBLEMS.has(problem))
+  return problems.length > 0 && problems.every(isCheckpointOrdinaryCommitSkippableProblem)
 }
 
 function runVNextDeliveryGuard() {
@@ -82,8 +96,11 @@ function runVNextDeliveryGuard() {
 
       const problems = payload.problems || []
       if (mode === 'checkpoint' && checkpointGuardSkippable(problems)) {
+        const reason = problems.includes(CHECKPOINT_DEV_CHECK_PROBLEM)
+          ? 'no passing dev-check'
+          : 'dev-check is stale for staged paths'
         process.stderr.write(
-          `v2 pre-commit: checkpoint guard skipped (${problems.includes(CHECKPOINT_DEV_CHECK_PROBLEM) ? 'no passing dev-check' : 'dev-check is stale for staged paths'}); ` +
+          `v2 pre-commit: checkpoint guard skipped (${reason}); ` +
           'ordinary commits only require code-rules. Run docs-tdd dev-check for scoped checkpoint commits, ' +
           'or DOCS_TDD_COMMIT_MODE=delivery / docs-tdd commit --mode delivery before final handoff.\n',
         )

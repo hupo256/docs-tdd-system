@@ -26,15 +26,21 @@ export function runReadiness() {
   }
   const orchestrator = readFileSync(join(scriptDir, 'project-orchestrator.mjs'), 'utf8')
   assert.match(orchestrator, /option\('--kind'\)/, 'public kickoff is missing --kind intake selection')
+  const baselineOk = { ok: true, severity: 'warn', note: 'baseline valid but origin/online has advanced since branch point; consider syncing before merge' }
   const safeFacts = {
     projectId: 'PR-00001', configuredPath: '/tmp/PR-00001', requestedWorktree: '', worktree: '/tmp/PR-00001',
     exists: true, topMatches: true, branch: 'feature/PR-00001', expectedBranch: 'feature/PR-00001',
-    baseRef: 'origin/online', baseExists: true, descendsFromBase: true, requireClean: true, dirty: false,
+    baseRef: 'origin/online', baseExists: true, baseline: baselineOk, requireClean: true, dirty: false,
   }
   assert.deepEqual(validateProjectWorktreeFacts(safeFacts), [])
   assert.match(validateProjectWorktreeFacts({ ...safeFacts, configuredPath: '', worktree: '', exists: false })[0], /no worktree binding/)
   assert.ok(validateProjectWorktreeFacts({ ...safeFacts, branch: 'online' }).some((problem) => problem.includes('environment branch')))
-  assert.ok(validateProjectWorktreeFacts({ ...safeFacts, descendsFromBase: false }).some((problem) => problem.includes('not a descendant')))
+  assert.ok(
+    validateProjectWorktreeFacts({
+      ...safeFacts,
+      baseline: { ok: false, severity: 'error', note: 'no common history with origin/online — likely branched off a non-online ref' },
+    }).some((problem) => problem.includes('no common history')),
+  )
   assert.ok(validateProjectWorktreeFacts({ ...safeFacts, dirty: true }).some((problem) => problem.includes('unowned changes')))
 
   const suites = [

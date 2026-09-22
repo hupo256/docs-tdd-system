@@ -34,7 +34,10 @@ git branch --show-current   # 绝不能是 online / pre / test / dev
 
 - 开新需求/修 bug：一律从**最新 `origin/online`** 切出。功能 `feature/<PROJECT-ID>`（如 `feature/PR-01685`）；修复 `fix/<PROJECT-ID>`（无项目号用 `fix/<简述>`，如 `fix/hichat-redirect-url`）。
 - 切分支前先 `git fetch origin online`,基于 `origin/online` 创建,保证起点最新。
-- **切完立即校验基线**:`git merge-base --is-ancestor origin/online HEAD`,退出码非 0 说明切错基线,必须重切,不得开始编码。（判据方向:`origin/online` 必须是 HEAD 的祖先——即 HEAD 基于最新 online;写反成 `HEAD origin/online` 会在「从陈旧本地 online 切出」这一唯一要拦的场景反而误判通过。gate `verify-project-gate.mjs` GIT-G4-002 用的就是此正确方向。）
+- **切完立即校验基线**（与 GIT-G4-002 / `classifyBaseline` 一致）：
+  1. `git merge-base origin/online HEAD` 必须成功——否则与 online **无共同历史**，说明从 dev/test 等错误起点切出，**必须重切**。
+  2. 若 `git merge-base --is-ancestor origin/online HEAD` 失败但 ① 通过，表示 **online 在切分支后又前进了**——基线仍合法，可继续编码；合 MR 前再 merge/rebase `origin/online` 即可。
+  3. 仅当 ① 通过且 ② 也通过时，表示 HEAD 仍包含当前 `origin/online` 全部提交（刚切分支的典型状态）。
 
 ## 2. 合并流向（关键）
 
