@@ -117,9 +117,10 @@ docs-tdd kickoff PR-XXXXX --kind feature
 3. [x] 至少 1 个 lite 实验完成 + 数据记录 ✅ **已完成（commit: 35e0146）**
 
 **可选交付**：
-- [ ] 3 个 lite 实验全部完成 ← **下一步**
-- [ ] 初步数据分析报告
-- [ ] v4.1 实施 go/no-go 决策
+- [x] v4.1 简化版实施 ✅ **已完成（commit: ece3952）**
+- [ ] 3 个 lite 实验全部完成 ← **继续收集数据**
+- [ ] 初步数据分析报告 ← **已有实验结果文档**
+- [x] v4.1 实施 go 决策 ✅ **已决策：推进简化版**
 
 ---
 
@@ -130,6 +131,7 @@ docs-tdd kickoff PR-XXXXX --kind feature
 - [x] Phase 1: 补全 v4.0 ✅ **已完成（commit: c8b66f9）**
 - [x] Phase 2: 决策 PR-02419 去向 ✅ **已完成（选方案 2B，换需求）**
 - [x] Phase 3: 数据收集计划确认 ✅ **第 1 个实验已完成（commit: 35e0146）**
+- [x] **决策推进 v4.1 简化版** ✅ **已完成（commit: ece3952）**
 
 **实验数据（PR-02233-BTN-LOADING）**：
 - ✅ 人工提炼：2 分钟
@@ -140,6 +142,13 @@ docs-tdd kickoff PR-XXXXX --kind feature
 - ✅ 准确率：100%
 - ✅ 意外收益：快速发现功能已实现
 
-**待决策**：
-- [ ] 是否继续 2 个 lite 实验？（数据已初步验证 lite 模式有效）
-- [ ] 基于 1 个实验数据，是否足够支持 v4.1 go 决策？
+**v4.1 简化版已实施**：
+- ✅ lite-work-item-template.json（模板）
+- ✅ lite-mode-guide.md（4000+ 字操作指南）
+- ✅ lite-experiment-template.md（实验记录模板）
+- ✅ new-project-kickoff.md 新增 §5 Lite 模式章节
+
+**下一步**：
+- [ ] 在实际项目中使用 2-3 次 lite 模式
+- [ ] 收集反馈，持续优化流程
+- [ ] 根据使用数据决定是否推进完整版 v4.1
