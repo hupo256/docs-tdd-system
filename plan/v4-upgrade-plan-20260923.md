@@ -6,7 +6,7 @@
 
 ---
 
-## 一、v4.0 规则补全（已完成 ✅）
+## 一、v4.0 规则补全（部分完成 ⚠️）
 
 ### 1.1 问题诊断
 
@@ -46,62 +46,70 @@
 
 #### Step 2: 更新 rule-loader-v4.mjs（已完成 ✅）
 
-**修改内容**：
-```javascript
-// 原来（v4.0 beta）：8 个精简规则
-const standardRules = [
-  'rule-router.md',
-  'coding-quality-lite.md',     // 精简版
-  'api-schema-mapper-lite.md',  // 精简版
-  // ...
-]
+**修改内容**：采用优先级排序 + 按档位加载模式
 
-// 现在（v4.0 stable）：10 个完整规则
-const standardRules = [
-  'rule-router.md',
-  'coding-core-checklist.md',        // 完整版
-  'api-schema-mapper-core.md',       // 完整版
-  'i18n-key-literal-rule.md',
-  'react-query-zustand-split.md',
-  'fameex-shared-components.md',
-  'biome-config-summary.md',
-  'project-readme-summary.md',
-  'new-project-kickoff.md',
-  'prd-feature-inventory.md',
-]
+**实际加载（standard 档，8 个规则）**：
+```javascript
+// P0: 必须（micro 3 个）
+{ path: 'git-branch-flow.md', priority: 1 },
+{ path: 'coding-worktree.md', priority: 2 },
+{ path: 'biome-config-summary.md', priority: 3 },  // ✅ 新规则
+
+// P1: 重要（lite +2 = 5 个）
+{ path: 'coding-core-checklist.md', priority: 4 },  // ✅ 新规则
+{ path: 'project-readme-summary.md', priority: 5 }, // ✅ 新规则
+
+// P2: 核心业务（standard +3 = 8 个）
+{ path: 'api-and-mapper.md', priority: 6 },              // 沿用老规则
+{ path: 'architecture-and-state.md', priority: 7 },     // 沿用老规则
+{ path: 'component-reuse-and-visual-fidelity.md', priority: 8 }, // 沿用老规则
 ```
+
+**集成情况**：
+- ✅ 使用了 3 个新规则（coding-core-checklist、biome-config-summary、project-readme-summary）
+- ⚠️ 保留了 5 个老规则（api-and-mapper 等）
+- ⚠️ 其他 4 个新规则已创建但未集成到 loader（api-schema-mapper-core、i18n-key-literal-rule、react-query-zustand-split、fameex-shared-components）
 
 **文件位置**：`common/engine/agent-scripts/lib/rule-loader-v4.mjs`
 
-**commit**: `f6495a1`
+**commit**: `f6495a1`（推测）
 
 #### Step 3: 调整预算配置（已完成 ✅）
 
-**修改内容**：`vnext-efficiency-policy.mjs`
+**修改内容**：`rule-loader-v4.mjs` 内置预算配置
 ```javascript
-micro:     25K  (2-3 个规则)
-lite:      30K  (5-6 个规则)
-standard:  80K  (10 个完整规则)  ← 从 50K 调整到 80K
-high-risk: 120K (全量规则)
+micro:     12000 字符  (3 个规则)
+lite:      24000 字符  (5 个规则)
+standard:  80000 字符  (8 个规则)  ← 从 50K 调整到 80K
+high-risk: 160000 字符 (12 个规则)
 ```
 
-**文件位置**：`common/engine/agent-scripts/lib/vnext-efficiency-policy.mjs`
+**实际验证**（standard 档）：
+- 加载 8 个规则文件
+- 总计 41611 字符
+- 在 80000 预算内 ✅
 
-**commit**: `f6495a1`
+**文件位置**：`common/engine/agent-scripts/lib/rule-loader-v4.mjs`
+
+**commit**: `f6495a1`（推测）
 
 ### 1.3 验证结果
 
 **测试命令**：
 ```bash
-node test-ctx-with-rules.mjs PR-02233
+node common/engine/agent-scripts/docs-tdd.mjs context PR-02233 standard
 ```
 
-**结果**：
-- ✅ standard 档成功加载 10 个规则文件
+**结果**（2026-09-23 实测）：
+- ✅ standard 档成功加载 8 个规则文件
 - ✅ 总计 41611 字符，在 80000 预算内
-- ✅ 规则覆盖完整（coding-quality、api-schema-mapper、i18n 等核心规则都有）
+- ⚠️ 规则覆盖：部分新规则已集成（coding-core-checklist、biome-config-summary、project-readme-summary）
+- ⚠️ 其他 4 个新规则已创建但未集成（api-schema-mapper-core、i18n-key-literal-rule、react-query-zustand-split、fameex-shared-components）
 
-**结论**：v4.0 规则补全完成，可以正常使用。
+**结论**：
+- v4.0 **部分完成**：核心规则加载机制工作正常，预算控制有效
+- **遗留问题**：4 个新创建的规则文件未集成到优先级列表中
+- **可用性**：当前配置可以正常使用，但规则覆盖不如预期完整
 
 ---
 
@@ -361,14 +369,20 @@ export const efficiencyLevels = {
 
 ## 四、实施时间线
 
-### Phase 1: v4.0 规则补全（已完成 ✅）
+### Phase 1: v4.0 规则补全（部分完成 ⚠️）
 
 - ✅ 2026-09-23：补充 7 个完整规则文件
-- ✅ 2026-09-23：更新 rule-loader-v4.mjs
+- ⚠️ 2026-09-23：更新 rule-loader-v4.mjs（仅集成 3/7 个新规则）
 - ✅ 2026-09-23：调整预算配置
-- ✅ 2026-09-23：验证通过
+- ⚠️ 2026-09-23：验证通过但规则覆盖不完整
 
-**结果**：v4.0 可以正式使用，规则覆盖完整。
+**结果**：v4.0 可以使用，但 4 个新规则文件未集成到 loader。
+
+**遗留工作**：
+- [ ] 将 `api-schema-mapper-core.md` 替换 `api-and-mapper.md`
+- [ ] 集成 `i18n-key-literal-rule.md`
+- [ ] 集成 `react-query-zustand-split.md`
+- [ ] 集成 `fameex-shared-components.md`
 
 ### Phase 2: v4.1 人工提炼输入（进行中 🚧）
 
@@ -473,7 +487,7 @@ export const efficiencyLevels = {
 - 同一个需求，分别用"AI extraction"和"人工提炼"生成 work-item
 - 对比实现后的返工次数、bug 数、验收通过率
 
-**当前状态**：待验证（需要完成 PR-02419 并收集数据）
+**当前状态**：PR-02419 实验阻塞在业务信息确认（公司做市用户 type ID、修改 API 等），技术流程未验证完整
 
 ### 假设 2：lite 模式节省 50% 时间
 
@@ -531,20 +545,46 @@ export const efficiencyLevels = {
 
 ### 立即行动（本周）
 
-1. **完成 PR-02419 实验**（验证 lite 模式效率）
-   - 修正 worktree 名称
-   - 实现 4 个 requirements
-   - 记录时间和 token 消耗
-   - 对比 full 模式的效率差异
+**决策点**：选择以下方案之一执行
 
-2. **收集数据**
-   - lite 模式 vs. full 模式的时间对比
-   - lite 模式 vs. full 模式的 token 对比
-   - 人工提炼的准确率数据
+#### 方案 A：补全 v4.0（保守，1-2 小时）
+1. **集成剩余 4 个新规则到 rule-loader-v4.mjs**
+   - 替换 `api-and-mapper.md` → `api-schema-mapper-core.md`
+   - 在 P2/P3 优先级插入其他 3 个新规则
+   - 调整 standard 档到 10 个规则（如计划原本设计）
+   
+2. **重新验证**
+   ```bash
+   node common/engine/agent-scripts/docs-tdd.mjs context PR-02233 standard
+   # 确认加载了所有新规则且未超预算
+   ```
 
-3. **更新本文档**
-   - 补充实验结果
-   - 确认 v4.1 实施优先级
+3. **标记 v4.0 真正完成**
+
+#### 方案 B：基于现状推进 v4.1（务实，1-2 周）
+1. **接受 v4.0 现状**
+   - 承认只集成了 3/7 个新规则
+   - 修改计划，移除"v4.0 已完成"的乐观描述
+   - 将剩余 4 个规则集成标记为"低优先级优化"
+
+2. **解除 PR-02419 阻塞**
+   - 如果 2 天内拿不到业务答案 → 换一个无阻塞的小需求做 lite 实验
+   - 目标：验证 lite 模式的 ROI，不是完成 PR-02419 本身
+
+3. **收集 lite 模式数据**（3 个需求）
+   - 记录时间、token、准确率
+   - 数据好 → 推进 v4.1 实施；数据差 → 放弃 lite 方向
+
+#### 方案 C：暂停迭代，聚焦真实痛点（激进，回归基本面）
+1. **回答 3 个问题**
+   - v4.0 解决了什么实际问题？（有 PR-02233 的实测对比数据吗？）
+   - lite 模式节省的 10-15 分钟值得投入多少开发时间？
+   - 当前系统真正的痛点是什么？（使用频率？失败率？体验？）
+
+2. **如果痛点不明确**
+   - 暂停 v4.x 系统迭代
+   - 跑 10 个真实需求，收集痛点数据
+   - 数据驱动下一步优化方向
 
 ### 短期行动（1-2 周）
 
@@ -652,4 +692,66 @@ export const efficiencyLevels = {
 
 **最后更新**：2026-09-23  
 **负责人**：待定  
-**状态**：v4.0 已完成，v4.1 进行中
+**状态**：v4.0 部分完成（3/7 新规则已集成），v4.1 设计完成待验证
+
+---
+
+## 附录 A：当前状态诊断（2026-09-23）
+
+### 发现的问题
+
+1. **计划-实现不一致**
+   - 计划声称 v4.0 "已完成"，实际只完成 43%（3/7 个新规则）
+   - 计划描述的规则列表与代码完全不匹配
+   - 标记 ✅ 的步骤实际未完全落地
+
+2. **v4.1 过度设计**
+   - schema 扩展、命令行参数、档位路由等设计完整
+   - 但实验只完成 1/4，且阻塞在业务信息而非技术验证
+   - 没有数据支撑 ROI 假设
+
+3. **PR-02419 阻塞不合理**
+   - lite 模式验证不应该依赖特定需求
+   - 业务信息缺失可以换需求继续验证
+   - 实验设计应该更灵活
+
+### 建议的优先级
+
+**P0（本周必做）**：
+1. **决策 v4.0 是否补全**
+   - 方案 A：花 1-2 小时补全 4 个规则 → v4.0 完整
+   - 方案 B：接受现状，将剩余规则标记为"可选优化"
+   - **推荐**：方案 A，既然规则已创建，集成成本低
+
+2. **解除 PR-02419 阻塞**
+   - 如果 48 小时内拿不到业务答案 → 换需求
+   - 找一个不阻塞的小需求（单页面、< 3 文件、纯前端）
+   - **目标**：验证 lite 流程，不是完成 PR-02419
+
+**P1（1-2 周）**：
+3. **收集 lite 模式数据**（至少 3 个需求）
+   - 记录：人工提炼时间、AI 生成时间、实现时间、token 消耗
+   - 对比：full 模式的历史数据（如果有）
+   - 决策：数据好 → 推进 v4.1；数据差 → 探索其他方向
+
+**P2（暂缓）**：
+4. **v4.1 实施**
+   - 等 P1 数据收集完成后再决定
+   - 如果 lite 模式节省 < 30% 时间 → 不值得投入
+   - 如果适用场景 < 50% 需求 → ROI 不够
+
+### 风险提示
+
+- **过度优化风险**：系统迭代消耗的时间 > 实际节省的时间
+- **数据缺失风险**：没有基线数据，无法评估优化效果
+- **需求不明风险**：不清楚真实痛点在哪里，盲目优化方向可能错误
+
+### 下一步决策点
+
+**立即决策**（今天）：
+- [ ] 是否补全 v4.0？（方案 A vs. 方案 B）
+- [ ] 是否继续 PR-02419？（等业务 vs. 换需求）
+
+**1 周后决策**：
+- [ ] lite 模式数据是否支持继续投入？
+- [ ] 是否暂停系统迭代，转向真实需求验证？

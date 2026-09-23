@@ -6,9 +6,11 @@ import { resolve, join } from 'node:path'
 
 /**
  * 规则文件优先级（从高到低）
- * micro(3) → lite(5) → standard(10) → high-risk(15)
- * 
- * v4.0 策略：用现有完整规则文件，确保覆盖率
+ * micro(3) → lite(5) → standard(11) → high-risk(17)
+ *
+ * v4.0 策略：集成所有新规则文件，确保覆盖率
+ * - v4.0 新规则：api-schema-mapper-core, i18n-key-literal-rule,
+ *   react-query-zustand-split, fameex-shared-components
  */
 const RULE_PRIORITY = [
   // P0: 必须（micro 3 个）
@@ -21,18 +23,20 @@ const RULE_PRIORITY = [
   { path: 'project-readme-summary.md', priority: 5, sizeKB: 2, tags: ['project'] },
   
   // P2: 核心业务（standard +5 = 10 个）
-  { path: 'api-and-mapper.md', priority: 6, sizeKB: 6, tags: ['api'] },
+  { path: 'api-schema-mapper-core.md', priority: 6, sizeKB: 2, tags: ['api'] },  // v4.0 新规则
   { path: 'architecture-and-state.md', priority: 7, sizeKB: 28, tags: ['state', 'architecture'] },
   { path: 'component-reuse-and-visual-fidelity.md', priority: 8, sizeKB: 10, tags: ['reuse', 'ui'] },
-  { path: 'i18n-key-literal-rule.md', priority: 9, sizeKB: 3, tags: ['i18n'] },
-  { path: 'hook-integration.md', priority: 10, sizeKB: 10, tags: ['git', 'precommit'] },
+  { path: 'i18n-key-literal-rule.md', priority: 9, sizeKB: 3, tags: ['i18n'] },  // v4.0 新规则
+  { path: 'react-query-zustand-split.md', priority: 10, sizeKB: 3, tags: ['state'] },  // v4.0 新规则
+  { path: 'fameex-shared-components.md', priority: 11, sizeKB: 2, tags: ['reuse'] },  // v4.0 新规则
+  { path: 'hook-integration.md', priority: 12, sizeKB: 10, tags: ['git', 'precommit'] },
   
-  // P3: 高风险场景（high-risk +5 = 15 个）
-  { path: 'execution-evidence.md', priority: 11, sizeKB: 7, tags: ['test', 'evidence'] },
-  { path: 'figma-mcp-read-workflow.md', priority: 12, sizeKB: 8, tags: ['figma'] },
-  { path: 'change-scope-boundary.md', priority: 13, sizeKB: 7, tags: ['scope'] },
-  { path: 'ui-style-token-rules.md', priority: 14, sizeKB: 9, tags: ['ui', 'style'] },
-  { path: 'blocking-and-change-protocol.md', priority: 15, sizeKB: 4, tags: ['safety', 'blocker'] },
+  // P3: 高风险场景（high-risk +5 = 17 个）
+  { path: 'execution-evidence.md', priority: 13, sizeKB: 7, tags: ['test', 'evidence'] },
+  { path: 'figma-mcp-read-workflow.md', priority: 14, sizeKB: 8, tags: ['figma'] },
+  { path: 'change-scope-boundary.md', priority: 15, sizeKB: 7, tags: ['scope'] },
+  { path: 'ui-style-token-rules.md', priority: 16, sizeKB: 9, tags: ['ui', 'style'] },
+  { path: 'blocking-and-change-protocol.md', priority: 17, sizeKB: 4, tags: ['safety', 'blocker'] },
 ]
 
 /**
@@ -48,8 +52,8 @@ export function selectRulesByEfficiency(efficiencyRoute, options = {}) {
   const budgets = {
     micro: { ruleFiles: 3, contextChars: 12000 },
     lite: { ruleFiles: 5, contextChars: 24000 },
-    standard: { ruleFiles: 8, contextChars: 80000 },
-    'high-risk': { ruleFiles: 12, contextChars: 160000 },
+    standard: { ruleFiles: 11, contextChars: 80000 },  // v4.0: 增加到 11 个规则
+    'high-risk': { ruleFiles: 17, contextChars: 160000 },  // v4.0: 增加到 17 个规则
   }
   
   const budget = budgets[efficiencyRoute] || budgets.standard
