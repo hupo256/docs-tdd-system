@@ -4523,6 +4523,7 @@
       "apps/web/package.json",
       "apps/web/src/mocks",
       "apps/web/src/services/api/user.ts",
+      "apps/web/src/types/user.ts",
       "apps/web/src/utils/hooks/useServiceWorkerRegistration.ts",
       "apps/web/src/i18n/locales/zh-CN/codeVerify.json",
       "pnpm-lock.yaml",

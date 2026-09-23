@@ -3,7 +3,7 @@ projectId: PR-02419
 status: active
 stage: G1
 branch: feature/PR-02419
-worktree: ""
+worktree: "/Users/aven/github/fameex-web-PR-02419"
 port: ""
 visualFidelity: standard
 prdSource: https://qfglxo2m3dc.sg.larksuite.com/wiki/RRKYwXfDxiv0Yek6fh4lyme2gAc
