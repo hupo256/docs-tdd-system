@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "workflowVersion": 2,
+  "projectId": "PR-02419",
+  "intake": {
+    "kind": "feature",
+    "sourceRole": "prd",
+    "sourceFingerprint": "382fc5970bd0c7627ffe864be61637c21ce6cab9b91f25e4d2a5ee28c862f6ef",
+    "sourcePaths": [
+      "prds/PR-02419/inbox/lark-sync/prd-latest.md"
+    ]
+  },
+  "sourceSnapshot": {
+    "revision": "1",
+    "contentHash": "774032973de4d9367c6b02ebf933ac73924c9fed45340a05e4cd6766c44cfb4b",
+    "sources": [
+      {
+        "path": "prds/PR-02419/inbox/lark-sync/prd-latest.md",
+        "contentHash": "13a9263ea1c7ee1da33e8056b00be54ce47e20413ef79c5cfb1cd493d7779a2b"
+      }
+    ],
+    "assets": [
+      {
+        "sourceId": "SRC-FF18DB189901",
+        "path": "https://feishu.cn/file/NQjbbU4ZDodrkax6aVmluXbngbf",
+        "assetHash": "",
+        "assetStatus": "remote",
+        "mediaType": "application/octet-stream"
+      },
+      {
+        "sourceId": "SRC-F675B520D3E9",
+        "path": "https://feishu.cn/file/YqVybCUI6oGnFYxvA4llYXVXgaf",
+        "assetHash": "",
+        "assetStatus": "remote",
+        "mediaType": "application/octet-stream"
+      }
+    ]
+  },
+  "requirements": [],
+  "coverageAudit": {
+    "sourceFingerprint": "pending",
+    "requirementsFingerprint": "pending",
+    "reviewMode": "independent-cold-read",
+    "reviewRunId": "pending",
+    "reviewer": {
+      "kind": "model",
+      "id": "pending"
+    },
+    "completedAt": "2000-01-01T00:00:00Z",
+    "verdict": "changes-required",
+    "unresolved": [
+      "kickoff stub: requirements not extracted from PRD yet"
+    ]
+  },
+  "routing": {
+    "scopeClass": "local",
+    "riskSignals": [
+      "unclassified"
+    ],
+    "verificationLevel": "V0",
+    "routerVersion": 1
+  },
+  "apiDependency": {
+    "mode": "no-request",
+    "reason": "kickoff stub before intake; reassess after requirement extraction"
+  },
+  "sourceReadiness": {
+    "figma": {
+      "requirement": "unknown",
+      "status": "pending",
+      "reason": "not classified from PRD yet"
+    },
+    "api": {
+      "requirement": "unknown",
+      "status": "pending",
+      "reason": "not classified from PRD yet"
+    }
+  },
+  "scopeApproval": null,
+  "autopilot": {
+    "phase": "intake",
+    "implementation": {
+      "status": "pending",
+      "changedPaths": []
+    },
+    "delivery": {
+      "status": "pending"
+    },
+    "repair": {
+      "attempts": {
+        "source": 0,
+        "scope": 0,
+        "code": 0,
+        "browser": 0,
+        "environment": 0,
+        "external-dependency": 0
+      },
+      "lastFailure": null,
+      "terminalState": null
+    },
+    "lastCheckpointAt": "2026-09-23T12:17:07.252Z"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "projectId": "PR-02419",
+  "outputDir": "apps/web/docs_tdd/prds/PR-02419/inbox/lark-sync",
+  "sources": [
+    {
+      "name": "需求 PRD",
+      "url": "https://qfglxo2m3dc.sg.larksuite.com/wiki/RRKYwXfDxiv0Yek6fh4lyme2gAc",
+      "type": "wiki",
+      "target": "prd-latest.md",
+      "role": "prd"
+    }
+  ]
+}

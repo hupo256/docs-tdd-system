@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "projectId": "PR-02419",
+  "sourceSnapshot": {
+    "revision": "1",
+    "contentHash": "774032973de4d9367c6b02ebf933ac73924c9fed45340a05e4cd6766c44cfb4b",
+    "sources": [
+      {
+        "path": "prds/PR-02419/inbox/lark-sync/prd-latest.md",
+        "contentHash": "13a9263ea1c7ee1da33e8056b00be54ce47e20413ef79c5cfb1cd493d7779a2b"
+      }
+    ]
+  },
+  "requirements": [
+    {
+      "id": "R1",
+      "statement": "运营后台修改用户类型时，前端调用接口获取用户账户类型进行校验",
+      "rationale": "需要判断当前用户是否为公司做市用户，作为拦截的前置条件",
+      "sources": [
+        {
+          "path": "prds/PR-02419/inbox/lark-sync/prd-latest.md",
+          "anchor": "## 四. 产品方案 > 4.1.1 业务规则 > 提交触发"
+        }
+      ],
+      "scope": "doing",
+      "phase": "本期"
+    },
+    {
+      "id": "R2",
+      "statement": "若用户账户类型为公司做市用户，前端阻止修改并弹出 toast 提示：该用户为公司做市用户，禁止修改用户类型",
+      "rationale": "核心拦截逻辑，阻止运营人员误操作修改公司做市用户的用户类型",
+      "sources": [
+        {
+          "path": "prds/PR-02419/inbox/lark-sync/prd-latest.md",
+          "anchor": "## 四. 产品方案 > 4.1.1 业务规则 > 命中拦截"
+        }
+      ],
+      "scope": "doing",
+      "phase": "本期"
+    },
+    {
+      "id": "R3",
+      "statement": "批量修改用户类型时，逐个校验，部分用户命中禁止修改则该部分失败并提示 UID 列表，其余用户正常修改",
+      "rationale": "批量操作场景需要支持部分成功、部分失败，不能因为部分用户不可修改而阻止全部",
+      "sources": [
+        {
+          "path": "prds/PR-02419/inbox/lark-sync/prd-latest.md",
+          "anchor": "## 四. 产品方案 > 4.1.1 业务规则 > 提交触发 > 校验对象"
+        }
+      ],
+      "scope": "doing",
+      "phase": "本期"
+    },
+    {
+      "id": "R4",
+      "statement": "用户类型修改接口在写入前独立校验用户账户类型，若为公司做市用户则拒绝修改并返回错误码和错误信息",
+      "rationale": "服务端最终保护，防止绕过前端直接调用接口修改公司做市用户的用户类型",
+      "sources": [
+        {
+          "path": "prds/PR-02419/inbox/lark-sync/prd-latest.md",
+          "anchor": "## 四. 产品方案 > 4.2 服务端修改保护 > 服务端校验"
+        }
+      ],
+      "scope": "doing",
+      "phase": "本期"
+    }
+  ],
+  "surfaces": [
+    {
+      "id": "S1",
+      "name": "用户详情页 - 用户类型修改",
+      "path": "运营后台 → 用户管理 → 用户详情 → 修改用户类型",
+      "type": "ui-interaction",
+      "requirementIds": ["R1", "R2"]
+    },
+    {
+      "id": "S2",
+      "name": "用户列表 - 批量设置类型",
+      "path": "运营后台 → 用户管理 → 批量设置类型",
+      "type": "ui-interaction",
+      "requirementIds": ["R1", "R2", "R3"]
+    },
+    {
+      "id": "S3",
+      "name": "用户批量管理 - 批量修改",
+      "path": "运营后台 → 用户管理 → 用户批量管理",
+      "type": "ui-interaction",
+      "requirementIds": ["R1", "R2", "R3"]
+    },
+    {
+      "id": "S4",
+      "name": "用户类型修改接口 - 后端校验",
+      "path": "后端接口",
+      "type": "api",
+      "requirementIds": ["R4"]
+    }
+  ]
+}
