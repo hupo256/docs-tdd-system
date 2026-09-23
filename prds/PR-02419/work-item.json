@@ -36,7 +36,81 @@
       }
     ]
   },
-  "requirements": [],
+  "humanSummary": "运营后台修改用户类型时，前端校验并拦截公司做市用户，后端独立二次校验",
+  "requirements": [
+    {
+      "requirementId": "R-001",
+      "statement": "用户详情页修改用户类型，点击确认前校验账户类型，若为公司做市用户则不发请求，Toast 拦截：'该用户为公司做市用户，禁止修改用户类型'（前端硬编码文案）",
+      "status": "doing",
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-001",
+          "locator": "apps/admin 用户详情页 - 设置类型弹窗",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "manual-browser",
+          "description": "测试公司做市用户修改时 Toast 拦截"
+        }
+      ]
+    },
+    {
+      "requirementId": "R-002",
+      "statement": "用户列表批量设置类型，提交前批量校验，若包含公司做市用户则过滤掉这些 UID 不发请求，Toast 显示失败 UID：'111111111, 222222222 修改失败'（前端硬编码格式）",
+      "status": "doing",
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-002",
+          "locator": "apps/admin 用户管理 - 批量设置类型",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "manual-browser",
+          "description": "测试批量修改时部分公司做市用户失败"
+        }
+      ]
+    },
+    {
+      "requirementId": "R-003",
+      "statement": "用户批量管理页批量设置类型，提交前批量校验，若包含公司做市用户则过滤掉这些 UID 不发请求，Toast 显示失败 UID：'111111111, 222222222 修改失败'（前端硬编码格式）",
+      "status": "doing",
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-003",
+          "locator": "apps/admin 用户管理 - 用户批量管理",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "manual-browser",
+          "description": "测试批量管理时部分公司做市用户失败"
+        }
+      ]
+    },
+    {
+      "requirementId": "R-004",
+      "statement": "后端接口独立校验并兜底（前端可能绕过），拒绝公司做市用户的修改请求并返回错误，前端统一错误处理：Toast 显示 response.msg",
+      "status": "doing",
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-004",
+          "locator": "apps/admin 用户类型修改接口错误处理",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "manual-api",
+          "description": "绕过前端直接调用接口，验证后端拦截"
+        }
+      ]
+    }
+  ],
   "coverageAudit": {
     "sourceFingerprint": "pending",
     "requirementsFingerprint": "pending",
@@ -55,30 +129,31 @@
   "routing": {
     "scopeClass": "local",
     "riskSignals": [
-      "unclassified"
+      "admin-only",
+      "validation-logic"
     ],
-    "verificationLevel": "V0",
+    "verificationLevel": "V1",
     "routerVersion": 1
   },
   "apiDependency": {
-    "mode": "no-request",
-    "reason": "kickoff stub before intake; reassess after requirement extraction"
+    "mode": "consume-only",
+    "reason": "前端消费现有用户详情接口和修改接口，后端加校验逻辑"
   },
   "sourceReadiness": {
     "figma": {
-      "requirement": "unknown",
-      "status": "pending",
-      "reason": "not classified from PRD yet"
+      "requirement": "not-required",
+      "status": "ready",
+      "reason": "复用现有弹窗样式，无新设计稿"
     },
     "api": {
-      "requirement": "unknown",
-      "status": "pending",
-      "reason": "not classified from PRD yet"
+      "requirement": "not-required",
+      "status": "ready",
+      "reason": "后端自行加校验，前端只处理错误码"
     }
   },
   "scopeApproval": null,
   "autopilot": {
-    "phase": "intake",
+    "phase": "implementation",
     "implementation": {
       "status": "pending",
       "changedPaths": []
