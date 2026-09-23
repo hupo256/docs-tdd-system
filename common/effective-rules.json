@@ -1,14 +1,14 @@
 {
   "version": 2,
-  "fingerprint": "85e7e34beac4ee4a50bf9e1ee7ded4344acca3108c3cdfd45b98c513309514f2",
-  "publishedAt": "2026-09-23T06:00:23.421Z",
-  "l3RuleReleaseFingerprint": "f7114a8b2d2dec14e6ff94acf61a87e3ff8a32d77d779dff7bd9f3e7a14adbb4",
+  "fingerprint": "2e1ac4bd475424a16bc521bffbd161a3531aae309ecef0c264b1b1c5c4dcda6b",
+  "publishedAt": "2026-09-23T08:09:27.920Z",
+  "l3RuleReleaseFingerprint": "df20d68b04b2ab995ff4a57b5f9bc1cb8c8a242433d8e15ed72c9cbb52b5ebef",
   "clientMatrix": {
     "codex": {
       "kind": "direct",
       "adapter": "~/.codex/AGENTS.md",
       "enforcement": "SessionStart rule preflight + Pre/PostToolUse receipt/code gate + changed/gate",
-      "sourceFingerprint": "c179aed578db347850ff6590a14cce6c5031f81253ae07412eb3877d47bd5b5c",
+      "sourceFingerprint": "e290f8d5fa7d473fd77281ff30dac50007bece5a11599c7f77a1355ee20ae162",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -40,6 +40,7 @@
         ".cursor/rules/async-dependencies.mdc",
         ".cursor/rules/async-parallel.mdc",
         ".cursor/rules/async-suspense-boundaries.mdc",
+        ".cursor/rules/auth-entry-web-next-only.mdc",
         ".cursor/rules/bundle-barrel-imports.mdc",
         ".cursor/rules/bundle-conditional.mdc",
         ".cursor/rules/bundle-defer-third-party.mdc",
@@ -111,14 +112,14 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "f7114a8b2d2dec14e6ff94acf61a87e3ff8a32d77d779dff7bd9f3e7a14adbb4",
+      "l3Fingerprint": "df20d68b04b2ab995ff4a57b5f9bc1cb8c8a242433d8e15ed72c9cbb52b5ebef",
       "conflictOverrides": []
     },
     "claude": {
       "kind": "direct",
       "adapter": "~/.claude/CLAUDE.md",
       "enforcement": "UserPromptSubmit rule preflight + Pre/PostToolUse receipt + changed/gate",
-      "sourceFingerprint": "c179aed578db347850ff6590a14cce6c5031f81253ae07412eb3877d47bd5b5c",
+      "sourceFingerprint": "e290f8d5fa7d473fd77281ff30dac50007bece5a11599c7f77a1355ee20ae162",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -150,6 +151,7 @@
         ".cursor/rules/async-dependencies.mdc",
         ".cursor/rules/async-parallel.mdc",
         ".cursor/rules/async-suspense-boundaries.mdc",
+        ".cursor/rules/auth-entry-web-next-only.mdc",
         ".cursor/rules/bundle-barrel-imports.mdc",
         ".cursor/rules/bundle-conditional.mdc",
         ".cursor/rules/bundle-defer-third-party.mdc",
@@ -221,14 +223,14 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "f7114a8b2d2dec14e6ff94acf61a87e3ff8a32d77d779dff7bd9f3e7a14adbb4",
+      "l3Fingerprint": "df20d68b04b2ab995ff4a57b5f9bc1cb8c8a242433d8e15ed72c9cbb52b5ebef",
       "conflictOverrides": []
     },
     "cursor": {
       "kind": "direct",
       "adapter": "~/.cursor/rules/fameex-local-governance.mdc",
       "enforcement": "native glob/alwaysApply + resolver conformance + changed/gate",
-      "sourceFingerprint": "c179aed578db347850ff6590a14cce6c5031f81253ae07412eb3877d47bd5b5c",
+      "sourceFingerprint": "e290f8d5fa7d473fd77281ff30dac50007bece5a11599c7f77a1355ee20ae162",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -260,6 +262,7 @@
         ".cursor/rules/async-dependencies.mdc",
         ".cursor/rules/async-parallel.mdc",
         ".cursor/rules/async-suspense-boundaries.mdc",
+        ".cursor/rules/auth-entry-web-next-only.mdc",
         ".cursor/rules/bundle-barrel-imports.mdc",
         ".cursor/rules/bundle-conditional.mdc",
         ".cursor/rules/bundle-defer-third-party.mdc",
@@ -331,14 +334,14 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "f7114a8b2d2dec14e6ff94acf61a87e3ff8a32d77d779dff7bd9f3e7a14adbb4",
+      "l3Fingerprint": "df20d68b04b2ab995ff4a57b5f9bc1cb8c8a242433d8e15ed72c9cbb52b5ebef",
       "conflictOverrides": []
     },
     "pi": {
       "kind": "direct",
       "adapter": "~/.pi/agent/AGENTS.md",
       "enforcement": "extension before_agent_start rule preflight + tool_call receipt + tool_result code gate + changed/gate",
-      "sourceFingerprint": "c179aed578db347850ff6590a14cce6c5031f81253ae07412eb3877d47bd5b5c",
+      "sourceFingerprint": "e290f8d5fa7d473fd77281ff30dac50007bece5a11599c7f77a1355ee20ae162",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -370,6 +373,7 @@
         ".cursor/rules/async-dependencies.mdc",
         ".cursor/rules/async-parallel.mdc",
         ".cursor/rules/async-suspense-boundaries.mdc",
+        ".cursor/rules/auth-entry-web-next-only.mdc",
         ".cursor/rules/bundle-barrel-imports.mdc",
         ".cursor/rules/bundle-conditional.mdc",
         ".cursor/rules/bundle-defer-third-party.mdc",
@@ -441,7 +445,7 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "f7114a8b2d2dec14e6ff94acf61a87e3ff8a32d77d779dff7bd9f3e7a14adbb4",
+      "l3Fingerprint": "df20d68b04b2ab995ff4a57b5f9bc1cb8c8a242433d8e15ed72c9cbb52b5ebef",
       "conflictOverrides": []
     },
     "lark-codex": {
@@ -449,7 +453,7 @@
       "delegatesTo": "codex",
       "adapter": "common/lark-bot/lib/lark-rule-context.mjs + common/lark-bot/lib/lark-worker-prompts.mjs + common/lark-bot/lib/lark-worker-run.mjs + common/engine/agent-scripts/rule-context-hook.mjs + common/engine/agent-scripts/rule-context.mjs + common/engine/agent-scripts/lib/l2-rule-resolver.mjs + common/engine/agent-scripts/lib/rule-consumption.mjs",
       "enforcement": "fresh effective rules + focused context + worker quality gate",
-      "sourceFingerprint": "c179aed578db347850ff6590a14cce6c5031f81253ae07412eb3877d47bd5b5c",
+      "sourceFingerprint": "e290f8d5fa7d473fd77281ff30dac50007bece5a11599c7f77a1355ee20ae162",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -481,6 +485,7 @@
         ".cursor/rules/async-dependencies.mdc",
         ".cursor/rules/async-parallel.mdc",
         ".cursor/rules/async-suspense-boundaries.mdc",
+        ".cursor/rules/auth-entry-web-next-only.mdc",
         ".cursor/rules/bundle-barrel-imports.mdc",
         ".cursor/rules/bundle-conditional.mdc",
         ".cursor/rules/bundle-defer-third-party.mdc",
@@ -552,7 +557,7 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "f7114a8b2d2dec14e6ff94acf61a87e3ff8a32d77d779dff7bd9f3e7a14adbb4",
+      "l3Fingerprint": "df20d68b04b2ab995ff4a57b5f9bc1cb8c8a242433d8e15ed72c9cbb52b5ebef",
       "conflictOverrides": []
     },
     "lark-claude": {
@@ -560,7 +565,7 @@
       "delegatesTo": "claude",
       "adapter": "common/lark-bot/lib/lark-rule-context.mjs + common/lark-bot/lib/lark-worker-prompts.mjs + common/lark-bot/lib/lark-worker-run.mjs + common/engine/agent-scripts/rule-context-hook.mjs + common/engine/agent-scripts/rule-context.mjs + common/engine/agent-scripts/lib/l2-rule-resolver.mjs + common/engine/agent-scripts/lib/rule-consumption.mjs",
       "enforcement": "fresh effective rules + focused context + worker quality gate",
-      "sourceFingerprint": "c179aed578db347850ff6590a14cce6c5031f81253ae07412eb3877d47bd5b5c",
+      "sourceFingerprint": "e290f8d5fa7d473fd77281ff30dac50007bece5a11599c7f77a1355ee20ae162",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -592,6 +597,7 @@
         ".cursor/rules/async-dependencies.mdc",
         ".cursor/rules/async-parallel.mdc",
         ".cursor/rules/async-suspense-boundaries.mdc",
+        ".cursor/rules/auth-entry-web-next-only.mdc",
         ".cursor/rules/bundle-barrel-imports.mdc",
         ".cursor/rules/bundle-conditional.mdc",
         ".cursor/rules/bundle-defer-third-party.mdc",
@@ -663,11 +669,11 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "f7114a8b2d2dec14e6ff94acf61a87e3ff8a32d77d779dff7bd9f3e7a14adbb4",
+      "l3Fingerprint": "df20d68b04b2ab995ff4a57b5f9bc1cb8c8a242433d8e15ed72c9cbb52b5ebef",
       "conflictOverrides": []
     }
   },
-  "fileCount": 111,
+  "fileCount": 112,
   "skillTargets": {
     "~/.codex/skills/coding-quality": "~/.ai-rules/skills/coding-quality",
     "~/.claude/skills/coding-quality": "~/.ai-rules/skills/coding-quality",
@@ -686,6 +692,7 @@
     ".cursor/rules/async-dependencies.mdc": "a72b46bae77f752ebd47e60aa923afb1529b37b504c2ecba378b843ddafe7f3b",
     ".cursor/rules/async-parallel.mdc": "0a7710ea469c6a94bcfce2797d8f2e79d991d427b400e57140412e76031e1967",
     ".cursor/rules/async-suspense-boundaries.mdc": "123dbe39ada6df1c38827232601f05ca773ac8ad512e33baf74ac9113b49aa47",
+    ".cursor/rules/auth-entry-web-next-only.mdc": "8ea0fa65d56bdd4f00b30726eaa1c341122c1e9a52ce2b682917546359db8775",
     ".cursor/rules/bundle-barrel-imports.mdc": "8e04175d5000c16e76ea50df527fc2f801b7bfa5e22f9deba8686df2bbbdffc8",
     ".cursor/rules/bundle-conditional.mdc": "3f9a4d7b543d73cd009afd6acdefb5b1b4d4d81470659ad2305e494c2e2873d9",
     ".cursor/rules/bundle-defer-third-party.mdc": "ed3e67412d0806a53d7801131c20e18dc568131985670dfca788d7445e68e510",

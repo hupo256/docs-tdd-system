@@ -39,7 +39,7 @@ Codex/Claude/Pi 侧编码规则入口不放在 `docs_tdd`：短硬规则常驻 `
 
 ## 5. 新需求接入
 
-当前产品能力线为 **docs_tdd v3.5**，发布资格状态为 **v3.5.0-rc / blocked**；只有 `docs-tdd guard --strict` 通过并重新发布规则事实后，才可标记正式 release。自 2026-09-08 起，新需求默认使用第二代 work-item 协议（兼容标识 `workflowVersion: 2`）；存量 `workflowVersion: 1` 项目继续使用第一代流程，不静默迁移。统一入口与完整步骤见 [common/rules/new-project-kickoff.md](./common/rules/new-project-kickoff.md) §2。
+当前产品能力线为 **docs_tdd v3.5**，**v3.5.0 / stable** 已于 2026-09-23 通过 `docs-tdd guard --strict`、规则发布和 golden 回归；pilot 仍为 collecting，未宣称 production-ready。自 2026-09-08 起，新需求默认使用第二代 work-item 协议（兼容标识 `workflowVersion: 2`）；存量 `workflowVersion: 1` 项目继续使用第一代流程，不静默迁移。统一入口与完整步骤见 [common/rules/new-project-kickoff.md](./common/rules/new-project-kickoff.md) §2。
 
 ### 5.1 v3.5 新项目（`workflowVersion: 2`，默认）
 

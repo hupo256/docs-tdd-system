@@ -38,7 +38,7 @@ export const VERSION_HISTORY = [
       'smart-rules.mjs',
     ],
     status: {
-      release: 'v3.5.0-rc / blocked',
+      release: 'v3.5.0 / stable',
       phase1: 'experimental, not integrated',
       phase2: 'read-only evaluation, not integrated into extract',
       phase3: 'experimental, not integrated',
@@ -47,7 +47,7 @@ export const VERSION_HISTORY = [
       pilot: 'collecting; no production attestation',
     },
     breaking: false,
-    notes: '当前版本仍在修复与门禁复核中；正式 release 取决于 guard --strict 结果。',
+    notes: '2026-09-23 guard --strict、规则发布和 golden 回归均通过；pilot 仍在 collecting，未宣称 production-ready。',
   },
   {
     version: 'v3.0.0',
@@ -183,10 +183,10 @@ export function selfTest() {
   const latest = getLatestVersion()
   assert.equal(getVersion(), 'v3.5.0')
   assert.equal(latest.version, getVersion())
-  assert.equal(latest.status.release, 'v3.5.0-rc / blocked')
+  assert.equal(latest.status.release, 'v3.5.0 / stable')
   assert.equal(latest.status.pilot, 'collecting; no production attestation')
   assert.equal(Object.hasOwn(latest, 'metrics'), false)
-  assert.match(formatVersionInfo(latest), /formal release depends on guard --strict|正式 release 取决于 guard --strict/)
+  assert.match(formatVersionInfo(latest), /guard --strict.*通过|guard --strict.*passed/)
   console.log('system-version self-test passed')
 }
 

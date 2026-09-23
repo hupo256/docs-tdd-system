@@ -7,6 +7,12 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-09-23（v3.5.0 stable）
+
+- **正式发布**：v3.5.0 已通过规则发布、golden 回归和 `docs-tdd guard --strict`；pilot 仍为 `collecting`，暂无 production attestation，因此不宣称 production-ready。
+- **安全与验证收口**：正式 extraction 保持 v2 状态机，lite-path 仅作只读候选评估；progressive verify 仅作 preflight，正式交付仍以 enforced verify 为唯一出口。
+- **生效边界**：新项目默认使用 `workflowVersion: 2`，存量 v1 项目不迁移；系统不自动 push，两个非阻断 doctor warning 继续留在后续维护清单。
+
 ## 2026-09-19（v3.5 Requirement-to-Commit）
 
 - **版本与协议**：当前入口升级为 docs_tdd v3.5 / ruleset 3.5；新项目继续使用 `workflowVersion: 2`，不迁移历史项目。
