@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "workflowVersion": 2,
+  "projectId": "PR-XXXXX",
+  "intake": {
+    "kind": "feature",
+    "sourceRole": "prd",
+    "sourceFingerprint": "lite-mode-human-input",
+    "sourcePaths": ["prds/PR-XXXXX/human-input.md"]
+  },
+  "sourceSnapshot": {
+    "revision": "1",
+    "contentHash": "lite-mode",
+    "sources": [
+      {
+        "path": "prds/PR-XXXXX/human-input.md",
+        "contentHash": "human-refined"
+      }
+    ],
+    "assets": []
+  },
+  "requirements": [
+    {
+      "requirementId": "R-001",
+      "statement": "[人工提炼的需求描述：要做什么、影响范围、验证方法]",
+      "status": "doing",
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-001",
+          "locator": "[文件路径或组件位置，如: apps/web-next/src/apps/XXX/ComponentName.tsx]",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "manual-browser",
+          "description": "[验证方法，如: 浏览器测试点击按钮后的 loading 效果]"
+        }
+      ]
+    }
+  ],
+  "requirementsAuthor": {
+    "kind": "human",
+    "id": "lite-mode-manual-refinement",
+    "reviewedBy": null
+  },
+  "coverageAudit": {
+    "sourceFingerprint": "lite-mode-skip",
+    "requirementsFingerprint": "lite-mode-skip",
+    "reviewMode": "lite-mode-human-refined",
+    "reviewRunId": "n/a",
+    "reviewer": {
+      "kind": "human",
+      "id": "manual-refinement"
+    },
+    "completedAt": "2026-01-01T00:00:00Z",
+    "verdict": "approved",
+    "unresolved": []
+  },
+  "routing": {
+    "scopeClass": "local",
+    "riskSignals": ["low-risk"],
+    "verificationLevel": "V0",
+    "routerVersion": 1
+  },
+  "apiDependency": {
+    "mode": "no-request",
+    "reason": "lite mode - adjust based on actual need"
+  },
+  "sourceReadiness": {
+    "figma": {
+      "requirement": "not-required",
+      "status": "n/a",
+      "reason": "lite mode"
+    },
+    "api": {
+      "requirement": "unknown",
+      "status": "pending",
+      "reason": "to be confirmed during implementation"
+    }
+  },
+  "scopeApproval": {
+    "approver": "human",
+    "approvedAt": "2026-01-01T00:00:00Z",
+    "sourceFingerprint": "lite-mode-human-input",
+    "requirementsFingerprint": "lite-mode-approved"
+  },
+  "autopilot": {
+    "phase": "implementation",
+    "implementation": {
+      "status": "pending",
+      "changedPaths": []
+    },
+    "delivery": {
+      "status": "pending"
+    },
+    "repair": {
+      "attempts": {
+        "source": 0,
+        "scope": 0,
+        "code": 0,
+        "browser": 0,
+        "environment": 0,
+        "external-dependency": 0
+      },
+      "lastFailure": null,
+      "terminalState": null
+    },
+    "lastCheckpointAt": "2026-01-01T00:00:00Z"
+  }
+}

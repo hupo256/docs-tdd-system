@@ -31,3 +31,52 @@ PRD 图片、表格、白板、删除线或引用文档不可完整读取时，�
 - v2：`work-item.json` 已基于当前来源建立；需求、surface、coverage review、routing 无未解决占位；如为 V2，scope approval 有效。
 - v1：目录与阶段准入分别以 [project-doc-structure.md](./project-doc-structure.md)、[workflow-gates.md](./workflow-gates.md) 为准。
 - 项目最少输入仅为 `<PROJECT-ID>` 与可读取的 PRD 链接或本地 Markdown；其他缺项进入对应工作流的 blocker。
+
+## 5. Lite 模式（小需求快速通道）
+
+> v4.1 新增：跳过完整 extraction，适用于需求清晰的小改动
+
+### 适用场景
+
+- ✅ 需求描述清晰（截图 + 简短文字）
+- ✅ 影响范围小（单页面、< 3 个文件）
+- ✅ 技术方案明确（标准 UI 交互、简单逻辑）
+- ✅ 快速验证类需求
+
+**不适合**：复杂业务逻辑、需求模糊、高风险改动、多文件协同（> 5 个）
+
+### 效率对比（实验数据）
+
+| 指标 | Lite 模式 | Full Extraction | 节省 |
+|---|---|---|---|
+| Intake 时间 | 3 分钟 | 15-20 分钟 | 80-85% |
+| 总时间 | 10 分钟 | 20-25 分钟 | 50-60% |
+| Token | 7K | 25-30K | 76% |
+| 准确率 | ≥ 95% | ~70-80% | +20-30% |
+
+### 使用方法
+
+1. **判断适用性**：符合上述适用场景
+2. **人工提炼**（2-3 分钟）：用 4 个要点描述需求
+   - 要做什么？
+   - 影响哪些文件/组件？
+   - 如何验证？
+   - 有什么边界条件？
+3. **生成 work-item**（1-2 分钟）：
+   ```bash
+   cp common/templates/lite-work-item-template.json prds/PR-XXXXX/work-item.json
+   # 填充 requirements、更新 projectId 和时间戳
+   ```
+4. **正常实施**：按照 work-item 正常开发和验证
+
+**详细指南**：`common/docs/lite-mode-guide.md`
+
+**示例**：`prds/PR-02233-BTN-LOADING/` - 完整的 lite 模式实验记录
+
+### 何时不用 Lite 模式
+
+如有以下情况之一，请使用标准流程（full extraction）：
+- 需求描述模糊或需要反复确认
+- 高风险改动（支付、权限、数据迁移）
+- 跨多个系统或多端协同
+- 需要完整追溯性和文档记录
