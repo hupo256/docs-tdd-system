@@ -1,4 +1,6 @@
 {
+  "$comment": "Lite Work-Item Template v1.1 - 基于 3 个实验优化",
+  "$usage": "见文件末尾的使用说明和检查清单",
   "schemaVersion": 1,
   "workflowVersion": 2,
   "projectId": "PR-XXXXX",
@@ -28,7 +30,9 @@
         {
           "surfaceId": "S-001",
           "locator": "[文件路径或组件位置，如: apps/web-next/src/apps/XXX/ComponentName.tsx]",
-          "disposition": "implement"
+          "disposition": "implement",
+          "$comment": "⚠️ 修改现有功能：必须填写准确的文件路径",
+          "$comment2": "⚠️ 新增页面/组件：必须填写 pageLocation（见下方）"
         }
       ],
       "evidencePlan": [
@@ -36,7 +40,15 @@
           "type": "manual-browser",
           "description": "[验证方法，如: 浏览器测试点击按钮后的 loading 效果]"
         }
-      ]
+      ],
+      "$pageLocation": {
+        "$comment": "【新增页面专用】如果是新增页面/组件，必须填写此字段",
+        "$enabled": false,
+        "route": "[路由，如: /future/api-rate-config]",
+        "menuPath": "[菜单路径，如: 合约配置 → API动态费率配置]",
+        "directory": "[文件目录，如: apps/futures-admin/src/apps/ApiRateConfig/]",
+        "referencePages": "[参考页面，如: RebateLevelConfig (类似的配置页面)]"
+      }
     }
   ],
   "requirementsAuthor": {
@@ -64,8 +76,16 @@
     "routerVersion": 1
   },
   "apiDependency": {
+    "$comment": "⚠️ 基于 PR-02208 实验：明确标记 API 依赖严重性",
     "mode": "no-request",
-    "reason": "lite mode - adjust based on actual need"
+    "severity": "none",
+    "$severityOptions": {
+      "none": "纯前端，无 API 依赖",
+      "soft": "有 API 但可以用 mock 数据先实现界面",
+      "hard": "硬阻塞，无 API 就无法开始实现"
+    },
+    "reason": "lite mode - adjust based on actual need",
+    "$hardBlockerChecklist": "如果是 hard，必须确认：API 接口定义、字段、类型、错误码"
   },
   "sourceReadiness": {
     "figma": {
@@ -76,7 +96,8 @@
     "api": {
       "requirement": "unknown",
       "status": "pending",
-      "reason": "to be confirmed during implementation"
+      "reason": "to be confirmed during implementation",
+      "$comment": "⚠️ 如果 apiDependency.severity = 'hard'，这里应该是 requirement: 'required', status: 'pending'"
     }
   },
   "scopeApproval": {
@@ -107,5 +128,50 @@
       "terminalState": null
     },
     "lastCheckpointAt": "2026-01-01T00:00:00Z"
+  },
+  "$USAGE_GUIDE": {
+    "$title": "Lite Work-Item 使用指南",
+    "$version": "v1.1 (基于 3 个实验优化)",
+    "$prerequisite": "使用前必读：前置检查清单",
+    "$preChecklist": [
+      "[ ] 是修改现有功能吗？（不是新增页面/模块）",
+      "[ ] 能否快速定位到目标文件？（搜索关键词能找到）",
+      "[ ] API 依赖是否已就绪？（或者不依赖 API）",
+      "[ ] 原型图/需求是否包含技术细节？（路由、菜单位置等）"
+    ],
+    "$decision": {
+      "allYes": "✅ 适合 Lite 模式，继续填写模板",
+      "anyNo": "⚠️ 谨慎使用，补充信息后再开始",
+      "3+No": "❌ 不适合 Lite，建议用 Full Extraction"
+    },
+    "$fillInstructions": {
+      "step1_projectId": "修改 projectId 为实际项目 ID（如 PR-02233）",
+      "step2_humanInput": "创建 prds/PR-XXXXX/human-input.md，记录人工提炼内容",
+      "step3_requirements": "根据人工提炼填充 requirements 数组",
+      "step4_affectedSurfaces": {
+        "modifyExisting": "修改现有功能：填写准确的文件路径",
+        "newPage": "新增页面/组件：启用 $pageLocation，填写路由、菜单、目录"
+      },
+      "step5_apiDependency": {
+        "checkSeverity": "明确 API 依赖严重性（none / soft / hard）",
+        "ifHard": "如果是 hard，必须确认 API 接口定义，否则会阻塞"
+      },
+      "step6_timestamps": "更新 completedAt 和 lastCheckpointAt 为当前时间"
+    },
+    "$commonMistakes": [
+      "❌ 新增页面但未填写 $pageLocation → 导致无法定位文件",
+      "❌ API 硬阻塞但标记为 'no-request' → 实施时才发现阻塞",
+      "❌ 遗漏验证规则和边界条件 → 准确率下降",
+      "❌ affectedSurfaces 只写模糊位置 → 无法定位代码文件"
+    ],
+    "$examples": {
+      "success": "prds/PR-02233-BTN-LOADING/work-item-lite.json",
+      "blocked": "prds/PR-02208/work-item.json (新增页面，信息不完整)"
+    },
+    "$dataBasedOnExperiments": {
+      "PR-02233": "修改现有功能，10 分钟完成，准确率 100%",
+      "PR-02208": "新增页面，23 分钟阻塞，准确率 65%",
+      "keyDifference": "文件是否可定位 → 决定 Lite 是否适用"
+    }
   }
 }
