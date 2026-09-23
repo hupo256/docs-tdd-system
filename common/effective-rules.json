@@ -1,14 +1,14 @@
 {
   "version": 2,
-  "fingerprint": "8cf66d91f1795ed929fdbbb2b5af6ff36d7e14d443d26cb336a2d4f4912a92b4",
-  "publishedAt": "2026-09-14T08:20:26.507Z",
-  "l3RuleReleaseFingerprint": "471b2ed155b183030dddf7056d00a5912fac9eea0df4fe5e16edaed2df86002c",
+  "fingerprint": "85e7e34beac4ee4a50bf9e1ee7ded4344acca3108c3cdfd45b98c513309514f2",
+  "publishedAt": "2026-09-23T06:00:23.421Z",
+  "l3RuleReleaseFingerprint": "f7114a8b2d2dec14e6ff94acf61a87e3ff8a32d77d779dff7bd9f3e7a14adbb4",
   "clientMatrix": {
     "codex": {
       "kind": "direct",
       "adapter": "~/.codex/AGENTS.md",
       "enforcement": "SessionStart rule preflight + Pre/PostToolUse receipt/code gate + changed/gate",
-      "sourceFingerprint": "9c40022d1176b853f5ed317bd288260b5fa8042bed93c5a3b0e2609ae0c4708f",
+      "sourceFingerprint": "c179aed578db347850ff6590a14cce6c5031f81253ae07412eb3877d47bd5b5c",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -67,6 +67,7 @@
         ".cursor/rules/js-tosorted-immutable.mdc",
         ".cursor/rules/patterns-children-over-render-props.mdc",
         ".cursor/rules/patterns-explicit-variants.mdc",
+        ".cursor/rules/prediction-web-next.mdc",
         ".cursor/rules/react19-no-forwardref.mdc",
         ".cursor/rules/rendering-activity.mdc",
         ".cursor/rules/rendering-animate-svg-wrapper.mdc",
@@ -110,14 +111,14 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "471b2ed155b183030dddf7056d00a5912fac9eea0df4fe5e16edaed2df86002c",
+      "l3Fingerprint": "f7114a8b2d2dec14e6ff94acf61a87e3ff8a32d77d779dff7bd9f3e7a14adbb4",
       "conflictOverrides": []
     },
     "claude": {
       "kind": "direct",
       "adapter": "~/.claude/CLAUDE.md",
       "enforcement": "UserPromptSubmit rule preflight + Pre/PostToolUse receipt + changed/gate",
-      "sourceFingerprint": "9c40022d1176b853f5ed317bd288260b5fa8042bed93c5a3b0e2609ae0c4708f",
+      "sourceFingerprint": "c179aed578db347850ff6590a14cce6c5031f81253ae07412eb3877d47bd5b5c",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -176,6 +177,7 @@
         ".cursor/rules/js-tosorted-immutable.mdc",
         ".cursor/rules/patterns-children-over-render-props.mdc",
         ".cursor/rules/patterns-explicit-variants.mdc",
+        ".cursor/rules/prediction-web-next.mdc",
         ".cursor/rules/react19-no-forwardref.mdc",
         ".cursor/rules/rendering-activity.mdc",
         ".cursor/rules/rendering-animate-svg-wrapper.mdc",
@@ -219,14 +221,14 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "471b2ed155b183030dddf7056d00a5912fac9eea0df4fe5e16edaed2df86002c",
+      "l3Fingerprint": "f7114a8b2d2dec14e6ff94acf61a87e3ff8a32d77d779dff7bd9f3e7a14adbb4",
       "conflictOverrides": []
     },
     "cursor": {
       "kind": "direct",
       "adapter": "~/.cursor/rules/fameex-local-governance.mdc",
       "enforcement": "native glob/alwaysApply + resolver conformance + changed/gate",
-      "sourceFingerprint": "9c40022d1176b853f5ed317bd288260b5fa8042bed93c5a3b0e2609ae0c4708f",
+      "sourceFingerprint": "c179aed578db347850ff6590a14cce6c5031f81253ae07412eb3877d47bd5b5c",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -285,6 +287,7 @@
         ".cursor/rules/js-tosorted-immutable.mdc",
         ".cursor/rules/patterns-children-over-render-props.mdc",
         ".cursor/rules/patterns-explicit-variants.mdc",
+        ".cursor/rules/prediction-web-next.mdc",
         ".cursor/rules/react19-no-forwardref.mdc",
         ".cursor/rules/rendering-activity.mdc",
         ".cursor/rules/rendering-animate-svg-wrapper.mdc",
@@ -328,14 +331,14 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "471b2ed155b183030dddf7056d00a5912fac9eea0df4fe5e16edaed2df86002c",
+      "l3Fingerprint": "f7114a8b2d2dec14e6ff94acf61a87e3ff8a32d77d779dff7bd9f3e7a14adbb4",
       "conflictOverrides": []
     },
     "pi": {
       "kind": "direct",
       "adapter": "~/.pi/agent/AGENTS.md",
       "enforcement": "extension before_agent_start rule preflight + tool_call receipt + tool_result code gate + changed/gate",
-      "sourceFingerprint": "9c40022d1176b853f5ed317bd288260b5fa8042bed93c5a3b0e2609ae0c4708f",
+      "sourceFingerprint": "c179aed578db347850ff6590a14cce6c5031f81253ae07412eb3877d47bd5b5c",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -394,6 +397,7 @@
         ".cursor/rules/js-tosorted-immutable.mdc",
         ".cursor/rules/patterns-children-over-render-props.mdc",
         ".cursor/rules/patterns-explicit-variants.mdc",
+        ".cursor/rules/prediction-web-next.mdc",
         ".cursor/rules/react19-no-forwardref.mdc",
         ".cursor/rules/rendering-activity.mdc",
         ".cursor/rules/rendering-animate-svg-wrapper.mdc",
@@ -437,7 +441,7 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "471b2ed155b183030dddf7056d00a5912fac9eea0df4fe5e16edaed2df86002c",
+      "l3Fingerprint": "f7114a8b2d2dec14e6ff94acf61a87e3ff8a32d77d779dff7bd9f3e7a14adbb4",
       "conflictOverrides": []
     },
     "lark-codex": {
@@ -445,7 +449,7 @@
       "delegatesTo": "codex",
       "adapter": "common/lark-bot/lib/lark-rule-context.mjs + common/lark-bot/lib/lark-worker-prompts.mjs + common/lark-bot/lib/lark-worker-run.mjs + common/engine/agent-scripts/rule-context-hook.mjs + common/engine/agent-scripts/rule-context.mjs + common/engine/agent-scripts/lib/l2-rule-resolver.mjs + common/engine/agent-scripts/lib/rule-consumption.mjs",
       "enforcement": "fresh effective rules + focused context + worker quality gate",
-      "sourceFingerprint": "9c40022d1176b853f5ed317bd288260b5fa8042bed93c5a3b0e2609ae0c4708f",
+      "sourceFingerprint": "c179aed578db347850ff6590a14cce6c5031f81253ae07412eb3877d47bd5b5c",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -504,6 +508,7 @@
         ".cursor/rules/js-tosorted-immutable.mdc",
         ".cursor/rules/patterns-children-over-render-props.mdc",
         ".cursor/rules/patterns-explicit-variants.mdc",
+        ".cursor/rules/prediction-web-next.mdc",
         ".cursor/rules/react19-no-forwardref.mdc",
         ".cursor/rules/rendering-activity.mdc",
         ".cursor/rules/rendering-animate-svg-wrapper.mdc",
@@ -547,7 +552,7 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "471b2ed155b183030dddf7056d00a5912fac9eea0df4fe5e16edaed2df86002c",
+      "l3Fingerprint": "f7114a8b2d2dec14e6ff94acf61a87e3ff8a32d77d779dff7bd9f3e7a14adbb4",
       "conflictOverrides": []
     },
     "lark-claude": {
@@ -555,7 +560,7 @@
       "delegatesTo": "claude",
       "adapter": "common/lark-bot/lib/lark-rule-context.mjs + common/lark-bot/lib/lark-worker-prompts.mjs + common/lark-bot/lib/lark-worker-run.mjs + common/engine/agent-scripts/rule-context-hook.mjs + common/engine/agent-scripts/rule-context.mjs + common/engine/agent-scripts/lib/l2-rule-resolver.mjs + common/engine/agent-scripts/lib/rule-consumption.mjs",
       "enforcement": "fresh effective rules + focused context + worker quality gate",
-      "sourceFingerprint": "9c40022d1176b853f5ed317bd288260b5fa8042bed93c5a3b0e2609ae0c4708f",
+      "sourceFingerprint": "c179aed578db347850ff6590a14cce6c5031f81253ae07412eb3877d47bd5b5c",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -614,6 +619,7 @@
         ".cursor/rules/js-tosorted-immutable.mdc",
         ".cursor/rules/patterns-children-over-render-props.mdc",
         ".cursor/rules/patterns-explicit-variants.mdc",
+        ".cursor/rules/prediction-web-next.mdc",
         ".cursor/rules/react19-no-forwardref.mdc",
         ".cursor/rules/rendering-activity.mdc",
         ".cursor/rules/rendering-animate-svg-wrapper.mdc",
@@ -657,11 +663,11 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "471b2ed155b183030dddf7056d00a5912fac9eea0df4fe5e16edaed2df86002c",
+      "l3Fingerprint": "f7114a8b2d2dec14e6ff94acf61a87e3ff8a32d77d779dff7bd9f3e7a14adbb4",
       "conflictOverrides": []
     }
   },
-  "fileCount": 110,
+  "fileCount": 111,
   "skillTargets": {
     "~/.codex/skills/coding-quality": "~/.ai-rules/skills/coding-quality",
     "~/.claude/skills/coding-quality": "~/.ai-rules/skills/coding-quality",
@@ -690,7 +696,7 @@
     ".cursor/rules/client-passive-event-listeners.mdc": "6b43af3a0be0b5cdf9a566073231e813c25d281d52e5677b1e93385396d9394e",
     ".cursor/rules/client-swr-dedup.mdc": "ffc1e83364f3e8e021cf5d6f39f568519e8d10e6846afe7d1c787aa4d5fd3677",
     ".cursor/rules/definition-of-done.mdc": "a6048d28f37d617434beab157136189b7da7e8274214155dc8d69de59f95e0ce",
-    ".cursor/rules/frontend-harness.mdc": "8b48868647fdc351c1b1df79e1be98a8f76e6b28ec2099f6e760da4c613e51e1",
+    ".cursor/rules/frontend-harness.mdc": "e69e08c0a8971a4e8995b71815a682e6621fb306a136264f586dd745ee635dfe",
     ".cursor/rules/js-batch-dom-css.mdc": "070c9f7f317737d250054cf2f968e66377922c7540320cb754b4e35f1dacb3a7",
     ".cursor/rules/js-cache-function-results.mdc": "8699bc5a56c41ef621268013a22caca2c25e49c45c3e9d638b3bc8c0a7c44b95",
     ".cursor/rules/js-cache-property-access.mdc": "246aea1625350af13ad38315743b65fb7d8976cb23c2334d6a6c4f5cc9067c18",
@@ -707,6 +713,7 @@
     ".cursor/rules/js-tosorted-immutable.mdc": "4c16bccd3ce2e5afe3082ce37528351852b480e339635cd0b02f9fb7719bf553",
     ".cursor/rules/patterns-children-over-render-props.mdc": "7ec5ede09ddf5ae62d5cf07afe4a4cb03fe30e83c39ae43950fe52119f083c08",
     ".cursor/rules/patterns-explicit-variants.mdc": "27b813160f9b089648533a961aae37db4efd3649953eebf99fff837de4b9b839",
+    ".cursor/rules/prediction-web-next.mdc": "789d233823a6690249c7fb7f68a9f64d9392f72e2b3af7ff04a6cbec6fa5ceb0",
     ".cursor/rules/react19-no-forwardref.mdc": "6d45e2676e0db32797b93559cd23d1eb26c15570b58388f93aa70bb2d8fadb7e",
     ".cursor/rules/rendering-activity.mdc": "828ff212cd6da8f4e725a1ee08ef91bbc018abbf8695c53c354402280dcc1215",
     ".cursor/rules/rendering-animate-svg-wrapper.mdc": "02276bd000bda96fc324fb21ffb24491ee3f166a45ecb7cc4307fd3a82dfad13",
@@ -746,7 +753,7 @@
     ".cursor/rules/state-context-interface.mdc": "cd3f3cf0da916c2315646c9d7b157391931ed2d6d2b6e6b756f87edf550b47c9",
     ".cursor/rules/state-decouple-implementation.mdc": "720aea501afbe5908f518ac8f072b2dfd5f4cfda6cf3cbee8b5c40ae8c109609",
     ".cursor/rules/state-lift-state.mdc": "98fd28e2f0c89a98ffb077ca5ba0a0b1777ebfffab2e4a13ea6a03b31282db8a",
-    "~/.ai-rules/AGENT.md": "43843073d08ac2cfb9d4d680dfd14d41af3419e6688345966ca63ec656463c95",
+    "~/.ai-rules/AGENT.md": "0db59c8d49f2a55bf126c24eb83d4780ff6f8a37b9a7e66e35f26c676903763d",
     "~/.ai-rules/skills/coding-quality/references/acceptance-evidence.md": "ba7b5c8e8c1ef133bdd9593d22764847784d507e091e5125fd32ff5bf7110788",
     "~/.ai-rules/skills/coding-quality/references/api-schema-mapper.md": "795fe9dc95e47489411a323e6a67639df0b6ae9c4a84fd9df34044bae3895053",
     "~/.ai-rules/skills/coding-quality/references/controlled-form-hooks.md": "43c6845aeff7e6af1640c3a51d4475dc586918ae7f9cbc62a427adfa552f90e3",
@@ -762,22 +769,22 @@
     "~/.ai-rules/skills/coding-quality/SKILL.md": "e7bd8883e1761d49d7752dff79c5819d816aca762f1fb75a5a3ae31465d5fbbf",
     "~/.ai-rules/skills/figma-read/scripts/figma-fetch.mjs": "4502e3284d3d8950dcdd81ea0527463820721f4d5022bf433127d22e488b4b71",
     "~/.ai-rules/skills/figma-read/scripts/figma-spec.mjs": "bd1b00cd243c00697549b12fa2ddb3dd4648fe953243519985f5023e0aa93994",
-    "~/.ai-rules/skills/figma-read/SKILL.md": "17902f4f95ec0000075e1aa5e980a03e2a61e3e067b6d1b3773c5a440acfecce",
-    "~/.claude/CLAUDE.md": "43843073d08ac2cfb9d4d680dfd14d41af3419e6688345966ca63ec656463c95",
+    "~/.ai-rules/skills/figma-read/SKILL.md": "c0e8cad3176bd50eccc1b6a70702afe07a63b284cb88a23d7c1c380f8e198b89",
+    "~/.claude/CLAUDE.md": "0db59c8d49f2a55bf126c24eb83d4780ff6f8a37b9a7e66e35f26c676903763d",
     "~/.claude/settings.json": "911e81dfa80398a602d96a0c687ab6e1829f55e969d896a7e84e09802aa516ad",
-    "~/.codex/AGENTS.md": "43843073d08ac2cfb9d4d680dfd14d41af3419e6688345966ca63ec656463c95",
+    "~/.codex/AGENTS.md": "0db59c8d49f2a55bf126c24eb83d4780ff6f8a37b9a7e66e35f26c676903763d",
     "~/.codex/hooks.json": "298d28695a0da0b5bd3c9f532e7593a4c5be9d1f4ef29621c1badb6162efefa1",
     "~/.cursor/rules/fameex-local-governance.mdc": "1b34e1269caf928ae2c157970bb915c798824345fd883817a9343001f76f2b45",
-    "~/.pi/agent/AGENTS.md": "43843073d08ac2cfb9d4d680dfd14d41af3419e6688345966ca63ec656463c95",
+    "~/.pi/agent/AGENTS.md": "0db59c8d49f2a55bf126c24eb83d4780ff6f8a37b9a7e66e35f26c676903763d",
     "~/.pi/agent/extensions/docs-tdd-rules.ts": "2a59c7468e3f8bbb4895d048979f94116c61f9c0dc30077c83f56ac5cb39ad3a",
-    "AGENTS.md": "392064b3caa6942371cdf5380c7c8b6e368e6ba36d5cae03753afc5d6001c480",
-    "CLAUDE.md": "e977e463d4123db2a9274bcc8b3ec10a25ae5d4722aa07f1df01e69d31423ce4",
+    "AGENTS.md": "d1279577e942d7d9d2c4a19d33cf7779d41195baaceef9df056ccd20bfe298a0",
+    "CLAUDE.md": "47353803f155e3beef8e05cbd8532d22acb34167f0ded8aa263164c383d68c34",
     "common/engine/agent-scripts/lib/l2-rule-resolver.mjs": "044bf02bce7fc1a3b1187a3d687434e2f538f062b9ba427deddc67d4e1307150",
-    "common/engine/agent-scripts/lib/rule-consumption.mjs": "d9d936592437ae3b4d9c9ad0641900c39d808a77d92e05133e431949446e70b5",
+    "common/engine/agent-scripts/lib/rule-consumption.mjs": "41ebfdc0754950db5ea9f96c084913c7ac72a00dbc60cd4d672f3a8cbb7cdaa8",
     "common/engine/agent-scripts/rule-context-hook.mjs": "445ad740db3878f8e6a0c99198ab0b5276423b718cca1029a3e44cbffc811c3c",
     "common/engine/agent-scripts/rule-context.mjs": "923c19e9138d0f0aa45135aeb3c20272123d6b9a7ce91037d586bee589a1f8e2",
     "common/lark-bot/lib/lark-rule-context.mjs": "c74a8cbe46b5c3bae158a05ce4654482176d42244d59ab73f387a8c6360a5ef6",
-    "common/lark-bot/lib/lark-worker-prompts.mjs": "b0bce12bde5925ef622ee0b126760f54389ce0a62def1f06c2c19f47aa5e64d2",
+    "common/lark-bot/lib/lark-worker-prompts.mjs": "2380ac459645f7eac4b6bb965275a64f2b5a1724d2c3102d79e4cacb756f362e",
     "common/lark-bot/lib/lark-worker-run.mjs": "a85a2dddb82cbb254759789543b377a5cd8cde263e2274e56b15cabd0e36bf3c"
   }
 }
