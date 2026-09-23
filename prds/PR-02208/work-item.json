@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "workflowVersion": 2,
+  "projectId": "PR-02208",
+  "intake": {
+    "kind": "feature",
+    "sourceRole": "prd",
+    "sourceFingerprint": "lite-mode-human-input",
+    "sourcePaths": ["prds/PR-02208/human-input.md"]
+  },
+  "sourceSnapshot": {
+    "revision": "1",
+    "contentHash": "lite-mode",
+    "sources": [
+      {
+        "path": "prds/PR-02208/human-input.md",
+        "contentHash": "human-refined"
+      }
+    ],
+    "assets": []
+  },
+  "requirements": [
+    {
+      "requirementId": "R-001",
+      "statement": "合约配置页面新增'API动态费率及返佣'配置功能，展示 L1-L5 五个档位的配置表格，每个档位包含：档位标识、30天滚动API成交量区间、Maker费率、Taker费率、返佣比例、编辑操作。支持点击编辑按钮修改每个档位的配置并保存。",
+      "status": "doing",
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-001",
+          "locator": "apps/futures-admin（或合约后台）- 合约配置模块 - API动态费率配置页面（新增）",
+          "disposition": "implement"
+        },
+        {
+          "surfaceId": "S-002",
+          "locator": "apps/futures-admin - API动态费率编辑表单/弹窗组件（新增）",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "manual-browser",
+          "description": "浏览器测试：合约配置页面存在'API动态费率及返佣'入口 → 点击进入看到 L1-L5 表格 → 点击编辑修改并保存成功"
+        }
+      ]
+    },
+    {
+      "requirementId": "R-002",
+      "statement": "配置表格需实现表单验证：L1-L5 档位不可重复，各档位成交量区间必须采用左闭右开区间（最后一档为左闭区间），成交量区间必须连续不允许重叠，Maker/Taker 费率必须满足系统精度要求，不符合规则统一报错提示'请输入正确的参数'。",
+      "status": "doing",
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-003",
+          "locator": "apps/futures-admin - API动态费率编辑表单验证逻辑",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "manual-browser",
+          "description": "浏览器测试：尝试重复档位 → 报错；尝试重叠区间 → 报错；尝试不连续区间 → 报错；尝试错误精度 → 报错"
+        }
+      ]
+    },
+    {
+      "requirementId": "R-003",
+      "statement": "手续费折扣列表在现有'手续费率'列后新增两列：'API费率档位'（显示 L1-L5 或 '-'）和'API费率'（显示 'Maker X% / Taker Y%' 或 '-'）。无 API key 的用户这两列均显示 '-'，有 API key 用户显示实际档位和费率数据。",
+      "status": "doing",
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-004",
+          "locator": "apps/futures-admin - 手续费折扣列表组件 - 列定义",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "manual-browser",
+          "description": "浏览器测试：查看手续费折扣列表 → 看到新增的两列在手续费率列后 → 有API key用户显示档位和费率 → 无API key用户显示'-'"
+        }
+      ]
+    }
+  ],
+  "requirementsAuthor": {
+    "kind": "human",
+    "id": "lite-mode-manual-refinement",
+    "reviewedBy": null
+  },
+  "coverageAudit": {
+    "sourceFingerprint": "lite-mode-skip",
+    "requirementsFingerprint": "lite-mode-skip",
+    "reviewMode": "lite-mode-human-refined",
+    "reviewRunId": "n/a",
+    "reviewer": {
+      "kind": "human",
+      "id": "manual-refinement"
+    },
+    "completedAt": "2026-09-23T00:00:00Z",
+    "verdict": "approved",
+    "unresolved": []
+  },
+  "routing": {
+    "scopeClass": "local",
+    "riskSignals": ["low-risk"],
+    "verificationLevel": "V0",
+    "routerVersion": 1
+  },
+  "apiDependency": {
+    "mode": "pending-dependency",
+    "reason": "需要确认 API 接口定义（配置 CRUD、用户 API key 状态查询、费率档位计算）"
+  },
+  "sourceReadiness": {
+    "figma": {
+      "requirement": "provided",
+      "status": "ready",
+      "reason": "原型图已提供（3 张）"
+    },
+    "api": {
+      "requirement": "required",
+      "status": "pending",
+      "reason": "需要确认 API 接口定义和数据结构"
+    }
+  },
+  "scopeApproval": {
+    "approver": "human",
+    "approvedAt": "2026-09-23T00:00:00Z",
+    "sourceFingerprint": "lite-mode-human-input",
+    "requirementsFingerprint": "lite-mode-approved"
+  },
+  "autopilot": {
+    "phase": "implementation",
+    "implementation": {
+      "status": "pending",
+      "changedPaths": []
+    },
+    "delivery": {
+      "status": "pending"
+    },
+    "repair": {
+      "attempts": {
+        "source": 0,
+        "scope": 0,
+        "code": 0,
+        "browser": 0,
+        "environment": 0,
+        "external-dependency": 0
+      },
+      "lastFailure": null,
+      "terminalState": null
+    },
+    "lastCheckpointAt": "2026-09-23T00:00:00Z"
+  }
+}
