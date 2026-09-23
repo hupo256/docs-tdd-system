@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "workflowVersion": 2,
+  "projectId": "TEST-V4-LITE-001",
+  "efficiencyRoute": "lite",
+  "createdAt": "2026-09-23T10:06:33.949Z",
+  "sourceSnapshot": {
+    "type": "text",
+    "content": "把 Home.tsx 首页按钮文案从'开始'改成'立即开始'",
+    "capturedAt": "2026-09-23T10:06:33.949Z",
+    "fingerprint": "537b2ee13b45199d0b32c7fb200c636b02d9c8bc4d7fd2069a1b0030b1e01e11"
+  },
+  "requirements": [
+    {
+      "requirementId": "R-001",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "lite-path-input",
+          "path": "user-intent"
+        }
+      ],
+      "statement": "改文案",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "none",
+        "expectedCount": 0
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-001",
+          "locator": "Home.tsx copy 修改",
+          "disposition": "implement",
+          "expectPath": "Home.tsx"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "copy-literal",
+          "runtimeRequired": false
+        }
+      ]
+    }
+  ],
+  "requirementsAuthor": "lite-path-v4",
+  "coverageAudit": {
+    "status": "lite-path-skip",
+    "message": "lite-path 快速通道跳过 extraction/coverage review"
+  },
+  "routing": {
+    "scenarioKind": "lite-path",
+    "deliveryTargetApp": "apps/web"
+  },
+  "apiDependency": {
+    "mode": "not-required"
+  },
+  "deliveryScope": {
+    "mode": "full-batch",
+    "policyPaths": [
+      "Home.tsx"
+    ]
+  }
+}

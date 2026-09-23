@@ -272,7 +272,13 @@ if (!new RegExp(`^(?:${config.projectIdPattern || '(?:PR|TR)-\\d{5}'})$`).test(p
   process.exit(1)
 }
 
-if (['run', 'kickoff', 'status', 'resume', 'next', 'source-update', 'checkpoint'].includes(command)) {
+// v4.0: kickoff 单独处理，使用 kickoff-v4.mjs（支持 lite-path）
+if (command === 'kickoff') {
+  const kickoffV4 = join(scriptDir, 'lib', 'kickoff-v4.mjs')
+  process.exit(run([kickoffV4, projectId, ...cliArgs.slice(2)]))
+}
+
+if (['run', 'status', 'resume', 'next', 'source-update', 'checkpoint'].includes(command)) {
   process.exit(run([join(scriptDir, 'project-orchestrator.mjs'), command, projectId, ...cliArgs.slice(2)]))
 }
 

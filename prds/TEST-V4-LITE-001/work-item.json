@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "workflowVersion": 2,
+  "projectId": "TEST-V4-LITE-001",
+  "efficiencyRoute": "lite",
+  "createdAt": "2026-09-23T10:17:17.700Z",
+  "sourceSnapshot": {
+    "type": "text",
+    "content": "把 Home.tsx 首页按钮文案从'开始'改成'立即开始'",
+    "capturedAt": "2026-09-23T10:17:17.700Z",
+    "fingerprint": "e7dd81d2b973952fe5c91098ff0bc951217c13b3defdd2eb58949f5517273f15"
+  },
+  "requirements": [
+    {
+      "requirementId": "R-001",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "lite-path-input",
+          "path": "user-intent"
+        }
+      ],
+      "statement": "改文案",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "none",
+        "expectedCount": 0
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-001",
+          "locator": "Home.tsx copy 修改",
+          "disposition": "implement",
+          "expectPath": "Home.tsx"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "copy-literal",
+          "runtimeRequired": false
+        }
+      ]
+    }
+  ],
+  "requirementsAuthor": "lite-path-v4",
+  "coverageAudit": {
+    "schemaVersion": 1,
+    "sourceFingerprint": "b2ad611f4e64fd8b2eb678ef15a60675f8f6c8b6bd7c181c89b0a11adb211f6f",
+    "requirementsFingerprint": "3b69bcdfac74b36d813848cc2ee196298c25a04adddbaf112d7827a50e2c63fe",
+    "sourceUnitsFingerprint": "ba88dae142b8e391d5146c8e4935631ce639bf2b70f656d5c57870efea23eeca",
+    "status": "lite-path-skip",
+    "reviewer": {
+      "kind": "lite-path",
+      "id": "v4"
+    },
+    "verdict": "pass",
+    "findings": [],
+    "message": "lite-path 快速通道跳过 extraction/coverage review"
+  },
+  "routing": {
+    "scenarioKind": "lite-path",
+    "scopeClass": "single-surface",
+    "riskSignals": [],
+    "verificationLevel": "V0",
+    "deliveryTargetApp": "apps/web"
+  },
+  "apiDependency": {
+    "mode": "not-required"
+  },
+  "deliveryScope": {
+    "mode": "full-batch",
+    "policyPaths": [
+      "Home.tsx"
+    ]
+  }
+}

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 // precommit-verify-code-rules.mjs — lint-staged glue for code rules plus the v2 commit guard.
+// v4.0: 按 efficiencyRoute 分档验证，micro/lite 走轻量守卫，standard/high-risk 走完整守卫。
 // lint-staged passes each staged file as a separate argv entry; verify-code-rules.mjs wants one
 // --files <comma-list> argument, so this joins argv before dispatching. On v2 project branches the
 // read-only guard defaults to checkpoint mode: only enforce a prior passing dev-check when one
@@ -9,6 +10,7 @@
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
+import { readFileSync, existsSync } from 'node:fs'
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url))
 const T = 20000
@@ -77,9 +79,46 @@ function checkpointGuardSkippable(problems) {
   return problems.length > 0 && problems.every(isCheckpointOrdinaryCommitSkippableProblem)
 }
 
+function getEfficiencyRoute() {
+  // 从当前目录向上查找 work-item.json
+  const findWorkItem = (dir) => {
+    const candidates = [
+      join(dir, 'work-item.json'),
+      join(dir, 'prds', 'work-item.json'),
+    ]
+    for (const path of candidates) {
+      if (existsSync(path)) {
+        try {
+          const workItem = JSON.parse(readFileSync(path, 'utf-8'))
+          return workItem.efficiencyRoute || 'standard'
+        } catch { /* fall through */ }
+      }
+    }
+    // 向上一级
+    const parent = dirname(dir)
+    if (parent !== dir && parent !== '/') return findWorkItem(parent)
+    return 'standard'
+  }
+  
+  return findWorkItem(process.cwd())
+}
+
 function runVNextDeliveryGuard() {
   const explicitMode = process.env.DOCS_TDD_COMMIT_MODE
   if (explicitMode === 'off' || explicitMode === 'skip') return
+  
+  // v4.0: 按 efficiencyRoute 分档
+  const efficiencyRoute = getEfficiencyRoute()
+  
+  // micro/lite 档跳过完整守卫，只跑 Biome
+  if (efficiencyRoute === 'micro' || efficiencyRoute === 'lite') {
+    process.stderr.write(
+      `v4.0 precommit: ${efficiencyRoute} 档跳过完整 checkpoint 守卫，` +
+      '仅验证 code-rules (Biome/格式/命名)。\n' +
+      '若需完整验证，手动执行: docs-tdd dev-check <PROJECT-ID>\n'
+    )
+    return
+  }
 
   const mode = explicitMode || 'checkpoint'
   const script = join(SCRIPT_DIR, 'vnext-delivery-guard.mjs')
