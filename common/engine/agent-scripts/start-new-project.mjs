@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 
+// ⚠️ DEPRECATED: This script creates v1 projects (legacy G0-G8 Gate workflow).
+// For new projects, use: docs-tdd kickoff PR-XXXXX --prd <URL> --kind feature|bugfix
+// v2 projects use work-item.json protocol and are the future direction.
+
 import { existsSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -18,7 +22,11 @@ const projectId = args[0];
 const dryRun = args.includes('--dry-run');
 
 function printHelp() {
-  console.log(`usage: start-new-project.mjs <PR-01234> --prd <Lark URL or local md path> [--title <name>] [--dry-run] [--help]
+  console.log(`⚠️  DEPRECATED: This script creates v1 projects (legacy G0-G8 Gate workflow).
+⚠️  For new projects, use: docs-tdd kickoff PR-XXXXX --prd <URL> --kind feature|bugfix
+⚠️  v2 projects use work-item.json protocol and are the future direction.
+
+usage: start-new-project.mjs <PR-01234> --prd <Lark URL or local md path> [--title <name>] [--dry-run] [--help]
 
 Scaffold a new docs_tdd project directory with templates, frontmatter, and Lark sync scripts.
 
