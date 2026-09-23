@@ -13,7 +13,7 @@ export const EFFICIENCY_ROUTES = Object.freeze(['micro', 'lite', 'standard', 'hi
 
 export const EFFICIENCY_POLICIES = Object.freeze({
   micro: Object.freeze({
-    contextChars: 12000,
+    contextChars: 25000,   // 3 个核心规则 (git + worktree + biome)
     ruleFiles: 3,
     reviewerRounds: 0,
     commands: 4,
@@ -22,7 +22,7 @@ export const EFFICIENCY_POLICIES = Object.freeze({
     elapsedMs: 600000,
   }),
   lite: Object.freeze({
-    contextChars: 24000,
+    contextChars: 30000,   // +2 个轻量规则 (quality + project)
     ruleFiles: 5,
     reviewerRounds: 1,
     commands: 6,
@@ -31,8 +31,8 @@ export const EFFICIENCY_POLICIES = Object.freeze({
     elapsedMs: 1200000,
   }),
   standard: Object.freeze({
-    contextChars: 80000,
-    ruleFiles: 8,
+    contextChars: 80000,   // +5 个业务规则 (api + state + component + i18n + hook)
+    ruleFiles: 10,
     reviewerRounds: 2,
     commands: 10,
     evidence: 8,
@@ -40,8 +40,8 @@ export const EFFICIENCY_POLICIES = Object.freeze({
     elapsedMs: 2700000,
   }),
   'high-risk': Object.freeze({
-    contextChars: 160000,
-    ruleFiles: 12,
+    contextChars: 120000,  // +5 个完整规则 (evidence + figma + scope + style + blocker)
+    ruleFiles: 15,
     reviewerRounds: 2,
     commands: 16,
     evidence: 12,

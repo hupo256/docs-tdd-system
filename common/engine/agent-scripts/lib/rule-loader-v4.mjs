@@ -6,28 +6,33 @@ import { resolve, join } from 'node:path'
 
 /**
  * 规则文件优先级（从高到低）
- * micro(3) → lite(5) → standard(8) → high-risk(12)
+ * micro(3) → lite(5) → standard(10) → high-risk(15)
+ * 
+ * v4.0 策略：用现有完整规则文件，确保覆盖率
  */
 const RULE_PRIORITY = [
   // P0: 必须（micro 3 个）
-  { path: 'git-branch-flow.md', priority: 1, sizeKB: 8, tags: ['git', 'safety'] },
-  { path: 'biome-config-summary.md', priority: 2, sizeKB: 3, tags: ['format', 'lint'] },
-  { path: 'coding-core-checklist.md', priority: 3, sizeKB: 12, tags: ['quality'] },
+  { path: 'git-branch-flow.md', priority: 1, sizeKB: 10, tags: ['git', 'safety'] },
+  { path: 'coding-worktree.md', priority: 2, sizeKB: 13, tags: ['git', 'worktree'] },
+  { path: 'biome-config-summary.md', priority: 3, sizeKB: 1, tags: ['format', 'lint'] },
   
   // P1: 重要（lite +2 = 5 个）
-  { path: 'project-readme-summary.md', priority: 4, sizeKB: 5, tags: ['project'] },
-  { path: 'fameex-shared-components.md', priority: 5, sizeKB: 15, tags: ['reuse'] },
+  { path: 'coding-core-checklist.md', priority: 4, sizeKB: 1, tags: ['quality'] },
+  { path: 'project-readme-summary.md', priority: 5, sizeKB: 2, tags: ['project'] },
   
-  // P2: 有用（standard +3 = 8 个）
-  { path: 'api-schema-mapper-core.md', priority: 6, sizeKB: 20, tags: ['api'] },
-  { path: 'i18n-key-literal-rule.md', priority: 7, sizeKB: 8, tags: ['i18n'] },
-  { path: 'react-query-zustand-split.md', priority: 8, sizeKB: 10, tags: ['state'] },
+  // P2: 核心业务（standard +5 = 10 个）
+  { path: 'api-and-mapper.md', priority: 6, sizeKB: 6, tags: ['api'] },
+  { path: 'architecture-and-state.md', priority: 7, sizeKB: 28, tags: ['state', 'architecture'] },
+  { path: 'component-reuse-and-visual-fidelity.md', priority: 8, sizeKB: 10, tags: ['reuse', 'ui'] },
+  { path: 'i18n-key-literal-rule.md', priority: 9, sizeKB: 3, tags: ['i18n'] },
+  { path: 'hook-integration.md', priority: 10, sizeKB: 10, tags: ['git', 'precommit'] },
   
-  // P3: 全面（high-risk +4 = 12 个）
-  { path: 'figma-extraction-detail.md', priority: 9, sizeKB: 18, tags: ['figma'] },
-  { path: 'security-sensitive-paths.md', priority: 10, sizeKB: 6, tags: ['security'] },
-  { path: 'test-strategy-full.md', priority: 11, sizeKB: 25, tags: ['test'] },
-  { path: 'accessibility-wcag-checklist.md', priority: 12, sizeKB: 22, tags: ['a11y'] },
+  // P3: 高风险场景（high-risk +5 = 15 个）
+  { path: 'execution-evidence.md', priority: 11, sizeKB: 7, tags: ['test', 'evidence'] },
+  { path: 'figma-mcp-read-workflow.md', priority: 12, sizeKB: 8, tags: ['figma'] },
+  { path: 'change-scope-boundary.md', priority: 13, sizeKB: 7, tags: ['scope'] },
+  { path: 'ui-style-token-rules.md', priority: 14, sizeKB: 9, tags: ['ui', 'style'] },
+  { path: 'blocking-and-change-protocol.md', priority: 15, sizeKB: 4, tags: ['safety', 'blocker'] },
 ]
 
 /**
