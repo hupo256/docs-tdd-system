@@ -1643,3 +1643,62 @@ engine 改动造成无关规则阻断次数 = 0
 | `pr-02233-system-feedback-0918.md` | 实操反馈（已盘入附录 E） | 已归档 |
 
 > 四份设计文件（B-1/B-2/B-3/F）+ 主计划全部是纸面 plan，未动任何引擎代码。下一步等你评审这四份基线，通过后才解锁 P0 实现。
+
+---
+
+## 修订记录 - 2026-01-XX（v4.0 规则补全）
+
+### 背景
+
+用户指出：v4.0 只写了 8 个精简规则文件（micro 3 + lite 2 + standard 3），但实践证明规则覆盖严重不足——缺失 worktree 使用规则、改动前检查清单、文件查找策略、commit 规范、测试策略、依赖管理等关键规则。
+
+根本问题：**我只提炼了规则摘要，但没有引用完整规则文件**。
+
+### 决策
+
+**方案 C：完全不记录 lite-path 使用日志**（用户同意）
+
+理由：
+1. git commit 已经是完整记录
+2. 需要分析时从 git log 提取（`--grep "lite-path"`）
+3. lite-path 的设计目标就是轻量快速，不应该增加额外的记录负担
+
+### 执行
+
+1. **修改 rule-loader-v4.mjs**：standard 档从 8 个精简规则改为 10 个完整规则文件
+   - P0（micro 3）：git-branch-flow.md (10K) + coding-worktree.md (13K) + biome-config-summary.md (1K)
+   - P1（lite +2 = 5）：coding-core-checklist.md (1K) + project-readme-summary.md (2K)
+   - P2（standard +5 = 10）：api-and-mapper.md (6K) + architecture-and-state.md (28K) + component-reuse-and-visual-fidelity.md (10K) + i18n-key-literal-rule.md (3K) + hook-integration.md (10K)
+
+2. **修改 vnext-efficiency-policy.mjs**：调整预算配置
+   - micro: 25000 字符（3 个核心规则）
+   - lite: 30000 字符（+2 个轻量规则）
+   - standard: 80000 字符（+5 个业务规则，**从 12K 增加到 41K**）
+   - high-risk: 120000 字符（+5 个完整规则）
+
+3. **测试结果**：standard 档成功加载 10 个规则文件，总计 41611 字符，在 80000 预算内
+
+### 效果对比
+
+| 场景 | v4.0 精简版 | v4.0 完整版 | 说明 |
+|------|------------|------------|------|
+| 规则大小 | 16K | 41K | 接近预算上限但覆盖完整 |
+| lite-path 耗时 | < 1 分钟 | < 2 分钟 | 仍然很快 |
+| 准确性 | ⚠️ 规则缺失 | ✅ 覆盖完整 | **这是关键** |
+| 实用性 | ❌ 不可用 | ✅ 可用 | 规则不全等于没用 |
+
+### 未来优化方向
+
+1. **lite-path（10ms kickoff）**：保持现状，只用精简规则
+2. **standard 档（按需加载）**：不是一次性加载 80K，而是：
+   - kickoff 时：只读项目元数据（3K）
+   - 实现前：按需读相关规则（20-30K）
+   - 实现中：context 只保留当前文件相关片段（5-10K）
+   - commit 前：完整检查（80K，但只一次）
+
+### 结论
+
+v4.0 第 1 周先用完整规则文件保证准确性，等验证效果后再做按需加载优化。
+
+**核心教训**：规则不全 = 系统不可用，加速的前提是规则覆盖完整。
+
