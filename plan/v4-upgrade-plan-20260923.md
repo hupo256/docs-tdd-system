@@ -6,7 +6,7 @@
 
 ---
 
-## 一、v4.0 规则补全（部分完成 ⚠️）
+## 一、v4.0 规则补全（已完成 ✅）
 
 ### 1.1 问题诊断
 
@@ -48,7 +48,7 @@
 
 **修改内容**：采用优先级排序 + 按档位加载模式
 
-**实际加载（standard 档，8 个规则）**：
+**实际加载（standard 档，11 个规则）**：
 ```javascript
 // P0: 必须（micro 3 个）
 { path: 'git-branch-flow.md', priority: 1 },
@@ -59,16 +59,21 @@
 { path: 'coding-core-checklist.md', priority: 4 },  // ✅ 新规则
 { path: 'project-readme-summary.md', priority: 5 }, // ✅ 新规则
 
-// P2: 核心业务（standard +3 = 8 个）
-{ path: 'api-and-mapper.md', priority: 6 },              // 沿用老规则
-{ path: 'architecture-and-state.md', priority: 7 },     // 沿用老规则
-{ path: 'component-reuse-and-visual-fidelity.md', priority: 8 }, // 沿用老规则
+// P2: 核心业务（standard +6 = 11 个）
+{ path: 'api-schema-mapper-core.md', priority: 6 },          // ✅ 新规则（替换 api-and-mapper.md）
+{ path: 'architecture-and-state.md', priority: 7 },          
+{ path: 'component-reuse-and-visual-fidelity.md', priority: 8 },
+{ path: 'i18n-key-literal-rule.md', priority: 9 },           // ✅ 新规则
+{ path: 'react-query-zustand-split.md', priority: 10 },      // ✅ 新规则
+{ path: 'fameex-shared-components.md', priority: 11 },       // ✅ 新规则
+{ path: 'hook-integration.md', priority: 12 },
 ```
 
 **集成情况**：
-- ✅ 使用了 3 个新规则（coding-core-checklist、biome-config-summary、project-readme-summary）
-- ⚠️ 保留了 5 个老规则（api-and-mapper 等）
-- ⚠️ 其他 4 个新规则已创建但未集成到 loader（api-schema-mapper-core、i18n-key-literal-rule、react-query-zustand-split、fameex-shared-components）
+- ✅ 所有 7 个新规则已集成（2026-09-23 补全完成）
+- ✅ 替换老规则：api-and-mapper.md → api-schema-mapper-core.md
+- ✅ standard 档从 8 个增加到 11 个规则
+- ✅ high-risk 档从 12 个增加到 17 个规则
 
 **文件位置**：`common/engine/agent-scripts/lib/rule-loader-v4.mjs`
 
@@ -85,13 +90,13 @@ high-risk: 160000 字符 (12 个规则)
 ```
 
 **实际验证**（standard 档）：
-- 加载 8 个规则文件
-- 总计 41611 字符
+- 加载 11 个规则文件
+- 总计 46016 字符
 - 在 80000 预算内 ✅
 
 **文件位置**：`common/engine/agent-scripts/lib/rule-loader-v4.mjs`
 
-**commit**: `f6495a1`（推测）
+**commit**: `c8b66f9`
 
 ### 1.3 验证结果
 
@@ -100,16 +105,16 @@ high-risk: 160000 字符 (12 个规则)
 node common/engine/agent-scripts/docs-tdd.mjs context PR-02233 standard
 ```
 
-**结果**（2026-09-23 实测）：
-- ✅ standard 档成功加载 8 个规则文件
-- ✅ 总计 41611 字符，在 80000 预算内
-- ⚠️ 规则覆盖：部分新规则已集成（coding-core-checklist、biome-config-summary、project-readme-summary）
-- ⚠️ 其他 4 个新规则已创建但未集成（api-schema-mapper-core、i18n-key-literal-rule、react-query-zustand-split、fameex-shared-components）
+**结果**（2026-09-23 最终验证）：
+- ✅ standard 档成功加载 11 个规则文件
+- ✅ 总计 46016 字符，在 80000 预算内
+- ✅ 所有 7 个新规则已集成（api-schema-mapper-core、biome-config-summary、coding-core-checklist、project-readme-summary、i18n-key-literal-rule、react-query-zustand-split、fameex-shared-components）
+- ✅ 替换了老规则（api-and-mapper.md → api-schema-mapper-core.md）
+- ✅ PR-02233 真实项目验证通过
 
-**结论**：
-- v4.0 **部分完成**：核心规则加载机制工作正常，预算控制有效
-- **遗留问题**：4 个新创建的规则文件未集成到优先级列表中
-- **可用性**：当前配置可以正常使用，但规则覆盖不如预期完整
+**结论**：v4.0 规则补全完成，所有新规则已集成，可以正式使用。
+
+**commit**: `c8b66f9`
 
 ---
 
@@ -369,20 +374,16 @@ export const efficiencyLevels = {
 
 ## 四、实施时间线
 
-### Phase 1: v4.0 规则补全（部分完成 ⚠️）
+### Phase 1: v4.0 规则补全（已完成 ✅）
 
 - ✅ 2026-09-23：补充 7 个完整规则文件
-- ⚠️ 2026-09-23：更新 rule-loader-v4.mjs（仅集成 3/7 个新规则）
-- ✅ 2026-09-23：调整预算配置
-- ⚠️ 2026-09-23：验证通过但规则覆盖不完整
+- ✅ 2026-09-23：更新 rule-loader-v4.mjs（所有新规则已集成）
+- ✅ 2026-09-23：调整预算配置（standard 11 个，high-risk 17 个）
+- ✅ 2026-09-23：验证通过（46016 / 80000 字符）
 
-**结果**：v4.0 可以使用，但 4 个新规则文件未集成到 loader。
+**结果**：v4.0 正式完成，所有新规则已集成，规则覆盖完整。
 
-**遗留工作**：
-- [ ] 将 `api-schema-mapper-core.md` 替换 `api-and-mapper.md`
-- [ ] 集成 `i18n-key-literal-rule.md`
-- [ ] 集成 `react-query-zustand-split.md`
-- [ ] 集成 `fameex-shared-components.md`
+**commit**: `c8b66f9`
 
 ### Phase 2: v4.1 人工提炼输入（进行中 🚧）
 
@@ -657,9 +658,10 @@ export const efficiencyLevels = {
 
 ### v4.0 成功指标（已达成 ✅）
 
-- ✅ standard 档规则覆盖完整（10 个完整规则）
-- ✅ 预算控制在 80K 以内
-- ✅ 验证通过（test-ctx-with-rules.mjs）
+- ✅ 7 个新规则文件已创建
+- ✅ 所有新规则文件已集成到 rule-loader
+- ✅ standard 档加载 11 个规则（预算 46016 / 80000）
+- ✅ 在真实项目中验证规则加载正常（PR-02233）
 
 ### v4.1 成功指标（待验证 ⏳）
 
@@ -692,7 +694,9 @@ export const efficiencyLevels = {
 
 **最后更新**：2026-09-23  
 **负责人**：待定  
-**状态**：v4.0 部分完成（3/7 新规则已集成），v4.1 设计完成待验证
+**状态**：v4.0 已完成 ✅，v4.1 设计完成待验证
+
+**v4.0 完成时间**：2026-09-23（commit: c8b66f9）
 
 ---
 

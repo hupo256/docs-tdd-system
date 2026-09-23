@@ -2,49 +2,18 @@
 
 > 基于 v4-upgrade-plan-20260923.md 的现状诊断
 
-## 🎯 推荐方案：A + B 组合
+## 🎯 推荐方案：Phase 2 + Phase 3
 
-### Phase 1: 补全 v4.0（1-2 小时，今天完成）
+### ~~Phase 1: 补全 v4.0~~（✅ 已完成）
 
-**目标**：让 v4.0 名副其实
+**完成时间**：2026-09-23  
+**commit**: `c8b66f9`
 
-**执行**：
-```bash
-# 1. 备份当前 rule-loader
-cp common/engine/agent-scripts/lib/rule-loader-v4.mjs{,.backup}
-
-# 2. 编辑 rule-loader-v4.mjs，修改优先级列表
-# 将以下规则加入优先级列表：
-#   - api-schema-mapper-core.md (替换 api-and-mapper.md)
-#   - i18n-key-literal-rule.md
-#   - react-query-zustand-split.md
-#   - fameex-shared-components.md
-
-# 3. 验证
-node common/engine/agent-scripts/docs-tdd.mjs context PR-02233 standard
-
-# 4. 确认加载了所有新规则且字符数 < 80000
-
-# 5. 提交
-git add common/engine/agent-scripts/lib/rule-loader-v4.mjs
-git commit -m "feat(v4.0): 集成剩余 4 个新规则文件
-
-- 替换 api-and-mapper.md → api-schema-mapper-core.md
-- 新增 i18n-key-literal-rule.md
-- 新增 react-query-zustand-split.md  
-- 新增 fameex-shared-components.md
-
-standard 档现在加载 10-12 个规则（取决于优先级排序）
-总字符数仍在 80K 预算内
-
-Closes v4.0 规则补全"
-```
-
-**验收标准**：
-- [ ] standard 档加载 ≥ 10 个规则
-- [ ] 包含所有 7 个新创建的规则文件
-- [ ] 总字符数 < 80000
-- [ ] PR-02233 context 命令正常运行
+**结果**：
+- ✅ 所有 7 个新规则已集成到 rule-loader-v4.mjs
+- ✅ standard 档加载 11 个规则（46016 / 80000 字符）
+- ✅ PR-02233 真实项目验证通过
+- ✅ v4.0 正式完成
 
 ---
 
@@ -113,9 +82,9 @@ docs-tdd kickoff PR-XXXXX --kind feature
 
 ### v4.0 完成标准
 - [x] 7 个新规则文件已创建
-- [ ] 所有新规则文件已集成到 rule-loader ← **待完成**
+- [x] 所有新规则文件已集成到 rule-loader ✅ **已完成（2026-09-23）**
 - [x] standard 档预算控制在 80K 以内
-- [ ] 在真实项目中验证规则加载正常
+- [x] 在真实项目中验证规则加载正常
 
 ### v4.1 启动标准（数据驱动）
 - [ ] 完成 ≥ 3 个 lite 实验
@@ -143,8 +112,8 @@ docs-tdd kickoff PR-XXXXX --kind feature
 ## 🎯 本周交付物
 
 **必须交付**：
-1. [ ] v4.0 补全（4 个规则集成）+ 验证通过
-2. [ ] PR-02419 决策（继续 or 换需求）
+1. [x] v4.0 补全（4 个规则集成）+ 验证通过 ✅ **已完成**
+2. [ ] PR-02419 决策（继续 or 换需求）← **下一步**
 3. [ ] 至少 1 个 lite 实验完成 + 数据记录
 
 **可选交付**：
@@ -158,8 +127,8 @@ docs-tdd kickoff PR-XXXXX --kind feature
 
 **2026-09-23 决策**：
 - [x] 采用方案 A+B 组合
-- [ ] Phase 1: 补全 v4.0（执行中）
-- [ ] Phase 2: 决策 PR-02419 去向
+- [x] Phase 1: 补全 v4.0 ✅ **已完成（commit: c8b66f9）**
+- [ ] Phase 2: 决策 PR-02419 去向 ← **下一步**
 - [ ] Phase 3: 数据收集计划确认
 
 **待决策**：
