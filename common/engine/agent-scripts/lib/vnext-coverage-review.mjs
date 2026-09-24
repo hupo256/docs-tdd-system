@@ -8,6 +8,7 @@ import { resolve } from 'node:path'
 import { coverageFingerprints, stableFingerprint, verifyVNextCoverage } from './vnext-work-item.mjs'
 import { deliveryPolicyPaths } from './vnext-delivery-scope.mjs'
 import { reviewRequestFingerprint, verifyReviewReceipt } from './vnext-review-receipt.mjs'
+import { sourceUnitDispositionProblems } from './vnext-source-disposition.mjs'
 import { isStructuralSourceUnit } from './vnext-source-units.mjs'
 
 export const REVIEW_PROTOCOL = 'vnext-independent-coverage-review-v3'
@@ -84,6 +85,10 @@ export function buildCoverageReviewRequest({ workItem, sourceUnits }) {
   if (unknownAnchors.length) throw new Error(`requirement anchors are absent from source units: ${unknownAnchors.join(', ')}`)
   const anchoredSourceIds = new Set((workItem.requirements || []).flatMap((requirement) => (requirement.sourceAnchors || []).map((anchor) => anchor.sourceId)))
   const dispositionBySourceId = new Map((workItem.sourceUnitDispositions || []).map((d) => [d.sourceId, d]))
+  const sourceUnitById = new Map(sourceUnits.map((unit) => [unit.sourceId, unit]))
+  const dispositionProblems = (workItem.sourceUnitDispositions || []).flatMap((disposition) =>
+    sourceUnitDispositionProblems(disposition, sourceUnitById.get(disposition.sourceId)))
+  if (dispositionProblems.length) throw new Error(`invalid source-unit dispositions: ${dispositionProblems.join('; ')}`)
   const unattributed = sourceUnits.filter((unit) => {
     if (anchoredSourceIds.has(unit.sourceId) || isStructuralSourceUnit(unit)) return false
     const disposition = dispositionBySourceId.get(unit.sourceId)
@@ -260,7 +265,12 @@ export function selfTest() {
   ]
   const imageWorkItem = structuredClone(workItem)
   imageWorkItem.requirements[0].sourceAnchors.push({ sourceId: 'IMG-ANCHORED' })
-  imageWorkItem.sourceUnitDispositions = [{ sourceId: 'IMG-REFERENCE', disposition: 'not-a-requirement', reason: 'current-state reference' }]
+  imageWorkItem.sourceUnitDispositions = [{
+    sourceId: 'IMG-REFERENCE',
+    disposition: 'not-a-requirement',
+    reason: 'current-state reference',
+    exclusionEvidence: { basis: 'context-only', sourceQuote: 'current state' },
+  }]
   const imageRequest = buildCoverageReviewRequest({ workItem: imageWorkItem, sourceUnits: imageUnits })
   assert.deepEqual(imageRequest.reviewAssets.map((asset) => asset.sourceId), ['IMG-ANCHORED'])
   assert.equal(imageRequest.sourceAssets.find((asset) => asset.sourceId === 'IMG-REFERENCE').reviewDisposition, 'manifest-only')

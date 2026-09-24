@@ -80,7 +80,11 @@ export function selfTest() {
     writeFileSync(source, '# Kickoff E2E\n\nRender the requested widget.\n')
     writeFileSync(outsideSource, '# Outside source\n\nMust not be read.\n')
     const outsideSourceBefore = readFileSync(outsideSource, 'utf8')
-    const env = { ...process.env, DOCS_TDD_CONFIG: configPath }
+    const env = {
+      ...process.env,
+      DOCS_TDD_CONFIG: configPath,
+      DOCS_TDD_CODEX_BIN: join(sandbox, 'missing-codex'),
+    }
 
     const v2Project = allocateProjectId(allocated)
     const v2Marker = `kickoff-public-e2e-${nonce}-v2`
@@ -184,12 +188,12 @@ export function selfTest() {
     const runMarker = `kickoff-public-e2e-${nonce}-run`
     projects.push({ projectId: runProject, marker: runMarker })
     const firstRun = run(docsTddCli, [
-      'run', runProject, '--prd', source, '--title', runMarker,
+      'run', runProject, '--prd', source, '--title', runMarker, '--client', 'codex',
     ], { cwd: sandbox, env })
-    assert.equal(firstRun.status, 0, firstRun.stderr)
+    assert.notEqual(firstRun.status, 0)
     const firstRunState = JSON.parse(firstRun.stdout)
     assert.equal(firstRunState.workflowVersion, 2)
-    assert.equal(firstRunState.status, 'needs-agent')
+    assert.equal(firstRunState.status, 'failed-infrastructure')
     assert.equal(firstRunState.nextAction, 'extract-requirements')
     const runWorkItemPath = join(resolveProjectRoot(runProject), 'work-item.json')
     const runWorkItem = JSON.parse(readFileSync(runWorkItemPath, 'utf8'))
@@ -232,7 +236,7 @@ export function selfTest() {
     assert.equal(resumed.status, 0, resumed.stderr)
     assert.notEqual(JSON.parse(resumed.stdout).status, 'blocked')
     assert.equal(existsSync(runWorkItemPath), true)
-    console.log('vnext public-command E2E passed (kickoff, run --prd binding, needs-agent boundary, run/v1 separation, resume failure, Lite denial, v1 compatibility, path boundary)')
+    console.log('vnext public-command E2E passed (kickoff, run --prd binding, Agent infrastructure failure, run/v1 separation, resume failure, Lite denial, v1 compatibility, path boundary)')
   } finally {
     for (const { projectId, marker } of projects) removeOwnedProject(projectId, marker)
     rmSync(sourceRoot, { recursive: true, force: true })

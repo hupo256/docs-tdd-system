@@ -5,6 +5,7 @@ import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import { resolve } from 'node:path'
+import { sourceUnitDispositionProblems } from './vnext-source-disposition.mjs'
 import { isStructuralSourceUnit } from './vnext-source-units.mjs'
 
 const EXTENDED_SOURCE_TYPES = new Set([
@@ -132,6 +133,7 @@ export function compileSourceGraph({ sourceUnits = [], workItem = {} } = {}) {
   }
   for (const disposition of workItem.sourceUnitDispositions || []) {
     if (!sourceById.has(disposition.sourceId)) problems.push(`source disposition references unknown unit ${disposition.sourceId}`)
+    problems.push(...sourceUnitDispositionProblems(disposition, sourceById.get(disposition.sourceId)))
   }
   for (const unit of sourceUnits.filter((item) => item.type === 'acceptance-row')) {
     if (!mappedSourceIds.has(unit.sourceId)) problems.push(`acceptance row ${unit.sourceId} is not mapped to a requirement`)

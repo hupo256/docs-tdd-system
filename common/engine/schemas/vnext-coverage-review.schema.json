@@ -6,7 +6,7 @@
   "required": ["schemaVersion", "protocol", "projectId", "sourceFingerprint", "requirementsFingerprint", "reviewRunId", "completedAt", "reviewer", "verdict", "findings"],
   "properties": {
     "schemaVersion": { "const": 1 },
-    "protocol": { "const": "vnext-independent-coverage-review-v2" },
+    "protocol": { "const": "vnext-independent-coverage-review-v3" },
     "projectId": { "type": "string", "pattern": "^(?:PR|TR)-\\d{5}$" },
     "sourceFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
     "requirementsFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
@@ -45,7 +45,7 @@
       "required": ["issuedBy", "client", "sessionId", "sourceIsolation", "requestFingerprint", "reviewedAssets", "startedAt", "completedAt", "signature"],
       "properties": {
         "issuedBy": { "const": "docs-tdd-review-v1" },
-        "client": { "type": "string", "enum": ["pi", "claude"] },
+        "client": { "type": "string", "enum": ["pi", "claude", "codex"] },
         "sessionId": { "type": "string", "minLength": 1 },
         "sourceIsolation": { "const": "source-only-no-code" },
         "requestFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },

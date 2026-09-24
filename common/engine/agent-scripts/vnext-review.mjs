@@ -73,7 +73,11 @@ export function resolveReviewerExecutable(client, {
   resolveRealpath = realpathSync,
   fileExists = existsSync,
 } = {}) {
-  const override = client === 'pi' ? env.DOCS_TDD_PI_BIN : env.DOCS_TDD_CLAUDE_BIN
+  const override = client === 'pi'
+    ? env.DOCS_TDD_PI_BIN
+    : client === 'codex'
+      ? env.DOCS_TDD_CODEX_BIN
+      : env.DOCS_TDD_CLAUDE_BIN
   if (override?.trim()) return override.trim()
   const direct = findExecutable(client, env.PATH || '')
   if (direct || client !== 'pi') return direct || client
@@ -103,6 +107,7 @@ export function reviewerTimeoutMs(request, envValue = process.env.DOCS_TDD_REVIE
 function runReviewer({ client, requestFile, imageFiles, sessionId, sessionDir, model, timeoutMs, spawn = spawnSync }) {
   const prompt = reviewPrompt()
   let args
+  let outputFile = ''
   if (client === 'pi') {
     args = [
       '--print', '--mode', 'text', '--system-prompt', REVIEW_SYSTEM_PROMPT, '--no-tools', '--no-context-files', '--no-extensions', '--no-skills', '--no-prompt-templates',
@@ -118,8 +123,24 @@ function runReviewer({ client, requestFile, imageFiles, sessionId, sessionDir, m
       ...(model ? ['--model', model] : []),
       `${prompt}\n\nReview request:\n${readFileSync(requestFile, 'utf8')}`,
     ]
+  } else if (client === 'codex') {
+    const schemaFile = join(sessionDir, 'review-output.schema.json')
+    outputFile = join(sessionDir, 'review-last-message.json')
+    writeFileSync(schemaFile, `${JSON.stringify(REVIEW_OUTPUT_SCHEMA, null, 2)}\n`)
+    args = [
+      'exec',
+      '--sandbox', 'read-only',
+      '-C', sessionDir,
+      '--skip-git-repo-check',
+      '--ephemeral',
+      '--output-schema', schemaFile,
+      '--output-last-message', outputFile,
+      ...imageFiles.flatMap((file) => ['--image', file]),
+      ...(model ? ['--model', model] : []),
+      `${prompt}\n\nReview request:\n${readFileSync(requestFile, 'utf8')}`,
+    ]
   } else {
-    throw new Error('review client must be pi or claude')
+    throw new Error('review client must be codex, claude, or pi')
   }
   const executable = resolveReviewerExecutable(client)
   const result = spawn(executable, args, {
@@ -131,7 +152,8 @@ function runReviewer({ client, requestFile, imageFiles, sessionId, sessionDir, m
   })
   if (result.error) throw result.error
   if (result.status !== 0) throw new Error(`${client} reviewer failed (${result.status}): ${(result.stderr || result.stdout || '').trim().slice(0, 2000)}`)
-  return extractJson(result.stdout)
+  const output = outputFile && existsSync(outputFile) ? readFileSync(outputFile, 'utf8') : result.stdout
+  return extractJson(output)
 }
 
 function sourceDocumentsFor(workItem) {
@@ -297,6 +319,7 @@ export function selfTest() {
     }), '/opt/pi-web/node_modules/@earendil-works/pi-coding-agent/dist/bundle/cli.js')
     assert.equal(resolveReviewerExecutable('pi', { env: { DOCS_TDD_PI_BIN: '/custom/pi' } }), '/custom/pi')
     assert.equal(resolveReviewerExecutable('claude', { env: { DOCS_TDD_CLAUDE_BIN: '/custom/claude' } }), '/custom/claude')
+    assert.equal(resolveReviewerExecutable('codex', { env: { DOCS_TDD_CODEX_BIN: '/custom/codex' } }), '/custom/codex')
     const fakeSpawn = () => ({ status: 0, stdout: '{"verdict":"pass","findings":[]}', stderr: '' })
     const result = runIsolatedCoverageReview({ projectDir, client: 'pi', spawn: fakeSpawn, keyPath, now: (() => { const times = ['2026-09-10T00:00:00Z', '2026-09-10T00:00:01Z']; return () => times.shift() })() })
     assert.equal(result.workItem.coverageAudit.verdict, 'pass')
@@ -308,6 +331,27 @@ export function selfTest() {
     )
     assert.doesNotThrow(() => applyCoverageReview(result.workItem, coverageReviewResponseFromAudit(result.workItem), { request: replayRequest, receiptKeyPath: keyPath }))
     assert.equal(JSON.parse(readFileSync(join(projectDir, 'work-item.json'), 'utf8')).coverageAudit.verdict, 'pass')
+    persistVNextWorkItem(projectDir, {
+      ...workItem,
+      requirementsAuthor: { kind: 'model', id: 'author', client: 'claude', sessionId: 'author-session' },
+    })
+    let codexArgs = []
+    const codexResult = runIsolatedCoverageReview({
+      projectDir,
+      client: 'codex',
+      keyPath,
+      now: (() => { const times = ['2026-09-10T00:01:00Z', '2026-09-10T00:01:01Z']; return () => times.shift() })(),
+      spawn: (_command, args) => {
+        codexArgs = args
+        const outputIndex = args.indexOf('--output-last-message')
+        writeFileSync(args[outputIndex + 1], '{"verdict":"pass","findings":[]}\n')
+        return { status: 0, stdout: '', stderr: '' }
+      },
+    })
+    assert.equal(codexResult.workItem.coverageAudit.receipt.client, 'codex')
+    assert.ok(codexArgs.includes('--skip-git-repo-check'))
+    assert.ok(codexArgs.includes('--output-schema'))
+    assert.ok(codexArgs.includes('--output-last-message'))
     persistVNextWorkItem(projectDir, workItem)
     assert.throws(() => runIsolatedCoverageReview({ projectDir, client: 'pi', keyPath, spawn: () => ({ status: 1, stdout: '', stderr: 'offline' }) }), /review escalation required/)
     const unavailable = JSON.parse(readFileSync(join(projectDir, 'work-item.json'), 'utf8')).reviewControl

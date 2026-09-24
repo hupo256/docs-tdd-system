@@ -421,8 +421,8 @@ if (projectWorkflowVersion === 2 && command === 'context') {
 }
 if (projectWorkflowVersion === 2 && command === 'review') {
   const reviewClient = clientIndex >= 0 ? agentClient : 'claude'
-  if (!['pi', 'claude'].includes(reviewClient)) {
-    console.error('v2 review uses Claude by default and accepts only --client claude or --client pi')
+  if (!['codex', 'pi', 'claude'].includes(reviewClient)) {
+    console.error('v2 review uses Claude by default and accepts only --client codex, --client claude, or --client pi')
     process.exit(1)
   }
   const model = modelIndex >= 0 ? commandArgs[modelIndex + 1] : ''

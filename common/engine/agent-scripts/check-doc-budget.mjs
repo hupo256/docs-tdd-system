@@ -140,6 +140,9 @@ const SELF_TEST_SCRIPTS = [
   ['lib/vnext-reconcile-runtime.mjs', '--self-test'],
   ['lib/vnext-reconcile-actions.mjs', '--self-test'],
   ['lib/vnext-autonomous-validation.mjs', '--self-test'],
+  ['lib/vnext-agent-runtime.mjs', '--self-test'],
+  ['lib/vnext-continuous-runner.mjs', '--self-test'],
+  ['lib/vnext-orchestrator-runner.mjs', '--self-test'],
   ['verify-msw-manifest.mjs', '--self-test'],
   ['warn-ledger.mjs', '--self-test'],
 ]

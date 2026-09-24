@@ -14,11 +14,15 @@ import { verifyExitResultIntegrity } from './lib/vnext-exit.mjs'
 import { persistVNextWorkItem } from './lib/vnext-persistence.mjs'
 import { applyAutopilotCheckpoint, applyDeliveryCommit, deriveAutopilotAction } from './lib/vnext-autopilot.mjs'
 import { applySourceUpdate } from './lib/vnext-source-readiness.mjs'
-import { inspectSurfaceReconciliation, executeSurfaceReconciliation } from './lib/vnext-reconcile-runtime.mjs'
+import { inspectSurfaceReconciliation } from './lib/vnext-reconcile-runtime.mjs'
 import { runAutonomousValidation as executeAutonomousValidation } from './lib/vnext-autonomous-validation.mjs'
 import { assertSafeWorkContext } from './lib/vnext-work-context-runtime.mjs'
 import { deriveDeliveryTruth } from './lib/vnext-delivery-truth.mjs'
 import { createVNextIntakeRuntime } from './lib/vnext-intake-runtime.mjs'
+import {
+  commitScopedPaths as executeCommitScopedPaths,
+  createVNextOrchestratorRunner,
+} from './lib/vnext-orchestrator-runner.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, config } = resolveRoots()
@@ -28,6 +32,18 @@ const [command, projectId] = args
 function option(name, fallback = '') {
   const index = args.indexOf(name)
   return index === -1 ? fallback : (args[index + 1] ?? fallback)
+}
+
+export function resolveAutopilotAgentOptions({
+  requestedClient = '',
+  requestedModel = '',
+  env = process.env,
+} = {}) {
+  const client = requestedClient || (env.CODEX_THREAD_ID ? 'codex' : 'claude')
+  if (!['codex', 'claude'].includes(client)) {
+    throw new Error('docs-tdd run --client must be codex or claude')
+  }
+  return { client, model: requestedModel }
 }
 
 function executeScript(script, scriptArgs) {
@@ -469,38 +485,10 @@ function runAutonomousValidation(id) {
 }
 
 export function commitScopedPaths(worktree, id, paths, spawn = spawnSync, mode = 'delivery', options = {}) {
-  if (!paths?.length) return { ok: false, step: 'commit', error: 'automatic commit requires a non-empty path scope' }
-  if (!['checkpoint', 'delivery'].includes(mode)) return { ok: false, step: 'commit', error: `unknown commit mode: ${mode}` }
-  try {
-    if (!options.workItem) throw new Error('automatic commit requires the canonical work item')
-    const safety = (options.assertSafety || assertSafeWorkContext)({
-      projectId: id,
-      workItem: options.workItem,
-      worktree,
-      baseRef: options.baseRef || config.baseRef || 'origin/online',
-      commitMode: mode === 'delivery' ? 'delivery-commit' : 'checkpoint',
-      actionId: options.actionId || '',
-      targetPaths: paths,
-    })
-    const env = { ...process.env, DOCS_TDD_COMMIT_MODE: mode }
-    runGit(worktree, ['add', '--', ...paths], spawn, env)
-    const truth = deriveDeliveryTruth({
-      workItem: options.workItem,
-      latestResult: options.latestResult || null,
-      integrityOk: options.integrityOk,
-      codeStateFresh: options.codeStateFresh,
-      assuranceTrusted: options.assuranceTrusted,
-      reconciliationResult: options.reconciliationResult || null,
-      gitScopeClean: false,
-      changedPaths: paths,
-    })
-    const message = options.subject || truth.commitSubjects[mode]
-    runGit(worktree, ['commit', '--only', '-m', message, '--', ...paths], spawn, env)
-    const commitSha = runGit(worktree, ['rev-parse', 'HEAD'], spawn, env).trim()
-    return { ok: true, step: 'commit', mode, commitSha, subject: message, paths, pushed: false, workContext: safety }
-  } catch (error) {
-    return { ok: false, step: 'commit', error: error.message, paths, pushed: false }
-  }
+  return executeCommitScopedPaths(worktree, id, paths, spawn, mode, {
+    ...options,
+    baseRef: options.baseRef || config.baseRef || 'origin/online',
+  })
 }
 
 export function commitEvidenceScope(id) {
@@ -564,63 +552,31 @@ function autopilotRun() {
       }
     }
   }
-  const before = inspectVNext(projectId)
-  if (before.nextAction === 'reconcile-current-code') {
-    const worktree = requireProjectWorktree(projectId)
-    const reconciliation = executeSurfaceReconciliation({
-      projectDir,
-      worktree,
-      baseRef: config.baseRef || 'origin/online',
-      executeScript,
-    })
-    const after = inspectVNext(projectId)
-    print({ ...after, automation: reconciliation })
-    return
+  const agent = resolveAutopilotAgentOptions({
+    requestedClient: option('--client'),
+    requestedModel: option('--model'),
+  })
+  const execution = createVNextOrchestratorRunner({
+    projectId,
+    projectDir,
+    inspect: () => inspectVNext(projectId),
+    requireWorktree: requireProjectWorktree,
+    executeScript,
+    runAutonomousValidation,
+    commitEvidenceScope,
+    scopedDeliveryCommitted,
+    baseRef: config.baseRef || 'origin/online',
+    agentClient: agent.client,
+    agentModel: agent.model,
+  }).run()
+  const topLevelStatus = ['needs-agent', 'needs-user', 'blocked-external-dependency', 'failed-infrastructure', 'failed-safety-check', 'budget-exhausted']
+    .includes(execution.runner.outcome)
+    ? execution.runner.outcome
+    : execution.state.status
+  print({ ...execution.state, status: topLevelStatus, runner: execution.runner })
+  if (['failed-infrastructure', 'failed-safety-check', 'budget-exhausted'].includes(execution.runner.outcome)) {
+    process.exitCode = 1
   }
-  if (before.nextAction === 'commit-ready-change') {
-    const automation = commitEvidenceScope(projectId)
-    const after = inspectVNext(projectId)
-    print({ ...after, automation })
-    return
-  }
-  if (!['capture-cli-evidence', 'revalidate-current-code-evidence', 'refresh-invalid-verification'].includes(before.nextAction)) {
-    const humanActions = new Set([
-      'collect-scope-approval',
-      'complete-deferred-human-review',
-      'complete-pretest-human-run',
-      'blocked-user-decision',
-    ])
-    const externalActions = new Set([
-      'await-surface-dependencies',
-      'await-late-dependencies',
-      'blocked-external-dependency',
-      'failed-infrastructure',
-    ])
-    if (humanActions.has(before.nextAction)) {
-      print({ ...before, status: 'needs-user', runner: { outcome: 'needs-user', actionId: before.actionPacket?.actionId } })
-    } else if (externalActions.has(before.nextAction)) {
-      print({ ...before, status: 'blocked-external-dependency', runner: { outcome: 'blocked-external-dependency', actionId: before.actionPacket?.actionId } })
-    } else if (before.status === 'blocked') {
-      print({ ...before, runner: { outcome: 'blocked', actionId: before.actionPacket?.actionId } })
-    } else if (before.status === 'complete') {
-      print(before)
-    } else {
-      print({
-        ...before,
-        status: 'needs-agent',
-        runner: {
-          outcome: 'needs-agent',
-          adapter: 'not-configured',
-          actionId: before.actionPacket?.actionId,
-          note: 'This action packet is not execution evidence; a host Agent must perform the action and submit its structured result.',
-        },
-      })
-    }
-    return
-  }
-  const automation = runAutonomousValidation(projectId)
-  const after = inspectVNext(projectId)
-  print({ ...after, automation })
 }
 
 function selfTest() {
@@ -631,6 +587,9 @@ function selfTest() {
   const advance = inferState({ projectExists: true, gateResult: { gate: 'G5', ok: true } })
   const complete = inferState({ projectExists: true, gateResult: { gate: 'G8', ok: true } })
   const decision = decideNext({ projectId: 'PR-00001', projectExists: true, gateResult: { gate: 'G5', ok: false, checks: [{ ruleId: 'DOC-G5-003', ok: false, severity: 'error', message: 'x' }] } })
+  const codexAgent = resolveAutopilotAgentOptions({ env: { CODEX_THREAD_ID: 'thread-1' } })
+  const claudeAgent = resolveAutopilotAgentOptions({ env: {} })
+  const modeledAgent = resolveAutopilotAgentOptions({ requestedClient: 'codex', requestedModel: 'gpt-test', env: {} })
   const gitCalls = []
   const commit = commitScopedPaths('/tmp/worktree', 'PR-00001', ['src/a.ts'], (_command, gitArgs) => {
     gitCalls.push(gitArgs)
@@ -646,6 +605,9 @@ function selfTest() {
     || complete.status !== 'complete'
     || decision.command !== 'docs-tdd gate PR-00001 G5'
     || decision.blockers.length !== 1
+    || codexAgent.client !== 'codex'
+    || claudeAgent.client !== 'claude'
+    || modeledAgent.model !== 'gpt-test'
     || vnextVerificationNextAction({ authoritativePass: false, shadowOnly: false, integrityOk: true, codeStateFresh: false, status: 'passed' }) !== 'revalidate_current_code_evidence'
     || vnextVerificationNextAction({ authoritativePass: false, shadowOnly: false, integrityOk: false, codeStateFresh: false, assuranceTrusted: false, status: 'passed' }) !== 'refresh_invalid_verification'
     || vnextVerificationNextAction({ authoritativePass: false, shadowOnly: false, integrityOk: true, codeStateFresh: true, assuranceTrusted: false, status: 'passed' }) !== 'capture_cli_attested_evidence'
@@ -663,7 +625,7 @@ function selfTest() {
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   if (args.includes('--self-test')) selfTest()
   else if (!new RegExp(`^(?:${config.projectIdPattern || '(?:PR|TR)-\\d{5}'})$`).test(projectId || '')) {
-    console.error('usage: project-orchestrator.mjs <run|kickoff|status|resume|next|source-update|checkpoint> PR-01234 [--prd <source>] [--title <name>] [--input <json>]')
+    console.error('usage: project-orchestrator.mjs <run|kickoff|status|resume|next|source-update|checkpoint> PR-01234 [--prd <source>] [--title <name>] [--input <json>] [--client codex|claude] [--model <name>]')
     process.exit(1)
   } else {
     try {

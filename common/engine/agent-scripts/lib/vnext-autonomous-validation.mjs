@@ -72,6 +72,7 @@ export function runAutonomousValidation({ id, projectDir, workItem, worktree, ba
   return {
     ok: verify.status === 0,
     step: 'verify',
+    verifyExitCode: verify.status,
     evidenceExitCode: evidence.status,
     evidenceDir: runDir,
     output: (verify.stdout || '').trim().slice(0, 4000),

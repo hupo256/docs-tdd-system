@@ -390,7 +390,7 @@
           "required": ["issuedBy", "client", "sessionId", "sourceIsolation", "requestFingerprint", "reviewedAssets", "startedAt", "completedAt", "signature"],
           "properties": {
             "issuedBy": { "const": "docs-tdd-review-v1" },
-            "client": { "type": "string", "enum": ["pi", "claude"] },
+            "client": { "type": "string", "enum": ["pi", "claude", "codex"] },
             "sessionId": { "type": "string", "minLength": 1 },
             "sourceIsolation": { "const": "source-only-no-code" },
             "requestFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
@@ -504,13 +504,22 @@
         "properties": {
           "sourceId": { "type": "string", "minLength": 1 },
           "disposition": { "type": "string", "enum": ["anchored", "not-a-requirement"] },
-          "reason": { "type": "string", "minLength": 1 }
+          "reason": { "type": "string", "minLength": 1 },
+          "exclusionEvidence": {
+            "type": "object",
+            "required": ["basis", "sourceQuote"],
+            "properties": {
+              "basis": { "type": "string", "enum": ["explicit-out-of-scope", "example-only", "context-only"] },
+              "sourceQuote": { "type": "string", "minLength": 1 }
+            },
+            "additionalProperties": false
+          }
         },
         "additionalProperties": false,
         "allOf": [
           {
             "if": { "properties": { "disposition": { "const": "not-a-requirement" } } },
-            "then": { "required": ["reason"] }
+            "then": { "required": ["reason", "exclusionEvidence"] }
           }
         ]
       }

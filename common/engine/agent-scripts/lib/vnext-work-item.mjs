@@ -5,6 +5,7 @@
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
 import { isStructuralSourceUnit } from './vnext-source-units.mjs'
+import { sourceUnitDispositionProblems } from './vnext-source-disposition.mjs'
 import { sourceGraphCheck } from './vnext-source-graph.mjs'
 
 function canonicalize(value) {
@@ -153,6 +154,7 @@ function requirementCoverageProblems(workItem, sourceUnits, sourceOracle) {
   }
   const dispositionBySourceId = new Map((workItem.sourceUnitDispositions || []).map((d) => [d.sourceId, d]))
   const sourceUnitIds = new Set((sourceUnits || []).map((unit) => unit.sourceId))
+  const sourceUnitById = new Map((sourceUnits || []).map((unit) => [unit.sourceId, unit]))
   for (const unit of sourceUnits || []) {
     if (anchoredSourceIds.has(unit.sourceId) || isStructuralSourceUnit(unit)) continue
     const disposition = dispositionBySourceId.get(unit.sourceId)
@@ -162,7 +164,7 @@ function requirementCoverageProblems(workItem, sourceUnits, sourceOracle) {
   }
   for (const disposition of workItem.sourceUnitDispositions || []) {
     if (!sourceUnitIds.has(disposition.sourceId)) problems.push(`sourceUnitDisposition references unknown source unit: ${disposition.sourceId}`)
-    if (disposition.disposition === 'not-a-requirement' && !disposition.reason?.trim()) problems.push(`not-a-requirement disposition for ${disposition.sourceId} requires a reason`)
+    problems.push(...sourceUnitDispositionProblems(disposition, sourceUnitById.get(disposition.sourceId)))
   }
 
   problems.push(...v0MicroProblems(workItem, sourceUnits))

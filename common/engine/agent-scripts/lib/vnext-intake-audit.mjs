@@ -6,6 +6,7 @@ import assert from 'node:assert/strict'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { evidencePlanProblems } from '../vnext-evidence.mjs'
+import { sourceUnitDispositionProblems } from './vnext-source-disposition.mjs'
 import { isStructuralSourceUnit } from './vnext-source-units.mjs'
 import { vNextIntakeProblems } from './vnext-intake.mjs'
 import { coverageFingerprints, stableFingerprint } from './vnext-work-item.mjs'
@@ -19,6 +20,7 @@ function requirementProblems(workItem, sourceUnits) {
   const problems = []
   const requirements = workItem?.requirements || []
   const sourceIds = new Set(sourceUnits.map((unit) => unit.sourceId))
+  const sourceById = new Map(sourceUnits.map((unit) => [unit.sourceId, unit]))
   const requirementIds = requirements.map((item) => item.requirementId).filter(Boolean)
   const duplicates = duplicateValues(requirementIds)
   if (!requirements.length) problems.push('no requirements were extracted')
@@ -84,7 +86,10 @@ function requirementProblems(workItem, sourceUnits) {
   }
 
   const anchored = new Set(requirements.flatMap((requirement) => (requirement.sourceAnchors || []).map((anchor) => anchor.sourceId)))
-  const dispositions = new Map((workItem?.sourceUnitDispositions || []).map((item) => [item.sourceId, item]))
+  const sourceUnitDispositions = workItem?.sourceUnitDispositions || []
+  const duplicateDispositions = duplicateValues(sourceUnitDispositions.map((item) => item.sourceId).filter(Boolean))
+  if (duplicateDispositions.length) problems.push(`duplicate source-unit dispositions: ${duplicateDispositions.join(', ')}`)
+  const dispositions = new Map(sourceUnitDispositions.map((item) => [item.sourceId, item]))
   for (const unit of sourceUnits) {
     if (isStructuralSourceUnit(unit) || anchored.has(unit.sourceId)) continue
     const disposition = dispositions.get(unit.sourceId)
@@ -92,9 +97,9 @@ function requirementProblems(workItem, sourceUnits) {
       problems.push(`semantic source unit ${unit.sourceId} is neither anchored nor explicitly excluded`)
     }
   }
-  for (const disposition of workItem?.sourceUnitDispositions || []) {
+  for (const disposition of sourceUnitDispositions) {
     if (!sourceIds.has(disposition.sourceId)) problems.push(`sourceUnitDisposition references unknown sourceId ${disposition.sourceId}`)
-    if (disposition.disposition === 'not-a-requirement' && !disposition.reason?.trim()) problems.push(`${disposition.sourceId} exclusion requires a reason`)
+    problems.push(...sourceUnitDispositionProblems(disposition, sourceById.get(disposition.sourceId)))
   }
   return problems
 }
@@ -182,6 +187,7 @@ export function selfTest() {
     { sourceId: 'SRC-H', type: 'text', content: '# Scope' },
     { sourceId: 'SRC-1', type: 'text', content: 'Change A.' },
     { sourceId: 'SRC-2', type: 'table', tableRole: 'row', content: '| Entry | Value |\n| Web | A |' },
+    { sourceId: 'SRC-3', type: 'text', content: 'Background: this screenshot is context only.' },
   ]
   const workItem = {
     workflowVersion: 2, projectId: 'PR-00001', sourceSnapshot: { revision: '1', contentHash: 'x', sources: [{ path: 'prd.md', contentHash: 'x' }] },
@@ -190,7 +196,12 @@ export function selfTest() {
       { factId: 'F-002', category: 'content', statement: 'The table row is an example.', sourceIds: ['SRC-2'], requirementIds: ['R-001'] },
     ],
     requirements: [{ requirementId: 'R-001', sourceAnchors: [{ type: 'text', sourceId: 'SRC-1' }, { type: 'table', sourceId: 'SRC-2' }], statement: 'Change A.', status: 'doing', collectionSemantics: { kind: 'none', expectedCount: 0 }, affectedSurfaces: [{ surfaceId: 'S-001', locator: 'src/a.ts', disposition: 'implement' }], evidencePlan: [{ type: 'copy-literal', runtimeRequired: false }] }],
-    sourceUnitDispositions: [],
+    sourceUnitDispositions: [{
+      sourceId: 'SRC-3',
+      disposition: 'not-a-requirement',
+      reason: 'context only',
+      exclusionEvidence: { basis: 'context-only', sourceQuote: 'this screenshot is context only' },
+    }],
     evidenceCommands: [
       { evidenceId: 'E-1', kind: 'copy-literal', argv: ['node', 'scripts/check-copy.mjs'], requirementIds: ['R-001'], surfaceIds: ['S-001'] },
       { evidenceId: 'E-2', kind: 'touched-file-quality', argv: ['pnpm', 'exec', 'biome', 'check', 'apps/web/src/a.ts'] },
@@ -211,11 +222,25 @@ export function selfTest() {
   assert.match(problemsFor(duplicate, 'EXTRACTION_STRUCTURE'), /duplicate requirement IDs/)
   const missingFact = structuredClone(workItem)
   missingFact.extractionFacts = missingFact.extractionFacts.filter((fact) => fact.factId !== 'F-002')
-  missingFact.sourceUnitDispositions = []
   assert.match(problemsFor(missingFact, 'EXTRACTION_TRACEABILITY'), /SRC-2/)
   const duplicateSurface = structuredClone(workItem)
   duplicateSurface.requirements.push({ ...structuredClone(duplicateSurface.requirements[0]), requirementId: 'R-002' })
   assert.match(problemsFor(duplicateSurface, 'EXTRACTION_STRUCTURE'), /duplicate surface IDs/)
+  const incompleteExclusion = structuredClone(workItem)
+  delete incompleteExclusion.sourceUnitDispositions[0].exclusionEvidence
+  assert.match(problemsFor(incompleteExclusion, 'EXTRACTION_STRUCTURE'), /exclusion requires evidence/)
+  const mixedFeatureUnits = [...units, { sourceId: 'SRC-4', type: 'text', content: 'The data appears automatically, and add an export button on the same page.' }]
+  const mixedFeature = structuredClone(workItem)
+  mixedFeature.sourceUnitDispositions.push({
+    sourceId: 'SRC-4',
+    disposition: 'not-a-requirement',
+    reason: 'automatic display',
+    exclusionEvidence: { basis: 'context-only', sourceQuote: 'The data appears automatically' },
+  })
+  assert.match(
+    runIntakeAudit(mixedFeature, mixedFeatureUnits).checks.find((check) => check.code === 'EXTRACTION_STRUCTURE').problems.join(' '),
+    /mixes passive-display/,
+  )
   console.log('vnext-intake-audit self-test passed')
 }
 
