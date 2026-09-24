@@ -111,6 +111,10 @@ function safeV2Worktree(id, args) {
 
 const readJson = (file) => JSON.parse(readFileSync(file, 'utf8'))
 
+export function kickoffCommandArgs(projectId, args = []) {
+  return [join(scriptDir, 'project-orchestrator.mjs'), 'kickoff', projectId, ...args]
+}
+
 if (process.argv.includes('--self-test')) {
   // 纯判定（section 切片 / scenario 展开 / gate 心跳）已随抽出的 lib 各自 --self-test，此处不重复；
   // 本文件的自测只守它作为**分发器**的独有关切：resolveRoots + readJson 能对真实规则数据接上、且
@@ -122,6 +126,13 @@ if (process.argv.includes('--self-test')) {
   assert.deepEqual(validateContextPolicy(index, { codingScenarios: CODING_SCENARIOS }), [])
   assert.deepEqual(coordinatorSteps(index, 'g6_verify'), G6_CONTEXT_SCENARIOS)
   assert(expandScenarioRefs(index, 'g6_code_review').some((ref) => ref.file === 'quality-checklist.md'))
+  assert.deepEqual(kickoffCommandArgs('PR-00001', ['--prd', 'prd.md']), [
+    join(scriptDir, 'project-orchestrator.mjs'),
+    'kickoff',
+    'PR-00001',
+    '--prd',
+    'prd.md',
+  ])
   console.log('docs-tdd self-test passed.')
   process.exit(0)
 }
@@ -272,10 +283,9 @@ if (!new RegExp(`^(?:${config.projectIdPattern || '(?:PR|TR)-\\d{5}'})$`).test(p
   process.exit(1)
 }
 
-// v4.0: kickoff 单独处理，使用 kickoff-v4.mjs（支持 lite-path）
+// 新项目统一由 v2 orchestrator 初始化；Lite 只保留只读候选评估，不得绕过 intake。
 if (command === 'kickoff') {
-  const kickoffV4 = join(scriptDir, 'lib', 'kickoff-v4.mjs')
-  process.exit(run([kickoffV4, projectId, ...cliArgs.slice(2)]))
+  process.exit(run(kickoffCommandArgs(projectId, cliArgs.slice(2))))
 }
 
 if (['run', 'status', 'resume', 'next', 'source-update', 'checkpoint'].includes(command)) {

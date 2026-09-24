@@ -27,7 +27,7 @@ v3.5 把流程继续收敛为 requirement-to-commit：四档效率路由（`micr
 运行环境必须提供 Node.js、Git 与 ripgrep（`rg`）；`docs-tdd doctor` 会对缺失依赖 fail-closed。核心命令统一走 `<mount>/common/engine/agent-scripts/docs-tdd.mjs`。下表中的 `docs-tdd` 是 `node <mount>/common/engine/agent-scripts/docs-tdd.mjs` 的阅读简写：
 
 ```bash
-docs-tdd run <PROJECT-ID> --prd <src>      # v3.5 Autopilot：断点续跑、自动验证/限次修复、按证据路径 commit（不 push）
+docs-tdd run <PROJECT-ID> --prd <src>      # v2 编排入口：初始化/恢复并推进确定性动作；不会越过 needs-agent / needs-user
 docs-tdd context <PROJECT-ID> <SCENARIO>   # 按场景生成默认 brief/compact 规则包；可显式覆盖模式
 docs-tdd kickoff <PROJECT-ID> --prd <src>  # 默认创建 workflowVersion 2 feature；已定位缺陷可加 --kind bugfix，显式 v1 加 --legacy
 docs-tdd verify  <PROJECT-ID> --input <json> # 第二代协议唯一正式出口，非 PASS 阻断
@@ -154,6 +154,8 @@ docs-tdd run PR-01234                # 中断后重复运行，按当前事实�
 ```
 
 CLI 始终返回带稳定 `actionId` 的唯一 action packet；Agent 只按 `action`、`reason`、`constraints` 执行下一步，不让用户手工选择 Gate，也不从 Markdown 阶段描述猜状态。第二代项目禁止运行第一代的 `gate` 或 `changed`。
+
+`run` 会初始化或恢复项目、执行已接通的确定性动作，并返回唯一下一步。当前 CLI 尚未配置 Codex/Claude 宿主 Agent adapter；遇到需求抽取、实现等语义动作时会返回 `needs-agent`，遇到审批或业务裁决时会返回 `needs-user`。宿主 Agent 必须实际执行动作、提交结构化结果后再续跑；action packet 本身不是完成证据。因此，单次 `run --prd` 当前不等于从需求到 PASS/commit 的连续自动交付。
 
 #### 2. 结构化需求、确定性前置审计与机器独立审查
 

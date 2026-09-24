@@ -1,6 +1,7 @@
 {
-  "$comment": "Lite Work-Item Template v1.1 - 基于 3 个实验优化",
-  "$usage": "见文件末尾的使用说明和检查清单",
+  "$comment": "Deprecated experimental template. Do not use to initialize workflowVersion 2 projects.",
+  "$deprecated": "Use docs-tdd kickoff <PROJECT-ID> --prd <source>; this template cannot establish source coverage, approval, or verification.",
+  "$usage": "Archived experiment reference only; not valid as a project initializer.",
   "schemaVersion": 1,
   "workflowVersion": 2,
   "projectId": "PR-XXXXX",
@@ -66,8 +67,8 @@
       "id": "manual-refinement"
     },
     "completedAt": "2026-01-01T00:00:00Z",
-    "verdict": "approved",
-    "unresolved": []
+    "verdict": "changes-required",
+    "unresolved": ["deprecated experimental template; initialize from the authoritative source with docs-tdd kickoff"]
   },
   "routing": {
     "scopeClass": "local",
@@ -100,12 +101,7 @@
       "$comment": "⚠️ 如果 apiDependency.severity = 'hard'，这里应该是 requirement: 'required', status: 'pending'"
     }
   },
-  "scopeApproval": {
-    "approver": "human",
-    "approvedAt": "2026-01-01T00:00:00Z",
-    "sourceFingerprint": "lite-mode-human-input",
-    "requirementsFingerprint": "lite-mode-approved"
-  },
+  "scopeApproval": null,
   "autopilot": {
     "phase": "implementation",
     "implementation": {

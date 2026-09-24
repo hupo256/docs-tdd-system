@@ -7,6 +7,12 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-09-24（优化计划 A/B 首批止损）
+
+- **入口与 Lite 权限收敛**：公开 `kickoff` 委托 v2 orchestrator；旧 v4 入口仅转发并拒绝强制 Lite，旧 Lite executor 改为无写入禁用态，模板撤销预置的 approved/scope approval。Lite 指南改为历史归档指针，删除未经可比样本验证的效率与准确率结论。
+- **事故来源诊断**：新增只读四项目 PRD 锚点、source-unit 数量和附件/嵌入对象盘点；诊断不执行语义覆盖判定、不授予通过。PR-01947/02265/01930 的未解析来源均导致预期 `blocked`；PR-02306 仅达到 `ready-for-manual-golden-review`，不等于 coverage pass。
+- **验证边界**：公开命令 E2E 覆盖初始化/恢复、来源绑定与漂移、Lite/v1 兼容、安全边界，以及 `run --prd` 返回 `needs-agent`、`run --legacy` 被拒绝；它不代表 Runner 已接通或连续交付。慢速 E2E 单独运行，不进入常规文档预算 self-test 序列。WP1 仍等待附件语义解析及四个 PR 的逐单元人工黄金期望；真实 Pilot 未认证。实施状态与证据见 [优化落地计划](../plan/optimization-execution-plan-2026-09-24.md)。
+
 ## 2026-09-23（v3.5.0 stable）
 
 - **正式发布**：v3.5.0 已通过规则发布、golden 回归和 `docs-tdd guard --strict`；pilot 仍为 `collecting`，暂无 production attestation，因此不宣称 production-ready。

@@ -9,17 +9,16 @@ import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 import { inspectProjectWorktree, requireProjectWorktree } from './lib/project-status-report.mjs'
 import { decideNext } from './lib/project-decision.mjs'
 import { changedCodePaths, codeFingerprint, matchesEffectiveCodeState } from './lib/fingerprint.mjs'
-import { sourceTypeFromPrd } from './lib/project-scaffold.mjs'
-import { normalizeSourceDocuments, readLocalSourceAsset } from './lib/vnext-source-units.mjs'
-import { bindVNextIntake, VNEXT_INTAKE_KINDS, vNextBranchName } from './lib/vnext-intake.mjs'
+import { VNEXT_INTAKE_KINDS } from './lib/vnext-intake.mjs'
 import { verifyExitResultIntegrity } from './lib/vnext-exit.mjs'
-import { initializeVNextArtifacts, persistVNextWorkItem } from './lib/vnext-persistence.mjs'
-import { applyAutopilotCheckpoint, applyDeliveryCommit, deriveAutopilotAction, initialAutopilotState } from './lib/vnext-autopilot.mjs'
-import { applySourceUpdate, initialSourceReadiness } from './lib/vnext-source-readiness.mjs'
+import { persistVNextWorkItem } from './lib/vnext-persistence.mjs'
+import { applyAutopilotCheckpoint, applyDeliveryCommit, deriveAutopilotAction } from './lib/vnext-autopilot.mjs'
+import { applySourceUpdate } from './lib/vnext-source-readiness.mjs'
 import { inspectSurfaceReconciliation, executeSurfaceReconciliation } from './lib/vnext-reconcile-runtime.mjs'
 import { runAutonomousValidation as executeAutonomousValidation } from './lib/vnext-autonomous-validation.mjs'
 import { assertSafeWorkContext } from './lib/vnext-work-context-runtime.mjs'
 import { deriveDeliveryTruth } from './lib/vnext-delivery-truth.mjs'
+import { createVNextIntakeRuntime } from './lib/vnext-intake-runtime.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, config } = resolveRoots()
@@ -48,6 +47,20 @@ function runGit(worktree, gitArgs, spawn = spawnSync, env = process.env) {
   if (result.status !== 0) throw new Error((result.stderr || result.stdout || `git ${gitArgs.join(' ')} failed`).trim())
   return result.stdout || ''
 }
+
+const {
+  syncAndInit,
+  kickoffVNext,
+  initializeVNextWorkItem: vnextInitWorkItem,
+  sourceIdentity,
+  initializeFromBoundSource: initializeVNextFromBoundSource,
+} = createVNextIntakeRuntime({
+  docsRoot,
+  consumerRoot: repoRoot,
+  config,
+  resolveProjectRoot,
+  executeScript,
+})
 
 export function scopedDeliveryCommitted(worktree, codeState, spawn = spawnSync) {
   if (codeState?.scopeMode !== 'path-set-v1' || !codeState.scopePaths?.length) return true
@@ -105,86 +118,8 @@ function loadDecisionInputs(id) {
   }
 }
 
-function syncAndInit(id, { legacy = true } = {}) {
-  const configFile = join(resolveProjectRoot(id), 'agent/lark-sources.json')
-  const sources = readJson(configFile)
-  if (!sources?.sources?.length) return { ok: false, nextAction: 'sync_prd', error: 'lark-sources.json 缺失或为空' }
-  const sync = executeScript('sync-lark-docs.mjs', ['--config', configFile])
-  if (sync.status !== 0) {
-    return { ok: false, nextAction: 'sync_prd', error: (sync.stderr || sync.stdout).trim().slice(0, 1200) }
-  }
-  const source = sources.sources[0]
-  const syncedPath = join(sources.outputDir, source.target)
-  if (!legacy) return { ok: true, nextAction: 'vnext_init', syncedPath }
-  const intake = executeScript('prd-intake.mjs', [id, '--init', '--source', syncedPath])
-  if (intake.status !== 0) {
-    return { ok: false, nextAction: 'initialize_prd_intake', error: (intake.stderr || intake.stdout).trim().slice(0, 1200), syncedPath }
-  }
-  return { ok: true, nextAction: 'complete_g0_g1_docs', syncedPath }
-}
-
-// vNext(workflowVersion 2)默认脚手架:kickoff 只建最小目录 + README frontmatter + Lark 同步配置,
-// 不再物化 v1 全套 product/engineering 文档。PRD 同步成功后用 normalizeSourceDocuments 生成
-// 带真实 source 锚点的 work-item stub(requirements 为空,verify 会诚实地 FAIL 到抽取完成为止)。
-// 显式 --legacy 才走 v1 全套(start-new-project.mjs)。
-function kickoffVNext(projectDir, prd, title, intakeKind) {
-  mkdirSync(join(projectDir, 'inbox/lark-sync'), { recursive: true })
-  mkdirSync(join(projectDir, 'agent'), { recursive: true })
-  const branchName = vNextBranchName(projectId, intakeKind, config.branchPrefix || 'feature/')
-  const sourceRole = intakeKind === 'bugfix' ? 'incident' : 'prd'
-  const sourceLabel = intakeKind === 'bugfix' ? '缺陷报告' : '需求 PRD'
-  writeFileSync(join(projectDir, 'README.md'), `---\nprojectId: ${projectId}\nstatus: active\nstage: G1\nbranch: ${branchName}\nworktree: ""\nport: ""\nvisualFidelity: standard\nprdSource: ${prd}\nfigmaNode: ""\nlarkEnabled: false\nworkflowVersion: 2\nworkItemKind: ${intakeKind}\n---\n\n# ${projectId} ${title}\n\n> v2 Autopilot ${intakeKind === 'bugfix' ? 'Bugfix' : 'Feature'} 项目：${sourceLabel}是唯一必需的开工输入；Figma/API 可后续增量接入。工作事实只保存在 work-item.json、latest-result.json、runs.jsonl。\n\n## 继续开发\n\n运行 \`docs-tdd run ${projectId}\`。CLI 会根据当前事实返回唯一下一动作；正常路径无需手工选择 Gate 或拼装验证输入。\n`)
-  const larkOutputDir = String(config.larkOutputDir || `apps/web/docs_tdd/prds/\${projectId}/inbox/lark-sync`).replaceAll('${projectId}', projectId)
-  writeFileSync(join(projectDir, 'agent/lark-sources.json'), JSON.stringify({
-    projectId,
-    outputDir: larkOutputDir,
-    sources: [{
-      type: sourceTypeFromPrd(prd), operation: 'read', name: sourceLabel, url: prd,
-      target: `${sourceRole}-latest.md`, localizedTarget: `${sourceRole}-latest.extracted.md`,
-    }],
-  }, null, 2))
-}
-
-// PRD 同步成功后,用规范化 source snapshot 直接落 work-item stub(requirements 为空 →
-// 首次 verify 如实 FAIL,逼出「抽取 + 独立冷读审查」;riskSignals 置 unclassified → RISK_ROUTE
-// 强制显式分类,不允许静默当 V0)。
-function vnextInitWorkItem(projectDir, intakeKind) {
-  const manifest = readJson(join(projectDir, 'agent/prd-source-manifest.json'))
-  const sourceConfig = readJson(join(projectDir, 'agent/lark-sources.json'))?.sources?.[0]
-  const rawSyncedMd = join(projectDir, 'inbox/lark-sync', sourceConfig?.target || 'prd-latest.md')
-  const localizedSyncedMd = join(projectDir, 'inbox/lark-sync', sourceConfig?.localizedTarget || 'prd-latest.extracted.md')
-  const syncedMd = existsSync(localizedSyncedMd) ? localizedSyncedMd : rawSyncedMd
-  if (!existsSync(syncedMd)) return false
-  const revision = manifest?.remoteSources?.[0]?.revisionId || '1'
-  const sourcePath = relative(docsRoot, syncedMd)
-  const { sourceSnapshot } = normalizeSourceDocuments([{ path: sourcePath, content: readFileSync(syncedMd, 'utf8') }], {
-    revision,
-    readAsset: (asset) => readLocalSourceAsset(asset, { root: docsRoot }),
-  })
-  const workItem = {
-    schemaVersion: 1,
-    workflowVersion: 2,
-    projectId,
-    intake: bindVNextIntake(intakeKind, sourceSnapshot),
-    sourceSnapshot,
-    requirements: [],
-    coverageAudit: {
-      sourceFingerprint: 'pending', requirementsFingerprint: 'pending', reviewMode: 'independent-cold-read',
-      reviewRunId: 'pending', reviewer: { kind: 'model', id: 'pending' },
-      completedAt: '2000-01-01T00:00:00Z', verdict: 'changes-required',
-      unresolved: ['kickoff stub: requirements not extracted from PRD yet'],
-    },
-    routing: { scopeClass: 'local', riskSignals: ['unclassified'], verificationLevel: 'V0', routerVersion: 1 },
-    apiDependency: { mode: 'no-request', reason: 'kickoff stub before intake; reassess after requirement extraction' },
-    sourceReadiness: initialSourceReadiness(),
-    scopeApproval: null,
-    autopilot: initialAutopilotState(),
-  }
-  initializeVNextArtifacts(projectDir, workItem)
-  return true
-}
-
-function kickoff() {
+function kickoff({ quiet = false } = {}) {
+  const emit = quiet ? () => {} : print
   const prd = option('--prd')
   const title = option('--title', projectId)
   const requestedKind = option('--kind')
@@ -195,6 +130,10 @@ function kickoff() {
   if (legacy && requestedKind) throw new Error('kickoff --kind is only supported by workflowVersion 2')
   const projectDir = resolveProjectRoot(projectId)
   if (existsSync(projectDir)) {
+    const configuredPrd = readJson(join(projectDir, 'agent/lark-sources.json'))?.sources?.[0]?.url
+    if (configuredPrd && sourceIdentity(configuredPrd) !== sourceIdentity(prd)) {
+      throw new Error('PRD source differs from the source bound at kickoff; preserve the current work item and use docs-tdd source-update')
+    }
     const existingVersion = projectWorkflowVersion(projectId)
     if (existingVersion === 2 && legacy) throw new Error(`${projectId} is already workflowVersion 2; refusing to downgrade it with --legacy`)
     legacy = existingVersion === 1
@@ -207,27 +146,32 @@ function kickoff() {
       const scaffold = executeScript('start-new-project.mjs', [projectId, '--prd', prd, '--title', title])
       if (scaffold.status !== 0) throw new Error((scaffold.stderr || scaffold.stdout).trim())
     } else {
-      kickoffVNext(projectDir, prd, title, intakeKind)
+      kickoffVNext(projectId, projectDir, prd, title, intakeKind)
     }
   }
 
   const result = syncAndInit(projectId, { legacy })
   if (!legacy) {
-    const initialized = result.ok && vnextInitWorkItem(projectDir, intakeKind)
-    if (!initialized) {
-      print({
+    const initialization = result.ok
+      ? vnextInitWorkItem(projectId, projectDir, intakeKind)
+      : { ok: false, initialized: false, nextAction: result.nextAction, error: result.error }
+    if (!initialization.ok) {
+      const output = {
         projectId,
         workflowVersion: 2,
         status: 'blocked',
         currentStage: 'V2-intake',
-        nextAction: result.nextAction,
-        blocker: result.error || 'v2 work-item initialization failed',
+        nextAction: initialization.nextAction,
+        blocker: initialization.error || 'v2 work-item initialization failed',
         syncedSource: result.syncedPath || '',
-      })
-      return
+      }
+      emit(output)
+      process.exitCode = 1
+      return { ok: false, output }
     }
-    print({ ...inspectVNext(projectId), initialized: true, syncedSource: result.syncedPath || '' })
-    return
+    const output = { ...inspectVNext(projectId), initialized: initialization.initialized, idempotent: initialization.idempotent, syncedSource: result.syncedPath || '' }
+    emit(output)
+    return { ok: true, output }
   }
 
   let state = writeState(projectId, {
@@ -247,7 +191,10 @@ function kickoff() {
     syncedSource: result.syncedPath || '',
     attempts: [...(state.attempts || []), { at: new Date().toISOString(), action: 'sync_and_init', ok: result.ok }],
   })
-  print({ ...state, workflowVersion: 1 })
+  const output = { ...state, workflowVersion: 1 }
+  emit(output)
+  if (!result.ok) process.exitCode = 1
+  return { ok: result.ok, output }
 }
 
 function projectWorkflowVersion(id) {
@@ -395,17 +342,17 @@ function resume() {
   if (projectWorkflowVersion(projectId) === 2) {
     const projectDir = resolveProjectRoot(projectId)
     if (!existsSync(join(projectDir, 'work-item.json'))) {
-      const result = syncAndInit(projectId, { legacy: false })
-      const initialized = result.ok && vnextInitWorkItem(projectDir)
-      if (!initialized) {
+      const initialization = initializeVNextFromBoundSource(projectId)
+      if (!initialization.ok) {
         print({
           projectId,
           workflowVersion: 2,
           status: 'blocked',
           currentStage: 'V2-intake',
-          nextAction: result.nextAction,
-          blocker: result.error || 'v2 work-item initialization failed',
+          nextAction: initialization.nextAction,
+          blocker: initialization.error || 'v2 work-item initialization failed',
         })
+        process.exitCode = 1
         return
       }
     }
@@ -576,14 +523,46 @@ export function commitEvidenceScope(id) {
 }
 
 function autopilotRun() {
+  if (args.includes('--legacy')) {
+    throw new Error('docs-tdd run is workflowVersion 2 only; create an explicit legacy project with docs-tdd kickoff --legacy')
+  }
   const projectDir = resolveProjectRoot(projectId)
   if (!existsSync(projectDir)) {
-    kickoff()
-    return
-  }
-  if (projectWorkflowVersion(projectId) !== 2 || !existsSync(join(projectDir, 'work-item.json'))) {
-    resume()
-    return
+    const initialized = kickoff({ quiet: true })
+    if (!initialized?.ok) {
+      if (initialized?.output) print(initialized.output)
+      return
+    }
+    if (initialized.output?.workflowVersion !== 2) {
+      print(initialized.output)
+      return
+    }
+  } else {
+    const requestedPrd = option('--prd')
+    const workflowVersion = projectWorkflowVersion(projectId)
+    if (requestedPrd && workflowVersion !== 2) {
+      throw new Error('--prd is only accepted by docs-tdd run when creating or resuming a workflowVersion=2 project')
+    }
+    if (workflowVersion !== 2) {
+      resume()
+      return
+    }
+    if (requestedPrd || !existsSync(join(projectDir, 'work-item.json'))) {
+      const initialization = initializeVNextFromBoundSource(projectId, requestedPrd)
+      if (!initialization.ok) {
+        print({
+          projectId,
+          workflowVersion: 2,
+          status: 'blocked',
+          currentStage: 'V2-intake',
+          nextAction: initialization.nextAction || 'sync_prd',
+          blocker: initialization.error || 'v2 source initialization failed',
+          syncedSource: initialization.syncedPath || '',
+        })
+        process.exitCode = 1
+        return
+      }
+    }
   }
   const before = inspectVNext(projectId)
   if (before.nextAction === 'reconcile-current-code') {
@@ -605,7 +584,38 @@ function autopilotRun() {
     return
   }
   if (!['capture-cli-evidence', 'revalidate-current-code-evidence', 'refresh-invalid-verification'].includes(before.nextAction)) {
-    print(before)
+    const humanActions = new Set([
+      'collect-scope-approval',
+      'complete-deferred-human-review',
+      'complete-pretest-human-run',
+      'blocked-user-decision',
+    ])
+    const externalActions = new Set([
+      'await-surface-dependencies',
+      'await-late-dependencies',
+      'blocked-external-dependency',
+      'failed-infrastructure',
+    ])
+    if (humanActions.has(before.nextAction)) {
+      print({ ...before, status: 'needs-user', runner: { outcome: 'needs-user', actionId: before.actionPacket?.actionId } })
+    } else if (externalActions.has(before.nextAction)) {
+      print({ ...before, status: 'blocked-external-dependency', runner: { outcome: 'blocked-external-dependency', actionId: before.actionPacket?.actionId } })
+    } else if (before.status === 'blocked') {
+      print({ ...before, runner: { outcome: 'blocked', actionId: before.actionPacket?.actionId } })
+    } else if (before.status === 'complete') {
+      print(before)
+    } else {
+      print({
+        ...before,
+        status: 'needs-agent',
+        runner: {
+          outcome: 'needs-agent',
+          adapter: 'not-configured',
+          actionId: before.actionPacket?.actionId,
+          note: 'This action packet is not execution evidence; a host Agent must perform the action and submit its structured result.',
+        },
+      })
+    }
     return
   }
   const automation = runAutonomousValidation(projectId)

@@ -42,8 +42,8 @@ function allocatePort() {
 
 const port = readOption('--port', '') || allocatePort();
 const verifyPath = readOption('--verify-path', config.verifyPath || '/zh-CN');
-// 强制规则：所有功能分支一律从最新 origin/online 切（见 common/rules/git-branch-flow.md §1）。
-// 仅在极少数确需其他基线时用 --base-ref 显式覆盖，并自负其责。
+// 默认从配置基线（通常为 origin/online）创建新分支；已有 feature/fix 不要求该基线是 HEAD 祖先，
+// 但必须与所选基线有共同历史。环境分支和无共同历史仍由 worktree 安全校验拒绝。
 const baseRef = readOption('--base-ref', config.baseRef || 'origin/online');
 
 function printHelp() {
@@ -131,7 +131,7 @@ for (const command of ['git', 'node', 'pnpm']) {
   run(command, ['--version'], { capture: true });
 }
 
-// 切分支前先拉最新基线，保证 feature 分支起点是最新主线（git-branch-flow.md §1）。
+// 更新配置基线，供新分支创建和已有 worktree 的共同历史校验使用。
 const [baseRemote, ...baseBranchParts] = baseRef.split('/');
 const baseBranch = baseBranchParts.join('/');
 if (baseRemote && baseBranch) {
