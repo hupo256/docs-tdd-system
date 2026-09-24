@@ -1,0 +1,50 @@
+{
+  "runId": "run-mufhxqo0-c4314a",
+  "projectId": "PR-02265",
+  "route": "standard",
+  "phase": "phase1-verification",
+  "description": "Phase 1 验证: PR-02265",
+  "startedAt": "2026-09-24T12:16:40.512Z",
+  "endedAt": "2026-09-24T12:16:40.513Z",
+  "elapsedMs": 1,
+  "actionCount": 2,
+  "commandCount": 0,
+  "reviewRounds": 0,
+  "evidenceCount": 0,
+  "repairAttempts": 0,
+  "estimatedInputTokens": null,
+  "estimatedOutputTokens": null,
+  "contextChars": null,
+  "ruleFiles": null,
+  "sourceUnits": null,
+  "terminalState": "completed-manual-verification-pending",
+  "budgetStatus": "within-budget",
+  "userInterruptCount": 0,
+  "necessaryInterruptCount": 0,
+  "actions": [
+    {
+      "actionId": "run-mufhxqo0-c4314a-a1",
+      "action": "read-prd",
+      "executor": "deterministic",
+      "startedAt": "2026-09-24T12:16:40.512Z",
+      "endedAt": "2026-09-24T12:16:40.512Z",
+      "outcome": "completed",
+      "durationMs": 0,
+      "commandsConsumed": 0,
+      "reviewRoundsConsumed": 0,
+      "repairsConsumed": 0
+    },
+    {
+      "actionId": "run-mufhxqo0-c4314a-a2",
+      "action": "extract-requirements",
+      "executor": "agent",
+      "startedAt": "2026-09-24T12:16:40.513Z",
+      "endedAt": "2026-09-24T12:16:40.513Z",
+      "outcome": "pending",
+      "durationMs": 0,
+      "commandsConsumed": 0,
+      "reviewRoundsConsumed": 0,
+      "repairsConsumed": 0
+    }
+  ]
+}

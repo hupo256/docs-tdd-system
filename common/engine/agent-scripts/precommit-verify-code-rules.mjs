@@ -7,10 +7,10 @@
 // exists. Ordinary development commits do not require system-repo evidence/verify or latest-result
 // PASS. Set DOCS_TDD_COMMIT_MODE=delivery to require authoritative CLI-attested PASS (final delivery).
 // Any violation or inability to run either applicable guard blocks the commit.
+import { spawnSync } from 'node:child_process'
+import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { spawnSync } from 'node:child_process'
-import { readFileSync, existsSync } from 'node:fs'
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url))
 const T = 20000
@@ -103,13 +103,97 @@ function getEfficiencyRoute() {
   return findWorkItem(process.cwd())
 }
 
+function formatGuardProblems(problems, mode, projectId) {
+  // 分类问题
+  const scopeProblems = problems.filter(p => p.includes('outside') && p.includes('scope'))
+  const devCheckProblems = problems.filter(p =>
+    p.includes('dev-check') ||
+    p.includes('differs from') ||
+    p.includes('staged paths differ')
+  )
+  const verifyProblems = problems.filter(p =>
+    p.includes('latest result') ||
+    p.includes('enforced PASS') ||
+    p.includes('cli-attested')
+  )
+  const otherProblems = problems.filter(p =>
+    !scopeProblems.includes(p) &&
+    !devCheckProblems.includes(p) &&
+    !verifyProblems.includes(p)
+  )
+
+  let output = `\n❌ commit blocked by v2 ${mode === 'delivery' ? 'delivery' : 'checkpoint'} guard for ${projectId}\n\n`
+
+  // 边界问题
+  if (scopeProblems.length > 0) {
+    const scopeLines = scopeProblems.flatMap(p => {
+      const match = p.match(/outside approved scope: (.+)/)
+      return match ? [match[1]] : []
+    })
+    if (scopeLines.length > 0) {
+      output += `📂 边界外文件 (${scopeLines.length} 个):\n`
+      scopeLines.slice(0, 5).forEach(file => {
+        output += `   ${file}\n`
+      })
+      if (scopeLines.length > 5) output += `   ... 还有 ${scopeLines.length - 5} 个文件\n`
+      output += '\n'
+    }
+  }
+
+  // dev-check 问题
+  if (devCheckProblems.length > 0) {
+    output += `🔍 dev-check 状态:\n`
+    if (problems.includes(CHECKPOINT_DEV_CHECK_PROBLEM)) {
+      output += `   未运行或已过期\n`
+    } else if (devCheckProblems.some(p => p.includes('differs from'))) {
+      output += `   代码已变更，需要重新验证\n`
+    } else if (devCheckProblems.some(p => p.includes('staged paths differ'))) {
+      output += `   暂存区文件与验证过的不一致\n`
+    }
+    output += '\n'
+  }
+
+  // verify 问题
+  if (verifyProblems.length > 0) {
+    output += `⚠️  验证状态:\n`
+    verifyProblems.slice(0, 3).forEach(p => {
+      output += `   ${p}\n`
+    })
+    output += '\n'
+  }
+
+  // 其他问题
+  if (otherProblems.length > 0) {
+    output += `⚠️  其他问题:\n`
+    otherProblems.forEach(p => {
+      output += `   ${p}\n`
+    })
+    output += '\n'
+  }
+
+  // 解决方案
+  output += `💡 解决方案:\n`
+  if (scopeProblems.length > 0) {
+    output += `   1. 扩展边界: 编辑 prds/${projectId}/work-item.json 的 deliveryScope.policyPaths\n`
+  }
+  if (mode === 'checkpoint') {
+    output += `   ${scopeProblems.length > 0 ? 2 : 1}. 开发阶段快速提交: DOCS_TDD_COMMIT_MODE=off git commit -m "..."\n`
+    output += `   ${scopeProblems.length > 0 ? 3 : 2}. 运行验证后提交: docs-tdd dev-check ${projectId}\n`
+  } else {
+    output += `   ${scopeProblems.length > 0 ? 2 : 1}. 运行完整验证: docs-tdd verify ${projectId}\n`
+  }
+  output += '\n'
+
+  return output
+}
+
 function runVNextDeliveryGuard() {
   const explicitMode = process.env.DOCS_TDD_COMMIT_MODE
   if (explicitMode === 'off' || explicitMode === 'skip') return
-  
+
   // v4.0: 按 efficiencyRoute 分档
   const efficiencyRoute = getEfficiencyRoute()
-  
+
   // micro/lite 档跳过完整守卫，只跑 Biome
   if (efficiencyRoute === 'micro' || efficiencyRoute === 'lite') {
     process.stderr.write(
@@ -146,8 +230,7 @@ function runVNextDeliveryGuard() {
         return
       }
 
-      const label = mode === 'delivery' ? 'delivery guard' : 'checkpoint guard'
-      process.stderr.write(`commit blocked by v2 ${label} for ${payload.projectId || 'unknown project'}:\n${problems.map((problem) => `  - ${problem}`).join('\n')}\n`)
+      process.stderr.write(formatGuardProblems(problems, mode, payload.projectId || 'unknown project'))
       process.exit(1)
     } catch { /* fall through to fail closed */ }
   }

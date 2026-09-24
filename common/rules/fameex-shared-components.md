@@ -9,27 +9,32 @@
 ## 高频复用组件
 
 ### 1. 按钮相关
+
 - `@fameex/ui` Button：基础按钮，支持 variant/color/size/isLoading/isDisabled
 - `AccountContactSubmitButton`：账户联系方式提交按钮（已有 loading 支持）
 - `ConfirmButton`：二次确认按钮
 
 ### 2. 输入相关
+
 - `@fameex/ui` Input：基础输入框
 - `AccountInput`：账号输入（邮箱/手机号）
 - `CountryPhoneCode`：国家区号选择器
 - `VerifyCodeInput`：验证码输入（6 位数字）
 
 ### 3. 表单相关
+
 - `useForm`：表单状态管理 hook（@/utils/hooks/useForm）
 - 校验规则：`@/utils/form/rules`（patternPhoneCode 等）
 - 表单布局：`accountContactFormClassName` 等常量
 
 ### 4. 安全验证
-- `AccountSecurityVerificationModal`：安全验证弹窗（二次确认）
+
+- `AccountVerifyMan`：安全验证弹窗（二次确认）
 - `SecurityVerificationCodes`：验证码类型定义
 - `useSecurityVerification`：验证流程 hook
 
 ### 5. 国际化
+
 - `useT`：翻译 hook（`const { t } = useT('namespace')`）
 - 命名空间：user / common / trade / balance 等
 - 键格式：`t('namespace:category.key')`
