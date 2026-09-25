@@ -103,6 +103,7 @@ export function createVNextOrchestratorRunner({
   scopedDeliveryCommitted,
   agentClient = 'codex',
   agentModel = '',
+  agentReviewerClient = '',
   invokeAgent,
   runCoverageReview,
   maxSteps = 20,
@@ -263,6 +264,7 @@ export function createVNextOrchestratorRunner({
     requireWorktree,
     client: agentClient,
     model: agentModel,
+    ...(agentReviewerClient ? { reviewerClient: agentReviewerClient } : {}),
     ...(invokeAgent ? { invoke: invokeAgent } : {}),
     ...(runCoverageReview ? { runCoverageReview } : {}),
   })
@@ -390,7 +392,7 @@ function selfTest() {
       scopedDeliveryCommitted: () => true,
       agentClient: 'codex',
       runCoverageReview: ({ client }) => {
-        assert.equal(client, 'claude')
+        assert.equal(client, 'codex')
         agentStage += 1
         return { response: { verdict: 'pass', reviewRunId: 'review-1' } }
       },

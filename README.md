@@ -159,7 +159,7 @@ CLI 始终返回带稳定 `actionId` 的唯一 action packet；Agent 只按 `act
 
 #### 2. 结构化需求、确定性前置审计与机器独立审查
 
-PRD 被确定性转换为 source units；表格既保留容器上下文，也逐数据行生成稳定 unit。先用 `docs-tdd extract <ID> --out /tmp/extraction.json` 生成带来源锚点的脚手架，按 Facts → Atomic Requirements → Surface Candidates 三阶段填写后，以 `--input` 应用。CLI 会先审计重复 ID、语义 unit/表格行反向覆盖、Fact→Requirement 链路、集合计数和 surface 映射；失败时不调用 Reviewer。需求作者登记身份后，`docs-tdd review` 才启动另一个 client/session；reviewer 只审语义范围，不审 evidence plan、代码或工具。每个 source lifecycle 总计最多自动审查两轮，人工介入不重置预算：候选未变化禁止重试，相同 finding 再现或两轮未通过会持久化 `human-review-deferred`；实现可以继续，但 evidence / 测试交接前必须人工逐 finding 裁决。Reviewer 启动失败仍立即 `escalated`，在实现前处理，不进入无限循环。审查结果由 CLI 本机签名，手写 reviewer JSON、复用同一 session、未处置 finding 或来源漂移都不能形成有效审查。
+PRD 被确定性转换为 source units；表格既保留容器上下文，也逐数据行生成稳定 unit。先用 `docs-tdd extract <ID> --out /tmp/extraction.json` 生成带来源锚点的脚手架，按 Facts → Atomic Requirements → Surface Candidates 三阶段填写后，以 `--input` 应用。CLI 会先审计重复 ID、语义 unit/表格行反向覆盖、Fact→Requirement 链路、集合计数和 surface 映射；失败时不调用 Reviewer。需求作者登记身份后，`docs-tdd review` 才启动一个独立 session 做冷读（独立性按 session 判定，默认沿用同一 client，可显式跨 client）；reviewer 只审语义范围，不审 evidence plan、代码或工具。每个 source lifecycle 总计最多自动审查两轮，人工介入不重置预算：候选未变化禁止重试，相同 finding 再现或两轮未通过会持久化 `human-review-deferred`；实现可以继续，但 evidence / 测试交接前必须人工逐 finding 裁决。Reviewer 启动失败仍立即 `escalated`，在实现前处理，不进入无限循环。审查结果由 CLI 本机签名，手写 reviewer JSON、复用同一 session、未处置 finding 或来源漂移都不能形成有效审查。
 
 #### 3. 安全上下文、实现与真实覆盖登记
 

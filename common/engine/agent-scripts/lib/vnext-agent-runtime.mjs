@@ -350,6 +350,10 @@ export function createVNextAgentExecutor({
   requireWorktree,
   client = 'codex',
   model = '',
+  // Independence is session-based, not vendor-based (see vnext-coverage-review validator): a fresh
+  // reviewer session on the same host is a valid cold read. The reviewer host defaults to the
+  // configured client; cross-vendor review stays available by passing an explicit reviewerClient.
+  reviewerClient = client,
   invoke = invokeHostAgent,
   runCoverageReview = runIsolatedCoverageReview,
   root = docsSystemRoot,
@@ -372,10 +376,10 @@ export function createVNextAgentExecutor({
 
     try {
       if (kind === 'review') {
-        const workItem = readJson(join(projectDir, 'work-item.json'))
-        const authorClient = workItem.requirementsAuthor?.client
-        const reviewerClient = authorClient === 'codex' ? 'claude' : 'codex'
-        if (reviewerClient === authorClient) throw new Error('independent review client must differ from requirements author client')
+        // A fresh reviewer session (runIsolatedCoverageReview mints a new UUID and asserts it
+        // differs from the author session) is the checked independence guarantee. Requiring a
+        // different AI vendor added no guarantee the validator enforces and made single-client
+        // setups unable to review at all, so the reviewer host now defaults to the configured client.
         const review = runCoverageReview({
           projectDir,
           client: reviewerClient,
