@@ -139,7 +139,9 @@ Micro 初始条件：
 
 ### WP4：新需求 Pilot
 
-状态：`planned`
+状态：`in-progress`
+
+Pilot 于 2026-09-25 经 owner 确认正式启动。样本与结果统一记录在 [real-demand-pilot-2026-09-25.md](./real-demand-pilot-2026-09-25.md)；系统根据需求事实自动判定 V0/V1/V2 和 execution route，不由人工为了凑样本指定等级。
 
 验证层次：
 
@@ -201,6 +203,8 @@ Micro 初始条件：
 - 保留三项既有债：L2 golden、`PROJECTS.md` 派生漂移、PR-02419 schema；分别交给对应 owner。
 - WP1 状态为 `synthetic-tested`；WP2 状态为 `e2e-tested`，批次 C 已达到退出条件。
 - WP3 状态为 `e2e-tested`；这只代表 Micro 基础设施 E2E 通过。新需求 Pilot 未完成，批次 D 尚未达到退出条件。
+- WP4 已于 2026-09-25 进入 `in-progress`。首个候选样本 PR-02233 增量需求的业务改动与定向验证已完成，但系统将它错绑到同编号历史 PRD，正式 coverage/verify 未绑定当前增量，因此只记 `blocked-system`，不计为 V0/V1/V2 合格样本。
+- 首个真实候选样本暴露的系统缺陷已完成定向修复：新增隔离历史范围的 `--change <id>` intake；`run --dry-run` 改为零写入、零 Agent 调用；普通 login 样式与单张 context/example-only 截图可走 Micro；Micro 硬预算收紧为 3 分钟。定向 self-test 与公开命令 E2E 已通过，但 PR-02233 仍保持 `blocked-system`，不追认合格样本，效果须由下一条新的真实需求重新验证。
 - 定向 self-test、67 脚本 vNext 聚合 self-test、公开命令 E2E、339 个文档链接和 `git diff --check` 已通过。
 - `check-doc-budget.mjs` 的本轮预算、索引和 101 个 self-test 入口已通过；当前 exit 1 仅来自上述三项既有债。
 

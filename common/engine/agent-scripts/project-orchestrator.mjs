@@ -5,7 +5,12 @@ import { createHash } from 'node:crypto'
 import { spawnSync } from 'node:child_process'
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
+import {
+  resolveProjectBaseRoot,
+  resolveProjectChangeRoot,
+  resolveProjectRoot,
+  resolveRoots,
+} from './lib/roots.mjs'
 import { inspectProjectWorktree, requireProjectWorktree } from './lib/project-status-report.mjs'
 import { decideNext } from './lib/project-decision.mjs'
 import { changedCodePaths, codeFingerprint, matchesEffectiveCodeState } from './lib/fingerprint.mjs'
@@ -23,6 +28,7 @@ import {
   commitScopedPaths as executeCommitScopedPaths,
   createVNextOrchestratorRunner,
 } from './lib/vnext-orchestrator-runner.mjs'
+import { activateVNextChangeSet } from './lib/vnext-change-set.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, config } = resolveRoots()
@@ -111,6 +117,60 @@ function print(state) {
   console.log(JSON.stringify(state, null, 2))
 }
 
+function requestedProjectContext({ dryRun = false } = {}) {
+  const changeId = option('--change')
+  if (!changeId) return { projectDir: resolveProjectRoot(projectId), changeId: '', change: null }
+  const baseRoot = resolveProjectBaseRoot(projectId)
+  const changeRoot = resolveProjectChangeRoot(projectId, changeId)
+  if (!dryRun && !existsSync(changeRoot) && !option('--prd')) {
+    throw new Error(`new change ${changeId} requires --prd <source>`)
+  }
+  const change = activateVNextChangeSet({
+    projectId,
+    changeId,
+    baseRoot,
+    changeRoot,
+    dryRun,
+  })
+  return { projectDir: changeRoot, changeId, change }
+}
+
+function dryRunOutput() {
+  const { projectDir, changeId, change } = requestedProjectContext({ dryRun: true })
+  const activeProjectDir = resolveProjectRoot(projectId)
+  const targetExists = existsSync(projectDir)
+  const canInspect = targetExists && projectDir === activeProjectDir && existsSync(join(projectDir, 'work-item.json'))
+  const state = canInspect
+    ? inspectVNext(projectId)
+    : {
+        projectId,
+        workflowVersion: 2,
+        status: targetExists ? 'ready' : 'not-created',
+        currentStage: 'V2-intake',
+        nextAction: targetExists ? 'resume-current-change' : 'create-project',
+      }
+  return {
+    ...state,
+    status: 'dry-run',
+    dryRun: {
+      projectDir,
+      changeId: changeId || null,
+      targetExists,
+      requiresPrd: !targetExists && !option('--prd'),
+      source: option('--prd') || null,
+      change,
+    },
+    runner: {
+      outcome: 'dry-run',
+      wouldExecute: {
+        activateChange: Boolean(changeId),
+        initializeProject: !targetExists,
+        resumeProject: targetExists,
+      },
+    },
+  }
+}
+
 // README frontmatter 里的 worktree 标量（唯一从 markdown 读的字段，且是结构化的 key: value，
 // 不是叙述文本的模糊匹配）。阶段/阻塞一律来自机器写的 JSON，不再扫 feature-inventory 的叙述行。
 function readWorktree(projectDir) {
@@ -136,6 +196,11 @@ function loadDecisionInputs(id) {
 
 function kickoff({ quiet = false } = {}) {
   const emit = quiet ? () => {} : print
+  if (args.includes('--dry-run')) {
+    const output = dryRunOutput()
+    emit(output)
+    return { ok: true, output }
+  }
   const prd = option('--prd')
   const title = option('--title', projectId)
   const requestedKind = option('--kind')
@@ -144,7 +209,7 @@ function kickoff({ quiet = false } = {}) {
   if (!prd) throw new Error('kickoff requires --prd <Lark URL or local Markdown>')
   if (!VNEXT_INTAKE_KINDS.includes(intakeKind)) throw new Error(`kickoff --kind must be one of: ${VNEXT_INTAKE_KINDS.join(', ')}`)
   if (legacy && requestedKind) throw new Error('kickoff --kind is only supported by workflowVersion 2')
-  const projectDir = resolveProjectRoot(projectId)
+  const { projectDir } = requestedProjectContext()
   if (existsSync(projectDir)) {
     const configuredPrd = readJson(join(projectDir, 'agent/lark-sources.json'))?.sources?.[0]?.url
     if (configuredPrd && sourceIdentity(configuredPrd) !== sourceIdentity(prd)) {
@@ -514,7 +579,11 @@ function autopilotRun() {
   if (args.includes('--legacy')) {
     throw new Error('docs-tdd run is workflowVersion 2 only; create an explicit legacy project with docs-tdd kickoff --legacy')
   }
-  const projectDir = resolveProjectRoot(projectId)
+  if (args.includes('--dry-run')) {
+    print(dryRunOutput())
+    return
+  }
+  const { projectDir } = requestedProjectContext()
   if (!existsSync(projectDir)) {
     const initialized = kickoff({ quiet: true })
     if (!initialized?.ok) {
@@ -625,7 +694,7 @@ function selfTest() {
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   if (args.includes('--self-test')) selfTest()
   else if (!new RegExp(`^(?:${config.projectIdPattern || '(?:PR|TR)-\\d{5}'})$`).test(projectId || '')) {
-    console.error('usage: project-orchestrator.mjs <run|kickoff|status|resume|next|source-update|checkpoint> PR-01234 [--prd <source>] [--title <name>] [--input <json>] [--client codex|claude] [--model <name>]')
+    console.error('usage: project-orchestrator.mjs <run|kickoff|status|resume|next|source-update|checkpoint> PR-01234 [--change <id>] [--prd <source>] [--title <name>] [--input <json>] [--client codex|claude] [--model <name>] [--dry-run]')
     process.exit(1)
   } else {
     try {

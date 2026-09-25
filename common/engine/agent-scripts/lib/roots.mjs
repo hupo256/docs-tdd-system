@@ -33,9 +33,32 @@ const defaultConfigFile = join(docsSystemRoot, 'docs-tdd.config.default.json')
 export const rulesRoot = join(docsSystemRoot, 'common', 'rules')
 export const engineRoot = join(docsSystemRoot, 'common', 'engine')
 export const prdsRoot = join(docsSystemRoot, 'prds')
-export function resolveProjectRoot(projectId) {
+export function resolveProjectBaseRoot(projectId) {
   if (typeof projectId !== 'string' || !projectId.trim()) throw new Error('projectId is empty')
   return join(prdsRoot, projectId.trim())
+}
+
+export function resolveProjectChangeRoot(projectId, changeId) {
+  if (!/^[a-z0-9][a-z0-9-]{0,47}$/.test(changeId || '')) {
+    throw new Error('changeId must be 1-48 lowercase letters, numbers, or hyphens')
+  }
+  return join(resolveProjectBaseRoot(projectId), 'changes', changeId)
+}
+
+export function resolveProjectRoot(projectId) {
+  const baseRoot = resolveProjectBaseRoot(projectId)
+  const pointerFile = join(baseRoot, 'active-change.json')
+  if (!existsSync(pointerFile)) return baseRoot
+  let pointer
+  try {
+    pointer = JSON.parse(readFileSync(pointerFile, 'utf8'))
+  } catch (error) {
+    throw new Error(`${projectId} active-change.json is invalid: ${error.message}`)
+  }
+  if (pointer?.schemaVersion !== 1 || pointer?.projectId !== projectId || !pointer?.changeId) {
+    throw new Error(`${projectId} active-change.json has an invalid contract`)
+  }
+  return resolveProjectChangeRoot(projectId, pointer.changeId)
 }
 // List all project instance IDs (PR-* / TR-* dirs) under the current prds root. Single
 // source for the several sites that used to readdirSync the docs root directly, so

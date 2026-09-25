@@ -1,13 +1,18 @@
 #!/usr/bin/env node
 
 import assert from 'node:assert/strict'
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
-import { randomInt } from 'node:crypto'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
+import { createHash, randomInt } from 'node:crypto'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
-import { docsSystemRoot, resolveProjectRoot } from './lib/roots.mjs'
+import {
+  docsSystemRoot,
+  resolveProjectBaseRoot,
+  resolveProjectChangeRoot,
+  resolveProjectRoot,
+} from './lib/roots.mjs'
 
 const scriptDir = new URL('.', import.meta.url)
 const docsTddCli = fileURLToPath(new URL('./docs-tdd.mjs', scriptDir))
@@ -17,7 +22,7 @@ const scriptPath = fileURLToPath(import.meta.url)
 function allocateProjectId(allocated) {
   for (let attempt = 0; attempt < 100; attempt += 1) {
     const projectId = `PR-${randomInt(10000, 100000)}`
-    if (!allocated.has(projectId) && !existsSync(resolveProjectRoot(projectId))) {
+    if (!allocated.has(projectId) && !existsSync(resolveProjectBaseRoot(projectId))) {
       allocated.add(projectId)
       return projectId
     }
@@ -43,11 +48,26 @@ function outputJson(result) {
 }
 
 function removeOwnedProject(projectId, marker) {
-  const projectDir = resolveProjectRoot(projectId)
+  const projectDir = resolveProjectBaseRoot(projectId)
   const readme = join(projectDir, 'README.md')
   if (!existsSync(readme)) return
   if (!readFileSync(readme, 'utf8').includes(marker)) return
   rmSync(projectDir, { recursive: true, force: true })
+}
+
+function directorySnapshot(root) {
+  if (!existsSync(root)) return null
+  const files = []
+  const visit = (dir, prefix = '') => {
+    for (const entry of readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+      const relativePath = prefix ? `${prefix}/${entry.name}` : entry.name
+      const absolutePath = join(dir, entry.name)
+      if (entry.isDirectory()) visit(absolutePath, relativePath)
+      else files.push([relativePath, createHash('sha256').update(readFileSync(absolutePath)).digest('hex')])
+    }
+  }
+  visit(root)
+  return files
 }
 
 export function selfTest() {
@@ -85,6 +105,15 @@ export function selfTest() {
       DOCS_TDD_CONFIG: configPath,
       DOCS_TDD_CODEX_BIN: join(sandbox, 'missing-codex'),
     }
+
+    const dryRunProject = allocateProjectId(allocated)
+    const dryRun = outputJson(run(docsTddCli, [
+      'run', dryRunProject, '--prd', source, '--title', `kickoff-public-e2e-${nonce}-dry-run`,
+      '--client', 'codex', '--dry-run',
+    ], { cwd: sandbox, env }))
+    assert.equal(dryRun.status, 'dry-run')
+    assert.equal(dryRun.runner.outcome, 'dry-run')
+    assert.equal(existsSync(resolveProjectBaseRoot(dryRunProject)), false)
 
     const v2Project = allocateProjectId(allocated)
     const v2Marker = `kickoff-public-e2e-${nonce}-v2`
@@ -197,6 +226,25 @@ export function selfTest() {
     assert.equal(firstRunState.nextAction, 'extract-requirements')
     const runWorkItemPath = join(resolveProjectRoot(runProject), 'work-item.json')
     const runWorkItem = JSON.parse(readFileSync(runWorkItemPath, 'utf8'))
+    const runProjectRoot = resolveProjectBaseRoot(runProject)
+    const beforeExistingDryRun = directorySnapshot(runProjectRoot)
+    const existingDryRun = outputJson(run(docsTddCli, [
+      'run', runProject, '--client', 'codex', '--dry-run',
+    ], { cwd: sandbox, env }))
+    assert.equal(existingDryRun.status, 'dry-run')
+    assert.equal(existingDryRun.runner.outcome, 'dry-run')
+    assert.deepEqual(directorySnapshot(runProjectRoot), beforeExistingDryRun)
+
+    const previewChangeRoot = resolveProjectChangeRoot(runProject, 'cursor-hover-preview')
+    const previewChange = outputJson(run(docsTddCli, [
+      'run', runProject, '--change', 'cursor-hover-preview', '--prd', source,
+      '--client', 'codex', '--dry-run',
+    ], { cwd: sandbox, env }))
+    assert.equal(previewChange.status, 'dry-run')
+    assert.equal(previewChange.dryRun.changeId, 'cursor-hover-preview')
+    assert.equal(existsSync(join(runProjectRoot, 'active-change.json')), false)
+    assert.equal(existsSync(previewChangeRoot), false)
+    assert.deepEqual(directorySnapshot(runProjectRoot), beforeExistingDryRun)
 
     const runLegacyProject = allocateProjectId(allocated)
     const runLegacy = run(docsTddCli, [
@@ -236,7 +284,27 @@ export function selfTest() {
     assert.equal(resumed.status, 0, resumed.stderr)
     assert.notEqual(JSON.parse(resumed.stdout).status, 'blocked')
     assert.equal(existsSync(runWorkItemPath), true)
-    console.log('vnext public-command E2E passed (kickoff, run --prd binding, Agent infrastructure failure, run/v1 separation, resume failure, Lite denial, v1 compatibility, path boundary)')
+
+    const historicalWorkItem = readFileSync(join(runProjectRoot, 'work-item.json'), 'utf8')
+    const changeRun = run(docsTddCli, [
+      'run', runProject, '--change', 'cursor-hover', '--prd', source,
+      '--title', `${runMarker}-cursor-hover`, '--client', 'codex',
+    ], { cwd: sandbox, env })
+    assert.notEqual(changeRun.status, 0)
+    assert.equal(JSON.parse(changeRun.stdout).status, 'failed-infrastructure')
+    const changeRoot = resolveProjectChangeRoot(runProject, 'cursor-hover')
+    assert.equal(existsSync(join(changeRoot, 'work-item.json')), true)
+    assert.equal(readFileSync(join(runProjectRoot, 'work-item.json'), 'utf8'), historicalWorkItem)
+    assert.deepEqual(JSON.parse(readFileSync(join(runProjectRoot, 'active-change.json'), 'utf8')), {
+      schemaVersion: 1,
+      projectId: runProject,
+      changeId: 'cursor-hover',
+    })
+    assert.match(
+      JSON.parse(readFileSync(join(changeRoot, 'agent/lark-sources.json'), 'utf8')).outputDir,
+      /changes\/cursor-hover\/inbox\/lark-sync$/,
+    )
+    console.log('vnext public-command E2E passed (read-only dry-run, isolated change sets, historical work-item preservation, kickoff/run binding, Agent infrastructure failure, v1 compatibility, path boundary)')
   } finally {
     for (const { projectId, marker } of projects) removeOwnedProject(projectId, marker)
     rmSync(sourceRoot, { recursive: true, force: true })

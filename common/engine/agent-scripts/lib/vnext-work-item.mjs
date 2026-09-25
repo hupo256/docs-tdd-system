@@ -20,6 +20,29 @@ export function stableFingerprint(value) {
   return createHash('sha256').update(JSON.stringify(canonicalize(value))).digest('hex')
 }
 
+export function auxiliaryImageSource(workItem, sourceUnits = []) {
+  const imageUnits = sourceUnits.filter((unit) => unit?.type === 'image')
+  const otherRichUnits = sourceUnits.filter((unit) => ['table', 'embed'].includes(unit?.type))
+  const assets = workItem?.sourceSnapshot?.assets || []
+  if (imageUnits.length !== 1 || otherRichUnits.length || assets.length !== 1) return { ok: false, sourceId: null }
+  const image = imageUnits[0]
+  const asset = assets[0]
+  const disposition = (workItem?.sourceUnitDispositions || []).find((item) => item?.sourceId === image.sourceId)
+  const allowedBasis = ['context-only', 'example-only'].includes(disposition?.exclusionEvidence?.basis)
+  const localAsset = ['local', 'embedded'].includes(asset?.assetStatus) && asset?.sourceId === image.sourceId
+  return {
+    ok: Boolean(
+      localAsset
+      && disposition?.disposition === 'not-a-requirement'
+      && disposition?.reason?.trim()
+      && disposition?.exclusionEvidence?.sourceQuote?.trim()
+      && allowedBasis
+      && sourceUnitDispositionProblems(disposition, image).length === 0
+    ),
+    sourceId: image.sourceId,
+  }
+}
+
 // Commit bookkeeping is recorded after verification and must not invalidate the verified
 // requirement/evidence contract. All implementation and review facts remain fingerprinted.
 export function verificationWorkItemFingerprint(workItem) {
@@ -155,13 +178,19 @@ export function v0MicroProblems(workItem, sourceUnits = []) {
   const problems = []
   const requirements = workItem.requirements || []
   const implementingSurfaces = requirements.flatMap((requirement) => requirement.affectedSurfaces || []).filter((surface) => surface.disposition === 'implement')
-  const richUnits = sourceUnits.filter((unit) => ['table', 'image', 'embed'].includes(unit.type))
+  const auxiliaryImage = auxiliaryImageSource(workItem, sourceUnits)
+  const richUnits = sourceUnits.filter((unit) => (
+    ['table', 'embed'].includes(unit.type)
+    || (unit.type === 'image' && unit.sourceId !== auxiliaryImage.sourceId)
+  ))
   if (requirements.length !== 1 || requirements[0]?.status !== 'doing') problems.push('V0-micro requires exactly one doing requirement')
   if (implementingSurfaces.length !== 1) problems.push('V0-micro requires exactly one implement surface')
   if (workItem?.routing?.scopeClass !== 'local' || workItem.routing.riskSignals?.length) problems.push('V0-micro requires local scope with no risk signals')
   if (workItem?.apiDependency?.mode !== 'no-request') problems.push('V0-micro requires apiDependency.mode=no-request')
   if (workItem?.deliveryScope) problems.push('V0-micro cannot use a bounded delivery scope')
-  if (richUnits.length || workItem?.sourceSnapshot?.assets?.length) problems.push('V0-micro cannot contain table, image, or embedded source units')
+  if (richUnits.length || ((workItem?.sourceSnapshot?.assets?.length || 0) > 0 && !auxiliaryImage.ok)) {
+    problems.push('V0-micro allows only one local image explicitly classified as context-only or example-only; tables and embeds are not allowed')
+  }
   const collection = requirements[0]?.collectionSemantics
   if (collection && (collection.kind !== 'none' || collection.expectedCount !== 0)) problems.push('V0-micro cannot contain collection semantics')
   if ((requirements[0]?.evidencePlan || []).some((item) => item.runtimeRequired)) problems.push('V0-micro cannot require runtime evidence')
@@ -369,7 +398,7 @@ export function selfTest() {
   assert.equal(verifyVNextCoverage({ workItem: v0Sealed, sourceUnits: [structuralUnit, semanticUnit] }).checks.find((item) => item.code === 'REQUIREMENT_COVERAGE').ok, true)
   const extraSemantic = { sourceId: 'SRC-EXTRA', type: 'text', content: 'Also change the mobile entry.' }
   assert.equal(verifyVNextCoverage({ workItem: v0Sealed, sourceUnits: [structuralUnit, semanticUnit, extraSemantic] }).checks.find((item) => item.code === 'REQUIREMENT_COVERAGE').ok, false)
-  assert.match(v0MicroProblems(v0Sealed, [{ sourceId: 'SRC-TABLE', type: 'table', content: '| A |' }]).join(' '), /cannot contain table/)
+  assert.match(v0MicroProblems(v0Sealed, [{ sourceId: 'SRC-TABLE', type: 'table', content: '| A |' }]).join(' '), /tables and embeds are not allowed/)
   const deterministicMicro = structuredClone(v0)
   deterministicMicro.extractionAudit = {
     status: 'pass',

@@ -85,7 +85,7 @@ try {
   console.error(error.message)
   process.exit(1)
 }
-const valueOptions = new Set(['--client', '--session-id', '--target', '--model', '--input', '--plan', '--out', '--worktree', '--session', '--evidence', '--surfaces', '--base'])
+const valueOptions = new Set(['--client', '--session-id', '--target', '--model', '--input', '--plan', '--out', '--worktree', '--session', '--evidence', '--surfaces', '--base', '--change'])
 const positional = commandArgs.filter((arg, index) => !arg.startsWith('--') && !valueOptions.has(commandArgs[index - 1]))
 const detail = positional[0]
 const noCache = cliArgs.includes('--no-cache')
@@ -280,7 +280,7 @@ if (command === 'rules') {
 }
 
 if (!new RegExp(`^(?:${config.projectIdPattern || '(?:PR|TR)-\\d{5}'})$`).test(projectId || '')) {
-  console.error('usage: docs-tdd.mjs <run|kickoff|status|resume|next|source-update|source-sync|source-graph|extract|coverage-check|scope-approval|scope-approve|review|review-adjudicate|review-resume|checkpoint|decision|efficiency|dev-check|manual-test|commit|worktree-prepare|capability|probe|doctor|release|golden|guard|rule-health|rules|explain|check|gate|evidence|reconcile|artifact-compat|verify|context|changed|recommend> PR-01234 [G0-G8|scenario] [--input file.json] [--evidence evidence.json] [--surfaces surfaces.json] [--plan evidence-plan.json] [--path-map dev-check-path-map.json] [--out file.json] [--kind feature|bugfix] [--write] [--json] [--dry-run] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|pi|human] [--session-id <id>] [--target path] [--model <name>]')
+  console.error('usage: docs-tdd.mjs <run|kickoff|status|resume|next|source-update|source-sync|source-graph|extract|coverage-check|scope-approval|scope-approve|review|review-adjudicate|review-resume|checkpoint|decision|efficiency|dev-check|manual-test|commit|worktree-prepare|capability|probe|doctor|release|golden|guard|rule-health|rules|explain|check|gate|evidence|reconcile|artifact-compat|verify|context|changed|recommend> PR-01234 [G0-G8|scenario] [--change <id>] [--input file.json] [--evidence evidence.json] [--surfaces surfaces.json] [--plan evidence-plan.json] [--path-map dev-check-path-map.json] [--out file.json] [--kind feature|bugfix] [--write] [--json] [--dry-run] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|pi|human] [--session-id <id>] [--target path] [--model <name>]')
   process.exit(1)
 }
 
