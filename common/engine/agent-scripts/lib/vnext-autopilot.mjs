@@ -4,7 +4,7 @@
 import assert from 'node:assert/strict'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { coverageFingerprints, effectiveCoverageReview, stableFingerprint } from './vnext-work-item.mjs'
+import { coverageFingerprints, effectiveCoverageReview, evaluateMicroEligibility, stableFingerprint } from './vnext-work-item.mjs'
 import { AUTOPILOT_ACTIONS, AUTOPILOT_PHASES } from './vnext-autopilot-actions.mjs'
 import { deliveryScopePathProblems } from './vnext-delivery-scope.mjs'
 import { largeContextActionFields } from './vnext-context.mjs'
@@ -118,6 +118,7 @@ export function deriveAutopilotAction({
   const extractionAuditCurrent = workItem.extractionAudit?.status === 'pass'
     && workItem.extractionAudit.sourceFingerprint === fingerprints.sourceFingerprint
     && workItem.extractionAudit.requirementsFingerprint === fingerprints.requirementsFingerprint
+    && workItem.extractionAudit.evidencePlanFingerprint === fingerprints.evidencePlanFingerprint
   // Extraction integrity precedes every later phase.
   if (!extractionAuditCurrent) {
     return actionPacket(workItem, {
@@ -471,6 +472,20 @@ export function selfTest() {
   const reviewed = { ...needsReview, coverageAudit: { ...coverageFingerprints(needsReview), reviewMode: 'independent-cold-read', reviewRunId: 'review-1', reviewer: { kind: 'human', id: 'reviewer' }, completedAt: '2026-09-08T00:00:00Z', verdict: 'pass', unresolved: [] } }
   assert.equal(deriveAutopilotAction({ workItem: reviewed }).action, 'implement-current-scope')
   assert.equal(deriveAutopilotAction({ workItem: reviewed, worktreeReady: false }).action, 'prepare-coding-worktree')
+  const microUnits = [{ sourceId: 'SRC-1', type: 'text', content: 'Implement the scoped change.' }]
+  const deterministicMicro = structuredClone(needsReview)
+  deterministicMicro.requirements[0].affectedSurfaces = [{ surfaceId: 'S-001', locator: 'src/x.ts', disposition: 'implement' }]
+  deterministicMicro.requirements[0].collectionSemantics = { kind: 'none', expectedCount: 0 }
+  deterministicMicro.requirements[0].evidencePlan = [{ type: 'pure-logic', runtimeRequired: false }]
+  deterministicMicro.routing = { scopeClass: 'local', riskSignals: [], verificationLevel: 'V0', routerVersion: 1 }
+  deterministicMicro.apiDependency = { mode: 'no-request', reason: 'local change' }
+  deterministicMicro.extractionAudit = {
+    status: 'pass',
+    ...coverageFingerprints(deterministicMicro),
+    sourceUnitsFingerprint: stableFingerprint(microUnits),
+  }
+  deterministicMicro.extractionAudit.microEligibility = evaluateMicroEligibility(deterministicMicro, microUnits)
+  assert.equal(deriveAutopilotAction({ workItem: deterministicMicro }).action, 'implement-current-scope')
   const large = structuredClone(reviewed)
   large.routing = { scopeClass: 'multi-surface', riskSignals: ['high-impact'], verificationLevel: 'V2' }
   large.requirements[0].statement = 'x'.repeat(9000)

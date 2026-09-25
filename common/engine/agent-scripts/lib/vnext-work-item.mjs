@@ -55,7 +55,51 @@ export function coverageFingerprints(workItem) {
   }
 }
 
-export function effectiveCoverageReview(workItem) {
+export function evaluateMicroEligibility(workItem, sourceUnits = []) {
+  const fingerprints = coverageFingerprints(workItem)
+  const problems = []
+  if (workItem?.routing?.verificationLevel !== 'V0') problems.push('deterministic Micro audit requires verificationLevel=V0')
+  if (!Array.isArray(sourceUnits) || !sourceUnits.length) problems.push('deterministic Micro audit requires normalized source units')
+  problems.push(...v0MicroProblems(workItem, sourceUnits))
+  return {
+    ok: problems.length === 0,
+    mode: 'deterministic-micro-audit',
+    ...fingerprints,
+    sourceUnitsFingerprint: stableFingerprint(sourceUnits),
+    problems: [...new Set(problems)],
+  }
+}
+
+export function currentMicroEligibility(workItem, { sourceUnits } = {}) {
+  const audit = workItem?.extractionAudit
+  const eligibility = audit?.microEligibility
+  const fingerprints = coverageFingerprints(workItem)
+  const problems = []
+  if (audit?.status !== 'pass') problems.push('deterministic Micro audit requires a passing extraction audit')
+  if (eligibility?.ok !== true || eligibility?.mode !== 'deterministic-micro-audit') problems.push('deterministic Micro eligibility is not approved')
+  if (eligibility?.sourceFingerprint !== fingerprints.sourceFingerprint) problems.push('deterministic Micro source fingerprint is stale')
+  if (eligibility?.requirementsFingerprint !== fingerprints.requirementsFingerprint) problems.push('deterministic Micro requirements fingerprint is stale')
+  if (eligibility?.evidencePlanFingerprint !== fingerprints.evidencePlanFingerprint) problems.push('deterministic Micro evidence-plan fingerprint is stale')
+  const expectedSourceUnitsFingerprint = Array.isArray(sourceUnits)
+    ? stableFingerprint(sourceUnits)
+    : audit?.sourceUnitsFingerprint
+  if (!expectedSourceUnitsFingerprint || eligibility?.sourceUnitsFingerprint !== expectedSourceUnitsFingerprint) {
+    problems.push('deterministic Micro source-unit fingerprint is stale')
+  }
+  if (Array.isArray(sourceUnits)) {
+    const current = evaluateMicroEligibility(workItem, sourceUnits)
+    problems.push(...current.problems)
+  }
+  return {
+    ok: problems.length === 0,
+    mode: 'deterministic-micro-audit',
+    problems: [...new Set(problems)],
+  }
+}
+
+export function effectiveCoverageReview(workItem, { sourceUnits } = {}) {
+  const micro = currentMicroEligibility(workItem, { sourceUnits })
+  if (micro.ok) return micro
   const audit = workItem?.coverageAudit || {}
   const fingerprints = coverageFingerprints(workItem)
   const problems = []
@@ -137,15 +181,17 @@ function requirementCoverageProblems(workItem, sourceUnits, sourceOracle) {
     if (!requirement.sourceAnchors?.length) problems.push(`${requirement.requirementId || 'unknown requirement'} has no source anchor`)
   }
 
-  const currentFingerprint = coverageFingerprints(workItem).requirementsFingerprint
-  if (workItem.coverageAudit?.requirementsFingerprint !== currentFingerprint && !workItem.reviewAdjudication?.repairConfirmation) {
-    problems.push('coverage audit does not match current requirements')
+  const effectiveReview = effectiveCoverageReview(workItem, { sourceUnits })
+  if (effectiveReview.mode !== 'deterministic-micro-audit') {
+    const currentFingerprint = coverageFingerprints(workItem).requirementsFingerprint
+    if (workItem.coverageAudit?.requirementsFingerprint !== currentFingerprint && !workItem.reviewAdjudication?.repairConfirmation) {
+      problems.push('coverage audit does not match current requirements')
+    }
+    if (workItem.coverageAudit?.reviewMode !== 'independent-cold-read') problems.push('coverage audit was not an independent cold read')
+    if (!workItem.coverageAudit?.reviewRunId) problems.push('coverage audit has no review run ID')
+    if (!['human', 'model'].includes(workItem.coverageAudit?.reviewer?.kind) || !workItem.coverageAudit?.reviewer?.id) problems.push('coverage audit has no reviewer identity')
+    if (!workItem.coverageAudit?.completedAt || Number.isNaN(Date.parse(workItem.coverageAudit.completedAt))) problems.push('coverage audit has no valid completion time')
   }
-  if (workItem.coverageAudit?.reviewMode !== 'independent-cold-read') problems.push('coverage audit was not an independent cold read')
-  if (!workItem.coverageAudit?.reviewRunId) problems.push('coverage audit has no review run ID')
-  if (!['human', 'model'].includes(workItem.coverageAudit?.reviewer?.kind) || !workItem.coverageAudit?.reviewer?.id) problems.push('coverage audit has no reviewer identity')
-  if (!workItem.coverageAudit?.completedAt || Number.isNaN(Date.parse(workItem.coverageAudit.completedAt))) problems.push('coverage audit has no valid completion time')
-  const effectiveReview = effectiveCoverageReview(workItem)
   if (!effectiveReview.ok) problems.push(...effectiveReview.problems)
 
   const anchoredSourceIds = new Set()
@@ -223,10 +269,13 @@ export function verifyVNextCoverage({ workItem, currentSourceSnapshot, sourceUni
   const expectedSource = coverageFingerprints(workItem).sourceFingerprint
   const actualSource = stableFingerprint(currentSourceSnapshot || workItem?.sourceSnapshot || null)
   const sourceProblems = []
+  const effectiveReview = effectiveCoverageReview(workItem, { sourceUnits })
   if (workItem?.workflowVersion !== 2) sourceProblems.push('workflowVersion must be 2')
   if (!workItem?.sourceSnapshot?.sources?.length) sourceProblems.push('source snapshot has no sources')
   if (actualSource !== expectedSource) sourceProblems.push('current source snapshot differs from work item')
-  if (workItem?.coverageAudit?.sourceFingerprint !== expectedSource) sourceProblems.push('coverage audit does not match current source snapshot')
+  if (effectiveReview.mode !== 'deterministic-micro-audit' && workItem?.coverageAudit?.sourceFingerprint !== expectedSource) {
+    sourceProblems.push('coverage audit does not match current source snapshot')
+  }
   if (workItem?.coverageAudit?.receipt) {
     const extractionAudit = workItem.extractionAudit
     const currentFingerprints = coverageFingerprints(workItem)
@@ -321,6 +370,17 @@ export function selfTest() {
   const extraSemantic = { sourceId: 'SRC-EXTRA', type: 'text', content: 'Also change the mobile entry.' }
   assert.equal(verifyVNextCoverage({ workItem: v0Sealed, sourceUnits: [structuralUnit, semanticUnit, extraSemantic] }).checks.find((item) => item.code === 'REQUIREMENT_COVERAGE').ok, false)
   assert.match(v0MicroProblems(v0Sealed, [{ sourceId: 'SRC-TABLE', type: 'table', content: '| A |' }]).join(' '), /cannot contain table/)
+  const deterministicMicro = structuredClone(v0)
+  deterministicMicro.extractionAudit = {
+    status: 'pass',
+    ...coverageFingerprints(deterministicMicro),
+    sourceUnitsFingerprint: stableFingerprint([structuralUnit, semanticUnit]),
+  }
+  deterministicMicro.extractionAudit.microEligibility = evaluateMicroEligibility(deterministicMicro, [structuralUnit, semanticUnit])
+  assert.equal(effectiveCoverageReview(deterministicMicro).mode, 'deterministic-micro-audit')
+  assert.equal(verifyVNextCoverage({ workItem: deterministicMicro, sourceUnits: [structuralUnit, semanticUnit] }).ok, true)
+  deterministicMicro.requirements[0].evidencePlan = [{ type: 'pure-logic', runtimeRequired: false }]
+  assert.equal(effectiveCoverageReview(deterministicMicro).ok, false)
   const verifiedContract = { ...sealed, autopilot: { implementation: { status: 'completed' }, delivery: { status: 'pending' } } }
   const afterCommit = { ...verifiedContract, autopilot: { ...verifiedContract.autopilot, delivery: { status: 'committed', commitSha: 'abc' }, lastCheckpointAt: '2026-09-08T00:00:00Z' } }
   assert.equal(verificationWorkItemFingerprint(verifiedContract), verificationWorkItemFingerprint(afterCommit))

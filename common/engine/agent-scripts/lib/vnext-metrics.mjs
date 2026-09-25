@@ -5,15 +5,38 @@ import assert from 'node:assert/strict'
 
 const sum = (values) => values.reduce((total, value) => total + (Number(value) || 0), 0)
 
+function routeReasonCode(reason) {
+  if (typeof reason === 'string') return reason
+  return reason?.code || ''
+}
+
+function normalizeTokenUsage(usage) {
+  if (!usage || typeof usage !== 'object') return null
+  const inputTokens = Number.isFinite(usage.inputTokens) ? usage.inputTokens : null
+  const outputTokens = Number.isFinite(usage.outputTokens) ? usage.outputTokens : null
+  const totalTokens = Number.isFinite(usage.totalTokens) ? usage.totalTokens : null
+  if (inputTokens === null && outputTokens === null && totalTokens === null) return null
+  return {
+    inputTokens,
+    outputTokens,
+    totalTokens,
+    source: typeof usage.source === 'string' && usage.source.trim() ? usage.source.trim() : null,
+  }
+}
+
 export function normalizeCompactRunRecord(record = {}) {
   return {
     schemaVersion: 1,
     runId: record.runId || null,
     projectId: record.projectId || null,
     route: record.route || null,
-    routeReasons: Array.isArray(record.routeReasons) ? [...new Set(record.routeReasons.filter(Boolean))] : [],
+    assurance: record.assurance || null,
+    routeReasons: Array.isArray(record.routeReasons)
+      ? [...new Set(record.routeReasons.map(routeReasonCode).filter(Boolean))]
+      : [],
     contextChars: Number.isFinite(record.contextChars) ? record.contextChars : null,
     estimatedInputTokens: null,
+    tokenUsage: normalizeTokenUsage(record.tokenUsage),
     ruleFiles: Number.isFinite(record.ruleFiles) ? record.ruleFiles : null,
     sourceUnits: Number.isFinite(record.sourceUnits) ? record.sourceUnits : null,
     actionCount: Number.isFinite(record.actionCount) ? record.actionCount : 0,
@@ -28,6 +51,9 @@ export function normalizeCompactRunRecord(record = {}) {
     falseCompletionCount: Number.isFinite(record.falseCompletionCount) ? record.falseCompletionCount : 0,
     terminalState: record.terminalState || null,
     budgetStatus: record.budgetStatus || null,
+    budget: record.budget && typeof record.budget === 'object' ? structuredClone(record.budget) : null,
+    startedAt: record.startedAt || null,
+    endedAt: record.endedAt || null,
     generatedAt: record.generatedAt || null,
   }
 }
@@ -42,9 +68,21 @@ export function summarizeCompactRuns(records = []) {
   const normalized = records.map(normalizeCompactRunRecord)
   const elapsed = normalized.map((record) => record.elapsedMs).filter(Number.isFinite)
   const contexts = normalized.map((record) => record.contextChars).filter(Number.isFinite)
+  const completeTokenUsage = normalized.length > 0 && normalized.every((record) => record.tokenUsage !== null)
+  const tokenUsage = completeTokenUsage
+    ? {
+        inputTokens: sum(normalized.map((record) => record.tokenUsage.inputTokens)),
+        outputTokens: sum(normalized.map((record) => record.tokenUsage.outputTokens)),
+        totalTokens: sum(normalized.map((record) => record.tokenUsage.totalTokens)),
+        source: normalized.every((record) => record.tokenUsage.source === normalized[0].tokenUsage.source)
+          ? normalized[0].tokenUsage.source
+          : 'mixed',
+      }
+    : null
   return {
     runCount: normalized.length,
     routes: [...new Set(normalized.map((record) => record.route).filter(Boolean))].sort(),
+    assurances: [...new Set(normalized.map((record) => record.assurance).filter(Boolean))].sort(),
     p50ElapsedMs: percentile(elapsed, 0.5),
     p90ElapsedMs: percentile(elapsed, 0.9),
     p50ContextChars: percentile(contexts, 0.5),
@@ -61,6 +99,7 @@ export function summarizeCompactRuns(records = []) {
     },
     terminalStates: [...new Set(normalized.map((record) => record.terminalState).filter(Boolean))].sort(),
     estimatedInputTokens: null,
+    tokenUsage,
   }
 }
 
@@ -162,14 +201,31 @@ export function selfTest() {
   assert.equal(summary.unavailableHistoricalMetrics.docsTddTokens, null)
   assert.equal(summarizePortfolio([summary]).reportedRequirementOmissionFixes, 1)
   const compact = summarizeCompactRuns([
-    { runId: 'a', route: 'micro', contextChars: 100, elapsedMs: 1000, commandCount: 2, terminalState: 'complete' },
+    {
+      runId: 'a',
+      route: 'micro',
+      assurance: 'V0',
+      routeReasons: [{ route: 'micro', code: 'micro-shape', detail: 'local' }, 'micro-shape'],
+      contextChars: 100,
+      elapsedMs: 1000,
+      commandCount: 2,
+      terminalState: 'complete',
+    },
     { runId: 'b', route: 'lite', contextChars: 200, elapsedMs: 3000, commandCount: 4, necessaryInterruptCount: 1, terminalState: 'blocked' },
   ])
   assert.deepEqual(compact.routes, ['lite', 'micro'])
+  assert.deepEqual(compact.assurances, ['V0'])
   assert.equal(compact.p50ElapsedMs, 1000)
   assert.equal(compact.p90ElapsedMs, 1000)
   assert.equal(compact.p90ContextChars, 100)
   assert.equal(compact.estimatedInputTokens, null)
+  assert.equal(compact.tokenUsage, null)
+  const normalized = normalizeCompactRunRecord({
+    routeReasons: [{ code: 'micro-shape' }, 'micro-shape'],
+    tokenUsage: { inputTokens: 10, outputTokens: 5, totalTokens: 15, source: 'host-agent' },
+  })
+  assert.deepEqual(normalized.routeReasons, ['micro-shape'])
+  assert.equal(normalized.tokenUsage.totalTokens, 15)
   assert.deepEqual(artifactConvergence({ baselineProcessFiles: 263, projectCount: 4 }), {
     baselineProcessFiles: 263, projectCount: 4, vnextFilesPerProject: 3, projectedVNextFiles: 12,
     reductionPercent: 95.44, targetReductionPercent: 80, ok: true,

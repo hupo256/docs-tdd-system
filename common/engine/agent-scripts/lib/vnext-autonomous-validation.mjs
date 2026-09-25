@@ -2,10 +2,26 @@
 // Execute the evidence -> reconciliation -> formal verification chain in an isolated cache directory.
 
 import assert from 'node:assert/strict'
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { homedir, tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { requiresSurfaceReconciliation } from './vnext-reconcile.mjs'
+
+function evidenceExecutionCounts(evidenceFile) {
+  if (!existsSync(evidenceFile)) return { commandCount: 0, evidenceCount: 0 }
+  const bundle = JSON.parse(readFileSync(evidenceFile, 'utf8'))
+  const facts = Array.isArray(bundle?.facts) ? bundle.facts : []
+  const executedCommands = new Set(facts
+    .filter((fact) => fact?.producer?.kind === 'command')
+    .map((fact) => JSON.stringify({
+      command: fact.producer.command || '',
+      startedAt: fact.producer.startedAt || '',
+      finishedAt: fact.producer.finishedAt || '',
+      stdoutHash: fact.producer.stdoutHash || '',
+      stderrHash: fact.producer.stderrHash || '',
+    })))
+  return { commandCount: executedCommands.size, evidenceCount: facts.length }
+}
 
 export function runAutonomousValidation({ id, projectDir, workItem, worktree, baseRef = 'origin/online', executeScript, evidenceRoot = join(homedir(), '.cache/docs-tdd/evidence', id) } = {}) {
   const implementation = workItem?.autopilot?.implementation
@@ -38,11 +54,16 @@ export function runAutonomousValidation({ id, projectDir, workItem, worktree, ba
       ok: false,
       step: 'evidence',
       evidenceDir: runDir,
+      commandCount: 0,
+      evidenceCount: 0,
       error: (evidence.stderr || evidence.stdout).trim().slice(0, 2000),
     }
   }
+  const counts = evidenceExecutionCounts(evidenceFile)
 
+  let reconciliationCount = 0
   if (requiresSurfaceReconciliation(workItem)) {
+    reconciliationCount = 1
     const reconciliation = executeScript('vnext-reconcile.mjs', [
       '--project', projectDir,
       '--worktree', worktree,
@@ -55,6 +76,8 @@ export function runAutonomousValidation({ id, projectDir, workItem, worktree, ba
         step: 'reconcile',
         evidenceExitCode: evidence.status,
         evidenceDir: runDir,
+        commandCount: counts.commandCount + reconciliationCount,
+        evidenceCount: counts.evidenceCount,
         error: (reconciliation.stderr || reconciliation.stdout).trim().slice(0, 2000),
       }
     }
@@ -75,6 +98,8 @@ export function runAutonomousValidation({ id, projectDir, workItem, worktree, ba
     verifyExitCode: verify.status,
     evidenceExitCode: evidence.status,
     evidenceDir: runDir,
+    commandCount: counts.commandCount + reconciliationCount + 1,
+    evidenceCount: counts.evidenceCount,
     output: (verify.stdout || '').trim().slice(0, 4000),
     error: verify.status === 0 ? '' : (verify.stderr || verify.stdout).trim().slice(0, 2000),
   }
@@ -90,13 +115,31 @@ function selfTest() {
     worktree: '/worktree',
     workItem: { autopilot: { implementation: { status: 'completed', coveredSurfaceIds: [] } } },
     evidenceRoot: mkdtempSync(join(tmpdir(), 'vnext-autonomous-validation-')),
-    executeScript: (script) => {
+    executeScript: (script, args) => {
       calls.push(script)
+      if (script === 'vnext-evidence.mjs') {
+        const output = args[args.indexOf('--out') + 1]
+        writeFileSync(output, `${JSON.stringify({
+          facts: [{
+            evidenceId: 'E-1',
+            producer: {
+              kind: 'command',
+              command: '"node" "tests/a.test.mjs"',
+              startedAt: '2026-09-24T00:00:00Z',
+              finishedAt: '2026-09-24T00:00:01Z',
+              stdoutHash: 'a',
+              stderrHash: 'b',
+            },
+          }],
+        })}\n`)
+      }
       return { status: 0, stdout: script === 'vnext-verify.mjs' ? 'PASS' : '', stderr: '' }
     },
   })
   assert.deepEqual(calls, ['vnext-evidence.mjs', 'vnext-verify.mjs'])
   assert.equal(result.ok, true)
+  assert.equal(result.commandCount, 2)
+  assert.equal(result.evidenceCount, 1)
   const structuredCalls = []
   const structured = runAutonomousValidation({
     id: 'PR-00001',
@@ -108,13 +151,18 @@ function selfTest() {
       autopilot: { implementation: { status: 'completed' } },
     },
     evidenceRoot: mkdtempSync(join(tmpdir(), 'vnext-autonomous-validation-structured-')),
-    executeScript: (script) => {
+    executeScript: (script, args) => {
       structuredCalls.push(script)
+      if (script === 'vnext-evidence.mjs') {
+        const output = args[args.indexOf('--out') + 1]
+        writeFileSync(output, `${JSON.stringify({ facts: [] })}\n`)
+      }
       return { status: 0, stdout: '', stderr: '' }
     },
   })
   assert.equal(structured.ok, true)
   assert.deepEqual(structuredCalls, ['vnext-evidence.mjs', 'vnext-reconcile.mjs', 'vnext-verify.mjs'])
+  assert.equal(structured.commandCount, 2)
   console.log('vnext-autonomous-validation self-test passed')
 }
 

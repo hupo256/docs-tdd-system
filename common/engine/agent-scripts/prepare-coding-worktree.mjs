@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { existsSync, lstatSync, mkdirSync, readFileSync, readlinkSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, lstatSync, mkdirSync, readFileSync, readlinkSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn, spawnSync } from 'node:child_process';
@@ -108,7 +108,7 @@ if (!projectId || !projectIdPattern.test(projectId)) {
 }
 
 const gitRoot = output('git', ['rev-parse', '--show-toplevel']);
-if (resolve(gitRoot) !== repoRoot) {
+if (realpathSync(resolve(gitRoot)) !== realpathSync(repoRoot)) {
   fail(`script must run inside repo root ${repoRoot}, got ${gitRoot}`);
 }
 
@@ -161,7 +161,9 @@ if (!existsSync(worktreeDir)) {
   console.log(`worktree directory exists: ${worktreeDir}`);
   const existingRoot = tryOutput('git', ['rev-parse', '--show-toplevel'], worktreeDir);
   const existingBranch = tryOutput('git', ['branch', '--show-current'], worktreeDir);
-  if (resolve(existingRoot) !== worktreeDir || existingBranch !== branchName) {
+  const matchesWorktreeRoot =
+    existingRoot && realpathSync(resolve(existingRoot)) === realpathSync(worktreeDir);
+  if (!matchesWorktreeRoot || existingBranch !== branchName) {
     fail(`${worktreeDir} exists but is not on ${branchName}; got root=${existingRoot || 'unknown'} branch=${existingBranch || 'unknown'}`);
   }
 }

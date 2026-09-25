@@ -5,7 +5,7 @@
 import assert from 'node:assert/strict'
 import { fileURLToPath } from 'node:url'
 import { resolve } from 'node:path'
-import { stableFingerprint } from './vnext-work-item.mjs'
+import { currentMicroEligibility, evaluateMicroEligibility, stableFingerprint } from './vnext-work-item.mjs'
 
 export const EFFICIENCY_POLICY_VERSION = 1
 
@@ -159,6 +159,7 @@ export function deriveEfficiencyRoute(workItem = {}) {
     && !asArray(workItem.sourceSnapshot?.assets).length
     && !asArray(workItem.runtimeEvidence).length
     && !asArray(workItem.browserScenarios).length
+    && currentMicroEligibility(workItem).ok
   if (!isMicroShape) {
     candidates.push('lite')
     reasons.push(routeReason('lite', 'micro-preconditions', 'micro requires one local symbol-level change with no rich source or runtime dependency'))
@@ -335,13 +336,37 @@ export function efficiencyMetrics({
 }
 
 export function selfTest() {
-  const micro = deriveEfficiencyRoute({
+  const microWorkItem = {
+    sourceSnapshot: { revision: '1', sources: [{ path: 'prd.md', contentHash: 'source' }] },
     routing: { scopeClass: 'local', riskSignals: [] },
-    requirements: [{ requirementId: 'R-1', status: 'doing', statement: 'Change one label.', affectedSurfaces: [{ surfaceId: 'S-1', disposition: 'implement', codeLocator: 'src/a.ts:label' }] }],
+    requirements: [{
+      requirementId: 'R-1',
+      status: 'doing',
+      statement: 'Change one label.',
+      collectionSemantics: { kind: 'none', expectedCount: 0 },
+      affectedSurfaces: [{ surfaceId: 'S-1', disposition: 'implement', codeLocator: 'src/a.ts:label' }],
+      evidencePlan: [{ type: 'copy-literal', runtimeRequired: false }],
+    }],
     apiDependency: { mode: 'no-request' },
-  })
+  }
+  const microUnits = [{ sourceId: 'SRC-1', type: 'text', content: 'Change one label.' }]
+  microWorkItem.routing.verificationLevel = 'V0'
+  const microEligibility = evaluateMicroEligibility(microWorkItem, microUnits)
+  microWorkItem.extractionAudit = {
+    status: 'pass',
+    sourceFingerprint: microEligibility.sourceFingerprint,
+    requirementsFingerprint: microEligibility.requirementsFingerprint,
+    evidencePlanFingerprint: microEligibility.evidencePlanFingerprint,
+    sourceUnitsFingerprint: stableFingerprint(microUnits),
+    microEligibility,
+  }
+  const micro = deriveEfficiencyRoute(microWorkItem)
   assert.equal(micro.route, 'micro')
   assert.equal(micro.policy.commands, 4)
+
+  const unapprovedMicro = structuredClone(microWorkItem)
+  delete unapprovedMicro.extractionAudit.microEligibility
+  assert.equal(deriveEfficiencyRoute(unapprovedMicro).route, 'lite')
 
   const standard = deriveEfficiencyRoute({
     routing: { scopeClass: 'multi-surface', riskSignals: [] },

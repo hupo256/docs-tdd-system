@@ -91,7 +91,7 @@
 
 ### WP2：连续 Runner
 
-状态：`wired-to-run`
+状态：`e2e-tested`
 
 已完成：
 
@@ -105,20 +105,20 @@
 - 无宿主 Agent adapter 时明确返回 `needs-agent`；人工和外部依赖分别返回 `needs-user`、`blocked-external-dependency`。
 - `resume-review-after-human-repair` 已按命令契约归类为 human；尚无 canonical checkpoint 契约的 manual-test repair 与通用 `resolve-blockers` 仍明确停在 `needs-agent`，不伪装为已自动闭环。
 - 临时 Git 仓库 self-test 已验证连续执行、提交中断恢复、只提交冻结路径，且未调用 `git push`。
+- clean-project public-command E2E 已从单一 PRD 输入跑通抽取、独立 review、隔离 worktree、编码、enforced PASS、冻结路径本地提交，并断言未调用 `git push`。
 
-剩余：
+后续增强（不阻塞批次 C）：
 
-- 完成 clean-project public-command E2E：从单一需求输入运行到 enforced PASS 和真实本地 commit。
-- 用该 E2E 覆盖真实 repair action 的二次失败预算和中断恢复，不把 synthetic adapter 自测当作业务闭环。
+- 增加公开命令下真实 repair action 的二次失败预算和中断恢复 E2E；现有 synthetic 层已覆盖这两类状态机契约。
 
 退出条件：
 
-- [ ] clean project 通过公开单输入命令到 enforced PASS 和本地 commit。
+- [x] clean project 通过公开单输入命令到 enforced PASS 和本地 commit。
 - [x] synthetic 层的超时、取消、无效输出、恢复和重复失败预算都有唯一终态。
 
 ### WP3：Micro 与成本
 
-状态：`planned`
+状态：`e2e-tested`
 
 Micro 初始条件：
 
@@ -130,9 +130,11 @@ Micro 初始条件：
 
 退出条件：
 
-- 默认 reviewer 轮次 0，机械性用户中断 0。
-- 只执行必要的定向检查。
-- trace 记录 route、assurance、命令、耗时、返工及真实 usage；不可得的 token 不估算。
+- [x] clean-project Micro E2E 中 reviewer 轮次 0，机械性用户中断 0。
+- [x] clean-project Micro E2E 只执行必要的定向检查和正式 verify。
+- [x] trace 记录 route、assurance、命令、耗时、返工及真实 usage；宿主未提供 token usage 时保持 `null`，不估算。
+
+当前结论仅为 **Micro 基础设施 E2E 已通过**。尚未完成任何新需求 Pilot，批次 D 仍在进行中，不能标记为 `pilot-certified` 或“批次 D 完成”。
 
 ### WP4：新需求 Pilot
 
@@ -182,18 +184,23 @@ Micro 初始条件：
 
 ## 7. 当前实施记录
 
-本轮聚焦 A/B/C：
+本轮聚焦 A/B/C，并完成 D 的基础设施 E2E：
 
 - 压缩常驻 router 和 extraction action packet。
 - 退役无生产消费者的旧 v4 context loader、重复规则和 phase1 历史验证脚本。
 - 在现有 intake contract 增加排除证据与混合语义反例。
 - Continuous Runner 已接入公开 `run` 主路径；运行状态、checkpoint 和 receipt 持久化到 `agent/runner-state.json`。
-- Codex/Claude Agent runtime 已完成 synthetic extraction/review/checkpoint、schema/canonical/Git 对账和失败预算测试；尚未取得 clean-project public-command E2E。
+- Codex/Claude Agent runtime 已完成 synthetic extraction/review/checkpoint、schema/canonical/Git 对账和失败预算测试；clean-project public-command E2E 已取得。
 - Runner runtime adapter 已从 `project-orchestrator.mjs` 拆出；orchestrator 从 36,794 bytes 降至 28,148 bytes，回到 35,000 bytes 硬上限内。
 - 临时 Git 仓库覆盖连续 deterministic action、commit 中断恢复、冻结路径提交和 no-push 契约。
+- clean-project E2E 暴露并修复 evidence type 白名单缺项，以及 macOS `/var`/`/private/var` worktree 路径误判。
+- Micro 路径已绑定 source、requirements、evidence-plan 和 source-unit 指纹；任一失效都会自动恢复独立 reviewer。
+- clean-project Micro E2E 已验证 reviewer 轮次 0、机械性用户中断 0、定向 evidence + 正式 verify、compact trace、本地 scoped commit 和 no-push。
+- trace 只记录宿主真实 token usage；当前 E2E 宿主未提供 usage，持久化值为 `null`。
 - 保留三项既有债：L2 golden、`PROJECTS.md` 派生漂移、PR-02419 schema；分别交给对应 owner。
-- WP1 状态为 `synthetic-tested`；WP2 状态为 `wired-to-run`，批次 C 尚未完成。
-- 定向 self-test、66 脚本 vNext 聚合 self-test、公开命令 E2E、339 个文档链接和 `git diff --check` 已通过。
-- `check-doc-budget.mjs` 的本轮预算、索引和 100 个 self-test 入口已通过；当前 exit 1 仅来自上述三项既有债。
+- WP1 状态为 `synthetic-tested`；WP2 状态为 `e2e-tested`，批次 C 已达到退出条件。
+- WP3 状态为 `e2e-tested`；这只代表 Micro 基础设施 E2E 通过。新需求 Pilot 未完成，批次 D 尚未达到退出条件。
+- 定向 self-test、67 脚本 vNext 聚合 self-test、公开命令 E2E、339 个文档链接和 `git diff --check` 已通过。
+- `check-doc-budget.mjs` 的本轮预算、索引和 101 个 self-test 入口已通过；当前 exit 1 仅来自上述三项既有债。
 
 本文件不授权业务仓改动、提交或 push。

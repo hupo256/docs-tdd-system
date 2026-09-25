@@ -19,6 +19,8 @@ import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { AUTOPILOT_ACTIONS } from './vnext-autopilot-actions.mjs'
+import { budgetStatus } from './vnext-efficiency-policy.mjs'
+import { normalizeCompactRunRecord } from './vnext-metrics.mjs'
 import { stableFingerprint } from './vnext-work-item.mjs'
 
 const DETERMINISTIC_ACTIONS = new Set([
@@ -92,6 +94,7 @@ function initialRunnerState(projectId) {
     projectId,
     activeAction: null,
     receipts: [],
+    trace: null,
     updatedAt: null,
   }
 }
@@ -103,7 +106,7 @@ export function readRunnerState(projectDir, projectId) {
   if (state?.schemaVersion !== 1 || state?.projectId !== projectId || !Array.isArray(state.receipts)) {
     throw new Error(`invalid v2 runner state: ${file}`)
   }
-  return state
+  return { ...state, trace: state.trace || null }
 }
 
 function persistRunnerState(projectDir, state, generatedAt) {
@@ -247,6 +250,107 @@ function normalizeResult(result) {
   return { changedState: false, ...result, outcome }
 }
 
+function sumReceiptMetric(receipts, metric, nestedMetric = metric) {
+  return receipts.reduce((total, receipt) => {
+    const direct = Number(receipt?.[metric])
+    if (Number.isFinite(direct)) return total + direct
+    const nested = Number(receipt?.validation?.[nestedMetric])
+    return total + (Number.isFinite(nested) ? nested : 0)
+  }, 0)
+}
+
+function tokenUsageFromReceipts(receipts) {
+  const agentReceipts = receipts.filter((receipt) => receipt.executorType === 'agent')
+  if (!agentReceipts.length || agentReceipts.some((receipt) => !receipt.tokenUsage)) return null
+  const usages = agentReceipts.map((receipt) => receipt.tokenUsage)
+  const value = (field) => usages.every((usage) => Number.isFinite(usage?.[field]))
+    ? usages.reduce((total, usage) => total + usage[field], 0)
+    : null
+  const sources = [...new Set(usages.map((usage) => usage?.source).filter(Boolean))]
+  return {
+    inputTokens: value('inputTokens'),
+    outputTokens: value('outputTokens'),
+    totalTokens: value('totalTokens'),
+    source: sources.length === 1 ? sources[0] : (sources.length ? 'mixed' : null),
+  }
+}
+
+function measuredBudget(sourceBudget, metrics, endedAt) {
+  if (!sourceBudget?.policy) return null
+  const usage = {
+    ...(sourceBudget.usage || {}),
+    reviewerRounds: metrics.reviewRounds,
+    commands: metrics.commandCount,
+    evidence: metrics.evidenceCount,
+    repairs: metrics.repairAttempts,
+    elapsedMs: metrics.elapsedMs,
+  }
+  const measurement = budgetStatus({ ...sourceBudget, usage, status: 'active' }, Date.parse(endedAt))
+  return {
+    policyVersion: sourceBudget.policyVersion || null,
+    route: sourceBudget.route || null,
+    limits: structuredClone(sourceBudget.policy),
+    usage,
+    status: measurement.status,
+    warningDimensions: measurement.warningDimensions,
+    exhaustedDimensions: measurement.exhaustedDimensions,
+    deadlineExceeded: measurement.deadlineExceeded,
+  }
+}
+
+function buildRunTrace({
+  projectId,
+  startedAt,
+  endedAt,
+  initial,
+  current,
+  receipts,
+  outcome,
+}) {
+  const packet = current?.actionPacket || initial?.actionPacket || {}
+  const elapsedMs = Math.max(0, Date.parse(endedAt) - Date.parse(startedAt))
+  const metrics = {
+    actionCount: receipts.length,
+    commandCount: sumReceiptMetric(receipts, 'commandCount'),
+    reviewRounds: receipts.filter((receipt) => receipt.action === 'complete-independent-review' || receipt.reviewRunId).length,
+    evidenceCount: sumReceiptMetric(receipts, 'evidenceCount'),
+    repairAttempts: receipts.filter((receipt) => receipt.action?.startsWith('repair-')).length,
+    elapsedMs: Number.isFinite(elapsedMs) ? elapsedMs : null,
+    userInterruptCount: receipts.filter((receipt) => receipt.outcome === 'needs-user').length,
+    necessaryInterruptCount: receipts.filter((receipt) => receipt.executorType === 'human' && receipt.outcome === 'needs-user').length,
+  }
+  const budget = measuredBudget(packet.efficiencyBudget, metrics, endedAt)
+  return normalizeCompactRunRecord({
+    runId: stableFingerprint({
+      projectId,
+      startedAt,
+      actionId: packet.actionId || null,
+      receiptIds: receipts.map((receipt) => receipt.receiptId || `${receipt.actionId || ''}:${receipt.outcome || ''}`),
+    }),
+    projectId,
+    route: current?.executionRoute || packet.executionRoute || packet.efficiencyBudget?.route || initial?.executionRoute || null,
+    assurance: current?.verificationLevel || initial?.verificationLevel || null,
+    routeReasons: current?.routeReasons || packet.routeReasons || initial?.routeReasons || [],
+    contextChars: packet.efficiencyBudget?.usage?.contextChars,
+    ruleFiles: packet.efficiencyBudget?.usage?.ruleFiles,
+    actionCount: metrics.actionCount,
+    commandCount: metrics.commandCount,
+    reviewRounds: metrics.reviewRounds,
+    evidenceCount: metrics.evidenceCount,
+    repairAttempts: metrics.repairAttempts,
+    elapsedMs: metrics.elapsedMs,
+    userInterruptCount: metrics.userInterruptCount,
+    necessaryInterruptCount: metrics.necessaryInterruptCount,
+    tokenUsage: tokenUsageFromReceipts(receipts),
+    terminalState: outcome,
+    budgetStatus: budget?.status || null,
+    budget,
+    startedAt,
+    endedAt,
+    generatedAt: endedAt,
+  })
+}
+
 export function runContinuousRunner({
   projectId,
   projectDir,
@@ -261,14 +365,58 @@ export function runContinuousRunner({
     throw new Error('continuous runner requires projectId, projectDir, inspect, and registry')
   }
 
+  const startedAt = now()
+  const initial = inspect()
+  let firstInspection = initial
+  const beforeRun = readRunnerState(projectDir, projectId)
+  const receiptOffset = beforeRun.receipts.length
+  const traceReceipts = []
+  const runningTrace = normalizeCompactRunRecord({
+    runId: stableFingerprint({
+      projectId,
+      startedAt,
+      actionId: initial.actionPacket?.actionId || null,
+      receiptOffset,
+    }),
+    projectId,
+    route: initial.executionRoute || initial.actionPacket?.executionRoute || initial.actionPacket?.efficiencyBudget?.route || null,
+    assurance: initial.verificationLevel || null,
+    routeReasons: initial.routeReasons || initial.actionPacket?.routeReasons || [],
+    contextChars: initial.actionPacket?.efficiencyBudget?.usage?.contextChars,
+    ruleFiles: initial.actionPacket?.efficiencyBudget?.usage?.ruleFiles,
+    terminalState: 'running',
+    budgetStatus: 'active',
+    budget: initial.actionPacket?.efficiencyBudget || null,
+    startedAt,
+    generatedAt: startedAt,
+  })
+  persistRunnerState(projectDir, { ...beforeRun, trace: runningTrace }, startedAt)
+
+  const finishRun = (current, outcome, details = {}) => {
+    const endedAt = now()
+    const persisted = readRunnerState(projectDir, projectId)
+    const trace = buildRunTrace({
+      projectId,
+      startedAt,
+      endedAt,
+      initial,
+      current,
+      receipts: traceReceipts,
+      outcome,
+    })
+    persistRunnerState(projectDir, { ...persisted, trace }, endedAt)
+    return terminalResult(current, outcome, { ...details, trace })
+  }
+
   for (let step = 1; step <= maxSteps; step += 1) {
-    let current = inspect()
+    let current = firstInspection || inspect()
+    firstInspection = null
     const packet = current.actionPacket
     if (current.status === 'complete' || packet?.action === 'complete') {
-      return terminalResult(current, 'complete', { steps: step - 1 })
+      return finishRun(current, 'complete', { steps: step - 1 })
     }
     if (!packet?.action || !packet?.actionId) {
-      return terminalResult(current, 'failed-infrastructure', {
+      return finishRun(current, 'failed-infrastructure', {
         steps: step - 1,
         error: 'Autopilot did not produce a valid action packet',
       })
@@ -276,7 +424,7 @@ export function runContinuousRunner({
 
     const registered = registry.get(packet.action)
     if (!registered) {
-      return terminalResult(current, 'failed-infrastructure', {
+      return finishRun(current, 'failed-infrastructure', {
         steps: step - 1,
         actionId: packet.actionId,
         error: `no executor registered for ${packet.action}`,
@@ -303,8 +451,14 @@ export function runContinuousRunner({
           ...recovery,
           outcome: recovery.outcome === 'completed' ? 'recovered' : recovery.outcome,
         }, now(), { recovery: true })
+        traceReceipts.push({
+          ...active,
+          ...recovery,
+          outcome: recovery.outcome === 'completed' ? 'recovered' : recovery.outcome,
+          recovery: true,
+        })
         if (recovery.outcome !== 'completed') {
-          return terminalResult(inspect(), recovery.outcome, {
+          return finishRun(inspect(), recovery.outcome, {
             steps: step - 1,
             actionId: active.actionId,
             recovery,
@@ -312,7 +466,7 @@ export function runContinuousRunner({
         }
         current = inspect()
         if (current.status === 'complete' || current.actionPacket?.action === 'complete') {
-          return terminalResult(current, 'complete', { steps: step - 1, recovered: true })
+          return finishRun(current, 'complete', { steps: step - 1, recovered: true })
         }
         if (runnerInvocationFingerprint(current) !== invocationId) continue
       }
@@ -323,7 +477,7 @@ export function runContinuousRunner({
       receipt.invocationId === invocationId && receipt.outcome === 'completed'
     ))
     if (successfulReceipt) {
-      return terminalResult(current, 'failed-infrastructure', {
+      return finishRun(current, 'failed-infrastructure', {
         steps: step - 1,
         actionId: packet.actionId,
         error: 'completed action receipt exists but canonical state did not advance',
@@ -388,10 +542,11 @@ export function runContinuousRunner({
       }
     }
     persisted = finishAction(projectDir, persisted, running, result, now())
+    traceReceipts.push({ ...running, ...result })
     if (result.outcome === 'completed') continue
 
     after = inspect()
-    return terminalResult(after, result.outcome, {
+    return finishRun(after, result.outcome, {
       steps: step,
       actionId: packet.actionId,
       executorType: registered.type,
@@ -400,7 +555,7 @@ export function runContinuousRunner({
     })
   }
 
-  return terminalResult(inspect(), 'budget-exhausted', {
+  return finishRun(inspect(), 'budget-exhausted', {
     steps: maxSteps,
     error: `continuous runner exceeded ${maxSteps} actions`,
   })

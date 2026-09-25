@@ -180,6 +180,12 @@ function selfTest() {
   })
   assert.equal(bounded.action.action, 'bound-implementation-scope')
   assert.match(bounded.action.reason, /24000 character budget/)
+  const deterministicMicro = deriveReviewPlanningPolicy(workItem, {
+    effectiveReview: { ok: true, mode: 'deterministic-micro-audit', problems: [] },
+    fingerprints: { requirementsFingerprint: 'requirements' },
+  })
+  assert.equal(deterministicMicro.action, null)
+  assert.equal(deterministicMicro.deferredHumanReview, false)
   console.log('vnext-review-policy self-test passed')
 }
 

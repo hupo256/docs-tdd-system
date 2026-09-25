@@ -16,7 +16,7 @@ import { normalizeSourceDocuments, readLocalSourceAsset } from './lib/vnext-sour
 import { verifyVNextRouting } from './lib/vnext-risk-route.mjs'
 import { signEvidenceBundle } from './lib/vnext-evidence-receipt.mjs'
 import { verifyReviewReceipt } from './lib/vnext-review-receipt.mjs'
-import { coverageFingerprints, verifyVNextCoverage } from './lib/vnext-work-item.mjs'
+import { coverageFingerprints, effectiveCoverageReview, evaluateMicroEligibility, verifyVNextCoverage } from './lib/vnext-work-item.mjs'
 import { evaluateSourceReadiness } from './lib/vnext-source-readiness.mjs'
 import { reconcileResultProblems } from './lib/vnext-reconcile.mjs'
 
@@ -116,10 +116,20 @@ function reviewedWorkItemForVerification(workItem, reviewResponse, reviewRequest
   return workItem
 }
 
+function resolveReviewedWorkItem(workItem, sourceUnits, reviewResponse) {
+  const effectiveReview = effectiveCoverageReview(workItem, { sourceUnits })
+  if (effectiveReview.ok && effectiveReview.mode === 'deterministic-micro-audit') return workItem
+  if (!reviewResponse) throw new Error('verification requires a signed independent review; run docs-tdd review first')
+  const reviewRequest = attachReviewIteration(
+    buildCoverageReviewRequest({ workItem, sourceUnits }),
+    workItem.reviewControl,
+    { reviewRunId: reviewResponse.reviewRunId },
+  )
+  return reviewedWorkItemForVerification(workItem, reviewResponse, reviewRequest)
+}
+
 export function runVNextVerification(input, { currentCodeState, generatedAt, mode = 'enforced' } = {}) {
   if (!input?.workItem) throw new Error('verification input requires workItem')
-  const reviewResponse = input.reviewResponse || coverageReviewResponseFromAudit(input.workItem)
-  if (!reviewResponse) throw new Error('verification requires a signed independent review; run docs-tdd review first')
   if (Object.hasOwn(input, 'sourceOracle')) throw new Error('sourceOracle is reviewer-owned and cannot be supplied by verification input')
   if (!Array.isArray(input.sourceDocuments)) throw new Error('verification input requires sourceDocuments')
   if (!Array.isArray(input.discoveredSurfaces)) throw new Error('verification input requires discoveredSurfaces (use [] when the search found none)')
@@ -129,12 +139,8 @@ export function runVNextVerification(input, { currentCodeState, generatedAt, mod
   if (!currentCodeState) throw new Error('verification requires a code fingerprint measured by the CLI')
 
   const normalized = normalizeCurrentSources(input.workItem, input.sourceDocuments, input.currentRevision)
-  const reviewRequest = attachReviewIteration(
-    buildCoverageReviewRequest({ workItem: input.workItem, sourceUnits: normalized.sourceUnits }),
-    input.workItem.reviewControl,
-    { reviewRunId: reviewResponse.reviewRunId },
-  )
-  const reviewedWorkItem = reviewedWorkItemForVerification(input.workItem, reviewResponse, reviewRequest)
+  const reviewResponse = input.reviewResponse || coverageReviewResponseFromAudit(input.workItem)
+  const reviewedWorkItem = resolveReviewedWorkItem(input.workItem, normalized.sourceUnits, reviewResponse)
   const coverage = verifyVNextCoverage({
     workItem: reviewedWorkItem,
     currentSourceSnapshot: normalized.sourceSnapshot,
@@ -314,6 +320,22 @@ export function selfTest() {
   assert.throws(() => runVNextVerification({ ...verifyInput, reviewResponse: null }, { currentCodeState: code }), /signed independent review/)
   assert.throws(() => runVNextVerification({ ...verifyInput, sourceOracle: { requiredUnits: [] } }, { currentCodeState: code }), /sourceOracle is reviewer-owned/)
 
+  const deterministicMicro = structuredClone(workItem)
+  deterministicMicro.coverageAudit = { unresolved: [] }
+  deterministicMicro.extractionAudit = {
+    status: 'pass',
+    ...coverageFingerprints(deterministicMicro),
+  }
+  deterministicMicro.extractionAudit.microEligibility = evaluateMicroEligibility(deterministicMicro, normalized.sourceUnits)
+  deterministicMicro.extractionAudit.sourceUnitsFingerprint = deterministicMicro.extractionAudit.microEligibility.sourceUnitsFingerprint
+  const microInput = { ...verifyInput, workItem: deterministicMicro }
+  delete microInput.reviewResponse
+  const microPass = runVNextVerification(microInput, { currentCodeState: code, generatedAt: '2026-09-04T00:00:03Z' })
+  assert.equal(microPass.ok, true, JSON.stringify(microPass))
+  const staleMicroInput = structuredClone(microInput)
+  staleMicroInput.workItem.requirements[0].evidencePlan = [{ type: 'pure-logic', runtimeRequired: false }]
+  assert.throws(() => runVNextVerification(staleMicroInput, { currentCodeState: code }), /signed independent review/)
+
   // End-to-end autonomous seam: sign the evidence bundle against the work item exactly as review
   // seals it to disk, then let runVNextVerification independently rebuild that work item via
   // applyCoverageReview before verifying the receipt. Unit-level exit tests share one workItem
@@ -399,12 +421,7 @@ if (process.argv.includes('--self-test')) {
         assertSafeArtifactOutput(worktreePath, outDir)
         const normalized = normalizeCurrentSources(input.workItem, input.sourceDocuments, input.currentRevision)
         const reviewResponse = input.reviewResponse || coverageReviewResponseFromAudit(input.workItem)
-        const reviewRequest = attachReviewIteration(
-          buildCoverageReviewRequest({ workItem: input.workItem, sourceUnits: normalized.sourceUnits }),
-          input.workItem.reviewControl,
-          { reviewRunId: reviewResponse.reviewRunId },
-        )
-        const workItem = reviewedWorkItemForVerification(input.workItem, reviewResponse, reviewRequest)
+        const workItem = resolveReviewedWorkItem(input.workItem, normalized.sourceUnits, reviewResponse)
         const persisted = persistVNextRun(outDir, { workItem, result })
         console.error(`vNext artifacts: ${persisted.idempotent ? 'idempotent' : 'written'} (${persisted.runCount} run${persisted.runCount === 1 ? '' : 's'})`)
       }

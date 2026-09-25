@@ -132,6 +132,7 @@ const SELF_TEST_SCRIPTS = [
   ['verify-build-quality.mjs', '--self-test'],
   ['verify-code-rules.mjs', '--self-test'],
   ['verify-project-gate.mjs', '--self-test'],
+  ['vnext-clean-project-e2e.mjs', '--self-test'],
   ['vnext-self-test.mjs', '--self-test'],
   ['lib/vnext-artifact-compat.mjs', '--self-test'],
   ['vnext-artifact-compat.mjs', '--self-test'],

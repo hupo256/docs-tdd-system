@@ -305,6 +305,18 @@ function normalizeInvocation(invocation) {
   return null
 }
 
+function tokenUsageFields(usage, source) {
+  if (!usage || typeof usage !== 'object') return {}
+  const tokenUsage = {
+    inputTokens: Number.isFinite(usage.inputTokens) ? usage.inputTokens : null,
+    outputTokens: Number.isFinite(usage.outputTokens) ? usage.outputTokens : null,
+    totalTokens: Number.isFinite(usage.totalTokens) ? usage.totalTokens : null,
+    source: usage.source || source,
+  }
+  if (tokenUsage.inputTokens === null && tokenUsage.outputTokens === null && tokenUsage.totalTokens === null) return {}
+  return { tokenUsage }
+}
+
 function validateOutput(output, schema) {
   const problems = validateSchema(output, schema)
   if (problems.length) throw new Error(`Agent output schema validation failed: ${problems.join('; ')}`)
@@ -366,6 +378,7 @@ export function createVNextAgentExecutor({
           adapter: `${reviewerClient}/${model || 'default'}`,
           verdict: review.response?.verdict,
           reviewRunId: review.response?.reviewRunId,
+          ...tokenUsageFields(review.tokenUsage, `${reviewerClient}-host`),
         }
       }
 
@@ -410,6 +423,7 @@ export function createVNextAgentExecutor({
           changedState: true,
           adapter: `${client}/${model || 'default'}`,
           extractionAudit: next.extractionAudit.status,
+          ...tokenUsageFields(invocation.tokenUsage, `${client}-host`),
         }
       }
 
@@ -445,6 +459,7 @@ export function createVNextAgentExecutor({
         changedState: true,
         adapter: `${client}/${model || 'default'}`,
         changedPaths: actualChangedPaths,
+        ...tokenUsageFields(invocation.tokenUsage, `${client}-host`),
       }
     } catch (error) {
       const infrastructure = /timed out|ENOENT|not found|failed \(\d+\)|reviewer-unavailable/i.test(error.message)

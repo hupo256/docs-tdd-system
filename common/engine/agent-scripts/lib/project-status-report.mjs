@@ -10,7 +10,7 @@
  */
 
 import { spawnSync } from 'node:child_process'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, realpathSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { resolveProjectRoot, resolveRoots } from './roots.mjs'
 import { inspectEffectiveRules, inspectRuleRelease } from './context-pack.mjs'
@@ -90,7 +90,7 @@ export function inspectProjectWorktree(projectId, { requestedWorktree = '', requ
   const baseline = exists ? evaluateWorktreeBaseline(worktree, baseRef) : { baseExists: false, ok: false, severity: 'error', note: '' }
   const facts = {
     projectId, configuredPath, requestedWorktree, worktree, exists,
-    topMatches: top.ok && resolve(top.stdout) === worktree,
+    topMatches: top.ok && realpathSync(resolve(top.stdout)) === realpathSync(worktree),
     branch: branchResult.ok ? branchResult.stdout : '', expectedBranch, baseRef,
     baseExists: baseline.baseExists,
     baseline,

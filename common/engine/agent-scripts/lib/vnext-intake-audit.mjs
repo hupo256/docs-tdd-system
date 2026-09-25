@@ -9,9 +9,21 @@ import { evidencePlanProblems } from '../vnext-evidence.mjs'
 import { sourceUnitDispositionProblems } from './vnext-source-disposition.mjs'
 import { isStructuralSourceUnit } from './vnext-source-units.mjs'
 import { vNextIntakeProblems } from './vnext-intake.mjs'
-import { coverageFingerprints, stableFingerprint } from './vnext-work-item.mjs'
+import { coverageFingerprints, evaluateMicroEligibility, stableFingerprint } from './vnext-work-item.mjs'
 
-const EVIDENCE_TYPES = new Set(['copy-literal', 'component-dom', 'pure-logic', 'payload-contract', 'api-contract', 'browser-interaction', 'visual'])
+const EVIDENCE_TYPES = new Set([
+  'copy-literal',
+  'component-dom',
+  'pure-logic',
+  'payload-contract',
+  'api-contract',
+  'browser-interaction',
+  'human-check',
+  'structural',
+  'quality',
+  'touched-file-quality',
+  'visual',
+])
 const FACT_CATEGORIES = new Set(['action', 'content', 'state', 'constraint', 'dependency', 'permission', 'navigation', 'error', 'collection', 'entry', 'visual'])
 const SURFACE_DISPOSITIONS = new Set(['implement', 'already-covered', 'not-applicable', 'deferred'])
 const duplicateValues = (values) => [...new Set(values.filter((value, index) => values.indexOf(value) !== index))]
@@ -162,6 +174,7 @@ export function runIntakeAudit(workItem, sourceUnits, { auditedAt = new Date().t
     auditedAt,
     ...fingerprints,
     sourceUnitsFingerprint: stableFingerprint(sourceUnits),
+    microEligibility: evaluateMicroEligibility(workItem, sourceUnits),
     status: checks.every((check) => check.ok) ? 'pass' : 'fail',
     checks,
   }
@@ -210,6 +223,8 @@ export function selfTest() {
   }
   const pass = runIntakeAudit(workItem, units, { auditedAt: '2026-09-12T00:00:00Z' })
   assert.equal(pass.status, 'pass', JSON.stringify(pass))
+  assert.equal(pass.microEligibility.ok, false)
+  assert.match(pass.microEligibility.problems.join(' '), /table, image, or embedded/)
   const staleIntake = {
     ...workItem,
     intake: { kind: 'bugfix', sourceRole: 'incident', sourceFingerprint: 'stale', sourcePaths: ['prd.md'] },
@@ -229,6 +244,16 @@ export function selfTest() {
   const incompleteExclusion = structuredClone(workItem)
   delete incompleteExclusion.sourceUnitDispositions[0].exclusionEvidence
   assert.match(problemsFor(incompleteExclusion, 'EXTRACTION_STRUCTURE'), /exclusion requires evidence/)
+  const touchedQuality = structuredClone(workItem)
+  touchedQuality.requirements[0].evidencePlan = [{ type: 'touched-file-quality', runtimeRequired: false }]
+  touchedQuality.evidenceCommands = [{
+    evidenceId: 'E-QUALITY',
+    kind: 'touched-file-quality',
+    argv: ['node', 'tests/a.test.mjs'],
+    requirementIds: ['R-001'],
+    surfaceIds: ['S-001'],
+  }]
+  assert.equal(problemsFor(touchedQuality, 'EXTRACTION_STRUCTURE'), '')
   const mixedFeatureUnits = [...units, { sourceId: 'SRC-4', type: 'text', content: 'The data appears automatically, and add an export button on the same page.' }]
   const mixedFeature = structuredClone(workItem)
   mixedFeature.sourceUnitDispositions.push({
@@ -241,6 +266,22 @@ export function selfTest() {
     runIntakeAudit(mixedFeature, mixedFeatureUnits).checks.find((check) => check.code === 'EXTRACTION_STRUCTURE').problems.join(' '),
     /mixes passive-display/,
   )
+  const simpleUnits = units.filter((unit) => ['SRC-H', 'SRC-1'].includes(unit.sourceId))
+  const simple = structuredClone(workItem)
+  simple.extractionFacts = simple.extractionFacts.filter((fact) => fact.factId === 'F-001')
+  simple.requirements[0].sourceAnchors = simple.requirements[0].sourceAnchors.filter((anchor) => anchor.sourceId === 'SRC-1')
+  simple.sourceUnitDispositions = []
+  simple.routing = { scopeClass: 'local', riskSignals: [], verificationLevel: 'V0', routerVersion: 1 }
+  simple.apiDependency = { mode: 'no-request', reason: 'local copy change' }
+  const simpleAudit = runIntakeAudit(simple, simpleUnits)
+  assert.equal(simpleAudit.status, 'pass', JSON.stringify(simpleAudit))
+  assert.deepEqual(simpleAudit.microEligibility, {
+    ok: true,
+    mode: 'deterministic-micro-audit',
+    ...coverageFingerprints(simple),
+    sourceUnitsFingerprint: stableFingerprint(simpleUnits),
+    problems: [],
+  })
   console.log('vnext-intake-audit self-test passed')
 }
 

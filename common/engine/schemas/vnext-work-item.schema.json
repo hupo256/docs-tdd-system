@@ -271,6 +271,20 @@
         "requirementsFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
         "evidencePlanFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
         "sourceUnitsFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "microEligibility": {
+          "type": "object",
+          "required": ["ok", "mode", "sourceFingerprint", "requirementsFingerprint", "evidencePlanFingerprint", "sourceUnitsFingerprint", "problems"],
+          "properties": {
+            "ok": { "type": "boolean" },
+            "mode": { "const": "deterministic-micro-audit" },
+            "sourceFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+            "requirementsFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+            "evidencePlanFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+            "sourceUnitsFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+            "problems": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+          },
+          "additionalProperties": false
+        },
         "status": { "enum": ["pass", "fail"] },
         "checks": {
           "type": "array",
