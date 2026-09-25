@@ -37,6 +37,7 @@ import { resolveRuleSessionClient } from './lib/rule-session.mjs'
 import { latestReleasePin, resolveRulePin, upgradeRulePin } from './lib/rule-pin.mjs'
 import { stableFingerprint } from './lib/vnext-work-item.mjs'
 import { inspectVNext } from './project-orchestrator.mjs'
+import { scopeAdvisory } from './lib/vnext-scope-advisor.mjs'
 import { workflowVersionForProject } from './lib/workflow-version.mjs'
 import { appendRuntimeDecision, readRuntimeDecisions } from './lib/vnext-runtime-decisions.mjs'
 import { budgetStatus } from './lib/vnext-efficiency-policy.mjs'
@@ -339,6 +340,7 @@ if (projectWorkflowVersion === 2 && command === 'efficiency') {
     routeReasons: inspection.routeReasons,
     budgetStatus: inspection.budgetStatus,
     action: inspection.nextAction,
+    scopeAdvisory: scopeAdvisory(workItem || {}),
     workItemFingerprint: stableFingerprint(workItem),
   }, null, 2))
   process.exit(0)
