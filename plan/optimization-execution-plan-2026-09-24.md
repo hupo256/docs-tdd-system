@@ -101,7 +101,7 @@
 - deterministic action 已接入 safe worktree、surface reconciliation、evidence/revalidate/verify 和 scoped local commit。
 - Codex/Claude Host Agent adapter 已接入 extraction、独立 coverage review 和代码 checkpoint；模型输出必须先过 JSON schema、canonical apply、intake audit 或 Git changed-path 对账。
 - Codex review 支持 read-only sandbox、图片附件、非 Git 临时目录和签名 receipt；reviewer client 与 requirements author client 分离。
-- timeout、取消、无效输出分别收敛为 `failed-infrastructure`、`needs-user`、`failed-safety-check`；同 invocation 的同类基础设施/安全失败第二次进入 `budget-exhausted`。
+- timeout、取消、无效输出分别收敛为 `failed-infrastructure`、`needs-user`、`failed-safety-check`；同 invocation 的同类基础设施/安全失败第二次保持原失败类型并标记 `repeatedFailure`，不得伪装成效率预算耗尽。
 - Agent 代码动作中断后比较代码 fingerprint；发生变化时先 reconcile。delivery commit 中断后核对 HEAD、提交标题、冻结路径和 scope clean，再补 canonical delivery record。
 - 无宿主 Agent adapter 时明确返回 `needs-agent`；人工和外部依赖分别返回 `needs-user`、`blocked-external-dependency`。
 - `resume-review-after-human-repair` 已按命令契约归类为 human；尚无 canonical checkpoint 契约的 manual-test repair 与通用 `resolve-blockers` 仍明确停在 `needs-agent`，不伪装为已自动闭环。
@@ -204,7 +204,7 @@ Pilot 于 2026-09-25 经 owner 确认正式启动。样本与结果统一记录�
 - WP1 状态为 `synthetic-tested`；WP2 状态为 `e2e-tested`，批次 C 已达到退出条件。
 - WP3 状态为 `e2e-tested`；这只代表 Micro 基础设施 E2E 通过。新需求 Pilot 未完成，批次 D 尚未达到退出条件。
 - WP4 已于 2026-09-25 进入 `in-progress`。首个候选样本 PR-02233 增量需求的业务改动与定向验证已完成，但系统将它错绑到同编号历史 PRD，正式 coverage/verify 未绑定当前增量，因此只记 `blocked-system`，不计为 V0/V1/V2 合格样本。
-- 首个真实候选样本暴露的系统缺陷已完成定向修复：新增隔离历史范围的 `--change <id>` intake；`run --dry-run` 改为零写入、零 Agent 调用；普通 login 样式与单张 context/example-only 截图可走 Micro；Micro 硬预算收紧为 3 分钟。定向 self-test 与公开命令 E2E 已通过，但 PR-02233 仍保持 `blocked-system`，不追认合格样本，效果须由下一条新的真实需求重新验证。
+- 首个真实候选样本暴露的系统缺陷已进入定向修复：增量 intake 必须同时隔离文档、分支和 worktree；`run --dry-run` 保持零写入、零 Agent 调用；普通 login 样式与单张 context/example-only 截图可走 Micro。Micro `<=2 分钟`、trivial `<=1.5 分钟` 是效率目标，不是停止交付的门槛；超目标只记录 `target-exceeded` 并削减非必要流程开销，业务实现与必要验证继续。PR-02233 仍保持 `blocked-system`，不追认合格样本，效果须由下一条新的真实需求重新验证。
 - 定向 self-test、67 脚本 vNext 聚合 self-test、公开命令 E2E、339 个文档链接和 `git diff --check` 已通过。
 - `check-doc-budget.mjs` 的本轮预算、索引和 101 个 self-test 入口已通过；当前 exit 1 仅来自上述三项既有债。
 

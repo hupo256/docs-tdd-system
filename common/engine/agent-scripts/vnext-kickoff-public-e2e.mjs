@@ -4,7 +4,7 @@ import assert from 'node:assert/strict'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { createHash, randomInt } from 'node:crypto'
 import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import {
@@ -13,6 +13,7 @@ import {
   resolveProjectChangeRoot,
   resolveProjectRoot,
 } from './lib/roots.mjs'
+import { readProjectGitBinding } from './lib/project-status-report.mjs'
 
 const scriptDir = new URL('.', import.meta.url)
 const docsTddCli = fileURLToPath(new URL('./docs-tdd.mjs', scriptDir))
@@ -136,12 +137,24 @@ export function selfTest() {
 
     const alternativeSource = join(sourceRoot, 'alternative-prd.md')
     writeFileSync(alternativeSource, '# Alternative source\n\nThis source must not be ignored.\n')
-    const sourceSwitch = run(docsTddCli, [
-      'kickoff', v2Project, '--prd', alternativeSource, '--title', v2Marker,
-    ], { cwd: sandbox, env })
-    assert.notEqual(sourceSwitch.status, 0)
-    assert.match(sourceSwitch.stderr, /source differs from the source bound/)
+    const v2ProjectBeforePreview = directorySnapshot(resolveProjectBaseRoot(v2Project))
+    const sourceSwitchPreview = outputJson(run(docsTddCli, [
+      'kickoff', v2Project, '--prd', alternativeSource, '--title', v2Marker, '--kind', 'bugfix', '--dry-run',
+    ], { cwd: sandbox, env }))
+    assert.equal(sourceSwitchPreview.status, 'dry-run')
+    assert.match(sourceSwitchPreview.dryRun.changeId, /^change-[0-9a-f]{8}$/)
+    assert.equal(existsSync(join(resolveProjectBaseRoot(v2Project), 'active-change.json')), false)
+    assert.equal(existsSync(sourceSwitchPreview.dryRun.projectDir), false)
+    assert.deepEqual(directorySnapshot(resolveProjectBaseRoot(v2Project)), v2ProjectBeforePreview)
     assert.deepEqual(JSON.parse(readFileSync(workItemPath, 'utf8')), firstWorkItem)
+
+    const explicitSourceSwitch = run(docsTddCli, [
+      'kickoff', v2Project, '--change', 'different-source', '--prd', alternativeSource, '--title', v2Marker,
+    ], { cwd: sandbox, env })
+    assert.equal(explicitSourceSwitch.status, 0, explicitSourceSwitch.stderr)
+    assert.equal(existsSync(join(resolveProjectChangeRoot(v2Project, 'different-source'), 'work-item.json')), true)
+    assert.deepEqual(JSON.parse(readFileSync(workItemPath, 'utf8')), firstWorkItem)
+    rmSync(join(resolveProjectBaseRoot(v2Project), 'active-change.json'))
 
     writeFileSync(source, '# Kickoff E2E\n\nRender the requested widget.\nPreserve the extracted requirement.\n')
     const sourceChanged = run(docsTddCli, [
@@ -254,13 +267,15 @@ export function selfTest() {
     assert.match(runLegacy.stderr, /docs-tdd run is workflowVersion 2 only/)
     assert.equal(existsSync(resolveProjectRoot(runLegacyProject)), false)
 
-    const runSourceSwitch = run(docsTddCli, [
-      'run', runProject, '--prd', alternativeSource,
-    ], { cwd: sandbox, env })
-    assert.notEqual(runSourceSwitch.status, 0)
-    const runSourceSwitchState = JSON.parse(runSourceSwitch.stdout)
-    assert.equal(runSourceSwitchState.status, 'blocked')
-    assert.equal(runSourceSwitchState.nextAction, 'source_update')
+    const autoChangePreview = outputJson(run(docsTddCli, [
+      'run', runProject, '--prd', alternativeSource, '--kind', 'bugfix',
+      '--base-ref', 'origin/release-test', '--client', 'codex', '--dry-run',
+    ], { cwd: sandbox, env }))
+    assert.equal(autoChangePreview.status, 'dry-run')
+    assert.match(autoChangePreview.dryRun.changeId, /^change-[0-9a-f]{8}$/)
+    assert.equal(existsSync(join(runProjectRoot, 'active-change.json')), false)
+    assert.equal(existsSync(autoChangePreview.dryRun.projectDir), false)
+    assert.deepEqual(directorySnapshot(runProjectRoot), beforeExistingDryRun)
     assert.deepEqual(JSON.parse(readFileSync(runWorkItemPath, 'utf8')), runWorkItem)
 
     writeFileSync(source, '# Kickoff E2E\n\nRender the requested widget.\nA changed source must not silently replace the active work item.\n')
@@ -286,6 +301,27 @@ export function selfTest() {
     assert.equal(existsSync(runWorkItemPath), true)
 
     const historicalWorkItem = readFileSync(join(runProjectRoot, 'work-item.json'), 'utf8')
+    const automaticChangeRun = run(docsTddCli, [
+      'run', runProject, '--prd', alternativeSource, '--kind', 'bugfix',
+      '--base-ref', 'origin/release-test', '--title', `${runMarker}-automatic-change`,
+      '--client', 'codex',
+    ], { cwd: sandbox, env })
+    assert.notEqual(automaticChangeRun.status, 0)
+    assert.equal(JSON.parse(automaticChangeRun.stdout).status, 'failed-infrastructure')
+    const automaticPointer = JSON.parse(readFileSync(join(runProjectRoot, 'active-change.json'), 'utf8'))
+    assert.match(automaticPointer.changeId, /^change-[0-9a-f]{8}$/)
+    const automaticChangeRoot = resolveProjectChangeRoot(runProject, automaticPointer.changeId)
+    const automaticReadme = readFileSync(join(automaticChangeRoot, 'README.md'), 'utf8')
+    assert.match(automaticReadme, new RegExp(`^changeId: ${automaticPointer.changeId}$`, 'm'))
+    assert.match(automaticReadme, new RegExp(`^branch: "fix/${runProject}-${automaticPointer.changeId}"$`, 'm'))
+    assert.match(automaticReadme, /^baseRef: "origin\/release-test"$/m)
+    assert.match(automaticReadme, new RegExp(`^worktree: ".*${runProject}-${automaticPointer.changeId}"$`, 'm'))
+    const automaticGitBinding = readProjectGitBinding(runProject)
+    assert.equal(automaticGitBinding.baseRef, 'origin/release-test')
+    assert.equal(automaticGitBinding.branch, `fix/${runProject}-${automaticPointer.changeId}`)
+    assert.equal(automaticGitBinding.worktree, join(dirname(resolve(sandbox)), `${runProject}-${automaticPointer.changeId}`))
+    assert.equal(readFileSync(join(runProjectRoot, 'work-item.json'), 'utf8'), historicalWorkItem)
+
     const changeRun = run(docsTddCli, [
       'run', runProject, '--change', 'cursor-hover', '--prd', source,
       '--title', `${runMarker}-cursor-hover`, '--client', 'codex',
@@ -304,7 +340,7 @@ export function selfTest() {
       JSON.parse(readFileSync(join(changeRoot, 'agent/lark-sources.json'), 'utf8')).outputDir,
       /changes\/cursor-hover\/inbox\/lark-sync$/,
     )
-    console.log('vnext public-command E2E passed (read-only dry-run, isolated change sets, historical work-item preservation, kickoff/run binding, Agent infrastructure failure, v1 compatibility, path boundary)')
+    console.log('vnext public-command E2E passed (read-only auto routing, isolated docs/branch/worktree bindings, same-source drift protection, historical preservation, v1 compatibility, path boundary)')
   } finally {
     for (const { projectId, marker } of projects) removeOwnedProject(projectId, marker)
     rmSync(sourceRoot, { recursive: true, force: true })

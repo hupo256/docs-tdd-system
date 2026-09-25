@@ -24,7 +24,7 @@ export const EFFICIENCY_POLICIES = Object.freeze({
     commands: 3,           // 改动 + biome + git diff --check（按需 DOM 断言算 evidence）
     evidence: 2,           // 强制 touched-file-quality + 一条可见面断言(component-dom/copy-literal)
     repairs: 1,
-    elapsedMs: 90000,      // 1.5 分钟硬停；纯展示/文案单点改动
+    elapsedMs: 90000,      // 1.5 分钟效率目标；超时只记账，不中断交付
   }),
   micro: Object.freeze({
     contextChars: 25000,   // 3 个核心规则 (git + worktree + biome)
@@ -251,6 +251,7 @@ function emptyUsage() {
 export function createEfficiencyBudget(routeOrDecision, {
   startedAt = new Date().toISOString(),
   inputFingerprint = '',
+  targetAt = null,
   deadlineAt = null,
 } = {}) {
   const decision = typeof routeOrDecision === 'string'
@@ -259,14 +260,14 @@ export function createEfficiencyBudget(routeOrDecision, {
   if (!EFFICIENCY_ROUTES.includes(decision?.route)) throw new Error(`unknown efficiency route: ${decision?.route || 'missing'}`)
   const policy = decision.policy || EFFICIENCY_POLICIES[decision.route]
   const startedMs = Date.parse(startedAt)
-  const resolvedDeadline = deadlineAt || (Number.isFinite(startedMs) ? new Date(startedMs + policy.elapsedMs).toISOString() : null)
+  const resolvedTarget = targetAt || deadlineAt || (Number.isFinite(startedMs) ? new Date(startedMs + policy.elapsedMs).toISOString() : null)
   return {
     policyVersion: EFFICIENCY_POLICY_VERSION,
     route: decision.route,
     policy: { ...policy },
     usage: emptyUsage(),
     startedAt,
-    deadlineAt: resolvedDeadline,
+    targetAt: resolvedTarget,
     inputFingerprint: inputFingerprint || null,
     status: 'active',
     warningAt: 0.8,
@@ -283,18 +284,23 @@ export function budgetStatus(budget, now = Date.now()) {
     used: Number(budget.usage?.[dimension]) || 0,
     limit: Number(budget.policy?.[dimension]) || 0,
   })).map((item) => ({ ...item, ratio: item.limit > 0 ? item.used / item.limit : 0 }))
-  const exhaustedDimensions = ratios.filter((item) => item.ratio >= 1).map((item) => item.dimension)
-  const warningDimensions = ratios.filter((item) => item.ratio >= 0.8 && item.ratio < 1).map((item) => item.dimension)
-  const deadlineMs = Date.parse(budget.deadlineAt || '')
-  const deadlineExceeded = Number.isFinite(deadlineMs) && now >= deadlineMs
-  const exhausted = exhaustedDimensions.length > 0 || deadlineExceeded || ['budget-exhausted', 'blocked', 'failed-infrastructure', 'complete'].includes(budget.status)
+  const targetExceededDimensions = ratios.filter((item) => item.ratio > 1).map((item) => item.dimension)
+  const warningDimensions = ratios.filter((item) => item.ratio >= 0.8 && item.ratio <= 1).map((item) => item.dimension)
+  const targetMs = Date.parse(budget.targetAt || budget.deadlineAt || '')
+  const elapsedTargetExceeded = Number.isFinite(targetMs) && now > targetMs
+  const targetExceeded = targetExceededDimensions.length > 0 || elapsedTargetExceeded
+  const terminal = ['blocked', 'failed-infrastructure', 'failed-safety-check', 'complete'].includes(budget.status)
   return {
-    status: exhausted ? (budget.status === 'active' ? 'budget-exhausted' : budget.status) : warningDimensions.length ? 'warning' : 'ok',
-    exhausted,
+    status: terminal ? budget.status : targetExceeded ? 'target-exceeded' : warningDimensions.length ? 'warning' : 'ok',
+    exhausted: terminal,
+    targetExceeded,
     warning: warningDimensions.length > 0,
     warningDimensions,
-    exhaustedDimensions,
-    deadlineExceeded,
+    targetExceededDimensions,
+    elapsedTargetExceeded,
+    // Compatibility fields for persisted v1 traces. They no longer imply termination.
+    exhaustedDimensions: targetExceededDimensions,
+    deadlineExceeded: elapsedTargetExceeded,
     ratios,
   }
 }
@@ -305,15 +311,15 @@ export function consumeEfficiencyBudget(budget, dimension, amount = 1, { now = D
   const next = structuredClone(budget)
   next.usage[dimension] = (Number(next.usage[dimension]) || 0) + amount
   const status = budgetStatus(next, now)
-  if (status.exhausted) {
-    next.status = 'budget-exhausted'
-    next.terminalReason = status.deadlineExceeded ? 'deadline-exceeded' : `budget-exhausted:${status.exhaustedDimensions.join(',')}`
+  if (status.targetExceeded && !status.exhausted) {
+    next.status = 'target-exceeded'
+    next.terminalReason = null
   }
   return { budget: next, ...status }
 }
 
 export function markEfficiencyTerminal(budget, status, reason) {
-  if (!['complete', 'blocked', 'failed-infrastructure', 'budget-exhausted'].includes(status)) {
+  if (!['complete', 'blocked', 'failed-infrastructure', 'failed-safety-check'].includes(status)) {
     throw new Error(`invalid efficiency terminal status: ${status}`)
   }
   return { ...structuredClone(budget), status, terminalReason: reason || status }
@@ -486,9 +492,21 @@ export function selfTest() {
   assert.equal(deriveEfficiencyRoute(unclassifiedScreenshot).route, 'standard')
 
   const budget = createEfficiencyBudget(micro, { startedAt: '2026-09-19T00:00:00.000Z', inputFingerprint: 'input' })
-  const warning = consumeEfficiencyBudget(budget, 'commands', 4)
-  assert.equal(warning.status, 'budget-exhausted')
-  assert.equal(warning.budget.status, 'budget-exhausted')
+  const startedAtMs = Date.parse(budget.startedAt)
+  const atTarget = consumeEfficiencyBudget(budget, 'commands', 4, { now: startedAtMs })
+  assert.equal(atTarget.status, 'warning')
+  assert.equal(atTarget.targetExceeded, false)
+  assert.equal(atTarget.budget.status, 'active')
+  const overTarget = consumeEfficiencyBudget(budget, 'commands', 5, { now: startedAtMs })
+  assert.equal(overTarget.status, 'target-exceeded')
+  assert.equal(overTarget.targetExceeded, true)
+  assert.equal(overTarget.exhausted, false)
+  assert.equal(overTarget.budget.status, 'target-exceeded')
+  const elapsedAtTarget = budgetStatus(budget, Date.parse(budget.targetAt))
+  assert.equal(elapsedAtTarget.status, 'ok')
+  const elapsedOverTarget = budgetStatus(budget, Date.parse(budget.targetAt) + 1)
+  assert.equal(elapsedOverTarget.status, 'target-exceeded')
+  assert.equal(elapsedOverTarget.exhausted, false)
   assert.equal(canRetryEfficiencyFailure({ inputFingerprint: 'a', failureFingerprint: 'b', previous: { inputFingerprint: 'a', failureFingerprint: 'b' } }).retryable, false)
   assert.equal(efficiencyMetrics({ route: 'micro', budget }).estimatedInputTokens, null)
   console.log('vnext-efficiency-policy self-test passed')

@@ -11,7 +11,7 @@ import {
   resolveProjectRoot,
   resolveRoots,
 } from './lib/roots.mjs'
-import { inspectProjectWorktree, requireProjectWorktree } from './lib/project-status-report.mjs'
+import { inspectProjectWorktree, readProjectGitBinding, requireProjectWorktree } from './lib/project-status-report.mjs'
 import { decideNext } from './lib/project-decision.mjs'
 import { changedCodePaths, codeFingerprint, matchesEffectiveCodeState } from './lib/fingerprint.mjs'
 import { VNEXT_INTAKE_KINDS } from './lib/vnext-intake.mjs'
@@ -117,13 +117,39 @@ function print(state) {
   console.log(JSON.stringify(state, null, 2))
 }
 
+export function automaticChangeIdForSource(sourceIdentityValue) {
+  if (!sourceIdentityValue) throw new Error('automatic change-set requires a source identity')
+  return `change-${createHash('sha256').update(sourceIdentityValue).digest('hex').slice(0, 8)}`
+}
+
+function boundSourceIdentity(projectDir) {
+  const configuredPrd = readJson(join(projectDir, 'agent/lark-sources.json'))?.sources?.[0]?.url
+  return configuredPrd ? sourceIdentity(configuredPrd) : ''
+}
+
 function requestedProjectContext({ dryRun = false } = {}) {
-  const changeId = option('--change')
-  if (!changeId) return { projectDir: resolveProjectRoot(projectId), changeId: '', change: null }
+  const explicitChangeId = option('--change')
   const baseRoot = resolveProjectBaseRoot(projectId)
+  const requestedPrd = option('--prd')
+  let changeId = explicitChangeId
+
+  if (!changeId && requestedPrd && existsSync(join(baseRoot, 'work-item.json'))) {
+    const activeRoot = resolveProjectRoot(projectId)
+    const requestedIdentity = sourceIdentity(requestedPrd)
+    const activeIdentity = boundSourceIdentity(activeRoot)
+    if (activeIdentity && activeIdentity !== requestedIdentity) {
+      changeId = automaticChangeIdForSource(requestedIdentity)
+    }
+  }
+
+  if (!changeId) return { projectDir: resolveProjectRoot(projectId), changeId: '', change: null }
   const changeRoot = resolveProjectChangeRoot(projectId, changeId)
-  if (!dryRun && !existsSync(changeRoot) && !option('--prd')) {
+  if (!dryRun && !existsSync(changeRoot) && !requestedPrd) {
     throw new Error(`new change ${changeId} requires --prd <source>`)
+  }
+  const targetIdentity = boundSourceIdentity(changeRoot)
+  if (targetIdentity && requestedPrd && targetIdentity !== sourceIdentity(requestedPrd)) {
+    throw new Error(`changeId collision: ${changeId} is already bound to another source`)
   }
   const change = activateVNextChangeSet({
     projectId,
@@ -194,7 +220,7 @@ function loadDecisionInputs(id) {
   }
 }
 
-function kickoff({ quiet = false } = {}) {
+function kickoff({ quiet = false, context = null } = {}) {
   const emit = quiet ? () => {} : print
   if (args.includes('--dry-run')) {
     const output = dryRunOutput()
@@ -209,7 +235,8 @@ function kickoff({ quiet = false } = {}) {
   if (!prd) throw new Error('kickoff requires --prd <Lark URL or local Markdown>')
   if (!VNEXT_INTAKE_KINDS.includes(intakeKind)) throw new Error(`kickoff --kind must be one of: ${VNEXT_INTAKE_KINDS.join(', ')}`)
   if (legacy && requestedKind) throw new Error('kickoff --kind is only supported by workflowVersion 2')
-  const { projectDir } = requestedProjectContext()
+  const { projectDir, changeId } = context || requestedProjectContext()
+  const selectedBaseRef = option('--base-ref', config.baseRef || 'origin/online')
   if (existsSync(projectDir)) {
     const configuredPrd = readJson(join(projectDir, 'agent/lark-sources.json'))?.sources?.[0]?.url
     if (configuredPrd && sourceIdentity(configuredPrd) !== sourceIdentity(prd)) {
@@ -227,7 +254,10 @@ function kickoff({ quiet = false } = {}) {
       const scaffold = executeScript('start-new-project.mjs', [projectId, '--prd', prd, '--title', title])
       if (scaffold.status !== 0) throw new Error((scaffold.stderr || scaffold.stdout).trim())
     } else {
-      kickoffVNext(projectId, projectDir, prd, title, intakeKind)
+      kickoffVNext(projectId, projectDir, prd, title, intakeKind, {
+        changeId,
+        baseRef: selectedBaseRef,
+      })
     }
   }
 
@@ -299,6 +329,7 @@ export function vnextVerificationNextAction({ authoritativePass, shadowOnly, int
 
 export function inspectVNext(id) {
   const projectDir = resolveProjectRoot(id)
+  const baseRef = readProjectGitBinding(id).baseRef
   const workItem = readJson(join(projectDir, 'work-item.json'))
   const latest = readJson(join(projectDir, 'latest-result.json'))
   if (!workItem) {
@@ -323,7 +354,7 @@ export function inspectVNext(id) {
     safeWorktree = requireProjectWorktree(id)
     if (latest) {
       const scopePaths = latest.codeFingerprint?.scopeMode === 'path-set-v1' ? latest.codeFingerprint.scopePaths : null
-      const current = codeFingerprint(safeWorktree, config.baseRef || 'origin/online', { scopePaths })
+      const current = codeFingerprint(safeWorktree, baseRef, { scopePaths })
       codeStateFresh = matchesEffectiveCodeState(current, latest.codeFingerprint)
       gitScopeClean = scopedDeliveryCommitted(safeWorktree, latest.codeFingerprint)
       if (!codeStateFresh) codeStateProblem = 'code content changed; revalidate evidence only (the signed source review remains reusable while the work item is unchanged)'
@@ -335,7 +366,7 @@ export function inspectVNext(id) {
     }
   }
   const reconciliation = worktreeInspection.ok
-    ? inspectSurfaceReconciliation({ projectDir, workItem, worktree: safeWorktree, baseRef: config.baseRef || 'origin/online' })
+    ? inspectSurfaceReconciliation({ projectDir, workItem, worktree: safeWorktree, baseRef })
     : { result: null, current: false, problem: '' }
   const reconciliationResult = reconciliation.result
   const reconciliationCurrent = reconciliation.current
@@ -511,19 +542,20 @@ function checkpoint() {
   if (!checkpointInput) throw new Error(`cannot read checkpoint: ${inputFile}`)
   if (checkpointInput.outcome === 'completed') {
     const worktree = requireProjectWorktree(projectId)
+    const baseRef = readProjectGitBinding(projectId).baseRef
     const actionId = checkpointInput.actionId || ''
     assertSafeWorkContext({
       projectId,
       workItem,
       worktree,
-      baseRef: config.baseRef || 'origin/online',
+      baseRef,
       commitMode: 'no-commit',
       actionId,
       targetPaths: checkpointInput.changedPaths || [],
     })
-    const actualChangedPaths = new Set(changedCodePaths(worktree, config.baseRef || 'origin/online'))
+    const actualChangedPaths = new Set(changedCodePaths(worktree, baseRef))
     const unverifiedPaths = (checkpointInput.changedPaths || []).filter((path) => !actualChangedPaths.has(path))
-    if (unverifiedPaths.length) throw new Error(`checkpoint paths are not changed from ${config.baseRef || 'origin/online'}: ${unverifiedPaths.join(', ')}`)
+    if (unverifiedPaths.length) throw new Error(`checkpoint paths are not changed from ${baseRef}: ${unverifiedPaths.join(', ')}`)
   }
   const currentAction = inspectVNext(projectId).actionPacket
   const next = applyAutopilotCheckpoint(workItem, checkpointInput, { latestResult, expectedAction: currentAction })
@@ -533,6 +565,7 @@ function checkpoint() {
 
 function runAutonomousValidation(id) {
   const projectDir = resolveProjectRoot(id)
+  const baseRef = readProjectGitBinding(id).baseRef
   let worktree
   try {
     worktree = requireProjectWorktree(id)
@@ -544,7 +577,7 @@ function runAutonomousValidation(id) {
     projectDir,
     worktree,
     workItem: readJson(join(projectDir, 'work-item.json')),
-    baseRef: config.baseRef || 'origin/online',
+    baseRef,
     executeScript,
   })
 }
@@ -558,6 +591,7 @@ export function commitScopedPaths(worktree, id, paths, spawn = spawnSync, mode =
 
 export function commitEvidenceScope(id) {
   const projectDir = resolveProjectRoot(id)
+  const baseRef = readProjectGitBinding(id).baseRef
   const latest = readJson(join(projectDir, 'latest-result.json'))
   const workItem = readJson(join(projectDir, 'work-item.json'))
   const paths = latest?.codeFingerprint?.scopeMode === 'path-set-v1' ? latest.codeFingerprint.scopePaths : []
@@ -568,7 +602,7 @@ export function commitEvidenceScope(id) {
     codeStateFresh: true,
     assuranceTrusted: latest?.mode === 'enforced' && latest?.assuranceMode === 'autonomous' && latest?.evidenceTrust === 'cli-attested',
     actionId: workItem?.autopilot?.implementation?.checkpoint?.actionId || '',
-    baseRef: config.baseRef || 'origin/online',
+    baseRef,
   })
   if (!commit.ok) return commit
   const persisted = persistVNextWorkItem(projectDir, applyDeliveryCommit(workItem, commit))
@@ -583,9 +617,10 @@ function autopilotRun() {
     print(dryRunOutput())
     return
   }
-  const { projectDir } = requestedProjectContext()
+  const context = requestedProjectContext()
+  const { projectDir } = context
   if (!existsSync(projectDir)) {
-    const initialized = kickoff({ quiet: true })
+    const initialized = kickoff({ quiet: true, context })
     if (!initialized?.ok) {
       if (initialized?.output) print(initialized.output)
       return
@@ -625,6 +660,7 @@ function autopilotRun() {
     requestedClient: option('--client'),
     requestedModel: option('--model'),
   })
+  const baseRef = readProjectGitBinding(projectId).baseRef
   const execution = createVNextOrchestratorRunner({
     projectId,
     projectDir,
@@ -634,16 +670,16 @@ function autopilotRun() {
     runAutonomousValidation,
     commitEvidenceScope,
     scopedDeliveryCommitted,
-    baseRef: config.baseRef || 'origin/online',
+    baseRef,
     agentClient: agent.client,
     agentModel: agent.model,
   }).run()
-  const topLevelStatus = ['needs-agent', 'needs-user', 'blocked-external-dependency', 'failed-infrastructure', 'failed-safety-check', 'budget-exhausted']
+  const topLevelStatus = ['needs-agent', 'needs-user', 'blocked-external-dependency', 'failed-infrastructure', 'failed-safety-check']
     .includes(execution.runner.outcome)
     ? execution.runner.outcome
     : execution.state.status
   print({ ...execution.state, status: topLevelStatus, runner: execution.runner })
-  if (['failed-infrastructure', 'failed-safety-check', 'budget-exhausted'].includes(execution.runner.outcome)) {
+  if (['failed-infrastructure', 'failed-safety-check'].includes(execution.runner.outcome)) {
     process.exitCode = 1
   }
 }
@@ -659,6 +695,7 @@ function selfTest() {
   const codexAgent = resolveAutopilotAgentOptions({ env: { CODEX_THREAD_ID: 'thread-1' } })
   const claudeAgent = resolveAutopilotAgentOptions({ env: {} })
   const modeledAgent = resolveAutopilotAgentOptions({ requestedClient: 'codex', requestedModel: 'gpt-test', env: {} })
+  const automaticChangeId = automaticChangeIdForSource('path:/tmp/new-prd.md')
   const gitCalls = []
   const commit = commitScopedPaths('/tmp/worktree', 'PR-00001', ['src/a.ts'], (_command, gitArgs) => {
     gitCalls.push(gitArgs)
@@ -677,6 +714,7 @@ function selfTest() {
     || codexAgent.client !== 'codex'
     || claudeAgent.client !== 'claude'
     || modeledAgent.model !== 'gpt-test'
+    || !/^change-[0-9a-f]{8}$/.test(automaticChangeId)
     || vnextVerificationNextAction({ authoritativePass: false, shadowOnly: false, integrityOk: true, codeStateFresh: false, status: 'passed' }) !== 'revalidate_current_code_evidence'
     || vnextVerificationNextAction({ authoritativePass: false, shadowOnly: false, integrityOk: false, codeStateFresh: false, assuranceTrusted: false, status: 'passed' }) !== 'refresh_invalid_verification'
     || vnextVerificationNextAction({ authoritativePass: false, shadowOnly: false, integrityOk: true, codeStateFresh: true, assuranceTrusted: false, status: 'passed' }) !== 'capture_cli_attested_evidence'
@@ -694,7 +732,7 @@ function selfTest() {
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   if (args.includes('--self-test')) selfTest()
   else if (!new RegExp(`^(?:${config.projectIdPattern || '(?:PR|TR)-\\d{5}'})$`).test(projectId || '')) {
-    console.error('usage: project-orchestrator.mjs <run|kickoff|status|resume|next|source-update|checkpoint> PR-01234 [--change <id>] [--prd <source>] [--title <name>] [--input <json>] [--client codex|claude] [--model <name>] [--dry-run]')
+    console.error('usage: project-orchestrator.mjs <run|kickoff|status|resume|next|source-update|checkpoint> PR-01234 [--change <id>] [--prd <source>] [--title <name>] [--kind feature|bugfix] [--base-ref <ref>] [--input <json>] [--client codex|claude] [--model <name>] [--dry-run]')
     process.exit(1)
   } else {
     try {

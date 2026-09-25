@@ -44,18 +44,19 @@
 
 - 当前输入只有一个明确改动：登录页 Google、HiChat、Apple、Telegram 按钮 hover 时显示手型光标；来源为用户文本和一张截图。
 - 业务实现已在安全 worktree 的 `feature/PR-02233` 完成；定向 Biome、DOM contract（24/24）、`git diff --check` 和真实登录页 computed style 均通过。
-- 从接收需求到完成的可见历时为 9m41s，远超 Micro 目标 `<=2 min` 和新的 3 分钟硬预算；宿主没有提供本次真实 token usage，因此只能记录 `null`，不估算。
+- 从接收需求到完成的可见历时为 9m41s，远超 Micro 目标 `<=2 min`；该目标只用于衡量系统效率，不得中断业务交付。宿主没有提供本次真实 token usage，因此只能记录 `null`，不估算。
 - 本次不能计为 V0/V1/V2 合格样本：现有 `PR-02233/work-item.json` 绑定的是历史大型 PRD，系统把当前增量错误继承为 V2/high-risk、41 个历史 implementation surfaces，正式 verify 也仍指向旧范围。
 - `docs-tdd run --dry-run` 实际启动了 Agent，并因宿主认证问题落为 `failed-infrastructure`。dry-run 不应产生 Agent 调用、receipt 或 repair 计数。
 - 终态只能标记为 `blocked-system`：业务定向验证通过，但 source-unit coverage 与 enforced verify 没有绑定当前增量，不能宣称 Pilot 通过或正式 V2 通过。
 
 ### 4.2 本样本触发的系统修复
 
-1. 新增 `--change <id>` 增量 change-set：当前增量写入独立目录，通过 `active-change.json` 选择活动范围，历史 `work-item.json` 保持不变。
+1. 新增自动增量 change-set：同项目编号收到不同来源时，系统自动生成稳定 change ID，并把文档、分支、worktree 与 `baseRef` 独立绑定；`active-change.json` 选择活动范围，历史 `work-item.json` 保持不变。`--change <id>` 仅保留给显式命名或恢复既有 change，不要求用户在正常接入时手写。
+   新 change 默认从配置基线（当前通常为 `origin/online`）切独立 `feature/<PR>-<change>` 或 `fix/<PR>-<change>` 分支；需要从尚未上线的指定分支继续时，开工显式传 `--base-ref <ref>`。最终选择会固化在该 change 的 README，后续 worktree、diff、验证和提交统一读取，不再跟随全局配置漂移。
 2. `run --dry-run` 在初始化、Agent 调用和持久化之前直接返回；不得创建项目/change 目录、调用 Agent、写 receipt 或消耗 repair budget。
 3. 修正路由：普通 login 按钮样式不再因 `login` 一词进入 high-risk；token/session/callback/auth-flow 等认证行为仍保持 high-risk。
 4. V0/Micro 允许一张本地辅助截图，但必须明确处置为 `context-only` 或 `example-only`；未分类图片仍升级为 Standard。
-5. Micro 硬预算从 10 分钟收紧为 3 分钟（`180000ms`）；目标仍为 `<=2 min`，超预算必须停止扩张并暴露系统阻塞。
+5. Micro `180000ms` 改为效率观测目标；`<=2 min` 仍是期望值。超目标记录 `target-exceeded`，自动停止非必要扩张或升档，但继续完成业务实现和必要验证。
 
 定向回归已通过：
 

@@ -4493,8 +4493,6 @@
       "apps/web-next/src/components/VerifyInputs",
       "apps/web-next/src/components/AccountInput",
       "apps/web-next/src/components/ThirdPartyLogin",
-      "apps/web-next/src/platform/third-party-sdk",
-      "apps/web-next/src/apps/Home/components/FafaAndAnniversaryBanner/HomeSocialLinks.tsx",
       "apps/web-next/src/apps/Login",
       "apps/web-next/src/apps/Register",
       "apps/web-next/src/apps/ResetPassword",

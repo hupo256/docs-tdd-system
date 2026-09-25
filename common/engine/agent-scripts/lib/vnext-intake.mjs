@@ -9,10 +9,11 @@ import { stableFingerprint } from './vnext-work-item.mjs'
 
 export const VNEXT_INTAKE_KINDS = Object.freeze(['feature', 'bugfix'])
 
-export function vNextBranchName(projectId, kind = 'feature', featurePrefix = 'feature/') {
+export function vNextBranchName(projectId, kind = 'feature', featurePrefix = 'feature/', changeId = '') {
   if (!/^(?:PR|TR)-\d{5}$/.test(projectId || '')) throw new Error('vNext branch requires a PR-xxxxx or TR-xxxxx projectId')
   if (!VNEXT_INTAKE_KINDS.includes(kind)) throw new Error(`unsupported vNext intake kind: ${kind || 'missing'}`)
-  return `${kind === 'bugfix' ? 'fix/' : featurePrefix}${projectId}`
+  if (changeId && !/^[a-z0-9][a-z0-9-]{0,47}$/.test(changeId)) throw new Error('invalid vNext changeId')
+  return `${kind === 'bugfix' ? 'fix/' : featurePrefix}${projectId}${changeId ? `-${changeId}` : ''}`
 }
 
 export function bindVNextIntake(kind, sourceSnapshot) {
@@ -51,6 +52,8 @@ export function selfTest() {
   assert.equal(bugfix.sourceRole, 'incident')
   assert.equal(vNextBranchName('PR-00001', 'bugfix'), 'fix/PR-00001')
   assert.equal(vNextBranchName('PR-00001', 'feature', 'feature/'), 'feature/PR-00001')
+  assert.equal(vNextBranchName('PR-00001', 'bugfix', 'feature/', 'cursor-hover'), 'fix/PR-00001-cursor-hover')
+  assert.throws(() => vNextBranchName('PR-00001', 'feature', 'feature/', '../escape'), /changeId/)
   assert.deepEqual(vNextIntakeProblems({ sourceSnapshot, intake: bugfix }), [])
   assert.match(vNextIntakeProblems({ sourceSnapshot: { ...sourceSnapshot, revision: '2' }, intake: bugfix }).join(' '), /stale/)
   assert.match(vNextIntakeProblems({ sourceSnapshot, intake: { ...bugfix, sourceRole: 'prd' } }).join(' '), /sourceRole=incident/)

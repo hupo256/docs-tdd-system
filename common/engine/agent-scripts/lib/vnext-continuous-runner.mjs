@@ -59,7 +59,6 @@ const RUNNER_TERMINALS = new Set([
   'blocked-external-dependency',
   'failed-infrastructure',
   'failed-safety-check',
-  'budget-exhausted',
 ])
 
 const BUDGETED_FAILURES = new Set([
@@ -293,8 +292,8 @@ function measuredBudget(sourceBudget, metrics, endedAt) {
     usage,
     status: measurement.status,
     warningDimensions: measurement.warningDimensions,
-    exhaustedDimensions: measurement.exhaustedDimensions,
-    deadlineExceeded: measurement.deadlineExceeded,
+    targetExceededDimensions: measurement.targetExceededDimensions,
+    elapsedTargetExceeded: measurement.elapsedTargetExceeded,
   }
 }
 
@@ -534,9 +533,9 @@ export function runContinuousRunner({
     ))
     if (repeatedFailure) {
       result = {
-        outcome: 'budget-exhausted',
+        outcome: result.outcome,
         changedState: false,
-        causeOutcome: result.outcome,
+        repeatedFailure: true,
         failureFingerprint,
         error: `same ${result.outcome} repeated for the current invocation`,
       }
@@ -555,9 +554,10 @@ export function runContinuousRunner({
     })
   }
 
-  return finishRun(inspect(), 'budget-exhausted', {
+  return finishRun(inspect(), 'failed-safety-check', {
     steps: maxSteps,
-    error: `continuous runner exceeded ${maxSteps} actions`,
+    nonConvergent: true,
+    error: `continuous runner did not converge within ${maxSteps} actions`,
   })
 }
 
@@ -642,14 +642,36 @@ function selfTest() {
       registry: failureRegistry,
     })
     assert.equal(firstFailure.runner.outcome, 'failed-safety-check')
-    const exhausted = runContinuousRunner({
+    const repeated = runContinuousRunner({
       projectId: 'PR-00004',
       projectDir: failureRoot,
       inspect: failureState,
       registry: failureRegistry,
     })
-    assert.equal(exhausted.runner.outcome, 'budget-exhausted')
-    assert.equal(exhausted.runner.causeOutcome, 'failed-safety-check')
+    assert.equal(repeated.runner.outcome, 'failed-safety-check')
+    assert.equal(repeated.runner.repeatedFailure, true)
+
+    const nonConvergentRoot = join(root, 'non-convergent')
+    let nonConvergentStep = 0
+    const nonConvergent = runContinuousRunner({
+      projectId: 'PR-00006',
+      projectDir: nonConvergentRoot,
+      inspect: () => ({
+        status: 'active',
+        actionPacket: { action: 'prepare-coding-worktree', actionId: `A-loop-${nonConvergentStep}` },
+      }),
+      registry: createActionExecutorRegistry({
+        deterministic: {
+          'prepare-coding-worktree': () => {
+            nonConvergentStep += 1
+            return { outcome: 'completed', changedState: true }
+          },
+        },
+      }),
+      maxSteps: 1,
+    })
+    assert.equal(nonConvergent.runner.outcome, 'failed-safety-check')
+    assert.equal(nonConvergent.runner.nonConvergent, true)
 
     let recoveryCalls = 0
     const recoveryRoot = join(root, 'recovery-case')

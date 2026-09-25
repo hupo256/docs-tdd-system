@@ -31,7 +31,7 @@ import { explainRule } from './lib/explain-rule.mjs'
 import { G6_CONTEXT_SCENARIOS, loadG6ContextSession, nextG6ContextScenario, printG6ContextPlan, recordG6Context, sameG6ContextBinding } from './lib/g6-context-session.mjs'
 import { createFingerprint } from './lib/gate-cache.mjs'
 import { maybeBroadcastGate, printGateHeartbeat } from './lib/gate-heartbeat.mjs'
-import { capability, requireProjectWorktree, resolveProjectWorktree } from './lib/project-status-report.mjs'
+import { capability, readProjectGitBinding, requireProjectWorktree, resolveProjectWorktree } from './lib/project-status-report.mjs'
 import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 import { resolveRuleSessionClient } from './lib/rule-session.mjs'
 import { latestReleasePin, resolveRulePin, upgradeRulePin } from './lib/rule-pin.mjs'
@@ -86,7 +86,11 @@ try {
   console.error(error.message)
   process.exit(1)
 }
-const valueOptions = new Set(['--client', '--session-id', '--target', '--model', '--input', '--plan', '--out', '--worktree', '--session', '--evidence', '--surfaces', '--base', '--change'])
+const valueOptions = new Set([
+  '--client', '--session-id', '--target', '--model', '--input', '--plan', '--out',
+  '--worktree', '--session', '--evidence', '--surfaces', '--base', '--base-ref',
+  '--change', '--prd', '--title', '--kind', '--path-map',
+])
 const positional = commandArgs.filter((arg, index) => !arg.startsWith('--') && !valueOptions.has(commandArgs[index - 1]))
 const detail = positional[0]
 const noCache = cliArgs.includes('--no-cache')
@@ -109,6 +113,10 @@ function safeV2Worktree(id, args) {
     console.error(error.message)
     process.exit(2)
   }
+}
+
+function v2BaseRef(id) {
+  return readProjectGitBinding(id).baseRef
 }
 
 const readJson = (file) => JSON.parse(readFileSync(file, 'utf8'))
@@ -281,7 +289,7 @@ if (command === 'rules') {
 }
 
 if (!new RegExp(`^(?:${config.projectIdPattern || '(?:PR|TR)-\\d{5}'})$`).test(projectId || '')) {
-  console.error('usage: docs-tdd.mjs <run|kickoff|status|resume|next|source-update|source-sync|source-graph|extract|coverage-check|scope-approval|scope-approve|review|review-adjudicate|review-resume|checkpoint|decision|efficiency|dev-check|manual-test|commit|worktree-prepare|capability|probe|doctor|release|golden|guard|rule-health|rules|explain|check|gate|evidence|reconcile|artifact-compat|verify|context|changed|recommend> PR-01234 [G0-G8|scenario] [--change <id>] [--input file.json] [--evidence evidence.json] [--surfaces surfaces.json] [--plan evidence-plan.json] [--path-map dev-check-path-map.json] [--out file.json] [--kind feature|bugfix] [--write] [--json] [--dry-run] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|pi|human] [--session-id <id>] [--target path] [--model <name>]')
+  console.error('usage: docs-tdd.mjs <run|kickoff|status|resume|next|source-update|source-sync|source-graph|extract|coverage-check|scope-approval|scope-approve|review|review-adjudicate|review-resume|checkpoint|decision|efficiency|dev-check|manual-test|commit|worktree-prepare|capability|probe|doctor|release|golden|guard|rule-health|rules|explain|check|gate|evidence|reconcile|artifact-compat|verify|context|changed|recommend> PR-01234 [G0-G8|scenario] [--change <id>] [--prd <source>] [--base-ref <ref>] [--input file.json] [--evidence evidence.json] [--surfaces surfaces.json] [--plan evidence-plan.json] [--path-map dev-check-path-map.json] [--out file.json] [--kind feature|bugfix] [--write] [--json] [--dry-run] [--brief|--compact|--full|--no-cache] [--client codex|claude|cursor|pi|human] [--session-id <id>] [--target path] [--model <name>]')
   process.exit(1)
 }
 
@@ -436,13 +444,14 @@ if (projectWorkflowVersion === 2 && command === 'review') {
 }
 if (projectWorkflowVersion === 2 && command === 'dev-check') {
   const worktree = safeV2Worktree(projectId, commandArgs)
+  const baseRef = v2BaseRef(projectId)
   const pathMapIndex = commandArgs.indexOf('--path-map')
   if (pathMapIndex >= 0 && !commandArgs[pathMapIndex + 1]) {
     console.error('--path-map requires <dev-check-path-map.json>')
     process.exit(1)
   }
   process.exit(run([
-    join(scriptDir, 'vnext-dev-check.mjs'), '--project', resolveProjectRoot(projectId), '--worktree', worktree, '--base', config.baseRef || 'origin/online',
+    join(scriptDir, 'vnext-dev-check.mjs'), '--project', resolveProjectRoot(projectId), '--worktree', worktree, '--base', baseRef,
     ...(pathMapIndex >= 0 ? ['--path-map', resolve(commandArgs[pathMapIndex + 1])] : []),
   ], docsRoot))
 }
@@ -456,8 +465,9 @@ if (projectWorkflowVersion === 2 && command === 'manual-test') {
     process.exit(1)
   }
   const worktree = safeV2Worktree(projectId, commandArgs)
+  const baseRef = v2BaseRef(projectId)
   process.exit(run([
-    join(scriptDir, 'vnext-manual-test.mjs'), '--project', resolveProjectRoot(projectId), '--worktree', worktree, '--base', config.baseRef || 'origin/online',
+    join(scriptDir, 'vnext-manual-test.mjs'), '--project', resolveProjectRoot(projectId), '--worktree', worktree, '--base', baseRef,
     ...(hasInput ? ['--input', resolve(commandArgs[inputIndex + 1])] : ['--out', resolve(commandArgs[outputIndex + 1])]),
   ], docsRoot))
 }
@@ -473,8 +483,9 @@ if (projectWorkflowVersion === 2 && command === 'evidence') {
     process.exit(1)
   }
   const worktree = safeV2Worktree(projectId, commandArgs)
+  const baseRef = v2BaseRef(projectId)
   process.exit(run([
-    join(scriptDir, 'vnext-evidence.mjs'), '--project', resolveProjectRoot(projectId), '--worktree', worktree, '--base', config.baseRef || 'origin/online',
+    join(scriptDir, 'vnext-evidence.mjs'), '--project', resolveProjectRoot(projectId), '--worktree', worktree, '--base', baseRef,
     ...(planIndex >= 0 ? ['--plan', resolve(commandArgs[planIndex + 1])] : []),
     ...(outputIndex >= 0 ? ['--out', resolve(commandArgs[outputIndex + 1])] : []),
   ], docsRoot))
@@ -491,8 +502,9 @@ if (projectWorkflowVersion === 2 && command === 'reconcile') {
     process.exit(1)
   }
   const worktree = safeV2Worktree(projectId, commandArgs)
+  const baseRef = v2BaseRef(projectId)
   process.exit(run([
-    join(scriptDir, 'vnext-reconcile.mjs'), '--project', resolveProjectRoot(projectId), '--worktree', worktree, '--base', config.baseRef || 'origin/online',
+    join(scriptDir, 'vnext-reconcile.mjs'), '--project', resolveProjectRoot(projectId), '--worktree', worktree, '--base', baseRef,
     ...(evidenceIndex >= 0 ? ['--evidence', resolve(commandArgs[evidenceIndex + 1])] : []),
     ...(outputIndex >= 0 ? ['--out', resolve(commandArgs[outputIndex + 1])] : []),
   ], docsRoot))
@@ -525,6 +537,7 @@ if (projectWorkflowVersion === 2 && command === 'verify') {
     process.exit(1)
   }
   const worktree = safeV2Worktree(projectId, commandArgs)
+  const baseRef = v2BaseRef(projectId)
   const verifyArgs = [join(scriptDir, 'vnext-verify.mjs')]
   if (hasInput) {
     const inputFile = resolve(commandArgs[inputIndex + 1])
@@ -553,7 +566,7 @@ if (projectWorkflowVersion === 2 && command === 'verify') {
   }
   verifyArgs.push(
     '--worktree', worktree,
-    '--base', config.baseRef || 'origin/online',
+    '--base', baseRef,
     '--write', '--out', projectDir,
     ...(commandArgs.includes('--json') ? ['--json'] : []),
   )

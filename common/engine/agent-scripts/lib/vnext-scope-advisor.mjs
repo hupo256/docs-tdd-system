@@ -2,7 +2,7 @@
 // 入口守卫（scope advisor）：检测「trivial 形态的单点改动混在大 work-item 里」的反模式。
 // 场景：一个纯展示/文案单点需求被追加进一个整体落 standard/high-risk 的巨型 work-item
 // （如 PR-02233 把「按钮加 hover 手型」挂进 32 需求项目），从而继承全套重流程。
-// 这是告警而非硬拦：合法的大项目本身没错，只是提示把 trivial 需求拆成独立最小项目走快档。
+// 这是历史 work-item 的诊断信息，不替代新输入分流；正常 run 会把不同来源自动放入 change-set。
 
 import assert from 'node:assert/strict'
 import { fileURLToPath } from 'node:url'
@@ -48,7 +48,7 @@ export function scopeAdvisory(workItem = {}) {
     trivialSplitCandidates,
     misbindDetected,
     recommendation: misbindDetected
-      ? `${trivialSplitCandidates.length} 个活动需求是 trivial 形态(纯展示单点)，却挂在 ${decision.route} 档的 work-item 上；建议拆到独立最小项目走 trivial 快档：${trivialSplitCandidates.join(', ')}`
+      ? `${trivialSplitCandidates.length} 个活动需求是 trivial 形态(纯展示单点)，却挂在 ${decision.route} 档的 work-item 上；若它们来自新的独立输入，应使用同项目编号的隔离 change-set，不要新建平行项目：${trivialSplitCandidates.join(', ')}`
       : null,
   }
 }
@@ -110,7 +110,8 @@ export function selfTest() {
     evidencePlan: [{ type: 'touched-file-quality', runtimeRequired: false }],
   }), false)
 
-  console.log('vnext-scope-advisor self-test passed (no false-positive on pure-trivial, detects trivial-in-heavy misbind, risk-word + no-marker excluded)')
+  assert.match(mixedAdvisory.recommendation, /change-set/)
+  console.log('vnext-scope-advisor self-test passed (diagnostic only; recommends same-project change-set)')
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url) && process.argv.includes('--self-test')) selfTest()

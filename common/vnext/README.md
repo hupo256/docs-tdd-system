@@ -37,7 +37,7 @@
 
 - `vnext-extract.mjs` + `lib/vnext-intake-audit.mjs`：CLI 按“事实清单 → 原子需求 → surface/集合”三阶段生成抽取脚手架，再做确定性 Coverage Compiler；每个语义 source unit 必须进入事实或显式排除，每条事实必须反向关联 requirement，重复 requirement/surface ID、漏锚表格行、集合计数和证据计划缺陷均在调用模型 Reviewer 前失败。
 - scope review 与 evidence plan 使用独立 fingerprint：Reviewer 只接收事实、需求、surface 和范围信息；修改 evidence command/argv 只重跑确定性 evidence-plan audit，不再使已经通过的 scope review 失效。
-- `vnext-review.mjs` 的有界审查控制：同一候选禁止无变化重试；同一 source lifecycle 总计最多两轮，人工介入不重置预算。相同 finding 再现或次数耗尽进入 `human-review-deferred`，允许先实现但在 evidence / 测试交接前强制人工逐项裁决；Reviewer 不可用则立即 `escalated`，实现前处理。隔离 Reviewer 默认使用 Claude，也允许显式切换 Pi。
+- `vnext-review.mjs` 的有界审查控制：同一候选禁止无变化重试；同一 source lifecycle 总计最多两轮语义审查，人工介入不重置次数。这里限制的是重复语义审查次数，不是时间硬截止。相同 finding 再现或次数用尽进入 `human-review-deferred`，允许先实现但在 evidence / 测试交接前强制人工逐项裁决；Reviewer 不可用则立即 `escalated`，实现前处理。隔离 Reviewer 默认使用 Claude，也允许显式切换 Pi。
 - `vnext-manual-test.mjs`：仅当两轮语义审查仍未收敛时启用提测前人工实跑。CLI 只把 `runtimeRequired` 需求转换为场景，并将功能与界面检查拆开；Requirement/Surface 只保留为机器映射，工程契约不再要求人工逐条填写。人工确认 `confirmedBy + 场景结果`；`failed` 补实际差异，`not-testable` 必须补 blocker 且绝不算通过。新遗漏优先路由回 extraction，功能/视觉失败分别路由修复。本地截图/录屏/日志文件在应用表单时复制到项目 `evidence/manual/`，避免仅保存会话临时引用。
 - `vnext-source-sync.mjs`：从既有 Lark source config 拉取到 staging，规范化并比较语义快照；无变化不改文件，有变化才原子替换来源并使旧抽取/审查/结果失效，失败保留旧快照。
 - `lib/vnext-source-units.mjs`：Markdown 表格按容器 + 每个数据行生成稳定 source units，避免一整张表作为一个不可审计黑盒。
@@ -71,7 +71,7 @@
 - source graph 与 `source-graph` CLI 将 source、requirement、surface、evidence、changed path 和 delivery path 关联成可审计图；source 漂移、覆盖缺口和证据缺口在出口前对账。
 - 四项目 replay 已覆盖零 silent omission 与零 false completion；string locator 仍保留为兼容 fallback，不能替代结构化 source graph。
 - delivery truth 要求 authoritative PASS、真实非空 delivery commit SHA、冻结路径完整且 clean scope；legacy/空 SHA、脏冻结路径和范围越界均拒绝交付。
-- bounded repair 只允许 `source`、`review`、`code`、`browser`、`environment`、`external-dependency` 六类；同指纹失败去重、域预算耗尽和 terminal recovery 状态都会停止无限重试。
+- bounded repair 只允许 `source`、`review`、`code`、`browser`、`environment`、`external-dependency` 六类；同指纹失败去重并保持真实失败类型，terminal recovery 状态停止无限重试。时间、命令和 evidence 超目标只记 `target-exceeded`，不停止需求交付。
 - manual acceptance 中普通 `unresolved` 进入 implementation repair；只有 `newOmissions` 回到 extraction，避免把普通实现缺陷误判为需求遗漏。
 
 ## 当前基线摘要

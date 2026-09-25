@@ -32,7 +32,7 @@
 - v2 的 coverage findings 必须处置且正式 verify 通过；v1 G6 必须 code review。质量检查在一批相关改动稳定后集中执行，范围限 touched files 与直接相关测试；小步编辑期间不重复跑完整 Biome/typecheck/test。
 - v1 新功能 MSW 继续按 manifest 强制验证；v2 只有 `apiDependency.mode=mock-required` 时要求 handler/worker/contract 覆盖，其他模式禁止无必要新增 mock。
 - v2 以 safe work context 绑定消费仓、环境分支、worktree 和允许路径；source graph 漂移、越界写入或冻结路径不一致必须 fail-closed。
-- 失败域仅允许 `source`、`review`、`code`、`browser`、`environment`、`external-dependency` 六类有界修复；同一失败指纹不重试，预算耗尽进入终态并给唯一恢复命令。
+- 失败域仅允许 `source`、`review`、`code`、`browser`、`environment`、`external-dependency` 六类有界修复；同一失败指纹不重试，重复失败保持真实失败类型并给唯一恢复命令。时间、命令和 evidence 预算只是效率目标，超标记录 `target-exceeded`，不得因此中断需求交付。
 
 ## 3. 场景
 

@@ -21,18 +21,30 @@ import { classifyBaseline } from './gate-doc-parsers.mjs'
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, consumerWorktree, config } = resolveRoots()
 const readJson = (file) => JSON.parse(readFileSync(file, 'utf8'))
 
+function frontmatterValue(readme, key) {
+  return readme.match(new RegExp(`^${key}:\\s*(.*)$`, 'm'))?.[1]?.replace(/^['"]|['"]$/g, '').trim() || ''
+}
+
+export function readProjectGitBinding(projectId) {
+  const projectDir = resolveProjectRoot(projectId)
+  const readmeFile = join(projectDir, 'README.md')
+  const readme = existsSync(readmeFile) ? readFileSync(readmeFile, 'utf8') : ''
+  const configuredWorktree = frontmatterValue(readme, 'worktree')
+  return {
+    projectDir,
+    branch: frontmatterValue(readme, 'branch') || `${config.branchPrefix || 'feature/'}${projectId}`,
+    baseRef: frontmatterValue(readme, 'baseRef') || config.baseRef || 'origin/online',
+    worktree: configuredWorktree ? resolve(projectDir, configuredWorktree) : '',
+  }
+}
+
 // 解析项目编码 worktree：优先 README frontmatter `worktree:`（相对项目目录解析成绝对路径），
 // 否则回退当前 cwd worktree（非 docsRoot 时）或 repoRoot。返回是否配置/是否存在，供调用方决定告警。
 export function resolveProjectWorktree(id) {
-  const projectDir = id ? resolveProjectRoot(id) : ''
-  const readmeFile = projectDir ? join(projectDir, 'README.md') : ''
-  const readme = readmeFile && existsSync(readmeFile) ? readFileSync(readmeFile, 'utf8') : ''
-  const configured = readme
-    .match(/^worktree:\s*(.*)$/m)?.[1]
-    ?.replace(/^['"]|['"]$/g, '')
-    .trim()
+  const binding = id ? readProjectGitBinding(id) : { worktree: '' }
+  const configured = binding.worktree
   const cwdWorktree = consumerWorktree && consumerWorktree !== docsRoot ? consumerWorktree : ''
-  const worktree = configured ? resolve(projectDir, configured) : cwdWorktree || repoRoot
+  const worktree = configured || cwdWorktree || repoRoot
   return {
     configured: Boolean(configured),
     exists: existsSync(worktree),
@@ -76,13 +88,10 @@ export function validateProjectWorktreeFacts(facts) {
 // Write-capable v2 commands must use this fail-closed inspection. The permissive resolver above
 // remains available only for read-only status/capability reporting.
 export function inspectProjectWorktree(projectId, { requestedWorktree = '', requireClean = false } = {}) {
-  const projectDir = resolveProjectRoot(projectId)
-  const readmeFile = join(projectDir, 'README.md')
-  const readme = existsSync(readmeFile) ? readFileSync(readmeFile, 'utf8') : ''
-  const configuredValue = readme.match(/^worktree:\s*(.*)$/m)?.[1]?.replace(/^['"]|['"]$/g, '').trim()
-  const configuredPath = configuredValue ? resolve(projectDir, configuredValue) : ''
-  const expectedBranch = readme.match(/^branch:\s*(.*)$/m)?.[1]?.replace(/^['"]|['"]$/g, '').trim() || `${config.branchPrefix || 'feature/'}${projectId}`
-  const baseRef = config.baseRef || 'origin/online'
+  const binding = readProjectGitBinding(projectId)
+  const configuredPath = binding.worktree
+  const expectedBranch = binding.branch
+  const baseRef = binding.baseRef
   const worktree = requestedWorktree ? resolve(requestedWorktree) : configuredPath
   const exists = Boolean(worktree && existsSync(worktree))
   const top = exists ? gitOutput(worktree, ['rev-parse', '--show-toplevel']) : { ok: false, stdout: '' }

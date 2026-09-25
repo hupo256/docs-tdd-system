@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { spawn, spawnSync } from 'node:child_process';
 import { listProjectIds, resolveProjectRoot, resolveRoots } from './lib/roots.mjs';
 import { assertSafeWorkContext } from './lib/vnext-work-context-runtime.mjs';
-import { evaluateWorktreeBaseline } from './lib/project-status-report.mjs';
+import { evaluateWorktreeBaseline, readProjectGitBinding } from './lib/project-status-report.mjs';
 
 const scriptPath = fileURLToPath(import.meta.url);
 const { docsSystemRoot, consumerRoot: repoRoot, config } = resolveRoots();
@@ -40,12 +40,6 @@ function allocatePort() {
   return String(candidate);
 }
 
-const port = readOption('--port', '') || allocatePort();
-const verifyPath = readOption('--verify-path', config.verifyPath || '/zh-CN');
-// 默认从配置基线（通常为 origin/online）创建新分支；已有 feature/fix 不要求该基线是 HEAD 祖先，
-// 但必须与所选基线有共同历史。环境分支和无共同历史仍由 worktree 安全校验拒绝。
-const baseRef = readOption('--base-ref', config.baseRef || 'origin/online');
-
 function printHelp() {
   console.log(`usage: prepare-coding-worktree.mjs <PROJECT-ID> [--dry-run] [--skip-install] [--skip-verify] [--port <port>] [--verify-path <path>] [--base-ref <ref>] [--help]
 
@@ -58,7 +52,7 @@ Options:
   --skip-verify   Skip dev server health check
   --port          Dev server port (auto-allocated from ${config.portRangeStart || config.defaultPort || 4101})
   --verify-path   Health-check URL path (default: ${config.verifyPath || '/zh-CN'})
-  --base-ref      Base ref to branch from (default: ${config.baseRef || 'origin/online'})`)
+  --base-ref      Base ref to branch from (CLI override, then project README, then ${config.baseRef || 'origin/online'})`)
 }
 
 if (process.argv.includes('--help')) {
@@ -107,15 +101,21 @@ if (!projectId || !projectIdPattern.test(projectId)) {
   fail('usage: prepare-coding-worktree.mjs <PROJECT-ID> [--dry-run] [--skip-install] [--skip-verify] [--port 4001] [--verify-path /zh-CN] [--base-ref origin/online]');
 }
 
+const port = readOption('--port', '') || allocatePort();
+const verifyPath = readOption('--verify-path', config.verifyPath || '/zh-CN');
+// 新 change-set 默认使用其 README 固化的基线；CLI 可显式覆盖。已有 feature/fix 不要求该基线
+// 是 HEAD 祖先，但必须与所选基线有共同历史。环境分支和无共同历史仍由 worktree 安全校验拒绝。
+const projectBinding = readProjectGitBinding(projectId);
+const baseRef = readOption('--base-ref', '') || projectBinding.baseRef || config.baseRef || 'origin/online';
+
 const gitRoot = output('git', ['rev-parse', '--show-toplevel']);
 if (realpathSync(resolve(gitRoot)) !== realpathSync(repoRoot)) {
   fail(`script must run inside repo root ${repoRoot}, got ${gitRoot}`);
 }
 
 const parentDir = dirname(repoRoot);
-const worktreeDir = join(parentDir, projectId);
-const configuredBranch = frontmatterValue(join(resolveProjectRoot(projectId), 'README.md'), 'branch');
-const branchName = configuredBranch || `${config.branchPrefix || 'feature/'}${projectId}`;
+const worktreeDir = projectBinding?.worktree || join(parentDir, projectId);
+const branchName = projectBinding?.branch || `${config.branchPrefix || 'feature/'}${projectId}`;
 const mainDocsTdd = docsSystemRoot;
 const linkedDocsTdd = join(worktreeDir, config.docsMountPath);
 const webDir = join(worktreeDir, config.appSubpath || 'apps/web');
@@ -291,19 +291,25 @@ function updateProjectMetadata() {
   const readme = join(resolveProjectRoot(projectId), 'README.md');
   if (!existsSync(readme)) fail(`project README missing: ${readme}`);
   if (dryRun) {
-    console.log(`[dry-run] update README frontmatter worktree=${worktreeDir} port=${port} branch=${branchName}`);
+    console.log(`[dry-run] update README frontmatter worktree=${worktreeDir} port=${port} branch=${branchName} baseRef=${baseRef}`);
     return;
   }
   let text = readFileSync(readme, 'utf8');
   const update = (key, value) => {
     const line = `${key}: ${JSON.stringify(String(value))}`;
     const pattern = new RegExp(`^${key}:.*$`, 'm');
-    if (!pattern.test(text)) fail(`README frontmatter missing ${key}: ${readme}`);
-    text = text.replace(pattern, line);
+    if (pattern.test(text)) {
+      text = text.replace(pattern, line);
+      return;
+    }
+    const branchPattern = /^branch:.*$/m;
+    if (!branchPattern.test(text)) fail(`README frontmatter missing branch: ${readme}`);
+    text = text.replace(branchPattern, (branchLine) => `${branchLine}\n${line}`);
   };
   update('worktree', worktreeDir);
   update('port', port);
   update('branch', branchName);
+  update('baseRef', baseRef);
   writeFileSync(readme, text);
   console.log(`project metadata updated: ${readme}`);
 }

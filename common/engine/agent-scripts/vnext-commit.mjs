@@ -7,8 +7,8 @@ import { readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { codeFingerprint, pendingCodePaths } from './lib/fingerprint.mjs'
-import { requireProjectWorktree } from './lib/project-status-report.mjs'
-import { resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
+import { readProjectGitBinding, requireProjectWorktree } from './lib/project-status-report.mjs'
+import { resolveProjectRoot } from './lib/roots.mjs'
 import { applyCheckpointCommit } from './lib/vnext-autopilot.mjs'
 import { persistVNextWorkItem } from './lib/vnext-persistence.mjs'
 import { checkpointCommitProblems } from './vnext-dev-check.mjs'
@@ -29,19 +29,19 @@ export function commitVNextProject(projectId, mode) {
     return { ...inspectVNext(projectId), automation }
   }
 
-  const { config } = resolveRoots()
   const projectDir = resolveProjectRoot(projectId)
+  const baseRef = readProjectGitBinding(projectId).baseRef
   const workItem = JSON.parse(readFileSync(join(projectDir, 'work-item.json'), 'utf8'))
   if (workItem.workflowVersion !== 2) throw new Error('commit is a v2-only command')
   const worktree = requireProjectWorktree(projectId)
   const paths = pendingCodePaths(worktree)
-  const currentCodeState = codeFingerprint(worktree, config.baseRef || 'origin/online')
+  const currentCodeState = codeFingerprint(worktree, baseRef)
   const problems = checkpointCommitProblems({ projectId, workItem, currentCodeState, changedPaths: paths, baseAvailable: Boolean(currentCodeState.baseSha) })
   if (problems.length) throw new Error(`checkpoint commit blocked:\n- ${problems.join('\n- ')}`)
   const commit = commitScopedPaths(worktree, projectId, paths, undefined, 'checkpoint', {
     workItem,
     actionId: workItem?.autopilot?.implementation?.checkpoint?.actionId || '',
-    baseRef: config.baseRef || 'origin/online',
+    baseRef,
   })
   if (!commit.ok) throw new Error(commit.error)
   persistVNextWorkItem(projectDir, applyCheckpointCommit(workItem, commit))

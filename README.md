@@ -10,7 +10,7 @@
 
 AI 编码的两个顽疾：**跳过需求确认直接写码**、**规则散落导致每次重新解释**。docs_tdd v3.5 用 `work-item.json` 固定原始需求、覆盖审查、风险等级和证据，并由 `latest-result.json` 给出唯一正式结论；抽取先经过确定性 intake audit，独立 Reviewer 在同一 source lifecycle 总计最多两轮；仍未通过时允许先实现，但测试交接前必须人工逐 finding 核对并完成一次真实预提测运行（CLI 预填，人工只确认必要结果），第一代 G0–G8 仅作为存量兼容。AI「已读/已注意」不算数，只认执行契约产出的证据。
 
-v3.5 把流程继续收敛为 requirement-to-commit：四档效率路由（`micro`、`lite`、`standard`、`high-risk`）带显式预算；safe work context、隔离 worktree、环境分支和路径边界共同阻断越界写入；source graph、requirement/surface/evidence 对账和四项目 replay 用于发现漏项与漂移；`source`、`review`、`code`、`browser`、`environment`、`external-dependency` 六类失败进入有界修复，同指纹不重复重试，预算耗尽只给唯一恢复命令。交付真值只接受当前 enforced PASS、`autonomous/cli-attested`、完整性与新鲜度、匹配的冻结路径、非空 delivery commit SHA 和 clean Git scope。pilot 仍为 `collecting`，尚未宣称 production-ready。
+v3.5 把流程继续收敛为 requirement-to-commit：四档效率路由（`micro`、`lite`、`standard`、`high-risk`）带显式效率目标；safe work context、隔离 worktree、环境分支和路径边界共同阻断越界写入；source graph、requirement/surface/evidence 对账和四项目 replay 用于发现漏项与漂移；`source`、`review`、`code`、`browser`、`environment`、`external-dependency` 六类失败进入有界修复，同指纹不重复重试。时间、命令和证据目标超标只记录 `target-exceeded` 并停止非必要扩张，不中断需求交付；真实失败保持原失败类型并给唯一恢复命令。交付真值只接受当前 enforced PASS、`autonomous/cli-attested`、完整性与新鲜度、匹配的冻结路径、非空 delivery commit SHA 和 clean Git scope。pilot 仍为 `collecting`，尚未宣称 production-ready。
 
 规则本身遵循「**规则可变多，常驻恒定小**」：AI 开工只常驻读一个路由文件（`common/rules/rule-router.md`，≤5000 字符机器守），其余按场景加载，避免上下文膨胀。v2 实现上下文对 V0/V1 保持 4K 硬上限；V2 使用 8K 目标、24K 硬上限，处于两者之间时显式警告但不中断大型需求。
 
@@ -186,7 +186,7 @@ assuranceMode=autonomous
 evidenceTrust=cli-attested
 ```
 
-`failed` 或 `blocked` 均不可交付；外部手填证据只能得到 `assisted-pilot / caller-supplied`，不能成为正式绿灯。当前 delivery truth 还要求 evidence/result integrity 与 freshness 通过、delivery commit 的 SHA 非空且路径集合匹配冻结集合、Git scope clean。代码检查和 browser 检查分别最多自动修复两轮，六类失败域按同一失败指纹去重，预算耗尽后明确升级人工处理，不无限循环。
+`failed` 或 `blocked` 均不可交付；外部手填证据只能得到 `assisted-pilot / caller-supplied`，不能成为正式绿灯。当前 delivery truth 还要求 evidence/result integrity 与 freshness 通过、delivery commit 的 SHA 非空且路径集合匹配冻结集合、Git scope clean。代码检查和 browser 检查分别最多自动修复两轮，六类失败域按同一失败指纹去重；重复失败保持真实失败类型并明确升级人工处理，不无限循环。效率目标超标不构成交付终态。
 
 人工验收中，普通 `unresolved` 表示当前场景未解决，路由到实现修复；只有 `newOmissions` 表示需求范围出现新遗漏，才回到 extraction 并重新审查。字符串 locator 仍保留为兼容 fallback，不作为已移除能力宣称。
 
