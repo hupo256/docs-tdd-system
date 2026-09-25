@@ -1,7 +1,7 @@
 # docs_tdd v4.x 迭代实施计划
 
 > 建立日期：2026-09-25
-> 状态：计划已落盘；实现尚未开始
+> 状态：M0–M2 已完成合成回归验证；M3 等待新真实需求，M4 未启动
 > 目标：从 v3.5 的模块与 Runner 基础，迭代到可安全验证真实需求、以数据决定是否切换默认路径的 v4.x。
 > 兼容边界：项目协议继续使用 `workflowVersion: 2`；产品版本号不因本计划创建而提前升级。
 
@@ -52,15 +52,22 @@
 - `plan/real-demand-pilot-2026-09-25.md` 只有 PR-02233 一个记录，且明确为 `blocked-system`，不计入 V0/V1/V2 合格样本；当前没有有效真实 Pilot 样本。
 - 旧 `v4-upgrade-plan-20260923.md` / `v4-action-plan.md` 是历史方案，不作为当前实施真值；其中跳过完整追溯/正式证据的 Lite 设想与当前 v3.5 单一 v2 流程不兼容。
 
-### 2.2 当前工作区与状态冲突
+### 2.2 计划创建时的工作区与状态冲突（基线快照）
 
 - docs_tdd 仓库在 `main`，HEAD 为 `36181a6`，相对 `origin/main` ahead 7。
-- 当前工作区并非 clean：`prds/PR-02233/work-item.json` 有已跟踪修改；存在未跟踪的 `.clean-project-e2e-xHwCFh/`、`prds/PR-42071/` 和 `plan/handoff-real-demand-pilot-2026-09-25.md`。本计划不假定这些文件可删除、重置或提交。
+- 计划创建时工作区并非 clean：`prds/PR-02233/work-item.json` 有已跟踪修改；存在未跟踪的 `.clean-project-e2e-xHwCFh/`、`prds/PR-42071/` 和 `plan/handoff-real-demand-pilot-2026-09-25.md`。本计划不假定这些文件可删除、重置或提交。
 - PR-02233 的 Pilot 台账称其 `blocked-system` 且禁止回放；但只读 `docs-tdd status PR-02233` 仍返回 `active` / `repair-intake-extraction`。这属于会误导下一步执行的状态冲突，必须先解决防误执行问题。
 - PR-42071 的来源明确写着 `Clean project E2E`，README 指向临时 E2E worktree；Runner 停在 `capture-cli-evidence`。它是 synthetic E2E fixture，不是真实业务需求，也不得计入 Pilot。
 - PR-42071 当前 `status` 报 `executionRoute: micro`，runner trace 报 `route: lite`；trace 仍是 running，且已有 receipt 但 `actionCount`/`elapsedMs` 等统计未完整落定。需在隔离回归中核实路由命名与终态汇总，不可用该 trace 计算 Pilot 效率。
 
 > 当前状态检查仅用于定义计划，不授权清理、续跑上述项目、修改业务仓或提交任何内容。先保留现状，明确归属后再做最小处置。
+
+### 2.3 实施与回归复核（2026-09-25）
+
+- 已提交基线实现 `3dfe9d6`（Pilot 执行 hold/资格、Runner receipt/trace 汇总、dry-run 防副作用及隔离 E2E）；本轮继续修复隔离项目的 PRD/Lark 路径映射、空 `sourceReadiness` 持久化 schema 合约，以及终态 route 与 `status` 不一致的问题。
+- 定向 self-test 通过：project control、Pilot registry、persistence、metrics、continuous runner、Agent runtime、dev-check、project index，以及 change-set、source units/graph、intake audit/disposition、work-item、coverage review、extract、source-sync。
+- Public-command、clean-project 和 trivial-project E2E 均通过；覆盖隔离的 synthetic 项目、hold/dry-run、副作用与恢复、完整来源覆盖、enforced verify、冻结路径本地提交、无 push。测试未访问或修改 FameEX 业务代码。
+- 预存工作区材料均只读归属并保持原样：PR-42071 与 `.clean-project-e2e-xHwCFh/prd.md` 是 synthetic clean-project E2E；PR-02233 继续按 `blocked-system` / Pilot excluded 处理；handoff 文档保留为交接记录。没有清理或改写任何历史材料。真实 Pilot 尚无新需求来源，因此本轮不计任何 synthetic E2E 为 Pilot 样本，M3 仍 blocked。
 
 ## 3. 迭代路线与阶段门
 
@@ -177,10 +184,10 @@ Pilot 规则：
 
 | 里程碑 | 内容 | 必须证据 | 当前状态 |
 |---|---|---|---|
-| M0 | 状态隔离与防误执行 | hold/exclusion、样本资格字段、工作区归属清单 | `not-started` |
-| M1 | 状态真值与遥测 | 定向 self-test、dry-run/恢复 E2E、receipt/trace 对账 | `not-started` |
-| M2 | 来源绑定与覆盖闭环 | intake/change-set/source graph/verify/scoped commit 回归 | `partially-present; revalidate-required` |
-| M3 | 真实 Pilot | V0/V1/V2 + ≥10 可比 Micro 完整台账 | `blocked-on-M0-M2-and-new-real-demand` |
+| M0 | 状态隔离与防误执行 | hold/exclusion、样本资格字段、工作区归属清单 | `implemented; synthetic-e2e-tested; pre-existing materials preserved` |
+| M1 | 状态真值与遥测 | 定向 self-test、dry-run/恢复 E2E、receipt/trace 对账 | `implemented; self-tested; public/clean/trivial-e2e-tested` |
+| M2 | 来源绑定与覆盖闭环 | intake/change-set/source graph/verify/scoped commit 回归 | `synthetic-e2e-tested; real-source pilot traceability pending` |
+| M3 | 真实 Pilot | V0/V1/V2 + ≥10 可比 Micro 完整台账 | `blocked-on-new-real-demand` |
 | M4 | Owner cutover/release | M3 证据 + 明确 owner 决定 + release gate | `not-started` |
 
 状态含义：

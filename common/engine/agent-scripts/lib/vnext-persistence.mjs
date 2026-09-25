@@ -394,7 +394,16 @@ export async function selfTest() {
       blockers: [],
       problems: [],
     }
-    const withDevCheck = { ...first.workItem, autopilot: { repairAttempts: { code: 0, browser: 0 }, lastDevCheck: summarizeVNextDevCheck(devCheck) } }
+    const withDevCheck = {
+      ...first.workItem,
+      autopilot: {
+        phase: 'implementing',
+        implementation: { status: 'in-progress', changedPaths: [] },
+        lastCheckpointAt: '2026-09-25T00:00:00Z',
+        repairAttempts: { code: 0, browser: 0 },
+        lastDevCheck: summarizeVNextDevCheck(devCheck),
+      },
+    }
     persistVNextWorkItem(basic, withDevCheck)
     assert.equal(persistVNextDevCheck(basic, devCheck).written, true)
     assert.equal(readVNextDevCheck(basic, withDevCheck).runId, devCheck.runId)

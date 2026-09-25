@@ -59,10 +59,11 @@ function assertProjectId(value) {
   }
 }
 
-function assertInside(parent, child, label) {
-  const relative = path.relative(parent, child);
-  if (relative.startsWith('..') || path.isAbsolute(relative)) {
-    fail(`${label} must stay inside ${parent}: ${child}`);
+function assertInside(child, label) {
+  try {
+    resolveDocsPath(child, { consumerRoot: repoRoot, docsMountPath: config.docsMountPath })
+  } catch (error) {
+    fail(`${label}: ${error.message}`)
   }
 }
 
@@ -81,7 +82,7 @@ async function readTemplate(templateName, fallback, replacements = {}) {
 }
 
 async function writeFileIfMissing(filePath, content) {
-  assertInside(docsRoot, filePath, 'output');
+  assertInside(filePath, 'output');
   // Depth-correct cross-domain links for every materialized markdown doc, based on where
   // the file actually lands under prds/<id>/… — the single choke point so no call site
   // can emit a stale ../ depth (see rewriteTemplateLinksForProjectDoc).
@@ -99,7 +100,7 @@ async function writeFileIfMissing(filePath, content) {
 }
 
 async function ensureDir(dirPath) {
-  assertInside(docsRoot, dirPath, 'directory');
+  assertInside(dirPath, 'directory');
   if (dryRun) {
     console.log(`[dry-run] mkdir ${path.relative(repoRoot, dirPath)}`);
     return;

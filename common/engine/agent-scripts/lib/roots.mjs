@@ -88,6 +88,24 @@ function isInside(parent, child) {
   return rel === '' || (!rel.startsWith('..') && !isAbsolute(rel))
 }
 
+function realpathWithMissingTail(path) {
+  let existing = resolve(path)
+  const tail = []
+  while (!existsSync(existing)) {
+    const parent = dirname(existing)
+    if (parent === existing) throw new Error(`cannot resolve existing parent for docs path: ${path}`)
+    tail.unshift(basename(existing))
+    existing = parent
+  }
+  return resolve(realpathSync(existing), ...tail)
+}
+
+function resolveDocsRelativePath(path) {
+  if (path === 'prds') return prdsRoot
+  if (path.startsWith('prds/')) return join(prdsRoot, path.slice('prds/'.length))
+  return join(docsSystemRoot, path)
+}
+
 // Resolve a path that belongs to docs_tdd whether callers provide:
 // - the physical standalone docs path,
 // - a consumer-repo mount path such as apps/web/docs_tdd/prds/PR-xxxxx/..., or
@@ -102,10 +120,10 @@ export function resolveDocsPath(value, { consumerRoot, docsMountPath = 'apps/web
   let candidate
   if (isAbsolute(input)) {
     candidate = absoluteMount && isInside(absoluteMount, input)
-      ? join(docsSystemRoot, relative(absoluteMount, input))
+      ? resolveDocsRelativePath(relative(absoluteMount, input))
       : input
   } else if (input === docsMountPath || input.startsWith(mountPrefix)) {
-    candidate = join(docsSystemRoot, input === docsMountPath ? '' : input.slice(mountPrefix.length))
+    candidate = resolveDocsRelativePath(input === docsMountPath ? '' : input.slice(mountPrefix.length))
   } else if (/^(?:PR|TR)-[^/]+(?:\/|$)/.test(input)) {
     // bare project-relative input (legacy callers) -> current prds root
     candidate = join(prdsRoot, input)
@@ -115,14 +133,15 @@ export function resolveDocsPath(value, { consumerRoot, docsMountPath = 'apps/web
     candidate = resolve(consumerRoot || docsSystemRoot, input)
   }
 
-  if (mustExist) {
-    if (!existsSync(candidate)) throw new Error(`docs path does not exist: ${candidate}`)
-    candidate = realpathSync(candidate)
-  } else {
-    candidate = resolve(candidate)
+  if (mustExist && !existsSync(candidate)) throw new Error(`docs path does not exist: ${candidate}`)
+  candidate = realpathWithMissingTail(candidate)
+  const allowedRoots = [realpathSync(docsSystemRoot)]
+  if (isolatedProjectsRoot) {
+    allowedRoots.push(existsSync(prdsRoot) ? realpathSync(prdsRoot) : resolve(prdsRoot))
   }
-  const realDocsRoot = realpathSync(docsSystemRoot)
-  if (!isInside(realDocsRoot, candidate)) throw new Error(`docs path must stay inside ${realDocsRoot}: ${candidate}`)
+  if (!allowedRoots.some((root) => isInside(root, candidate))) {
+    throw new Error(`docs path must stay inside ${allowedRoots.join(' or ')}: ${candidate}`)
+  }
   return candidate
 }
 

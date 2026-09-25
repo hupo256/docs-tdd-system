@@ -6,7 +6,6 @@ import path from 'node:path'
 import { resolveDocsPath, resolveRoots } from './lib/roots.mjs'
 import {
   assertInside,
-  docsRoot,
   normalizeTargetPath,
   resolveLocalMarkdownSource,
   shellQuote,
@@ -221,11 +220,12 @@ const readLocalMarkdown = async (source) => {
 }
 
 const writeReport = async ({ outputDir, rows }) => {
-  const reportPath = path.join(resolveDocsPath(outputDir, {
+  const resolvedOutputDir = resolveDocsPath(outputDir, {
     consumerRoot: repoRoot,
     docsMountPath: bindingConfig.docsMountPath,
-  }), 'sync-report.md')
-  assertInside(docsRoot, reportPath, 'sync-report')
+  })
+  const reportPath = path.join(resolvedOutputDir, 'sync-report.md')
+  assertInside(resolvedOutputDir, reportPath, 'sync-report')
   await fs.mkdir(path.dirname(reportPath), { recursive: true })
 
   const lines = [

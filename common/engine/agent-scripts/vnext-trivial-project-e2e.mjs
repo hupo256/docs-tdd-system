@@ -190,7 +190,7 @@ if (prompt.includes('Extraction scaffold:')) {
     deliveryScope: null,
   }
 } else {
-  const packet = section('Action packet:\\n', '\\n\\nCanonical work item:')
+  const packet = section('Action packet:\\n', '\\n\\nCompact implementation context:')
   writeFileSync(join(process.cwd(), 'src/label.js'), "export const label = 'Log in'\\n")
   output = {
     schemaVersion: 1,

@@ -392,7 +392,7 @@ function buildRunTrace({
   return normalizeCompactRunRecord({
     runId,
     projectId,
-    route: observedRoutes.length ? highestObservedRoute(observedRoutes) : null,
+    route: executionRouteFor(current) || (observedRoutes.length ? highestObservedRoute(observedRoutes) : null),
     routePolicyVersion: EFFICIENCY_POLICY_VERSION,
     observedRoutes,
     assurance: current?.verificationLevel || initial?.verificationLevel || null,
@@ -690,6 +690,26 @@ function selfTest() {
     assert.deepEqual(completed.runner.trace.observedRoutes, ['micro', 'standard'])
     assert.equal(completed.runner.trace.grossElapsedMs, completed.runner.trace.elapsedMs)
     assert.equal(completed.runner.trace.activeElapsedMs, 2000)
+
+    let terminalRouteStage = 0
+    const terminalRouteStates = [
+      { status: 'active', executionRoute: 'lite', actionPacket: { action: 'prepare-coding-worktree', actionId: 'A-route-1', executionRoute: 'lite' } },
+      { status: 'active', executionRoute: 'micro', actionPacket: { action: 'capture-cli-evidence', actionId: 'A-route-2', executionRoute: 'micro' } },
+      { status: 'complete', executionRoute: 'micro', actionPacket: { action: 'complete', actionId: 'A-route-3', executionRoute: 'micro' } },
+    ]
+    const terminalRouteRun = runContinuousRunner({
+      projectId: 'PR-00008',
+      projectDir: join(root, 'terminal-route'),
+      inspect: () => terminalRouteStates[terminalRouteStage],
+      registry: createActionExecutorRegistry({
+        deterministic: {
+          'prepare-coding-worktree': () => { terminalRouteStage += 1; return { outcome: 'completed' } },
+          'capture-cli-evidence': () => { terminalRouteStage += 1; return { outcome: 'completed' } },
+        },
+      }),
+    })
+    assert.equal(terminalRouteRun.runner.trace.route, 'micro')
+    assert.deepEqual(terminalRouteRun.runner.trace.observedRoutes, ['lite', 'micro'])
 
     const invalidRouteRoot = join(root, 'invalid-route')
     assert.throws(() => runContinuousRunner({

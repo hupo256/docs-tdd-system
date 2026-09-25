@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 
 import { spawnSync } from 'node:child_process'
-import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs'
-import { dirname, join, relative, resolve } from 'node:path'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { dirname, join, relative } from 'node:path'
 import { validateSource } from './lib/lark-command.mjs'
 import { classifyDriftUnverified, compareRemoteSnapshot, hashCanonicalLarkContent, parseLarkDocumentPayload, remoteSnapshotFromMetadata } from './lib/lark-prd-drift.mjs'
 import { resolveDocsPath, resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 import { fingerprint, inspectManifest, scanMarkdown, selfTest, sourceContentHash } from './lib/prd-manifest.mjs'
 
-const { docsSystemRoot: docsRoot, consumerRoot: repoRoot } = resolveRoots()
+const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, config } = resolveRoots()
 const args = process.argv.slice(2)
 
 if (args.includes('--self-test')) {
@@ -23,23 +23,26 @@ function projectPaths(projectId) {
 
 // 归属校验跟随软链接：apps/web/docs_tdd 可能是指向 docs 仓库根的 symlink，
 // 纯字符串 startsWith 会误判为「不在 docs_tdd 内」，故对存在的路径先取 realpath 再比对。
-function insideDocs(absolute) {
-  if (!existsSync(absolute)) return false
-  let real = absolute
-  try { real = realpathSync(absolute) } catch { /* keep absolute */ }
-  return real.startsWith(`${docsRoot}/`) || absolute.startsWith(`${docsRoot}/`)
+function resolveProjectSource(sourcePath) {
+  try {
+    return resolveDocsPath(sourcePath, {
+      consumerRoot: repoRoot,
+      docsMountPath: config.docsMountPath,
+      mustExist: true,
+    })
+  } catch {
+    return null
+  }
 }
 
 function readProjectSource(sourcePath) {
-  const absolute = resolve(repoRoot, sourcePath)
-  if (!insideDocs(absolute)) return null
-  return readFileSync(absolute, 'utf8')
+  const absolute = resolveProjectSource(sourcePath)
+  return absolute ? readFileSync(absolute, 'utf8') : null
 }
 
 function readProjectAsset(assetPath) {
-  const absolute = resolve(repoRoot, assetPath)
-  if (!insideDocs(absolute)) return null
-  return readFileSync(absolute)
+  const absolute = resolveProjectSource(assetPath)
+  return absolute ? readFileSync(absolute) : null
 }
 
 function readJson(file) {

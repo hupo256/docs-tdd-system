@@ -5,7 +5,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os'
 import { dirname, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { docsSystemRoot, resolveDocsPath } from './roots.mjs'
+import { docsSystemRoot, isolatedProjectStore, resolveDocsPath } from './roots.mjs'
 import { sourceTypeFromPrd } from './project-scaffold.mjs'
 import { normalizeSourceDocuments, readLocalSourceAsset } from './vnext-source-units.mjs'
 import { bindVNextIntake, vNextBranchName } from './vnext-intake.mjs'
@@ -49,11 +49,13 @@ export function createVNextIntakeRuntime({ docsRoot, consumerRoot, config, resol
     const sourceRole = intakeKind === 'bugfix' ? 'incident' : 'prd'
     const sourceLabel = intakeKind === 'bugfix' ? '缺陷报告' : '需求 PRD'
     writeFileSync(join(projectDir, 'README.md'), `---\nprojectId: ${projectId}\n${changeId ? `changeId: ${changeId}\n` : ''}status: active\nstage: G1\nbranch: ${JSON.stringify(branchName)}\nbaseRef: ${JSON.stringify(baseRef)}\nworktree: ${JSON.stringify(worktree)}\nport: ""\nvisualFidelity: standard\nprdSource: ${prd}\nfigmaNode: ""\nlarkEnabled: false\nworkflowVersion: 2\nworkItemKind: ${intakeKind}\n---\n\n# ${projectId}${changeId ? ` / ${changeId}` : ''} ${title}\n\n> v2 Autopilot ${intakeKind === 'bugfix' ? 'Bugfix' : 'Feature'} 项目：${sourceLabel}是唯一必需的开工输入；Figma/API 可后续增量接入。工作事实只保存在 work-item.json、latest-result.json、runs.jsonl。\n\n## 继续开发\n\n运行 \`docs-tdd run ${projectId}${changeId ? ` --change ${changeId}` : ''}\`。CLI 会根据当前事实返回唯一下一动作；正常路径无需手工选择 Gate 或拼装验证输入。\n`)
-    const larkOutputDir = join(
-      config.docsMountPath || 'apps/web/docs_tdd',
-      relative(docsRoot, projectDir),
-      'inbox/lark-sync',
-    )
+    const larkOutputDir = isolatedProjectStore
+      ? join(projectDir, 'inbox/lark-sync')
+      : join(
+          config.docsMountPath || 'apps/web/docs_tdd',
+          relative(docsRoot, projectDir),
+          'inbox/lark-sync',
+        )
     writeFileSync(join(projectDir, 'agent/lark-sources.json'), JSON.stringify({
       projectId,
       outputDir: larkOutputDir,

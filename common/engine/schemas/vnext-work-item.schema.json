@@ -380,6 +380,7 @@
       "properties": {
         "sourceFingerprint": { "type": "string", "minLength": 1 },
         "requirementsFingerprint": { "type": "string", "minLength": 1 },
+        "evidencePlanFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
         "reviewMode": { "const": "independent-cold-read" },
         "reviewRunId": { "type": "string", "minLength": 1 },
         "reviewer": {
@@ -497,7 +498,7 @@
       "additionalProperties": false
     },
     "sourceReadiness": {
-      "type": "object",
+      "type": ["object", "null"],
       "required": ["figma", "api"],
       "properties": {
         "figma": { "$ref": "#/definitions/lateSource" },
