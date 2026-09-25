@@ -373,9 +373,10 @@ export function selfTest() {
     const firstFailure = advanceReviewControl({ attempts: 0, history: [] }, responseBase, requestBase)
     assert.equal(firstFailure.status, 'changes-required')
     assert.equal(Object.hasOwn(firstFailure.history[0], 'candidateRequirements'), false)
+    const { candidateRequirementFingerprints: _priorCandidateFingerprints, ...firstFailureHistoryEntry } = firstFailure.history[0]
     const secondRequest = attachReviewIteration({ ...requestBase, candidateRequirements: [{ requirementId: 'R-001', statement: 'repaired' }, { requirementId: 'R-002' }] }, {
       attempts: 1,
-      history: [{ ...firstFailure.history[0], candidateRequirements: [{ requirementId: 'R-001', statement: 'original' }] }],
+      history: [{ ...firstFailureHistoryEntry, candidateRequirements: [{ requirementId: 'R-001', statement: 'original' }] }],
     })
     assert.equal(secondRequest.reviewIteration, 2)
     assert.deepEqual(secondRequest.candidateDiff, { addedRequirementIds: ['R-002'], removedRequirementIds: [], changedRequirementIds: ['R-001'] })

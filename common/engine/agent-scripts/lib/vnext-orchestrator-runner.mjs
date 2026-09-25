@@ -21,6 +21,7 @@ import { deriveDeliveryTruth } from './vnext-delivery-truth.mjs'
 import { persistVNextWorkItem } from './vnext-persistence.mjs'
 import { executeSurfaceReconciliation } from './vnext-reconcile-runtime.mjs'
 import { assertSafeWorkContext } from './vnext-work-context-runtime.mjs'
+import { sealCoverageAuditForFixture } from './vnext-work-item.mjs'
 
 const CODE_WRITING_AGENT_ACTIONS = new Set([
   'implement-current-scope',
@@ -322,13 +323,25 @@ function selfTest() {
     assert.match(git(repo, ['status', '--short', '--', 'src/unrelated.ts']), /src\/unrelated\.ts/)
     assert.equal(gitCalls.some((call) => call[1] === 'push'), false)
 
-    const workItem = {
+    const workItem = sealCoverageAuditForFixture({
       schemaVersion: 1,
       workflowVersion: 2,
       projectId: 'PR-00001',
+      sourceSnapshot: { revision: '1', contentHash: 'source', sources: [{ path: 'prd.md', contentHash: 'source' }] },
+      routing: { scopeClass: 'local', riskSignals: [], verificationLevel: 'V0', routerVersion: 1 },
+      apiDependency: { mode: 'no-request', reason: 'fixture' },
+      requirements: [{
+        requirementId: 'R-001',
+        sourceAnchors: [{ type: 'text', sourceId: 'SRC-1' }],
+        statement: 'Fixture requirement.',
+        status: 'doing',
+        evidencePlan: [{ type: 'pure-logic', runtimeRequired: false }],
+        affectedSurfaces: [],
+      }],
       requirementsAuthor: { kind: 'model', id: 'codex/default', client: 'codex', sessionId: 'author-session' },
       autopilot: { delivery: { status: 'pending' } },
-    }
+      coverageAudit: { unresolved: [] },
+    })
     writeFileSync(join(projectDir, 'work-item.json'), `${JSON.stringify(workItem, null, 2)}\n`)
     writeFileSync(join(projectDir, 'latest-result.json'), `${JSON.stringify({
       codeFingerprint: { scopeMode: 'path-set-v1', scopePaths: ['src/frozen.ts'] },

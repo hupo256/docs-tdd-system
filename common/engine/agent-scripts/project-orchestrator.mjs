@@ -449,7 +449,8 @@ export function inspectVNext(id) {
     routeReasons: actionPacket.routeReasons,
     budgetStatus: actionPacket.budgetStatus,
     status: executionHeld ? 'blocked' : runnerFailure || actionPacket.status,
-    executionStatus: executionHeld ? 'blocked' : runnerFailure || actionPacket.status,
+    // execution hold 只改对外有效态 status，不得覆盖底层真实执行态：executionStatus 始终反映 Autopilot/runner 实况
+    executionStatus: runnerFailure || actionPacket.status,
     currentStage: executionHeld ? 'V2-execution-hold' : runnerFailure ? 'V2-runner-failed' : `V2-${actionPacket.phase}`,
     nextAction: executionHeld ? 'resolve-execution-hold' : runnerFailure ? 'retry-failed-action' : actionPacket.action,
     command: executionHeld ? null : runnerFailure ? `docs-tdd run ${id} --retry-failed-action` : actionPacket.command,

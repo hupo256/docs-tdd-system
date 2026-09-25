@@ -255,7 +255,8 @@ export function selfTest() {
     const firstRunState = JSON.parse(firstRun.stdout)
     assert.equal(firstRunState.workflowVersion, 2)
     assert.equal(firstRunState.status, 'failed-infrastructure')
-    assert.equal(firstRunState.nextAction, 'extract-requirements')
+    // 失败 action 不再自动重放；契约见 project-orchestrator：runnerFailure 时唯一下一步是显式重试
+    assert.equal(firstRunState.nextAction, 'retry-failed-action')
     const runWorkItemPath = join(resolveProjectRoot(runProject), 'work-item.json')
     const runWorkItem = JSON.parse(readFileSync(runWorkItemPath, 'utf8'))
     const runProjectRoot = resolveProjectBaseRoot(runProject)

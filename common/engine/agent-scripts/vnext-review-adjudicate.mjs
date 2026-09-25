@@ -139,14 +139,17 @@ export function selfTest() {
     const workItem = {
       schemaVersion: 1, workflowVersion: 2, projectId: 'PR-00001',
       sourceSnapshot: { revision: '1', contentHash: 'a', sources: [{ path: 'prd.md', contentHash: 'a' }] },
-      requirements: [{ requirementId: 'R-001' }],
+      routing: { scopeClass: 'local', riskSignals: [], verificationLevel: 'V0', routerVersion: 1 },
+      apiDependency: { mode: 'no-request', reason: 'fixture' },
+      requirementsAuthor: { kind: 'human', id: 'fixture' },
+      requirements: [{ requirementId: 'R-001', sourceAnchors: [{ type: 'text', sourceId: 'SRC-1' }], statement: 'Fixture requirement.', status: 'doing', affectedSurfaces: [], evidencePlan: [{ type: 'pure-logic', runtimeRequired: false }] }],
       coverageAudit: {
         sourceFingerprint: '', requirementsFingerprint: '', reviewMode: 'independent-cold-read', reviewRunId: 'review-1',
         reviewer: { kind: 'model', id: 'pi/default' }, completedAt: '2026-09-12T00:00:00Z', verdict: 'changes-required',
         findings: [{ findingId: 'F-1', code: 'other', message: 'false positive', sourceIds: [], disposition: 'open' }],
         unresolved: ['F-1: false positive'],
       },
-      extractionAudit: { status: 'pass' },
+      extractionAudit: { schemaVersion: 1, auditedAt: '2026-09-12T00:00:00Z', sourceUnitsFingerprint: '0'.repeat(64), status: 'pass', checks: [] },
       reviewControl: { sourceFingerprint: 'source', attempts: 1, maxAttempts: 2, status: 'human-review-deferred', reason: 'repeated-findings', history: [] },
     }
     const fingerprints = coverageFingerprints(workItem)
@@ -167,7 +170,7 @@ export function selfTest() {
       decisions: [{ findingId: 'F-1', disposition: 'accepted', reason: 'requirement is missing' }],
     })
     const revised = structuredClone(accepted)
-    revised.requirements.push({ requirementId: 'R-002' })
+    revised.requirements.push({ requirementId: 'R-002', sourceAnchors: [{ type: 'text', sourceId: 'SRC-1' }], statement: 'Repaired requirement.', status: 'doing', affectedSurfaces: [], evidencePlan: [{ type: 'pure-logic', runtimeRequired: false }] })
     Object.assign(revised.extractionAudit, { status: 'pass', ...coverageFingerprints(revised) })
     revised.reviewControl.attempts = 1
     const resumed = resumeReview(revised, { schemaVersion: 1, projectId: 'PR-00001', adjudicatedBy: 'owner@example.com', adjudicatedAt: '2026-09-13', reason: 'candidate repaired' })

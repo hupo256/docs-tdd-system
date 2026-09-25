@@ -73,7 +73,8 @@ export function selfTest() {
     const workItem = {
       schemaVersion: 1, workflowVersion: 2, projectId: 'PR-00001',
       sourceSnapshot: { revision: '1', contentHash: 'source', sources: [{ path: 'prd.md', contentHash: 'source' }] },
-      requirements: [{ requirementId: 'R-001', status: 'doing', affectedSurfaces: [{ surfaceId: 'S-001', locator: 'src/a.ts', disposition: 'implement' }] }],
+      requirementsAuthor: { kind: 'human', id: 'fixture' },
+      requirements: [{ requirementId: 'R-001', sourceAnchors: [{ type: 'text', sourceId: 'SRC-1' }], statement: 'Fixture requirement.', status: 'doing', affectedSurfaces: [{ surfaceId: 'S-001', locator: 'src/a.ts', disposition: 'implement' }], evidencePlan: [{ type: 'pure-logic', runtimeRequired: false }] }],
       coverageAudit: { sourceFingerprint: '', requirementsFingerprint: '', reviewMode: 'independent-cold-read', reviewRunId: 'review-1', reviewer: { kind: 'human', id: 'reviewer' }, completedAt: '2026-09-12T00:00:00Z', verdict: 'pass', unresolved: [] },
       routing: { scopeClass: 'cross-boundary', riskSignals: [], verificationLevel: 'V2', routerVersion: 1 },
       apiDependency: { mode: 'no-request', reason: 'fixture' }, scopeApproval: null,
