@@ -5,13 +5,27 @@
 import assert from 'node:assert/strict'
 import { fileURLToPath } from 'node:url'
 import { resolve } from 'node:path'
-import { currentMicroEligibility, evaluateMicroEligibility, stableFingerprint } from './vnext-work-item.mjs'
+import {
+  auxiliaryImageSource,
+  currentMicroEligibility,
+  evaluateMicroEligibility,
+  stableFingerprint,
+} from './vnext-work-item.mjs'
 
 export const EFFICIENCY_POLICY_VERSION = 1
 
-export const EFFICIENCY_ROUTES = Object.freeze(['micro', 'lite', 'standard', 'high-risk'])
+export const EFFICIENCY_ROUTES = Object.freeze(['trivial', 'micro', 'lite', 'standard', 'high-risk'])
 
 export const EFFICIENCY_POLICIES = Object.freeze({
+  trivial: Object.freeze({
+    contextChars: 8000,    // 1-2 个核心规则 (git + biome/style)；不加载业务规则
+    ruleFiles: 2,
+    reviewerRounds: 0,
+    commands: 3,           // 改动 + biome + git diff --check（按需 DOM 断言算 evidence）
+    evidence: 1,
+    repairs: 1,
+    elapsedMs: 90000,      // 1.5 分钟硬停；纯展示/文案单点改动
+  }),
   micro: Object.freeze({
     contextChars: 25000,   // 3 个核心规则 (git + worktree + biome)
     ruleFiles: 3,
@@ -19,7 +33,7 @@ export const EFFICIENCY_POLICIES = Object.freeze({
     commands: 4,
     evidence: 2,
     repairs: 1,
-    elapsedMs: 600000,
+    elapsedMs: 180000,
   }),
   lite: Object.freeze({
     contextChars: 30000,   // +2 个轻量规则 (quality + project)
@@ -50,8 +64,10 @@ export const EFFICIENCY_POLICIES = Object.freeze({
   }),
 })
 
-const ROUTE_ORDER = Object.freeze({ micro: 0, lite: 1, standard: 2, 'high-risk': 3 })
-const HIGH_RISK_WORDS = /\b(password|permission|funds?|trading|delete|deletion|irreversible|login|authentication|auth|money|amount|withdraw|transfer)\b/i
+const ROUTE_ORDER = Object.freeze({ trivial: 0, micro: 1, lite: 2, standard: 3, 'high-risk': 4 })
+const PRESENTATIONAL_EVIDENCE = new Set(['copy-literal', 'component-dom'])
+const HIGH_RISK_WORDS = /\b(password|permission|funds?|trading|delete|deletion|irreversible|money|amount|withdraw|transfer)\b/i
+const AUTH_BEHAVIOR_WORDS = /\b(credentials?|sessions?|tokens?|oauth\s+callback|authentication\s+flow|auth\s+flow|login\s+flow|sign[- ]?in\s+flow|logout\s+flow|refresh\s+token|access\s+token|id\s+token)\b/i
 const COLLECTION_WORDS = /\b(all|every|each|any|全部|每个|所有|每种|各个)\b/i
 const RICH_SOURCE_TYPES = new Set(['table', 'table-row', 'table-cell', 'image', 'image-spec', 'figma', 'api', 'acceptance'])
 
@@ -96,7 +112,18 @@ function routeReason(route, code, detail) {
 }
 
 function highestRoute(routes) {
-  return routes.reduce((current, candidate) => ROUTE_ORDER[candidate] > ROUTE_ORDER[current] ? candidate : current, 'micro')
+  return routes.reduce((current, candidate) => ROUTE_ORDER[candidate] > ROUTE_ORDER[current] ? candidate : current, 'trivial')
+}
+
+// 纯展示/文案单点改动：唯一需求，证据只有可见面断言(copy-literal/component-dom)，无运行时依赖。
+// 逻辑/契约/运行时证据(pure-logic/payload-contract/api-contract/browser-interaction)都会退出 trivial。
+function isPresentationalOnly(workItem) {
+  const requirements = asArray(workItem.requirements)
+  if (requirements.length !== 1) return false
+  return requirements.every((requirement) => {
+    const plan = asArray(requirement.evidencePlan)
+    return plan.length > 0 && plan.every((evidence) => PRESENTATIONAL_EVIDENCE.has(evidence?.type) && !evidence?.runtimeRequired)
+  })
 }
 
 export function deriveEfficiencyRoute(workItem = {}) {
@@ -105,14 +132,16 @@ export function deriveEfficiencyRoute(workItem = {}) {
   const sourceUnits = asArray(workItem.sourceSnapshot?.units).concat(asArray(workItem.sourceUnits))
   const riskSignals = asArray(workItem.routing?.riskSignals)
   const text = allRequirementText(workItem)
+  const auxiliaryImage = auxiliaryImageSource(workItem, sourceUnits)
   const reasons = []
-  const candidates = ['micro']
+  const candidates = []
 
-  const explicitHighRisk = riskSignals.some((signal) => HIGH_RISK_WORDS.test(signal))
+  const explicitHighRisk = riskSignals.some((signal) => HIGH_RISK_WORDS.test(signal) || AUTH_BEHAVIOR_WORDS.test(signal))
     || HIGH_RISK_WORDS.test(text)
+    || AUTH_BEHAVIOR_WORDS.test(text)
   if (explicitHighRisk) {
     candidates.push('high-risk')
-    reasons.push(routeReason('high-risk', 'high-risk-semantics', 'login/password/permission/funds/irreversible semantics detected'))
+    reasons.push(routeReason('high-risk', 'high-risk-semantics', 'credential/auth-flow/password/permission/funds/irreversible semantics detected'))
   }
   if (riskSignals.some((signal) => ['funds', 'trading', 'permission', 'irreversible', 'new-api', 'cross-app'].includes(signal))) {
     candidates.push('high-risk')
@@ -134,8 +163,8 @@ export function deriveEfficiencyRoute(workItem = {}) {
     candidates.push('standard')
     reasons.push(routeReason('standard', 'api-or-contract', 'API, schema, mock, or contract work requires broader checks'))
   }
-  if (sourceUnits.some((unit) => RICH_SOURCE_TYPES.has(unit?.type))
-    || asArray(workItem.sourceSnapshot?.assets).length
+  if (sourceUnits.some((unit) => RICH_SOURCE_TYPES.has(unit?.type) && unit?.sourceId !== auxiliaryImage.sourceId)
+    || (asArray(workItem.sourceSnapshot?.assets).length && !auxiliaryImage.ok)
     || asArray(workItem.sourceSnapshot?.revisions).length > 1) {
     candidates.push('standard')
     reasons.push(routeReason('standard', 'rich-source', 'table, image, Figma, acceptance, or multiple source revisions require coverage compilation'))
@@ -155,8 +184,8 @@ export function deriveEfficiencyRoute(workItem = {}) {
     && riskSignals.length === 0
     && !hasApiDependency(workItem)
     && !hasCollectionSemantics(workItem)
-    && sourceUnits.every((unit) => !RICH_SOURCE_TYPES.has(unit?.type))
-    && !asArray(workItem.sourceSnapshot?.assets).length
+    && sourceUnits.every((unit) => !RICH_SOURCE_TYPES.has(unit?.type) || unit?.sourceId === auxiliaryImage.sourceId)
+    && (!asArray(workItem.sourceSnapshot?.assets).length || auxiliaryImage.ok)
     && !asArray(workItem.runtimeEvidence).length
     && !asArray(workItem.browserScenarios).length
     && currentMicroEligibility(workItem).ok
@@ -165,7 +194,16 @@ export function deriveEfficiencyRoute(workItem = {}) {
     reasons.push(routeReason('lite', 'micro-preconditions', 'micro requires one local symbol-level change with no rich source or runtime dependency'))
   }
 
-  if (!reasons.length) reasons.push(routeReason('micro', 'micro-shape', 'single local symbol-level change with no escalation signal'))
+  // 底档(floor)：trivial ⊂ micro。纯展示/文案单点改动落 trivial，其余可 micro 的落 micro，否则 lite。
+  const isTrivialShape = isMicroShape && isPresentationalOnly(workItem)
+  const floor = isTrivialShape ? 'trivial' : isMicroShape ? 'micro' : 'lite'
+  candidates.push(floor)
+
+  if (!reasons.length) {
+    reasons.push(floor === 'trivial'
+      ? routeReason('trivial', 'trivial-shape', 'single presentational-only change (style/copy) with no logic, contract, or runtime evidence')
+      : routeReason('micro', 'micro-shape', 'single local symbol-level change with no escalation signal'))
+  }
   const route = highestRoute(candidates)
   return {
     policyVersion: EFFICIENCY_POLICY_VERSION,
@@ -345,7 +383,7 @@ export function selfTest() {
       statement: 'Change one label.',
       collectionSemantics: { kind: 'none', expectedCount: 0 },
       affectedSurfaces: [{ surfaceId: 'S-1', disposition: 'implement', codeLocator: 'src/a.ts:label' }],
-      evidencePlan: [{ type: 'copy-literal', runtimeRequired: false }],
+      evidencePlan: [{ type: 'pure-logic', runtimeRequired: false }],
     }],
     apiDependency: { mode: 'no-request' },
   }
@@ -363,6 +401,7 @@ export function selfTest() {
   const micro = deriveEfficiencyRoute(microWorkItem)
   assert.equal(micro.route, 'micro')
   assert.equal(micro.policy.commands, 4)
+  assert.equal(micro.policy.elapsedMs, 180000)
 
   const unapprovedMicro = structuredClone(microWorkItem)
   delete unapprovedMicro.extractionAudit.microEligibility
@@ -380,6 +419,68 @@ export function selfTest() {
     requirements: [{ requirementId: 'R-1', statement: 'Allow password reset.', affectedSurfaces: [{ surfaceId: 'S-1', disposition: 'implement' }] }],
   })
   assert.equal(highRisk.route, 'high-risk')
+
+  // 用户真实场景：登录 provider 按钮加 hover 手型 —— 纯展示单点改动，应落 trivial 底档。
+  const loginButton = structuredClone(microWorkItem)
+  loginButton.requirements[0].statement = 'Show pointer cursor on login provider buttons.'
+  loginButton.requirements[0].evidencePlan = [{ type: 'component-dom', runtimeRequired: false }]
+  const loginButtonEligibility = evaluateMicroEligibility(loginButton, microUnits)
+  loginButton.extractionAudit = {
+    status: 'pass',
+    sourceFingerprint: loginButtonEligibility.sourceFingerprint,
+    requirementsFingerprint: loginButtonEligibility.requirementsFingerprint,
+    evidencePlanFingerprint: loginButtonEligibility.evidencePlanFingerprint,
+    sourceUnitsFingerprint: stableFingerprint(microUnits),
+    microEligibility: loginButtonEligibility,
+  }
+  const loginButtonDecision = deriveEfficiencyRoute(loginButton)
+  assert.equal(loginButtonDecision.route, 'trivial')
+  assert.equal(loginButtonDecision.policy.elapsedMs, 90000)
+  assert.equal(loginButtonDecision.policy.reviewerRounds, 0)
+  assert.ok(loginButtonDecision.reasons.some((reason) => reason.code === 'trivial-shape'))
+
+  // 运行时证据(runtimeRequired)同时不满足 trivial 与 micro 前置，退回 lite。
+  const trivialWithRuntime = structuredClone(loginButton)
+  trivialWithRuntime.requirements[0].evidencePlan = [{ type: 'component-dom', runtimeRequired: true }]
+  assert.notEqual(deriveEfficiencyRoute(trivialWithRuntime).route, 'trivial')
+
+  const authFlow = structuredClone(microWorkItem)
+  authFlow.requirements[0].statement = 'Change the OAuth callback token handling in the login flow.'
+  assert.equal(deriveEfficiencyRoute(authFlow).route, 'high-risk')
+
+  const screenshotUnits = [
+    ...microUnits,
+    { sourceId: 'SRC-IMG', type: 'image', content: 'Current state screenshot: context only.' },
+  ]
+  const screenshot = structuredClone(microWorkItem)
+  screenshot.sourceUnits = screenshotUnits
+  screenshot.sourceSnapshot.assets = [{
+    sourceId: 'SRC-IMG',
+    path: 'inbox/context.png',
+    assetHash: 'a'.repeat(64),
+    assetStatus: 'local',
+    mediaType: 'image/png',
+  }]
+  screenshot.sourceUnitDispositions = [{
+    sourceId: 'SRC-IMG',
+    disposition: 'not-a-requirement',
+    reason: 'visual context only',
+    exclusionEvidence: { basis: 'context-only', sourceQuote: 'context only' },
+  }]
+  const screenshotEligibility = evaluateMicroEligibility(screenshot, screenshotUnits)
+  screenshot.extractionAudit = {
+    status: 'pass',
+    sourceFingerprint: screenshotEligibility.sourceFingerprint,
+    requirementsFingerprint: screenshotEligibility.requirementsFingerprint,
+    evidencePlanFingerprint: screenshotEligibility.evidencePlanFingerprint,
+    sourceUnitsFingerprint: stableFingerprint(screenshotUnits),
+    microEligibility: screenshotEligibility,
+  }
+  assert.equal(screenshotEligibility.ok, true, screenshotEligibility.problems.join('; '))
+  assert.equal(deriveEfficiencyRoute(screenshot).route, 'micro')
+  const unclassifiedScreenshot = structuredClone(screenshot)
+  unclassifiedScreenshot.sourceUnitDispositions = []
+  assert.equal(deriveEfficiencyRoute(unclassifiedScreenshot).route, 'standard')
 
   const budget = createEfficiencyBudget(micro, { startedAt: '2026-09-19T00:00:00.000Z', inputFingerprint: 'input' })
   const warning = consumeEfficiencyBudget(budget, 'commands', 4)

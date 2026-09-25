@@ -81,6 +81,17 @@
       },
       "execution-evidence.md"
     ],
+    "trivial_change": [
+      {
+        "file": "coding-worktree.md",
+        "sections": "1-3"
+      },
+      {
+        "file": "git-branch-flow.md",
+        "sections": "1-4"
+      },
+      "ui-style-token-rules.md"
+    ],
     "g4_coding_worktree": [
       {
         "file": "coding-worktree.md",
