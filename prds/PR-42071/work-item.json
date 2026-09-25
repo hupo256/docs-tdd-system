@@ -1,0 +1,213 @@
+{
+  "schemaVersion": 1,
+  "workflowVersion": 2,
+  "projectId": "PR-42071",
+  "intake": {
+    "kind": "feature",
+    "sourceRole": "prd",
+    "sourceFingerprint": "ee9d3f4c2dcd0a343eb40f6bf8c1ab9887c51e5329564da8254b6a84a0a7f79f",
+    "sourcePaths": [
+      "prds/PR-42071/inbox/lark-sync/prd-latest.md"
+    ]
+  },
+  "sourceSnapshot": {
+    "revision": "1",
+    "contentHash": "354f572231d15ccf71af8a0e3f9bef52db30818938bcb7c4a9e83a1ed98e474c",
+    "sources": [
+      {
+        "path": "prds/PR-42071/inbox/lark-sync/prd-latest.md",
+        "contentHash": "0e03e8c62b7d8615daa4e373087d6bbe3644044f37c566d7e15d6403652e8d6e"
+      }
+    ]
+  },
+  "requirements": [
+    {
+      "requirementId": "R-001",
+      "sourceAnchors": [
+        {
+          "type": "text",
+          "sourceId": "SRC-EF67354BAA7D"
+        }
+      ],
+      "statement": "Change src/message.js to export after.",
+      "status": "doing",
+      "collectionSemantics": {
+        "kind": "none",
+        "expectedCount": 0
+      },
+      "affectedSurfaces": [
+        {
+          "surfaceId": "S-001",
+          "locator": "src/message.js",
+          "disposition": "implement"
+        }
+      ],
+      "evidencePlan": [
+        {
+          "type": "touched-file-quality",
+          "runtimeRequired": false
+        }
+      ]
+    }
+  ],
+  "coverageAudit": {
+    "sourceFingerprint": "pending",
+    "requirementsFingerprint": "pending",
+    "reviewMode": "independent-cold-read",
+    "reviewRunId": "pending",
+    "reviewer": {
+      "kind": "model",
+      "id": "pending"
+    },
+    "completedAt": "2000-01-01T00:00:00Z",
+    "verdict": "changes-required",
+    "unresolved": [
+      "deterministic intake passed; independent review is pending"
+    ]
+  },
+  "routing": {
+    "scopeClass": "local",
+    "riskSignals": [],
+    "verificationLevel": "V0",
+    "routerVersion": 1
+  },
+  "apiDependency": {
+    "mode": "no-request",
+    "reason": "The change is isolated to a local export."
+  },
+  "sourceReadiness": {
+    "figma": {
+      "requirement": "not-required",
+      "status": "not-required",
+      "reason": "No visual change is requested."
+    },
+    "api": {
+      "requirement": "not-required",
+      "status": "not-required",
+      "reason": "No API change is requested."
+    }
+  },
+  "scopeApproval": null,
+  "autopilot": {
+    "phase": "validating",
+    "implementation": {
+      "status": "completed",
+      "changedPaths": [
+        "src/message.js"
+      ],
+      "checkpoint": {
+        "actionId": "d108dfd8cbb910b24de360892b48f30caf00e0bc009929cd3b167c6951e948a9",
+        "outcome": "completed",
+        "recordedAt": "2026-09-25T14:03:49.174Z"
+      },
+      "discoveredSurfaces": [
+        {
+          "surfaceId": "S-001",
+          "locator": "src/message.js"
+        }
+      ],
+      "coveredSurfaceIds": [
+        "S-001"
+      ],
+      "completedAt": "2026-09-25T14:03:49.174Z"
+    },
+    "delivery": {
+      "status": "pending"
+    },
+    "repair": {
+      "attempts": {
+        "source": 0,
+        "scope": 0,
+        "code": 0,
+        "browser": 0,
+        "environment": 0,
+        "external-dependency": 0
+      },
+      "lastFailure": null,
+      "terminalState": null
+    },
+    "lastCheckpointAt": "2026-09-25T14:03:49.174Z",
+    "repairAttempts": {
+      "code": 0,
+      "browser": 0
+    }
+  },
+  "extractionFacts": [
+    {
+      "factId": "F-001",
+      "category": "action",
+      "statement": "Change the exported message from before to after.",
+      "sourceIds": [
+        "SRC-EF67354BAA7D"
+      ],
+      "requirementIds": [
+        "R-001"
+      ]
+    }
+  ],
+  "sourceUnitDispositions": [],
+  "evidenceCommands": [
+    {
+      "evidenceId": "E-001",
+      "kind": "touched-file-quality",
+      "argv": [
+        "node",
+        "tests/message.test.mjs"
+      ],
+      "requirementIds": [
+        "R-001"
+      ],
+      "surfaceIds": [
+        "S-001"
+      ]
+    }
+  ],
+  "requirementsAuthor": {
+    "kind": "model",
+    "id": "codex/default",
+    "client": "codex",
+    "sessionId": "b9000a6b-c889-4ad4-93f6-aafee9e84d7e"
+  },
+  "deliveryScope": null,
+  "reviewAdjudication": null,
+  "extractionAudit": {
+    "schemaVersion": 1,
+    "auditedAt": "2026-09-25T14:03:21.643Z",
+    "sourceFingerprint": "ee9d3f4c2dcd0a343eb40f6bf8c1ab9887c51e5329564da8254b6a84a0a7f79f",
+    "requirementsFingerprint": "45f0ad9f12133b2acf7119627e49a169cd5f8750cf34bfdc6357442209d8eb24",
+    "evidencePlanFingerprint": "fd1b8e227af719d40290c0491a5f6655d98be3f48a6e56988ca33c2de5da2524",
+    "sourceUnitsFingerprint": "872210b64940a4a8e704a9571f5c4d1f27360dd69b95450490cfe4811e8d02ef",
+    "microEligibility": {
+      "ok": true,
+      "mode": "deterministic-micro-audit",
+      "sourceFingerprint": "ee9d3f4c2dcd0a343eb40f6bf8c1ab9887c51e5329564da8254b6a84a0a7f79f",
+      "requirementsFingerprint": "45f0ad9f12133b2acf7119627e49a169cd5f8750cf34bfdc6357442209d8eb24",
+      "evidencePlanFingerprint": "fd1b8e227af719d40290c0491a5f6655d98be3f48a6e56988ca33c2de5da2524",
+      "sourceUnitsFingerprint": "872210b64940a4a8e704a9571f5c4d1f27360dd69b95450490cfe4811e8d02ef",
+      "problems": []
+    },
+    "status": "pass",
+    "checks": [
+      {
+        "code": "INTAKE_SOURCE_BINDING",
+        "ok": true,
+        "problems": []
+      },
+      {
+        "code": "EXTRACTION_STRUCTURE",
+        "ok": true,
+        "problems": []
+      },
+      {
+        "code": "EXTRACTION_TRACEABILITY",
+        "ok": true,
+        "problems": []
+      },
+      {
+        "code": "EVIDENCE_COMMANDS",
+        "ok": true,
+        "problems": []
+      }
+    ]
+  }
+}

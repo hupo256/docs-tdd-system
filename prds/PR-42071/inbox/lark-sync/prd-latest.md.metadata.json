@@ -1,0 +1,17 @@
+{
+  "sourceName": "需求 PRD",
+  "sourceType": "markdown",
+  "sourceUrl": "/Users/aven/github/docs_tdd/.clean-project-e2e-xHwCFh/prd.md",
+  "syncedAt": "2026-09-25T14:03:20.762Z",
+  "readOnly": true,
+  "command": [
+    "local-markdown",
+    "../../../../../../../Users/aven/github/docs_tdd/.clean-project-e2e-xHwCFh/prd.md"
+  ],
+  "stderr": null,
+  "target": "../../../../../../../Users/aven/github/docs_tdd/prds/PR-42071/inbox/lark-sync/prd-latest.md",
+  "remoteContentHash": null,
+  "remoteDocumentId": null,
+  "remoteRevisionId": null,
+  "identity": null
+}

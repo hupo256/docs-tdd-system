@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "projectId": "PR-42071",
+  "activeAction": {
+    "action": "capture-cli-evidence",
+    "actionId": "ae30bc69ef01961474bb865934443935b4a322b32e4d2f1865922be236be2211",
+    "invocationId": "7aeada5cba1676aa3a2e6b6ed88c18175c5373437f47996d7dcd59d2a0889d03",
+    "executorType": "deterministic",
+    "startedAt": "2026-09-25T14:03:57.503Z",
+    "checkpoint": {}
+  },
+  "receipts": [
+    {
+      "receiptId": "a3c2ba375603a9079e3172b354e0ed4cd1fa780b4fa83f6a62b12709b67e0194",
+      "action": "extract-requirements",
+      "actionId": "cf04cb616b3ef347e050eba18d58a19cce5eae85c49cc6db571b453796ba617a",
+      "invocationId": "9fa754d0f769e08e5c43298cf0f97ab3981ab637c610d07aaa26b7616c7f28e0",
+      "executorType": "agent",
+      "startedAt": "2026-09-25T14:03:20.846Z",
+      "completedAt": "2026-09-25T14:03:21.663Z",
+      "changedState": true,
+      "outcome": "completed",
+      "adapter": "codex/default",
+      "extractionAudit": "pass"
+    },
+    {
+      "receiptId": "551dc8cfe8e9a00f69f37da5c6c6576fb2515fb99f21820ff1f955d63f56741b",
+      "action": "prepare-coding-worktree",
+      "actionId": "d6695b336024a0a505132e8f96b632b275dc29e3a1393acefaa1a2c2ae2e5c48",
+      "invocationId": "48884b5f7957ce6624bf32902ef1dd1e4d86375c11eecc8ec7d652b06529d3f0",
+      "executorType": "deterministic",
+      "startedAt": "2026-09-25T14:03:21.674Z",
+      "completedAt": "2026-09-25T14:03:38.656Z",
+      "changedState": true,
+      "outcome": "completed",
+      "output": "projectId: PR-42071\nbranch: feature/PR-42071\nbase ref: main\nworktree: /var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/vnext-clean-project-e2e-NZYwyu/PR-42071\ndocs_tdd link: /var/folders/07/f0k63_dx0yb54r7bk3dx0ddr0000gp/T/vnext-clean-project-e2e-NZYwyu/PR-42071/docs_tdd -> /Users/aven/github/docs_tdd\nverify url: http://localhost:46222/\nHEAD is now at f0aab0a initial fixture\nbaseline check passed: HEAD shares history with main\nready\ndev server verified: http://localhost:46222/\nproject metadata updated: /Users/aven/github/docs_tdd/prds/PR-42071/README.md\ncoding worktree is ready"
+    },
+    {
+      "receiptId": "d2769339bd3e0ceb185ed88d143f548e7aefdb49dd16866f0b7f501350f544ab",
+      "action": "implement-current-scope",
+      "actionId": "d108dfd8cbb910b24de360892b48f30caf00e0bc009929cd3b167c6951e948a9",
+      "invocationId": "f41daf93c58f3d821b59e8fec594c8662e33363bf7913231277d6694239e4ed0",
+      "executorType": "agent",
+      "startedAt": "2026-09-25T14:03:41.617Z",
+      "completedAt": "2026-09-25T14:03:53.317Z",
+      "changedState": true,
+      "outcome": "completed",
+      "adapter": "codex/default",
+      "changedPaths": [
+        "src/message.js"
+      ]
+    }
+  ],
+  "trace": {
+    "schemaVersion": 1,
+    "runId": "d02a03c879494ce7408c5c172db5b531094efdf6e8110998de9dc64d59f5c772",
+    "projectId": "PR-42071",
+    "route": "lite",
+    "assurance": "V0",
+    "routeReasons": [
+      "micro-preconditions"
+    ],
+    "contextChars": 0,
+    "estimatedInputTokens": null,
+    "tokenUsage": null,
+    "ruleFiles": 0,
+    "sourceUnits": null,
+    "actionCount": 0,
+    "commandCount": 0,
+    "reviewRounds": 0,
+    "evidenceCount": 0,
+    "repairAttempts": 0,
+    "elapsedMs": null,
+    "userInterruptCount": 0,
+    "necessaryInterruptCount": 0,
+    "silentOmissionCount": 0,
+    "falseCompletionCount": 0,
+    "terminalState": "running",
+    "budgetStatus": "active",
+    "budget": {
+      "policyVersion": 1,
+      "route": "lite",
+      "policy": {
+        "contextChars": 30000,
+        "ruleFiles": 5,
+        "reviewerRounds": 1,
+        "commands": 6,
+        "evidence": 4,
+        "repairs": 2,
+        "elapsedMs": 1200000
+      },
+      "usage": {
+        "contextChars": 0,
+        "ruleFiles": 0,
+        "reviewerRounds": 0,
+        "commands": 0,
+        "evidence": 0,
+        "repairs": 0
+      },
+      "startedAt": "2026-09-25T14:03:20.836Z",
+      "targetAt": "2026-09-25T14:23:20.836Z",
+      "inputFingerprint": "4f618ef701696ccdd5f5549ed2237c59d9a1e016cc52ba01d5f80b73c5545c90",
+      "status": "active",
+      "warningAt": 0.8,
+      "terminalReason": null,
+      "lastFailureFingerprint": null
+    },
+    "startedAt": "2026-09-25T14:03:20.834Z",
+    "endedAt": null,
+    "generatedAt": "2026-09-25T14:03:20.834Z"
+  },
+  "updatedAt": "2026-09-25T14:03:57.503Z"
+}

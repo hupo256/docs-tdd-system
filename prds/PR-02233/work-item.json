@@ -4517,6 +4517,8 @@
       "apps/web-next/src/platform/domain/web/endpoints/test/authLoginContract.test.ts",
       "apps/web-next/src/platform/domain/web/endpoints/test/postRegisterInviterInfoEndpoint.test.ts",
       "apps/web-next/src/services/hooks/auth",
+      "apps/web-next/src/platform/third-party-sdk",
+      "apps/web-next/src/services/subscription/wsfapi-public-business",
       "apps/web-next/src/routes/join",
       "apps/web-next/src/routeTree.gen.ts",
       "apps/web-next/src/styles/tailwind-theme-legacy.css",

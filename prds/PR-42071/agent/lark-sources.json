@@ -1,0 +1,14 @@
+{
+  "projectId": "PR-42071",
+  "outputDir": "docs_tdd/prds/PR-42071/inbox/lark-sync",
+  "sources": [
+    {
+      "type": "markdown",
+      "operation": "read",
+      "name": "需求 PRD",
+      "url": "/Users/aven/github/docs_tdd/.clean-project-e2e-xHwCFh/prd.md",
+      "target": "prd-latest.md",
+      "localizedTarget": "prd-latest.extracted.md"
+    }
+  ]
+}
