@@ -2,7 +2,7 @@
 
 > 日期：2026-09-24
 > 决策：不再补历史 PR 附件，不做历史项目逐单元 golden；只修当前系统并用合成契约回归。
-> 边界：仅修改 `docs_tdd`，不碰业务仓、不提交、不 push。
+> 边界：仅修改 `docs_tdd`，不碰业务仓、不 push；后续已按 owner 授权完成本地提交。
 
 ## P0：清掉本轮可控的 doc-budget 阻断
 
@@ -21,7 +21,7 @@
 
 - [x] 本轮引入或本轮认领的前三类阻断清零。
 - [x] `check-doc-budget.mjs` 只报告上述三类既有债。
-- [ ] `git diff --check` 通过。
+- [x] `git diff --check` 通过。
 
 ## P1：强化现有 intake 契约
 
@@ -50,6 +50,8 @@
 - `vnext-self-test.mjs --self-test` 通过，共覆盖 63 个 vNext 脚本。
 - `check-doc-links.mjs` 通过，339 个 Markdown 本地链接有效。
 - `check-doc-budget.mjs` 中本轮预算、索引和 self-test 项全部通过；退出 1 仅由 P0 已列出的三类既有债导致。
+- 最终收尾已通过 67 个 vNext 聚合 self-test、101 个核心 self-test、339 个 Markdown 链接和 `git diff --check`。
+- 实施结果已分三次本地提交：`aa31b21`、`6e26d1d`、`5a27d3e`；均未 push。
 
 ## 后续
 

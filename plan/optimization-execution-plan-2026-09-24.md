@@ -1,6 +1,7 @@
 # docs_tdd 优化落地计划：面向下一次需求
 
 > 日期：2026-09-24
+> 最近更新：2026-09-25
 > 状态：in-progress
 > 范围：`docs_tdd` 新需求主路径、覆盖契约、执行器、效率度量与 Pilot
 > 目标路径：用户给需求 -> 安全 worktree -> 完整理解 -> 必要时询问 -> 实现 -> 定向验证与修复 -> 本地提交；不自动 push
@@ -202,5 +203,33 @@ Micro 初始条件：
 - WP3 状态为 `e2e-tested`；这只代表 Micro 基础设施 E2E 通过。新需求 Pilot 未完成，批次 D 尚未达到退出条件。
 - 定向 self-test、67 脚本 vNext 聚合 self-test、公开命令 E2E、339 个文档链接和 `git diff --check` 已通过。
 - `check-doc-budget.mjs` 的本轮预算、索引和 101 个 self-test 入口已通过；当前 exit 1 仅来自上述三项既有债。
+
+## 8. Owner 决策与已接受代价
+
+### 2026-09-25：发布证据改为新需求 Pilot
+
+这是 owner 明确认可的发布门槛调整：
+
+- 历史 PR 不再作为发布前置，不补历史附件，不建设四个历史 PR 的逐单元 golden。
+- PR-02306 不保留真实来源 replay；它与其他历史项目一样，不再消耗当前优化批次的实现和维护预算。
+- 历史项目只在暴露出可复用的抽象失败模式时，提炼为最小 synthetic regression，不恢复整项目回放。
+
+明确接受的代价：
+
+- 放弃对 PR-02306 中 remote 图片、`<sheet>`、whiteboard 等历史脏来源的直接回归保护。
+- synthetic fixture 只能证明契约机制，不能单独证明系统已适应所有真实来源噪声，因此不能据此标记 `pilot-certified`。
+
+选择该方向的理由：
+
+- 当前目标是提高后续真实需求的效率、完整性和交付质量，不继续为已完成项目重建昂贵档案。
+- 历史 replay 的附件补齐和 golden 维护成本高，且会重新引入本轮要消除的时间与 token 负担。
+- 新需求 V0/V1/V2 Pilot 能同时验证真实来源、真实代码、真实提测结果和效率数据，证据更贴近默认路径切换决策。
+
+替代保护与发布门槛：
+
+- 不可读图片、表格、embed 和未处置 semantic unit 继续 fail-closed。
+- synthetic negative fixture 与 clean-project E2E 继续守住遗漏、假完成、越界提交和未经授权 push。
+- 完成至少各 1 个 V0/V1/V2 新需求样本及至少 10 个可比 micro 样本前，不进入 owner cutover。
+- Pilot 暴露新的通用失败模式时，补最小、确定性的 regression fixture，再继续样本收集。
 
 本文件不授权业务仓改动、提交或 push。
