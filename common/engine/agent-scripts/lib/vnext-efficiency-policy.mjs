@@ -22,7 +22,7 @@ export const EFFICIENCY_POLICIES = Object.freeze({
     ruleFiles: 2,
     reviewerRounds: 0,
     commands: 3,           // 改动 + biome + git diff --check（按需 DOM 断言算 evidence）
-    evidence: 1,
+    evidence: 2,           // 强制 touched-file-quality + 一条可见面断言(component-dom/copy-literal)
     repairs: 1,
     elapsedMs: 90000,      // 1.5 分钟硬停；纯展示/文案单点改动
   }),
@@ -65,7 +65,10 @@ export const EFFICIENCY_POLICIES = Object.freeze({
 })
 
 const ROUTE_ORDER = Object.freeze({ trivial: 0, micro: 1, lite: 2, standard: 3, 'high-risk': 4 })
-const PRESENTATIONAL_EVIDENCE = new Set(['copy-literal', 'component-dom'])
+// 逻辑/契约/运行时证据 → 退出 trivial（回到 micro 及以上）。
+const NON_TRIVIAL_EVIDENCE = new Set(['pure-logic', 'payload-contract', 'api-contract', 'browser-interaction'])
+// 正向展示信号：出现可见面断言才算 trivial；仅 touched-file-quality(可能是逻辑改)保持 micro。
+const PRESENTATIONAL_MARKERS = new Set(['copy-literal', 'component-dom'])
 const HIGH_RISK_WORDS = /\b(password|permission|funds?|trading|delete|deletion|irreversible|money|amount|withdraw|transfer)\b/i
 const AUTH_BEHAVIOR_WORDS = /\b(credentials?|sessions?|tokens?|oauth\s+callback|authentication\s+flow|auth\s+flow|login\s+flow|sign[- ]?in\s+flow|logout\s+flow|refresh\s+token|access\s+token|id\s+token)\b/i
 const COLLECTION_WORDS = /\b(all|every|each|any|全部|每个|所有|每种|各个)\b/i
@@ -115,15 +118,15 @@ function highestRoute(routes) {
   return routes.reduce((current, candidate) => ROUTE_ORDER[candidate] > ROUTE_ORDER[current] ? candidate : current, 'trivial')
 }
 
-// 纯展示/文案单点改动：唯一需求，证据只有可见面断言(copy-literal/component-dom)，无运行时依赖。
-// 逻辑/契约/运行时证据(pure-logic/payload-contract/api-contract/browser-interaction)都会退出 trivial。
+// 纯展示/文案单点改动：唯一需求；无逻辑/契约/运行时证据；且带正向展示信号(copy-literal/component-dom)。
+// 强制的 touched-file-quality 单独出现不算 trivial(可能是逻辑改)，仍走 micro。
 function isPresentationalOnly(workItem) {
   const requirements = asArray(workItem.requirements)
   if (requirements.length !== 1) return false
-  return requirements.every((requirement) => {
-    const plan = asArray(requirement.evidencePlan)
-    return plan.length > 0 && plan.every((evidence) => PRESENTATIONAL_EVIDENCE.has(evidence?.type) && !evidence?.runtimeRequired)
-  })
+  const plan = asArray(requirements[0].evidencePlan)
+  if (!plan.length) return false
+  if (plan.some((evidence) => NON_TRIVIAL_EVIDENCE.has(evidence?.type) || evidence?.runtimeRequired)) return false
+  return plan.some((evidence) => PRESENTATIONAL_MARKERS.has(evidence?.type))
 }
 
 export function deriveEfficiencyRoute(workItem = {}) {
