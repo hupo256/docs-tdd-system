@@ -328,14 +328,26 @@ export function vnextVerificationNextAction({ authoritativePass, shadowOnly, int
   return 'fix_failed_checks_and_reverify'
 }
 
+export function runnerFailureStatus(runner, actionPacket) {
+  const outcome = runner?.trace?.terminalState
+  return ['failed-infrastructure', 'failed-safety-check'].includes(outcome)
+    && runner.lastReceipt?.actionId === actionPacket?.actionId
+    && runner.lastReceipt?.outcome === outcome
+    ? outcome
+    : null
+}
+
 function runnerObservation(projectDir, executionRoute) {
   const persisted = readJson(join(projectDir, 'agent/runner-state.json'))
   const trace = persisted?.trace && typeof persisted.trace === 'object' ? persisted.trace : null
   const route = typeof trace?.route === 'string' ? trace.route : null
   const traceHistory = Array.isArray(persisted?.traceHistory) ? persisted.traceHistory : []
+  const receipts = Array.isArray(persisted?.receipts) ? persisted.receipts : []
+  const traceReceipts = Number.isInteger(trace?.receiptOffset) ? receipts.slice(trace.receiptOffset) : []
   return {
     activeAction: persisted?.activeAction || null,
-    receiptCount: Array.isArray(persisted?.receipts) ? persisted.receipts.length : null,
+    receiptCount: receipts.length,
+    lastReceipt: traceReceipts.at(-1) || receipts.at(-1) || null,
     trace,
     traceHistoryCount: traceHistory.length,
     recentTraceHistory: traceHistory.slice(-5),
@@ -427,6 +439,8 @@ export function inspectVNext(id) {
     reconciliationResult,
     reconciliationCurrent,
   })
+  const runner = runnerObservation(projectDir, actionPacket.executionRoute)
+  const runnerFailure = runnerFailureStatus(runner, actionPacket)
   return {
     projectId: id,
     workflowVersion: 2,
@@ -434,15 +448,15 @@ export function inspectVNext(id) {
     executionRoute: actionPacket.executionRoute,
     routeReasons: actionPacket.routeReasons,
     budgetStatus: actionPacket.budgetStatus,
-    status: executionHeld ? 'blocked' : actionPacket.status,
-    executionStatus: actionPacket.status,
-    currentStage: executionHeld ? 'V2-execution-hold' : `V2-${actionPacket.phase}`,
-    nextAction: executionHeld ? 'resolve-execution-hold' : actionPacket.action,
-    command: actionPacket.command,
-    blockers: [...failedChecks.flatMap((check) => check.problems || [check.code]), ...integrity.problems, ...worktreeInspection.problems, ...(codeStateProblem ? [codeStateProblem] : []), ...(reconciliation.problem ? [reconciliation.problem] : []), ...holdBlockers],
+    status: executionHeld ? 'blocked' : runnerFailure || actionPacket.status,
+    executionStatus: executionHeld ? 'blocked' : runnerFailure || actionPacket.status,
+    currentStage: executionHeld ? 'V2-execution-hold' : runnerFailure ? 'V2-runner-failed' : `V2-${actionPacket.phase}`,
+    nextAction: executionHeld ? 'resolve-execution-hold' : runnerFailure ? 'retry-failed-action' : actionPacket.action,
+    command: executionHeld ? null : runnerFailure ? `docs-tdd run ${id} --retry-failed-action` : actionPacket.command,
+    blockers: [...failedChecks.flatMap((check) => check.problems || [check.code]), ...integrity.problems, ...worktreeInspection.problems, ...(codeStateProblem ? [codeStateProblem] : []), ...(reconciliation.problem ? [reconciliation.problem] : []), ...(runnerFailure ? [`last runner action ended with ${runnerFailure}; explicit retry is required after correcting the cause`] : []), ...holdBlockers],
     executionControl,
     actionPacket,
-    runnerObservation: runnerObservation(projectDir, actionPacket.executionRoute),
+    runnerObservation: runner,
     lifecycle: {
       deliveryTruth,
       implementationCheckpoint: workItem.autopilot?.implementation?.checkpoint || null,
@@ -727,6 +741,7 @@ function autopilotRun() {
     baseRef,
     agentClient: agent.client,
     agentModel: agent.model,
+    retryFailedAction: args.includes('--retry-failed-action'),
   }).run()
   const topLevelStatus = ['needs-agent', 'needs-user', 'blocked-external-dependency', 'failed-infrastructure', 'failed-safety-check']
     .includes(execution.runner.outcome)
@@ -750,6 +765,8 @@ function selfTest() {
   const claudeAgent = resolveAutopilotAgentOptions({ env: {} })
   const modeledAgent = resolveAutopilotAgentOptions({ requestedClient: 'codex', requestedModel: 'gpt-test', env: {} })
   const automaticChangeId = automaticChangeIdForSource('path:/tmp/new-prd.md')
+  const matchedRunnerFailure = runnerFailureStatus({ trace: { terminalState: 'failed-infrastructure' }, lastReceipt: { actionId: 'A-1', outcome: 'failed-infrastructure' } }, { actionId: 'A-1' })
+  const staleRunnerFailure = runnerFailureStatus({ trace: { terminalState: 'failed-infrastructure' }, lastReceipt: { actionId: 'A-1', outcome: 'failed-infrastructure' } }, { actionId: 'A-2' })
   const gitCalls = []
   const commit = commitScopedPaths('/tmp/worktree', 'PR-00001', ['src/a.ts'], (_command, gitArgs) => {
     gitCalls.push(gitArgs)
@@ -769,6 +786,8 @@ function selfTest() {
     || claudeAgent.client !== 'claude'
     || modeledAgent.model !== 'gpt-test'
     || !/^change-[0-9a-f]{8}$/.test(automaticChangeId)
+    || matchedRunnerFailure !== 'failed-infrastructure'
+    || staleRunnerFailure !== null
     || vnextVerificationNextAction({ authoritativePass: false, shadowOnly: false, integrityOk: true, codeStateFresh: false, status: 'passed' }) !== 'revalidate_current_code_evidence'
     || vnextVerificationNextAction({ authoritativePass: false, shadowOnly: false, integrityOk: false, codeStateFresh: false, assuranceTrusted: false, status: 'passed' }) !== 'refresh_invalid_verification'
     || vnextVerificationNextAction({ authoritativePass: false, shadowOnly: false, integrityOk: true, codeStateFresh: true, assuranceTrusted: false, status: 'passed' }) !== 'capture_cli_attested_evidence'
@@ -786,7 +805,7 @@ function selfTest() {
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   if (args.includes('--self-test')) selfTest()
   else if (!new RegExp(`^(?:${config.projectIdPattern || '(?:PR|TR)-\\d{5}'})$`).test(projectId || '')) {
-    console.error('usage: project-orchestrator.mjs <run|kickoff|status|resume|next|source-update|checkpoint> PR-01234 [--change <id>] [--prd <source>] [--title <name>] [--kind feature|bugfix] [--base-ref <ref>] [--input <json>] [--client codex|claude] [--model <name>] [--dry-run]')
+    console.error('usage: project-orchestrator.mjs <run|kickoff|status|resume|next|source-update|checkpoint> PR-01234 [--change <id>] [--prd <source>] [--title <name>] [--kind feature|bugfix] [--base-ref <ref>] [--input <json>] [--client codex|claude] [--model <name>] [--dry-run] [--retry-failed-action]')
     process.exit(1)
   } else {
     try {

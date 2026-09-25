@@ -1,0 +1,13 @@
+{
+  "projectId": "PR-02208",
+  "outputDir": "apps/web/docs_tdd/prds/PR-02208/changes/1/inbox/frontend-scope-snapshot",
+  "sources": [
+    {
+      "type": "markdown",
+      "operation": "read",
+      "name": "用户确认的前端范围与验收",
+      "url": "prds/PR-02208/changes/1/inbox/frontend-scope.md",
+      "target": "frontend-scope.md"
+    }
+  ]
+}

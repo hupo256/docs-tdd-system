@@ -428,6 +428,7 @@ export function runContinuousRunner({
   checkpointFor = () => ({}),
   recoverInterrupted = null,
   maxSteps = 20,
+  retryFailedAction = false,
   now = () => new Date().toISOString(),
 } = {}) {
   if (!projectId || !projectDir || typeof inspect !== 'function' || !(registry instanceof Map)) {
@@ -495,7 +496,8 @@ export function runContinuousRunner({
     })
     traceHistory = appendTraceHistory(persisted.traceHistory, trace)
     persistRunnerState(projectDir, { ...persisted, trace, traceHistory }, endedAt)
-    return terminalResult(current, outcome, { ...details, trace })
+    const finalState = inspect()
+    return terminalResult(finalState, outcome, { ...details, trace })
   }
 
   for (let step = 1; step <= maxSteps; step += 1) {
@@ -559,6 +561,21 @@ export function runContinuousRunner({
     }
 
     persisted = readRunnerState(projectDir, projectId)
+    const previousFailure = persisted.receipts.find((receipt) => (
+      receipt.invocationId === invocationId
+      && ['failed-infrastructure', 'failed-safety-check'].includes(receipt.outcome)
+    ))
+    if (previousFailure && !retryFailedAction) {
+      return finishRun(current, previousFailure.outcome, {
+        steps: step - 1,
+        actionId: packet.actionId,
+        receiptId: previousFailure.receiptId,
+        failureFingerprint: previousFailure.failureFingerprint || runnerFailureFingerprint(previousFailure),
+        repeatedFailure: true,
+        retryRequired: true,
+        error: `prior ${previousFailure.outcome} receipt exists for this action; correct the cause, then use docs-tdd run ${projectId} --retry-failed-action`,
+      })
+    }
     const successfulReceipt = persisted.receipts.find((receipt) => (
       receipt.invocationId === invocationId && receipt.outcome === 'completed'
     ))
@@ -764,8 +781,12 @@ function selfTest() {
       status: 'active',
       actionPacket: { action: 'implement-current-scope', actionId: 'A-failure' },
     })
+    let failureExecutions = 0
     const failureRegistry = createActionExecutorRegistry({
-      agent: () => ({ outcome: 'failed-safety-check', error: 'reported paths do not match Git' }),
+      agent: () => {
+        failureExecutions += 1
+        return { outcome: 'failed-safety-check', error: 'reported paths do not match Git' }
+      },
     })
     const firstFailure = runContinuousRunner({
       projectId: 'PR-00004',
@@ -782,6 +803,17 @@ function selfTest() {
     })
     assert.equal(repeated.runner.outcome, 'failed-safety-check')
     assert.equal(repeated.runner.repeatedFailure, true)
+    assert.equal(repeated.runner.retryRequired, true)
+    assert.equal(failureExecutions, 1)
+    const explicitRetry = runContinuousRunner({
+      projectId: 'PR-00004',
+      projectDir: failureRoot,
+      inspect: failureState,
+      registry: failureRegistry,
+      retryFailedAction: true,
+    })
+    assert.equal(explicitRetry.runner.outcome, 'failed-safety-check')
+    assert.equal(failureExecutions, 2)
 
     const nonConvergentRoot = join(root, 'non-convergent')
     let nonConvergentStep = 0

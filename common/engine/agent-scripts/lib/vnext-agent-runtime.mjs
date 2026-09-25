@@ -243,7 +243,6 @@ export function invokeHostAgent({
         '--permission-mode', sandbox === 'read-only' ? 'plan' : 'acceptEdits',
         ...(sandbox === 'read-only' ? ['--tools', ''] : []),
         ...(model ? ['--model', model] : []),
-        prompt,
       ]
     }
     const result = spawn(executable(client), args, {
@@ -251,7 +250,8 @@ export function invokeHostAgent({
       encoding: 'utf8',
       timeout: timeoutMs,
       env: { ...process.env, DOCS_TDD_AGENT_RUNTIME: '1' },
-      stdio: ['ignore', 'pipe', 'pipe'],
+      stdio: client === 'claude' ? ['pipe', 'pipe', 'pipe'] : ['ignore', 'pipe', 'pipe'],
+      ...(client === 'claude' ? { input: prompt } : {}),
     })
     if (result.error?.code === 'ETIMEDOUT') {
       return { ok: false, timedOut: true, error: `Agent timed out after ${timeoutMs}ms` }
@@ -497,6 +497,28 @@ function selfTest() {
   const projectDir = join(root, 'PR-00001')
   const repo = join(root, 'repo')
   try {
+    const outputSchema = extractionOutputSchema()
+    const surfaceSchema = outputSchema.properties.requirements.items.properties.affectedSurfaces.items
+    assert.equal(surfaceSchema.allOf[0].if.properties.codeLocator.type, 'object')
+    assert.equal(surfaceSchema.allOf[0].then.properties.wiring.type, 'object')
+    assert.equal(surfaceSchema.allOf[0].then.properties.wiring.properties.dependsOn.type, 'array')
+    assert.equal(outputSchema.properties.apiDependency.allOf[0].then.properties.contractIds.type, 'array')
+
+    const claudePrompt = 'Return a JSON object from stdin.'
+    let claudeInvocation
+    const claudeResult = invokeHostAgent({
+      client: 'claude', cwd: root, prompt: claudePrompt, schema: { type: 'object' }, sandbox: 'read-only',
+      spawn: (_command, args, options) => {
+        claudeInvocation = { args, options }
+        return { status: 0, stdout: '{"ok":true}', stderr: '' }
+      },
+    })
+    assert.equal(claudeResult.ok, true)
+    assert.deepEqual(claudeResult.output, { ok: true })
+    assert.equal(claudeInvocation.args.includes(claudePrompt), false)
+    assert.equal(claudeInvocation.options.input, claudePrompt)
+    assert.deepEqual(claudeInvocation.options.stdio, ['pipe', 'pipe', 'pipe'])
+
     writeFileSync(join(root, 'prd.md'), '# Scope\n\nChange A.\n')
     const initial = {
       schemaVersion: 1,

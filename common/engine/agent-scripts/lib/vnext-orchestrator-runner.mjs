@@ -105,6 +105,7 @@ export function createVNextOrchestratorRunner({
   invokeAgent,
   runCoverageReview,
   maxSteps = 20,
+  retryFailedAction = false,
 } = {}) {
   const required = {
     inspect,
@@ -276,6 +277,7 @@ export function createVNextOrchestratorRunner({
       checkpointFor,
       recoverInterrupted,
       maxSteps,
+      retryFailedAction,
     }),
   }
 }

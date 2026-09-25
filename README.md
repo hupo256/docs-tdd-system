@@ -155,7 +155,7 @@ docs-tdd run PR-01234                # 中断后重复运行，按当前事实�
 
 CLI 始终返回带稳定 `actionId` 的唯一 action packet；Agent 只按 `action`、`reason`、`constraints` 执行下一步，不让用户手工选择 Gate，也不从 Markdown 阶段描述猜状态。第二代项目禁止运行第一代的 `gate` 或 `changed`。
 
-`run` 会初始化或恢复项目、执行已接通的确定性动作，并返回唯一下一步。当前 CLI 尚未配置 Codex/Claude 宿主 Agent adapter；遇到需求抽取、实现等语义动作时会返回 `needs-agent`，遇到审批或业务裁决时会返回 `needs-user`。宿主 Agent 必须实际执行动作、提交结构化结果后再续跑；action packet 本身不是完成证据。因此，单次 `run --prd` 当前不等于从需求到 PASS/commit 的连续自动交付。
+`run` 会初始化或恢复项目，并通过选定的 Codex/Claude 宿主执行已接通的语义动作；确定性动作由 CLI 执行。需要人工审批或业务裁决时返回 `needs-user`，不支持的动作返回 `needs-agent`。action packet 本身不是完成证据。已失败的同一 action 不会在普通 `run` 中自动重放；修复失败原因后，只有显式传入 `--retry-failed-action` 才会重新调用，`status` 会显示失败终态和唯一重试命令。
 
 #### 2. 结构化需求、确定性前置审计与机器独立审查
 

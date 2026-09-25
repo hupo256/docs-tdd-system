@@ -157,6 +157,26 @@
         "reason": "Prevent accidental run/resume of a persisted synthetic E2E project; this project is not real-demand evidence.",
         "setAt": "2026-09-25T00:00:00.000Z"
       }
+    },
+    {
+      "projectId": "PR-02208",
+      "sourceIdentity": "Lark Wiki PRD https://qfglxo2m3dc.sg.larksuite.com/wiki/TWvcwhONMieDKPkxA0wlrP0cghh; change-set=1; branch=feature/PR-02208-1",
+      "synthetic": false,
+      "sourceFingerprint": "4d7ad98f66a0a81cd41ada2cd909598751cdbfa5d19542d2d914362625752ae2",
+      "verificationLevel": null,
+      "executionRoute": "standard",
+      "observedExecutionRoutes": ["standard"],
+      "routeConflict": false,
+      "terminalState": "blocked-system",
+      "sampleDisposition": "excluded-system-failure-on-entry",
+      "pilotEligibility": "excluded",
+      "exclusionReason": "The first real execution failed before extraction because the generated JSON Schema was rejected by Claude strictTypes and the Claude --print adapter supplied no recognized prompt input. Preserve this failure; this change-set remains excluded from Pilot even if business work continues after the system fix.",
+      "executionHold": {
+        "active": false,
+        "code": null,
+        "reason": null,
+        "setAt": null
+      }
     }
   ],
   "candidateAssessments": [

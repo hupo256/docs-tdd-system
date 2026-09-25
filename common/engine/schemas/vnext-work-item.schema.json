@@ -236,8 +236,8 @@
               ],
               "allOf": [
                 {
-                  "if": { "properties": { "codeLocator": { "properties": { "role": { "const": "consumer" } }, "required": ["role"] } }, "required": ["codeLocator"] },
-                  "then": { "required": ["wiring"], "properties": { "wiring": { "properties": { "role": { "const": "consumer" }, "dependsOn": { "minItems": 1 } } } } }
+                  "if": { "properties": { "codeLocator": { "type": "object", "properties": { "role": { "const": "consumer" } }, "required": ["role"] } }, "required": ["codeLocator"] },
+                  "then": { "required": ["wiring"], "properties": { "wiring": { "type": "object", "properties": { "role": { "const": "consumer" }, "dependsOn": { "type": "array", "minItems": 1 } } } } }
                 }
               ],
               "additionalProperties": false
@@ -488,7 +488,7 @@
       "allOf": [
         {
           "if": { "properties": { "mode": { "const": "mock-required" } }, "required": ["mode"] },
-          "then": { "required": ["contractIds"], "properties": { "contractIds": { "minItems": 1 } } }
+          "then": { "required": ["contractIds"], "properties": { "contractIds": { "type": "array", "minItems": 1 } } }
         },
         {
           "if": { "properties": { "mode": { "const": "pending-dependency" } }, "required": ["mode"] },
