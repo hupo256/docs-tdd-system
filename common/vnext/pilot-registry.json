@@ -28,6 +28,23 @@
         "requirementOmissionEscapes": 0,
         "falseGreenEscapes": 0,
         "notes": "已提测，QA 阶段未发现 PRD 漏项；vNext 出口 PASS 与提测结果一致。"
+      },
+      "sourceIdentity": "revision=chat-2026-09-04-1; source=prds/PR-02074/inbox/vnext-search-width-2026-09-04.md",
+      "synthetic": false,
+      "sourceFingerprint": "768fa5756bfb0d957d9334f9dbe3bf9d2b39f94075fa0439ae90ff63345114b4",
+      "verificationLevel": "V0",
+      "executionRoute": null,
+      "observedExecutionRoutes": [],
+      "routeConflict": false,
+      "terminalState": "passed",
+      "sampleDisposition": "observed-pass",
+      "pilotEligibility": "eligible",
+      "exclusionReason": null,
+      "executionHold": {
+        "active": false,
+        "code": null,
+        "reason": null,
+        "setAt": null
       }
     },
     {
@@ -44,17 +61,102 @@
         "requirementOmissionEscapes": 0,
         "falseGreenEscapes": 0,
         "notes": "已提测（临近 pre），QA 阶段未发现 PRD 漏项；vNext 出口 PASS 与提测结果一致。"
+      },
+      "sourceIdentity": "revision=chat-screenshot-2026-09-04-2; source=prds/PR-02172/inbox/vnext-login-provider-layout-2026-09-04.md",
+      "synthetic": false,
+      "sourceFingerprint": "88b96b5e1f5af303e6ef33ebf7f8554413a52c75ffd3075a7710ca16ef83b934",
+      "verificationLevel": "V1",
+      "executionRoute": null,
+      "observedExecutionRoutes": [],
+      "routeConflict": false,
+      "terminalState": "passed",
+      "sampleDisposition": "observed-pass",
+      "pilotEligibility": "eligible",
+      "exclusionReason": null,
+      "executionHold": {
+        "active": false,
+        "code": null,
+        "reason": null,
+        "setAt": null
+      }
+    }
+  ],
+  "projectDispositions": [
+    {
+      "projectId": "PR-02118",
+      "sourceIdentity": "https://qfglxo2m3dc.sg.larksuite.com/wiki/J43NwG6N4ipCEbk6YFaloJk8gWb",
+      "synthetic": false,
+      "sourceFingerprint": null,
+      "verificationLevel": null,
+      "executionRoute": null,
+      "observedExecutionRoutes": [],
+      "routeConflict": false,
+      "terminalState": "unqualified",
+      "sampleDisposition": "not-coding-pilot",
+      "pilotEligibility": "excluded",
+      "exclusionReason": "Human-confirmed negative sample: the supplied document is an operational market-maker onboarding/offboarding SOP without an explicit software delivery scope.",
+      "decision": "not-coding-pilot",
+      "decidedAt": "2026-09-04T08:21:00Z",
+      "executionHold": {
+        "active": false,
+        "code": null,
+        "reason": null,
+        "setAt": null
       }
     },
     {
-      "sampleId": "PR-02233-AUTOPILOT-V33",
       "projectId": "PR-02233",
-      "artifactDir": "../../prds/PR-02233",
-      "artifactMode": "project",
-      "enrolledAt": "2026-09-12T12:28:48Z",
-      "newRequirement": true,
-      "executionAttestation": null,
-      "observation": null
+      "sampleId": "PR-02233-AUTOPILOT-V33",
+      "sourceIdentity": "Lark Doc revision=671; historical scope snapshot; current hover request is separate and not approved for this project execution.",
+      "synthetic": false,
+      "sourceFingerprint": "fa425b96dc8ba5e4d4353c3fbdd67b82471a3915e6627170f8893f8b231a95f1",
+      "verificationLevel": "V2",
+      "executionRoute": "high-risk",
+      "observedExecutionRoutes": [
+        "high-risk"
+      ],
+      "routeConflict": false,
+      "terminalState": "running",
+      "sampleDisposition": "excluded-unapproved-overlap",
+      "pilotEligibility": "excluded",
+      "exclusionReason": "V2 scope was never approved for this revision. Current work overlaps an ongoing real request and has an active intake repair action; do not resume or count it as a pilot observation. Re-enrollment requires approved, fingerprint-bound scope and a fresh review of the overlap.",
+      "executionHold": {
+        "active": true,
+        "code": "unapproved-overlap",
+        "reason": "Block run/resume while the V2 scope is unapproved and overlaps an ongoing real request.",
+        "setAt": "2026-09-25T00:00:00.000Z"
+      },
+      "historicalEnrollment": {
+        "artifactDir": "../../prds/PR-02233",
+        "artifactMode": "project",
+        "enrolledAt": "2026-09-12T12:28:48Z",
+        "newRequirement": true,
+        "executionAttestation": null,
+        "observation": null
+      }
+    },
+    {
+      "projectId": "PR-42071",
+      "sourceIdentity": "synthetic local fixture; revision=1; source=prds/PR-42071/inbox/lark-sync/prd-latest.md",
+      "synthetic": true,
+      "sourceFingerprint": "354f572231d15ccf71af8a0e3f9bef52db30818938bcb7c4a9e83a1ed98e474c",
+      "verificationLevel": "V0",
+      "executionRoute": null,
+      "observedExecutionRoutes": [
+        "micro",
+        "lite"
+      ],
+      "routeConflict": true,
+      "terminalState": "running",
+      "sampleDisposition": "excluded-synthetic-e2e-fixture",
+      "pilotEligibility": "excluded",
+      "exclusionReason": "Synthetic clean-project E2E fixture. It must not be treated as real-demand evidence; runner state remains active and observed routing disagrees (micro vs lite).",
+      "executionHold": {
+        "active": true,
+        "code": "synthetic-e2e-fixture",
+        "reason": "Prevent accidental run/resume of a persisted synthetic E2E project; this project is not real-demand evidence.",
+        "setAt": "2026-09-25T00:00:00.000Z"
+      }
     }
   ],
   "candidateAssessments": [
@@ -79,15 +181,6 @@
       "decision": "ineligible-for-requested-level",
       "assessedAt": "2026-09-04T08:35:00Z",
       "reason": "Introduces a shared asynchronous export center with permissions, task lifecycle, notification, download, and retention behavior across business pages; this is an architecture/API boundary change."
-    }
-  ],
-  "excludedCandidates": [
-    {
-      "projectId": "PR-02118",
-      "source": "https://qfglxo2m3dc.sg.larksuite.com/wiki/J43NwG6N4ipCEbk6YFaloJk8gWb",
-      "decidedAt": "2026-09-04T08:21:00Z",
-      "decision": "not-coding-pilot",
-      "reason": "Human-confirmed negative sample: the supplied document is an operational market-maker onboarding/offboarding SOP without an explicit software delivery scope."
     }
   ]
 }

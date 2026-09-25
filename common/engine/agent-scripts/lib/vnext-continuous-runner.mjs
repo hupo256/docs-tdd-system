@@ -19,7 +19,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { AUTOPILOT_ACTIONS } from './vnext-autopilot-actions.mjs'
-import { budgetStatus } from './vnext-efficiency-policy.mjs'
+import { budgetStatus, EFFICIENCY_POLICY_VERSION, EFFICIENCY_ROUTES } from './vnext-efficiency-policy.mjs'
 import { normalizeCompactRunRecord } from './vnext-metrics.mjs'
 import { stableFingerprint } from './vnext-work-item.mjs'
 
@@ -94,6 +94,7 @@ function initialRunnerState(projectId) {
     activeAction: null,
     receipts: [],
     trace: null,
+    traceHistory: [],
     updatedAt: null,
   }
 }
@@ -102,10 +103,47 @@ export function readRunnerState(projectDir, projectId) {
   const file = runnerStateFile(projectDir)
   if (!existsSync(file)) return initialRunnerState(projectId)
   const state = JSON.parse(readFileSync(file, 'utf8'))
-  if (state?.schemaVersion !== 1 || state?.projectId !== projectId || !Array.isArray(state.receipts)) {
+  if (state?.schemaVersion !== 1 || state?.projectId !== projectId || !Array.isArray(state.receipts)
+    || (state.traceHistory !== undefined && !Array.isArray(state.traceHistory))) {
     throw new Error(`invalid v2 runner state: ${file}`)
   }
-  return { ...state, trace: state.trace || null }
+  const traceHistory = state.traceHistory || []
+  const traceIds = traceHistory.map((trace) => trace?.runId)
+  if (traceIds.some((runId) => typeof runId !== 'string' || !runId) || new Set(traceIds).size !== traceIds.length) {
+    throw new Error(`invalid v2 runner trace history: ${file}`)
+  }
+  return { ...state, trace: state.trace || null, traceHistory }
+}
+
+function appendTraceHistory(history, trace) {
+  const existing = history.find((entry) => entry.runId === trace.runId)
+  if (existing) {
+    if (stableFingerprint(existing) !== stableFingerprint(trace)) throw new Error(`runner trace id conflict: ${trace.runId}`)
+    return history
+  }
+  return [...history, trace]
+}
+
+function interruptedTrace(trace, generatedAt) {
+  return normalizeCompactRunRecord({
+    ...trace,
+    actionCount: null,
+    commandCount: null,
+    reviewRounds: null,
+    evidenceCount: null,
+    repairAttempts: null,
+    elapsedMs: null,
+    grossElapsedMs: null,
+    activeElapsedMs: null,
+    userInterruptCount: null,
+    necessaryInterruptCount: null,
+    silentOmissionCount: null,
+    falseCompletionCount: null,
+    terminalState: 'interrupted',
+    budgetStatus: 'unknown',
+    endedAt: null,
+    generatedAt,
+  })
 }
 
 function persistRunnerState(projectDir, state, generatedAt) {
@@ -297,13 +335,45 @@ function measuredBudget(sourceBudget, metrics, endedAt) {
   }
 }
 
+function executionRouteFor(inspection) {
+  const candidates = [
+    inspection?.executionRoute,
+    inspection?.actionPacket?.executionRoute,
+    inspection?.actionPacket?.efficiencyBudget?.route,
+  ].filter(Boolean)
+  const distinct = [...new Set(candidates)]
+  if (distinct.length > 1) throw new Error(`execution route fields disagree: ${distinct.join(', ')}`)
+  const route = distinct[0] || null
+  if (route && !EFFICIENCY_ROUTES.includes(route)) throw new Error(`unknown execution route: ${route}`)
+  return route
+}
+
+function highestObservedRoute(routes) {
+  return routes.reduce((highest, route) => EFFICIENCY_ROUTES.indexOf(route) > EFFICIENCY_ROUTES.indexOf(highest) ? route : highest, 'trivial')
+}
+
+function activeElapsedFromReceipts(receipts) {
+  const durations = receipts.map((receipt) => {
+    const startedAt = Date.parse(receipt?.startedAt)
+    const completedAt = Date.parse(receipt?.completedAt)
+    return Number.isFinite(startedAt) && Number.isFinite(completedAt) && completedAt >= startedAt
+      ? completedAt - startedAt
+      : null
+  })
+  if (durations.some((duration) => duration === null)) return null
+  return durations.reduce((total, duration) => total + duration, 0)
+}
+
 function buildRunTrace({
+  runId,
+  receiptOffset,
   projectId,
   startedAt,
   endedAt,
   initial,
   current,
   receipts,
+  observedRoutes,
   outcome,
 }) {
   const packet = current?.actionPacket || initial?.actionPacket || {}
@@ -320,14 +390,11 @@ function buildRunTrace({
   }
   const budget = measuredBudget(packet.efficiencyBudget, metrics, endedAt)
   return normalizeCompactRunRecord({
-    runId: stableFingerprint({
-      projectId,
-      startedAt,
-      actionId: packet.actionId || null,
-      receiptIds: receipts.map((receipt) => receipt.receiptId || `${receipt.actionId || ''}:${receipt.outcome || ''}`),
-    }),
+    runId,
     projectId,
-    route: current?.executionRoute || packet.executionRoute || packet.efficiencyBudget?.route || initial?.executionRoute || null,
+    route: observedRoutes.length ? highestObservedRoute(observedRoutes) : null,
+    routePolicyVersion: EFFICIENCY_POLICY_VERSION,
+    observedRoutes,
     assurance: current?.verificationLevel || initial?.verificationLevel || null,
     routeReasons: current?.routeReasons || packet.routeReasons || initial?.routeReasons || [],
     contextChars: packet.efficiencyBudget?.usage?.contextChars,
@@ -338,6 +405,8 @@ function buildRunTrace({
     evidenceCount: metrics.evidenceCount,
     repairAttempts: metrics.repairAttempts,
     elapsedMs: metrics.elapsedMs,
+    grossElapsedMs: metrics.elapsedMs,
+    activeElapsedMs: activeElapsedFromReceipts(receipts),
     userInterruptCount: metrics.userInterruptCount,
     necessaryInterruptCount: metrics.necessaryInterruptCount,
     tokenUsage: tokenUsageFromReceipts(receipts),
@@ -347,6 +416,7 @@ function buildRunTrace({
     startedAt,
     endedAt,
     generatedAt: endedAt,
+    receiptOffset,
   })
 }
 
@@ -368,17 +438,32 @@ export function runContinuousRunner({
   const initial = inspect()
   let firstInspection = initial
   const beforeRun = readRunnerState(projectDir, projectId)
+  let traceHistory = [...beforeRun.traceHistory]
+  if (beforeRun.trace?.terminalState === 'running') {
+    traceHistory = appendTraceHistory(traceHistory, interruptedTrace(beforeRun.trace, startedAt))
+  }
   const receiptOffset = beforeRun.receipts.length
-  const traceReceipts = []
-  const runningTrace = normalizeCompactRunRecord({
-    runId: stableFingerprint({
-      projectId,
-      startedAt,
-      actionId: initial.actionPacket?.actionId || null,
-      receiptOffset,
-    }),
+  const traceRunId = stableFingerprint({
     projectId,
-    route: initial.executionRoute || initial.actionPacket?.executionRoute || initial.actionPacket?.efficiencyBudget?.route || null,
+    startedAt,
+    actionId: initial.actionPacket?.actionId || null,
+    receiptOffset,
+    sequence: traceHistory.length,
+  })
+  const traceReceipts = []
+  const observedRoutes = []
+  const observeRoute = (inspection) => {
+    const route = executionRouteFor(inspection)
+    if (route && !observedRoutes.includes(route)) observedRoutes.push(route)
+    return route
+  }
+  const initialRoute = observeRoute(initial)
+  const runningTrace = normalizeCompactRunRecord({
+    runId: traceRunId,
+    projectId,
+    route: initialRoute,
+    routePolicyVersion: EFFICIENCY_POLICY_VERSION,
+    observedRoutes,
     assurance: initial.verificationLevel || null,
     routeReasons: initial.routeReasons || initial.actionPacket?.routeReasons || [],
     contextChars: initial.actionPacket?.efficiencyBudget?.usage?.contextChars,
@@ -388,28 +473,35 @@ export function runContinuousRunner({
     budget: initial.actionPacket?.efficiencyBudget || null,
     startedAt,
     generatedAt: startedAt,
+    receiptOffset,
   })
-  persistRunnerState(projectDir, { ...beforeRun, trace: runningTrace }, startedAt)
+  persistRunnerState(projectDir, { ...beforeRun, trace: runningTrace, traceHistory }, startedAt)
 
   const finishRun = (current, outcome, details = {}) => {
+    observeRoute(current)
     const endedAt = now()
     const persisted = readRunnerState(projectDir, projectId)
     const trace = buildRunTrace({
+      runId: traceRunId,
+      receiptOffset,
       projectId,
       startedAt,
       endedAt,
       initial,
       current,
       receipts: traceReceipts,
+      observedRoutes,
       outcome,
     })
-    persistRunnerState(projectDir, { ...persisted, trace }, endedAt)
+    traceHistory = appendTraceHistory(persisted.traceHistory, trace)
+    persistRunnerState(projectDir, { ...persisted, trace, traceHistory }, endedAt)
     return terminalResult(current, outcome, { ...details, trace })
   }
 
   for (let step = 1; step <= maxSteps; step += 1) {
     let current = firstInspection || inspect()
     firstInspection = null
+    observeRoute(current)
     const packet = current.actionPacket
     if (current.status === 'complete' || packet?.action === 'complete') {
       return finishRun(current, 'complete', { steps: step - 1 })
@@ -450,12 +542,7 @@ export function runContinuousRunner({
           ...recovery,
           outcome: recovery.outcome === 'completed' ? 'recovered' : recovery.outcome,
         }, now(), { recovery: true })
-        traceReceipts.push({
-          ...active,
-          ...recovery,
-          outcome: recovery.outcome === 'completed' ? 'recovered' : recovery.outcome,
-          recovery: true,
-        })
+        traceReceipts.push(persisted.receipts.at(-1))
         if (recovery.outcome !== 'completed') {
           return finishRun(inspect(), recovery.outcome, {
             steps: step - 1,
@@ -541,7 +628,7 @@ export function runContinuousRunner({
       }
     }
     persisted = finishAction(projectDir, persisted, running, result, now())
-    traceReceipts.push({ ...running, ...result })
+    traceReceipts.push(persisted.receipts.at(-1))
     if (result.outcome === 'completed') continue
 
     after = inspect()
@@ -572,9 +659,9 @@ function selfTest() {
   try {
     let stage = 0
     const states = [
-      { status: 'active', actionPacket: { action: 'prepare-coding-worktree', actionId: 'A-1' } },
-      { status: 'active', actionPacket: { action: 'capture-cli-evidence', actionId: 'A-2' } },
-      { status: 'complete', actionPacket: { action: 'complete', actionId: 'A-3' } },
+      { status: 'active', executionRoute: 'micro', actionPacket: { action: 'prepare-coding-worktree', actionId: 'A-1', executionRoute: 'micro' } },
+      { status: 'active', executionRoute: 'standard', actionPacket: { action: 'capture-cli-evidence', actionId: 'A-2', executionRoute: 'standard' } },
+      { status: 'complete', executionRoute: 'standard', actionPacket: { action: 'complete', actionId: 'A-3', executionRoute: 'standard' } },
     ]
     const registry = createActionExecutorRegistry({
       deterministic: {
@@ -593,7 +680,29 @@ function selfTest() {
       })(),
     })
     assert.equal(completed.runner.outcome, 'complete')
-    assert.equal(readRunnerState(root, 'PR-00001').receipts.length, 2)
+    const completedState = readRunnerState(root, 'PR-00001')
+    assert.equal(completedState.receipts.length, 2)
+    assert.equal(completedState.traceHistory.length, 1)
+    assert.equal(completedState.traceHistory[0].runId, completed.runner.trace.runId)
+    assert.equal(completedState.traceHistory[0].actionCount, 2)
+    assert.equal(completed.runner.trace.route, 'standard')
+    assert.equal(completed.runner.trace.routePolicyVersion, EFFICIENCY_POLICY_VERSION)
+    assert.deepEqual(completed.runner.trace.observedRoutes, ['micro', 'standard'])
+    assert.equal(completed.runner.trace.grossElapsedMs, completed.runner.trace.elapsedMs)
+    assert.equal(completed.runner.trace.activeElapsedMs, 2000)
+
+    const invalidRouteRoot = join(root, 'invalid-route')
+    assert.throws(() => runContinuousRunner({
+      projectId: 'PR-00007',
+      projectDir: invalidRouteRoot,
+      inspect: () => ({
+        status: 'active',
+        executionRoute: 'micro',
+        actionPacket: { action: 'implement-current-scope', actionId: 'A-invalid-route', executionRoute: 'lite' },
+      }),
+      registry: createActionExecutorRegistry(),
+    }), /execution route fields disagree/)
+    assert.equal(existsSync(runnerStateFile(invalidRouteRoot)), false)
 
     let needsAgentCalls = 0
     const agentRoot = join(root, 'agent-case')
@@ -614,7 +723,10 @@ function selfTest() {
       projectId: 'PR-00002', projectDir: agentRoot, inspect: agentState, registry: agentRegistry,
     }).runner.outcome, 'needs-agent')
     assert.equal(needsAgentCalls, 2)
-    assert.equal(readRunnerState(agentRoot, 'PR-00002').receipts.length, 1)
+    const agentStateAfterRuns = readRunnerState(agentRoot, 'PR-00002')
+    assert.equal(agentStateAfterRuns.receipts.length, 1)
+    assert.equal(agentStateAfterRuns.traceHistory.length, 2)
+    assert.equal(new Set(agentStateAfterRuns.traceHistory.map((trace) => trace.runId)).size, 2)
     assert.equal(executorTypeForAction('resume-review-after-human-repair'), 'human')
     const humanResume = runContinuousRunner({
       projectId: 'PR-00005',
@@ -677,6 +789,16 @@ function selfTest() {
     const recoveryRoot = join(root, 'recovery-case')
     atomicWrite(runnerStateFile(recoveryRoot), {
       ...initialRunnerState('PR-00003'),
+      trace: normalizeCompactRunRecord({
+        runId: 'old-run',
+        projectId: 'PR-00003',
+        route: 'micro',
+        routePolicyVersion: EFFICIENCY_POLICY_VERSION,
+        terminalState: 'running',
+        startedAt: '2026-09-24T00:00:00Z',
+        generatedAt: '2026-09-24T00:00:00Z',
+        receiptOffset: 0,
+      }),
       activeAction: {
         action: 'implement-current-scope',
         actionId: 'A-old',
@@ -698,7 +820,12 @@ function selfTest() {
     })
     assert.equal(recovered.runner.outcome, 'needs-user')
     assert.equal(recoveryCalls, 1)
-    assert.equal(readRunnerState(recoveryRoot, 'PR-00003').activeAction, null)
+    const recoveredState = readRunnerState(recoveryRoot, 'PR-00003')
+    assert.equal(recoveredState.activeAction, null)
+    assert.equal(recoveredState.traceHistory[0].runId, 'old-run')
+    assert.equal(recoveredState.traceHistory[0].terminalState, 'interrupted')
+    assert.equal(recoveredState.traceHistory[0].actionCount, null)
+    assert.equal(recoveredState.trace.terminalState, 'needs-user')
     console.log('vnext-continuous-runner self-test passed')
   } finally {
     rmSync(root, { recursive: true, force: true })

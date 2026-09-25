@@ -11,12 +11,24 @@ import { spawn } from 'node:child_process'
 import { dirname, join, resolve } from 'node:path'
 import { tmpdir } from 'node:os'
 import { fileURLToPath } from 'node:url'
+import { validateSchema } from './doc-budget-schema.mjs'
 import { buildVNextExitResult, verifyExitResultIntegrity } from './vnext-exit.mjs'
-import { stableFingerprint } from './vnext-work-item.mjs'
+import { sealCoverageAuditForFixture, stableFingerprint } from './vnext-work-item.mjs'
 
 export const VNEXT_ARTIFACT_FILES = Object.freeze(['work-item.json', 'latest-result.json', 'runs.jsonl'])
+export const VNEXT_OPTIONAL_ARTIFACT_FILES = Object.freeze(['latest-dev-check.json'])
+export const VNEXT_WORK_ITEM_TARGET_BYTES = 64 * 1024
+export const VNEXT_WORK_ITEM_HARD_BYTES = 128 * 1024
 const lockName = '.vnext-write.lock'
 const sleepBuffer = new Int32Array(new SharedArrayBuffer(4))
+const workItemSchema = JSON.parse(readFileSync(
+  fileURLToPath(new URL('../../schemas/vnext-work-item.schema.json', import.meta.url)),
+  'utf8',
+))
+const devCheckSchema = JSON.parse(readFileSync(
+  fileURLToPath(new URL('../../schemas/vnext-dev-check.schema.json', import.meta.url)),
+  'utf8',
+))
 
 function sleep(milliseconds) {
   Atomics.wait(sleepBuffer, 0, 0, milliseconds)
@@ -24,6 +36,10 @@ function sleep(milliseconds) {
 
 function json(value) {
   return `${JSON.stringify(value, null, 2)}\n`
+}
+
+function compactJson(value) {
+  return `${JSON.stringify(value)}\n`
 }
 
 function atomicWrite(file, content) {
@@ -134,9 +150,80 @@ function recoverLatest(outDir, history) {
   return appendIfAbsent(outDir, latest, history)
 }
 
+function assertSchema(value, schema, label) {
+  const problems = validateSchema(value, schema)
+  if (problems.length) throw new Error(`${label} schema validation failed: ${problems.slice(0, 20).join('; ')}`)
+}
+
+function canonicalBytes(value) {
+  return Buffer.byteLength(compactJson(value), 'utf8')
+}
+
+function assertWorkItemBudget(workFile, workItem) {
+  const bytes = canonicalBytes(workItem)
+  const existingBytes = existsSync(workFile) ? canonicalBytes(readJson(workFile)) : 0
+  if (bytes > VNEXT_WORK_ITEM_HARD_BYTES && (!existingBytes || bytes > existingBytes)) {
+    throw new Error(
+      `work-item.json canonical size ${bytes} bytes exceeds hard limit ${VNEXT_WORK_ITEM_HARD_BYTES}; `
+      + (existingBytes ? `existing oversized item is ${existingBytes} bytes and may only stay the same size or shrink` : 'split the work item'),
+    )
+  }
+  return {
+    bytes,
+    targetBytes: VNEXT_WORK_ITEM_TARGET_BYTES,
+    hardBytes: VNEXT_WORK_ITEM_HARD_BYTES,
+    status: bytes > VNEXT_WORK_ITEM_HARD_BYTES ? 'legacy-oversized' : bytes > VNEXT_WORK_ITEM_TARGET_BYTES ? 'above-target' : 'within-target',
+  }
+}
+
 function assertWorkItem(workItem) {
-  if (workItem?.schemaVersion !== 1 || workItem?.workflowVersion !== 2 || !/^(?:PR|TR)-\d{5}$/.test(workItem?.projectId || '')) {
-    throw new Error('work item must be schemaVersion=1, workflowVersion=2, and have a PR-xxxxx projectId')
+  assertSchema(workItem, workItemSchema, 'work item')
+}
+
+function assertDevCheck(report) {
+  assertSchema(report, devCheckSchema, 'development check')
+}
+
+export function summarizeVNextDevCheck(report) {
+  if (!report) return null
+  return {
+    schemaVersion: report.schemaVersion,
+    projectId: report.projectId,
+    runId: report.runId,
+    checkedAt: report.checkedAt,
+    status: report.status,
+    ok: report.ok,
+    codeState: structuredClone(report.codeState),
+    pendingCommitPaths: structuredClone(report.pendingCommitPaths || []),
+    unmappedPaths: structuredClone(report.unmappedPaths || []),
+    problems: structuredClone(report.problems || []),
+  }
+}
+
+export function readVNextDevCheck(outDir, workItem = null) {
+  const file = join(resolve(outDir), 'latest-dev-check.json')
+  if (!existsSync(file)) return null
+  const report = readJson(file)
+  assertDevCheck(report)
+  const summary = workItem?.autopilot?.lastDevCheck
+  if (workItem && (report.projectId !== workItem.projectId || !summary || report.runId !== summary.runId)) return null
+  return report
+}
+
+export function persistVNextDevCheck(outDir, report, lockOptions = {}) {
+  assertDevCheck(report)
+  const absolute = resolve(outDir)
+  const release = acquireLock(absolute, lockOptions)
+  try {
+    const file = join(absolute, 'latest-dev-check.json')
+    const content = compactJson(report)
+    if (existsSync(file) && readFileSync(file, 'utf8') === content) {
+      return { written: false, idempotent: true, file: 'latest-dev-check.json', bytes: Buffer.byteLength(content, 'utf8') }
+    }
+    atomicWrite(file, content)
+    return { written: true, idempotent: false, file: 'latest-dev-check.json', bytes: Buffer.byteLength(content, 'utf8') }
+  } finally {
+    release()
   }
 }
 
@@ -146,11 +233,13 @@ export function persistVNextWorkItem(outDir, workItem, lockOptions = {}) {
   const release = acquireLock(absolute, lockOptions)
   try {
     const workFile = join(absolute, 'work-item.json')
-    if (existsSync(workFile) && stableFingerprint(readJson(workFile)) === stableFingerprint(workItem)) {
-      return { written: false, idempotent: true, files: readdirSync(absolute).filter((name) => name !== lockName).sort() }
+    const budget = assertWorkItemBudget(workFile, workItem)
+    const content = compactJson(workItem)
+    if (existsSync(workFile) && readFileSync(workFile, 'utf8') === content) {
+      return { written: false, idempotent: true, budget, files: readdirSync(absolute).filter((name) => name !== lockName).sort() }
     }
-    atomicWrite(workFile, json(workItem))
-    return { written: true, idempotent: false, files: readdirSync(absolute).filter((name) => name !== lockName).sort() }
+    atomicWrite(workFile, content)
+    return { written: true, idempotent: false, budget, files: readdirSync(absolute).filter((name) => name !== lockName).sort() }
   } finally {
     release()
   }
@@ -163,13 +252,15 @@ export function initializeVNextArtifacts(outDir, workItem, lockOptions = {}) {
   try {
     const workFile = join(absolute, 'work-item.json')
     const latestFile = join(absolute, 'latest-result.json')
+    const budget = assertWorkItemBudget(workFile, workItem)
     if (existsSync(latestFile)) {
       const latest = readJson(latestFile)
       if (latest.workItemFingerprint !== stableFingerprint(workItem)) throw new Error('cannot replace an active work item without writing its matching verification result')
     }
-    if (existsSync(workFile) && stableFingerprint(readJson(workFile)) === stableFingerprint(workItem)) return { initialized: false, idempotent: true, files: readdirSync(absolute).filter((name) => name !== lockName).sort() }
-    atomicWrite(workFile, json(workItem))
-    return { initialized: true, idempotent: false, files: readdirSync(absolute).filter((name) => name !== lockName).sort() }
+    const content = compactJson(workItem)
+    if (existsSync(workFile) && readFileSync(workFile, 'utf8') === content) return { initialized: false, idempotent: true, budget, files: readdirSync(absolute).filter((name) => name !== lockName).sort() }
+    atomicWrite(workFile, content)
+    return { initialized: true, idempotent: false, budget, files: readdirSync(absolute).filter((name) => name !== lockName).sort() }
   } finally {
     release()
   }
@@ -185,19 +276,20 @@ export function persistVNextRun(outDir, { workItem, result }, options = {}) {
   const absolute = resolve(outDir)
   const release = acquireLock(absolute, options.lock)
   try {
+    const budget = assertWorkItemBudget(join(absolute, 'work-item.json'), workItem)
     const history = readVNextRunHistory(absolute)
     const recovered = recoverLatest(absolute, history)
     const duplicate = history.find((run) => run.runId === result.runId)
     if (duplicate) {
       if (duplicate.resultFingerprint !== result.resultFingerprint) throw new Error(`runId conflict: ${result.runId}`)
-      return { written: false, idempotent: true, recovered, runCount: history.length, files: VNEXT_ARTIFACT_FILES }
+      return { written: false, idempotent: true, recovered, runCount: history.length, budget, files: VNEXT_ARTIFACT_FILES }
     }
 
-    atomicWrite(join(absolute, 'work-item.json'), json(workItem))
+    atomicWrite(join(absolute, 'work-item.json'), compactJson(workItem))
     atomicWrite(join(absolute, 'latest-result.json'), json(result))
     if (options.failAfterLatest) throw new Error('injected interruption after latest-result write')
     const written = appendIfAbsent(absolute, result, history)
-    return { written, idempotent: false, recovered, runCount: history.length, files: VNEXT_ARTIFACT_FILES }
+    return { written, idempotent: false, recovered, runCount: history.length, budget, files: VNEXT_ARTIFACT_FILES }
   } finally {
     release()
   }
@@ -205,10 +297,24 @@ export function persistVNextRun(outDir, { workItem, result }, options = {}) {
 
 function sample(runId, generatedAt = '2026-09-04T00:00:03Z') {
   const code = { headSha: 'abc1234', baseSha: 'base1234', dirtyHash: 'dirty', dirtyFileCount: 0, untrackedFileCount: 0, isGitRepo: true }
-  const workItem = {
-    schemaVersion: 1, workflowVersion: 2, projectId: 'PR-00001', routing: { verificationLevel: 'V0' }, apiDependency: { mode: 'no-request', reason: 'fixture' },
-    requirements: [{ requirementId: 'R-001', status: 'doing', evidencePlan: [{ type: 'pure-logic' }], affectedSurfaces: [] }],
-  }
+  const workItem = sealCoverageAuditForFixture({
+    schemaVersion: 1,
+    workflowVersion: 2,
+    projectId: 'PR-00001',
+    sourceSnapshot: { revision: '1', contentHash: 'source', sources: [{ path: 'prd.md', contentHash: 'source' }] },
+    routing: { scopeClass: 'local', riskSignals: [], verificationLevel: 'V0', routerVersion: 1 },
+    apiDependency: { mode: 'no-request', reason: 'fixture' },
+    requirementsAuthor: { kind: 'human', id: 'fixture' },
+    requirements: [{
+      requirementId: 'R-001',
+      sourceAnchors: [{ type: 'text', sourceId: 'SRC-1' }],
+      statement: 'Fixture requirement.',
+      status: 'doing',
+      evidencePlan: [{ type: 'pure-logic', runtimeRequired: false }],
+      affectedSurfaces: [],
+    }],
+    coverageAudit: { unresolved: [] },
+  })
   const fact = (evidenceId, kind, requirementIds = []) => ({
     evidenceId, kind, result: 'pass', codeFingerprint: code, requirementIds, surfaceIds: [], evidenceRefs: [`logs/${evidenceId}.txt`],
     producer: { kind: 'command', command: `test ${kind}`, exitCode: 0, startedAt: '2026-09-04T00:00:00Z', finishedAt: '2026-09-04T00:00:01Z' },
@@ -235,6 +341,7 @@ export async function selfTest() {
     const first = sample('run-1')
     assert.deepEqual(initializeVNextArtifacts(basic, first.workItem).files, ['work-item.json'])
     assert.equal(initializeVNextArtifacts(basic, first.workItem).idempotent, true)
+    assert.equal(readFileSync(join(basic, 'work-item.json'), 'utf8').includes('\n  "schemaVersion"'), false)
     assert.equal(persistVNextWorkItem(basic, { ...first.workItem, apiDependency: { mode: 'no-request', reason: 'updated' } }).written, true)
     persistVNextWorkItem(basic, first.workItem)
     assert.equal(persistVNextRun(basic, first).written, true)
@@ -268,7 +375,35 @@ export async function selfTest() {
     assert.equal(parallelRuns.length, 6)
     assert.equal(new Set(parallelRuns.map((run) => run.runId)).size, 6)
     assert.deepEqual(readdirSync(concurrent).sort(), [...VNEXT_ARTIFACT_FILES].sort())
-    console.log('vnext-persistence self-test passed (atomic, idempotent, recovery, stale-lock, concurrency)')
+
+    const devCheck = {
+      schemaVersion: 1,
+      projectId: 'PR-00001',
+      runId: 'dev-check-1',
+      checkedAt: '2026-09-25T00:00:00Z',
+      status: 'passed',
+      ok: true,
+      codeState: { headSha: 'head', contentHash: 'content', dirtyHash: 'dirty' },
+      changedPaths: ['src/a.ts'],
+      pendingCommitPaths: ['src/a.ts'],
+      pathCoverage: [{ path: 'src/a.ts', requirementIds: ['R-001'], surfaceIds: ['S-001'], mappingSource: 'locator' }],
+      unmappedPaths: [],
+      pathPolicy: { status: 'not-configured', policyPaths: [], outOfScopePaths: [] },
+      commandSelection: { plannedCount: 1, selectedCount: 1, executedCount: 1, supersededCommandIds: [], notRunCommandIds: [] },
+      commandResults: [{ evidenceId: 'E-1', kind: 'pure-logic', argv: ['node', 'test.mjs'], result: 'pass', exitCode: 0 }],
+      blockers: [],
+      problems: [],
+    }
+    const withDevCheck = { ...first.workItem, autopilot: { repairAttempts: { code: 0, browser: 0 }, lastDevCheck: summarizeVNextDevCheck(devCheck) } }
+    persistVNextWorkItem(basic, withDevCheck)
+    assert.equal(persistVNextDevCheck(basic, devCheck).written, true)
+    assert.equal(readVNextDevCheck(basic, withDevCheck).runId, devCheck.runId)
+    assert.equal(readVNextDevCheck(basic, { ...withDevCheck, autopilot: { ...withDevCheck.autopilot, lastDevCheck: { ...withDevCheck.autopilot.lastDevCheck, runId: 'other' } } }), null)
+
+    const oversized = join(root, 'oversized')
+    const tooLarge = { ...first.workItem, coverageAudit: { ...first.workItem.coverageAudit, unresolved: ['x'.repeat(VNEXT_WORK_ITEM_HARD_BYTES)] } }
+    assert.throws(() => persistVNextWorkItem(oversized, tooLarge), /exceeds hard limit/)
+    console.log('vnext-persistence self-test passed (schema, compactness, budgets, sidecar, atomicity, idempotency, recovery, stale-lock, concurrency)')
   } finally {
     rmSync(root, { recursive: true, force: true })
   }

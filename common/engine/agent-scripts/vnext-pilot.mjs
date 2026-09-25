@@ -9,6 +9,7 @@ import { buildVNextContext } from './lib/vnext-context.mjs'
 import { verifyExitResultIntegrity } from './lib/vnext-exit.mjs'
 import { readVNextRunHistory, VNEXT_ARTIFACT_FILES } from './lib/vnext-persistence.mjs'
 import { deriveDeliveryTruth } from './lib/vnext-delivery-truth.mjs'
+import { readProjectControlRegistry, summarizeProjectControl } from './lib/vnext-project-control.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const defaultRegistry = join(scriptDir, '..', '..', 'vnext', 'pilot-registry.json')
@@ -53,10 +54,14 @@ export function inspectPilotEntry(entry, registryDir) {
     projectId: entry.projectId,
     root,
     artifactMode,
+    ...summarizeProjectControl(entry),
     autopilotRelease: execution?.release || null,
     publicCommandsOnly: execution?.publicCommandsOnly === true,
     executionAttestedBy: execution?.attestedBy || null,
     executionAttestedAt: execution?.attestedAt || null,
+  }
+  if (entry.pilotEligibility === 'excluded') {
+    return { ...common, excluded: true, authoritative: false, deliveryCommitted: false, ok: false, problems: [entry.exclusionReason] }
   }
   const problems = []
   let workItem = null
@@ -67,6 +72,8 @@ export function inspectPilotEntry(entry, registryDir) {
     const latest = load(join(root, 'latest-result.json'))
     const history = readVNextRunHistory(root)
     if (workItem.projectId !== entry.projectId || latest.projectId !== entry.projectId) problems.push('projectId does not match registry')
+    if (entry.sourceFingerprint && workItem.sourceSnapshot?.contentHash !== entry.sourceFingerprint) problems.push('source fingerprint does not match registry')
+    if (entry.verificationLevel && workItem.routing?.verificationLevel !== entry.verificationLevel) problems.push('verification level does not match registry')
     const integrity = verifyExitResultIntegrity(latest, workItem)
     if (!integrity.ok) problems.push(...integrity.problems)
     if (!history.some((run) => run.runId === latest.runId && run.resultFingerprint === latest.resultFingerprint)) problems.push('latest result is absent from runs.jsonl')
@@ -109,17 +116,18 @@ export function inspectPilotEntry(entry, registryDir) {
 }
 
 export function evaluatePilot(registry, samples, isolation = inspectV1Isolation()) {
+  const eligibleSamples = samples.filter((sample) => sample.pilotEligibility !== 'excluded')
   const requiredLevels = registry.requiredLevels || ['V0', 'V1', 'V2']
-  const enrolledLevels = [...new Set(samples.map((sample) => sample.level).filter(Boolean))].sort()
-  const levels = [...new Set(samples.filter((sample) => sample.ok).map((sample) => sample.level))].sort()
-  const escapeSamples = samples.filter((sample) => (sample.omissionEscapes || 0) > 0 || (sample.falseGreenEscapes || 0) > 0)
-  const completed = samples.filter((sample) => sample.ok)
-  const withinCount = samples.length >= registry.minimumSamples && samples.length <= registry.maximumSamples
+  const enrolledLevels = [...new Set(eligibleSamples.map((sample) => sample.level).filter(Boolean))].sort()
+  const levels = [...new Set(eligibleSamples.filter((sample) => sample.ok).map((sample) => sample.level))].sort()
+  const escapeSamples = eligibleSamples.filter((sample) => (sample.omissionEscapes || 0) > 0 || (sample.falseGreenEscapes || 0) > 0)
+  const completed = eligibleSamples.filter((sample) => sample.ok)
+  const withinCount = eligibleSamples.length >= registry.minimumSamples && eligibleSamples.length <= registry.maximumSamples
   const levelCoverage = requiredLevels.every((level) => levels.includes(level))
   const zeroEscapes = escapeSamples.length === 0
   const qualificationTarget = registry.qualificationTarget || null
   const qualifiedSamples = qualificationTarget
-    ? samples.filter((sample) => sample.ok
+    ? eligibleSamples.filter((sample) => sample.ok
       && sample.authoritative === true
       && sample.deliveryCommitted === true
       && sample.autopilotRelease === qualificationTarget.release
@@ -141,15 +149,16 @@ export function evaluatePilot(registry, samples, isolation = inspectV1Isolation(
     status: 'collecting',
     automaticCutover: false,
     summary: {
-      enrolled: samples.length,
+      enrolled: eligibleSamples.length,
+      excluded: samples.length - eligibleSamples.length,
       completed: completed.length,
       minimumSamples: registry.minimumSamples,
       maximumSamples: registry.maximumSamples,
       enrolledLevels,
       completedLevels: levels,
       requiredLevels,
-      zeroRequirementOmissionEscapes: samples.reduce((total, sample) => total + (sample.omissionEscapes || 0), 0) === 0,
-      zeroFalseGreenEscapes: samples.reduce((total, sample) => total + (sample.falseGreenEscapes || 0), 0) === 0,
+      zeroRequirementOmissionEscapes: eligibleSamples.reduce((total, sample) => total + (sample.omissionEscapes || 0), 0) === 0,
+      zeroFalseGreenEscapes: eligibleSamples.reduce((total, sample) => total + (sample.falseGreenEscapes || 0), 0) === 0,
     },
     releaseQualification: {
       readinessCaseId: qualificationTarget?.readinessCaseId || null,
@@ -162,9 +171,9 @@ export function evaluatePilot(registry, samples, isolation = inspectV1Isolation(
     },
     checks: [
       { code: 'LEGACY_ISOLATED', ok: isolation.ok, problems: isolation.coupled || [] },
-      { code: 'SAMPLE_COUNT', ok: withinCount, problems: withinCount ? [] : [`need ${registry.minimumSamples}–${registry.maximumSamples} samples, got ${samples.length}`] },
+      { code: 'SAMPLE_COUNT', ok: withinCount, problems: withinCount ? [] : [`need ${registry.minimumSamples}–${registry.maximumSamples} samples, got ${eligibleSamples.length}`] },
       { code: 'LEVEL_COVERAGE', ok: levelCoverage, problems: requiredLevels.filter((level) => !levels.includes(level)).map((level) => `no completed ${level} sample`) },
-      { code: 'SAMPLES_COMPLETE', ok: completed.length === samples.length && samples.length > 0, problems: samples.filter((sample) => !sample.ok).map((sample) => `${sample.sampleId || sample.projectId}: ${sample.problems.join('; ')}`) },
+      { code: 'SAMPLES_COMPLETE', ok: completed.length === eligibleSamples.length && eligibleSamples.length > 0, problems: eligibleSamples.filter((sample) => !sample.ok).map((sample) => `${sample.sampleId || sample.projectId}: ${sample.problems.join('; ')}`) },
       { code: 'ZERO_ESCAPES', ok: zeroEscapes, problems: escapeSamples.map((sample) => `${sample.sampleId || sample.projectId}: omission=${sample.omissionEscapes}, falseGreen=${sample.falseGreenEscapes}`) },
       {
         code: 'R13_PUBLIC_COMMAND_PILOTS',
@@ -175,7 +184,7 @@ export function evaluatePilot(registry, samples, isolation = inspectV1Isolation(
           : ['pilot registry has no release qualification target'],
       },
     ],
-    samples,
+    samples: eligibleSamples,
   }
 }
 
@@ -197,6 +206,11 @@ export function selfTest() {
   escaped[2].omissionEscapes = 1
   assert.equal(evaluatePilot(registry, escaped, { ok: true, coupled: [] }).decision, 'collecting')
   assert.equal(evaluatePilot(registry, samples.slice(0, 2), { ok: true, coupled: [] }).decision, 'collecting')
+  const excluded = { ...samples[0], projectId: 'TR-00001', pilotEligibility: 'excluded', exclusionReason: 'synthetic fixture' }
+  const withExcluded = evaluatePilot(registry, [...samples, excluded], { ok: true, coupled: [] })
+  assert.equal(withExcluded.summary.enrolled, samples.length)
+  assert.equal(withExcluded.summary.excluded, 1)
+  assert.equal(withExcluded.samples.some((sample) => sample.projectId === 'TR-00001'), false)
   assert.equal(evaluatePilot(registry, samples, { ok: false, coupled: ['docs-tdd.mjs'] }).decision, 'collecting')
   const unattested = structuredClone(samples)
   unattested[2].publicCommandsOnly = false
@@ -209,9 +223,16 @@ else {
   try {
     const registryIndex = process.argv.indexOf('--registry')
     const registryFile = resolve(registryIndex === -1 ? defaultRegistry : process.argv[registryIndex + 1])
-    const registry = load(registryFile)
+    const registry = readProjectControlRegistry(registryFile)
     const samples = registry.entries.map((entry) => inspectPilotEntry(entry, dirname(registryFile)))
-    const report = evaluatePilot(registry, samples)
+    const report = {
+      ...evaluatePilot(registry, samples),
+      projectControls: [...registry.entries, ...registry.projectDispositions].map((control) => ({
+        projectId: control.projectId,
+        sampleId: control.sampleId || null,
+        ...summarizeProjectControl(control),
+      })),
+    }
     if (process.argv.includes('--write')) writeFileSync(defaultReport, `${JSON.stringify(report, null, 2)}\n`)
     console.log(JSON.stringify(report, null, 2))
     process.exitCode = 0

@@ -3,7 +3,7 @@
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { join, relative } from 'node:path'
-import { listProjectIds, resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
+import { isolatedProjectStore, listProjectIds, resolveProjectRoot, resolveRoots } from './lib/roots.mjs'
 import {
   firstMatch,
   focusLine,
@@ -51,6 +51,11 @@ if (args.includes('--help')) {
 if (args.includes('--self-test')) {
   selfTest()
   process.exit(0)
+}
+
+if (write && isolatedProjectStore) {
+  console.error('refusing --write while DOCS_TDD_ISOLATED_PROJECTS_ROOT is active; isolated fixtures must not replace the canonical PROJECTS.md')
+  process.exit(2)
 }
 
 function read(file) {

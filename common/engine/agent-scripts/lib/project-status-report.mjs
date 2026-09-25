@@ -25,8 +25,8 @@ function frontmatterValue(readme, key) {
   return readme.match(new RegExp(`^${key}:\\s*(.*)$`, 'm'))?.[1]?.replace(/^['"]|['"]$/g, '').trim() || ''
 }
 
-export function readProjectGitBinding(projectId) {
-  const projectDir = resolveProjectRoot(projectId)
+export function readProjectGitBinding(projectId, options = {}) {
+  const projectDir = resolveProjectRoot(projectId, options)
   const readmeFile = join(projectDir, 'README.md')
   const readme = existsSync(readmeFile) ? readFileSync(readmeFile, 'utf8') : ''
   const configuredWorktree = frontmatterValue(readme, 'worktree')

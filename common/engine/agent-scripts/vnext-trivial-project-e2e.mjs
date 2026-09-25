@@ -48,10 +48,10 @@ function git(repo, args) {
   return result.stdout || ''
 }
 
-function allocateProjectId(parent) {
+function allocateProjectId(parent, projectsRoot) {
   for (let attempt = 0; attempt < 100; attempt += 1) {
-    const projectId = `PR-${randomInt(10000, 100000)}`
-    if (!existsSync(resolveProjectRoot(projectId)) && !existsSync(join(parent, projectId))) return projectId
+    const projectId = `TR-${randomInt(10000, 100000)}`
+    if (!existsSync(resolveProjectRoot(projectId, { projectsRoot })) && !existsSync(join(parent, projectId))) return projectId
   }
   throw new Error('unable to allocate an unused trivial-project E2E project ID')
 }
@@ -66,8 +66,8 @@ function parseJsonOutput(result) {
   return JSON.parse(result.stdout)
 }
 
-function removeOwnedProject(projectId, marker) {
-  const projectDir = resolveProjectRoot(projectId)
+function removeOwnedProject(projectId, marker, projectsRoot) {
+  const projectDir = resolveProjectRoot(projectId, { projectsRoot })
   const readme = join(projectDir, 'README.md')
   if (!existsSync(readme)) return
   if (!readFileSync(readme, 'utf8').includes(marker)) return
@@ -256,7 +256,8 @@ export function runTrivialProjectE2E() {
   const repo = join(root, 'consumer')
   const binDir = join(root, 'bin')
   const sourceRoot = mkdtempSync(join(docsSystemRoot, '.trivial-project-e2e-'))
-  const projectId = allocateProjectId(root)
+  const projectRoot = join(root, 'isolated-projects')
+  const projectId = allocateProjectId(root, projectRoot)
   const branch = `feature/${projectId}`
   const worktree = join(root, projectId)
   const marker = `trivial-project-e2e-${process.pid}-${randomInt(100000, 1000000)}`
@@ -291,6 +292,7 @@ export function runTrivialProjectE2E() {
       ...process.env,
       PATH: `${binDir}:${process.env.PATH || ''}`,
       DOCS_TDD_CONFIG: configPath,
+      DOCS_TDD_ISOLATED_PROJECTS_ROOT: projectRoot,
       DOCS_TDD_CODEX_BIN: join(binDir, 'codex'),
       DOCS_TDD_CLAUDE_BIN: join(binDir, 'claude'),
       DOCS_TDD_E2E_REAL_GIT: realGit,
@@ -311,7 +313,7 @@ export function runTrivialProjectE2E() {
       'codex',
     ], { cwd: repo, env, timeout: 120000 })
     const state = parseJsonOutput(result)
-    const projectDir = resolveProjectRoot(projectId)
+    const projectDir = resolveProjectRoot(projectId, { projectsRoot: projectRoot })
     const workItem = JSON.parse(readFileSync(join(projectDir, 'work-item.json'), 'utf8'))
     const latest = JSON.parse(readFileSync(join(projectDir, 'latest-result.json'), 'utf8'))
     const head = git(worktree, ['rev-parse', 'HEAD']).trim()
@@ -330,6 +332,8 @@ export function runTrivialProjectE2E() {
     assert.equal(state.status, 'complete', stateDetails)
     assert.equal(state.runner.outcome, 'complete', stateDetails)
     assert.equal(state.executionRoute, 'trivial', stateDetails)
+    assert.equal(state.executionControl.synthetic, null)
+    assert.equal(existsSync(join(docsSystemRoot, 'prds', projectId)), false, 'E2E project must not be persisted in canonical prds')
     assert.equal(latest.mode, 'enforced')
     assert.equal(latest.status, 'passed')
     assert.equal(latest.ok, true)
@@ -352,7 +356,7 @@ export function runTrivialProjectE2E() {
     console.log(`vNext trivial-project E2E passed (${projectId}): route=trivial, elapsedMs=${trace.elapsedMs}, commands=${trace.commandCount}/${trace.budget.limits.commands}, evidence=${trace.evidenceCount}/${trace.budget.limits.evidence}, reviewRounds=0, tokenUsage=null, scoped commit, no push`)
   } finally {
     cleanupWorktree(repo, worktree, branch)
-    removeOwnedProject(projectId, marker)
+    removeOwnedProject(projectId, marker, projectRoot)
     rmSync(join(process.env.HOME || '', '.cache/docs-tdd/evidence', projectId), { recursive: true, force: true })
     rmSync(sourceRoot, { recursive: true, force: true })
     rmSync(root, { recursive: true, force: true })

@@ -32,21 +32,34 @@ const defaultConfigFile = join(docsSystemRoot, 'docs-tdd.config.default.json')
 //   Phase 3 (rules):  rulesRoot     -> join(docsSystemRoot, 'common', 'rules')   [DONE]
 export const rulesRoot = join(docsSystemRoot, 'common', 'rules')
 export const engineRoot = join(docsSystemRoot, 'common', 'engine')
-export const prdsRoot = join(docsSystemRoot, 'prds')
-export function resolveProjectBaseRoot(projectId) {
+const canonicalPrdsRoot = join(docsSystemRoot, 'prds')
+const isolatedProjectsRoot = process.env.DOCS_TDD_ISOLATED_PROJECTS_ROOT?.trim()
+if (isolatedProjectsRoot) {
+  const candidate = resolve(isolatedProjectsRoot)
+  const canonicalRoot = existsSync(canonicalPrdsRoot) ? realpathSync(canonicalPrdsRoot) : canonicalPrdsRoot
+  const canonicalCandidate = existsSync(candidate) ? realpathSync(candidate) : candidate
+  const relativeToCanonical = relative(canonicalRoot, canonicalCandidate)
+  if (relativeToCanonical === '' || (!relativeToCanonical.startsWith('..') && !isAbsolute(relativeToCanonical))) {
+    throw new Error('DOCS_TDD_ISOLATED_PROJECTS_ROOT must stay outside the canonical prds directory')
+  }
+}
+export const isolatedProjectStore = Boolean(isolatedProjectsRoot)
+export const prdsRoot = isolatedProjectsRoot ? resolve(isolatedProjectsRoot) : canonicalPrdsRoot
+
+export function resolveProjectBaseRoot(projectId, { projectsRoot = prdsRoot } = {}) {
   if (typeof projectId !== 'string' || !projectId.trim()) throw new Error('projectId is empty')
-  return join(prdsRoot, projectId.trim())
+  return join(resolve(projectsRoot), projectId.trim())
 }
 
-export function resolveProjectChangeRoot(projectId, changeId) {
+export function resolveProjectChangeRoot(projectId, changeId, options = {}) {
   if (!/^[a-z0-9][a-z0-9-]{0,47}$/.test(changeId || '')) {
     throw new Error('changeId must be 1-48 lowercase letters, numbers, or hyphens')
   }
-  return join(resolveProjectBaseRoot(projectId), 'changes', changeId)
+  return join(resolveProjectBaseRoot(projectId, options), 'changes', changeId)
 }
 
-export function resolveProjectRoot(projectId) {
-  const baseRoot = resolveProjectBaseRoot(projectId)
+export function resolveProjectRoot(projectId, options = {}) {
+  const baseRoot = resolveProjectBaseRoot(projectId, options)
   const pointerFile = join(baseRoot, 'active-change.json')
   if (!existsSync(pointerFile)) return baseRoot
   let pointer
@@ -58,7 +71,7 @@ export function resolveProjectRoot(projectId) {
   if (pointer?.schemaVersion !== 1 || pointer?.projectId !== projectId || !pointer?.changeId) {
     throw new Error(`${projectId} active-change.json has an invalid contract`)
   }
-  return resolveProjectChangeRoot(projectId, pointer.changeId)
+  return resolveProjectChangeRoot(projectId, pointer.changeId, options)
 }
 // List all project instance IDs (PR-* / TR-* dirs) under the current prds root. Single
 // source for the several sites that used to readdirSync the docs root directly, so

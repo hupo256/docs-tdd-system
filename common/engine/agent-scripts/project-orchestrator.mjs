@@ -29,6 +29,7 @@ import {
   createVNextOrchestratorRunner,
 } from './lib/vnext-orchestrator-runner.mjs'
 import { activateVNextChangeSet } from './lib/vnext-change-set.mjs'
+import { findProjectControl, isProjectExecutionHeld, readProjectControlRegistry, summarizeProjectControl } from './lib/vnext-project-control.mjs'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const { docsSystemRoot: docsRoot, consumerRoot: repoRoot, config } = resolveRoots()
@@ -327,7 +328,34 @@ export function vnextVerificationNextAction({ authoritativePass, shadowOnly, int
   return 'fix_failed_checks_and_reverify'
 }
 
+function runnerObservation(projectDir, executionRoute) {
+  const persisted = readJson(join(projectDir, 'agent/runner-state.json'))
+  const trace = persisted?.trace && typeof persisted.trace === 'object' ? persisted.trace : null
+  const route = typeof trace?.route === 'string' ? trace.route : null
+  const traceHistory = Array.isArray(persisted?.traceHistory) ? persisted.traceHistory : []
+  return {
+    activeAction: persisted?.activeAction || null,
+    receiptCount: Array.isArray(persisted?.receipts) ? persisted.receipts.length : null,
+    trace,
+    traceHistoryCount: traceHistory.length,
+    recentTraceHistory: traceHistory.slice(-5),
+    traceCompleteness: !trace ? 'not-recorded'
+      : trace.terminalState === 'running' ? 'pending'
+        : trace.terminalState === 'interrupted' ? 'interrupted' : 'terminal',
+    routePolicyVersion: Number.isInteger(trace?.routePolicyVersion) ? trace.routePolicyVersion : null,
+    routeComparisonBasis: Number.isInteger(trace?.routePolicyVersion) ? `policy-v${trace.routePolicyVersion}` : 'legacy-unversioned',
+    routeAlignment: !route || !executionRoute ? 'not-comparable' : route === executionRoute ? 'aligned' : 'mismatch',
+    currentExecutionRoute: executionRoute || null,
+  }
+}
+
 export function inspectVNext(id) {
+  const controlRegistry = readProjectControlRegistry(join(docsRoot, 'common/vnext/pilot-registry.json'))
+  const projectControl = findProjectControl(controlRegistry, id)
+  const executionHeld = isProjectExecutionHeld(projectControl)
+  const { terminalState: recordedTerminalState, ...executionControlSummary } = summarizeProjectControl(projectControl)
+  const executionControl = { ...executionControlSummary, recordedTerminalState }
+  const holdBlockers = executionHeld ? [`execution held [${executionControl.executionHold.code}]: ${executionControl.executionHold.reason}`] : []
   const projectDir = resolveProjectRoot(id)
   const baseRef = readProjectGitBinding(id).baseRef
   const workItem = readJson(join(projectDir, 'work-item.json'))
@@ -337,9 +365,13 @@ export function inspectVNext(id) {
       projectId: id,
       workflowVersion: 2,
       status: 'blocked',
-      currentStage: 'V2-intake',
-      nextAction: 'initialize-vnext-work-item',
-      command: `docs-tdd run ${id}`,
+      executionStatus: 'blocked',
+      currentStage: executionHeld ? 'V2-execution-hold' : 'V2-intake',
+      nextAction: executionHeld ? 'resolve-execution-hold' : 'initialize-vnext-work-item',
+      command: executionHeld ? null : `docs-tdd run ${id}`,
+      blockers: holdBlockers,
+      executionControl,
+      runnerObservation: runnerObservation(projectDir, null),
     }
   }
 
@@ -402,12 +434,15 @@ export function inspectVNext(id) {
     executionRoute: actionPacket.executionRoute,
     routeReasons: actionPacket.routeReasons,
     budgetStatus: actionPacket.budgetStatus,
-    status: actionPacket.status,
-    currentStage: `V2-${actionPacket.phase}`,
-    nextAction: actionPacket.action,
+    status: executionHeld ? 'blocked' : actionPacket.status,
+    executionStatus: actionPacket.status,
+    currentStage: executionHeld ? 'V2-execution-hold' : `V2-${actionPacket.phase}`,
+    nextAction: executionHeld ? 'resolve-execution-hold' : actionPacket.action,
     command: actionPacket.command,
-    blockers: [...failedChecks.flatMap((check) => check.problems || [check.code]), ...integrity.problems, ...worktreeInspection.problems, ...(codeStateProblem ? [codeStateProblem] : []), ...(reconciliation.problem ? [reconciliation.problem] : [])],
+    blockers: [...failedChecks.flatMap((check) => check.problems || [check.code]), ...integrity.problems, ...worktreeInspection.problems, ...(codeStateProblem ? [codeStateProblem] : []), ...(reconciliation.problem ? [reconciliation.problem] : []), ...holdBlockers],
+    executionControl,
     actionPacket,
+    runnerObservation: runnerObservation(projectDir, actionPacket.executionRoute),
     lifecycle: {
       deliveryTruth,
       implementationCheckpoint: workItem.autopilot?.implementation?.checkpoint || null,
@@ -450,8 +485,26 @@ function status() {
   print({ ...decision, projectId, workflowVersion: 1, stateFile: relative(repoRoot, stateFile(projectId)) })
 }
 
+function blockHeldExecution(id, action) {
+  const registry = readProjectControlRegistry(join(docsRoot, 'common/vnext/pilot-registry.json'))
+  const control = findProjectControl(registry, id)
+  if (!isProjectExecutionHeld(control)) return false
+  const state = inspectVNext(id)
+  print({
+    ...state,
+    status: 'blocked',
+    executionStatus: 'blocked',
+    currentStage: 'V2-execution-hold',
+    nextAction: 'resolve-execution-hold',
+    runner: { outcome: 'blocked-safety-check', action, holdCode: control.executionHold.code },
+  })
+  process.exitCode = 1
+  return true
+}
+
 function resume() {
   if (projectWorkflowVersion(projectId) === 2) {
+    if (blockHeldExecution(projectId, 'resume')) return
     const projectDir = resolveProjectRoot(projectId)
     if (!existsSync(join(projectDir, 'work-item.json'))) {
       const initialization = initializeVNextFromBoundSource(projectId)
@@ -613,6 +666,7 @@ function autopilotRun() {
   if (args.includes('--legacy')) {
     throw new Error('docs-tdd run is workflowVersion 2 only; create an explicit legacy project with docs-tdd kickoff --legacy')
   }
+  if (projectWorkflowVersion(projectId) === 2 && blockHeldExecution(projectId, 'run')) return
   if (args.includes('--dry-run')) {
     print(dryRunOutput())
     return

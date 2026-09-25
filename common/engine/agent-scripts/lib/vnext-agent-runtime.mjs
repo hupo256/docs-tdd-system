@@ -19,6 +19,7 @@ import { fileURLToPath } from 'node:url'
 import { validateSchema } from './doc-budget-schema.mjs'
 import { changedCodePaths } from './fingerprint.mjs'
 import { applyAutopilotCheckpoint } from './vnext-autopilot.mjs'
+import { buildVNextContext } from './vnext-context.mjs'
 import { persistVNextWorkItem } from './vnext-persistence.mjs'
 import { docsSystemRoot } from './roots.mjs'
 import { normalizeSourceDocuments } from './vnext-source-units.mjs'
@@ -26,6 +27,7 @@ import { applyExtractionCandidate, scaffoldExtraction } from '../vnext-extract.m
 import { runIsolatedCoverageReview } from '../vnext-review.mjs'
 
 export const AGENT_RUNTIME_CLIENTS = Object.freeze(['codex', 'claude'])
+export const CHECKPOINT_PROMPT_HARD_CHARS = 24000
 
 const EXTRACTION_ACTIONS = new Set([
   'extract-requirements',
@@ -285,8 +287,9 @@ function extractionPrompt({ action, packet, scaffold, client, sessionId }) {
   ].join('\n\n')
 }
 
-function checkpointPrompt({ action, packet, workItem }) {
-  return [
+export function checkpointPrompt({ action, packet, workItem }) {
+  const context = buildVNextContext({ workItem })
+  const prompt = [
     `Perform docs_tdd Agent action "${action}" for ${packet.projectId} in the current coding worktree.`,
     'Implement only the current reviewed/bounded scope. Inspect the existing code and follow repository rules.',
     'Do not commit and do not push. Do not run broad repository-wide checks; the deterministic runner performs validation after this checkpoint.',
@@ -294,8 +297,13 @@ function checkpointPrompt({ action, packet, workItem }) {
     'changedPaths must list every and only path currently changed from the configured base ref.',
     'Use empty arrays and null for optional result fields that do not apply.',
     `Action packet:\n${JSON.stringify(packet)}`,
-    `Canonical work item:\n${JSON.stringify(workItem)}`,
+    `Compact implementation context:\n${context.text}`,
   ].join('\n\n')
+  const chars = Array.from(prompt).length
+  if (chars > CHECKPOINT_PROMPT_HARD_CHARS) {
+    throw new Error(`checkpoint prompt is ${chars} characters, above ${CHECKPOINT_PROMPT_HARD_CHARS}; split the work item`)
+  }
+  return prompt
 }
 
 function normalizeInvocation(invocation) {
@@ -629,6 +637,33 @@ function selfTest() {
       unresolved: [],
     }
     reviewed.routing = { scopeClass: 'local', riskSignals: [], verificationLevel: 'V1', routerVersion: 1 }
+    const projectedPrompt = checkpointPrompt({
+      action: 'implement-current-scope',
+      packet: { projectId: 'PR-00001', actionId: 'checkpoint-preview' },
+      workItem: {
+        ...reviewed,
+        reviewControl: { sourceFingerprint: 'source', attempts: 0, status: 'active', history: [] },
+        autopilot: {
+          repairAttempts: { code: 0, browser: 0 },
+          lastDevCheck: {
+            schemaVersion: 1,
+            projectId: 'PR-00001',
+            runId: 'do-not-inline-this-report',
+            checkedAt: '2026-09-24T00:00:00Z',
+            status: 'failed',
+            ok: false,
+            codeState: { headSha: 'head', contentHash: 'content', dirtyHash: 'dirty' },
+            pendingCommitPaths: [],
+            unmappedPaths: [],
+            problems: ['do-not-inline-this-problem'],
+          },
+        },
+      },
+    })
+    assert.ok(projectedPrompt.length < CHECKPOINT_PROMPT_HARD_CHARS)
+    assert.equal(projectedPrompt.includes('reviewControl'), false)
+    assert.equal(projectedPrompt.includes('do-not-inline-this-report'), false)
+    assert.equal(projectedPrompt.includes('do-not-inline-this-problem'), false)
     persistVNextWorkItem(projectDir, reviewed)
 
     mkdirSync(join(repo, 'src'), { recursive: true })

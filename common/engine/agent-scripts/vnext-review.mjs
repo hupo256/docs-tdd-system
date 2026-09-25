@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os'
 import { delimiter, dirname, isAbsolute, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
-import { attachReviewIteration, buildCoverageReviewRequest, applyCoverageReview, coverageReviewResponseFromAudit, validateCoverageReviewResponse, REVIEW_PROTOCOL } from './lib/vnext-coverage-review.mjs'
+import { attachReviewIteration, buildCoverageReviewRequest, applyCoverageReview, candidateRequirementFingerprints, coverageReviewResponseFromAudit, validateCoverageReviewResponse, REVIEW_PROTOCOL } from './lib/vnext-coverage-review.mjs'
 import { docsSystemRoot } from './lib/roots.mjs'
 import { persistVNextWorkItem } from './lib/vnext-persistence.mjs'
 import { intakeAuditProblems, runIntakeAudit } from './lib/vnext-intake-audit.mjs'
@@ -189,14 +189,19 @@ export function advanceReviewControl(previous, response, request) {
     && previous.history?.some((attempt) => attempt.findingSignature === signature)
   const attempts = previous.attempts + 1
   const deferredToHuman = response.verdict === 'changes-required' && (attempts >= MAX_AUTOMATED_REVIEW_ATTEMPTS || repeatedFinding)
-  const history = [...(previous.history || []), {
+  const compactHistory = (previous.history || []).map(({ candidateRequirements, ...attempt }) => ({
+    ...attempt,
+    candidateRequirementFingerprints: attempt.candidateRequirementFingerprints
+      || candidateRequirementFingerprints(candidateRequirements || []),
+  }))
+  const history = [...compactHistory, {
     reviewRunId: response.reviewRunId,
     completedAt: response.completedAt,
     requirementsFingerprint: request.requirementsFingerprint,
     verdict: response.verdict,
     findingSignature: signature,
     findings: response.findings,
-    candidateRequirements: structuredClone(request.candidateRequirements || []),
+    candidateRequirementFingerprints: candidateRequirementFingerprints(request.candidateRequirements || []),
   }].slice(-MAX_AUTOMATED_REVIEW_ATTEMPTS)
   return {
     sourceFingerprint: request.sourceFingerprint,
@@ -367,6 +372,7 @@ export function selfTest() {
     const responseBase = { reviewRunId: 'r1', completedAt: '2026-09-10T00:00:01Z', verdict: 'changes-required', findings: finding }
     const firstFailure = advanceReviewControl({ attempts: 0, history: [] }, responseBase, requestBase)
     assert.equal(firstFailure.status, 'changes-required')
+    assert.equal(Object.hasOwn(firstFailure.history[0], 'candidateRequirements'), false)
     const secondRequest = attachReviewIteration({ ...requestBase, candidateRequirements: [{ requirementId: 'R-001', statement: 'repaired' }, { requirementId: 'R-002' }] }, {
       attempts: 1,
       history: [{ ...firstFailure.history[0], candidateRequirements: [{ requirementId: 'R-001', statement: 'original' }] }],

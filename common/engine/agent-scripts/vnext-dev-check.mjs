@@ -22,7 +22,12 @@ import {
   deliveryScopePathProblems,
   outOfScopeDeliveryPaths,
 } from "./lib/vnext-delivery-scope.mjs";
-import { persistVNextWorkItem } from "./lib/vnext-persistence.mjs";
+import {
+  persistVNextDevCheck,
+  persistVNextWorkItem,
+  readVNextDevCheck,
+  summarizeVNextDevCheck,
+} from "./lib/vnext-persistence.mjs";
 import { scopeApprovalFingerprint } from "./lib/vnext-risk-route.mjs";
 import {
   effectiveCoverageReview,
@@ -241,6 +246,7 @@ export function runDevelopmentCheck({
   baseRef = "origin/online",
   generatedAt = new Date().toISOString(),
   pathMappings = [],
+  previousReport = null,
   dependencies = {},
 } = {}) {
   const preflightProblems = developmentPreflightProblems(workItem);
@@ -271,7 +277,9 @@ export function runDevelopmentCheck({
       })),
   );
   const inheritedMappings = (
-    workItem.autopilot?.lastDevCheck?.pathCoverage || []
+    previousReport?.pathCoverage ||
+    workItem.autopilot?.lastDevCheck?.pathCoverage ||
+    []
   )
     .filter(
       (entry) => entry.surfaceIds?.length && changedPaths.includes(entry.path),
@@ -328,7 +336,9 @@ export function runDevelopmentCheck({
           exitCode: result.exitCode,
           changedPaths,
           previousSummary:
-            workItem.autopilot?.lastDevCheck?.typecheckSummary || null,
+            previousReport?.typecheckSummary ||
+            workItem.autopilot?.lastDevCheck?.typecheckSummary ||
+            null,
         })
       : null;
     if (typecheck) typecheckSummary = typecheck;
@@ -428,7 +438,7 @@ export function applyDevelopmentCheck(workItem, report) {
   const next = structuredClone(workItem);
   next.autopilot = {
     ...(next.autopilot || {}),
-    lastDevCheck: report,
+    lastDevCheck: summarizeVNextDevCheck(report),
     lastCheckpointAt: report.checkedAt,
   };
   return next;
@@ -511,6 +521,13 @@ export function selfTest() {
   assert.equal(
     applyDevelopmentCheck(workItem, report).autopilot.lastDevCheck.runId,
     report.runId,
+  );
+  assert.equal(
+    Object.hasOwn(
+      applyDevelopmentCheck(workItem, report).autopilot.lastDevCheck,
+      "commandResults",
+    ),
+    false,
   );
   const selected = selectDevelopmentCommands(
     [
@@ -706,12 +723,19 @@ if (
         worktree,
         baseRef: argumentValue("--base") || "origin/online",
         pathMappings,
+        previousReport:
+          readVNextDevCheck(projectDir, workItem) ||
+          workItem.autopilot?.lastDevCheck ||
+          null,
       });
+      const devCheckArtifact = persistVNextDevCheck(projectDir, report);
       const persisted = persistVNextWorkItem(
         projectDir,
         applyDevelopmentCheck(workItem, report),
       );
-      console.log(JSON.stringify({ ...report, persisted }, null, 2));
+      console.log(
+        JSON.stringify({ ...report, artifacts: { devCheckArtifact, workItem: persisted } }, null, 2),
+      );
       process.exitCode = report.ok ? 0 : 1;
     } catch (error) {
       console.error(`vNext dev-check failed: ${error.message}`);

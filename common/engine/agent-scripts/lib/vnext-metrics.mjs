@@ -24,12 +24,20 @@ function normalizeTokenUsage(usage) {
   }
 }
 
+function countMetric(value, terminalState) {
+  if (Number.isFinite(value)) return value
+  return terminalState === 'running' || terminalState === 'interrupted' ? null : 0
+}
+
 export function normalizeCompactRunRecord(record = {}) {
+  const terminalState = record.terminalState || null
   return {
     schemaVersion: 1,
     runId: record.runId || null,
     projectId: record.projectId || null,
     route: record.route || null,
+    routePolicyVersion: Number.isInteger(record.routePolicyVersion) ? record.routePolicyVersion : null,
+    observedRoutes: Array.isArray(record.observedRoutes) ? [...new Set(record.observedRoutes.filter((route) => typeof route === 'string'))] : [],
     assurance: record.assurance || null,
     routeReasons: Array.isArray(record.routeReasons)
       ? [...new Set(record.routeReasons.map(routeReasonCode).filter(Boolean))]
@@ -39,22 +47,25 @@ export function normalizeCompactRunRecord(record = {}) {
     tokenUsage: normalizeTokenUsage(record.tokenUsage),
     ruleFiles: Number.isFinite(record.ruleFiles) ? record.ruleFiles : null,
     sourceUnits: Number.isFinite(record.sourceUnits) ? record.sourceUnits : null,
-    actionCount: Number.isFinite(record.actionCount) ? record.actionCount : 0,
-    commandCount: Number.isFinite(record.commandCount) ? record.commandCount : 0,
-    reviewRounds: Number.isFinite(record.reviewRounds) ? record.reviewRounds : 0,
-    evidenceCount: Number.isFinite(record.evidenceCount) ? record.evidenceCount : 0,
-    repairAttempts: Number.isFinite(record.repairAttempts) ? record.repairAttempts : 0,
-    elapsedMs: Number.isFinite(record.elapsedMs) ? record.elapsedMs : null,
-    userInterruptCount: Number.isFinite(record.userInterruptCount) ? record.userInterruptCount : 0,
-    necessaryInterruptCount: Number.isFinite(record.necessaryInterruptCount) ? record.necessaryInterruptCount : 0,
-    silentOmissionCount: Number.isFinite(record.silentOmissionCount) ? record.silentOmissionCount : 0,
-    falseCompletionCount: Number.isFinite(record.falseCompletionCount) ? record.falseCompletionCount : 0,
-    terminalState: record.terminalState || null,
+    actionCount: countMetric(record.actionCount, terminalState),
+    commandCount: countMetric(record.commandCount, terminalState),
+    reviewRounds: countMetric(record.reviewRounds, terminalState),
+    evidenceCount: countMetric(record.evidenceCount, terminalState),
+    repairAttempts: countMetric(record.repairAttempts, terminalState),
+    elapsedMs: Number.isFinite(record.grossElapsedMs) ? record.grossElapsedMs : Number.isFinite(record.elapsedMs) ? record.elapsedMs : null,
+    grossElapsedMs: Number.isFinite(record.grossElapsedMs) ? record.grossElapsedMs : Number.isFinite(record.elapsedMs) ? record.elapsedMs : null,
+    activeElapsedMs: Number.isFinite(record.activeElapsedMs) ? record.activeElapsedMs : null,
+    userInterruptCount: countMetric(record.userInterruptCount, terminalState),
+    necessaryInterruptCount: countMetric(record.necessaryInterruptCount, terminalState),
+    silentOmissionCount: countMetric(record.silentOmissionCount, terminalState),
+    falseCompletionCount: countMetric(record.falseCompletionCount, terminalState),
+    terminalState,
     budgetStatus: record.budgetStatus || null,
     budget: record.budget && typeof record.budget === 'object' ? structuredClone(record.budget) : null,
     startedAt: record.startedAt || null,
     endedAt: record.endedAt || null,
     generatedAt: record.generatedAt || null,
+    receiptOffset: Number.isInteger(record.receiptOffset) ? record.receiptOffset : null,
   }
 }
 
@@ -66,9 +77,15 @@ function percentile(values, ratio) {
 
 export function summarizeCompactRuns(records = []) {
   const normalized = records.map(normalizeCompactRunRecord)
-  const elapsed = normalized.map((record) => record.elapsedMs).filter(Number.isFinite)
+  const elapsed = normalized.map((record) => record.grossElapsedMs).filter(Number.isFinite)
+  const activeElapsed = normalized.map((record) => record.activeElapsedMs).filter(Number.isFinite)
   const contexts = normalized.map((record) => record.contextChars).filter(Number.isFinite)
+  const completeGrossElapsed = normalized.length > 0 && normalized.every((record) => Number.isFinite(record.grossElapsedMs))
+  const completeActiveElapsed = normalized.length > 0 && normalized.every((record) => Number.isFinite(record.activeElapsedMs))
   const completeTokenUsage = normalized.length > 0 && normalized.every((record) => record.tokenUsage !== null)
+  const sumKnown = (field) => normalized.length === 0 ? 0 : normalized.every((record) => Number.isFinite(record[field]))
+    ? sum(normalized.map((record) => record[field]))
+    : null
   const tokenUsage = completeTokenUsage
     ? {
         inputTokens: sum(normalized.map((record) => record.tokenUsage.inputTokens)),
@@ -81,21 +98,27 @@ export function summarizeCompactRuns(records = []) {
     : null
   return {
     runCount: normalized.length,
+    completeRunCount: normalized.filter((record) => record.terminalState && !['running', 'interrupted'].includes(record.terminalState)).length,
+    incompleteRunCount: normalized.filter((record) => ['running', 'interrupted'].includes(record.terminalState)).length,
     routes: [...new Set(normalized.map((record) => record.route).filter(Boolean))].sort(),
     assurances: [...new Set(normalized.map((record) => record.assurance).filter(Boolean))].sort(),
-    p50ElapsedMs: percentile(elapsed, 0.5),
-    p90ElapsedMs: percentile(elapsed, 0.9),
+    p50ElapsedMs: completeGrossElapsed ? percentile(elapsed, 0.5) : null,
+    p90ElapsedMs: completeGrossElapsed ? percentile(elapsed, 0.9) : null,
+    p50GrossElapsedMs: completeGrossElapsed ? percentile(elapsed, 0.5) : null,
+    p90GrossElapsedMs: completeGrossElapsed ? percentile(elapsed, 0.9) : null,
+    p50ActiveElapsedMs: completeActiveElapsed ? percentile(activeElapsed, 0.5) : null,
+    p90ActiveElapsedMs: completeActiveElapsed ? percentile(activeElapsed, 0.9) : null,
     p50ContextChars: percentile(contexts, 0.5),
     p90ContextChars: percentile(contexts, 0.9),
     totals: {
-      actions: sum(normalized.map((record) => record.actionCount)),
-      commands: sum(normalized.map((record) => record.commandCount)),
-      reviews: sum(normalized.map((record) => record.reviewRounds)),
-      evidence: sum(normalized.map((record) => record.evidenceCount)),
-      repairs: sum(normalized.map((record) => record.repairAttempts)),
-      necessaryInterrupts: sum(normalized.map((record) => record.necessaryInterruptCount)),
-      silentOmissions: sum(normalized.map((record) => record.silentOmissionCount)),
-      falseCompletions: sum(normalized.map((record) => record.falseCompletionCount)),
+      actions: sumKnown('actionCount'),
+      commands: sumKnown('commandCount'),
+      reviews: sumKnown('reviewRounds'),
+      evidence: sumKnown('evidenceCount'),
+      repairs: sumKnown('repairAttempts'),
+      necessaryInterrupts: sumKnown('necessaryInterruptCount'),
+      silentOmissions: sumKnown('silentOmissionCount'),
+      falseCompletions: sumKnown('falseCompletionCount'),
     },
     terminalStates: [...new Set(normalized.map((record) => record.terminalState).filter(Boolean))].sort(),
     estimatedInputTokens: null,
@@ -207,7 +230,10 @@ export function selfTest() {
       assurance: 'V0',
       routeReasons: [{ route: 'micro', code: 'micro-shape', detail: 'local' }, 'micro-shape'],
       contextChars: 100,
-      elapsedMs: 1000,
+      grossElapsedMs: 1000,
+      activeElapsedMs: 400,
+      routePolicyVersion: 1,
+      observedRoutes: ['micro'],
       commandCount: 2,
       terminalState: 'complete',
     },
@@ -217,6 +243,9 @@ export function selfTest() {
   assert.deepEqual(compact.assurances, ['V0'])
   assert.equal(compact.p50ElapsedMs, 1000)
   assert.equal(compact.p90ElapsedMs, 1000)
+  assert.equal(compact.p50GrossElapsedMs, 1000)
+  assert.equal(compact.p50ActiveElapsedMs, null)
+  assert.equal(compact.routes.join(','), 'lite,micro')
   assert.equal(compact.p90ContextChars, 100)
   assert.equal(compact.estimatedInputTokens, null)
   assert.equal(compact.tokenUsage, null)
@@ -226,6 +255,13 @@ export function selfTest() {
   })
   assert.deepEqual(normalized.routeReasons, ['micro-shape'])
   assert.equal(normalized.tokenUsage.totalTokens, 15)
+  const pendingSummary = summarizeCompactRuns([{ runId: 'pending', terminalState: 'running' }])
+  assert.equal(pendingSummary.incompleteRunCount, 1)
+  assert.equal(pendingSummary.completeRunCount, 0)
+  assert.equal(pendingSummary.totals.actions, null)
+  assert.equal(pendingSummary.p50GrossElapsedMs, null)
+  assert.equal(normalizeCompactRunRecord({ terminalState: 'running' }).actionCount, null)
+  assert.equal(normalizeCompactRunRecord({ terminalState: 'interrupted' }).commandCount, null)
   assert.deepEqual(artifactConvergence({ baselineProcessFiles: 263, projectCount: 4 }), {
     baselineProcessFiles: 263, projectCount: 4, vnextFilesPerProject: 3, projectedVNextFiles: 12,
     reductionPercent: 95.44, targetReductionPercent: 80, ok: true,

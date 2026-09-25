@@ -26,14 +26,21 @@ function reviewRequirements(requirements = []) {
   }))
 }
 
+export function candidateRequirementFingerprints(requirements = []) {
+  return requirements.map((item) => ({
+    requirementId: item.requirementId,
+    fingerprint: item.fingerprint || stableFingerprint(item),
+  }))
+}
+
 function candidateDiff(previous = [], current = []) {
-  const previousById = new Map(previous.map((item) => [item.requirementId, item]))
-  const currentById = new Map(current.map((item) => [item.requirementId, item]))
+  const previousById = new Map(candidateRequirementFingerprints(previous).map((item) => [item.requirementId, item.fingerprint]))
+  const currentById = new Map(candidateRequirementFingerprints(current).map((item) => [item.requirementId, item.fingerprint]))
   return {
     addedRequirementIds: [...currentById.keys()].filter((id) => !previousById.has(id)).sort(),
     removedRequirementIds: [...previousById.keys()].filter((id) => !currentById.has(id)).sort(),
     changedRequirementIds: [...currentById.keys()].filter((id) => previousById.has(id)
-      && stableFingerprint(previousById.get(id)) !== stableFingerprint(currentById.get(id))).sort(),
+      && previousById.get(id) !== currentById.get(id)).sort(),
   }
 }
 
@@ -48,7 +55,10 @@ export function attachReviewIteration(request, reviewControl = {}, { reviewRunId
         ...request,
         reviewIteration: iteration,
         previousReview: { reviewRunId: prior.reviewRunId, verdict: prior.verdict, findings: structuredClone(prior.findings || []) },
-        candidateDiff: candidateDiff(prior.candidateRequirements || [], request.candidateRequirements || []),
+        candidateDiff: candidateDiff(
+          prior.candidateRequirementFingerprints || prior.candidateRequirements || [],
+          request.candidateRequirements || [],
+        ),
       }
   return { ...packet, requestFingerprint: reviewRequestFingerprint(packet) }
 }
@@ -258,6 +268,7 @@ export function selfTest() {
   assert.equal(request.sourceUnits[0].sourceId, 'SRC-1')
   assert.equal(request.sourceUnits.some((unit) => unit.sourceId === 'SRC-HEADING'), false)
   assert.equal(request.sourceInventory.some((unit) => unit.sourceId === 'SRC-HEADING' && unit.structural), true)
+  assert.equal(candidateRequirementFingerprints(request.candidateRequirements)[0].fingerprint.length, 64)
   const imageUnits = [
     ...sourceUnits,
     { sourceId: 'IMG-ANCHORED', type: 'image', path: 'prd.md', lineStart: 3, lineEnd: 3, content: 'target state', contentHash: 'image-a', assetPath: 'a.png', assetHash: 'a'.repeat(64), assetStatus: 'local', mediaType: 'image/png' },

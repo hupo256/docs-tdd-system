@@ -9,9 +9,9 @@ import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import {
   docsSystemRoot,
-  resolveProjectBaseRoot,
-  resolveProjectChangeRoot,
-  resolveProjectRoot,
+  resolveProjectBaseRoot as resolveProjectBaseRootFromRoots,
+  resolveProjectChangeRoot as resolveProjectChangeRootFromRoots,
+  resolveProjectRoot as resolveProjectRootFromRoots,
 } from './lib/roots.mjs'
 import { readProjectGitBinding } from './lib/project-status-report.mjs'
 
@@ -19,10 +19,23 @@ const scriptDir = new URL('.', import.meta.url)
 const docsTddCli = fileURLToPath(new URL('./docs-tdd.mjs', scriptDir))
 const kickoffCompat = fileURLToPath(new URL('./lib/kickoff-v4.mjs', scriptDir))
 const scriptPath = fileURLToPath(import.meta.url)
+let activeProjectsRoot = null
+
+function resolveProjectBaseRoot(projectId) {
+  return resolveProjectBaseRootFromRoots(projectId, activeProjectsRoot ? { projectsRoot: activeProjectsRoot } : {})
+}
+
+function resolveProjectChangeRoot(projectId, changeId) {
+  return resolveProjectChangeRootFromRoots(projectId, changeId, activeProjectsRoot ? { projectsRoot: activeProjectsRoot } : {})
+}
+
+function resolveProjectRoot(projectId) {
+  return resolveProjectRootFromRoots(projectId, activeProjectsRoot ? { projectsRoot: activeProjectsRoot } : {})
+}
 
 function allocateProjectId(allocated) {
   for (let attempt = 0; attempt < 100; attempt += 1) {
-    const projectId = `PR-${randomInt(10000, 100000)}`
+    const projectId = `TR-${randomInt(10000, 100000)}`
     if (!allocated.has(projectId) && !existsSync(resolveProjectBaseRoot(projectId))) {
       allocated.add(projectId)
       return projectId
@@ -74,8 +87,13 @@ function directorySnapshot(root) {
 export function selfTest() {
   const sandbox = mkdtempSync(join(tmpdir(), 'vnext-kickoff-public-e2e-'))
   const sourceRoot = mkdtempSync(join(docsSystemRoot, '.kickoff-public-e2e-'))
+  const projectIndexPath = join(docsSystemRoot, 'PROJECTS.md')
+  const contextPath = join(docsSystemRoot, 'CONTEXT.md')
+  const projectIndexBefore = readFileSync(projectIndexPath, 'utf8')
+  const contextBefore = existsSync(contextPath) ? readFileSync(contextPath, 'utf8') : null
   const allocated = new Set()
   const projects = []
+  activeProjectsRoot = join(sandbox, 'isolated-projects')
   const nonce = `${process.pid}-${randomInt(100000, 1000000)}`
   const source = join(sourceRoot, 'prd.md')
   const outsideSource = join(sandbox, 'outside.md')
@@ -104,6 +122,7 @@ export function selfTest() {
     const env = {
       ...process.env,
       DOCS_TDD_CONFIG: configPath,
+      DOCS_TDD_ISOLATED_PROJECTS_ROOT: activeProjectsRoot,
       DOCS_TDD_CODEX_BIN: join(sandbox, 'missing-codex'),
     }
 
@@ -316,7 +335,7 @@ export function selfTest() {
     assert.match(automaticReadme, new RegExp(`^branch: "fix/${runProject}-${automaticPointer.changeId}"$`, 'm'))
     assert.match(automaticReadme, /^baseRef: "origin\/release-test"$/m)
     assert.match(automaticReadme, new RegExp(`^worktree: ".*${runProject}-${automaticPointer.changeId}"$`, 'm'))
-    const automaticGitBinding = readProjectGitBinding(runProject)
+    const automaticGitBinding = readProjectGitBinding(runProject, { projectsRoot: activeProjectsRoot })
     assert.equal(automaticGitBinding.baseRef, 'origin/release-test')
     assert.equal(automaticGitBinding.branch, `fix/${runProject}-${automaticPointer.changeId}`)
     assert.equal(automaticGitBinding.worktree, join(dirname(resolve(sandbox)), `${runProject}-${automaticPointer.changeId}`))
@@ -340,10 +359,66 @@ export function selfTest() {
       JSON.parse(readFileSync(join(changeRoot, 'agent/lark-sources.json'), 'utf8')).outputDir,
       /changes\/cursor-hover\/inbox\/lark-sync$/,
     )
-    console.log('vnext public-command E2E passed (read-only auto routing, isolated docs/branch/worktree bindings, same-source drift protection, historical preservation, v1 compatibility, path boundary)')
+    for (const { projectId } of projects) {
+      assert.equal(existsSync(join(docsSystemRoot, 'prds', projectId)), false, `${projectId} must not be persisted in canonical prds`)
+    }
+
+    const liveEnv = { ...env }
+    delete liveEnv.DOCS_TDD_ISOLATED_PROJECTS_ROOT
+    const updateIndexScript = fileURLToPath(new URL('./update-project-index.mjs', scriptDir))
+    const refusedIsolatedIndexWrite = run(updateIndexScript, ['--write'], { cwd: sandbox, env })
+    assert.equal(refusedIsolatedIndexWrite.status, 2)
+    assert.equal(readFileSync(projectIndexPath, 'utf8'), projectIndexBefore)
+    assert.equal(contextBefore === null ? !existsSync(contextPath) : readFileSync(contextPath, 'utf8') === contextBefore, true)
+    const canonicalIndex = outputJson(run(updateIndexScript, ['--json'], { cwd: sandbox, env: liveEnv }))
+    for (const { projectId } of projects) {
+      assert.equal(canonicalIndex.projects.some((project) => project.id === projectId), false, `${projectId} leaked into PROJECTS.md input`)
+    }
+    const pilotReport = outputJson(run(fileURLToPath(new URL('./vnext-pilot.mjs', scriptDir)), [], { cwd: sandbox, env: liveEnv }))
+    const pilotRegistry = JSON.parse(readFileSync(join(docsSystemRoot, 'common/vnext/pilot-registry.json'), 'utf8'))
+    assert.equal(pilotReport.summary.enrolled, pilotRegistry.entries.filter((entry) => entry.pilotEligibility !== 'excluded').length)
+    for (const { projectId } of projects) {
+      assert.equal(pilotReport.projectControls.some((control) => control.projectId === projectId), false, `${projectId} leaked into Pilot registration`)
+      assert.equal(pilotReport.samples.some((sample) => sample.projectId === projectId), false, `${projectId} leaked into Pilot sample statistics`)
+    }
+
+    const controlRegistryPath = join(docsSystemRoot, 'common/vnext/pilot-registry.json')
+    const controlRegistryBefore = readFileSync(controlRegistryPath, 'utf8')
+    for (const protectedId of ['PR-02233', 'PR-42071']) {
+      const protectedRoot = resolveProjectBaseRootFromRoots(protectedId)
+      const beforeHold = directorySnapshot(protectedRoot)
+      const status = outputJson(run(docsTddCli, ['status', protectedId], { cwd: sandbox, env: liveEnv }))
+      assert.equal(status.executionControl.pilotEligibility, 'excluded')
+      assert.equal(status.executionControl.executionHold.active, true)
+      assert.equal(status.status, 'blocked')
+      assert.equal(status.executionStatus, status.actionPacket.status, 'status must keep current execution separate from Pilot eligibility and system hold')
+      if (protectedId === 'PR-02233') {
+        assert.equal(status.executionControl.recordedTerminalState, 'running')
+        assert.equal(status.executionStatus, 'active')
+        assert.notEqual(status.actionPacket.status, status.status, 'system hold must not overwrite the current Autopilot status')
+      } else {
+        assert.equal(status.executionControl.synthetic, true)
+        assert.equal(status.runnerObservation.traceCompleteness, 'pending')
+        assert.equal(status.runnerObservation.routeAlignment, 'mismatch')
+        assert.equal(status.runnerObservation.routePolicyVersion, null)
+        assert.equal(status.runnerObservation.routeComparisonBasis, 'legacy-unversioned')
+      }
+      for (const action of ['run', 'resume']) {
+        const held = run(docsTddCli, [action, protectedId], { cwd: sandbox, env: liveEnv })
+        assert.notEqual(held.status, 0)
+        const output = JSON.parse(held.stdout)
+        assert.equal(output.status, 'blocked')
+        assert.equal(output.executionControl.executionHold.active, true)
+        assert.equal(output.runner.outcome, 'blocked-safety-check')
+        assert.deepEqual(directorySnapshot(protectedRoot), beforeHold, `${protectedId} ${action} must not write state or receipts`)
+        assert.equal(readFileSync(controlRegistryPath, 'utf8'), controlRegistryBefore, 'held commands must not alter Pilot controls')
+      }
+    }
+    console.log('vnext public-command E2E passed (isolated synthetic TR projects, hold-before-write, status/trace reconciliation, read-only auto routing, isolated docs/branch/worktree bindings, same-source drift protection, historical preservation, v1 compatibility, path boundary)')
   } finally {
     for (const { projectId, marker } of projects) removeOwnedProject(projectId, marker)
     rmSync(sourceRoot, { recursive: true, force: true })
+    activeProjectsRoot = null
     rmSync(sandbox, { recursive: true, force: true })
   }
 }
