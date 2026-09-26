@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "projectId": "PR-02233",
+  "adjudicatedBy": "aven",
+  "adjudicatedAt": "2026-09-26",
+  "reason": "用户确认恢复流程；独立冷读 reviewer 已在修订后的 extraction candidate 上返回 pass。"
+}

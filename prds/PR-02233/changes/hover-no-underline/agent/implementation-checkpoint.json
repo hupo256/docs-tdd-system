@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "actionId": "940c68c204bcf1c1849b3d50b625c6b6dbc5cf1940565e4b15427fd2056c5970",
+  "outcome": "completed",
+  "changedPaths": [
+    "apps/web/src/components/Verification/SecurityVerifyMan.tsx",
+    "apps/web/src/components/Verification/SendCodeButton.tsx"
+  ],
+  "discoveredSurfaces": [
+    {
+      "surfaceId": "S-001",
+      "locator": "apps/web/src/components/Verification/SecurityVerifyMan.tsx renderSwitchLink"
+    },
+    {
+      "surfaceId": "S-002",
+      "locator": "apps/web/src/components/Verification/SendCodeButton.tsx clickable resend state"
+    }
+  ],
+  "coveredSurfaceIds": [
+    "S-001",
+    "S-002"
+  ],
+  "integratedSourceKinds": [],
+  "msw": null,
+  "blockers": []
+}

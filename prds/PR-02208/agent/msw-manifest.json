@@ -1,0 +1,92 @@
+{
+  "projectId": "PR-02208",
+  "route": "msw",
+  "lifecycle": "mock-active",
+  "sourceRoot": "/Users/aven/github/PR-02208",
+  "assets": {
+    "handler": "apps/futures-admin/src/mocks/pr02208/handlers.ts",
+    "fixture": "apps/futures-admin/src/mocks/pr02208/fixtures.ts",
+    "contractTest": "apps/futures-admin/__tests__/apps/FutureApiDynamicFeeConfig/pr02208.mockContract.test.ts",
+    "registration": "apps/futures-admin/src/mocks/browser.ts",
+    "workerHook": "apps/futures-admin/src/mocks/useMockWorker.ts",
+    "provider": "apps/futures-admin/src/app/[lang]/Providers.tsx",
+    "handlerExport": "pr02208Handlers"
+  },
+  "endpoints": [
+    {
+      "id": "next-api-dynamic-fee-config-read",
+      "method": "GET",
+      "path": "/v1/api-dynamic-fee/config",
+      "apiStatus": "not-ready",
+      "assumptions": ["ASM-001"],
+      "scenarios": [
+        { "name": "normal", "status": "implemented", "reason": "配置页开发所需最小 L1-L5 数据。" },
+        { "name": "empty", "status": "not-applicable", "reason": "配置必须是完整五档，空配置属于契约错误。" },
+        { "name": "error", "status": "not-applicable", "reason": "页面错误态由请求失败分支覆盖，不扩充临时 handler。" },
+        { "name": "unauthorized", "status": "not-applicable", "reason": "沿用现有统一鉴权处理。" },
+        { "name": "edge", "status": "not-applicable", "reason": "档位边界由纯逻辑测试覆盖。" }
+      ]
+    },
+    {
+      "id": "next-api-dynamic-fee-config-save",
+      "method": "PUT",
+      "path": "/v1/api-dynamic-fee/config",
+      "apiStatus": "not-ready",
+      "assumptions": ["ASM-001"],
+      "scenarios": [
+        { "name": "normal", "status": "implemented", "reason": "保存并回传通过 schema 的配置。" },
+        { "name": "empty", "status": "not-applicable", "reason": "空配置由请求 schema 拒绝。" },
+        { "name": "error", "status": "implemented", "reason": "非法请求体返回 HTTP 400。" },
+        { "name": "unauthorized", "status": "not-applicable", "reason": "沿用现有统一鉴权处理。" },
+        { "name": "edge", "status": "not-applicable", "reason": "精度和区间边界由纯逻辑测试覆盖。" }
+      ]
+    },
+    {
+      "id": "legacy-api-dynamic-fee-config-read",
+      "method": "GET",
+      "path": "/fe-coadmin-api/api_dynamic_fee_config",
+      "apiStatus": "not-ready",
+      "assumptions": ["ASM-002"],
+      "scenarios": [
+        { "name": "normal", "status": "implemented", "reason": "Legacy 配置页开发所需最小数据。" },
+        { "name": "empty", "status": "not-applicable", "reason": "配置必须是完整五档。" },
+        { "name": "error", "status": "not-applicable", "reason": "页面错误态由请求失败分支覆盖。" },
+        { "name": "unauthorized", "status": "not-applicable", "reason": "沿用现有统一鉴权处理。" },
+        { "name": "edge", "status": "not-applicable", "reason": "档位边界由纯逻辑测试覆盖。" }
+      ]
+    },
+    {
+      "id": "legacy-api-dynamic-fee-config-save",
+      "method": "POST",
+      "path": "/fe-coadmin-api/update_api_dynamic_fee_config",
+      "apiStatus": "not-ready",
+      "assumptions": ["ASM-002"],
+      "scenarios": [
+        { "name": "normal", "status": "implemented", "reason": "接收 Legacy Axios JSON 请求体并回传配置。" },
+        { "name": "empty", "status": "not-applicable", "reason": "空配置由请求 schema 拒绝。" },
+        { "name": "error", "status": "implemented", "reason": "非法请求体返回 HTTP 400。" },
+        { "name": "unauthorized", "status": "not-applicable", "reason": "沿用现有统一鉴权处理。" },
+        { "name": "edge", "status": "not-applicable", "reason": "精度和区间边界由纯逻辑测试覆盖。" }
+      ]
+    },
+    {
+      "id": "legacy-user-api-fee-list",
+      "method": "POST",
+      "path": "/fe-coadmin-api/get_commission_discount_list",
+      "apiStatus": "not-ready",
+      "assumptions": ["ASM-003"],
+      "scenarios": [
+        { "name": "normal", "status": "implemented", "reason": "同时覆盖有 API Key 与无 API Key 用户。" },
+        { "name": "empty", "status": "not-applicable", "reason": "既有列表空态不属于本需求改动。" },
+        { "name": "error", "status": "not-applicable", "reason": "既有列表错误态不属于本需求改动。" },
+        { "name": "unauthorized", "status": "not-applicable", "reason": "沿用现有统一鉴权处理。" },
+        { "name": "edge", "status": "implemented", "reason": "无 API Key 行显式返回空费率字段。" }
+      ]
+    }
+  ],
+  "retirement": {
+    "retiredAt": "",
+    "retirementCondition": "对应接口在 dev 环境可用且完成真实契约逐字段对账。",
+    "reconciliationEvidence": ""
+  }
+}

@@ -7,6 +7,10 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-09-26（change-set Git 绑定纠偏）
+
+- **遵行既有分支规则**：修复 change-set 初始化擅自生成 `fix/<PROJECT-ID>-<changeId>`、以父 feature 为基线并创建后缀 worktree 的行为。项目内 change 现在复用父项目已有的 `branch/baseRef/worktree`；没有父项目绑定时，仍按 `git-branch-flow.md` 与 `new-project-kickoff.md` 的既有 taxonomy 创建 `feature/<PROJECT-ID>` 或 `fix/<PROJECT-ID>`，基线为 `origin/online`。本次只修实现偏差，不新增规则。
+
 ## 2026-09-24（优化计划 A/B 首批止损）
 
 - **入口与 Lite 权限收敛**：公开 `kickoff` 委托 v2 orchestrator；旧 v4 入口仅转发并拒绝强制 Lite，旧 Lite executor 改为无写入禁用态，模板撤销预置的 approved/scope approval。Lite 指南改为历史归档指针，删除未经可比样本验证的效率与准确率结论。

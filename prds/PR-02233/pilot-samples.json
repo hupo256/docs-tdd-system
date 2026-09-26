@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "projectId": "PR-02233",
+  "samples": [
+    {
+      "sequence": 1,
+      "sampleId": "PR-02233-HOVER-NO-UNDERLINE",
+      "changeId": "hover-no-underline",
+      "title": "安全验证弹窗链接 hover 无下划线",
+      "artifactDir": "prds/PR-02233/changes/hover-no-underline",
+      "sourcePath": "prds/PR-02233/inbox/hover-no-underline-2026-09-26.md",
+      "sourceFingerprint": "226ee2bafdcc21d16dc1f756b9bf525d4a9ffedae482d8d563776a846cc58883",
+      "synthetic": false,
+      "newRequirement": true,
+      "verificationLevel": "V0",
+      "status": "failed",
+      "completed": false,
+      "executionAttestation": null,
+      "observation": null
+    },
+    {
+      "sequence": 2,
+      "sampleId": "PR-02233-LOGIN-GOOGLE-ORIGIN-403",
+      "changeId": "login-google-origin-403",
+      "title": "本地登录页 Google GSI origin 403",
+      "artifactDir": "prds/PR-02233/changes/login-google-origin-403",
+      "sourcePath": "prds/PR-02233/inbox/login-google-origin-403-2026-09-26.md",
+      "sourceFingerprint": "b04c82d3214c91743fbe6404ccb2bbd3878c36d790e801d427586b613d54dc09",
+      "synthetic": false,
+      "newRequirement": true,
+      "verificationLevel": null,
+      "provisionalRoute": {
+        "verificationLevel": "V0",
+        "executionRoute": "lite",
+        "status": "pending-requirement-extraction"
+      },
+      "status": "collecting",
+      "completed": false,
+      "executionAttestation": null,
+      "observation": null
+    }
+  ]
+}

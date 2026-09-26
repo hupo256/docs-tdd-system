@@ -4,6 +4,7 @@ import {
   automaticChangeIdForSource,
   commitScopedPaths,
   inferState,
+  projectExecutionHoldApplies,
   resolveAutopilotAgentOptions,
   runnerFailureStatus,
   scopedDeliveryCommitted,
@@ -38,6 +39,7 @@ assert.equal(resolveAutopilotAgentOptions({
   env: {},
 }).model, 'gpt-test')
 assert.match(automaticChangeIdForSource('path:/tmp/new-prd.md'), /^change-[0-9a-f]{8}$/)
+assert.equal(projectExecutionHoldApplies('PR-00001', '/tmp/prds/PR-00001'), false)
 assert.equal(runnerFailureStatus({
   trace: { terminalState: 'failed-infrastructure' },
   lastReceipt: { actionId: 'A-1', outcome: 'failed-infrastructure' },

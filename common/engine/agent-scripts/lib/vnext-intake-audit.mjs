@@ -164,17 +164,19 @@ export function runIntakeAudit(workItem, sourceUnits, { auditedAt = new Date().t
   if (!Array.isArray(sourceUnits) || !sourceUnits.length) throw new Error('intake audit requires normalized source units')
   const checks = []
   const add = (code, problems) => checks.push({ code, ok: problems.length === 0, problems })
+  const microEligibility = evaluateMicroEligibility(workItem, sourceUnits)
   add('INTAKE_SOURCE_BINDING', vNextIntakeProblems(workItem))
   add('EXTRACTION_STRUCTURE', requirementProblems(workItem, sourceUnits))
   add('EXTRACTION_TRACEABILITY', traceabilityProblems(workItem, sourceUnits))
   add('EVIDENCE_COMMANDS', evidencePlanProblems({ schemaVersion: 1, projectId: workItem.projectId, commands: workItem.evidenceCommands || [] }, workItem))
+  if (workItem?.routing?.verificationLevel === 'V0') add('V0_MICRO_ELIGIBILITY', microEligibility.problems)
   const fingerprints = coverageFingerprints(workItem)
   const audit = {
     schemaVersion: 1,
     auditedAt,
     ...fingerprints,
     sourceUnitsFingerprint: stableFingerprint(sourceUnits),
-    microEligibility: evaluateMicroEligibility(workItem, sourceUnits),
+    microEligibility,
     status: checks.every((check) => check.ok) ? 'pass' : 'fail',
     checks,
   }
@@ -218,8 +220,10 @@ export function selfTest() {
     evidenceCommands: [
       { evidenceId: 'E-1', kind: 'copy-literal', argv: ['node', 'scripts/check-copy.mjs'], requirementIds: ['R-001'], surfaceIds: ['S-001'] },
       { evidenceId: 'E-2', kind: 'touched-file-quality', argv: ['pnpm', 'exec', 'biome', 'check', 'apps/web/src/a.ts'] },
+      { evidenceId: 'E-3', kind: 'directed-tests', argv: ['node', 'scripts/check-copy.mjs'], requirementIds: ['R-001'], surfaceIds: ['S-001'] },
+      { evidenceId: 'E-4', kind: 'prd-to-diff-review', argv: ['node', 'scripts/check-copy.mjs'], requirementIds: ['R-001'], surfaceIds: ['S-001'] },
     ],
-    routing: { verificationLevel: 'V0' },
+    routing: { verificationLevel: 'V1' },
   }
   const pass = runIntakeAudit(workItem, units, { auditedAt: '2026-09-12T00:00:00Z' })
   assert.equal(pass.status, 'pass', JSON.stringify(pass))
@@ -245,6 +249,7 @@ export function selfTest() {
   delete incompleteExclusion.sourceUnitDispositions[0].exclusionEvidence
   assert.match(problemsFor(incompleteExclusion, 'EXTRACTION_STRUCTURE'), /exclusion requires evidence/)
   const touchedQuality = structuredClone(workItem)
+  touchedQuality.routing = { scopeClass: 'local', riskSignals: [], verificationLevel: 'V0', routerVersion: 1 }
   touchedQuality.requirements[0].evidencePlan = [{ type: 'touched-file-quality', runtimeRequired: false }]
   touchedQuality.evidenceCommands = [{
     evidenceId: 'E-QUALITY',
@@ -282,6 +287,15 @@ export function selfTest() {
     sourceUnitsFingerprint: stableFingerprint(simpleUnits),
     problems: [],
   })
+  const invalidV0 = structuredClone(simple)
+  invalidV0.requirements[0].collectionSemantics = { kind: 'explicit-set', expectedCount: 2 }
+  invalidV0.requirements[0].affectedSurfaces.push({ surfaceId: 'S-002', locator: 'src/b.ts', disposition: 'implement' })
+  const invalidV0Audit = runIntakeAudit(invalidV0, simpleUnits)
+  assert.equal(invalidV0Audit.status, 'fail')
+  assert.match(
+    invalidV0Audit.checks.find((check) => check.code === 'V0_MICRO_ELIGIBILITY').problems.join(' '),
+    /exactly one implement surface/,
+  )
   console.log('vnext-intake-audit self-test passed')
 }
 

@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "actionId": "70f967939faa591ecee322414a167b0a99e0445e0e4b8dce704f482736188317",
+  "outcome": "completed",
+  "changedPaths": [
+    "apps/futures-admin/__tests__/apps/FutureApiDynamicFeeConfig/pr02208.mockContract.test.ts",
+    "apps/futures-admin/__tests__/apps/FutureApiDynamicFeeConfig/validateTiers.test.ts",
+    "apps/futures-admin/__tests__/legacy/apiDynamicFeeDisplay.test.ts",
+    "apps/futures-admin/legacy-admin/src/mixin/marketManagement/apiDynamicFeeConfig.js",
+    "apps/futures-admin/legacy-admin/src/utils/apiDynamicFeeDisplay.js",
+    "apps/futures-admin/legacy-admin/src/utils/apiDynamicFeeTierConfig.js",
+    "apps/futures-admin/legacy-admin/src/viewsTemplate/marketManagement/apiDynamicFeeConfig.vue",
+    "apps/futures-admin/package.json",
+    "apps/futures-admin/public/mockServiceWorker.js",
+    "apps/futures-admin/src/app/[lang]/Providers.tsx",
+    "apps/futures-admin/src/apps/FutureApiDynamicFeeConfig/api.ts",
+    "apps/futures-admin/src/apps/FutureApiDynamicFeeConfig/components/ConfigTable.tsx",
+    "apps/futures-admin/src/apps/FutureApiDynamicFeeConfig/components/EditModal.tsx",
+    "apps/futures-admin/src/apps/FutureApiDynamicFeeConfig/constants.ts",
+    "apps/futures-admin/src/apps/FutureApiDynamicFeeConfig/contract.ts",
+    "apps/futures-admin/src/apps/FutureApiDynamicFeeConfig/index.tsx",
+    "apps/futures-admin/src/apps/FutureApiDynamicFeeConfig/utils/useApiDynamicFeeConfig.ts",
+    "apps/futures-admin/src/mocks/browser.ts",
+    "apps/futures-admin/src/mocks/pr02208/fixtures.ts",
+    "apps/futures-admin/src/mocks/pr02208/handlers.ts",
+    "apps/futures-admin/src/mocks/useMockWorker.ts",
+    "pnpm-lock.yaml"
+  ],
+  "discoveredSurfaces": [
+    {
+      "surfaceId": "S-012",
+      "locator": "apps/futures-admin/src/apps/FutureApiDynamicFeeConfig/**"
+    },
+    {
+      "surfaceId": "S-013",
+      "locator": "apps/futures-admin/legacy-admin/src/viewsTemplate/marketManagement/apiDynamicFeeConfig.vue"
+    },
+    {
+      "surfaceId": "S-014",
+      "locator": "apps/futures-admin/src/apps/FutureApiDynamicFeeConfig API client and React Query hook"
+    },
+    {
+      "surfaceId": "S-015",
+      "locator": "apps/futures-admin/legacy-admin/src/mixin/marketManagement/apiDynamicFeeConfig.js API lifecycle"
+    },
+    {
+      "surfaceId": "S-016",
+      "locator": "apps/futures-admin/legacy-admin/src/mixin/futuresExchange/futuresFeeList.js API fee columns"
+    },
+    {
+      "surfaceId": "S-017",
+      "locator": "apps/futures-admin/legacy-admin/src/utils/apiDynamicFeeDisplay.js response mapping"
+    }
+  ],
+  "coveredSurfaceIds": [
+    "S-012",
+    "S-013",
+    "S-014",
+    "S-015",
+    "S-016",
+    "S-017"
+  ],
+  "integratedSourceKinds": [],
+  "msw": {
+    "workerIntegrated": true,
+    "handlerIds": [
+      "next-api-dynamic-fee-config-read",
+      "next-api-dynamic-fee-config-save",
+      "legacy-api-dynamic-fee-config-read",
+      "legacy-api-dynamic-fee-config-save",
+      "legacy-user-api-fee-list"
+    ],
+    "coveredContractIds": [
+      "PR-02208-CONFIG-READ",
+      "PR-02208-CONFIG-WRITE",
+      "PR-02208-USER-FEE-DISPLAY"
+    ]
+  },
+  "blockers": []
+}

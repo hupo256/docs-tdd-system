@@ -1,0 +1,14 @@
+{
+  "projectId": "PR-02233",
+  "outputDir": "apps/web/docs_tdd/prds/PR-02233/changes/login-google-origin-403/inbox/lark-sync",
+  "sources": [
+    {
+      "type": "markdown",
+      "operation": "read",
+      "name": "缺陷报告",
+      "url": "/Users/aven/github/docs_tdd/prds/PR-02233/inbox/login-google-origin-403-2026-09-26.md",
+      "target": "incident-latest.md",
+      "localizedTarget": "incident-latest.extracted.md"
+    }
+  ]
+}

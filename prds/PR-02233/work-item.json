@@ -4540,8 +4540,7 @@
       "apps/web/src/utils/hooks/useServiceWorkerRegistration.ts",
       "apps/web/src/i18n/locales/zh-CN/codeVerify.json",
       "pnpm-lock.yaml",
-      "apps/web/src/i18n/locales/zh-CN/user.json",
-      "apps/web/scripts/dom-contract/pr-02233"
+      "apps/web/src/i18n/locales/zh-CN/user.json"
     ],
     "deferred": {
       "owner": "PR-02233 后续批次(待 Account/Assets 迁移)",

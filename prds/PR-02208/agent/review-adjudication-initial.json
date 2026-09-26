@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "projectId": "PR-02208",
+  "reviewRunId": "review-e0310ca5-f731-4a0d-82c6-32bc96446172",
+  "sourceFingerprint": "55f9b52d357aec21abe9a4b32e9f9f26e06afa43928e70801f059d9c9549876f",
+  "requirementsFingerprint": "a50228f247f86b6771451ea7d3cf2ad571186acef9915b6764bc837cfe5b7f0d",
+  "adjudicatedBy": "aven",
+  "adjudicatedAt": "2026-09-26",
+  "reason": "确认采纳遗漏项修复，依据已核验的内嵌表格驳回两项来源不可见结论，并维持后端/API 契约批次延期。",
+  "decisions": [
+    {
+      "findingId": "COVERAGE-007",
+      "disposition": "rejected",
+      "reason": "成交 API 字段清单已从 PRD 内嵌 Sheet 在线核验并固化到项目局部快照。",
+      "evidenceRefs": [
+        "inbox/embedded-sheets.md#BuUqw1"
+      ]
+    },
+    {
+      "findingId": "COVERAGE-008",
+      "disposition": "rejected",
+      "reason": "档位变化历史字段已从 PRD 内嵌 Sheet 在线核验并固化到项目局部快照。",
+      "evidenceRefs": [
+        "inbox/embedded-sheets.md#hqsIdH"
+      ]
+    },
+    {
+      "findingId": "COVERAGE-009",
+      "disposition": "accepted",
+      "reason": "补充 API 成交量作为独立字段记录的原子要求。"
+    },
+    {
+      "findingId": "COVERAGE-010",
+      "disposition": "accepted",
+      "reason": "补充 API 成交量不进入原返佣考核成交量及返佣计算基数的要求。"
+    },
+    {
+      "findingId": "COVERAGE-011",
+      "disposition": "accepted",
+      "reason": "补充 API 自返佣结算规则及时间与现行每日结算一致的要求。"
+    },
+    {
+      "findingId": "COVERAGE-012",
+      "disposition": "accepted",
+      "reason": "补充后台和用户侧 API 成交量展示不属于本期范围的边界。"
+    },
+    {
+      "findingId": "DEFERRED-001",
+      "disposition": "deferred",
+      "reason": "后端职责且前端依赖正式 API 契约。",
+      "owner": "合约/交易/返佣后端 owners",
+      "batch": "PR-02208-backend-and-api-contract"
+    }
+  ]
+}

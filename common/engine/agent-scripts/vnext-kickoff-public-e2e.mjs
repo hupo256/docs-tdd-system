@@ -333,13 +333,13 @@ export function selfTest() {
     const automaticChangeRoot = resolveProjectChangeRoot(runProject, automaticPointer.changeId)
     const automaticReadme = readFileSync(join(automaticChangeRoot, 'README.md'), 'utf8')
     assert.match(automaticReadme, new RegExp(`^changeId: ${automaticPointer.changeId}$`, 'm'))
-    assert.match(automaticReadme, new RegExp(`^branch: "fix/${runProject}-${automaticPointer.changeId}"$`, 'm'))
-    assert.match(automaticReadme, /^baseRef: "origin\/release-test"$/m)
-    assert.match(automaticReadme, new RegExp(`^worktree: ".*${runProject}-${automaticPointer.changeId}"$`, 'm'))
+    assert.match(automaticReadme, new RegExp(`^branch: "feature/${runProject}"$`, 'm'))
+    assert.match(automaticReadme, /^baseRef: "origin\/online"$/m)
+    assert.match(automaticReadme, new RegExp(`^worktree: ".*${runProject}"$`, 'm'))
     const automaticGitBinding = readProjectGitBinding(runProject, { projectsRoot: activeProjectsRoot })
-    assert.equal(automaticGitBinding.baseRef, 'origin/release-test')
-    assert.equal(automaticGitBinding.branch, `fix/${runProject}-${automaticPointer.changeId}`)
-    assert.equal(automaticGitBinding.worktree, join(dirname(resolve(sandbox)), `${runProject}-${automaticPointer.changeId}`))
+    assert.equal(automaticGitBinding.baseRef, 'origin/online')
+    assert.equal(automaticGitBinding.branch, `feature/${runProject}`)
+    assert.equal(automaticGitBinding.worktree, join(dirname(resolve(sandbox)), runProject))
     assert.equal(readFileSync(join(runProjectRoot, 'work-item.json'), 'utf8'), historicalWorkItem)
 
     const changeRun = run(docsTddCli, [
@@ -396,6 +396,15 @@ export function selfTest() {
       assert.equal(status.executionControl.recordedTerminalState, 'running')
       assert.equal(status.executionStatus, 'active')
       assert.notEqual(status.actionPacket.status, status.status, 'system hold must not overwrite the current Autopilot status')
+      const heldChangeId = `hold-bypass-${nonce}`
+      const heldChangePreview = outputJson(run(docsTddCli, [
+        'run', protectedId, '--change', heldChangeId, '--prd', source,
+        '--kind', 'bugfix', '--client', 'codex', '--dry-run',
+      ], { cwd: sandbox, env: liveEnv }))
+      assert.equal(heldChangePreview.status, 'dry-run')
+      assert.equal(heldChangePreview.dryRun.changeId, heldChangeId)
+      assert.equal(existsSync(resolveProjectChangeRootFromRoots(protectedId, heldChangeId)), false)
+      assert.deepEqual(directorySnapshot(protectedRoot), beforeHold, `${protectedId} change-set preview must remain read-only`)
       for (const action of ['run', 'resume']) {
         const held = run(docsTddCli, [action, protectedId], { cwd: sandbox, env: liveEnv })
         assert.notEqual(held.status, 0)

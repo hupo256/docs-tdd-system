@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "projectId": "PR-02208",
+  "approvalFingerprint": "2cb81980d8860e53a7da1f06c29c0cd85f94c546903c37d41d572dfc89eaf74a",
+  "sourceFingerprint": "55f9b52d357aec21abe9a4b32e9f9f26e06afa43928e70801f059d9c9549876f",
+  "requirementsFingerprint": "e6093ffd357d7580ef0de83fc483754bb273ab417560ae2ebec043e1e0241fea",
+  "reviewStatus": "passed",
+  "routing": {
+    "scopeClass": "cross-boundary",
+    "riskSignals": [
+      "amount-semantics",
+      "contract-change",
+      "cross-app",
+      "fee-semantics",
+      "funds",
+      "permission",
+      "trading"
+    ],
+    "verificationLevel": "V2",
+    "routerVersion": 1
+  },
+  "requirementCounts": {
+    "doing": 2,
+    "deferred": 14,
+    "not-doing": 3
+  },
+  "highRiskSurfaces": [
+    {
+      "requirementId": "R-006",
+      "surfaceId": "S-012",
+      "locator": "apps/futures-admin/src/apps/FutureApiDynamicFeeConfig/**"
+    },
+    {
+      "requirementId": "R-006",
+      "surfaceId": "S-013",
+      "locator": "apps/futures-admin/legacy-admin/src/viewsTemplate/marketManagement/apiDynamicFeeConfig.vue"
+    },
+    {
+      "requirementId": "R-006",
+      "surfaceId": "S-014",
+      "locator": "apps/futures-admin/src/apps/FutureApiDynamicFeeConfig API client and React Query hook"
+    },
+    {
+      "requirementId": "R-006",
+      "surfaceId": "S-015",
+      "locator": "apps/futures-admin/legacy-admin/src/mixin/marketManagement/apiDynamicFeeConfig.js API lifecycle"
+    },
+    {
+      "requirementId": "R-007",
+      "surfaceId": "S-016",
+      "locator": "apps/futures-admin/legacy-admin/src/mixin/futuresExchange/futuresFeeList.js API fee columns"
+    },
+    {
+      "requirementId": "R-007",
+      "surfaceId": "S-017",
+      "locator": "apps/futures-admin/legacy-admin/src/utils/apiDynamicFeeDisplay.js response mapping"
+    }
+  ],
+  "sourceReadiness": {
+    "figma": {
+      "requirement": "not-required",
+      "status": "not-required",
+      "reason": "PRD 两张原型图仅用于定位既有后台页面和字段，样式明确沿用后台规范，无独立 Figma 交付。"
+    },
+    "api": {
+      "requirement": "required",
+      "status": "pending",
+      "reason": "配置读写、用户费率、API Key 状态、权限和审计契约尚未提供。"
+    }
+  },
+  "apiDependency": {
+    "mode": "mock-required",
+    "reason": "正式 API 尚未 ready，但前端范围和交互已明确；按现有规则使用临时契约与开发环境 MSW 最小 mock 推进，API ready 后逐接口对账并删除对应 handler。",
+    "contractIds": [
+      "PR-02208-CONFIG-READ",
+      "PR-02208-CONFIG-WRITE",
+      "PR-02208-USER-FEE-DISPLAY"
+    ]
+  },
+  "confirmation": {
+    "confirmedBy": "aven",
+    "confirmedAt": "2026-09-26",
+    "reason": "确认继续按当前 PRD、R-001 至 R-019 的交付边界、V2 风险路由及 mock-required + MSW 策略实施；正式 API 未 ready 不构成前端开工阻断。",
+    "statement": "I reviewed this exact source, requirement boundary, risk route, and dependency policy and approve implementation of the doing scope."
+  }
+}

@@ -1,0 +1,303 @@
+{
+  "schemaVersion": 1,
+  "workflowVersion": 2,
+  "tool": "vnext-verify.mjs",
+  "mode": "enforced",
+  "assuranceMode": "autonomous",
+  "evidenceTrust": "cli-attested",
+  "runId": "evidence-20260926115308-73202f7c",
+  "generatedAt": "2026-09-26T11:54:10.190Z",
+  "projectId": "PR-02233",
+  "level": "V0",
+  "status": "failed",
+  "ok": false,
+  "workItemFingerprint": "30cb7838c2bf89fb2525acf533ee97c4d6a39fc0b70c70e35d07b1bbee45ae93",
+  "codeFingerprint": {
+    "headSha": "b0c46b0f13b638e0113606408e927e511580b87c",
+    "baseSha": "b0c46b0f13b638e0113606408e927e511580b87c",
+    "contentHash": "a20696507e2fe5593851dc0996da694f7e3c5d22900039dd164c56d411533335",
+    "dirtyHash": "a4c204760ccfac2f222e6f66ea77f8f529a533d30a0704b2f55ef78d43b1288c",
+    "dirtyFileCount": 3,
+    "untrackedFileCount": 1,
+    "isGitRepo": true,
+    "scopeMode": "path-set-v1",
+    "scopePaths": [
+      "apps/web/scripts/dom-contract/pr-02233/hover-no-underline.mjs",
+      "apps/web/src/components/Verification/SecurityVerifyMan.tsx",
+      "apps/web/src/components/Verification/SendCodeButton.tsx"
+    ]
+  },
+  "checks": [
+    {
+      "code": "SOURCE_FRESH",
+      "ok": true,
+      "problems": []
+    },
+    {
+      "code": "SOURCE_GRAPH",
+      "ok": true,
+      "problems": [],
+      "graph": {
+        "schemaVersion": 1,
+        "projectId": "PR-02233",
+        "sourceFingerprint": "a3fc804d69a81161c6091137e0e95a4f0fe3f8fd4ebdb5e6434bdf6c8ef53730",
+        "sourceUnitHashes": {
+          "SRC-481B221AFBC9": "b811351bbf80576f91fdee0abb93d4d47498827bd97f1af77eb481c8c058aeb4",
+          "SRC-536AF382F47A": "fa9493dbf6a94867d92a41aa2f481fd3165b5b9c2883ae7d8fd6cda5b3f932d5",
+          "SRC-7547DFB0CDBA": "f4b11ab3bd12221f3c037347845da6c5928c3ccc6f43ecb9f81ee7e5ea39fbcf",
+          "SRC-8CD894F080BC": "af742f7dd5f97403bad407ddda70a9ba563f4526c66cea9e07f171aa9b8865d7",
+          "SRC-9CC7D9A64990": "41f50d9ba8007d9110b60fbf813ecd6ca4fd71de964a08097cdd3853220a6574",
+          "SRC-D285189F2733": "21d42f04a9124c4640ba6699e95a76df154997d997b380172363bd65d115ca88",
+          "SRC-DD9CA566443B": "91ed981d4006dd65bd2180b316b3eb4af2b6b82a54d1fc5c6ed52e6ed98ad035"
+        },
+        "nodes": {
+          "sources": [
+            {
+              "sourceId": "SRC-481B221AFBC9",
+              "type": "text",
+              "path": "prds/PR-02233/changes/hover-no-underline/inbox/lark-sync/incident-latest.md"
+            },
+            {
+              "sourceId": "SRC-8CD894F080BC",
+              "type": "text",
+              "path": "prds/PR-02233/changes/hover-no-underline/inbox/lark-sync/incident-latest.md"
+            },
+            {
+              "sourceId": "SRC-DD9CA566443B",
+              "type": "text",
+              "path": "prds/PR-02233/changes/hover-no-underline/inbox/lark-sync/incident-latest.md"
+            },
+            {
+              "sourceId": "SRC-D285189F2733",
+              "type": "text",
+              "path": "prds/PR-02233/changes/hover-no-underline/inbox/lark-sync/incident-latest.md"
+            },
+            {
+              "sourceId": "SRC-9CC7D9A64990",
+              "type": "text",
+              "path": "prds/PR-02233/changes/hover-no-underline/inbox/lark-sync/incident-latest.md"
+            },
+            {
+              "sourceId": "SRC-536AF382F47A",
+              "type": "text",
+              "path": "prds/PR-02233/changes/hover-no-underline/inbox/lark-sync/incident-latest.md"
+            },
+            {
+              "sourceId": "SRC-7547DFB0CDBA",
+              "type": "text",
+              "path": "prds/PR-02233/changes/hover-no-underline/inbox/lark-sync/incident-latest.md"
+            }
+          ],
+          "requirements": [
+            {
+              "requirementId": "R-001",
+              "status": "doing"
+            }
+          ],
+          "surfaces": [
+            {
+              "surfaceId": "S-001",
+              "requirementId": "R-001",
+              "disposition": "implement"
+            },
+            {
+              "surfaceId": "S-002",
+              "requirementId": "R-001",
+              "disposition": "implement"
+            }
+          ],
+          "evidence": [
+            {
+              "evidenceId": "EP-R-001-01",
+              "requirementId": "R-001",
+              "kind": "component-dom",
+              "runtimeRequired": false
+            },
+            {
+              "evidenceId": "EP-R-001-02",
+              "requirementId": "R-001",
+              "kind": "touched-file-quality",
+              "runtimeRequired": false
+            }
+          ]
+        },
+        "edges": [
+          {
+            "type": "requirement-evidence",
+            "from": "R-001",
+            "to": "EP-R-001-01"
+          },
+          {
+            "type": "requirement-evidence",
+            "from": "R-001",
+            "to": "EP-R-001-02"
+          },
+          {
+            "type": "requirement-surface",
+            "from": "R-001",
+            "to": "S-001"
+          },
+          {
+            "type": "requirement-surface",
+            "from": "R-001",
+            "to": "S-002"
+          },
+          {
+            "type": "source-requirement",
+            "from": "SRC-7547DFB0CDBA",
+            "to": "R-001"
+          },
+          {
+            "type": "source-requirement",
+            "from": "SRC-9CC7D9A64990",
+            "to": "R-001"
+          },
+          {
+            "type": "source-requirement",
+            "from": "SRC-DD9CA566443B",
+            "to": "R-001"
+          }
+        ],
+        "problems": [],
+        "ok": true,
+        "graphFingerprint": "64e13eba00763dbb8c4172351b85deef6ce3acad97f544365ea47b85631766a5"
+      }
+    },
+    {
+      "code": "REQUIREMENT_COVERAGE",
+      "ok": false,
+      "problems": [
+        "V0-micro requires exactly one implement surface",
+        "V0-micro cannot contain collection semantics"
+      ]
+    },
+    {
+      "code": "SURFACE_COVERAGE",
+      "ok": true,
+      "problems": []
+    },
+    {
+      "code": "SURFACE_RECONCILIATION",
+      "ok": true,
+      "problems": [],
+      "evidenceIds": []
+    },
+    {
+      "code": "RISK_ROUTE",
+      "ok": true,
+      "problems": []
+    },
+    {
+      "code": "SCOPE_APPROVAL",
+      "ok": true,
+      "problems": []
+    },
+    {
+      "code": "MSW_POLICY",
+      "ok": true,
+      "problems": [],
+      "mode": "no-request",
+      "required": false,
+      "blocked": false
+    },
+    {
+      "code": "SOURCE_READINESS",
+      "ok": true,
+      "problems": [],
+      "unknownKinds": [],
+      "pendingRequiredKinds": [],
+      "reconciliationKinds": [],
+      "implementationCanProceed": true,
+      "readyToTest": true
+    },
+    {
+      "code": "MANUAL_PRETEST_RUN",
+      "ok": true,
+      "problems": [],
+      "evidenceIds": []
+    },
+    {
+      "code": "CODE_STATE",
+      "ok": true,
+      "problems": [],
+      "evidenceIds": []
+    },
+    {
+      "code": "EVIDENCE_INTEGRITY",
+      "ok": true,
+      "problems": [],
+      "evidenceIds": [
+        "E-001",
+        "E-002"
+      ]
+    },
+    {
+      "code": "EVIDENCE_FRESHNESS",
+      "ok": true,
+      "problems": [],
+      "evidenceIds": [
+        "E-001",
+        "E-002"
+      ]
+    },
+    {
+      "code": "REQUIRED_EVIDENCE",
+      "ok": true,
+      "problems": [],
+      "evidenceIds": []
+    },
+    {
+      "code": "EVIDENCE_SUFFICIENCY",
+      "ok": false,
+      "problems": [
+        "R-001 DOM/static evidence cannot prove its side effect",
+        "R-001 runtime critical path lacks browser-interaction or human-check evidence"
+      ],
+      "evidenceIds": [
+        "E-001",
+        "E-002"
+      ]
+    },
+    {
+      "code": "REQUIREMENT_EVIDENCE",
+      "ok": true,
+      "problems": [],
+      "evidenceIds": []
+    },
+    {
+      "code": "SURFACE_EVIDENCE",
+      "ok": true,
+      "problems": [],
+      "evidenceIds": []
+    },
+    {
+      "code": "BLOCKERS",
+      "ok": true,
+      "problems": [],
+      "evidenceIds": []
+    }
+  ],
+  "summary": {
+    "total": 18,
+    "passed": 16,
+    "failed": 2
+  },
+  "blockedBy": [],
+  "failureDomains": [
+    "code",
+    "scope"
+  ],
+  "evidenceAttestation": {
+    "issuedBy": "docs-tdd-evidence-v1",
+    "projectId": "PR-02233",
+    "workItemFingerprint": "30cb7838c2bf89fb2525acf533ee97c4d6a39fc0b70c70e35d07b1bbee45ae93",
+    "codeContentHash": "a20696507e2fe5593851dc0996da694f7e3c5d22900039dd164c56d411533335",
+    "planFingerprint": "73202f7c6de57410173a62d00ee4f551c6341b8daacc36bf9c30ddc74802c80e",
+    "runId": "evidence-20260926115308-73202f7c",
+    "startedAt": "2026-09-26T11:53:00.973Z",
+    "completedAt": "2026-09-26T11:53:08.417Z",
+    "signature": "f65e23c3d26b26ae5b34b85b14dd4d5ca16131d50d0acf767c8fc1f53d39de79",
+    "bundleFingerprint": "f3ef4e9ec40d0d795d225cca39d2fe1f11f5d935b0f0ae291c5e9cbfa420c904"
+  },
+  "resultFingerprint": "7be38590ec375ff209fd3e471f344237a0c111875a878ea4ed0f666065e174cf"
+}

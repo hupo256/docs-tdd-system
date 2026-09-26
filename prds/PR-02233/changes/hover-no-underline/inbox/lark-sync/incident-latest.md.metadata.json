@@ -1,0 +1,17 @@
+{
+  "sourceName": "缺陷报告",
+  "sourceType": "markdown",
+  "sourceUrl": "/Users/aven/github/docs_tdd/prds/PR-02233/inbox/hover-no-underline-2026-09-26.md",
+  "syncedAt": "2026-09-26T10:55:04.806Z",
+  "readOnly": true,
+  "command": [
+    "local-markdown",
+    "../docs_tdd/prds/PR-02233/inbox/hover-no-underline-2026-09-26.md"
+  ],
+  "stderr": null,
+  "target": "../docs_tdd/prds/PR-02233/changes/hover-no-underline/inbox/lark-sync/incident-latest.md",
+  "remoteContentHash": null,
+  "remoteDocumentId": null,
+  "remoteRevisionId": null,
+  "identity": null
+}

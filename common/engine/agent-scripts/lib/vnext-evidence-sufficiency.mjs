@@ -13,10 +13,17 @@ const QUALITY_KINDS = new Set(['structural', 'quality', 'touched-file-quality', 
 
 const passing = (facts) => facts.filter((fact) => fact.result === 'pass' && (fact.producer?.kind !== 'command' || fact.producer.exitCode === 0))
 
+function actionableStatement(statement) {
+  return String(statement || '')
+    .replace(/[“”][^“”]*[“”]/g, ' ')
+    .replace(/"[^"]*"/g, ' ')
+    .replace(/(?:不(?:改变|修改|影响)|保持)[^；;。.!?]*(?:不变)?/g, ' ')
+}
+
 export function runtimeCriticalRequirementIds(workItem) {
   return (workItem?.requirements || [])
     .filter((requirement) => requirement.status === 'doing')
-    .filter((requirement) => RUNTIME_LANGUAGE.test(requirement.statement || '')
+    .filter((requirement) => RUNTIME_LANGUAGE.test(actionableStatement(requirement.statement))
       || (requirement.evidencePlan || []).some((plan) => plan.runtimeRequired || plan.type === 'browser-interaction'))
     .map((requirement) => requirement.requirementId)
 }
@@ -97,7 +104,7 @@ export function auditEvidenceSufficiency({ workItem, evidence, currentCodeState 
     if (runtimeIds.has(requirement.requirementId) && !hasRuntime) {
       problems.push(`${requirement.requirementId} runtime critical path lacks browser-interaction or human-check evidence`)
     }
-    if (SIDE_EFFECT_LANGUAGE.test(requirement.statement || '')
+    if (SIDE_EFFECT_LANGUAGE.test(actionableStatement(requirement.statement))
       && requirementFacts.some((fact) => ['component-dom', 'copy-literal'].includes(fact.kind))
       && !hasRuntime
       && !requirementFacts.some((fact) => ['payload-contract', 'pure-logic'].includes(fact.kind))) {
@@ -136,6 +143,11 @@ export function selfTest() {
     producer: { kind: 'command', exitCode: 0 },
   }
   assert.match(auditEvidenceSufficiency({ workItem, evidence: { facts: [dom] }, currentCodeState: code }).problems.join(' '), /runtime critical path/)
+  const labelOnly = structuredClone(workItem)
+  labelOnly.requirements[0].statement = '“切换为手机验证”和“重新发送”入口 hover 时无下划线，不改变点击行为。'
+  labelOnly.requirements[0].evidencePlan = [{ type: 'component-dom', runtimeRequired: false }]
+  assert.deepEqual(runtimeCriticalRequirementIds(labelOnly), [])
+  assert.equal(auditEvidenceSufficiency({ workItem: labelOnly, evidence: { facts: [dom] }, currentCodeState: code }).ok, true)
   const manualTestRun = {
     runId: 'run-1',
     status: 'passed',

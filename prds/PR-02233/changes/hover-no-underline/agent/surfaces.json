@@ -1,0 +1,17 @@
+{
+  "discoveredSurfaces": [
+    {
+      "surfaceId": "S-001",
+      "locator": "apps/web/src/components/Verification/SecurityVerifyMan.tsx renderSwitchLink"
+    },
+    {
+      "surfaceId": "S-002",
+      "locator": "apps/web/src/components/Verification/SendCodeButton.tsx clickable resend state"
+    }
+  ],
+  "coveredSurfaceIds": [
+    "S-001",
+    "S-002"
+  ],
+  "blockers": []
+}

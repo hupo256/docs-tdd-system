@@ -19,6 +19,25 @@ export function createVNextIntakeRuntime({ docsRoot, consumerRoot, config, resol
     try { return JSON.parse(readFileSync(file, 'utf8')) } catch { return null }
   }
 
+  function frontmatterValue(file, key) {
+    if (!existsSync(file)) return ''
+    return readFileSync(file, 'utf8').match(new RegExp(`^${key}:\\s*(.*)$`, 'm'))?.[1]?.replace(/^['"]|['"]$/g, '').trim() || ''
+  }
+
+  function parentProjectGitBinding(projectId, projectDir, changeId) {
+    if (!changeId) return null
+    const baseProjectDir = resolve(projectDir, '..', '..')
+    const readme = join(baseProjectDir, 'README.md')
+    const branch = frontmatterValue(readme, 'branch')
+    const worktree = frontmatterValue(readme, 'worktree')
+    if (!branch || !worktree) return null
+    return {
+      branch,
+      baseRef: frontmatterValue(readme, 'baseRef') || config.baseRef || 'origin/online',
+      worktree: resolve(baseProjectDir, worktree),
+    }
+  }
+
   function syncAndInit(id, { legacy = true } = {}) {
     const configFile = join(resolveProjectRoot(id), 'agent/lark-sources.json')
     const sources = readJson(configFile)
@@ -43,12 +62,13 @@ export function createVNextIntakeRuntime({ docsRoot, consumerRoot, config, resol
   } = {}) {
     mkdirSync(join(projectDir, 'inbox/lark-sync'), { recursive: true })
     mkdirSync(join(projectDir, 'agent'), { recursive: true })
-    const branchName = vNextBranchName(projectId, intakeKind, config.branchPrefix || 'feature/', changeId)
-    const worktreeName = `${projectId}${changeId ? `-${changeId}` : ''}`
-    const worktree = consumerRoot ? join(dirname(resolve(consumerRoot)), worktreeName) : ''
+    const parentBinding = parentProjectGitBinding(projectId, projectDir, changeId)
+    const branchName = parentBinding?.branch || vNextBranchName(projectId, intakeKind, config.branchPrefix || 'feature/')
+    const effectiveBaseRef = parentBinding?.baseRef || baseRef
+    const worktree = parentBinding?.worktree || (consumerRoot ? join(dirname(resolve(consumerRoot)), projectId) : '')
     const sourceRole = intakeKind === 'bugfix' ? 'incident' : 'prd'
     const sourceLabel = intakeKind === 'bugfix' ? '缺陷报告' : '需求 PRD'
-    writeFileSync(join(projectDir, 'README.md'), `---\nprojectId: ${projectId}\n${changeId ? `changeId: ${changeId}\n` : ''}status: active\nstage: G1\nbranch: ${JSON.stringify(branchName)}\nbaseRef: ${JSON.stringify(baseRef)}\nworktree: ${JSON.stringify(worktree)}\nport: ""\nvisualFidelity: standard\nprdSource: ${prd}\nfigmaNode: ""\nlarkEnabled: false\nworkflowVersion: 2\nworkItemKind: ${intakeKind}\n---\n\n# ${projectId}${changeId ? ` / ${changeId}` : ''} ${title}\n\n> v2 Autopilot ${intakeKind === 'bugfix' ? 'Bugfix' : 'Feature'} 项目：${sourceLabel}是唯一必需的开工输入；Figma/API 可后续增量接入。工作事实只保存在 work-item.json、latest-result.json、runs.jsonl。\n\n## 继续开发\n\n运行 \`docs-tdd run ${projectId}${changeId ? ` --change ${changeId}` : ''}\`。CLI 会根据当前事实返回唯一下一动作；正常路径无需手工选择 Gate 或拼装验证输入。\n`)
+    writeFileSync(join(projectDir, 'README.md'), `---\nprojectId: ${projectId}\n${changeId ? `changeId: ${changeId}\n` : ''}status: active\nstage: G1\nbranch: ${JSON.stringify(branchName)}\nbaseRef: ${JSON.stringify(effectiveBaseRef)}\nworktree: ${JSON.stringify(worktree)}\nport: ""\nvisualFidelity: standard\nprdSource: ${prd}\nfigmaNode: ""\nlarkEnabled: false\nworkflowVersion: 2\nworkItemKind: ${intakeKind}\n---\n\n# ${projectId}${changeId ? ` / ${changeId}` : ''} ${title}\n\n> v2 Autopilot ${intakeKind === 'bugfix' ? 'Bugfix' : 'Feature'} 项目：${sourceLabel}是唯一必需的开工输入；Figma/API 可后续增量接入。工作事实只保存在 work-item.json、latest-result.json、runs.jsonl。\n\n## 继续开发\n\n运行 \`docs-tdd run ${projectId}${changeId ? ` --change ${changeId}` : ''}\`。CLI 会根据当前事实返回唯一下一动作；正常路径无需手工选择 Gate 或拼装验证输入。\n`)
     const larkOutputDir = isolatedProjectStore
       ? join(projectDir, 'inbox/lark-sync')
       : join(
@@ -194,15 +214,24 @@ export function selfTest() {
     )
     assert.equal(runtime.sourceIdentity('https://example.invalid/prd'), 'url:https://example.invalid/prd')
 
-    runtime.kickoffVNext('PR-00001', projectDir, 'https://example.invalid/prd', 'Cursor hover', 'bugfix', {
+    const baseProjectDir = join(root, 'base', 'PR-00001')
+    const changeProjectDir = join(baseProjectDir, 'changes', 'cursor-hover')
+    mkdirSync(baseProjectDir, { recursive: true })
+    writeFileSync(join(baseProjectDir, 'README.md'), `---
+branch: "feature/PR-00001"
+baseRef: "origin/online"
+worktree: "/tmp/PR-00001"
+---
+`)
+    runtime.kickoffVNext('PR-00001', changeProjectDir, 'https://example.invalid/prd', 'Cursor hover', 'bugfix', {
       changeId: 'cursor-hover',
-      baseRef: 'origin/online',
+      baseRef: 'origin/ignored',
     })
-    const readme = readFileSync(join(projectDir, 'README.md'), 'utf8')
+    const readme = readFileSync(join(changeProjectDir, 'README.md'), 'utf8')
     assert.match(readme, /^changeId: cursor-hover$/m)
-    assert.match(readme, /^branch: "fix\/PR-00001-cursor-hover"$/m)
+    assert.match(readme, /^branch: "feature\/PR-00001"$/m)
     assert.match(readme, /^baseRef: "origin\/online"$/m)
-    assert.match(readme, /PR-00001-cursor-hover"$/m)
+    assert.match(readme, /^worktree: "\/tmp\/PR-00001"$/m)
 
     mkdirSync(join(projectDir, 'agent'), { recursive: true })
     writeFileSync(join(projectDir, 'agent/lark-sources.json'), JSON.stringify({

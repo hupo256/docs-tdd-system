@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "projectId": "PR-02208",
+  "samples": [
+    {
+      "sequence": 3,
+      "sampleId": "PR-02208-API-DYNAMIC-FEE",
+      "title": "API 用户动态费率及返佣体系",
+      "sourcePath": "prds/PR-02208/inbox/lark-sync/prd-latest.extracted.md",
+      "sourceUrl": "https://qfglxo2m3dc.sg.larksuite.com/wiki/TWvcwhONMieDKPkxA0wlrP0cghh",
+      "sourceFingerprint": "55f9b52d357aec21abe9a4b32e9f9f26e06afa43928e70801f059d9c9549876f",
+      "requirementsFingerprint": "e6093ffd357d7580ef0de83fc483754bb273ab417560ae2ebec043e1e0241fea",
+      "scopeApprovalFingerprint": "2cb81980d8860e53a7da1f06c29c0cd85f94c546903c37d41d572dfc89eaf74a",
+      "synthetic": false,
+      "newRequirement": true,
+      "verificationLevel": "V2",
+      "executionRoute": "high-risk",
+      "scopeClass": "cross-boundary",
+      "status": "implementation-complete-api-pending",
+      "completed": false,
+      "dependencyMode": "mock-required",
+      "contractIds": [
+        "PR-02208-CONFIG-READ",
+        "PR-02208-CONFIG-WRITE",
+        "PR-02208-USER-FEE-DISPLAY"
+      ],
+      "registryDisposition": "project-local-candidate",
+      "countedAsCompletedPilot": false,
+      "observation": "真实 PRD、Coverage Review、V2 人工范围确认和前端实现均已完成；正式 API 未 ready 时按既有 mock-required 路由使用开发环境 MSW，当前为等待晚到 API 后逐接口对账并清理 mock 的集成等待状态，不是 blocker；最终验证完成前不计入已完成 Pilot 样本。"
+    }
+  ]
+}

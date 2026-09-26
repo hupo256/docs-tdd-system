@@ -1,0 +1,125 @@
+{
+  "runId": "evidence-20260926115308-73202f7c",
+  "capturedAt": "2026-09-26T11:53:08.417Z",
+  "assuranceMode": "autonomous",
+  "evidenceTrust": "cli-attested",
+  "codeFingerprint": {
+    "headSha": "b0c46b0f13b638e0113606408e927e511580b87c",
+    "baseSha": "b0c46b0f13b638e0113606408e927e511580b87c",
+    "contentHash": "a20696507e2fe5593851dc0996da694f7e3c5d22900039dd164c56d411533335",
+    "dirtyHash": "a4c204760ccfac2f222e6f66ea77f8f529a533d30a0704b2f55ef78d43b1288c",
+    "dirtyFileCount": 3,
+    "untrackedFileCount": 1,
+    "isGitRepo": true,
+    "scopeMode": "path-set-v1",
+    "scopePaths": [
+      "apps/web/scripts/dom-contract/pr-02233/hover-no-underline.mjs",
+      "apps/web/src/components/Verification/SecurityVerifyMan.tsx",
+      "apps/web/src/components/Verification/SendCodeButton.tsx"
+    ]
+  },
+  "facts": [
+    {
+      "evidenceId": "E-001",
+      "kind": "component-dom",
+      "result": "pass",
+      "codeFingerprint": {
+        "headSha": "b0c46b0f13b638e0113606408e927e511580b87c",
+        "baseSha": "b0c46b0f13b638e0113606408e927e511580b87c",
+        "contentHash": "a20696507e2fe5593851dc0996da694f7e3c5d22900039dd164c56d411533335",
+        "dirtyHash": "a4c204760ccfac2f222e6f66ea77f8f529a533d30a0704b2f55ef78d43b1288c",
+        "dirtyFileCount": 3,
+        "untrackedFileCount": 1,
+        "isGitRepo": true,
+        "scopeMode": "path-set-v1",
+        "scopePaths": [
+          "apps/web/scripts/dom-contract/pr-02233/hover-no-underline.mjs",
+          "apps/web/src/components/Verification/SecurityVerifyMan.tsx",
+          "apps/web/src/components/Verification/SendCodeButton.tsx"
+        ]
+      },
+      "requirementIds": [
+        "R-001"
+      ],
+      "surfaceIds": [
+        "S-001",
+        "S-002"
+      ],
+      "evidenceRefs": [
+        "command-output:sha256:b35b229f6e8889719d62adbdeb10001f84929dd0e61823aeb0821fcc67ccf718"
+      ],
+      "producer": {
+        "kind": "command",
+        "command": "\"node\" \"apps/web/scripts/dom-contract/pr-02233/hover-no-underline.mjs\"",
+        "argv": [
+          "node",
+          "apps/web/scripts/dom-contract/pr-02233/hover-no-underline.mjs"
+        ],
+        "exitCode": 0,
+        "startedAt": "2026-09-26T11:53:00.975Z",
+        "finishedAt": "2026-09-26T11:53:01.027Z",
+        "stdoutHash": "0fa0cd294c53fe17aaabfb242494d08ab52f66789a9c6dfb4ea047a6520cc137",
+        "stderrHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "evidenceId": "E-002",
+      "kind": "touched-file-quality",
+      "result": "pass",
+      "codeFingerprint": {
+        "headSha": "b0c46b0f13b638e0113606408e927e511580b87c",
+        "baseSha": "b0c46b0f13b638e0113606408e927e511580b87c",
+        "contentHash": "a20696507e2fe5593851dc0996da694f7e3c5d22900039dd164c56d411533335",
+        "dirtyHash": "a4c204760ccfac2f222e6f66ea77f8f529a533d30a0704b2f55ef78d43b1288c",
+        "dirtyFileCount": 3,
+        "untrackedFileCount": 1,
+        "isGitRepo": true,
+        "scopeMode": "path-set-v1",
+        "scopePaths": [
+          "apps/web/scripts/dom-contract/pr-02233/hover-no-underline.mjs",
+          "apps/web/src/components/Verification/SecurityVerifyMan.tsx",
+          "apps/web/src/components/Verification/SendCodeButton.tsx"
+        ]
+      },
+      "requirementIds": [
+        "R-001"
+      ],
+      "surfaceIds": [
+        "S-001",
+        "S-002"
+      ],
+      "evidenceRefs": [
+        "command-output:sha256:c96ca7e4b0a8238cd3db24bc437c1fe89d4be191603ea8ee1085e8ca3df95eca"
+      ],
+      "producer": {
+        "kind": "command",
+        "command": "\"pnpm\" \"exec\" \"biome\" \"check\" \"apps/web/src/components/Verification/SecurityVerifyMan.tsx\" \"apps/web/src/components/Verification/SendCodeButton.tsx\" \"apps/web/scripts/dom-contract/pr-02233/hover-no-underline.mjs\"",
+        "argv": [
+          "pnpm",
+          "exec",
+          "biome",
+          "check",
+          "apps/web/src/components/Verification/SecurityVerifyMan.tsx",
+          "apps/web/src/components/Verification/SendCodeButton.tsx",
+          "apps/web/scripts/dom-contract/pr-02233/hover-no-underline.mjs"
+        ],
+        "exitCode": 0,
+        "startedAt": "2026-09-26T11:53:03.226Z",
+        "finishedAt": "2026-09-26T11:53:03.483Z",
+        "stdoutHash": "967c1eb73ff103928ef8edf73b47e89032eeb26ac7ff0f457c68f8c3928f9618",
+        "stderrHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  ],
+  "receipt": {
+    "issuedBy": "docs-tdd-evidence-v1",
+    "projectId": "PR-02233",
+    "workItemFingerprint": "30cb7838c2bf89fb2525acf533ee97c4d6a39fc0b70c70e35d07b1bbee45ae93",
+    "codeContentHash": "a20696507e2fe5593851dc0996da694f7e3c5d22900039dd164c56d411533335",
+    "planFingerprint": "73202f7c6de57410173a62d00ee4f551c6341b8daacc36bf9c30ddc74802c80e",
+    "runId": "evidence-20260926115308-73202f7c",
+    "startedAt": "2026-09-26T11:53:00.973Z",
+    "completedAt": "2026-09-26T11:53:08.417Z",
+    "signature": "f65e23c3d26b26ae5b34b85b14dd4d5ca16131d50d0acf767c8fc1f53d39de79"
+  }
+}

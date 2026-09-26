@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "projectId": "PR-02208",
+  "reviewRunId": "review-e0310ca5-f731-4a0d-82c6-32bc96446172",
+  "sourceFingerprint": "55f9b52d357aec21abe9a4b32e9f9f26e06afa43928e70801f059d9c9549876f",
+  "requirementsFingerprint": "e6093ffd357d7580ef0de83fc483754bb273ab417560ae2ebec043e1e0241fea",
+  "adjudicatedBy": "aven",
+  "adjudicatedAt": "2026-09-26",
+  "reason": "确认本次仅将 deliveryScope 路径从无效 glob 修正为目录前缀并纳入 pnpm-lock.yaml，业务需求、来源、风险路由和 mock-required 策略均未改变。",
+  "decisions": [
+    {
+      "findingId": "COVERAGE-007",
+      "disposition": "rejected",
+      "reason": "成交 API 字段清单已从 PRD 内嵌 Sheet 在线核验并固化到项目局部快照。",
+      "evidenceRefs": [
+        "inbox/embedded-sheets.md#BuUqw1"
+      ]
+    },
+    {
+      "findingId": "COVERAGE-008",
+      "disposition": "rejected",
+      "reason": "档位变化历史字段已从 PRD 内嵌 Sheet 在线核验并固化到项目局部快照。",
+      "evidenceRefs": [
+        "inbox/embedded-sheets.md#hqsIdH"
+      ]
+    },
+    {
+      "findingId": "COVERAGE-009",
+      "disposition": "resolved",
+      "reason": "R-016 已明确 API 成交量作为独立字段记录。"
+    },
+    {
+      "findingId": "COVERAGE-010",
+      "disposition": "resolved",
+      "reason": "R-017 已明确排除原返佣考核成交量及返佣计算基数。"
+    },
+    {
+      "findingId": "COVERAGE-011",
+      "disposition": "resolved",
+      "reason": "R-018 已明确结算规则和时间与现行每日结算一致。"
+    },
+    {
+      "findingId": "COVERAGE-012",
+      "disposition": "resolved",
+      "reason": "R-019 已明确后台和用户侧 API 成交量展示不属于本期。"
+    },
+    {
+      "findingId": "DEFERRED-001",
+      "disposition": "deferred",
+      "reason": "后端职责且前端依赖正式 API 契约。",
+      "owner": "合约/交易/返佣后端 owners",
+      "batch": "PR-02208-backend-and-api-contract"
+    }
+  ]
+}

@@ -337,6 +337,10 @@ export function runnerFailureStatus(runner, actionPacket) {
     : null
 }
 
+export function projectExecutionHoldApplies(id, projectDir) {
+  return resolve(projectDir) === resolve(resolveProjectBaseRoot(id))
+}
+
 function runnerObservation(projectDir, executionRoute) {
   const persisted = readJson(join(projectDir, 'agent/runner-state.json'))
   const trace = persisted?.trace && typeof persisted.trace === 'object' ? persisted.trace : null
@@ -363,12 +367,14 @@ function runnerObservation(projectDir, executionRoute) {
 
 export function inspectVNext(id) {
   const controlRegistry = readProjectControlRegistry(join(docsRoot, 'common/vnext/pilot-registry.json'))
-  const projectControl = findProjectControl(controlRegistry, id)
+  const projectDir = resolveProjectRoot(id)
+  const projectControl = projectExecutionHoldApplies(id, projectDir)
+    ? findProjectControl(controlRegistry, id)
+    : null
   const executionHeld = isProjectExecutionHeld(projectControl)
   const { terminalState: recordedTerminalState, ...executionControlSummary } = summarizeProjectControl(projectControl)
   const executionControl = { ...executionControlSummary, recordedTerminalState }
   const holdBlockers = executionHeld ? [`execution held [${executionControl.executionHold.code}]: ${executionControl.executionHold.reason}`] : []
-  const projectDir = resolveProjectRoot(id)
   const baseRef = readProjectGitBinding(id).baseRef
   const workItem = readJson(join(projectDir, 'work-item.json'))
   const latest = readJson(join(projectDir, 'latest-result.json'))
@@ -500,7 +506,8 @@ function status() {
   print({ ...decision, projectId, workflowVersion: 1, stateFile: relative(repoRoot, stateFile(projectId)) })
 }
 
-function blockHeldExecution(id, action) {
+function blockHeldExecution(id, action, projectDir = resolveProjectRoot(id)) {
+  if (!projectExecutionHoldApplies(id, projectDir)) return false
   const registry = readProjectControlRegistry(join(docsRoot, 'common/vnext/pilot-registry.json'))
   const control = findProjectControl(registry, id)
   if (!isProjectExecutionHeld(control)) return false
@@ -681,7 +688,8 @@ function autopilotRun() {
   if (args.includes('--legacy')) {
     throw new Error('docs-tdd run is workflowVersion 2 only; create an explicit legacy project with docs-tdd kickoff --legacy')
   }
-  if (projectWorkflowVersion(projectId) === 2 && blockHeldExecution(projectId, 'run')) return
+  const previewContext = requestedProjectContext({ dryRun: true })
+  if (projectWorkflowVersion(projectId) === 2 && blockHeldExecution(projectId, 'run', previewContext.projectDir)) return
   if (args.includes('--dry-run')) {
     print(dryRunOutput())
     return
