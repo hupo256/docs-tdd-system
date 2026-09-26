@@ -40,7 +40,7 @@
 - 不回放或修复 PR-02233 等历史业务项目来凑 Pilot；历史项目只可作为被明确排除的回归输入。
 - 不重建已被决策放弃的历史 PRD/replay 档案；新发现的通用失败只补最小 synthetic regression。
 - 不因本计划修改 FameEX 业务代码、提交业务代码或 push。
-- 不把 `L2 golden 47 != 49`、`PROJECTS.md` 派生漂移、PR-02419 schema mismatch 混入本轮，除非它们被证明确实阻断当前里程碑。
+- 不把 `L2 golden 47 != 49`、`PROJECTS.md` 派生漂移混入本轮，除非它们被证明确实阻断当前里程碑。
 
 ## 2. 当前基线（2026-09-25 检查）
 
@@ -50,15 +50,14 @@
 - 新项目的兼容协议标识是 `workflowVersion: 2`，默认入口为 `docs-tdd run`；旧 v1 项目保留兼容流程。
 - 最新优化计划（`plan/optimization-execution-plan-2026-09-24.md`）记录：WP1 来源覆盖为 `synthetic-tested`；WP2 Runner 为 `e2e-tested`；WP3 Micro 基础设施为 `e2e-tested`；WP4 真实需求 Pilot 仍 `in-progress`。
 - `plan/real-demand-pilot-2026-09-25.md` 只有 PR-02233 一个记录，且明确为 `blocked-system`，不计入 V0/V1/V2 合格样本；当前没有有效真实 Pilot 样本。
-- 旧 `v4-upgrade-plan-20260923.md` / `v4-action-plan.md` 是历史方案，不作为当前实施真值；其中跳过完整追溯/正式证据的 Lite 设想与当前 v3.5 单一 v2 流程不兼容。
+- 已清理的早期 v4 实验方案不作为当前实施真值；其中跳过完整追溯/正式证据的 Lite 设想与当前 v3.5 单一 v2 流程不兼容。
 
 ### 2.2 计划创建时的工作区与状态冲突（基线快照）
 
 - docs_tdd 仓库在 `main`，HEAD 为 `36181a6`，相对 `origin/main` ahead 7。
-- 计划创建时工作区并非 clean：`prds/PR-02233/work-item.json` 有已跟踪修改；存在未跟踪的 `.clean-project-e2e-xHwCFh/`、`prds/PR-42071/` 和 `plan/handoff-real-demand-pilot-2026-09-25.md`。本计划不假定这些文件可删除、重置或提交。
+- 计划创建时工作区并非 clean：`prds/PR-02233/work-item.json` 有已跟踪修改；另有未跟踪的 clean-project E2E 夹具和交接文档。本计划当时不假定这些文件可删除、重置或提交。
 - PR-02233 的 Pilot 台账称其 `blocked-system` 且禁止回放；但只读 `docs-tdd status PR-02233` 仍返回 `active` / `repair-intake-extraction`。这属于会误导下一步执行的状态冲突，必须先解决防误执行问题。
-- PR-42071 的来源明确写着 `Clean project E2E`，README 指向临时 E2E worktree；Runner 停在 `capture-cli-evidence`。它是 synthetic E2E fixture，不是真实业务需求，也不得计入 Pilot。
-- PR-42071 当前 `status` 报 `executionRoute: micro`，runner trace 报 `route: lite`；trace 仍是 running，且已有 receipt 但 `actionCount`/`elapsedMs` 等统计未完整落定。需在隔离回归中核实路由命名与终态汇总，不可用该 trace 计算 Pilot 效率。
+- 当时发现的 clean-project synthetic E2E fixture 不是真实业务需求，也不得计入 Pilot；其运行状态只用于隔离回归，现已按 owner 授权清理。
 
 > 当前状态检查仅用于定义计划，不授权清理、续跑上述项目、修改业务仓或提交任何内容。先保留现状，明确归属后再做最小处置。
 
@@ -67,7 +66,7 @@
 - 已提交基线实现 `3dfe9d6`（Pilot 执行 hold/资格、Runner receipt/trace 汇总、dry-run 防副作用及隔离 E2E）；本轮继续修复隔离项目的 PRD/Lark 路径映射、空 `sourceReadiness` 持久化 schema 合约，以及终态 route 与 `status` 不一致的问题。
 - 定向 self-test 通过：project control、Pilot registry、persistence、metrics、continuous runner、Agent runtime、dev-check、project index，以及 change-set、source units/graph、intake audit/disposition、work-item、coverage review、extract、source-sync。
 - Public-command、clean-project 和 trivial-project E2E 均通过；覆盖隔离的 synthetic 项目、hold/dry-run、副作用与恢复、完整来源覆盖、enforced verify、冻结路径本地提交、无 push。测试未访问或修改 FameEX 业务代码。
-- 预存工作区材料均只读归属并保持原样：PR-42071 与 `.clean-project-e2e-xHwCFh/prd.md` 是 synthetic clean-project E2E；PR-02233 继续按 `blocked-system` / Pilot excluded 处理；handoff 文档保留为交接记录。没有清理或改写任何历史材料。真实 Pilot 尚无新需求来源，因此本轮不计任何 synthetic E2E 为 Pilot 样本，M3 仍 blocked。
+- 预存工作区材料先完成只读归属：clean-project E2E 材料属于 synthetic fixture；PR-02233 继续按 `blocked-system` / Pilot excluded 处理。后续已获 owner 授权清理无效需求和测试夹具；真实 Pilot 仍不得把 synthetic E2E 计为样本。
 
 ## 3. 迭代路线与阶段门
 
@@ -79,14 +78,14 @@
 
 1. 给当前工作区做只读盘点：tracked/untracked 改动、项目输入来源、关联 worktree、Runner active action、receipt 和 Pilot 台账归属；对所有未知归属保持原样。
 2. 将 PR-02233 明确登记为 `pilotEligibility=excluded/blocked-system`，保留原始 work-item 与失败事实；实现可验证的执行 hold，使 `run/resume` 不会按遗留的 `active` action 继续推进。`status` 必须同时显示真实 execution state 和 Pilot eligibility，不能用其一冒充另一项。
-3. 将 PR-42071 明确标为 synthetic E2E、Pilot 不合格；隔离未来测试项目的持久化位置/命名，避免 clean-project fixture 混入真实 `prds/` 索引或 Pilot 统计。当前文件不自动移动或删除，先确认归属。
+3. 将 clean-project fixture 明确识别为 synthetic E2E、Pilot 不合格；隔离未来测试项目的持久化位置/命名，避免测试夹具混入真实 `prds/` 索引或 Pilot 统计。
 4. 定义唯一的 Pilot 样本登记与排除字段：真实来源身份、是否 synthetic、来源 fingerprint、verification level、execution route、终态、排除理由。样本资格不能由目录名或 `status` 单独推断。
 5. 记录并核实真实需求开始前的 Git/worktree 基线；不把当前脏状态默认为可用基线。
 
 验收证据：
 
 - [ ] PR-02233 被标为不可用于 Pilot，且 `run/resume` 在产生任何文件、Agent 调用或 receipt 前被安全 hold；其原始业务来源和实现不被重写。
-- [ ] PR-42071 明确显示为 synthetic、Pilot excluded；测试夹具不能进入真实 Pilot 样本计数。
+- [ ] synthetic E2E 明确排除在 Pilot 外；测试夹具不能进入真实 Pilot 样本计数。
 - [ ] `status` 能并列显示 execution state、execution hold、Pilot eligibility 和 terminal/sample disposition。
 - [ ] 所有当前未跟踪/已修改项均有“保留/移交/获批清理”的明确归属；未获批的内容未被清除。
 
@@ -131,7 +130,7 @@
 
 ### M3：真实需求 Pilot（产品效果验证，不用 synthetic 替代）
 
-**进入条件**：M0–M2 通过；Pilot 台账和计量定义可用；取得新的真实需求。PR-02233、PR-42071 均不计数。
+**进入条件**：M0–M2 通过；Pilot 台账和计量定义可用；取得新的真实需求。历史被排除项目和 synthetic fixture 均不计数。
 
 Pilot 规则：
 
@@ -201,7 +200,7 @@ Pilot 规则：
 
 ## 6. 开工顺序（后续分步实施）
 
-1. **先 M0 只读盘点与防误执行设计**：不续跑 PR-02233/PR-42071，不清理当前材料；先明确 pilot eligibility、执行 hold 和隔离位置。
+1. **先 M0 只读盘点与防误执行设计**：不续跑被排除项目或 synthetic fixture；先明确 pilot eligibility、执行 hold 和隔离位置。
 2. **经 owner 确认 M0 的数据归属方案后实施**：优先加最小 hold/样本资格机制，不迁移或覆盖历史项目事实。
 3. **再做 M1 状态/trace 确定性修复**：针对真实发现的 route 命名、终态汇总、状态优先级缺陷补小型回归。
 4. **M2 只补覆盖盲点**：已有 change-set 和 clean-project E2E 不重复造轮子；先审计证据，再补缺口。
@@ -213,5 +212,5 @@ Pilot 规则：
 - 当前产品事实：`README.md`、`VERSION`、`common/rules/rule-router.md`。
 - 当前工作项与 Pilot 事实：`plan/optimization-execution-plan-2026-09-24.md`、`plan/real-demand-pilot-2026-09-25.md`、`plan/handoff-real-demand-pilot-2026-09-25.md`。
 - 本计划是 **v4.x 目标到分阶段实施的主计划**；具体每个 Work Package 的实现事实仍由代码、自测和当前 Pilot 台账证明。
-- `plan/v4-upgrade-plan-20260923.md`、`plan/v4-action-plan.md`、`plan/v4.1-simplified-implementation-plan.md` 保留作历史决策依据，不作为当前运行手册；与本计划冲突时以当前 README/Router 和本计划的安全边界为准。
+- `plan/v4.1-simplified-implementation-plan.md` 仅保留作历史决策依据，不作为当前运行手册；与本计划冲突时以当前 README/Router 和本计划的安全边界为准。
 - 本计划不自动更新 `VERSION`、README 的当前稳定版本声明或 release 文档；待 M4 才统一决定是否发布 v4.x。

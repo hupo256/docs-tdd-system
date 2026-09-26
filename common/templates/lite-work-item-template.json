@@ -77,7 +77,7 @@
     "routerVersion": 1
   },
   "apiDependency": {
-    "$comment": "⚠️ 基于 PR-02208 实验：明确标记 API 依赖严重性",
+    "$comment": "历史实验结论：明确标记 API 依赖严重性",
     "mode": "no-request",
     "severity": "none",
     "$severityOptions": {
@@ -161,12 +161,12 @@
       "❌ affectedSurfaces 只写模糊位置 → 无法定位代码文件"
     ],
     "$examples": {
-      "success": "prds/PR-02233-BTN-LOADING/work-item-lite.json",
-      "blocked": "prds/PR-02208/work-item.json (新增页面，信息不完整)"
+      "success": "修改现有功能且目标文件明确",
+      "blocked": "新增页面但来源、路由或 API 信息不完整"
     },
     "$dataBasedOnExperiments": {
-      "PR-02233": "修改现有功能，10 分钟完成，准确率 100%",
-      "PR-02208": "新增页面，23 分钟阻塞，准确率 65%",
+      "localizedChange": "修改现有功能且文件可定位",
+      "newSurface": "新增页面但关键信息不完整时阻塞",
       "keyDifference": "文件是否可定位 → 决定 Lite 是否适用"
     }
   }

@@ -97,11 +97,10 @@ PR-02233 增量需求暴露了“当前增量错绑历史 PRD”的系统问题�
 
 ## 6. 既有债
 
-以下三项不属于当前优化计划，不阻塞真实需求 Pilot：
+以下两项不属于当前优化计划，不阻塞真实需求 Pilot：
 
 1. L2 golden：`47 != 49`
 2. `PROJECTS.md` generated-content drift
-3. PR-02419 schema mismatch
 
 不要把它们混入下一条真实需求。
 

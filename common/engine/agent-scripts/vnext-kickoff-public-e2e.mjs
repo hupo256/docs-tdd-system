@@ -385,7 +385,7 @@ export function selfTest() {
 
     const controlRegistryPath = join(docsSystemRoot, 'common/vnext/pilot-registry.json')
     const controlRegistryBefore = readFileSync(controlRegistryPath, 'utf8')
-    for (const protectedId of ['PR-02233', 'PR-42071']) {
+    for (const protectedId of ['PR-02233']) {
       const protectedRoot = resolveProjectBaseRootFromRoots(protectedId)
       const beforeHold = directorySnapshot(protectedRoot)
       const status = outputJson(run(docsTddCli, ['status', protectedId], { cwd: sandbox, env: liveEnv }))
@@ -393,17 +393,9 @@ export function selfTest() {
       assert.equal(status.executionControl.executionHold.active, true)
       assert.equal(status.status, 'blocked')
       assert.equal(status.executionStatus, status.actionPacket.status, 'status must keep current execution separate from Pilot eligibility and system hold')
-      if (protectedId === 'PR-02233') {
-        assert.equal(status.executionControl.recordedTerminalState, 'running')
-        assert.equal(status.executionStatus, 'active')
-        assert.notEqual(status.actionPacket.status, status.status, 'system hold must not overwrite the current Autopilot status')
-      } else {
-        assert.equal(status.executionControl.synthetic, true)
-        assert.equal(status.runnerObservation.traceCompleteness, 'pending')
-        assert.equal(status.runnerObservation.routeAlignment, 'mismatch')
-        assert.equal(status.runnerObservation.routePolicyVersion, null)
-        assert.equal(status.runnerObservation.routeComparisonBasis, 'legacy-unversioned')
-      }
+      assert.equal(status.executionControl.recordedTerminalState, 'running')
+      assert.equal(status.executionStatus, 'active')
+      assert.notEqual(status.actionPacket.status, status.status, 'system hold must not overwrite the current Autopilot status')
       for (const action of ['run', 'resume']) {
         const held = run(docsTddCli, [action, protectedId], { cwd: sandbox, env: liveEnv })
         assert.notEqual(held.status, 0)

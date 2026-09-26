@@ -1,19 +1,19 @@
 {
   "schemaVersion": 1,
   "mode": "explicit-dual-track-shadow",
-  "generatedAt": "2026-09-19T12:23:56.101Z",
+  "generatedAt": "2026-09-26T10:28:25.782Z",
   "decision": "collecting",
   "status": "collecting",
   "automaticCutover": false,
   "summary": {
-    "enrolled": 3,
+    "enrolled": 2,
+    "excluded": 0,
     "completed": 0,
     "minimumSamples": 3,
     "maximumSamples": 10,
     "enrolledLevels": [
       "V0",
-      "V1",
-      "V2"
+      "V1"
     ],
     "completedLevels": [],
     "requiredLevels": [
@@ -45,8 +45,10 @@
     },
     {
       "code": "SAMPLE_COUNT",
-      "ok": true,
-      "problems": []
+      "ok": false,
+      "problems": [
+        "need 3–10 samples, got 2"
+      ]
     },
     {
       "code": "LEVEL_COVERAGE",
@@ -62,8 +64,7 @@
       "ok": false,
       "problems": [
         "PR-02074-SEARCH-WIDTH: invalid stored run implemented-PR-02074-20260904: assuranceMode/evidenceTrust must be autonomous/cli-attested or assisted-pilot/caller-supplied",
-        "PR-02172-PROVIDER-VISIBILITY: invalid stored run implemented-PR-02172-20260904: assuranceMode/evidenceTrust must be autonomous/cli-attested or assisted-pilot/caller-supplied",
-        "PR-02233-AUTOPILOT-V33: missing latest-result.json; missing runs.jsonl"
+        "PR-02172-PROVIDER-VISIBILITY: invalid stored run implemented-PR-02172-20260904: assuranceMode/evidenceTrust must be autonomous/cli-attested or assisted-pilot/caller-supplied"
       ]
     },
     {
@@ -88,6 +89,23 @@
       "projectId": "PR-02074",
       "root": "/Users/aven/github/docs_tdd/common/vnext/pilots/PR-02074-search-width",
       "artifactMode": "isolated-snapshot",
+      "sourceIdentity": "revision=chat-2026-09-04-1; source=prds/PR-02074/inbox/vnext-search-width-2026-09-04.md",
+      "synthetic": false,
+      "sourceFingerprint": "768fa5756bfb0d957d9334f9dbe3bf9d2b39f94075fa0439ae90ff63345114b4",
+      "verificationLevel": "V0",
+      "executionRoute": null,
+      "observedExecutionRoutes": [],
+      "routeConflict": false,
+      "terminalState": "passed",
+      "sampleDisposition": "observed-pass",
+      "pilotEligibility": "eligible",
+      "exclusionReason": null,
+      "executionHold": {
+        "active": false,
+        "code": null,
+        "reason": null,
+        "setAt": null
+      },
       "autopilotRelease": null,
       "publicCommandsOnly": false,
       "executionAttestedBy": null,
@@ -105,6 +123,23 @@
       "projectId": "PR-02172",
       "root": "/Users/aven/github/docs_tdd/common/vnext/pilots/PR-02172-provider-visibility",
       "artifactMode": "isolated-snapshot",
+      "sourceIdentity": "revision=chat-screenshot-2026-09-04-2; source=prds/PR-02172/inbox/vnext-login-provider-layout-2026-09-04.md",
+      "synthetic": false,
+      "sourceFingerprint": "88b96b5e1f5af303e6ef33ebf7f8554413a52c75ffd3075a7710ca16ef83b934",
+      "verificationLevel": "V1",
+      "executionRoute": null,
+      "observedExecutionRoutes": [],
+      "routeConflict": false,
+      "terminalState": "passed",
+      "sampleDisposition": "observed-pass",
+      "pilotEligibility": "eligible",
+      "exclusionReason": null,
+      "executionHold": {
+        "active": false,
+        "code": null,
+        "reason": null,
+        "setAt": null
+      },
       "autopilotRelease": null,
       "publicCommandsOnly": false,
       "executionAttestedBy": null,
@@ -116,24 +151,94 @@
       "problems": [
         "invalid stored run implemented-PR-02172-20260904: assuranceMode/evidenceTrust must be autonomous/cli-attested or assisted-pilot/caller-supplied"
       ]
+    }
+  ],
+  "projectControls": [
+    {
+      "projectId": "PR-02074",
+      "sampleId": "PR-02074-SEARCH-WIDTH",
+      "sourceIdentity": "revision=chat-2026-09-04-1; source=prds/PR-02074/inbox/vnext-search-width-2026-09-04.md",
+      "synthetic": false,
+      "sourceFingerprint": "768fa5756bfb0d957d9334f9dbe3bf9d2b39f94075fa0439ae90ff63345114b4",
+      "verificationLevel": "V0",
+      "executionRoute": null,
+      "observedExecutionRoutes": [],
+      "routeConflict": false,
+      "terminalState": "passed",
+      "sampleDisposition": "observed-pass",
+      "pilotEligibility": "eligible",
+      "exclusionReason": null,
+      "executionHold": {
+        "active": false,
+        "code": null,
+        "reason": null,
+        "setAt": null
+      }
     },
     {
-      "sampleId": "PR-02233-AUTOPILOT-V33",
+      "projectId": "PR-02172",
+      "sampleId": "PR-02172-PROVIDER-VISIBILITY",
+      "sourceIdentity": "revision=chat-screenshot-2026-09-04-2; source=prds/PR-02172/inbox/vnext-login-provider-layout-2026-09-04.md",
+      "synthetic": false,
+      "sourceFingerprint": "88b96b5e1f5af303e6ef33ebf7f8554413a52c75ffd3075a7710ca16ef83b934",
+      "verificationLevel": "V1",
+      "executionRoute": null,
+      "observedExecutionRoutes": [],
+      "routeConflict": false,
+      "terminalState": "passed",
+      "sampleDisposition": "observed-pass",
+      "pilotEligibility": "eligible",
+      "exclusionReason": null,
+      "executionHold": {
+        "active": false,
+        "code": null,
+        "reason": null,
+        "setAt": null
+      }
+    },
+    {
+      "projectId": "PR-02118",
+      "sampleId": null,
+      "sourceIdentity": "https://qfglxo2m3dc.sg.larksuite.com/wiki/J43NwG6N4ipCEbk6YFaloJk8gWb",
+      "synthetic": false,
+      "sourceFingerprint": null,
+      "verificationLevel": null,
+      "executionRoute": null,
+      "observedExecutionRoutes": [],
+      "routeConflict": false,
+      "terminalState": "unqualified",
+      "sampleDisposition": "not-coding-pilot",
+      "pilotEligibility": "excluded",
+      "exclusionReason": "Human-confirmed negative sample: the supplied document is an operational market-maker onboarding/offboarding SOP without an explicit software delivery scope.",
+      "executionHold": {
+        "active": false,
+        "code": null,
+        "reason": null,
+        "setAt": null
+      }
+    },
+    {
       "projectId": "PR-02233",
-      "root": "/Users/aven/github/docs_tdd/prds/PR-02233",
-      "artifactMode": "project",
-      "autopilotRelease": null,
-      "publicCommandsOnly": false,
-      "executionAttestedBy": null,
-      "executionAttestedAt": null,
-      "level": "V2",
-      "authoritative": false,
-      "deliveryCommitted": false,
-      "ok": false,
-      "problems": [
-        "missing latest-result.json",
-        "missing runs.jsonl"
-      ]
+      "sampleId": "PR-02233-AUTOPILOT-V33",
+      "sourceIdentity": "Lark Doc revision=671; historical scope snapshot; current hover request is separate and not approved for this project execution.",
+      "synthetic": false,
+      "sourceFingerprint": "fa425b96dc8ba5e4d4353c3fbdd67b82471a3915e6627170f8893f8b231a95f1",
+      "verificationLevel": "V2",
+      "executionRoute": "high-risk",
+      "observedExecutionRoutes": [
+        "high-risk"
+      ],
+      "routeConflict": false,
+      "terminalState": "running",
+      "sampleDisposition": "excluded-unapproved-overlap",
+      "pilotEligibility": "excluded",
+      "exclusionReason": "V2 scope was never approved for this revision. Current work overlaps an ongoing real request and has an active intake repair action; do not resume or count it as a pilot observation. Re-enrollment requires approved, fingerprint-bound scope and a fresh review of the overlap.",
+      "executionHold": {
+        "active": true,
+        "code": "unapproved-overlap",
+        "reason": "Block run/resume while the V2 scope is unapproved and overlaps an ongoing real request.",
+        "setAt": "2026-09-25T00:00:00.000Z"
+      }
     }
   ]
 }
