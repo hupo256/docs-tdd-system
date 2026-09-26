@@ -91,6 +91,26 @@ export function commitScopedPaths(worktree, id, paths, spawn = spawnSync, mode =
   }
 }
 
+export function adoptVerifiedHeadCommit(worktree, codeState, spawn = spawnSync, { baseRef = 'origin/online' } = {}) {
+  const paths = codeState?.scopeMode === 'path-set-v1' ? codeState.scopePaths || [] : []
+  if (!paths.length) return { ok: false, step: 'commit', error: 'existing commit adoption requires a non-empty verified path scope' }
+  try {
+    const pending = runGit(worktree, ['status', '--porcelain=v1', '-z', '--', ...paths], spawn)
+    if (pending.length) throw new Error('verified paths still have pending changes')
+    const current = codeFingerprint(worktree, baseRef, { scopePaths: paths })
+    if (!matchesEffectiveCodeState(current, codeState)) throw new Error('HEAD content does not match the verified path scope')
+    const committedPaths = runGit(worktree, ['diff-tree', '--no-commit-id', '--name-only', '-r', 'HEAD'], spawn)
+      .split('\n')
+      .filter(Boolean)
+    if (!samePathSet(paths, committedPaths)) throw new Error('HEAD commit paths do not exactly match the verified path scope')
+    const commitSha = runGit(worktree, ['rev-parse', 'HEAD'], spawn).trim()
+    const subject = runGit(worktree, ['log', '-1', '--format=%s'], spawn).trim()
+    return { ok: true, step: 'commit', mode: 'delivery', commitSha, subject, paths, pushed: false, adopted: true }
+  } catch (error) {
+    return { ok: false, step: 'commit', error: error.message, paths, pushed: false }
+  }
+}
+
 export function createVNextOrchestratorRunner({
   projectId,
   projectDir,
@@ -324,6 +344,13 @@ function selfTest() {
     assert.deepEqual(git(repo, ['diff-tree', '--no-commit-id', '--name-only', '-r', 'HEAD']).trim().split('\n'), ['src/frozen.ts'])
     assert.match(git(repo, ['status', '--short', '--', 'src/unrelated.ts']), /src\/unrelated\.ts/)
     assert.equal(gitCalls.some((call) => call[1] === 'push'), false)
+    const adopted = adoptVerifiedHeadCommit(repo, {
+      ...codeFingerprint(repo, 'HEAD', { scopePaths: ['src/frozen.ts'] }),
+      headSha: headShaBefore,
+    }, spawnSync, { baseRef: 'HEAD' })
+    assert.equal(adopted.ok, true, adopted.error)
+    assert.equal(adopted.commitSha, commit.commitSha)
+    assert.equal(adopted.adopted, true)
 
     const workItem = sealCoverageAuditForFixture({
       schemaVersion: 1,

@@ -25,6 +25,7 @@ import { assertSafeWorkContext } from './lib/vnext-work-context-runtime.mjs'
 import { deriveDeliveryTruth } from './lib/vnext-delivery-truth.mjs'
 import { createVNextIntakeRuntime } from './lib/vnext-intake-runtime.mjs'
 import {
+  adoptVerifiedHeadCommit,
   commitScopedPaths as executeCommitScopedPaths,
   createVNextOrchestratorRunner,
 } from './lib/vnext-orchestrator-runner.mjs'
@@ -670,7 +671,8 @@ export function commitEvidenceScope(id) {
   const latest = readJson(join(projectDir, 'latest-result.json'))
   const workItem = readJson(join(projectDir, 'work-item.json'))
   const paths = latest?.codeFingerprint?.scopeMode === 'path-set-v1' ? latest.codeFingerprint.scopePaths : []
-  const commit = commitScopedPaths(requireProjectWorktree(id), id, paths, spawnSync, 'delivery', {
+  const worktree = requireProjectWorktree(id)
+  const commitOptions = {
     workItem,
     latestResult: latest,
     integrityOk: verifyExitResultIntegrity(latest, workItem).ok,
@@ -678,7 +680,10 @@ export function commitEvidenceScope(id) {
     assuranceTrusted: latest?.mode === 'enforced' && latest?.assuranceMode === 'autonomous' && latest?.evidenceTrust === 'cli-attested',
     actionId: workItem?.autopilot?.implementation?.checkpoint?.actionId || '',
     baseRef,
-  })
+  }
+  const commit = scopedDeliveryCommitted(worktree, latest?.codeFingerprint)
+    ? adoptVerifiedHeadCommit(worktree, latest?.codeFingerprint, spawnSync, { baseRef })
+    : commitScopedPaths(worktree, id, paths, spawnSync, 'delivery', commitOptions)
   if (!commit.ok) return commit
   const persisted = persistVNextWorkItem(projectDir, applyDeliveryCommit(workItem, commit))
   return { ...commit, persisted }

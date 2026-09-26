@@ -1,0 +1,330 @@
+{
+  "schemaVersion": 1,
+  "workflowVersion": 2,
+  "tool": "vnext-verify.mjs",
+  "mode": "enforced",
+  "assuranceMode": "autonomous",
+  "evidenceTrust": "cli-attested",
+  "runId": "evidence-20260926185318-bf6a61e0",
+  "generatedAt": "2026-09-26T18:53:27.108Z",
+  "projectId": "PR-02233",
+  "level": "V1",
+  "status": "passed",
+  "ok": true,
+  "workItemFingerprint": "d900c69069fe2000c09ff4b8f8fcc46d808d6457c99d9aeadfd23860a4856d81",
+  "codeFingerprint": {
+    "headSha": "d608c3dccbece43b9949bbd23affe1b7d6a66b22",
+    "baseSha": "6dd6fbe3821230fa73ec1ac04f0b0abca3f5f9b5",
+    "contentHash": "b2a28f5e57af8b137a389ace93ed46dffbd2f5f4e1fcd0b5cdeacb1d97c5d5fa",
+    "dirtyHash": "e95cf8f65c6eaca5206504c8edbacdaed0a01b08d928e61ee6433dc610b3be48",
+    "dirtyFileCount": 0,
+    "untrackedFileCount": 0,
+    "isGitRepo": true,
+    "scopeMode": "path-set-v1",
+    "scopePaths": [
+      "apps/web/src/utils/captcha/index.tsx"
+    ]
+  },
+  "checks": [
+    {
+      "code": "SOURCE_FRESH",
+      "ok": true,
+      "problems": []
+    },
+    {
+      "code": "SOURCE_GRAPH",
+      "ok": true,
+      "problems": [],
+      "graph": {
+        "schemaVersion": 1,
+        "projectId": "PR-02233",
+        "sourceFingerprint": "4fb323edd7820766a99028b3f84d5234a003169ab75c9f25539a47580354d415",
+        "sourceUnitHashes": {
+          "SRC-04BD4DEEB82C": "af742f7dd5f97403bad407ddda70a9ba563f4526c66cea9e07f171aa9b8865d7",
+          "SRC-0B0958F2DC3C": "b4d28ee6291861536c07fdafedd0d75cf48d8fc09ea8490e1f5749f63fa83948",
+          "SRC-115C47DBEA6E": "fee11d97495668fa4ea6cb25c7a25c3db321f911415ebf7ca9a0c65962142de2",
+          "SRC-654021AD8B33": "0aa80fdb9d3c48c4dd11919129a08ed4fd32320bfe597848da940fa631232f75",
+          "SRC-6953274099FF": "c586ce9aeffcd66ab417b5b0d740cc96691daae8889be9a2a8be24c750dbcf04",
+          "SRC-6CF769BAAAAA": "30c5ee7ce017154e5ef2d3418c18d1b671067426147749b4e97fcf08de42e7a5",
+          "SRC-AF1AE7ED8A39": "71e56218e00fe80938a6a811317b92f0a88bd50d0603544457d1e23331e55687",
+          "SRC-C6AA207B6A57": "21d42f04a9124c4640ba6699e95a76df154997d997b380172363bd65d115ca88",
+          "SRC-CB101AB772DE": "61f7783bafb068dcb97b2c5366021ab0fc8a7a01216149d135e87997a4b35a37",
+          "SRC-D96C67D9D048": "246c9f010df3509b82c6b8c13efc3baf219f0f406aaf79da20a991ebfeeb4a7e"
+        },
+        "nodes": {
+          "sources": [
+            {
+              "sourceId": "SRC-D96C67D9D048",
+              "type": "text",
+              "path": "prds/PR-02233/changes/login-geetest-not-proof/inbox/lark-sync/incident-latest.md"
+            },
+            {
+              "sourceId": "SRC-0B0958F2DC3C",
+              "type": "text",
+              "path": "prds/PR-02233/changes/login-geetest-not-proof/inbox/lark-sync/incident-latest.md"
+            },
+            {
+              "sourceId": "SRC-6953274099FF",
+              "type": "text",
+              "path": "prds/PR-02233/changes/login-geetest-not-proof/inbox/lark-sync/incident-latest.md"
+            },
+            {
+              "sourceId": "SRC-654021AD8B33",
+              "type": "text",
+              "path": "prds/PR-02233/changes/login-geetest-not-proof/inbox/lark-sync/incident-latest.md"
+            },
+            {
+              "sourceId": "SRC-CB101AB772DE",
+              "type": "text",
+              "path": "prds/PR-02233/changes/login-geetest-not-proof/inbox/lark-sync/incident-latest.md"
+            },
+            {
+              "sourceId": "SRC-AF1AE7ED8A39",
+              "type": "text",
+              "path": "prds/PR-02233/changes/login-geetest-not-proof/inbox/lark-sync/incident-latest.md"
+            },
+            {
+              "sourceId": "SRC-04BD4DEEB82C",
+              "type": "text",
+              "path": "prds/PR-02233/changes/login-geetest-not-proof/inbox/lark-sync/incident-latest.md"
+            },
+            {
+              "sourceId": "SRC-6CF769BAAAAA",
+              "type": "text",
+              "path": "prds/PR-02233/changes/login-geetest-not-proof/inbox/lark-sync/incident-latest.md"
+            },
+            {
+              "sourceId": "SRC-C6AA207B6A57",
+              "type": "text",
+              "path": "prds/PR-02233/changes/login-geetest-not-proof/inbox/lark-sync/incident-latest.md"
+            },
+            {
+              "sourceId": "SRC-115C47DBEA6E",
+              "type": "text",
+              "path": "prds/PR-02233/changes/login-geetest-not-proof/inbox/lark-sync/incident-latest.md"
+            }
+          ],
+          "requirements": [
+            {
+              "requirementId": "R-001",
+              "status": "doing"
+            }
+          ],
+          "surfaces": [
+            {
+              "surfaceId": "S-001",
+              "requirementId": "R-001",
+              "disposition": "implement"
+            }
+          ],
+          "evidence": [
+            {
+              "evidenceId": "EP-R-001-01",
+              "requirementId": "R-001",
+              "kind": "browser-interaction",
+              "runtimeRequired": true
+            },
+            {
+              "evidenceId": "EP-R-001-02",
+              "requirementId": "R-001",
+              "kind": "pure-logic",
+              "runtimeRequired": false
+            },
+            {
+              "evidenceId": "EP-R-001-03",
+              "requirementId": "R-001",
+              "kind": "touched-file-quality",
+              "runtimeRequired": false
+            }
+          ]
+        },
+        "edges": [
+          {
+            "type": "requirement-evidence",
+            "from": "R-001",
+            "to": "EP-R-001-01"
+          },
+          {
+            "type": "requirement-evidence",
+            "from": "R-001",
+            "to": "EP-R-001-02"
+          },
+          {
+            "type": "requirement-evidence",
+            "from": "R-001",
+            "to": "EP-R-001-03"
+          },
+          {
+            "type": "requirement-surface",
+            "from": "R-001",
+            "to": "S-001"
+          },
+          {
+            "type": "source-requirement",
+            "from": "SRC-115C47DBEA6E",
+            "to": "R-001"
+          },
+          {
+            "type": "source-requirement",
+            "from": "SRC-654021AD8B33",
+            "to": "R-001"
+          },
+          {
+            "type": "source-requirement",
+            "from": "SRC-6953274099FF",
+            "to": "R-001"
+          },
+          {
+            "type": "source-requirement",
+            "from": "SRC-6CF769BAAAAA",
+            "to": "R-001"
+          },
+          {
+            "type": "source-requirement",
+            "from": "SRC-AF1AE7ED8A39",
+            "to": "R-001"
+          }
+        ],
+        "problems": [],
+        "ok": true,
+        "graphFingerprint": "1e29ad21523eb9d40cd73bf1a12966a7fae133234a455ed7bae5a19d77254675"
+      }
+    },
+    {
+      "code": "REQUIREMENT_COVERAGE",
+      "ok": true,
+      "problems": []
+    },
+    {
+      "code": "SURFACE_COVERAGE",
+      "ok": true,
+      "problems": []
+    },
+    {
+      "code": "SURFACE_RECONCILIATION",
+      "ok": true,
+      "problems": [],
+      "evidenceIds": []
+    },
+    {
+      "code": "RISK_ROUTE",
+      "ok": true,
+      "problems": []
+    },
+    {
+      "code": "SCOPE_APPROVAL",
+      "ok": true,
+      "problems": []
+    },
+    {
+      "code": "MSW_POLICY",
+      "ok": true,
+      "problems": [],
+      "mode": "no-request",
+      "required": false,
+      "blocked": false
+    },
+    {
+      "code": "SOURCE_READINESS",
+      "ok": true,
+      "problems": [],
+      "unknownKinds": [],
+      "pendingRequiredKinds": [],
+      "reconciliationKinds": [],
+      "implementationCanProceed": true,
+      "readyToTest": true
+    },
+    {
+      "code": "MANUAL_PRETEST_RUN",
+      "ok": true,
+      "problems": [],
+      "evidenceIds": []
+    },
+    {
+      "code": "CODE_STATE",
+      "ok": true,
+      "problems": [],
+      "evidenceIds": []
+    },
+    {
+      "code": "EVIDENCE_INTEGRITY",
+      "ok": true,
+      "problems": [],
+      "evidenceIds": [
+        "E-001",
+        "E-002",
+        "E-004",
+        "E-003",
+        "E-005"
+      ]
+    },
+    {
+      "code": "EVIDENCE_FRESHNESS",
+      "ok": true,
+      "problems": [],
+      "evidenceIds": [
+        "E-001",
+        "E-002",
+        "E-004",
+        "E-003",
+        "E-005"
+      ]
+    },
+    {
+      "code": "REQUIRED_EVIDENCE",
+      "ok": true,
+      "problems": [],
+      "evidenceIds": []
+    },
+    {
+      "code": "EVIDENCE_SUFFICIENCY",
+      "ok": true,
+      "problems": [],
+      "evidenceIds": [
+        "E-001",
+        "E-002",
+        "E-004",
+        "E-003",
+        "E-005"
+      ]
+    },
+    {
+      "code": "REQUIREMENT_EVIDENCE",
+      "ok": true,
+      "problems": [],
+      "evidenceIds": []
+    },
+    {
+      "code": "SURFACE_EVIDENCE",
+      "ok": true,
+      "problems": [],
+      "evidenceIds": []
+    },
+    {
+      "code": "BLOCKERS",
+      "ok": true,
+      "problems": [],
+      "evidenceIds": []
+    }
+  ],
+  "summary": {
+    "total": 18,
+    "passed": 18,
+    "failed": 0
+  },
+  "blockedBy": [],
+  "failureDomains": [],
+  "evidenceAttestation": {
+    "issuedBy": "docs-tdd-evidence-v1",
+    "projectId": "PR-02233",
+    "workItemFingerprint": "d900c69069fe2000c09ff4b8f8fcc46d808d6457c99d9aeadfd23860a4856d81",
+    "codeContentHash": "b2a28f5e57af8b137a389ace93ed46dffbd2f5f4e1fcd0b5cdeacb1d97c5d5fa",
+    "planFingerprint": "bf6a61e0cd02b2540ebc0e69a32883c2a6b7fa2792349d000ac71abf56ab6d21",
+    "runId": "evidence-20260926185318-bf6a61e0",
+    "startedAt": "2026-09-26T18:53:00.771Z",
+    "completedAt": "2026-09-26T18:53:18.787Z",
+    "signature": "711d2e612e1b1f87b20a5f22e53e8c9ffe98f364f908b803041ab3f2ee526918",
+    "bundleFingerprint": "a90ecaec59974313e2467d91c5c688a75eb26e12d4c972b641393176052ef4a5"
+  },
+  "resultFingerprint": "18099060b260e0fecd7acf4fcc4fc24769ecd3a0e956d72daacd11a0c61d3c86"
+}

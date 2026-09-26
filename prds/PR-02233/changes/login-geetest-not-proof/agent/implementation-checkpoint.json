@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "actionId": "e80d31fd56cc273c0d782dac9b11921d02615326633971366485bdd599044c6d",
+  "outcome": "completed",
+  "changedPaths": [
+    "apps/web/src/utils/captcha/index.tsx"
+  ],
+  "discoveredSurfaces": [
+    {
+      "surfaceId": "S-001",
+      "locator": "apps/web/src/utils/captcha/index.tsx startCaptcha Geetest v3 lifecycle"
+    }
+  ],
+  "coveredSurfaceIds": [
+    "S-001"
+  ],
+  "integratedSourceKinds": [],
+  "msw": null,
+  "blockers": []
+}

@@ -1,0 +1,12 @@
+{
+  "discoveredSurfaces": [
+    {
+      "surfaceId": "S-001",
+      "locator": "apps/web/src/utils/captcha/index.tsx startCaptcha Geetest v3 lifecycle"
+    }
+  ],
+  "coveredSurfaceIds": [
+    "S-001"
+  ],
+  "blockers": []
+}

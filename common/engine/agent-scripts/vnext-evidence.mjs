@@ -105,10 +105,12 @@ function executeCommand(spec, worktree) {
 }
 
 export function verificationScopePaths(workItem, worktree, baseRef = 'origin/online') {
-  return [...new Set([
-    ...changedCodePaths(worktree, baseRef),
-    ...(workItem?.autopilot?.implementation?.changedPaths || []),
-  ])].sort()
+  const implementationPaths = workItem?.autopilot?.implementation?.status === 'completed'
+    ? workItem.autopilot.implementation.changedPaths || []
+    : []
+  return [...new Set(
+    implementationPaths.length ? implementationPaths : changedCodePaths(worktree, baseRef),
+  )].sort()
 }
 
 export function runEvidencePlan({ plan, workItem, worktree, baseRef = 'origin/online', keyPath, dependencies = {} } = {}) {
@@ -257,6 +259,9 @@ export function selfTest() {
     const scoped = { ...code, scopeMode: 'path-set-v1', scopePaths: ['src/x.ts'], contentHash: 'b'.repeat(64) }
     assert.equal(matchesEffectiveCodeState({ ...scoped, headSha: 'new-commit', dirtyHash: 'unrelated' }, scoped), true)
     assert.equal(matchesEffectiveCodeState({ ...scoped, contentHash: 'c'.repeat(64) }, scoped), false)
+    assert.deepEqual(verificationScopePaths({
+      autopilot: { implementation: { status: 'completed', changedPaths: ['src/change.ts'] } },
+    }, '/unused'), ['src/change.ts'])
     console.log('vnext-evidence self-test passed')
   } finally {
     try { unlinkSync(keyPath) } catch { /* no-op */ }

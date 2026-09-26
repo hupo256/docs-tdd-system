@@ -66,6 +66,37 @@
         ]
       },
       "observation": "单一简体中文文案字面值变更；精确值断言与目标 JSON 结构校验通过。"
+    },
+    {
+      "sequence": 4,
+      "sampleId": "PR-02233-LOGIN-GEETEST-NOT-PROOF",
+      "changeId": "login-geetest-not-proof",
+      "title": "本地登录页 Geetest not proof",
+      "artifactDir": "prds/PR-02233/changes/login-geetest-not-proof",
+      "sourcePath": "prds/PR-02233/inbox/login-geetest-not-proof-2026-09-26.md",
+      "sourceFingerprint": "db037f8c1de760b73dbd330aed518f82d8ed4be0fc2f206ad7a30777165c3126",
+      "synthetic": false,
+      "newRequirement": true,
+      "verificationLevel": "V1",
+      "status": "completed",
+      "completed": true,
+      "executionAttestation": {
+        "mode": "enforced",
+        "status": "passed",
+        "ok": true,
+        "runId": "evidence-20260926185318-bf6a61e0",
+        "verifiedAt": "2026-09-26T18:53:27.108Z",
+        "assuranceMode": "autonomous",
+        "evidenceTrust": "cli-attested",
+        "evidenceIds": [
+          "E-001",
+          "E-002",
+          "E-003",
+          "E-004",
+          "E-005"
+        ]
+      },
+      "observation": "登录页 Geetest v3 首次拉起仅 verify，复用同一实例时 reset 后再 verify；真实浏览器交互未出现 not proof。"
     }
   ]
 }
