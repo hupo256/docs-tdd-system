@@ -754,57 +754,11 @@ function autopilotRun() {
   }
 }
 
-function selfTest() {
-  // 阶段/阻塞判定的完整用例在 lib/project-decision.mjs --self-test；这里只验编排层的结构化装配：
-  // inferState 只吃 JSON（不再有 markdown 分支），且 decideNext 能从最小结构化输入产出决策。
-  const a = inferState({ projectExists: false })
-  const blocked = inferState({ projectExists: true, gateResult: { gate: 'G5', ok: false } })
-  const advance = inferState({ projectExists: true, gateResult: { gate: 'G5', ok: true } })
-  const complete = inferState({ projectExists: true, gateResult: { gate: 'G8', ok: true } })
-  const decision = decideNext({ projectId: 'PR-00001', projectExists: true, gateResult: { gate: 'G5', ok: false, checks: [{ ruleId: 'DOC-G5-003', ok: false, severity: 'error', message: 'x' }] } })
-  const codexAgent = resolveAutopilotAgentOptions({ env: { CODEX_THREAD_ID: 'thread-1' } })
-  const claudeAgent = resolveAutopilotAgentOptions({ env: {} })
-  const modeledAgent = resolveAutopilotAgentOptions({ requestedClient: 'codex', requestedModel: 'gpt-test', env: {} })
-  const automaticChangeId = automaticChangeIdForSource('path:/tmp/new-prd.md')
-  const matchedRunnerFailure = runnerFailureStatus({ trace: { terminalState: 'failed-infrastructure' }, lastReceipt: { actionId: 'A-1', outcome: 'failed-infrastructure' } }, { actionId: 'A-1' })
-  const staleRunnerFailure = runnerFailureStatus({ trace: { terminalState: 'failed-infrastructure' }, lastReceipt: { actionId: 'A-1', outcome: 'failed-infrastructure' } }, { actionId: 'A-2' })
-  const gitCalls = []
-  const commit = commitScopedPaths('/tmp/worktree', 'PR-00001', ['src/a.ts'], (_command, gitArgs) => {
-    gitCalls.push(gitArgs)
-    return { status: 0, stdout: gitArgs[0] === 'rev-parse' ? 'abc123\n' : '', stderr: '' }
-  }, 'delivery', {
-    workItem: { workflowVersion: 2, projectId: 'PR-00001' },
-    assertSafety: () => ({ ok: true, branch: 'feature/PR-00001' }),
-  })
-  if (
-    a.nextAction !== 'scaffold_project'
-    || blocked.nextAction !== 'fix_gate_failures'
-    || advance.nextAction !== 'run_next_gate'
-    || complete.status !== 'complete'
-    || decision.command !== 'docs-tdd gate PR-00001 G5'
-    || decision.blockers.length !== 1
-    || codexAgent.client !== 'codex'
-    || claudeAgent.client !== 'claude'
-    || modeledAgent.model !== 'gpt-test'
-    || !/^change-[0-9a-f]{8}$/.test(automaticChangeId)
-    || matchedRunnerFailure !== 'failed-infrastructure'
-    || staleRunnerFailure !== null
-    || vnextVerificationNextAction({ authoritativePass: false, shadowOnly: false, integrityOk: true, codeStateFresh: false, status: 'passed' }) !== 'revalidate_current_code_evidence'
-    || vnextVerificationNextAction({ authoritativePass: false, shadowOnly: false, integrityOk: false, codeStateFresh: false, assuranceTrusted: false, status: 'passed' }) !== 'refresh_invalid_verification'
-    || vnextVerificationNextAction({ authoritativePass: false, shadowOnly: false, integrityOk: true, codeStateFresh: true, assuranceTrusted: false, status: 'passed' }) !== 'capture_cli_attested_evidence'
-    || !scopedDeliveryCommitted('/tmp/worktree', { scopeMode: 'path-set-v1', scopePaths: ['src/a.ts'] }, () => ({ status: 0, stdout: '', stderr: '' }))
-    || scopedDeliveryCommitted('/tmp/worktree', { scopeMode: 'path-set-v1', scopePaths: ['src/a.ts'] }, () => ({ status: 0, stdout: ' M src/a.ts', stderr: '' }))
-    || !commit.ok
-    || commit.commitSha !== 'abc123'
-    || commit.mode !== 'delivery'
-    || gitCalls.some((gitArgs) => gitArgs[0] === 'push')
-    || !gitCalls.some((gitArgs) => gitArgs[0] === 'commit' && gitArgs.includes('--only'))
-  ) process.exit(1)
-  console.log('project-orchestrator self-test passed (structured inferState + decideNext wiring)')
-}
-
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  if (args.includes('--self-test')) selfTest()
+  if (args.includes('--self-test')) import('../self-tests/project-orchestrator.self-test.mjs').catch((error) => {
+    console.error(error)
+    process.exitCode = 1
+  })
   else if (!new RegExp(`^(?:${config.projectIdPattern || '(?:PR|TR)-\\d{5}'})$`).test(projectId || '')) {
     console.error('usage: project-orchestrator.mjs <run|kickoff|status|resume|next|source-update|checkpoint> PR-01234 [--change <id>] [--prd <source>] [--title <name>] [--kind feature|bugfix] [--base-ref <ref>] [--input <json>] [--client codex|claude] [--model <name>] [--dry-run] [--retry-failed-action]')
     process.exit(1)

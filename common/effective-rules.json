@@ -1,14 +1,14 @@
 {
   "version": 2,
-  "fingerprint": "2e1ac4bd475424a16bc521bffbd161a3531aae309ecef0c264b1b1c5c4dcda6b",
-  "publishedAt": "2026-09-23T08:09:27.920Z",
-  "l3RuleReleaseFingerprint": "df20d68b04b2ab995ff4a57b5f9bc1cb8c8a242433d8e15ed72c9cbb52b5ebef",
+  "fingerprint": "8d51a76ffcb02dc105c7b8158a0d5972977d53987ae3837684b3263113501d09",
+  "publishedAt": "2026-09-26T10:14:27.773Z",
+  "l3RuleReleaseFingerprint": "481f9aa2804d13f86ca5138d3db11507fbb50a9ccba8db5465e5ea1776f5cf20",
   "clientMatrix": {
     "codex": {
       "kind": "direct",
       "adapter": "~/.codex/AGENTS.md",
       "enforcement": "SessionStart rule preflight + Pre/PostToolUse receipt/code gate + changed/gate",
-      "sourceFingerprint": "e290f8d5fa7d473fd77281ff30dac50007bece5a11599c7f77a1355ee20ae162",
+      "sourceFingerprint": "066cb265ad4162f3a91d699702c338425bd8084c0bec2c9f726af9924c993b3e",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -40,7 +40,6 @@
         ".cursor/rules/async-dependencies.mdc",
         ".cursor/rules/async-parallel.mdc",
         ".cursor/rules/async-suspense-boundaries.mdc",
-        ".cursor/rules/auth-entry-web-next-only.mdc",
         ".cursor/rules/bundle-barrel-imports.mdc",
         ".cursor/rules/bundle-conditional.mdc",
         ".cursor/rules/bundle-defer-third-party.mdc",
@@ -68,7 +67,6 @@
         ".cursor/rules/js-tosorted-immutable.mdc",
         ".cursor/rules/patterns-children-over-render-props.mdc",
         ".cursor/rules/patterns-explicit-variants.mdc",
-        ".cursor/rules/prediction-web-next.mdc",
         ".cursor/rules/react19-no-forwardref.mdc",
         ".cursor/rules/rendering-activity.mdc",
         ".cursor/rules/rendering-animate-svg-wrapper.mdc",
@@ -112,14 +110,14 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "df20d68b04b2ab995ff4a57b5f9bc1cb8c8a242433d8e15ed72c9cbb52b5ebef",
+      "l3Fingerprint": "481f9aa2804d13f86ca5138d3db11507fbb50a9ccba8db5465e5ea1776f5cf20",
       "conflictOverrides": []
     },
     "claude": {
       "kind": "direct",
       "adapter": "~/.claude/CLAUDE.md",
       "enforcement": "UserPromptSubmit rule preflight + Pre/PostToolUse receipt + changed/gate",
-      "sourceFingerprint": "e290f8d5fa7d473fd77281ff30dac50007bece5a11599c7f77a1355ee20ae162",
+      "sourceFingerprint": "066cb265ad4162f3a91d699702c338425bd8084c0bec2c9f726af9924c993b3e",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -151,7 +149,6 @@
         ".cursor/rules/async-dependencies.mdc",
         ".cursor/rules/async-parallel.mdc",
         ".cursor/rules/async-suspense-boundaries.mdc",
-        ".cursor/rules/auth-entry-web-next-only.mdc",
         ".cursor/rules/bundle-barrel-imports.mdc",
         ".cursor/rules/bundle-conditional.mdc",
         ".cursor/rules/bundle-defer-third-party.mdc",
@@ -179,7 +176,6 @@
         ".cursor/rules/js-tosorted-immutable.mdc",
         ".cursor/rules/patterns-children-over-render-props.mdc",
         ".cursor/rules/patterns-explicit-variants.mdc",
-        ".cursor/rules/prediction-web-next.mdc",
         ".cursor/rules/react19-no-forwardref.mdc",
         ".cursor/rules/rendering-activity.mdc",
         ".cursor/rules/rendering-animate-svg-wrapper.mdc",
@@ -223,14 +219,14 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "df20d68b04b2ab995ff4a57b5f9bc1cb8c8a242433d8e15ed72c9cbb52b5ebef",
+      "l3Fingerprint": "481f9aa2804d13f86ca5138d3db11507fbb50a9ccba8db5465e5ea1776f5cf20",
       "conflictOverrides": []
     },
     "cursor": {
       "kind": "direct",
       "adapter": "~/.cursor/rules/fameex-local-governance.mdc",
       "enforcement": "native glob/alwaysApply + resolver conformance + changed/gate",
-      "sourceFingerprint": "e290f8d5fa7d473fd77281ff30dac50007bece5a11599c7f77a1355ee20ae162",
+      "sourceFingerprint": "066cb265ad4162f3a91d699702c338425bd8084c0bec2c9f726af9924c993b3e",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -262,7 +258,6 @@
         ".cursor/rules/async-dependencies.mdc",
         ".cursor/rules/async-parallel.mdc",
         ".cursor/rules/async-suspense-boundaries.mdc",
-        ".cursor/rules/auth-entry-web-next-only.mdc",
         ".cursor/rules/bundle-barrel-imports.mdc",
         ".cursor/rules/bundle-conditional.mdc",
         ".cursor/rules/bundle-defer-third-party.mdc",
@@ -290,7 +285,6 @@
         ".cursor/rules/js-tosorted-immutable.mdc",
         ".cursor/rules/patterns-children-over-render-props.mdc",
         ".cursor/rules/patterns-explicit-variants.mdc",
-        ".cursor/rules/prediction-web-next.mdc",
         ".cursor/rules/react19-no-forwardref.mdc",
         ".cursor/rules/rendering-activity.mdc",
         ".cursor/rules/rendering-animate-svg-wrapper.mdc",
@@ -334,14 +328,14 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "df20d68b04b2ab995ff4a57b5f9bc1cb8c8a242433d8e15ed72c9cbb52b5ebef",
+      "l3Fingerprint": "481f9aa2804d13f86ca5138d3db11507fbb50a9ccba8db5465e5ea1776f5cf20",
       "conflictOverrides": []
     },
     "pi": {
       "kind": "direct",
       "adapter": "~/.pi/agent/AGENTS.md",
       "enforcement": "extension before_agent_start rule preflight + tool_call receipt + tool_result code gate + changed/gate",
-      "sourceFingerprint": "e290f8d5fa7d473fd77281ff30dac50007bece5a11599c7f77a1355ee20ae162",
+      "sourceFingerprint": "066cb265ad4162f3a91d699702c338425bd8084c0bec2c9f726af9924c993b3e",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -373,7 +367,6 @@
         ".cursor/rules/async-dependencies.mdc",
         ".cursor/rules/async-parallel.mdc",
         ".cursor/rules/async-suspense-boundaries.mdc",
-        ".cursor/rules/auth-entry-web-next-only.mdc",
         ".cursor/rules/bundle-barrel-imports.mdc",
         ".cursor/rules/bundle-conditional.mdc",
         ".cursor/rules/bundle-defer-third-party.mdc",
@@ -401,7 +394,6 @@
         ".cursor/rules/js-tosorted-immutable.mdc",
         ".cursor/rules/patterns-children-over-render-props.mdc",
         ".cursor/rules/patterns-explicit-variants.mdc",
-        ".cursor/rules/prediction-web-next.mdc",
         ".cursor/rules/react19-no-forwardref.mdc",
         ".cursor/rules/rendering-activity.mdc",
         ".cursor/rules/rendering-animate-svg-wrapper.mdc",
@@ -445,7 +437,7 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "df20d68b04b2ab995ff4a57b5f9bc1cb8c8a242433d8e15ed72c9cbb52b5ebef",
+      "l3Fingerprint": "481f9aa2804d13f86ca5138d3db11507fbb50a9ccba8db5465e5ea1776f5cf20",
       "conflictOverrides": []
     },
     "lark-codex": {
@@ -453,7 +445,7 @@
       "delegatesTo": "codex",
       "adapter": "common/lark-bot/lib/lark-rule-context.mjs + common/lark-bot/lib/lark-worker-prompts.mjs + common/lark-bot/lib/lark-worker-run.mjs + common/engine/agent-scripts/rule-context-hook.mjs + common/engine/agent-scripts/rule-context.mjs + common/engine/agent-scripts/lib/l2-rule-resolver.mjs + common/engine/agent-scripts/lib/rule-consumption.mjs",
       "enforcement": "fresh effective rules + focused context + worker quality gate",
-      "sourceFingerprint": "e290f8d5fa7d473fd77281ff30dac50007bece5a11599c7f77a1355ee20ae162",
+      "sourceFingerprint": "066cb265ad4162f3a91d699702c338425bd8084c0bec2c9f726af9924c993b3e",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -485,7 +477,6 @@
         ".cursor/rules/async-dependencies.mdc",
         ".cursor/rules/async-parallel.mdc",
         ".cursor/rules/async-suspense-boundaries.mdc",
-        ".cursor/rules/auth-entry-web-next-only.mdc",
         ".cursor/rules/bundle-barrel-imports.mdc",
         ".cursor/rules/bundle-conditional.mdc",
         ".cursor/rules/bundle-defer-third-party.mdc",
@@ -513,7 +504,6 @@
         ".cursor/rules/js-tosorted-immutable.mdc",
         ".cursor/rules/patterns-children-over-render-props.mdc",
         ".cursor/rules/patterns-explicit-variants.mdc",
-        ".cursor/rules/prediction-web-next.mdc",
         ".cursor/rules/react19-no-forwardref.mdc",
         ".cursor/rules/rendering-activity.mdc",
         ".cursor/rules/rendering-animate-svg-wrapper.mdc",
@@ -557,7 +547,7 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "df20d68b04b2ab995ff4a57b5f9bc1cb8c8a242433d8e15ed72c9cbb52b5ebef",
+      "l3Fingerprint": "481f9aa2804d13f86ca5138d3db11507fbb50a9ccba8db5465e5ea1776f5cf20",
       "conflictOverrides": []
     },
     "lark-claude": {
@@ -565,7 +555,7 @@
       "delegatesTo": "claude",
       "adapter": "common/lark-bot/lib/lark-rule-context.mjs + common/lark-bot/lib/lark-worker-prompts.mjs + common/lark-bot/lib/lark-worker-run.mjs + common/engine/agent-scripts/rule-context-hook.mjs + common/engine/agent-scripts/rule-context.mjs + common/engine/agent-scripts/lib/l2-rule-resolver.mjs + common/engine/agent-scripts/lib/rule-consumption.mjs",
       "enforcement": "fresh effective rules + focused context + worker quality gate",
-      "sourceFingerprint": "e290f8d5fa7d473fd77281ff30dac50007bece5a11599c7f77a1355ee20ae162",
+      "sourceFingerprint": "066cb265ad4162f3a91d699702c338425bd8084c0bec2c9f726af9924c993b3e",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -597,7 +587,6 @@
         ".cursor/rules/async-dependencies.mdc",
         ".cursor/rules/async-parallel.mdc",
         ".cursor/rules/async-suspense-boundaries.mdc",
-        ".cursor/rules/auth-entry-web-next-only.mdc",
         ".cursor/rules/bundle-barrel-imports.mdc",
         ".cursor/rules/bundle-conditional.mdc",
         ".cursor/rules/bundle-defer-third-party.mdc",
@@ -625,7 +614,6 @@
         ".cursor/rules/js-tosorted-immutable.mdc",
         ".cursor/rules/patterns-children-over-render-props.mdc",
         ".cursor/rules/patterns-explicit-variants.mdc",
-        ".cursor/rules/prediction-web-next.mdc",
         ".cursor/rules/react19-no-forwardref.mdc",
         ".cursor/rules/rendering-activity.mdc",
         ".cursor/rules/rendering-animate-svg-wrapper.mdc",
@@ -669,11 +657,11 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "df20d68b04b2ab995ff4a57b5f9bc1cb8c8a242433d8e15ed72c9cbb52b5ebef",
+      "l3Fingerprint": "481f9aa2804d13f86ca5138d3db11507fbb50a9ccba8db5465e5ea1776f5cf20",
       "conflictOverrides": []
     }
   },
-  "fileCount": 112,
+  "fileCount": 110,
   "skillTargets": {
     "~/.codex/skills/coding-quality": "~/.ai-rules/skills/coding-quality",
     "~/.claude/skills/coding-quality": "~/.ai-rules/skills/coding-quality",
@@ -692,7 +680,6 @@
     ".cursor/rules/async-dependencies.mdc": "a72b46bae77f752ebd47e60aa923afb1529b37b504c2ecba378b843ddafe7f3b",
     ".cursor/rules/async-parallel.mdc": "0a7710ea469c6a94bcfce2797d8f2e79d991d427b400e57140412e76031e1967",
     ".cursor/rules/async-suspense-boundaries.mdc": "123dbe39ada6df1c38827232601f05ca773ac8ad512e33baf74ac9113b49aa47",
-    ".cursor/rules/auth-entry-web-next-only.mdc": "8ea0fa65d56bdd4f00b30726eaa1c341122c1e9a52ce2b682917546359db8775",
     ".cursor/rules/bundle-barrel-imports.mdc": "8e04175d5000c16e76ea50df527fc2f801b7bfa5e22f9deba8686df2bbbdffc8",
     ".cursor/rules/bundle-conditional.mdc": "3f9a4d7b543d73cd009afd6acdefb5b1b4d4d81470659ad2305e494c2e2873d9",
     ".cursor/rules/bundle-defer-third-party.mdc": "ed3e67412d0806a53d7801131c20e18dc568131985670dfca788d7445e68e510",
@@ -703,7 +690,7 @@
     ".cursor/rules/client-passive-event-listeners.mdc": "6b43af3a0be0b5cdf9a566073231e813c25d281d52e5677b1e93385396d9394e",
     ".cursor/rules/client-swr-dedup.mdc": "ffc1e83364f3e8e021cf5d6f39f568519e8d10e6846afe7d1c787aa4d5fd3677",
     ".cursor/rules/definition-of-done.mdc": "a6048d28f37d617434beab157136189b7da7e8274214155dc8d69de59f95e0ce",
-    ".cursor/rules/frontend-harness.mdc": "e69e08c0a8971a4e8995b71815a682e6621fb306a136264f586dd745ee635dfe",
+    ".cursor/rules/frontend-harness.mdc": "8b48868647fdc351c1b1df79e1be98a8f76e6b28ec2099f6e760da4c613e51e1",
     ".cursor/rules/js-batch-dom-css.mdc": "070c9f7f317737d250054cf2f968e66377922c7540320cb754b4e35f1dacb3a7",
     ".cursor/rules/js-cache-function-results.mdc": "8699bc5a56c41ef621268013a22caca2c25e49c45c3e9d638b3bc8c0a7c44b95",
     ".cursor/rules/js-cache-property-access.mdc": "246aea1625350af13ad38315743b65fb7d8976cb23c2334d6a6c4f5cc9067c18",
@@ -720,7 +707,6 @@
     ".cursor/rules/js-tosorted-immutable.mdc": "4c16bccd3ce2e5afe3082ce37528351852b480e339635cd0b02f9fb7719bf553",
     ".cursor/rules/patterns-children-over-render-props.mdc": "7ec5ede09ddf5ae62d5cf07afe4a4cb03fe30e83c39ae43950fe52119f083c08",
     ".cursor/rules/patterns-explicit-variants.mdc": "27b813160f9b089648533a961aae37db4efd3649953eebf99fff837de4b9b839",
-    ".cursor/rules/prediction-web-next.mdc": "789d233823a6690249c7fb7f68a9f64d9392f72e2b3af7ff04a6cbec6fa5ceb0",
     ".cursor/rules/react19-no-forwardref.mdc": "6d45e2676e0db32797b93559cd23d1eb26c15570b58388f93aa70bb2d8fadb7e",
     ".cursor/rules/rendering-activity.mdc": "828ff212cd6da8f4e725a1ee08ef91bbc018abbf8695c53c354402280dcc1215",
     ".cursor/rules/rendering-animate-svg-wrapper.mdc": "02276bd000bda96fc324fb21ffb24491ee3f166a45ecb7cc4307fd3a82dfad13",
@@ -784,8 +770,8 @@
     "~/.cursor/rules/fameex-local-governance.mdc": "1b34e1269caf928ae2c157970bb915c798824345fd883817a9343001f76f2b45",
     "~/.pi/agent/AGENTS.md": "0db59c8d49f2a55bf126c24eb83d4780ff6f8a37b9a7e66e35f26c676903763d",
     "~/.pi/agent/extensions/docs-tdd-rules.ts": "2a59c7468e3f8bbb4895d048979f94116c61f9c0dc30077c83f56ac5cb39ad3a",
-    "AGENTS.md": "d1279577e942d7d9d2c4a19d33cf7779d41195baaceef9df056ccd20bfe298a0",
-    "CLAUDE.md": "47353803f155e3beef8e05cbd8532d22acb34167f0ded8aa263164c383d68c34",
+    "AGENTS.md": "392064b3caa6942371cdf5380c7c8b6e368e6ba36d5cae03753afc5d6001c480",
+    "CLAUDE.md": "aafb3f43ff67ac92ba335a7095c504342e89a803eee349e9bde3ae8ebe6fd694",
     "common/engine/agent-scripts/lib/l2-rule-resolver.mjs": "044bf02bce7fc1a3b1187a3d687434e2f538f062b9ba427deddc67d4e1307150",
     "common/engine/agent-scripts/lib/rule-consumption.mjs": "41ebfdc0754950db5ea9f96c084913c7ac72a00dbc60cd4d672f3a8cbb7cdaa8",
     "common/engine/agent-scripts/rule-context-hook.mjs": "445ad740db3878f8e6a0c99198ab0b5276423b718cca1029a3e44cbffc811c3c",

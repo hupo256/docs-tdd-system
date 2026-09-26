@@ -21,6 +21,12 @@
     "branch": {
       "type": "string"
     },
+    "baseRef": {
+      "type": "string"
+    },
+    "changeId": {
+      "type": "string"
+    },
     "worktree": {
       "type": "string"
     },

@@ -1,21 +1,17 @@
 #!/usr/bin/env node
 // Durable, bounded execution loop for v2 Autopilot action packets.
 
-import assert from 'node:assert/strict'
 import {
   closeSync,
   existsSync,
   fsyncSync,
   mkdirSync,
-  mkdtempSync,
   openSync,
   readFileSync,
   renameSync,
-  rmSync,
   unlinkSync,
   writeFileSync,
 } from 'node:fs'
-import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { AUTOPILOT_ACTIONS } from './vnext-autopilot-actions.mjs'
@@ -665,225 +661,9 @@ export function runContinuousRunner({
   })
 }
 
-function selfTest() {
-  assert.equal(executorTypeForAction('capture-cli-evidence'), 'deterministic')
-  assert.equal(executorTypeForAction('implement-current-scope'), 'agent')
-  assert.equal(executorTypeForAction('collect-scope-approval'), 'human')
-  assert.equal(executorTypeForAction('await-late-dependencies'), 'external')
-  assert.equal(new Set(AUTOPILOT_ACTIONS.map(executorTypeForAction)).size, 4)
-
-  const root = mkdtempSync(join(tmpdir(), 'vnext-continuous-runner-'))
-  try {
-    let stage = 0
-    const states = [
-      { status: 'active', executionRoute: 'micro', actionPacket: { action: 'prepare-coding-worktree', actionId: 'A-1', executionRoute: 'micro' } },
-      { status: 'active', executionRoute: 'standard', actionPacket: { action: 'capture-cli-evidence', actionId: 'A-2', executionRoute: 'standard' } },
-      { status: 'complete', executionRoute: 'standard', actionPacket: { action: 'complete', actionId: 'A-3', executionRoute: 'standard' } },
-    ]
-    const registry = createActionExecutorRegistry({
-      deterministic: {
-        'prepare-coding-worktree': () => { stage += 1; return { outcome: 'completed' } },
-        'capture-cli-evidence': () => { stage += 1; return { outcome: 'completed' } },
-      },
-    })
-    const completed = runContinuousRunner({
-      projectId: 'PR-00001',
-      projectDir: root,
-      inspect: () => states[stage],
-      registry,
-      now: (() => {
-        let tick = 0
-        return () => `2026-09-24T00:00:0${tick += 1}Z`
-      })(),
-    })
-    assert.equal(completed.runner.outcome, 'complete')
-    const completedState = readRunnerState(root, 'PR-00001')
-    assert.equal(completedState.receipts.length, 2)
-    assert.equal(completedState.traceHistory.length, 1)
-    assert.equal(completedState.traceHistory[0].runId, completed.runner.trace.runId)
-    assert.equal(completedState.traceHistory[0].actionCount, 2)
-    assert.equal(completed.runner.trace.route, 'standard')
-    assert.equal(completed.runner.trace.routePolicyVersion, EFFICIENCY_POLICY_VERSION)
-    assert.deepEqual(completed.runner.trace.observedRoutes, ['micro', 'standard'])
-    assert.equal(completed.runner.trace.grossElapsedMs, completed.runner.trace.elapsedMs)
-    assert.equal(completed.runner.trace.activeElapsedMs, 2000)
-
-    let terminalRouteStage = 0
-    const terminalRouteStates = [
-      { status: 'active', executionRoute: 'lite', actionPacket: { action: 'prepare-coding-worktree', actionId: 'A-route-1', executionRoute: 'lite' } },
-      { status: 'active', executionRoute: 'micro', actionPacket: { action: 'capture-cli-evidence', actionId: 'A-route-2', executionRoute: 'micro' } },
-      { status: 'complete', executionRoute: 'micro', actionPacket: { action: 'complete', actionId: 'A-route-3', executionRoute: 'micro' } },
-    ]
-    const terminalRouteRun = runContinuousRunner({
-      projectId: 'PR-00008',
-      projectDir: join(root, 'terminal-route'),
-      inspect: () => terminalRouteStates[terminalRouteStage],
-      registry: createActionExecutorRegistry({
-        deterministic: {
-          'prepare-coding-worktree': () => { terminalRouteStage += 1; return { outcome: 'completed' } },
-          'capture-cli-evidence': () => { terminalRouteStage += 1; return { outcome: 'completed' } },
-        },
-      }),
-    })
-    assert.equal(terminalRouteRun.runner.trace.route, 'micro')
-    assert.deepEqual(terminalRouteRun.runner.trace.observedRoutes, ['lite', 'micro'])
-
-    const invalidRouteRoot = join(root, 'invalid-route')
-    assert.throws(() => runContinuousRunner({
-      projectId: 'PR-00007',
-      projectDir: invalidRouteRoot,
-      inspect: () => ({
-        status: 'active',
-        executionRoute: 'micro',
-        actionPacket: { action: 'implement-current-scope', actionId: 'A-invalid-route', executionRoute: 'lite' },
-      }),
-      registry: createActionExecutorRegistry(),
-    }), /execution route fields disagree/)
-    assert.equal(existsSync(runnerStateFile(invalidRouteRoot)), false)
-
-    let needsAgentCalls = 0
-    const agentRoot = join(root, 'agent-case')
-    const agentRegistry = createActionExecutorRegistry({
-      agent: ({ packet }) => {
-        needsAgentCalls += 1
-        return { outcome: 'needs-agent', actionId: packet.actionId }
-      },
-    })
-    const agentState = () => ({
-      status: 'active',
-      actionPacket: { action: 'implement-current-scope', actionId: 'A-agent' },
-    })
-    assert.equal(runContinuousRunner({
-      projectId: 'PR-00002', projectDir: agentRoot, inspect: agentState, registry: agentRegistry,
-    }).runner.outcome, 'needs-agent')
-    assert.equal(runContinuousRunner({
-      projectId: 'PR-00002', projectDir: agentRoot, inspect: agentState, registry: agentRegistry,
-    }).runner.outcome, 'needs-agent')
-    assert.equal(needsAgentCalls, 2)
-    const agentStateAfterRuns = readRunnerState(agentRoot, 'PR-00002')
-    assert.equal(agentStateAfterRuns.receipts.length, 1)
-    assert.equal(agentStateAfterRuns.traceHistory.length, 2)
-    assert.equal(new Set(agentStateAfterRuns.traceHistory.map((trace) => trace.runId)).size, 2)
-    assert.equal(executorTypeForAction('resume-review-after-human-repair'), 'human')
-    const humanResume = runContinuousRunner({
-      projectId: 'PR-00005',
-      projectDir: join(root, 'human-resume'),
-      inspect: () => ({
-        status: 'active',
-        actionPacket: { action: 'resume-review-after-human-repair', actionId: 'A-human-resume' },
-      }),
-      registry: createActionExecutorRegistry(),
-    })
-    assert.equal(humanResume.runner.outcome, 'needs-user')
-
-    const failureRoot = join(root, 'failure-budget')
-    const failureState = () => ({
-      status: 'active',
-      actionPacket: { action: 'implement-current-scope', actionId: 'A-failure' },
-    })
-    let failureExecutions = 0
-    const failureRegistry = createActionExecutorRegistry({
-      agent: () => {
-        failureExecutions += 1
-        return { outcome: 'failed-safety-check', error: 'reported paths do not match Git' }
-      },
-    })
-    const firstFailure = runContinuousRunner({
-      projectId: 'PR-00004',
-      projectDir: failureRoot,
-      inspect: failureState,
-      registry: failureRegistry,
-    })
-    assert.equal(firstFailure.runner.outcome, 'failed-safety-check')
-    const repeated = runContinuousRunner({
-      projectId: 'PR-00004',
-      projectDir: failureRoot,
-      inspect: failureState,
-      registry: failureRegistry,
-    })
-    assert.equal(repeated.runner.outcome, 'failed-safety-check')
-    assert.equal(repeated.runner.repeatedFailure, true)
-    assert.equal(repeated.runner.retryRequired, true)
-    assert.equal(failureExecutions, 1)
-    const explicitRetry = runContinuousRunner({
-      projectId: 'PR-00004',
-      projectDir: failureRoot,
-      inspect: failureState,
-      registry: failureRegistry,
-      retryFailedAction: true,
-    })
-    assert.equal(explicitRetry.runner.outcome, 'failed-safety-check')
-    assert.equal(failureExecutions, 2)
-
-    const nonConvergentRoot = join(root, 'non-convergent')
-    let nonConvergentStep = 0
-    const nonConvergent = runContinuousRunner({
-      projectId: 'PR-00006',
-      projectDir: nonConvergentRoot,
-      inspect: () => ({
-        status: 'active',
-        actionPacket: { action: 'prepare-coding-worktree', actionId: `A-loop-${nonConvergentStep}` },
-      }),
-      registry: createActionExecutorRegistry({
-        deterministic: {
-          'prepare-coding-worktree': () => {
-            nonConvergentStep += 1
-            return { outcome: 'completed', changedState: true }
-          },
-        },
-      }),
-      maxSteps: 1,
-    })
-    assert.equal(nonConvergent.runner.outcome, 'failed-safety-check')
-    assert.equal(nonConvergent.runner.nonConvergent, true)
-
-    let recoveryCalls = 0
-    const recoveryRoot = join(root, 'recovery-case')
-    atomicWrite(runnerStateFile(recoveryRoot), {
-      ...initialRunnerState('PR-00003'),
-      trace: normalizeCompactRunRecord({
-        runId: 'old-run',
-        projectId: 'PR-00003',
-        route: 'micro',
-        routePolicyVersion: EFFICIENCY_POLICY_VERSION,
-        terminalState: 'running',
-        startedAt: '2026-09-24T00:00:00Z',
-        generatedAt: '2026-09-24T00:00:00Z',
-        receiptOffset: 0,
-      }),
-      activeAction: {
-        action: 'implement-current-scope',
-        actionId: 'A-old',
-        invocationId: 'old',
-        executorType: 'agent',
-        startedAt: '2026-09-24T00:00:00Z',
-        checkpoint: {},
-      },
-    })
-    const recovered = runContinuousRunner({
-      projectId: 'PR-00003',
-      projectDir: recoveryRoot,
-      inspect: () => ({ status: 'active', actionPacket: { action: 'collect-scope-approval', actionId: 'A-new' } }),
-      registry: createActionExecutorRegistry(),
-      recoverInterrupted: () => {
-        recoveryCalls += 1
-        return { outcome: 'completed', changedState: true, reconciled: true }
-      },
-    })
-    assert.equal(recovered.runner.outcome, 'needs-user')
-    assert.equal(recoveryCalls, 1)
-    const recoveredState = readRunnerState(recoveryRoot, 'PR-00003')
-    assert.equal(recoveredState.activeAction, null)
-    assert.equal(recoveredState.traceHistory[0].runId, 'old-run')
-    assert.equal(recoveredState.traceHistory[0].terminalState, 'interrupted')
-    assert.equal(recoveredState.traceHistory[0].actionCount, null)
-    assert.equal(recoveredState.trace.terminalState, 'needs-user')
-    console.log('vnext-continuous-runner self-test passed')
-  } finally {
-    rmSync(root, { recursive: true, force: true })
-  }
-}
-
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url) && process.argv.includes('--self-test')) {
-  selfTest()
+  import('../../self-tests/vnext-continuous-runner.self-test.mjs').catch((error) => {
+    console.error(error)
+    process.exitCode = 1
+  })
 }

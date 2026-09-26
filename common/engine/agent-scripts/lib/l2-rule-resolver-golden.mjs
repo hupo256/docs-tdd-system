@@ -29,7 +29,7 @@ function verifyCase(target, expectedCount) {
 }
 
 export function runGolden() {
-  const results = [verifyCase('apps/web/src/Foo.tsx', 49), verifyCase('apps/web/src/useFoo.ts', 36), verifyCase('apps/web/src/foo.ts', 32), verifyCase('README.md', 2)]
+  const results = [verifyCase('apps/web/src/Foo.tsx', 47), verifyCase('apps/web/src/useFoo.ts', 34), verifyCase('apps/web/src/foo.ts', 30), verifyCase('README.md', 0)]
   const tsx = resolveRulePack({
     worktree,
     targetFiles: ['apps/web/src/Foo.tsx'],

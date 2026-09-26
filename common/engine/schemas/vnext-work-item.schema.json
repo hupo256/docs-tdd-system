@@ -546,7 +546,10 @@
         "allOf": [
           {
             "if": { "properties": { "disposition": { "const": "not-a-requirement" } } },
-            "then": { "required": ["reason", "exclusionEvidence"] }
+            "then": {
+              "required": ["reason"],
+              "description": "Persisted pre-exclusionEvidence work items remain readable. Current extraction is enforced by vnext-intake-audit.mjs before canonical persistence."
+            }
           }
         ]
       }

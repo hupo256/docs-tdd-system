@@ -17,10 +17,25 @@
     }
   },
   "definitions": {
-    "baseStatus": {
+    "g5Status": {
       "type": "object",
       "required": ["status", "reason", "evidence", "updatedAt"],
       "properties": {
+        "status": { "type": "string", "enum": ["pending", "blocked", "frontend-complete-pending-reconcile", "frontend-complete-pending-verify", "completed", "not-applicable"] },
+        "reason": { "type": "string", "minLength": 1 },
+        "evidence": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "updatedAt": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "confirmedBy": { "type": "string", "minLength": 1, "description": "人工确认签名：谁确认了这个阶段处置（DOC-CONFIRM-001/002）。AI 客户端名不算人工确认。" },
+        "confirmedAt": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "reconciledAt": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" }
+      },
+      "additionalProperties": false
+    },
+    "g6Status": {
+      "type": "object",
+      "required": ["status", "reason", "evidence", "updatedAt"],
+      "properties": {
+        "status": { "type": "string", "enum": ["pending", "blocked", "partial-pass", "completed", "skipped"] },
         "reason": { "type": "string", "minLength": 1 },
         "evidence": { "type": "array", "items": { "type": "string", "minLength": 1 } },
         "updatedAt": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
@@ -29,23 +44,18 @@
       },
       "additionalProperties": false
     },
-    "g5Status": {
-      "allOf": [
-        { "$ref": "#/definitions/baseStatus" },
-        { "properties": { "status": { "type": "string", "enum": ["pending", "blocked", "frontend-complete-pending-reconcile", "completed", "not-applicable"] } }, "required": ["status"] }
-      ]
-    },
     "g7Status": {
-      "allOf": [
-        { "$ref": "#/definitions/baseStatus" },
-        { "properties": { "status": { "type": "string", "enum": ["pending", "blocked", "completed", "skipped"] } }, "required": ["status"] }
-      ]
-    },
-    "g6Status": {
-      "allOf": [
-        { "$ref": "#/definitions/baseStatus" },
-        { "properties": { "status": { "type": "string", "enum": ["pending", "blocked", "completed", "skipped"] } }, "required": ["status"] }
-      ]
+      "type": "object",
+      "required": ["status", "reason", "evidence", "updatedAt"],
+      "properties": {
+        "status": { "type": "string", "enum": ["pending", "blocked", "completed", "skipped"] },
+        "reason": { "type": "string", "minLength": 1 },
+        "evidence": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "updatedAt": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "confirmedBy": { "type": "string", "minLength": 1, "description": "人工确认签名：谁确认了这个阶段处置（DOC-CONFIRM-001/002）。AI 客户端名不算人工确认。" },
+        "confirmedAt": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false

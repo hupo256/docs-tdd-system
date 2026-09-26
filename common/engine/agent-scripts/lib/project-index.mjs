@@ -108,8 +108,13 @@ function worktreeCell(project) {
   return `\`${project.worktree}\``
 }
 
+function projectReadmeLink(project) {
+  const path = project.readme || `prds/${project.id}/README.md`
+  return path.startsWith('.') ? path : `./${path}`
+}
+
 function projectTable(projects) {
-  const rows = projects.map((project) => `| [${cell(project.id)}](./prds/${cell(project.id)}/README.md) | ${cell(project.workflow || 'v1')} | ${cell(project.status)} | ${cell(project.g2)} | ${cell(project.gate)} | ${project.evidenceCount} | ${worktreeCell(project)} | ${cell(project.modulePath)} |`)
+  const rows = projects.map((project) => `| [${cell(project.id)}](${projectReadmeLink(project)}) | ${cell(project.workflow || 'v1')} | ${cell(project.status)} | ${cell(project.g2)} | ${cell(project.gate)} | ${project.evidenceCount} | ${worktreeCell(project)} | ${cell(project.modulePath)} |`)
   return `| Project | Workflow | Status | G2 / Scope approval | Latest gate / exit | Evidence files | Worktree | Responsibility modules |\n|---------|----------|--------|---------------------|--------------------|----------------|----------|-------------------------|\n${rows.join('\n') || '| — | — | — | — | — | — | — | — |'}`
 }
 
@@ -177,9 +182,9 @@ export function selfTest() {
   const stripped = stripMd('`apps/web/docs_tdd/prds/PR-00001` **done**')
   assert.ok(stripped.includes('docs_tdd') && !stripped.includes('`') && !stripped.includes('**'), 'stripMd should preserve underscores and remove markdown markers')
   const markdown = renderMarkdown([
-    { id: 'PR-00001', status: 'G6', g2: 'Aven / 2026-07-10', gate: 'G6 PASS (fail=0, warn=0)', evidenceCount: 1, worktree: '/Users/aven/github/PR-00001', modulePath: 'apps/web/src/apps/Demo' },
+    { id: 'PR-00001', status: 'G6', g2: 'Aven / 2026-07-10', gate: 'G6 PASS (fail=0, warn=0)', evidenceCount: 1, worktree: '/Users/aven/github/PR-00001', modulePath: 'apps/web/src/apps/Demo', readme: 'prds/PR-00001/changes/1/README.md' },
   ], '2026-01-01T00:00:00.000Z')
-  assert.ok(markdown.includes('[PR-00001](./prds/PR-00001/README.md)') && markdown.includes('| Project | Workflow | Status |'), 'rendered markdown table is incomplete')
+  assert.ok(markdown.includes('[PR-00001](./prds/PR-00001/changes/1/README.md)') && markdown.includes('| Project | Workflow | Status |'), 'rendered markdown table is incomplete')
   assert.ok(markdown.includes('| Worktree |') && markdown.includes('/Users/aven/github/PR-00001'), 'worktree column missing from rendered table')
   const grouped = renderMarkdown([
     { id: 'PR-00001', indexGroup: 'active', status: 'G4', evidenceCount: 0 },

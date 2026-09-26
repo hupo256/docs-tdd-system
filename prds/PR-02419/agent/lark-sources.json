@@ -6,8 +6,9 @@
       "name": "需求 PRD",
       "url": "https://qfglxo2m3dc.sg.larksuite.com/wiki/RRKYwXfDxiv0Yek6fh4lyme2gAc",
       "type": "wiki",
+      "operation": "read",
       "target": "prd-latest.md",
-      "role": "prd"
+      "localizedTarget": "prd-latest.md"
     }
   ]
 }
