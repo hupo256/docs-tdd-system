@@ -38,6 +38,34 @@
       "completed": false,
       "executionAttestation": null,
       "observation": null
+    },
+    {
+      "sequence": 3,
+      "sampleId": "PR-02233-DOUBLE-SUBTITLE-PUNCTUATION",
+      "changeId": "double-subtitle-punctuation",
+      "title": "双验证说明文案补充逗号",
+      "artifactDir": "prds/PR-02233/changes/double-subtitle-punctuation",
+      "sourcePath": "prds/PR-02233/inbox/double-subtitle-punctuation-2026-09-26.md",
+      "sourceFingerprint": "ced8f53efa087be82442945ae78c00fade7008ce3f7b70ad920739938251ab9b",
+      "synthetic": false,
+      "newRequirement": true,
+      "verificationLevel": "V0",
+      "status": "completed",
+      "completed": true,
+      "executionAttestation": {
+        "mode": "enforced",
+        "status": "passed",
+        "ok": true,
+        "runId": "evidence-20260926175415-480e5a02",
+        "verifiedAt": "2026-09-26T17:54:22.055Z",
+        "assuranceMode": "autonomous",
+        "evidenceTrust": "cli-attested",
+        "evidenceIds": [
+          "E-001",
+          "E-002"
+        ]
+      },
+      "observation": "单一简体中文文案字面值变更；精确值断言与目标 JSON 结构校验通过。"
     }
   ]
 }
