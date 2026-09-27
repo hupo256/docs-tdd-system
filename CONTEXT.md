@@ -8,7 +8,7 @@
 - 当前工作重点：**TR-02386 登录/注册/三方登录迁移到 web-next**——最近工作流结果 V2 enforced passed（2026-09-16）。本行由 `update-project-index.mjs --write` 从最近 Gate / verify 活动派生，勿手改。
 - 本地文档目录（唯一真实路径）：`/Users/aven/github/fameex-web/apps/web/docs_tdd/`
 - 文档跟踪：本目录为独立本地 Git 仓库；业务仓挂载路径继续保持 ignore，不提交到业务仓。
-- 当前框架：docs_tdd v3.3；新需求默认使用第二代 work-item 协议（`workflowVersion: 2`），存量项目按 README `workflowVersion` 继续第一代流程。
+- 当前新需求默认使用 Web Lite 流程；已有 `workflowVersion: 1|2` 项目按原协议兼容，不静默迁移。v3.3/v3.5 引擎只用于对应存量项目。
 
 ## Worktree 与文档 symlink
 
@@ -45,10 +45,9 @@
 
 线程中断或上下文压缩后，**走 [common/rules/rule-router.md](./common/rules/rule-router.md) §1 启动协议**，不要在这里再列一遍读取顺序——本文件曾硬编码一份 10 步全读清单，与 router 的「禁止全读 `common/`」直接冲突，冷启动的 Agent 命中哪份全看运气。
 
-冷启动只需三件事：
+冷启动按任务类型读取，避免把存量流程带入新需求：
 
-1. 读 [common/rules/rule-router.md](./common/rules/rule-router.md)（唯一常驻规则文件）。
-2. 读 README `workflowVersion`：v2 读 `work-item.json` / `latest-result.json`，v1 读 `agent/context-summary.md`。
-3. 跑 `docs-tdd context <PROJECT-ID> <SCENARIO>`；CLI 自动按版本返回对应 context。
+1. 新需求读 [common/rules/rule-router.md](./common/rules/rule-router.md) 和 [common/rules/web-lite-workflow.md](./common/rules/web-lite-workflow.md)。
+2. 存量项目读该项目 README 的 `workflowVersion`，再按对应协议恢复必要事实；只有存量 v1/v2 项目需要时才运行 `docs-tdd context <PROJECT-ID> <SCENARIO>`。
 
 不要自动回到其他项目；除非用户明确切换项目。

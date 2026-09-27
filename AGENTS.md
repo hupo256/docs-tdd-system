@@ -16,16 +16,15 @@
 
 **不要一次性读完整本 `common/`**（全量 ≈ 9-10 万 token，会挤占窗口、拖慢响应）。改为渐进披露：
 
-1. 先读 [README.md](./README.md)（本目录职责与项目索引）。
-2. **读 [common/rules/rule-router.md](./common/rules/rule-router.md)——唯一常驻规则文件**：§1 硬规则 TL;DR（单一常驻源）+ §2 按场景命中才读的路由。
-3. 如需机器路由，读 [common/rules/rule-index.json](./common/rules/rule-index.json)，按场景取 2-4 篇专题，不是全量。
-4. 再按项目版本读取事实：v2 读 `README.md`、`work-item.json`、`latest-result.json`（若存在）；v1 读 `agent/context-summary.md`（若存在）、`README.md`、`product/00-feature-inventory.md`、`product/06-collaboration.md`。
+1. **新需求**直接读 [common/rules/rule-router.md](./common/rules/rule-router.md) 和命中的 [common/rules/web-lite-workflow.md](./common/rules/web-lite-workflow.md)，不要先读整份 README 或全读 `common/`。
+2. **存量项目**按其项目 README 中的 `workflowVersion` 读取对应规则和事实；需要查目录职责或项目索引时再读本文件/README。
+3. 不要把 v1/v2 的台账、门禁带入新需求。
 
 > 完整专题清单和触发条件见 [common/rules/rule-router.md](./common/rules/rule-router.md)；[common/README.md](./common/README.md) 保留专题全索引供查阅，但**开工路由以 rule-router 为准**。
 
 Codex/Claude/Pi 侧编码规则入口不放在 `docs_tdd`：短硬规则常驻 `~/.ai-rules/AGENT.md`（`~/.codex/AGENTS.md`、`~/.claude/CLAUDE.md`、`~/.pi/agent/AGENTS.md` 均软链至此，三工具读同一份文件，禁止分叉编辑）；长清单按需读 `~/.ai-rules/skills/coding-quality/SKILL.md`、`~/.ai-rules/skills/figma-read/SKILL.md`（三工具的 `skills/coding-quality`、`skills/figma-read` 同样软链至此）；FameEX 锚定编码规则按主题读仓库 `.cursor/rules/*.mdc`。本目录只保留项目、流程、门禁、边界与项目事实。
 
-新 chat 一句话启动新需求时，优先使用 [common/rules/startup-prompt.md](./common/rules/startup-prompt.md) 的启动口令，并执行 [common/rules/new-project-kickoff.md](./common/rules/new-project-kickoff.md) §2 的自动链路。
+新 chat 一句话启动需求时，使用 [common/rules/startup-prompt.md](./common/rules/startup-prompt.md)；新需求按 Web Lite 流程，不运行旧引擎 kickoff。
 
 ## 3. 当前项目索引
 
@@ -35,30 +34,17 @@ Codex/Claude/Pi 侧编码规则入口不放在 `docs_tdd`：短硬规则常驻 `
 
 ## 4. 公共开发规则
 
-**硬规则 TL;DR 的唯一常驻源是 [common/rules/rule-router.md](./common/rules/rule-router.md) §1**，本文不再重复列举（避免同批规则在多处常驻、三重冗余）。开工按 §2 渐进披露读路由表即可。
+**流程硬规则的唯一常驻源是 [common/rules/rule-router.md](./common/rules/rule-router.md) §1**，本文不再重复列举（避免同批规则在多处常驻、三重冗余）。开工按 §2 渐进披露读路由表即可。
 
 ## 5. 新需求接入
 
-当前产品能力线为 **docs_tdd v3.5**，**v3.5.0 / stable** 已于 2026-09-23 通过 `docs-tdd guard --strict`、规则发布和 golden 回归；pilot 仍为 collecting，未宣称 production-ready。自 2026-09-08 起，新需求默认使用第二代 work-item 协议（兼容标识 `workflowVersion: 2`）；存量 `workflowVersion: 1` 项目继续使用第一代流程，不静默迁移。统一入口与完整步骤见 [common/rules/new-project-kickoff.md](./common/rules/new-project-kickoff.md) §2。
+新需求统一按 [common/rules/web-lite-workflow.md](./common/rules/web-lite-workflow.md)：`PRD → 最小 Task → worktree → coding（API 未就绪时 + MSW）→ 冷读 check → git add / commit`。只做 Web；PRD 单次完整读取；同一 revision 不重拉；Task 默认是对话中的短 checklist；不运行 G0–G8 或 v2 work-item 引擎。
 
-### 5.1 v3.5 新项目（`workflowVersion: 2`，默认）
+### 5.1 存量项目兼容
 
-1. 运行 `docs-tdd kickoff <PROJECT-ID> --prd <source> --title <title>`，创建最小项目并初始化 `work-item.json`。
-2. 从当前 source snapshot 抽取原子需求与 surface，完成独立冷读 coverage review 和风险路由；V2 必须取得绑定当前 fingerprint 的 human scope approval。
-3. 范围审查完成前禁止写业务代码；实现和证据必须绑定当前 `headSha + dirtyHash`。
-4. 运行 `docs-tdd verify <PROJECT-ID> --input <verify-input.json>` 写正式出口。只有 `mode=enforced,status=passed,ok=true` 可以交付；failed/blocked 一律阻断。
-5. v2 不运行 G0–G8 Gate；默认持久化事实仅为 `work-item.json`、`latest-result.json`、`runs.jsonl`（首次 verify 前可只有 work-item）。
-
-### 5.2 v1 存量与显式 legacy 项目
-
-只有用户明确要求时，使用 `docs-tdd kickoff ... --legacy` 新建 v1。v1 继续执行 [common/rules/prd-feature-inventory.md](./common/rules/prd-feature-inventory.md) §3：G0 前建 feature inventory，G2 标记做/不做/延期并确认，G2 未定稿前不写业务代码；后续按 G0–G8 Gate 推进。
-
-### 5.3 共同约束
-
-- 原始 PRD / Figma / API / QA 只放当前项目 `inbox/`，不要放根目录。
-- 新项目启动先做规则继承检查；发现旧项目可复用规则尚未进入 `common/`，先提炼公共规则。
-- 项目文档和脚本必须保持薄包装，不复制公共规则或公共脚本实现。
-- 接手存量项目时以 README `workflowVersion` 路由；缺字段按 v1 兼容，不因缺少 v1 清单而把 v2 项目降级。
+- 存量 v1/v2 项目的 PRD / Figma / API / QA 只放对应项目 `inbox/`，不要放根目录；新需求遵循 Web Lite，不复制 PRD 到本目录。
+- 已有 `workflowVersion: 1` / `workflowVersion: 2` 的项目按原协议完成；不静默迁移、不把旧台账要求施加给新需求。
+- 存量文档和脚本仅在处理对应旧项目时加载；新需求不因历史工具存在而创建项目目录、状态 JSON 或证据套件。
 
 ## 6. 规则沉淀机制
 

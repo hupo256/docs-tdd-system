@@ -1,6 +1,6 @@
-# docs_tdd v3.5 正式工作流
+# docs_tdd v3.5 / workflowVersion 2 历史工作流说明
 
-> 状态：**正式启用（enforced）**。当前框架发布版本为 **v3.5**，使用第二代 work-item 协议；项目文件中的稳定兼容标识仍为 `workflowVersion: 2`。自 2026-09-08 起，该协议作为新需求默认系统；第一代流程只服务存量 `workflowVersion: 1` 项目和显式 `--legacy` 项目。历史切换决策见 [cutover-decision-20260908.md](./cutover-decision-20260908.md)。
+> **当前路由优先**：新需求默认使用 [../rules/web-lite-workflow.md](../rules/web-lite-workflow.md)。本文记录 v3.5 / `workflowVersion: 2` 的设计与运行方式，仅用于维护已有 v2 项目，不作为新需求入口。以下“当前/正式”均指该 v2 协议的历史生效状态；切换记录见 [cutover-decision-20260908.md](./cutover-decision-20260908.md)。
 
 项目编号支持大写 `PR-xxxxx` 与 `TR-xxxxx`（五位数字）；本文命令里的 `PR-01234` 仅作示例。
 

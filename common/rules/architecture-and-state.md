@@ -1,6 +1,6 @@
 # 架构、数据与状态公共规则
 
-> AI 主用文档：祈使式规则清单，非教程。章节号被外部文档锚点引用（§3.1/§8/§8.1/§8.2），勿改编号。路线 A 拆除税（原 §8.0/§8.0.1/§8.0.3/§8.3）已移至 [mock-legacy-route-a.md](./mock-legacy-route-a.md) 并沿用同编号。
+> 本文包含两类内容：§1-7 是按需加载的代码架构参考；§8 的项目 Gate、台账与证据流程仅适用于 workflowVersion 1/2 存量项目。新需求的 API readiness/MSW 规则以 [web-lite-workflow.md](./web-lite-workflow.md) 为准，不创建 assumptions、manifest 或 waiver 台账。章节号被外部文档锚点引用（§3.1/§8/§8.1/§8.2），勿改编号。路线 A 拆除税（原 §8.0/§8.0.1/§8.0.3/§8.3）已移至 [mock-legacy-route-a.md](./mock-legacy-route-a.md) 并沿用同编号。
 
 ## 1. 默认分层
 
@@ -130,9 +130,11 @@ Modal、分享渠道行、底部浮层、分页、状态 CTA **必须先 grep �
 
 快速通道里非 API 的临时业务语义（权限、金额精度、状态机、路由、核心交互）不塞进字段假设台账，统一登记到 [fast-track-incomplete-docs.md](./fast-track-incomplete-docs.md) 定义的 `agent/fast-track.json`；只有语义已确认或有人签认了默认安全、可逆的临时契约才允许实现，Mock 只模拟该契约，不负责发明契约。
 
-## 8. Mock 策略：默认 MSW 路线 B，临时脚手架、零残留
+## 8. 存量项目 Mock 策略：workflowVersion 1/2
 
-**默认主路径（硬性）**：新功能一律走 **MSW 路线 B**（§8.4.1）——service/hook/mapper 从第一天只写真实请求，mock 只在 `src/mocks/handlers/`，mock 从不进生产代码路径，结构上不可能残留。不采用 MSW 必须先在 `agent/rule-waivers.json` 登记豁免。**遗留 `if(USE_MOCK)` 路线 A 的隔离/拆除税已移至 [mock-legacy-route-a.md](./mock-legacy-route-a.md)**（仅未采用 MSW 的存量功能读），本文件只保留两路线通用关卡。
+本节中的 manifest、assumptions、waiver、Gate 和证据要求仅用于对应存量项目；不得带入 Web Lite 新需求。Web Lite 的 MSW 约定以 [web-lite-workflow.md](./web-lite-workflow.md) 为准。
+
+**存量项目主路径**：适用项目按 **MSW 路线 B**（§8.4.1）实施；service/hook/mapper 从第一天只写真实请求，mock 只在 `src/mocks/handlers/`。存量项目的 waiver 和验收要求仍按原规则执行。**遗留 `if(USE_MOCK)` 路线 A 的隔离/拆除税已移至 [mock-legacy-route-a.md](./mock-legacy-route-a.md)**。
 
 **两路线通用关卡（无论走哪条都做）**：字段假设标记（§8.0.2）→ 真实接口字段对账（§8.1）→ 真实接口后禁假默认兜底（§8.2）。Mock 只是真实接口 ready 前写 UI/UX 的临时脚手架，非长期并存层。**全节以 §8.-1 四阶段生命周期为时间线主轴。**
 
@@ -206,7 +208,7 @@ const optionalText = (v?: string) =>
 
 机器兜底：`CODE-MOCK-003`（verify-code-rules.mjs，warn-first）扫 `apps/web/src/apps/**` 与 mapper 新增行里 `?? '字面量'` / `|| '非--文案'` 的可疑展示兜底，提示人工确认是否假默认；稳定后提 error。
 
-### 8.4 路线 B：MSW 强制标准路线
+### 8.4 路线 B：存量项目 MSW 标准路线
 
 新功能一律用 MSW 在网络层拦截请求；service/hook/mapper/组件只实现真实请求链路。**PR-01947 已作为首个固化范例验证**「停用 handler 即切真实接口，业务代码不因拆 mock 而修改」，试点结项后本路线晋级为**强制标准**：`DOC-G3-IMPL-001..006` 自模板 v4 起硬阻断（trial+since:4，见 [rule-id-ledger.md](./rule-id-ledger.md)），存量低版本项目 warn。历史决策过程只在 [CHANGELOG.md](../CHANGELOG.md) 保留。遗留 `if (USE_MOCK)` 功能才消费 [mock-legacy-route-a.md](./mock-legacy-route-a.md)。
 

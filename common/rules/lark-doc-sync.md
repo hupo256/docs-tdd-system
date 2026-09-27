@@ -1,6 +1,6 @@
 # Lark 文档只读同步规则
 
-> 本文描述用 Lark 官方 `lark-cli` 读取 PRD / Wiki / Drive 资料，以及把本地 Markdown PRD 同步到 `docs_tdd` 的规则。群内 @ 应用任务链路见 [lark-bot 子系统文档](../lark-bot/docs/README.md)。
+> 本文只适用于需要将来源持久化到项目 `inbox/` 的 workflowVersion 1/2 存量项目。新需求按 [web-lite-workflow.md](./web-lite-workflow.md) 直接一次性读取用户给定来源，不同步到 `docs_tdd`、不重复拉取同一 revision。群内 @ 应用任务链路见 [lark-bot 子系统文档](../lark-bot/docs/README.md)。
 
 ## 1. 目标
 
@@ -106,6 +106,8 @@ LARK_CLI_BIN=/path/to/lark-cli node apps/web/docs_tdd/prds/<PROJECT-ID>/agent/sc
 - 同步成功后，开发依据是本地副本和 `sync-report.md`；同步失败时进入待确认或失败，不拿旧 PRD 冒充最新。
 
 ## 8. 富媒体与删除线读取规则
+
+> 本节的 intake manifest、PRD drift 和 G2 动作只用于 workflowVersion 1/2 存量项目。Web Lite 按用户给定 revision 单次完整读取；无法读到影响 Web 的内容时说明具体缺口，不重试或改读其他 revision。
 
 Lark CLI 导出的 Markdown 不是完整视觉还原稿。Agent 读取 PRD 时必须同时检查正文、表格、图片、白板 / 思维导图占位和删除线，不能把“CLI 已导出 Markdown”等同于“全部需求已读”。
 

@@ -1,6 +1,6 @@
-# 新项目编码 worktree 规则
+# 存量项目编码 worktree 规则
 
-> AI 主用。主仓只做资料/规则沉淀，业务代码在独立分支 + 独立 worktree 完成，编码前本地页面已能跑。章节号 §7 被外链引用，勿改编号。
+> 仅适用于已有 workflowVersion 1/2 项目。新需求按 [web-lite-workflow.md](./web-lite-workflow.md) 建立独立 worktree，不执行本文的 Gate、登记表和启动前置项。章节号 §7 被外链引用，勿改编号。
 
 ## 1. 触发时机
 
@@ -20,6 +20,8 @@
 | 开发分支 | `feature/<PROJECT-ID>` | `feature/PR-01234` |
 | 文档来源 | 主仓 `apps/web/docs_tdd` | `/Users/aven/github/fameex-web/apps/web/docs_tdd` |
 | worktree 文档入口 | **必须**软链到主仓 `docs_tdd`（§6） | `/Users/aven/github/PR-01234/apps/web/docs_tdd` |
+
+临时 worktree 必须位于主仓 checkout 同级的 `~/github/` 下；不得放在主仓内部或 `~/.codex/worktrees/`。本规则的项目编号目录（如 `~/github/PR-01234`）符合此要求。
 
 ### 端口分配
 

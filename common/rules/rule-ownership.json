@@ -5,6 +5,7 @@
     "consumerDefines": "trigger-and-source-reference-only"
   },
   "topics": {
+    "web-lite-workflow": { "source": "web-lite-workflow.md" },
     "workflow-gates": { "source": "workflow-gates.md" },
     "fast-track-incomplete-docs": { "source": "fast-track-incomplete-docs.md" },
     "project-structure": { "source": "project-doc-structure.md" },

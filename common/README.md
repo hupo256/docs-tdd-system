@@ -1,21 +1,22 @@
 # common 公共规则入口
 
-`common/` 是新项目继承项目流程、门禁、自测、边界和证据规则的唯一公共入口。项目目录只放当前需求的差异化规则、PRD、Figma、API 和任务。通用代码质量归全局 AGENTS/skill，FameEX 代码锚点归 `.cursor/rules/*.mdc`；本目录只记录何时加载、如何验证、证据落哪里。
+新需求默认使用 [Web Lite 流程](./rules/web-lite-workflow.md)；`common/` 提供它需要的流程规则，以及 workflowVersion 1/2 存量项目的兼容专题。新需求不创建项目台账或证据目录。通用代码质量归全局 AGENTS/skill，FameEX 代码锚点归 `.cursor/rules/*.mdc`。
 
 项目编号统一使用大写 `PR-xxxxx` 或 `TR-xxxxx`（五位数字）；下方命令中的 `PR-01234` 仅为示例，两类编号均由同一工具链支持。
 
-> **开工不要全读本索引**：常驻只读 [rule-router.md](./rules/rule-router.md)，再执行 `docs-tdd.mjs context <PROJECT-ID> <SCENARIO>` 读取带 fingerprint 的临时 context pack。下面是**专题全索引，供人工查阅**，不是每次全读清单。
+> **开工不要全读本索引**：新需求只读 [rule-router.md](./rules/rule-router.md) 和命中的 Lite/编码专题，不运行 `docs-tdd context`。下面是**专题全索引，供人工查阅**，不是每次全读清单。
 
 ## 专题全索引（查阅用）
 
 1. [rule-router.md](./rules/rule-router.md)：**渐进披露路由表**（开工唯一常驻入口，按场景命中才读正文）。
-2. [new-project-kickoff.md](./rules/new-project-kickoff.md)：新 chat 一句话启动项目的双协议自动链路（v3.5 默认创建 `workflowVersion: 2`，第一代流程需 `--legacy`）。
-3. [startup-prompt.md](./rules/startup-prompt.md)：新需求启动口令模板。
-4. [rule-index.json](./rules/rule-index.json)：机器可读场景路由索引。
+2. [web-lite-workflow.md](./rules/web-lite-workflow.md)：新需求默认流程（PRD → 最小 Task → worktree → coding/MSW → 冷读 check → 本地提交）。
+3. [new-project-kickoff.md](./rules/new-project-kickoff.md)：新需求启动口令与 Lite 链路参考；实际路由以 rule-router 为准。
+4. [startup-prompt.md](./rules/startup-prompt.md)：可选的新需求启动口令模板。
+5. [rule-index.json](./rules/rule-index.json)：机器可读场景路由索引。
    - [rule-ownership.json](./rules/rule-ownership.json)：专题唯一正文所有权表；Router、Gate、模板只消费，不复制正文。
 5. [rule-inheritance.md](./rules/rule-inheritance.md)：规则如何从旧项目沉淀到公共区。
-6. [prd-feature-inventory.md](./rules/prd-feature-inventory.md)：**PRD 全量功能清单与范围 SSOT**（「做 / 不做 / 延期」只在 `00-feature-inventory.md` 裁决，防 Figma 边界误裁和多文档漂移）。
-7. [workflow-gates.md](./rules/workflow-gates.md)：G0-G8 开发门禁（含 G3 MSW 前置、G5 字段对账、G6 自动验收）。
+6. [prd-feature-inventory.md](./rules/prd-feature-inventory.md)：存量 workflowVersion 1 的 PRD 功能清单与范围规则。
+7. [workflow-gates.md](./rules/workflow-gates.md)：存量 workflowVersion 1 的 G0-G8 开发门禁（含 MSW、字段对账与验收）。
    - [fast-track-incomplete-docs.md](./rules/fast-track-incomplete-docs.md)：**文档未齐快速通道**（按语义确定性/可逆性/影响面决定能否用临时契约推进；`reuse-api` 连续推进，`pending-api` 在 G6-partial 后停靠）。
 8. [rule-ids-and-gates.md](./rules/rule-ids-and-gates.md)：规则 ID、阶段 gate、只扫新增/修改文件的静态检查。
    - [blocking-and-change-protocol.md](./rules/blocking-and-change-protocol.md)：阻塞与需求变更的机器可读单一源 `agent/blockers.json`（`DOC-BLOCK-*`，gate 能拦、交付摘要能派生）。
@@ -39,7 +40,7 @@
 25. [collaboration-and-notifications.md](./rules/collaboration-and-notifications.md)：协作通知总入口和安全边界。
 26. [lark-active-notification.md](./rules/lark-active-notification.md)：自定义机器人主动发群消息（G0-G8）规则。
 27. [lark-bot 子系统文档](./lark-bot/docs/README.md)：群内 @ 应用触发任务的完整链路（线程文字/图片上下文、项目 scope 注入、Figma 规格预取、bug 表跨项目回执、附件保留期与并行调度）运维手册；不是编码规则，不参与规则指纹。
-28. [lark-doc-sync.md](./rules/lark-doc-sync.md)：Lark CLI 只读同步 PRD / Wiki / Drive / Markdown 到 `docs_tdd` 的规则；PRD intake 使用剥离易变媒体元数据的稳定指纹，历史 manifest 可就地 `--remigrate`。
+28. [lark-doc-sync.md](./rules/lark-doc-sync.md)：workflowVersion 1/2 存量项目的 Lark 来源同步与 PRD intake；新需求直接单次读取给定来源。
 29. [project-doc-structure.md](./rules/project-doc-structure.md)：项目文档目录规范。
 30. [CHANGELOG.md](./CHANGELOG.md)：公共规则、gate 脚本和模板的框架变更日志。
 
@@ -79,7 +80,7 @@
 | 发送 Lark 阶段卡片 | `node apps/web/docs_tdd/common/engine/agent-scripts/notify-lark.mjs G6 已完成 "摘要" --config apps/web/docs_tdd/prds/PR-01234/agent/scripts/pr-01234.json` |
 | 创建编码 worktree | `node apps/web/docs_tdd/common/engine/agent-scripts/prepare-coding-worktree.mjs PR-01234` |
 | 字段对账（schema vs fixture） | `node apps/web/docs_tdd/common/engine/agent-scripts/schema-fixture-reconcile.mjs` |
-| 新建项目（默认 v3.5 / `workflowVersion: 2`） | `node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs kickoff PR-01234 --prd <Lark URL 或本地 md>`；显式第一代流程加 `--legacy` |
+| 新建 workflowVersion 1/2 存量协议项目（仅显式要求时） | `node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs kickoff PR-01234 --prd <Lark URL 或本地 md>` |
 | source graph 检查 | `node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs source-graph PR-01234 [--json]` |
 | 第二代协议正式交付验证 | `node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs verify PR-01234 --input <verify-input.json>` |
 | 只读同步 Lark 资料 | `node apps/web/docs_tdd/common/engine/agent-scripts/sync-lark-docs.mjs --config apps/web/docs_tdd/prds/PR-01234/agent/lark-sources.json` |
@@ -95,13 +96,12 @@
 
 - 修改规则后先跑公共自检，再依次执行 `rule-release.mjs --write`、`effective-rules.mjs --write` 和 `docs-tdd doctor`；`context/changed/gate` 只消费两层 fresh release。
 - 新项目启动时只从 `common/` 继承公共规则。
-- 用户用“根据 apps/web/docs_tdd 下的文档，开始新的需求...”启动时，Agent 必须先执行 [new-project-kickoff.md](./rules/new-project-kickoff.md)。
+- 新需求按 [rule-router.md](./rules/rule-router.md) 与 [web-lite-workflow.md](./rules/web-lite-workflow.md) 执行；启动模板可选，不运行旧引擎 kickoff。
 - 旧项目里发现可复用规则，必须提炼到 `common/`，再继续当前项目。
 - 项目 `engineering/development-rules.md` 只写特殊约束，不复制整份公共规则。
 - 每次发现“以前定过但新项目没继承”，视为文档流程缺陷，先补 `common/`。
 - 维护 `docs_tdd` 时先按 [rule-inheritance.md](./rules/rule-inheritance.md) §0.1/§0.2 判断载体；不要把 L1/L2 代码规范正文复制进 L3。
-- 新需求默认按 [new-project-kickoff.md](./rules/new-project-kickoff.md) 使用 v3.5 创建 `workflowVersion: 2` 项目；原子需求、coverage review、风险路由完成后再写代码，V2 额外要求 human scope approval。
-- 存量 v1 / 显式 `--legacy` 项目才执行 [prd-feature-inventory.md](./rules/prd-feature-inventory.md) §3 和 G0–G8；不把 v1 产物要求施加到 v2。
-- 项目正式出口按版本选择：v2 运行 `docs-tdd.mjs verify <PROJECT-ID> --input <verify-input.json>`；v1 运行 `docs-tdd.mjs gate <PROJECT-ID> <GATE>`。二者不可混用。
-- 新需求进入编码前：Agent 必须按 [coding-worktree.md](./rules/coding-worktree.md) 创建或确认同级 worktree，不在主仓直接改业务代码。
+- 新需求默认按 [web-lite-workflow.md](./rules/web-lite-workflow.md)；不创建 workflowVersion、项目状态台账或 evidence 套件。
+- 已有 v1 项目继续执行 [prd-feature-inventory.md](./rules/prd-feature-inventory.md) §3 和 G0–G8；已有 v2 项目继续使用其 work-item/verify。不得静默迁移。
+- 只有恢复存量项目或用户明确要求旧协议时，才使用 `docs-tdd.mjs run/kickoff/verify/gate` 与 [coding-worktree.md](./rules/coding-worktree.md)。
 - v1 项目进入 G2 / G5 / G6 / G7 / G8 前：Agent 必须按 [rule-ids-and-gates.md](./rules/rule-ids-and-gates.md) 依次跑对应 gate；v2 不运行这条 Gate 链。

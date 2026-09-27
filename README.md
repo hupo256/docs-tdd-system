@@ -1,18 +1,22 @@
-# docs_tdd v3.5 - 可移植的 AI 前端开发规则与门禁系统
+# docs_tdd - Web Lite 默认流程与存量规则库
 
-> 当前产品能力线：**v3.5**。截至 2026-09-23，**v3.5.0 / stable** 已通过 `docs-tdd guard --strict`、规则发布和 golden 回归；pilot 仍为 collecting，未宣称 production-ready。项目文件中的兼容路由标识仍为 `workflowVersion: 2`，它不是产品发布版本。
+> 新需求的唯一默认流程是 [Web Lite](./common/rules/web-lite-workflow.md)。docs_tdd v3.5 / `workflowVersion: 1|2` 的引擎和文档只用于恢复、维护已有项目；不再作为新需求入口。
 
-一套**独立**的 AI 前端开发操作系统：新需求默认使用第二代 work-item 流程的「原始需求 → 独立覆盖审查 → 风险分级 → 当前代码证据 → 单一正式出口」，存量项目兼容第一代 G0–G8 门禁；两条工作流都只认机器可验证证据。引擎与业务仓库通过 `docs-tdd.config.json` + 一个软链解耦；**目前只在一个仓库（`@fameex/web`）真实验证过，移植到第二个仓库需要改动下列锚点**（见[可移植性的真实边界](#可移植性的真实边界)）。
+新需求只走：`PRD → 最小 Task → worktree → coding（API 未 ready 时 + MSW）→ 冷读 check → git add / commit`。只交付 Web；用户给定的 PRD 单次完整读取；默认不落项目台账、不跑 G0-G8 或 v2 work-item/verify，不 push。完整约束和失败处理见 [Web Lite 规范](./common/rules/web-lite-workflow.md)。
 
-> 本仓库是从某前端工程中沉淀、抽离出的独立系统，经多轮真实项目迭代。作为个人知识库独立版本管理，不含任何业务机密以外的通用方法论。
+v3.5、引擎、模板和 PRD 历史仍保留，用于已有 workflowVersion 项目兼容；它们不改变新需求的默认流程。新流程不依赖 OpenSpec、spec-kit 或额外编排器。
 
-## 它解决什么
+## 默认流程
 
-AI 编码的两个顽疾：**跳过需求确认直接写码**、**规则散落导致每次重新解释**。docs_tdd v3.5 用 `work-item.json` 固定原始需求、覆盖审查、风险等级和证据，并由 `latest-result.json` 给出唯一正式结论；抽取先经过确定性 intake audit，独立 Reviewer 在同一 source lifecycle 总计最多两轮；仍未通过时允许先实现，但测试交接前必须人工逐 finding 核对并完成一次真实预提测运行（CLI 预填，人工只确认必要结果），第一代 G0–G8 仅作为存量兼容。AI「已读/已注意」不算数，只认执行契约产出的证据。
+1. 从用户给定链接或本地文件一次性完整读取 PRD，只抽取 Web 范围并形成简短 Task。
+2. Task 明确后检查 Git 状态，在隔离 worktree 中完成需求；API 未 ready 或无法确认时按 endpoint 使用 MSW 最小数据。
+3. 冷读核对 Task、diff 和可见页面，做有价值的定向验证，复核后本地提交。
 
-v3.5 把流程继续收敛为 requirement-to-commit：四档效率路由（`micro`、`lite`、`standard`、`high-risk`）带显式效率目标；safe work context、隔离 worktree、环境分支和路径边界共同阻断越界写入；source graph、requirement/surface/evidence 对账和四项目 replay 用于发现漏项与漂移；`source`、`review`、`code`、`browser`、`environment`、`external-dependency` 六类失败进入有界修复，同指纹不重复重试。时间、命令和证据目标超标只记录 `target-exceeded` 并停止非必要扩张，不中断需求交付；真实失败保持原失败类型并给唯一恢复命令。交付真值只接受当前 enforced PASS、`autonomous/cli-attested`、完整性与新鲜度、匹配的冻结路径、非空 delivery commit SHA 和 clean Git scope。pilot 仍为 `collecting`，尚未宣称 production-ready。
+仅在歧义实质影响 Web 行为、正确性或安全时提问。读取失败报告具体原因，不循环重试；API ready 后按 endpoint 对账并切换真实请求。新需求无需额外安装流程工具。
 
-规则本身遵循「**规则可变多，常驻恒定小**」：AI 开工只常驻读一个路由文件（`common/rules/rule-router.md`，≤5000 字符机器守），其余按场景加载，避免上下文膨胀。v2 实现上下文对 V0/V1 保持 4K 硬上限；V2 使用 8K 目标、24K 硬上限，处于两者之间时显式警告但不中断大型需求。
+## 存量兼容
+
+已有 workflowVersion 1 项目继续使用 G0-G8；已有 workflowVersion 2 项目继续使用原 work-item/verify。按项目 README 恢复，不静默迁移。下文的 v3.5 引擎命令、安装和详细协议均属存量文档，不适用于新需求。
 
 ## 架构
 
@@ -20,9 +24,9 @@ v3.5 把流程继续收敛为 requirement-to-commit：四档效率路由（`micr
 | --- | --- | --- |
 | **常驻路由** | 开工唯一入口：启动协议 + 硬规则 + 场景表 | [common/rules/rule-router.md](./common/rules/rule-router.md) |
 | **按需专题** | 架构/状态/API/Mock/UI/Figma/协作/门禁等规则，命中场景才加载 | `common/rules/*.md`（人工索引见 [common/README.md](./common/README.md)，机器路由见 `common/rules/rule-index.json`） |
-| **流程引擎** | 阶段验证、机器事实层、发布指纹、golden 自回归 | `common/engine/` |
-| **模板** | 新需求复制使用的文档骨架 | `templates/` |
-| **项目实例** | 各需求的文档/证据（清单见自动生成的 [PROJECTS.md](./PROJECTS.md)） | `prds/<PROJECT-ID>/` |
+| **流程引擎** | workflowVersion 1/2 存量项目的阶段验证与兼容工具 | `common/engine/` |
+| **模板** | 存量协议使用的项目文档骨架 | `templates/` |
+| **项目实例** | 存量需求的文档/证据（清单见 [PROJECTS.md](./PROJECTS.md)） | `prds/<PROJECT-ID>/` |
 
 运行环境必须提供 Node.js、Git 与 ripgrep（`rg`）；`docs-tdd doctor` 会对缺失依赖 fail-closed。核心命令统一走 `<mount>/common/engine/agent-scripts/docs-tdd.mjs`。下表中的 `docs-tdd` 是 `node <mount>/common/engine/agent-scripts/docs-tdd.mjs` 的阅读简写：
 
@@ -127,7 +131,7 @@ node apps/web/docs_tdd/common/engine/agent-scripts/docs-tdd.mjs doctor
 
 命令统一走 `<mount>/common/engine/agent-scripts/docs-tdd.mjs`（下文简写 `docs-tdd`）。
 
-### 默认：v3.5 工作流
+### 存量兼容：v3.5 / workflowVersion 2
 
 v3.5 是当前产品版本；项目文件继续使用 `workflowVersion: 2` 作为第二代协议的稳定兼容标识。风险等级 `V0/V1/V2` 也不是产品版本：V0 是严格受限的局部微改，V1 是多影响面或中等风险，V2 是资金、权限、新 API、跨应用等高风险变更并要求人工确认范围。效率路由会在这些风险等级内进一步选择 `micro`、`lite`、`standard` 或 `high-risk`，并为 context、规则、命令、evidence、repair 和 elapsed 设置预算。
 
@@ -290,6 +294,6 @@ node <mount>/common/engine/agent-scripts/decommission-worktree.mjs PR-01234
 
 ## 规则继承原则
 
-- `common/` 是新项目继承规则的唯一公共入口；项目目录只沉淀当前需求的差异，一旦可跨项目复用必须回写 `common/`。
+- 新需求按 [Web Lite 规范](./common/rules/web-lite-workflow.md)，默认不创建项目目录；已有 v1/v2 项目从 `common/` 按对应协议恢复。
 - 跨项目脚本有公共实现，项目脚本只做薄包装。
 - 通用 React/TypeScript 手艺归全局 AI 规则与 skill，框架代码锚点归各仓库 `.cursor/rules`；`docs_tdd` 只承载项目流程、门禁、Mock 策略、证据与豁免。详见 [common/rules/rule-inheritance.md](./common/rules/rule-inheritance.md)。
