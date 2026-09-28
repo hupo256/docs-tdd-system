@@ -2,7 +2,7 @@
 
 > 新需求的唯一默认流程是 [Web Lite](./common/rules/web-lite-workflow.md)。docs_tdd v3.5 / `workflowVersion: 1|2` 的引擎和文档只用于恢复、维护已有项目；不再作为新需求入口。
 
-新需求只走：`PRD → 最小 Task → worktree → coding（API 未 ready 时 + MSW）→ 冷读 check → git add / commit`。只交付 Web；用户给定的 PRD 单次完整读取；默认不落项目台账、不跑 G0-G8 或 v2 work-item/verify，不 push。完整约束和失败处理见 [Web Lite 规范](./common/rules/web-lite-workflow.md)。
+新需求只走：`PRD → 最小 Task → worktree → coding（仅必要时 + MSW）→ 冷读 check → git add / commit`。只交付 Web；用户给定的 PRD 单次完整读取；默认不落项目台账、不跑 G0-G8 或 v2 work-item/verify，不 push。完整约束和失败处理见 [Web Lite 规范](./common/rules/web-lite-workflow.md)。
 
 v3.5、引擎、模板和 PRD 历史仍保留，用于已有 workflowVersion 项目兼容；它们不改变新需求的默认流程。新流程不依赖 OpenSpec、spec-kit 或额外编排器。
 

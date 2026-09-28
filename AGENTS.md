@@ -38,7 +38,7 @@ Codex/Claude/Pi 侧编码规则入口不放在 `docs_tdd`：短硬规则常驻 `
 
 ## 5. 新需求接入
 
-新需求统一按 [common/rules/web-lite-workflow.md](./common/rules/web-lite-workflow.md)：`PRD → 最小 Task → worktree → coding（API 未就绪时 + MSW）→ 冷读 check → git add / commit`。只做 Web；PRD 单次完整读取；同一 revision 不重拉；Task 默认是对话中的短 checklist；不运行 G0–G8 或 v2 work-item 引擎。
+新需求统一按 [common/rules/web-lite-workflow.md](./common/rules/web-lite-workflow.md)：`PRD → 最小 Task → worktree → coding（仅必要时 + MSW）→ 冷读 check → git add / commit`。只做 Web；PRD 单次完整读取；同一 revision 不重拉；Task 默认是对话中的短 checklist；不运行 G0–G8 或 v2 work-item 引擎。
 
 ### 5.1 存量项目兼容
 

@@ -5,13 +5,13 @@
 
 ## 1. 新需求默认流程
 
-新需求唯一默认流程：`PRD → 最小 Task → worktree → coding（API 未 ready 时 + MSW）→ 冷读 check → git add / commit`。
+新需求唯一默认流程：`PRD → 最小 Task → worktree → coding（仅必要时 + MSW）→ 冷读 check → git add / commit`。
 
 - **范围**：只交付 Web；纯非 Web 内容忽略。只有影响 Web 行为/契约或阻碍正确实现时才纳入说明或提问。
 - **来源**：用户提供的 PRD 按定稿处理；一次完整读取正文及相关表格/图片/嵌入内容。同一来源/revision 不重复 fetch、同步或漂移校验；只有用户通知改版才读新版本。读取失败说明具体缺口并停止依赖该内容的工作，不循环重试。
-- **Task**：默认在当前对话中形成短 checklist；不建重型目录、JSON 状态、逐条测试映射或人工签核。只在确需跨会话恢复时保存单个 `task.md`。仅就实质影响 Web 行为、正确性或安全的歧义提问。
+- **Task**：默认在当前对话中形成短 checklist；PRD 明确指定的 hover/tooltip 等 UI 文案须逐字记录并带来源位置，基于本轮已读取内容核对完整；不建重型目录、JSON 状态、逐条测试映射或人工签核。只在确实缺失且实质影响 Web 行为、正确性或安全时提问。
 - **工作区**：编码前检查 Git 状态并使用独立 worktree。worktree 必须放在主仓 checkout 的同级 `~/github/` 下（如 `~/github/docs_tdd-<task>`），不得放入主仓内部或 `~/.codex/worktrees/`。新需求 `feature/<PROJECT-ID>`，缺陷 `fix/<PROJECT-ID>`；按 [git-branch-flow.md](./git-branch-flow.md) 操作，不覆盖已有或未知改动。
-- **API / MSW**：目标环境 API 已 ready 用真实请求；未 ready 或无法确认时按 endpoint 用 MSW 最小数据完成 UI/UX。隔离 handler，不在业务代码加 mock 分支；API ready 后对账并逐 endpoint 切真实请求。
+- **API / MSW**：默认沿用现有真实请求，API 未 ready 或无法确认不自动引入 MSW。先用现有数据和定向验证覆盖页面状态；仅关键 UI/UX 状态缺少可用数据、确需反复走正式请求链时，才对新增能力局部启用最小 MSW，旧业务请求保持真实链路。API ready 后对账并清理实际使用的本需求 MSW；未对账不得提测。
 - **检查与交付**：冷读对照 Task、diff、页面，不重拉同一 PRD。只运行有价值的定向验证；稳定后集中执行一次。复核 diff 后只暂存本需求改动并本地 commit；未经当次明确授权不 push。
 - 详细步骤见 [web-lite-workflow.md](./web-lite-workflow.md)；启动口令见 [startup-prompt.md](./startup-prompt.md)。
 

@@ -13,7 +13,7 @@
 1. 读 [rule-router.md](./rule-router.md)，新需求只加载 `web-lite-workflow.md` 和确实命中的编码专题。
 2. 单次完整读取给定的定稿 PRD，抽取 Web 范围为简短 Task checklist；不重复读取同一 revision，不运行 `docs-tdd run/kickoff`，不创建重型项目台账。
 3. Task 明确后检查仓库状态，在独立 worktree 建立 `feature/<PROJECT-ID>` 或 `fix/<PROJECT-ID>`；遵守 [git-branch-flow.md](./git-branch-flow.md)。不覆盖已有目录、分支或未识别改动。
-4. 实现 Task 中的 Web 行为。API 已 ready 则用真实请求；API 未 ready 或无法确认时，按 endpoint 用 MSW 最小数据完成 UI/UX。
+4. 实现 Task 中的 Web 行为，默认沿用真实请求。API 未 ready 或无法确认只标记待联调/核实；仅关键 UI/UX 需要反复走请求链模拟时局部使用最小 MSW。真实契约对账并清理本需求 MSW 后才能提测。
 5. 冷读核对 Task、diff 和可见页面；按改动做最小有效验证。不重新拉 PRD，不建 G0-G8 / v2 evidence 套件。
 6. 复核改动范围后 `git add`、`git commit`。不 push，除非用户在当前请求明确授权。
 
