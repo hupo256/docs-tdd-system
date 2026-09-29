@@ -12,7 +12,7 @@
 2. [web-lite-workflow.md](./rules/web-lite-workflow.md)：新需求默认流程（PRD → 最小 Task → worktree → coding/MSW → 冷读 check → 本地提交）。
 3. [new-project-kickoff.md](./rules/new-project-kickoff.md)：新需求启动口令与 Lite 链路参考；实际路由以 rule-router 为准。
 4. [startup-prompt.md](./rules/startup-prompt.md)：可选的新需求启动口令模板。
-5. [rule-index.json](./rules/rule-index.json)：机器可读场景路由索引。
+   - [rule-index.json](./rules/rule-index.json)：机器可读场景路由索引。
    - [rule-ownership.json](./rules/rule-ownership.json)：专题唯一正文所有权表；Router、Gate、模板只消费，不复制正文。
 5. [rule-inheritance.md](./rules/rule-inheritance.md)：规则如何从旧项目沉淀到公共区。
 6. [prd-feature-inventory.md](./rules/prd-feature-inventory.md)：存量 workflowVersion 1 的 PRD 功能清单与范围规则。

@@ -3,46 +3,41 @@
   "assumptions": [
     {
       "id": "ASM-001",
-      "endpoint": "GET/PUT /v1/api-dynamic-fee/config",
-      "field": "tiers[].level,min_volume_usdt,max_volume_usdt,maker_fee_rate_percent,taker_fee_rate_percent,rebate_ratio_percent",
+      "endpoint": "POST /fe-coadmin-api/api_fee_tier_list; POST /fe-coadmin-api/api_fee_tier_edit",
+      "field": "tiers[].tier,volumeMin,volumeMax,makerRate,takerRate,rebateRate",
       "code": [
         "apps/futures-admin/src/apps/FutureApiDynamicFeeConfig/api.ts",
-        "apps/futures-admin/src/apps/FutureApiDynamicFeeConfig/contract.ts",
-        "apps/futures-admin/src/mocks/pr02208/fixtures.ts",
-        "apps/futures-admin/src/mocks/pr02208/handlers.ts"
+        "apps/futures-admin/src/apps/FutureApiDynamicFeeConfig/utils/useApiDynamicFeeConfig.ts"
       ],
       "owner": "合约后台 API owner",
-      "status": "open",
+      "status": "resolved-by-documented-contract",
       "blockingWhen": "api-ready",
-      "resolution": "正式接口部署后逐字段核对 URL、method、nullable、精度和响应 envelope，再删除对应 MSW handler。"
+      "resolution": "YApi 6514/6517: POST /fe-coadmin-api/api_fee_tier_list and api_fee_tier_edit; tier,volumeMin,volumeMax,makerRate,takerRate,rebateRate. See inbox/api-contract-2026-09-29.md. Authenticated runtime read/save is not yet verified."
     },
     {
       "id": "ASM-002",
-      "endpoint": "GET /fe-coadmin-api/api_dynamic_fee_config; POST /fe-coadmin-api/update_api_dynamic_fee_config",
-      "field": "tiers",
+      "endpoint": "POST /fe-coadmin-api/api_fee_tier_list; POST /fe-coadmin-api/api_fee_tier_edit",
+      "field": "tiers[].tier,volumeMin,volumeMax,makerRate,takerRate,rebateRate",
       "code": [
         "apps/futures-admin/legacy-admin/src/mixin/marketManagement/apiDynamicFeeConfig.js",
-        "apps/futures-admin/legacy-admin/src/utils/apiDynamicFeeTierConfig.js",
-        "apps/futures-admin/src/mocks/pr02208/handlers.ts"
+        "apps/futures-admin/legacy-admin/src/utils/apiDynamicFeeTierConfig.js"
       ],
       "owner": "合约后台 API owner",
-      "status": "open",
+      "status": "resolved-by-documented-contract",
       "blockingWhen": "api-ready",
-      "resolution": "Legacy 正式接口部署后核对请求体和响应体，并删除对应 MSW handler。"
+      "resolution": "YApi 6514/6517 documents the same endpoints for Legacy; JSON full-set save and empty form list. See inbox/api-contract-2026-09-29.md. Runtime read/save is not yet verified."
     },
     {
       "id": "ASM-003",
       "endpoint": "POST /fe-coadmin-api/get_commission_discount_list",
-      "field": "hasApiKey,apiFeeLevel,apiMakerFee,apiTakerFee",
+      "field": "apiLevel,apiFeeRate",
       "code": [
-        "apps/futures-admin/legacy-admin/src/utils/apiDynamicFeeDisplay.js",
-        "apps/futures-admin/src/mocks/pr02208/fixtures.ts",
-        "apps/futures-admin/src/mocks/pr02208/handlers.ts"
+        "apps/futures-admin/legacy-admin/src/utils/apiDynamicFeeDisplay.js"
       ],
       "owner": "合约后台 API owner",
-      "status": "open",
+      "status": "resolved-by-documented-contract",
       "blockingWhen": "api-ready",
-      "resolution": "正式列表契约发布后核对字段名、类型和空值语义，不允许通过别名或费率值推断 API Key 状态。"
+      "resolution": "YApi 6520 adds server display strings apiLevel and apiFeeRate, with '-' for no tier; it does not specify hasApiKey. See inbox/api-contract-2026-09-29.md. Runtime rows are not yet verified."
     }
   ]
 }

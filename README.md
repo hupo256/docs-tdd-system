@@ -9,7 +9,7 @@ v3.5、引擎、模板和 PRD 历史仍保留，用于已有 workflowVersion 项
 ## 默认流程
 
 1. 从用户给定链接或本地文件一次性完整读取 PRD，只抽取 Web 范围并形成简短 Task。
-2. Task 明确后检查 Git 状态，在隔离 worktree 中完成需求；API 未 ready 或无法确认时按 endpoint 使用 MSW 最小数据。
+2. Task 明确后检查 Git 状态，在隔离 worktree 中完成需求；默认沿用真实请求，仅关键 UI 状态确需反复模拟请求链时局部使用最小 MSW。
 3. 冷读核对 Task、diff 和可见页面，做有价值的定向验证，复核后本地提交。
 
 仅在歧义实质影响 Web 行为、正确性或安全时提问。读取失败报告具体原因，不循环重试；API ready 后按 endpoint 对账并切换真实请求。新需求无需额外安装流程工具。

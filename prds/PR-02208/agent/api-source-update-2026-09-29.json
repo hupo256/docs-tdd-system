@@ -1,0 +1,8 @@
+{
+  "kind": "api",
+  "requirement": "required",
+  "status": "available",
+  "reason": "YApi 6514, 6517, and 6520 contracts supplied for the PR-02208 integration",
+  "revision": "2026-09-29",
+  "path": "/Users/aven/github/docs_tdd/prds/PR-02208/inbox/api-contract-2026-09-29.md"
+}

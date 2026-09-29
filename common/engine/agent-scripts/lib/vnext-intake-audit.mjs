@@ -228,7 +228,9 @@ export function selfTest() {
   const pass = runIntakeAudit(workItem, units, { auditedAt: '2026-09-12T00:00:00Z' })
   assert.equal(pass.status, 'pass', JSON.stringify(pass))
   assert.equal(pass.microEligibility.ok, false)
-  assert.match(pass.microEligibility.problems.join(' '), /tables and embeds are not allowed/)
+  assert.match(pass.microEligibility.problems.join(' '), /requires verificationLevel=V0/)
+  const v0WithTable = runIntakeAudit({ ...workItem, routing: { scopeClass: 'local', riskSignals: [], verificationLevel: 'V0' } }, units)
+  assert.match(v0WithTable.microEligibility.problems.join(' '), /tables and embeds are not allowed/)
   const staleIntake = {
     ...workItem,
     intake: { kind: 'bugfix', sourceRole: 'incident', sourceFingerprint: 'stale', sourcePaths: ['prd.md'] },

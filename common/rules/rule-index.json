@@ -45,6 +45,7 @@
     ],
     "g0_g2_scope": [
       "prd-feature-inventory.md",
+      "project-doc-structure.md",
       "fast-track-incomplete-docs.md",
       {
         "file": "lark-doc-sync.md",
@@ -298,6 +299,8 @@
       }
     ],
     "docs_tdd_maintenance": [
+      "new-project-kickoff.md",
+      "startup-prompt.md",
       {
         "file": "rule-inheritance.md",
         "sections": "0-6"
