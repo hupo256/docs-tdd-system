@@ -1,17 +1,19 @@
 # common 公共规则入口
 
-新需求默认使用 [Web Lite 流程](./rules/web-lite-workflow.md)；`common/` 提供它需要的流程规则，以及 workflowVersion 1/2 存量项目的兼容专题。新需求不创建项目台账或证据目录。通用代码质量归全局 AGENTS/skill，FameEX 代码锚点归 `.cursor/rules/*.mdc`。
+> 自 2026-10-10 起冻结：新需求走 skill `prd-to-commit`（见 [使用说明](../docs/prd-to-commit/usage.md)），不读本目录。`common/` 只为 workflowVersion 1/2 存量项目和 lark-bot 保留，Web Lite 已废弃。
+
+`common/` 提供 workflowVersion 1/2 存量项目的流程规则与兼容专题。通用代码质量归全局 AGENTS/skill，FameEX 代码锚点归 `.cursor/rules/*.mdc`。
 
 项目编号统一使用大写 `PR-xxxxx` 或 `TR-xxxxx`（五位数字）；下方命令中的 `PR-01234` 仅为示例，两类编号均由同一工具链支持。
 
-> **开工不要全读本索引**：新需求只读 [rule-router.md](./rules/rule-router.md) 和命中的 Lite/编码专题，不运行 `docs-tdd context`。下面是**专题全索引，供人工查阅**，不是每次全读清单。
+> **开工不要全读本索引**：存量项目从 [rule-router.md](./rules/rule-router.md) §1 开工，按场景命中再读专题。下面是**专题全索引，供人工查阅**，不是每次全读清单。
 
 ## 专题全索引（查阅用）
 
 1. [rule-router.md](./rules/rule-router.md)：**渐进披露路由表**（开工唯一常驻入口，按场景命中才读正文）。
-2. [web-lite-workflow.md](./rules/web-lite-workflow.md)：新需求默认流程（PRD → 最小 Task → worktree → coding/MSW → 冷读 check → 本地提交）。
-3. [new-project-kickoff.md](./rules/new-project-kickoff.md)：新需求启动口令与 Lite 链路参考；实际路由以 rule-router 为准。
-4. [startup-prompt.md](./rules/startup-prompt.md)：可选的新需求启动口令模板。
+2. [web-lite-workflow.md](./rules/web-lite-workflow.md)：**已废弃**（2026-09-28 至 10-10 的新需求流程），仅供查阅。
+3. [new-project-kickoff.md](./rules/new-project-kickoff.md)：存量协议的项目启动参考；实际路由以 rule-router 为准。
+4. [startup-prompt.md](./rules/startup-prompt.md)：新需求启动口令（指向 prd-to-commit）。
    - [rule-index.json](./rules/rule-index.json)：机器可读场景路由索引。
    - [rule-ownership.json](./rules/rule-ownership.json)：专题唯一正文所有权表；Router、Gate、模板只消费，不复制正文。
 5. [rule-inheritance.md](./rules/rule-inheritance.md)：规则如何从旧项目沉淀到公共区。

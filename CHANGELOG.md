@@ -1,150 +1,78 @@
 # Changelog
 
-All notable changes to the docs_tdd system will be documented in this file.
+整个 docs_tdd 仓库的版本时间线，只记版本和重大变更。细目分别见：
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+- prd-to-commit：[docs/prd-to-commit/releases.md](./docs/prd-to-commit/releases.md)
+- docs_tdd 引擎、规则与 lark-bot：[common/CHANGELOG.md](./common/CHANGELOG.md)（更早的条目在 [CHANGELOG-archive.md](./common/CHANGELOG-archive.md)）
+- 各历史阶段的计划与复盘：[docs/archive/](./docs/archive/README.md)
 
----
+格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，按时间倒序排列。只写可核查的事实；效率和质量数字必须来自回放或真实运行的记录，并给出出处。
 
-## [v3.5.0] - 2026-09-21
-
-### 代号
-**Phase 1-5 优化完成**
-
-### Added
-- **Phase 1: extraction-guidance** - 第一次理解准确模块
-  - 四遍精读法
-  - 强制枚举协议
-  - 图片深度解读（5问法）
-  - 领域检查清单（自动激活）
-  - 历史案例警示
-  - 效果：准确率 +30%，遗漏率 -80%
-
-- **Phase 2: 快速通道** - 低风险需求加速处理
-  - `lite-path-router.mjs` - 智能路由判断
-  - `lite-path-executor.mjs` - 快速执行器
-  - `lite-path-integration.mjs` - 集成层
-  - 白名单 + 黑名单 + 智能例外
-  - 6层安全保障
-  - 效果：耗时 -85%，Token -80%
-  - 实战验证：PR-02233 成功（2分钟，效率提升 93%）
-
-- **Phase 3: 智能提问** - 减少人工介入
-  - `smart-approval.mjs` - 智能 V2 scope approval
-  - `smart-review.mjs` - 智能审查修正
-  - 明确高风险 vs 普通多落点
-  - AI 自动修正 + 建议方案
-  - 效果：V2人工介入 -50%，审查返工 -70%
-
-- **Phase 4: 渐进式验证** - 快速反馈循环
-  - `progressive-verify.mjs` - 三级验证体系
-  - Level 1: 编辑后即时检查 (<10秒)
-  - Level 2: Checkpoint 检查 (<1分钟)
-  - Level 3: 完整验证 (按需)
-  - 效果：提早发现问题 60%+
-
-- **Phase 5: 规则系统简化** - 降低认知负担
-  - `smart-rules.mjs` - 智能规则选择和注入
-  - V0-lite/V0/V1/V2 分层规则
-  - 按需加载领域规则
-  - 信号检测自动加载
-  - 效果：Token -60%，响应速度 +10-15%
-
-- **版本管理系统**
-  - `system-version.mjs` - 系统版本管理
-  - 版本历史记录
-  - CLI 工具支持
+## [docs-2026.10.11] — 2026-10-11 文档整理
 
 ### Changed
-- `docs-tdd.mjs` - 集成快速通道（Phase 2）
-- `docs-tdd.mjs` - 添加版本号注释
 
-### Tested
-- 27/27 单元测试全部通过
-- 2/2 实战验证成功（PR-02233 + PR-02440）
+- 人读文档统一放到 `docs/`，按现行流程（`prd-to-commit/`）、决策（`decisions/`）、存量手册（`legacy/`）、历史归档（`archive/`）分类，分类和命名规则见 [docs/README.md](./docs/README.md)。
+- 回放基准从 `plan/replay/` 移到 [benchmarks/replay/](./benchmarks/replay/README.md)，评分标准和结果记录分开存放；`score-prompt.sh` 不再写死仓库绝对路径。
+- 根 README 改写为首页，只保留现状、快速开始和目录；docs_tdd v3.5 引擎的完整手册拆到 [docs/legacy/docs-tdd-v3.5-manual.md](./docs/legacy/docs-tdd-v3.5-manual.md)。
+- 本文件重写为整仓时间线，补上 v4 实验、Web Lite 和 prd-to-commit 的记录。
 
-### Metrics
-- 准确率提升：+30%
-- 效率提升：+85%
-- 成本降低：-70%
-- 人工介入减少：-70%
-- Token 减少：-60%
-- 反馈速度：质的飞跃（<10秒）
+### Removed
 
-### Status
-- Phase 1: ⏸️ 待集成
-- Phase 2: ✅ 已集成并实战验证
-- Phase 3: ⏸️ 待集成
-- Phase 4: ⏸️ 待集成
-- Phase 5: ⏸️ 待集成
+- `plan/`、`practice-log/`、`output-tdd/`、`share/` 四个目录，以及根目录的 `RELEASE-v3.5.0.md`、`MIGRATION.md`、`VERSION`。内容迁移位置见[旧路径对照](./docs/archive/README.md)。`VERSION` 不再保留：仓库里有多个组件，各自的版本来源见 [docs/README.md](./docs/README.md)。
+- 28 份冗余的完成报告、日报和被取代的计划草稿，内容合并进对应阶段纪要后删除。原路径登记在各纪要中，可用 `git show 2f39fdd:<原路径>` 取回。
+- 残留的测试目录 `apps/web/docs_tdd/prds/TEST-V4-LITE-001/`（v4 Lite 实验的 kickoff 产物，路径套错了一层）。
+- 旧版本文件里的 v3.5.0 效率、准确率指标（「准确率 +30%」「Token −60%」等）。这些数字已于 09-24 撤回，此前在本文件里一直没删。原始声明保留在[归档的发布说明](./docs/archive/2026-09-21-phase1-5-experiment/release-notes-v3.5.0.md)中作为证据。
 
----
+## prd-to-commit v1.2 — 2026-10-11
 
-## [v3.0.0] - 2026-09-12
+浏览器核对打通：四个站点使用固定 dev server 加专用浏览器 profile，连 test 环境跑真实页面，写操作默认拦截。见 [releases.md](./docs/prd-to-commit/releases.md)。
 
-### 代号
-**v3.x 系统重构**
+## prd-to-commit v1.1 — 2026-10-11（正式版）
 
-### Added
-- vnext-* 模块架构
-- work-item.json 标准化
-- V2 工作流支持
+在 6 个回放基准上，Claude 平均得分 95.3%，陷阱零违反；Codex 在 2 个基准上不低于历史首轮。成本约为历史的 1/4 到 1/16。未达标项：1 个中等需求的 token 超出目标约 15%。见[最终报告](./docs/prd-to-commit/reports/2026-10-11-final-report.md)。
 
-### Changed
-- **BREAKING**: 重大架构升级
+## prd-to-commit v1.0 — 2026-10-10 · docs_tdd 冻结
 
----
+- 新需求改用 skill `prd-to-commit`；docs_tdd 引擎冻结在 v3.5.0，只用于收尾存量 `workflowVersion: 1|2` 项目；Web Lite 废弃。见[决策](./docs/decisions/2026-10-10-switch-to-prd-to-commit.md)。
+- 依据：[2026-10-09 现状审计](./docs/prd-to-commit/reports/2026-10-09-status-audit.md)、[正式化评估](./docs/prd-to-commit/reports/2026-10-10-readiness.md)，以及 PR-02306、PR-01930 两个回放。
+- lark-bot：默认执行器改为 Claude；回收空闲的孤儿任务；新增 `claude-auth` 切换；修 bug 表前先做只读分诊。
 
-## [v2.0.0] - 2026-08-xx
+## Web Lite — 2026-09-28
 
-### 代号
-**V2 工作流**
+新需求改走「PRD → 最小 Task → worktree → coding → 冷读 → 本地提交」，不再跑 G0–G8 或 v2 work-item。2026-10-10 被 prd-to-commit 取代。见[决策](./docs/decisions/2026-09-28-switch-to-web-lite.md)。
 
-### Added
-- work-item 标准化
-- acceptance-results 验收机制
+## 优化落地与真实需求 Pilot — 2026-09-24 ~ 09-26
 
-### Changed
-- **BREAKING**: 引入 V2 工作流
+撤回 Phase 1–5 和 v4 实验中无实测的数字；入口收敛到单一的 v2 `docs-tdd run`；Lite executor 禁用；Runner 闭环通过合成 E2E。真实 Pilot 未完成，方向随后转向 Web Lite。见[阶段纪要](./docs/archive/2026-09-24-optimization-pilot/README.md)。
 
----
+## v4.0 / v4.1 Lite 实验 — 2026-09-23（已撤回）
 
-## [v1.0.0] - 2026-06-xx
+代码快速通道、规则档位裁剪和人工提炼的 Lite 模式，靠 1~3 个自估样本宣称提速。次日入口被收敛、执行器被禁用，相关数字被删除。从未作为正式版本发布。见[阶段纪要](./docs/archive/2026-09-23-v4-lite-experiment/README.md)。
 
-### 代号
-**初始版本**
+## docs_tdd v3.5.0 — 2026-09-23 stable
 
-### Added
-- 基础 docs-tdd 工作流
-- V1 项目流程
+- 2026-09-19 实施 Requirement-to-Commit：四档效率路由与预算、safe work context、source graph、requirement/surface/evidence 对账、六类失败的有界修复、delivery truth。
+- 2026-09-23 通过规则发布、golden 回归和 `docs-tdd guard --strict` 后定为 stable。pilot 仍为 `collecting`，没有 production attestation。
+- 09-21 的 Phase 1–5 实验模块曾以「v3.5.0 发布」的名义带着效率指标对外说明，当天审查发现安全问题后回滚为只读候选，指标于 09-24 撤回。见[阶段纪要](./docs/archive/2026-09-21-phase1-5-experiment/README.md)。
+- 细目：[common/CHANGELOG.md](./common/CHANGELOG.md) 2026-09-19、09-23 条；设计与计划见[阶段纪要](./docs/archive/2026-09-17-v3.5-requirement-to-commit/README.md)。
 
----
+## docs_tdd v3.1 – v3.3 — 2026-09-11 ~ 09-16
 
-## 版本规范
+v3.1 定版（09-11），v3.2 改进 Intake 和 Review 的可靠性，v3.3 实现 Autopilot Implementation Loop（均为 09-12），随后补齐审查成本上限、验证经济和 Hook 兼容。首批真实项目的实践记录见[阶段纪要](./docs/archive/2026-09-12-v3.1-v3.3-practice/README.md)。
 
-### 版本号格式
-`v<major>.<minor>.<patch>`
+## docs_tdd v2（workflowVersion 2）— 2026-09-08
 
-### 版本类型
-- **major**: 重大架构变更或不兼容更新
-- **minor**: 新增功能模块
-- **patch**: Bug 修复和小优化
+新需求默认使用 v2：work-item 状态机，`docs-tdd verify` 是唯一正式出口，结果全等级 enforced。存量项目继续用 v1。见[切换决策](./common/vnext/cutover-decision-20260908.md)。
 
-### 标签说明
-- `Added`: 新增功能
-- `Changed`: 功能变更
-- `Deprecated`: 即将废弃
-- `Removed`: 已删除功能
-- `Fixed`: Bug 修复
-- `Security`: 安全相关
-- `Tested`: 测试验证
-- `Metrics`: 效果指标
-- `Status`: 集成状态
+## lark-bot — 2026-08-06 起
 
----
+群内 @ 触发的自动修 bug 服务。08-06 增加 Codex 执行器；08-07 完成无人值守链路 P0–P3；08-08 抽成 `common/lark-bot/` 子树；08-10 接入 bug「验退」自动进入下一轮修复；之后持续迭代。正式交付权与轻量闭环分离（09-11）。见 [lark-bot 运维手册](./common/lark-bot/docs/README.md)。
 
-[v3.5.0]: https://github.com/your-org/docs_tdd/compare/v3.0.0...v3.5.0
-[v3.0.0]: https://github.com/your-org/docs_tdd/compare/v2.0.0...v3.0.0
-[v2.0.0]: https://github.com/your-org/docs_tdd/compare/v1.0.0...v2.0.0
-[v1.0.0]: https://github.com/your-org/docs_tdd/releases/tag/v1.0.0
+## docs_tdd 独立成仓 — 2026-08-04
+
+从 fameex-web 的本地忽略目录抽成独立 git 仓库，通过软链挂载回 `fameex-web/apps/web/docs_tdd`，路径解析与宿主仓解耦。
+
+## docs_tdd v1 — 2026-06 ~ 08
+
+G0–G8 阶段门禁、项目文档模板、规则路由与按需加载、L1/L2/L3 规则分层、规则发布指纹。细目见 [CHANGELOG-archive.md](./common/CHANGELOG-archive.md)（最早记录为 2026-07-05）。
