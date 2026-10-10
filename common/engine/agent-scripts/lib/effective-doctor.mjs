@@ -84,6 +84,17 @@ export function runDoctor(deps) {
   const checks = []
   const add = (id, ok, severity, message, file = '') => checks.push({ id, ok, severity, message, file })
 
+  const consumerRootReady = existsSync(ruleConsumerRoot) && lstatSync(ruleConsumerRoot).isDirectory()
+  add(
+    'CONSUMER-ROOT',
+    consumerRootReady,
+    'error',
+    consumerRootReady
+      ? `consumer repo is present: ${ruleConsumerRoot}`
+      : `consumer repo not found or not a directory: ${ruleConsumerRoot}; run doctor from inside the consumer worktree (check docs-tdd.config.json consumerRoot)`,
+    ruleConsumerRoot,
+  )
+
   const ripgrep = spawnSync('rg', ['--version'], { encoding: 'utf8', stdio: 'pipe' })
   const ripgrepReady = ripgrep.status === 0
   add(
@@ -259,7 +270,8 @@ export function runDoctor(deps) {
   const ignored = spawnSync('git', ['check-ignore', '-q', config.docsMountPath], { cwd: ruleConsumerRoot })
   add('LOCAL-ISOLATION', ignored.status === 0, 'error', `docs_tdd ${ignored.status === 0 ? 'is locally ignored' : 'is not ignored'}`, config.docsMountPath)
   const protectedPaths = config.protectedRuleSurfaces
-  const trackedChanges = spawnSync('git', ['status', '--short', '--', ...protectedPaths], { cwd: ruleConsumerRoot, encoding: 'utf8' }).stdout.trim()
+  const trackedChangesResult = spawnSync('git', ['status', '--short', '--', ...protectedPaths], { cwd: ruleConsumerRoot, encoding: 'utf8' })
+  const trackedChanges = trackedChangesResult.status === 0 ? (trackedChangesResult.stdout || '').trim() : ''
   const trackedChangesAllowed = Boolean(trackedChanges && allowTrackedRuleChanges)
   add(
     'TRACKED-RULE-ISOLATION',
