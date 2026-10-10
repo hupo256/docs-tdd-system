@@ -1,22 +1,11 @@
 # Startup Prompt
 
-新需求直接使用下面口令；编码规范仍按全局/仓库规则按需加载。
-
-## 新需求模板
+新需求在新会话（Claude 或 Codex）里发：
 
 ```text
-新需求 <PROJECT-ID>，PRD：<链接或本地路径>。
-只做 Web。请按 apps/web/docs_tdd/common/rules/web-lite-workflow.md 执行：
-PRD 单次完整读取 → 最小 Task → 独立 worktree → coding（仅必要时用最小 MSW）→ 冷读 check → 本地 git add / commit。
-PRD 是定稿；不要重复 fetch 同一 revision。仅在实质影响 Web 行为、正确性或安全的歧义下提问。不要运行 G0-G8、v2 work-item/verify 或创建重型台账。不要 push。
+用 prd-to-commit，项目号 <PROJECT-ID>，PRD：<Lark 链接>
 ```
 
-## 执行入口
+可追加：Figma 链接、接口契约/YApi 文件、「只做 web / admin」、「这是 fix」。流程与约束以 `~/.ai-rules/skills/prd-to-commit/SKILL.md` 为准；你只需在需求清单出来时确认一次。
 
-1. 读 `common/rules/rule-router.md`，再读 `common/rules/web-lite-workflow.md`。
-2. 对 PRD 做一次完整读取，生成简短 Task checklist；非 Web 内容忽略。
-3. 检查 Git 状态并在独立 worktree 开发；按需加载目标模块对应的编码规则。
-4. 默认沿用真实请求。API 未 ready 或无法确认不自动启用 MSW；仅关键 UI/UX 需要反复走请求链模拟时局部使用最小 MSW。API ready 后核对真实契约，清理本需求实际使用的 MSW；未对账不得提测。
-5. 冷读对照 Task 和 diff，定向验证，复核后本地提交。
-
-存量项目通过其现有 `workflowVersion` 路由旧流程；不要将旧流程套用到新需求。
+存量项目按其 README `workflowVersion` 继续旧流程；旧的 Web Lite 口令已废弃。

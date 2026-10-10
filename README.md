@@ -1,6 +1,6 @@
 # docs_tdd - Web Lite 默认流程与存量规则库
 
-> 新需求的唯一默认流程是 [Web Lite](./common/rules/web-lite-workflow.md)。docs_tdd v3.5 / `workflowVersion: 1|2` 的引擎和文档只用于恢复、维护已有项目；不再作为新需求入口。
+> **已冻结（2026-10-10）**：新需求唯一默认流程是 skill `prd-to-commit`（`~/.ai-rules/skills/prd-to-commit/SKILL.md`，Claude/Codex 已软链）。启动语：`用 prd-to-commit，项目号 PR-xxxxx，PRD：<链接>`。docs_tdd v3.5 / `workflowVersion: 1|2` 的引擎和文档只用于收尾已有项目；Web Lite 已废弃。
 
 新需求只走：`PRD → 最小 Task → worktree → coding（仅必要时 + MSW）→ 冷读 check → git add / commit`。只交付 Web；用户给定的 PRD 单次完整读取；默认不落项目台账、不跑 G0-G8 或 v2 work-item/verify，不 push。完整约束和失败处理见 [Web Lite 规范](./common/rules/web-lite-workflow.md)。
 

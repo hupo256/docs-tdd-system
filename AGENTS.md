@@ -16,7 +16,7 @@
 
 **不要一次性读完整本 `common/`**（全量 ≈ 9-10 万 token，会挤占窗口、拖慢响应）。改为渐进披露：
 
-1. **新需求**直接读 [common/rules/rule-router.md](./common/rules/rule-router.md) 和命中的 [common/rules/web-lite-workflow.md](./common/rules/web-lite-workflow.md)，不要先读整份 README 或全读 `common/`。
+1. **新需求**不读本目录：新需求唯一默认流程是 skill `prd-to-commit`（`~/.ai-rules/skills/prd-to-commit/SKILL.md`，Claude/Codex 已软链）。启动语：`用 prd-to-commit，项目号 PR-xxxxx，PRD：<链接>`。
 2. **存量项目**按其项目 README 中的 `workflowVersion` 读取对应规则和事实；需要查目录职责或项目索引时再读本文件/README。
 3. 不要把 v1/v2 的台账、门禁带入新需求。
 
@@ -24,7 +24,7 @@
 
 Codex/Claude/Pi 侧编码规则入口不放在 `docs_tdd`：短硬规则常驻 `~/.ai-rules/AGENT.md`（`~/.codex/AGENTS.md`、`~/.claude/CLAUDE.md`、`~/.pi/agent/AGENTS.md` 均软链至此，三工具读同一份文件，禁止分叉编辑）；长清单按需读 `~/.ai-rules/skills/coding-quality/SKILL.md`、`~/.ai-rules/skills/figma-read/SKILL.md`（三工具的 `skills/coding-quality`、`skills/figma-read` 同样软链至此）；FameEX 锚定编码规则按主题读仓库 `.cursor/rules/*.mdc`。本目录只保留项目、流程、门禁、边界与项目事实。
 
-新 chat 一句话启动需求时，使用 [common/rules/startup-prompt.md](./common/rules/startup-prompt.md)；新需求按 Web Lite 流程，不运行旧引擎 kickoff。
+新 chat 一句话启动需求时，使用 [common/rules/startup-prompt.md](./common/rules/startup-prompt.md)；不运行旧引擎 kickoff。
 
 ## 3. 当前项目索引
 
@@ -38,11 +38,11 @@ Codex/Claude/Pi 侧编码规则入口不放在 `docs_tdd`：短硬规则常驻 `
 
 ## 5. 新需求接入
 
-新需求统一按 [common/rules/web-lite-workflow.md](./common/rules/web-lite-workflow.md)：`PRD → 最小 Task → worktree → coding（仅必要时 + MSW）→ 冷读 check → git add / commit`。只做 Web；PRD 单次完整读取；同一 revision 不重拉；Task 默认是对话中的短 checklist；不运行 G0–G8 或 v2 work-item 引擎。
+新需求统一走 skill `prd-to-commit`（见上）。Web Lite 已于 2026-10-10 废弃；不运行 G0–G8 或 v2 work-item 引擎。
 
 ### 5.1 存量项目兼容
 
-- 存量 v1/v2 项目的 PRD / Figma / API / QA 只放对应项目 `inbox/`，不要放根目录；新需求遵循 Web Lite，不复制 PRD 到本目录。
+- 存量 v1/v2 项目的 PRD / Figma / API / QA 只放对应项目 `inbox/`，不要放根目录；新需求不复制 PRD 到本目录（prd-to-commit 落盘在 `~/.prd-cache/<ID>/`）。
 - 已有 `workflowVersion: 1` / `workflowVersion: 2` 的项目按原协议完成；不静默迁移、不把旧台账要求施加给新需求。
 - 存量文档和脚本仅在处理对应旧项目时加载；新需求不因历史工具存在而创建项目目录、状态 JSON 或证据套件。
 

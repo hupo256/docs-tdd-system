@@ -1,6 +1,6 @@
 # Web Lite 开发流程
 
-> 新需求的唯一默认流程。新需求不进入 G0-G8 或 v2 work-item 引擎；旧项目按原协议继续，不静默迁移。
+> **已废弃（2026-10-10）**：新需求改用 skill `prd-to-commit`（`~/.ai-rules/skills/prd-to-commit/SKILL.md`）。本文仅供查阅，不要再按本文执行。
 
 ## 流程
 

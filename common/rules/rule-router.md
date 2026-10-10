@@ -1,19 +1,13 @@
 <!-- RESIDENT-DOC: 唯一常驻规则；预算和覆盖校验见 check-doc-budget.mjs -->
 # docs_tdd 启动路由
 
-> 新需求只读本文件和命中专题；禁止全读 `common/`。机器路由见 [rule-index.json](./rule-index.json)，完整规范见 [web-lite-workflow.md](./web-lite-workflow.md)。
+> 新需求唯一默认流程是 skill `prd-to-commit`（`~/.ai-rules/skills/prd-to-commit/SKILL.md`，Claude/Codex 已软链）。启动语：`用 prd-to-commit，项目号 PR-xxxxx，PRD：<链接>`。本目录只服务存量项目；不要再为新需求读取 `common/`。
 
 ## 1. 新需求默认流程
 
-新需求唯一默认流程：`PRD → 最小 Task → worktree → coding（仅必要时 + MSW）→ 冷读 check → git add / commit`。
-
-- **范围**：只交付 Web；纯非 Web 内容忽略。只有影响 Web 行为/契约或阻碍正确实现时才纳入说明或提问。
-- **来源**：用户提供的 PRD 按定稿处理；一次完整读取正文及相关表格/图片/嵌入内容。同一来源/revision 不重复 fetch、同步或漂移校验；只有用户通知改版才读新版本。读取失败说明具体缺口并停止依赖该内容的工作，不循环重试。
-- **Task**：默认在当前对话中形成短 checklist；PRD 明确指定的 hover/tooltip 等 UI 文案须逐字记录并带来源位置，基于本轮已读取内容核对完整；不建重型目录、JSON 状态、逐条测试映射或人工签核。只在确实缺失且实质影响 Web 行为、正确性或安全时提问。
-- **工作区**：编码前检查 Git 状态并使用独立 worktree。worktree 必须放在主仓 checkout 的同级 `~/github/` 下（如 `~/github/docs_tdd-<task>`），不得放入主仓内部或 `~/.codex/worktrees/`。新需求 `feature/<PROJECT-ID>`，缺陷 `fix/<PROJECT-ID>`；按 [git-branch-flow.md](./git-branch-flow.md) 操作，不覆盖已有或未知改动。
-- **API / MSW**：默认沿用现有真实请求，API 未 ready 或无法确认不自动引入 MSW。先用现有数据和定向验证覆盖页面状态；仅关键 UI/UX 状态缺少可用数据、确需反复走正式请求链时，才对新增能力局部启用最小 MSW，旧业务请求保持真实链路。API ready 后对账并清理实际使用的本需求 MSW；未对账不得提测。
-- **检查与交付**：冷读对照 Task、diff、页面，不重拉同一 PRD。只运行有价值的定向验证；稳定后集中执行一次。复核 diff 后只暂存本需求改动并本地 commit；未经当次明确授权不 push。
-- 详细步骤见 [web-lite-workflow.md](./web-lite-workflow.md)；启动口令见 [startup-prompt.md](./startup-prompt.md)。
+- 走 `prd-to-commit`：拉 PRD（含内嵌表格）→ 需求清单（原句→落点）→ plan 依赖分批 → 用户确认一次 → worktree → 编码（批次并行）→ 改动文件检查 → 独立冷读 → 修复 → 本地 commit。细节以 skill 为准，本文件不复述。
+- Web Lite（[web-lite-workflow.md](./web-lite-workflow.md)）已于 2026-10-10 废弃，仅供查阅。
+- 依据：[plan/status-audit-2026-10-09.md](../../plan/status-audit-2026-10-09.md)、[plan/prd-to-commit-readiness-2026-10-10.md](../../plan/prd-to-commit-readiness-2026-10-10.md)、回放基准 [plan/replay/](../../plan/replay/)。
 
 ## 2. 存量流程路由
 
@@ -23,9 +17,9 @@
 
 ## 3. 按需加载
 
-- 新需求：`new_project` → 仅加载 `web-lite-workflow.md`；只有需要启动口令模板时再读 `startup-prompt.md`。
+- 新需求：不走本目录，直接用 `prd-to-commit` skill。
 - Web UI：`write_ui`；API/schema/mapper：`write_api` / `write_mapper` / `write_query_hook`；MSW：`write_msw`；Figma：`write_figma`。
-- 存量 v1：`g0_g2_scope`、`g4_coding_worktree`、`g6_verify` 等原场景。
+- 存量 v1：`g0_g2_scope`、`g4_coding_worktree`、`g6_verify` 等原场景；机器路由见 [rule-index.json](./rule-index.json)。
 - 不确定时先读任务相关专题 1-3 篇；大文件用 `rg` 定位后读局部，不全读 `common/`。
 
 ## 4. 上下文与验证节制
