@@ -48,6 +48,19 @@
 | C | **切换（需用户确认时间）**：停服务 → 复制 runtime 状态 → 换 plist 和 `~/.local/bin/lark-bot` → 启动 → 用真实的 `lark-bot` 入口验证 → 删除 `common/lark-bot/` → 提交 B3 | 全部 | B1、B2、B3 | 串行 |
 | D | **fameex-web 删除 lint-staged 那一行（需用户确认分支和时间）**：这是业务仓提交，会随分支进入团队 | fameex-web | B2 | 串行 |
 
+### 进度（2026-10-11）
+
+| 批次 | 状态 | 产物 |
+|---|---|---|
+| 0 | ✅ | 计划 `165b070`；`~/github/lark-bot` 带 87 个历史提交 |
+| A1 | ✅ | lark-bot `6e2d2cd`…`7873ce3`；13 个测试文件全部通过 |
+| A2 | ✅ | `~/.ai-rules` `cdae09b`；自测 46 例；与旧脚本对比，新脚本报出的 error 都在旧脚本的 error 里 |
+| A3 + B1 | ✅ | lark-bot `2e7f9e1`、`3f89c33`…`e6609fe`。越界时任务挂成「待确认」：群里回复「确认扩大范围」即可续跑（失败状态没有群内出口）。claude CLI 实测接受分析 schema |
+| B2 | ✅ | lark-bot `90f6b40`、`afaf75c`；合并后 15 个测试文件共 507 条全部通过 |
+| B3 | ✅ 已准备 | docs_tdd 分支 `chore/split-lark-bot` `7dcdab7`，切换后合并 |
+| C | 待用户确认时间 | — |
+| D | 待用户确认 | — |
+
 ### 范围契约（A3 / B1）
 
 - **分析阶段输出** `scope`：
