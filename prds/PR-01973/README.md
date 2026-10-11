@@ -1,6 +1,6 @@
 ---
 projectId: PR-01973
-status: active
+status: closed
 stage: G4
 branch: feature/PR-01973
 worktree: ""
