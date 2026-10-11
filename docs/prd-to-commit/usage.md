@@ -56,7 +56,7 @@ AI 读完 PRD（内嵌表格和图片会自动落盘、展开）后，会给你�
 
 ## 需要知道的限制
 
-- **浏览器核对已打通**（2026-10-11）：web、admin、legacy-admin、futures-legacy-admin 四个站点用固定端口的 dev server 加专用浏览器 profile 跑真实页面，**连 dev 环境**（接口先发 dev 联调，dev 也更好操作），接口没好用 mock。写操作在 dev 上默认真实执行（交付说明会列出改了哪些 dev 数据），发往其他环境的写操作一律拦截。你只需要登录两次（web、现货后台；登录态按环境区分，换环境后要重新登录一次），登录态失效时 AI 会提示你执行 `node ~/.ai-rules/skills/prd-to-commit/scripts/browser.mjs login --site <web|legacy-admin>`。详见 skill 的 `references/browser.md`。后台各页面的验证脚本细节后续再补。
+- **浏览器核对已打通**（2026-10-11）：web、admin、legacy-admin、futures-legacy-admin 四个站点用固定端口的 dev server 加专用浏览器 profile 跑真实页面，**连 dev 环境**（接口先发 dev 联调，dev 也更好操作）。接口没好时，mock 只写在验证脚本里，不改业务代码；需要团队成员手动点页面也能用的 mock（MSW）时，要你明确提出。写操作在 dev 上默认真实执行（交付说明会列出改了哪些 dev 数据），发往其他环境的写操作一律拦截。你只需要登录两次（web、现货后台；登录态按环境区分，换环境后要重新登录一次），登录态失效时 AI 会提示你执行 `node ~/.ai-rules/skills/prd-to-commit/scripts/browser.mjs login --site <web|legacy-admin>`。详见 skill 的 `references/browser.md`。后台各页面的验证脚本细节后续再补。
 - **legacy Vue2 模板没有编译检查**：check 会报 `not-covered`，需要人工核对。
 - **Codex CLI**：沙箱里 `.git` 是只读的，提交会失败，它会把提交打成 bundle。用 Codex 桌面 App 没有这个问题。
 - **Lark 历史版本**：需要文档编辑权限，平时拉最新版不受影响。
