@@ -76,7 +76,7 @@ v3.1 定版（09-11），v3.2 改进 Intake 和 Review 的可靠性，v3.3 实�
 
 ## lark-bot — 2026-08-06 起
 
-群内 @ 触发的自动修 bug 服务。08-06 增加 Codex 执行器；08-07 完成无人值守链路 P0–P3；08-08 抽成 `common/lark-bot/` 子树；08-10 接入 bug「验退」自动进入下一轮修复；之后持续迭代。正式交付权与轻量闭环分离（09-11）。见 [lark-bot 运维手册](./common/lark-bot/docs/README.md)。
+群内 @ 触发的自动修 bug 服务。08-06 增加 Codex 执行器；08-07 完成无人值守链路 P0–P3；08-08 抽成 `common/lark-bot/` 子树；08-10 接入 bug「验退」自动进入下一轮修复；之后持续迭代。正式交付权与轻量闭环分离（09-11）。见 lark-bot 运维手册（`~/github/lark-bot/docs/README.md`）。
 
 ## docs_tdd 独立成仓 — 2026-08-04
 

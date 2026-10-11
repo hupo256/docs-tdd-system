@@ -16,7 +16,7 @@
 
 - [benchmarks/replay/](../benchmarks/replay/README.md)：回放基准、结果与工具。
 - [common/README.md](../common/README.md)：规则库专题全索引；[common/rules/rule-router.md](../common/rules/rule-router.md) 是存量项目开工的常驻入口。
-- [common/lark-bot/docs/](../common/lark-bot/docs/README.md)：lark-bot 运维手册。
+- lark-bot 运维手册：已随 lark-bot 迁到独立仓库 `~/github/lark-bot/docs/`。
 
 ## 新文档放哪
 
@@ -43,6 +43,6 @@
 | 整个仓库 | git tag：`docs-tdd-v3.5.0`、`docs-YYYY.MM.DD` | [CHANGELOG.md](../CHANGELOG.md) |
 | prd-to-commit skill | `~/.ai-rules` 的 tag：`prd-to-commit-vX.Y[.Z]` | [releases.md](./prd-to-commit/releases.md)；回放数据记在 [iteration-ledger.md](./prd-to-commit/iteration-ledger.md) |
 | docs_tdd 引擎与规则 | `common/engine/agent-scripts/lib/system-version.mjs`（冻结在 v3.5.0）；规则指纹记录在 `common/rule-release.json` | [common/CHANGELOG.md](../common/CHANGELOG.md) |
-| lark-bot | 不单独发版 | [common/CHANGELOG.md](../common/CHANGELOG.md) 与 git log |
+| lark-bot | 已迁出为独立仓库 `~/github/lark-bot`（2026-10-11） | 该仓库的 git log |
 
 根目录 [CHANGELOG.md](../CHANGELOG.md) 是整仓的版本时间线，只记版本和重大变更，并链接到上表各自的细目。

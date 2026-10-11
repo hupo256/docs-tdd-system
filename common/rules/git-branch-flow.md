@@ -18,7 +18,7 @@ origin/online ──┬─> feature/<PROJECT-ID>              新需求功能分
 | `fix/<PROJECT-ID>`（无项目号时 `fix/<简述>`） | 人 / 交互 agent | **计划内 bug 修复** | 最新 `origin/online` | 同上，走正常测试发布节奏 |
 | `hotfix/<PROJECT-ID\|adhoc>-<id>` | **lark-bot 专用** | bot 无人类 worktree 时开的隔离临时工作分支：**从不自动 push / merge**，落盘待人工 review / 挑拣 | 最新 `origin/online` | 人工 review 后再决定去向 |
 
-- `hotfix/*` 是 lark-bot 的**受认可**前缀（`common/lark-bot/lib/lark-work-context.mjs` 的 `tempWorktreeContextFor`），不是漂移；它与人类 `fix/<ID>` 是**两个不同概念**（bot 隔离草稿分支 vs 人类计划内修复），刻意不同名，禁止互相 rename 对齐。
+- `hotfix/*` 是 lark-bot 的**受认可**前缀（`~/github/lark-bot/lib/lark-work-context.mjs` 的 `tempWorktreeContextFor`），不是漂移；它与人类 `fix/<ID>` 是**两个不同概念**（bot 隔离草稿分支 vs 人类计划内修复），刻意不同名，禁止互相 rename 对齐。
 - 无「紧急生产热修」的既有实践；真出现紧急线上修复，仍从最新 `origin/online` 切 `fix/<简述>`，不新造流程。
 
 ### 1.2 开工前置门（人 / 交互 agent 强制，防误在环境分支直接改）

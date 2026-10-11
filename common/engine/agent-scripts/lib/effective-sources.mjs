@@ -32,9 +32,6 @@ export function createSourceLens({ docsSystemRoot, ruleConsumerRoot, repoRoot, h
     l1: [join(g.aiRules, 'AGENT.md'), ...canonicalSkillRoots.flatMap(walkFiles)],
     adapters: [join(g.codex, 'AGENTS.md'), join(g.claude, 'CLAUDE.md'), g.cursorLocalGovernance, join(g.claude, 'settings.json'), join(g.codex, 'hooks.json'), join(g.pi, 'AGENTS.md'), join(g.pi, PI_EXTENSION_RELPATH)],
     runtimeAdapters: [
-      join(docsSystemRoot, 'common/lark-bot/lib/lark-rule-context.mjs'),
-      join(docsSystemRoot, 'common/lark-bot/lib/lark-worker-prompts.mjs'),
-      join(docsSystemRoot, 'common/lark-bot/lib/lark-worker-run.mjs'),
       join(docsSystemRoot, 'common/engine/agent-scripts/rule-context-hook.mjs'),
       join(docsSystemRoot, 'common/engine/agent-scripts/rule-context.mjs'),
       join(docsSystemRoot, 'common/engine/agent-scripts/lib/l2-rule-resolver.mjs'),

@@ -21,8 +21,8 @@ export const docsSystemRoot = resolve(here, '../../../..') // -> <docs> root, ho
 const defaultConfigFile = join(docsSystemRoot, 'docs-tdd.config.default.json')
 
 // --- Domain roots (three-domain reorg indirection layer) ---
-// The system splits into three internal domains under common/ (rules / lark-bot /
-// engine) plus project instances (prds/). Callers must resolve those locations
+// The system splits into internal domains under common/ (rules / engine) plus
+// project instances (prds/); lark-bot moved out to its own repo on 2026-10-11. Callers must resolve those locations
 // through THESE helpers, never by hand-joining docsSystemRoot, so a physical move
 // flips one constant here instead of chasing scattered path joins. Values below
 // point at the PRE-reorg locations, so introducing this layer is zero behavior

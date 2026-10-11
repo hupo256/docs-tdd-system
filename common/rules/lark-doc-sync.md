@@ -1,6 +1,6 @@
 # Lark 文档只读同步规则
 
-> 本文只适用于需要将来源持久化到项目 `inbox/` 的 workflowVersion 1/2 存量项目。新需求按 [web-lite-workflow.md](./web-lite-workflow.md) 直接一次性读取用户给定来源，不同步到 `docs_tdd`、不重复拉取同一 revision。群内 @ 应用任务链路见 [lark-bot 子系统文档](../lark-bot/docs/README.md)。
+> 本文只适用于需要将来源持久化到项目 `inbox/` 的 workflowVersion 1/2 存量项目。新需求按 [web-lite-workflow.md](./web-lite-workflow.md) 直接一次性读取用户给定来源，不同步到 `docs_tdd`、不重复拉取同一 revision。群内 @ 应用任务链路见 lark-bot 子系统文档（`~/github/lark-bot/docs/README.md`）。
 
 ## 1. 目标
 
