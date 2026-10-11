@@ -7,5 +7,6 @@
 | 2026-09-08 | [docs_tdd v2 正式切换](../../common/vnext/cutover-decision-20260908.md)（执行记录：[PHASE8-CUTOVER](../../common/vnext/PHASE8-CUTOVER.md)） | 已被取代；仍约束存量 v2 项目 |
 | 2026-09-28 | [新需求切换到 Web Lite](./2026-09-28-switch-to-web-lite.md) | 已被 2026-10-10 取代 |
 | 2026-10-10 | [新需求改用 prd-to-commit，冻结 docs_tdd](./2026-10-10-switch-to-prd-to-commit.md) | **现行** |
+| 2026-10-11 | [lark-bot 拆为独立仓库，加修改范围契约](./2026-10-11-split-lark-bot.md) | 执行中 |
 
 2026-09-08 的两份文件留在 `common/vnext/`，因为引擎文档和规则发布清单引用了它们。
