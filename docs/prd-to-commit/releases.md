@@ -11,6 +11,13 @@ skill 本体在 `~/.ai-rules/skills/prd-to-commit/`（独立 git 仓库），版
 
 ## 未发布
 
+- `cdae09b`（2026-10-11）：新增零依赖扫描器 `scripts/code-rules.mjs`，`check.mjs` 在 biome、tsc 之后调用它（[拆分决策](../decisions/2026-10-11-split-lark-bot.md)第 3 条）。
+  - 规则从 docs_tdd 的 `verify-code-rules.mjs` 中挑出，只保留误报低的 error 级规则：ARCH-001、TYPE-002、E2E-001、MAPPER-001、FILE-001、STYLE-001、MOCK-004/005。
+  - 丢弃：TYPE-001（Biome 已覆盖）；STYLE-002 写死颜色（近 3 个月命中 810 处，当 error 误报太高）；所有 warn-first 规则；依赖项目文档的规则。
+  - 豁免只有一种写法：`code-rules-ignore <RULE-ID>: <理由>`。
+  - lark-bot 用同一份脚本（复制一份钉住版本）。
+  - 验证：自测 46 例；在 PR-02463 和主仓 138 个文件上与旧脚本对比，新脚本报出的 error 都在旧脚本的 error 里。没有做基准回放，因为这只是确定性检查，不改变 AI 的行为。打 tag 前至少回放 1 个基准。
+
 - `ef0bb18`（2026-10-11）：**MSW 基建常驻**（用户确认：以前接口好了连基建一起清掉，清得太干净）。fameex-web 的本地分支 `feature/msw-infra`（`d4e3f12b86`，未 push）提供 apps/web 的常驻基建：`src/mocks/` 下的 handlers 登记表、按开关加载的 worker、README，以及 proxy、SW 注册和 turbo.json 的配套改动。已在本地验证：开关打开时 MSW 启动并能拦截请求，不开时完全不加载。按用户决定，不单独提基建 PR：第一个需要 MSW 的真实需求 cherry-pick 这个提交，基建随该需求合入 online，之后常驻；每个需求只增删 `src/mocks/<功能>/` 和登记行。
 - （2026-10-11）mock 策略写进 SKILL.md §5（用户要求，未回放）：接口没上 dev 时，**AI 自行决定**加最小 MSW mock，把 UI/UX 写全、本地能点通，不用等用户提出。只 mock 本需求新增/变更的接口，放在 `src/mocks/<功能>/`，只在 `NEXT_PUBLIC_ENABLE_MSW=true` 的本地开发下生效，接口上 dev 后删除。app 还没接入 MSW 时，参照 `feature/PR-02463` 单独提交补齐（清单在 `references/fameex.md`）。只为验证构造的边缘数据态写在浏览器验证 spec 里。交付说明要列出 MSW handler。同日早先一版写成「MSW 要用户明确提出」，已更正。
 - `c99da4c`（2026-10-11）：登录窗口改为**普通 Chrome**，登录期间只在浏览器级别读 cookie，不连接页面。原先由 Playwright 启动或经 Playwright 连进页面做快照，dev 登录页会不停闪动、无法操作；二分实验确认普通 Chrome 加浏览器级读取是稳定的。登录态按环境打标记，换环境时自动归档旧 profile。关窗后进程不退出的问题一并修复。四个站点已在 dev 上 check 通过。
