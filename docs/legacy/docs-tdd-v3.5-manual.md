@@ -267,7 +267,9 @@ node <mount>/common/engine/agent-scripts/decommission-worktree.mjs PR-01234
 
 ## 自检状态
 
-截至 2026-10-11，`check-doc-budget.mjs` 退出码为 0，`rule-release.mjs --check` 为 fresh。维护 `common/` 后，先跑 `check-doc-links.mjs` 和 `check-doc-budget.mjs`，都通过后再运行 `rule-release.mjs --write`。
+截至 2026-10-11：`check-doc-budget.mjs` 退出码为 0；`rule-release.mjs --check` 与 `effective-rules.mjs --check` 均为 fresh；`docs-tdd golden` 41 项全部通过。
+
+`docs-tdd doctor` 仍报 6 个 ERROR，这是冻结后的**预期状态，不要修**：ADAPTER-PROTOCOL（Codex/Claude/Pi 的全局入口不再声明 router/context/changed/gate）、CLAUDE-HOOK、CODEX-HOOK、CLIENT-RUNTIME-CONFORMANCE。2026-10-10 冻结时，这些 docs_tdd 注入 hook 和入口声明被有意从全局配置中移除。要让它们转绿，就得重新安装 hook，等于撤销冻结。维护 `common/` 后，先跑 `check-doc-links.mjs` 和 `check-doc-budget.mjs`，都通过后再运行 `rule-release.mjs --write`。
 
 冻结前遗留的四项失败已在 2026-10-11 修复，修法如下：
 
