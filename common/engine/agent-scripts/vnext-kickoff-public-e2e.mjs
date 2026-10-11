@@ -14,6 +14,7 @@ import {
   resolveProjectRoot as resolveProjectRootFromRoots,
 } from './lib/roots.mjs'
 import { readProjectGitBinding } from './lib/project-status-report.mjs'
+import { findProjectControl, isProjectExecutionHeld, readProjectControlRegistry } from './lib/vnext-project-control.mjs'
 
 const scriptDir = new URL('.', import.meta.url)
 const docsTddCli = fileURLToPath(new URL('./docs-tdd.mjs', scriptDir))
@@ -110,8 +111,11 @@ export function selfTest() {
       assert.equal(result.status, 0, result.stderr)
     }
 
+    // baseRef 显式写成 FameEX 消费仓的值：tracked 默认配置是中性的 origin/main，
+    // 不写就会漏进沙箱，导致下方 change-set 基线断言（origin/online）随默认配置漂移。
     const config = {
       consumerRoot: sandbox,
+      baseRef: 'origin/online',
       docsMountPath: 'apps/web/docs_tdd',
       larkOutputDir: 'apps/web/docs_tdd/prds/${projectId}/inbox/lark-sync',
     }
@@ -388,14 +392,27 @@ export function selfTest() {
     for (const protectedId of ['PR-02233']) {
       const protectedRoot = resolveProjectBaseRootFromRoots(protectedId)
       const beforeHold = directorySnapshot(protectedRoot)
+      // PR-02233 自 2026-09-26 起有 active-change 指针（真实 change-set 样本）。不带 --change 的
+      // status/run/resume 会解析到该 change，而项目级 hold 按设计只作用于基础项目目录
+      // （project-orchestrator 的 projectExecutionHoldApplies）。所以这里不能再对真实仓库执行
+      // run/resume 来验证 hold——那会真的推进 change。改为：基础项目的 hold 判定在纯函数层验证，
+      // 对真实项目只做只读断言（status、dry-run 预览、目录快照、注册表不变）。
+      const registry = readProjectControlRegistry(controlRegistryPath)
+      const baseControl = findProjectControl(registry, protectedId)
+      assert.equal(baseControl?.pilotEligibility, 'excluded')
+      assert.equal(isProjectExecutionHeld(baseControl), true, `${protectedId} base project must stay held`)
+      const resolvedRoot = resolveProjectRootFromRoots(protectedId)
+      const activePointer = existsSync(join(protectedRoot, 'active-change.json'))
+        ? JSON.parse(readFileSync(join(protectedRoot, 'active-change.json'), 'utf8'))
+        : null
+      if (activePointer) {
+        assert.equal(resolvedRoot, resolveProjectChangeRootFromRoots(protectedId, activePointer.changeId), 'active change pointer must route status to the change-set')
+      }
       const status = outputJson(run(docsTddCli, ['status', protectedId], { cwd: sandbox, env: liveEnv }))
-      assert.equal(status.executionControl.pilotEligibility, 'excluded')
-      assert.equal(status.executionControl.executionHold.active, true)
-      assert.equal(status.status, 'blocked')
-      assert.equal(status.executionStatus, status.actionPacket.status, 'status must keep current execution separate from Pilot eligibility and system hold')
-      assert.equal(status.executionControl.recordedTerminalState, 'running')
-      assert.equal(status.executionStatus, 'active')
-      assert.notEqual(status.actionPacket.status, status.status, 'system hold must not overwrite the current Autopilot status')
+      assert.equal(status.executionControl.executionHold.active, !activePointer, 'project hold applies to the base project only, never to its change-sets')
+      if (!activePointer) {
+        assert.equal(status.executionStatus, status.actionPacket.status, 'status must keep current execution separate from Pilot eligibility and system hold')
+      }
       const heldChangeId = `hold-bypass-${nonce}`
       const heldChangePreview = outputJson(run(docsTddCli, [
         'run', protectedId, '--change', heldChangeId, '--prd', source,
@@ -404,17 +421,8 @@ export function selfTest() {
       assert.equal(heldChangePreview.status, 'dry-run')
       assert.equal(heldChangePreview.dryRun.changeId, heldChangeId)
       assert.equal(existsSync(resolveProjectChangeRootFromRoots(protectedId, heldChangeId)), false)
-      assert.deepEqual(directorySnapshot(protectedRoot), beforeHold, `${protectedId} change-set preview must remain read-only`)
-      for (const action of ['run', 'resume']) {
-        const held = run(docsTddCli, [action, protectedId], { cwd: sandbox, env: liveEnv })
-        assert.notEqual(held.status, 0)
-        const output = JSON.parse(held.stdout)
-        assert.equal(output.status, 'blocked')
-        assert.equal(output.executionControl.executionHold.active, true)
-        assert.equal(output.runner.outcome, 'blocked-safety-check')
-        assert.deepEqual(directorySnapshot(protectedRoot), beforeHold, `${protectedId} ${action} must not write state or receipts`)
-        assert.equal(readFileSync(controlRegistryPath, 'utf8'), controlRegistryBefore, 'held commands must not alter Pilot controls')
-      }
+      assert.deepEqual(directorySnapshot(protectedRoot), beforeHold, `${protectedId} status and change-set preview must remain read-only`)
+      assert.equal(readFileSync(controlRegistryPath, 'utf8'), controlRegistryBefore, 'read-only commands must not alter Pilot controls')
     }
     console.log('vnext public-command E2E passed (isolated synthetic TR projects, hold-before-write, status/trace reconciliation, read-only auto routing, isolated docs/branch/worktree bindings, same-source drift protection, historical preservation, v1 compatibility, path boundary)')
   } finally {

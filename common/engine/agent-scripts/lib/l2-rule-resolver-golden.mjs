@@ -28,8 +28,10 @@ function verifyCase(target, expectedCount) {
   }
 }
 
+// 计数随消费仓 .cursor/rules 变化：每新增一条 alwaysApply 规则，四个用例（含 README.md）各 +1。
+// 2026-10-11：fameex-web 新增 prediction-web-next.mdc、auth-entry-web-next-only.mdc（均 alwaysApply），47/34/30/0 → 49/36/32/2。
 export function runGolden() {
-  const results = [verifyCase('apps/web/src/Foo.tsx', 47), verifyCase('apps/web/src/useFoo.ts', 34), verifyCase('apps/web/src/foo.ts', 30), verifyCase('README.md', 0)]
+  const results = [verifyCase('apps/web/src/Foo.tsx', 49), verifyCase('apps/web/src/useFoo.ts', 36), verifyCase('apps/web/src/foo.ts', 32), verifyCase('README.md', 2)]
   const tsx = resolveRulePack({
     worktree,
     targetFiles: ['apps/web/src/Foo.tsx'],

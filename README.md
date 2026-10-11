@@ -67,4 +67,4 @@ package.json         引擎脚本的 Node 依赖（minimatch、yaml）
 
 - 默认只做本地提交，未经当次明确授权不 push。
 - 新文档先按 [docs/README.md](./docs/README.md) 的分类放置；不要再在根目录或 `plan/` 一类目录堆放报告。
-- `common/` 下的规则改动之后，运行 `check-doc-links.mjs` 和 `check-doc-budget.mjs`，确认没有新增失败。引擎冻结后有几项已知失败不再修复，它们也挡住了 `rule-release.mjs --write`，所以规则指纹停在 2026-09-26；详情和影响见 [v3.5 引擎手册](./docs/legacy/docs-tdd-v3.5-manual.md)「已知未修项」。
+- `common/` 下的规则改动之后，运行 `check-doc-links.mjs` 和 `check-doc-budget.mjs`，都通过后再运行 `rule-release.mjs --write` 重新发布指纹。自检现状见 [v3.5 引擎手册](./docs/legacy/docs-tdd-v3.5-manual.md)「自检状态」。

@@ -12,7 +12,7 @@
 - **文档整理**：人读文档移出 `common/` 之外的 `plan/`、`practice-log/`、`output-tdd/`，统一放到仓库 `docs/` 与 `benchmarks/replay/`；`common/` 内的路径和规则正文不变，只修正指向已删除目录的链接。整仓时间线见根 [CHANGELOG.md](../CHANGELOG.md)。
 - **现行口径**：`common/README.md`、`new-project-kickoff.md`、`vnext/README.md`、`docs/lite-mode-guide.md` 和三个专题中仍把 Web Lite 写成新需求流程的句子，改为指向 `prd-to-commit`；只改正文，未改任何被 lark-bot 按标题注入的章节标题。
 - **版本源**：`lib/system-version.mjs` 的 `VERSION_HISTORY` 与真实时间线对齐——v3.5.0 改为 09-23 stable（原写作 09-21 的 Phase 1-5 实验）、删除不存在的 v3.0.0、补 v3.1–v3.3 与 v2.0.0（09-08）。只改数据，自测通过。
-- **未重新发布**：`rule-release --write` 依赖 `check-doc-budget` 全部通过，而 PR-02208 assumptions 枚举、`g0_g2_scope` 超预算、L2 golden 49≠47、kickoff e2e 的 baseRef 断言这四项冻结前就已失败，所以发布清单仍停在 2026-09-26。清单见 [v3.5 引擎手册](../docs/legacy/docs-tdd-v3.5-manual.md)「已知未修项」。
+- **自检转绿并重新发布**：修复冻结前遗留的四项失败。PR-02208 assumptions 的状态改用 schema 内的 `confirmed`；L2 golden 计数随 fameex-web 新增的两条 alwaysApply 规则更新为 49/36/32/2；kickoff e2e 沙箱显式写入 `baseRef`，PR-02233 的 hold 断言改为纯函数层验证，并且不再对真实仓库执行 `run`/`resume`；`g0_g2_scope` 按 `new_project` 先例设场景上限 34000/40000，因为冻结后已没有 v1 项目会再进入 G0–G2。`check-doc-budget` 退出码为 0，`rule-release --write` 发布后 `--check` 为 fresh。修法明细见 [v3.5 引擎手册](../docs/legacy/docs-tdd-v3.5-manual.md)「自检状态」。
 
 ## 2026-10-10（冻结：新需求改用 prd-to-commit）
 

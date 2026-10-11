@@ -265,17 +265,18 @@ node <mount>/common/engine/agent-scripts/decommission-worktree.mjs PR-01234
 - **日志轮转**：`CHANGELOG.md` 只保留近期条目，旧条目轮转进 `CHANGELOG-archive.md`（不进 context、不参与预算）。
 - **防重复守护**：`FORBIDDEN_DUPLICATE_BLOCKS` 登记已收敛的唯一正文源签名，防规则正文在多处回潮重复。
 
-## 已知未修项（2026-10-11 记录）
+## 自检状态
 
-引擎冻结后，`check-doc-budget.mjs` 以退出码 1 结束，原因是下面这些失败。它们在冻结前就已存在，**不再修复**。维护 `common/` 时只需确认没有在此之外新增失败。
+截至 2026-10-11，`check-doc-budget.mjs` 退出码为 0，`rule-release.mjs --check` 为 fresh。维护 `common/` 后，先跑 `check-doc-links.mjs` 和 `check-doc-budget.mjs`，都通过后再运行 `rule-release.mjs --write`。
 
-| 失败项 | 原因 | 影响 |
-|---|---|---|
-| `PR-02208/agent/assumptions.json` 有 3 条 `status` 值为 `resolved-by-documented-contract`，不在 schema 枚举内 | 项目数据使用了 schema 之外的状态值 | 仅该存量项目的 schema 校验 |
-| 默认 context pack `g0_g2_scope` 为 36188 字符，超过 32000 上限 | 存量 v1 规则累积超出预算 | 仅存量 v1 项目的 G0–G2 上下文包 |
-| `lib/l2-rule-resolver-golden.mjs`：首次编辑 `.tsx` 命中的 L2 规则数为 49，golden 期望 47 | fameex-web 的 `.cursor/rules` 新增了规则，golden 未更新 | 仅 golden 回归，不影响规则解析本身 |
-| `vnext-kickoff-public-e2e.mjs` 自测期望合成项目的 `baseRef` 为 `origin/online`，实际为 `origin/main` | 自测依赖本机 `docs-tdd.config.json`，未与默认配置隔离 | 仅该自测 |
+冻结前遗留的四项失败已在 2026-10-11 修复，修法如下：
 
-**连带后果：规则指纹无法重新发布。** `rule-release.mjs --write` 会先跑 `check-doc-budget.mjs`，上述失败存在时拒绝发布，所以发布清单 `common/rule-release.json` 停在 2026-09-26，`rule-release --check` 报 stale。存量项目按各自钉住的 `rulePolicy` 读取规则，stale 不阻断 `context`、`changed`、`gate`。要恢复 fresh，需先修完上表四项，再运行 `rule-release --write`。
+| 原失败 | 修法 |
+|---|---|
+| `PR-02208/agent/assumptions.json` 有 3 条 `status` 为 `resolved-by-documented-contract`，不在 schema 枚举内 | 改为 `confirmed`：接口契约已由 YApi 文档确认，运行时尚未对账，`resolution` 里保留了「未运行时验证」的说明。gate 只把 `open` 当作未销账，行为不变 |
+| L2 golden 期望 47/34/30/0，实际 49/36/32/2 | fameex-web 新增两条 `alwaysApply` 规则（`prediction-web-next.mdc`、`auth-entry-web-next-only.mdc`），四个用例各 +2。更新期望值，并在代码注释里写明计数随消费仓规则变化 |
+| kickoff e2e 自测期望 change-set 基线为 `origin/online`，实际为 `origin/main` | 自测沙箱未写 `baseRef`，继承了中性的默认配置。沙箱配置改为显式写入 FameEX 的 `origin/online` |
+| 同一自测断言 PR-02233 的 `status` 处于 hold | PR-02233 自 09-26 起有 active-change 指针，`status`/`run`/`resume` 会解析到 change-set，而项目级 hold 按设计只作用于基础项目。原断言之后还会对真实仓库执行 `run`/`resume`。改为在纯函数层验证基础项目的 hold，对真实项目只做只读断言 |
+| 默认 context pack `g0_g2_scope` 为 36188 字符，超过阶段上限 32000 | 内容是 G0–G2 所需的四份完整规则。引擎冻结后不再新建 v1 项目，现存 v1 项目都已过 G2，这个包不会再被加载，因此不删规则正文，而是与内容相同的 `new_project` 一样设场景上限 34000/40000（`rule-index.json` 的 `contextBudget.scenarios`） |
 
-另外，按 `check-doc-budget.mjs` 内置的体量告警线，若干脚本与 `architecture-and-state.md` 处于体量告警区（⚠，不是失败）。
+体量告警（⚠，不是失败）仍有若干：多个引擎脚本和 `architecture-and-state.md` 超过 `check-doc-budget.mjs` 内置的告警线。冻结期间不拆分。

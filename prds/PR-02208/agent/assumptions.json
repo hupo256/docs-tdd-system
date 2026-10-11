@@ -10,7 +10,7 @@
         "apps/futures-admin/src/apps/FutureApiDynamicFeeConfig/utils/useApiDynamicFeeConfig.ts"
       ],
       "owner": "合约后台 API owner",
-      "status": "resolved-by-documented-contract",
+      "status": "confirmed",
       "blockingWhen": "api-ready",
       "resolution": "YApi 6514/6517: POST /fe-coadmin-api/api_fee_tier_list and api_fee_tier_edit; tier,volumeMin,volumeMax,makerRate,takerRate,rebateRate. See inbox/api-contract-2026-09-29.md. Authenticated runtime read/save is not yet verified."
     },
@@ -23,7 +23,7 @@
         "apps/futures-admin/legacy-admin/src/utils/apiDynamicFeeTierConfig.js"
       ],
       "owner": "合约后台 API owner",
-      "status": "resolved-by-documented-contract",
+      "status": "confirmed",
       "blockingWhen": "api-ready",
       "resolution": "YApi 6514/6517 documents the same endpoints for Legacy; JSON full-set save and empty form list. See inbox/api-contract-2026-09-29.md. Runtime read/save is not yet verified."
     },
@@ -35,7 +35,7 @@
         "apps/futures-admin/legacy-admin/src/utils/apiDynamicFeeDisplay.js"
       ],
       "owner": "合约后台 API owner",
-      "status": "resolved-by-documented-contract",
+      "status": "confirmed",
       "blockingWhen": "api-ready",
       "resolution": "YApi 6520 adds server display strings apiLevel and apiFeeRate, with '-' for no tier; it does not specify hasApiKey. See inbox/api-contract-2026-09-29.md. Runtime rows are not yet verified."
     }

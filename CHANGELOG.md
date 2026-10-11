@@ -22,7 +22,8 @@
   - `common/CHANGELOG.md` 补齐 09-28 之后的条目；
   - 存量项目指针从 rule-router §1 改为 §2；
   - Lite 遗留模板和 lark 交接快照移入归档，`common/docs/`、`common/templates/` 两个目录不再存在；
-  - 重新生成 PROJECTS.md；规则指纹没有重新发布：`rule-release --write` 被引擎的已知失败挡住，已记录在[引擎手册](./docs/legacy/docs-tdd-v3.5-manual.md)「已知未修项」；
+  - 重新生成 PROJECTS.md；
+- 引擎自检转绿（同日第三个提交）：修复冻结前遗留的四项 `check-doc-budget` 失败，`rule-release --write` 重新发布规则指纹，`--check` 恢复 fresh。修法见[引擎手册](./docs/legacy/docs-tdd-v3.5-manual.md)「自检状态」。
   - 修正 usage、台账中的数字，最终报告加勘误。
 
 ### Removed
