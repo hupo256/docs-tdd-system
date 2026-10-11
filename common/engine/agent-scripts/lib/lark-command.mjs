@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Lark 只读文档同步的命令构造与安全校验层：只放行 lark-cli 的 read/search/docs-fetch，
 // 扫描整条命令拦截写类 token，并把输出目标限制在 docs_tdd 内。validateSource 是禁写安全边界。
-// 逻辑由 common/lark-bot/__tests__/lark-pure.test.mjs 经 sync-lark-docs re-export 覆盖。
+// 引擎已冻结；lark-bot 迁出（2026-10-11）时带走了一份 validateSource 副本及其单测。
 
 import path from 'node:path'
 import { resolveDocsPath, resolveRoots } from './roots.mjs'

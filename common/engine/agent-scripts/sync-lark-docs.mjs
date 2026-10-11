@@ -13,7 +13,7 @@ import {
 } from './lib/lark-command.mjs'
 import { classifyMediaUrl, localizeLarkMediaReferences, parseLarkDocumentPayload, sniffImageType } from './lib/lark-prd-drift.mjs'
 
-// 安全边界 validateSource 沿用从本文件导入（common/lark-bot/__tests__/lark-pure.test.mjs 依赖此路径）。
+// 安全边界 validateSource 沿用从本文件导出（历史调用方依赖此路径）。
 export { validateSource } from './lib/lark-command.mjs'
 
 const { consumerRoot: repoRoot, config: bindingConfig } = resolveRoots()

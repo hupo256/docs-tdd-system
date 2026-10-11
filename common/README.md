@@ -1,6 +1,6 @@
 # common 公共规则入口
 
-> 自 2026-10-10 起冻结：新需求走 skill `prd-to-commit`（见 [使用说明](../docs/prd-to-commit/usage.md)），不读本目录。`common/` 只为 workflowVersion 1/2 存量项目和 lark-bot 保留，Web Lite 已废弃。
+> 自 2026-10-10 起冻结：新需求走 skill `prd-to-commit`（见 [使用说明](../docs/prd-to-commit/usage.md)），不读本目录。`common/` 只为 workflowVersion 1/2 存量项目保留（lark-bot 已于 2026-10-11 迁出为独立仓库 `~/github/lark-bot`），Web Lite 已废弃。
 
 `common/` 提供 workflowVersion 1/2 存量项目的流程规则与兼容专题。通用代码质量归全局 AGENTS/skill，FameEX 代码锚点归 `.cursor/rules/*.mdc`。
 
@@ -41,7 +41,7 @@
 24. [browser-e2e-mcp.md](./rules/browser-e2e-mcp.md)：Browser / Playwright MCP 自测（禁止项目内安装 Playwright）。
 25. [collaboration-and-notifications.md](./rules/collaboration-and-notifications.md)：协作通知总入口和安全边界。
 26. [lark-active-notification.md](./rules/lark-active-notification.md)：自定义机器人主动发群消息（G0-G8）规则。
-27. [lark-bot 子系统文档](./lark-bot/docs/README.md)：群内 @ 应用触发任务的完整链路（线程文字/图片上下文、项目 scope 注入、Figma 规格预取、bug 表跨项目回执、附件保留期与并行调度）运维手册；不是编码规则，不参与规则指纹。
+27. lark-bot 子系统文档（`~/github/lark-bot/docs/README.md`）：群内 @ 应用触发任务的完整链路（线程文字/图片上下文、项目 scope 注入、Figma 规格预取、bug 表跨项目回执、附件保留期与并行调度）运维手册；不是编码规则，不参与规则指纹。
 28. [lark-doc-sync.md](./rules/lark-doc-sync.md)：workflowVersion 1/2 存量项目的 Lark 来源同步与 PRD intake；新需求直接单次读取给定来源。
 29. [project-doc-structure.md](./rules/project-doc-structure.md)：项目文档目录规范。
 30. [CHANGELOG.md](./CHANGELOG.md)：公共规则、gate 脚本和模板的框架变更日志。
@@ -77,7 +77,6 @@
 | Claude/Codex Pre/PostToolUse 规则注入 | `node apps/web/docs_tdd/common/engine/agent-scripts/rule-context-hook.mjs --client <claude|codex>` |
 | Claude PostToolUse 代码门禁分发 | `node apps/web/docs_tdd/common/engine/agent-scripts/claude-posttooluse-gate.mjs` |
 | 上线后回收编码 worktree | `node apps/web/docs_tdd/common/engine/agent-scripts/decommission-worktree.mjs PR-01234 [--dry-run]` |
-| Lark Bot Gateway 任务 worker | `node apps/web/docs_tdd/common/lark-bot/lark-worker.mjs [--once]` |
 | PostToolUse Bash 执行证据日志 | `node apps/web/docs_tdd/common/engine/agent-scripts/log-exec.mjs --out <abs-log-path>` |
 | 发送 Lark 阶段卡片 | `node apps/web/docs_tdd/common/engine/agent-scripts/notify-lark.mjs G6 已完成 "摘要" --config apps/web/docs_tdd/prds/PR-01234/agent/scripts/pr-01234.json` |
 | 创建编码 worktree | `node apps/web/docs_tdd/common/engine/agent-scripts/prepare-coding-worktree.mjs PR-01234` |

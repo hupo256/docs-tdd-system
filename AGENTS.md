@@ -9,7 +9,7 @@
 | **新需求**（给了 PRD 和项目号） | 走 skill `prd-to-commit`（`~/.ai-rules/skills/prd-to-commit/SKILL.md`）。**不读本仓文档**，不创建 `prds/<ID>/`、状态 JSON 或证据套件。启动语：`用 prd-to-commit，项目号 PR-xxxxx，PRD：<链接>` |
 | **存量项目**（`prds/<ID>/README.md` 标记了 `workflowVersion: 1\|2`） | 按该项目 README 恢复，开工入口是 [common/rules/rule-router.md](./common/rules/rule-router.md) §2「存量流程路由」，命令见 [v3.5 引擎手册](./docs/legacy/docs-tdd-v3.5-manual.md)。不静默迁移，也不把旧台账要求带到新需求上 |
 | **改 prd-to-commit** | 先满足「同类问题出现 2 次，并且能在回放中复现」；改完用 [benchmarks/replay/](./benchmarks/replay/README.md) 回放验证，再按 [releases.md](./docs/prd-to-commit/releases.md) 的纪律发版 |
-| **改 lark-bot** | 见 [lark-bot 运维手册](./common/lark-bot/docs/README.md)；网关的 HTTP 契约变了，要同步 `~/.local/bin/lark-bot` |
+| **改 lark-bot** | 已迁出为独立仓库 `~/github/lark-bot`（2026-10-11），按该仓库的 `AGENTS.md` 操作，不在本仓改 |
 | **整理或新增文档** | 按 [docs/README.md](./docs/README.md) 的分类和命名放置 |
 
 **不要一次性读完 `common/`**（全量约 9–10 万 token）。按 rule-router 的场景表渐进加载。

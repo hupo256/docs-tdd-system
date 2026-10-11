@@ -196,7 +196,7 @@ const SELF_TEST_EXEMPT = new Set([
   'prepare-coding-worktree.mjs', // worktree 准备 IO
   'start-new-project.mjs', // 项目骨架 IO
   'sync-lark-docs.mjs', // Lark 只读同步 IO
-  // 注：AI 自动修 bug 的常驻服务已抽到 common/lark-bot/（含 lib/__tests__），不在本 agent-scripts 预算/自测扫描范围。
+  // 注：AI 自动修 bug 的常驻服务已迁出为独立仓库 ~/github/lark-bot（2026-10-11），不在本仓范围。
   'lib/fingerprint.mjs', // 指纹小工具（被 rule-release/effective-rules self-test 间接覆盖）
   'lib/roots.mjs', // 根解析（被多脚本 self-test 间接覆盖）
   'lib/golden-cases.mjs', // golden 变异用例数据表（apply/assert 闭包 + 数据，判定核心在 lib/golden-verdict.mjs 已自测；被 golden-run 端到端覆盖）
@@ -206,7 +206,7 @@ const SELF_TEST_EXEMPT = new Set([
   'lib/rule-session-runtime.mjs',
   'lib/cli-report.mjs', // CLI 报告打印小工具（只 console.log/warn，无导出纯逻辑）；行为由 capability/context 冒烟 + golden 覆盖
   'lib/project-status-report.mjs', // capability 体检报告 + worktree 解析（报告/IO 型）；由 docs-tdd capability 冒烟 + golden 覆盖
-  'lib/lark-command.mjs', // Lark 只读同步命令构造/校验；validateSource 由 common/lark-bot/__tests__/lark-pure.test.mjs 经 sync-lark-docs re-export 覆盖
+  'lib/lark-command.mjs', // Lark 只读同步命令构造/校验；引擎已冻结；lark-bot 迁出时带走了一份 validateSource 副本及其单测
 ])
 const ROUTER_FILE = 'rule-router.md'
 const README_FILE = 'README.md'
