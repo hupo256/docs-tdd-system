@@ -84,7 +84,7 @@ if (process.argv[1]?.endsWith('effective-sources.mjs') && process.argv.includes(
     assert.equal(lens.sources.adapters[2], g.cursorLocalGovernance)
     assert.equal(lens.sources.adapters[5], join(g.pi, 'AGENTS.md'))
     assert.equal(lens.sources.adapters[6], join(g.pi, 'extensions/docs-tdd-rules.ts'))
-    assert.ok(lens.sources.runtimeAdapters.length === 7)
+    assert.ok(lens.sources.runtimeAdapters.length === 4)
     console.log('effective-sources self-test passed.')
   } finally {
     rmSync(fixture, { recursive: true, force: true })

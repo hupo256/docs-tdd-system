@@ -267,7 +267,7 @@ node <mount>/common/engine/agent-scripts/decommission-worktree.mjs PR-01234
 
 ## 自检状态
 
-截至 2026-10-11：`check-doc-budget.mjs` 退出码为 0；`rule-release.mjs --check` 与 `effective-rules.mjs --check` 均为 fresh；`docs-tdd golden` 41 项全部通过。
+截至 2026-10-11（lark-bot 迁出后）：`check-doc-budget.mjs` 只剩一条与环境相关的失败：L2 golden 的规则数随 fameex-web 主仓当前检出的分支变化，主仓在 `feature/PR-02233` 时比 `origin/online` 少一条 alwaysApply 规则。要发布指纹时，用一份 `consumerRoot` 指向 online worktree 的临时配置（`DOCS_TDD_CONFIG=...`）运行 `rule-release.mjs --write`；`effective-rules.mjs --write` 仍用真实配置运行，否则 Cursor adapter 会因路径不同而比对失败。在主仓检出 online 时，`rule-release.mjs --check` 与 `effective-rules.mjs --check` 均为 fresh；`docs-tdd golden` 41 项全部通过。
 
 `docs-tdd doctor` 仍报 6 个 ERROR，这是冻结后的**预期状态，不要修**：ADAPTER-PROTOCOL（Codex/Claude/Pi 的全局入口不再声明 router/context/changed/gate）、CLAUDE-HOOK、CODEX-HOOK、CLIENT-RUNTIME-CONFORMANCE。2026-10-10 冻结时，这些 docs_tdd 注入 hook 和入口声明被有意从全局配置中移除。要让它们转绿，就得重新安装 hook，等于撤销冻结。维护 `common/` 后，先跑 `check-doc-links.mjs` 和 `check-doc-budget.mjs`，都通过后再运行 `rule-release.mjs --write`。
 

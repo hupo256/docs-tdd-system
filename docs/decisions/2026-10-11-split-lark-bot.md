@@ -1,6 +1,6 @@
 # 决策：lark-bot 拆为独立仓库，加修改范围契约；fameex-web 不再调用 docs_tdd 引擎（2026-10-11）
 
-> 状态：执行中 · 不取代其他决策（[2026-10-10 切换到 prd-to-commit](./2026-10-10-switch-to-prd-to-commit.md) 仍为现行）
+> 状态：已执行（C 已于 2026-10-11 完成切换；D 已在 fameex-web 本地分支提交，未 push） · 不取代其他决策（[2026-10-10 切换到 prd-to-commit](./2026-10-10-switch-to-prd-to-commit.md) 仍为现行）
 
 ## 背景
 
@@ -58,8 +58,8 @@
 | A3 + B1 | ✅ | lark-bot `2e7f9e1`、`3f89c33`…`e6609fe`。越界时任务挂成「待确认」：群里回复「确认扩大范围」即可续跑（失败状态没有群内出口）。claude CLI 实测接受分析 schema |
 | B2 | ✅ | lark-bot `90f6b40`、`afaf75c`；合并后 15 个测试文件共 507 条全部通过 |
 | B3 | ✅ 已准备 | docs_tdd 分支 `chore/split-lark-bot` `7dcdab7`，切换后合并 |
-| C | 待用户确认时间 | — |
-| D | 待用户确认 | — |
+| C | ✅ | 2026-10-11 切换：服务从新仓库运行，健康检查显示代码版本未落后；docs_tdd 合并 `d2d1380`；规则指纹 `91334667a79a` 与生效规则 `cf11742be7a7` 已重新发布 |
+| D | ✅ 本地 | fameex-web 分支 `fix/remove-docs-tdd-lint-staged` `caf0b23f8`（基于 `origin/online`，worktree `~/github/fix-docs-tdd-lint-staged`），未 push，何时合入由用户决定。v2 存量项目的提交守卫随之失效，交付前按各自 README 手动运行 |
 
 ### 范围契约（A3 / B1）
 

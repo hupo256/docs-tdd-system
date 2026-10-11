@@ -3,10 +3,26 @@
 整个 docs_tdd 仓库的版本时间线，只记版本和重大变更。细目分别见：
 
 - prd-to-commit：[docs/prd-to-commit/releases.md](./docs/prd-to-commit/releases.md)
-- docs_tdd 引擎、规则与 lark-bot：[common/CHANGELOG.md](./common/CHANGELOG.md)（更早的条目在 [CHANGELOG-archive.md](./common/CHANGELOG-archive.md)）
+- docs_tdd 引擎与规则：[common/CHANGELOG.md](./common/CHANGELOG.md)（更早的条目在 [CHANGELOG-archive.md](./common/CHANGELOG-archive.md)）
 - 各历史阶段的计划与复盘：[docs/archive/](./docs/archive/README.md)
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，按时间倒序排列。只写可核查的事实；效率和质量数字必须来自回放或真实运行的记录，并给出出处。
+
+## 2026-10-11 lark-bot 迁出为独立仓库
+
+见[决策记录](./docs/decisions/2026-10-11-split-lark-bot.md)。
+
+### Changed
+
+- lark-bot 用 `git subtree split` 带历史迁到 `~/github/lark-bot`，不再 import 本仓的任何代码。运行中的服务已切换到新仓库，`~/.local/bin/lark-bot` 转发到新仓库的 CLI。本仓删除 `common/lark-bot/`。
+- 引擎中对 lark-bot 的引用已删除：规则指纹的排除项、effective-sources 的 runtime adapters、预算和自测注释。随后重新发布了规则指纹 `91334667a79a` 和生效规则 `cf11742be7a7`。
+- 删除失效的项目级 worker 包装（PR-01685、PR-01973）。
+
+### Added（在 lark-bot 仓库）
+
+- 修改范围契约：所有会改代码的任务先跑只读分析，输出结构化的 `scope`；提交前用实际改动核对，越界时挂成「待确认」，群里回复「确认扩大范围」即可放行。
+- 内置独立代码规则扫描器（权威版本在 `~/.ai-rules` `cdae09b`，prd-to-commit 的 `check.mjs` 也调用它）。
+- PRD 优先从 `~/.prd-cache/<ID>/` 读取，其次读存量项目的 `prds/`。
 
 ## [docs-2026.10.11] — 2026-10-11 文档整理
 
