@@ -2,11 +2,18 @@
 
 整个 docs_tdd 仓库的版本时间线，只记版本和重大变更。细目分别见：
 
-- prd-to-commit：[docs/prd-to-commit/releases.md](./docs/prd-to-commit/releases.md)
+- prd-to-commit：[releases.md](/Users/aven/.ai-rules/labs/prd-to-commit/releases.md)（2026-10-11 起在 `~/.ai-rules/labs/prd-to-commit/`，不在本仓）
 - docs_tdd 引擎与规则：[common/CHANGELOG.md](./common/CHANGELOG.md)（更早的条目在 [CHANGELOG-archive.md](./common/CHANGELOG-archive.md)）
 - 各历史阶段的计划与复盘：[docs/archive/](./docs/archive/README.md)
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，按时间倒序排列。只写可核查的事实；效率和质量数字必须来自回放或真实运行的记录，并给出出处。
+
+## 2026-10-11 prd-to-commit 研发资产迁出
+
+### Removed
+
+- `benchmarks/replay/`、`docs/prd-to-commit/`（releases、iteration-ledger、usage、reports/）和 `docs/decisions/` 里与新需求默认流程相关的两份决策（2026-09-28 Web Lite、2026-10-10 prd-to-commit），迁到 [~/.ai-rules/labs/prd-to-commit/](/Users/aven/.ai-rules/labs/prd-to-commit/README.md)。本仓不再承担 prd-to-commit 的现役职能。
+- `docs/decisions/` 只保留 docs_tdd 自身历史（lark-bot 拆仓）；本仓指向迁出文件的链接改为绝对路径。
 
 ## 2026-10-11 lark-bot 迁出为独立仓库
 
@@ -29,7 +36,7 @@
 ### Changed
 
 - 人读文档统一放到 `docs/`，按现行流程（`prd-to-commit/`）、决策（`decisions/`）、存量手册（`legacy/`）、历史归档（`archive/`）分类，分类和命名规则见 [docs/README.md](./docs/README.md)。
-- 回放基准从 `plan/replay/` 移到 [benchmarks/replay/](./benchmarks/replay/README.md)，评分标准和结果记录分开存放；`score-prompt.sh` 改为按脚本位置定位评分标准，不再写死本仓路径（`prompt.tpl`、`codex-run.sh` 中指向回放 worktree 的本机路径仍保留）。
+- 回放基准从 `plan/replay/` 移到 `benchmarks/replay/`（同日再迁到 [~/.ai-rules/labs/prd-to-commit/replay/](/Users/aven/.ai-rules/labs/prd-to-commit/replay/README.md)），评分标准和结果记录分开存放；`score-prompt.sh` 改为按脚本位置定位评分标准，不再写死本仓路径（`prompt.tpl`、`codex-run.sh` 中指向回放 worktree 的本机路径仍保留）。
 - 根 README 改写为首页，只保留现状、快速开始和目录；docs_tdd v3.5 引擎的完整手册拆到 [docs/legacy/docs-tdd-v3.5-manual.md](./docs/legacy/docs-tdd-v3.5-manual.md)。
 - 本文件重写为整仓时间线，补上 v4 实验、Web Lite 和 prd-to-commit 的记录。
 - 复审修正（同日第二个提交）：
@@ -51,21 +58,21 @@
 
 ## prd-to-commit v1.2 — 2026-10-11
 
-浏览器核对打通：四个站点使用固定 dev server 加专用浏览器 profile，连 test 环境跑真实页面，写操作默认拦截。见 [releases.md](./docs/prd-to-commit/releases.md)。
+浏览器核对打通：四个站点使用固定 dev server 加专用浏览器 profile，连 test 环境跑真实页面，写操作默认拦截。见 [releases.md](/Users/aven/.ai-rules/labs/prd-to-commit/releases.md)。
 
 ## prd-to-commit v1.1 — 2026-10-11（正式版）
 
-在 6 个回放基准上，Claude 平均得分 95.3%，陷阱零违反；Codex 在 2 个基准上不低于历史首轮。成本约为历史的 1/4 到 1/16。未达标项：1 个中等需求的 token 超出目标约 15%。见[最终报告](./docs/prd-to-commit/reports/2026-10-11-final-report.md)。
+在 6 个回放基准上，Claude 平均得分 95.3%，陷阱零违反；Codex 在 2 个基准上不低于历史首轮。成本约为历史的 1/4 到 1/16。未达标项：1 个中等需求的 token 超出目标约 15%。见[最终报告](/Users/aven/.ai-rules/labs/prd-to-commit/reports/2026-10-11-final-report.md)。
 
 ## prd-to-commit v1.0 — 2026-10-10 · docs_tdd 冻结
 
-- 新需求改用 skill `prd-to-commit`；docs_tdd 引擎冻结在 v3.5.0，只用于收尾存量 `workflowVersion: 1|2` 项目；Web Lite 废弃。见[决策](./docs/decisions/2026-10-10-switch-to-prd-to-commit.md)。
-- 依据：[2026-10-09 现状审计](./docs/prd-to-commit/reports/2026-10-09-status-audit.md)、[正式化评估](./docs/prd-to-commit/reports/2026-10-10-readiness.md)，以及 PR-02306、PR-01930 两个回放。
+- 新需求改用 skill `prd-to-commit`；docs_tdd 引擎冻结在 v3.5.0，只用于收尾存量 `workflowVersion: 1|2` 项目；Web Lite 废弃。见[决策](/Users/aven/.ai-rules/labs/prd-to-commit/decisions/2026-10-10-switch-to-prd-to-commit.md)。
+- 依据：[2026-10-09 现状审计](/Users/aven/.ai-rules/labs/prd-to-commit/reports/2026-10-09-status-audit.md)、[正式化评估](/Users/aven/.ai-rules/labs/prd-to-commit/reports/2026-10-10-readiness.md)，以及 PR-02306、PR-01930 两个回放。
 - lark-bot：默认执行器改为 Claude；回收空闲的孤儿任务；新增 `claude-auth` 切换；修 bug 表前先做只读分诊。
 
 ## Web Lite — 2026-09-28
 
-新需求改走「PRD → 最小 Task → worktree → coding → 冷读 → 本地提交」，不再跑 G0–G8 或 v2 work-item。2026-10-10 被 prd-to-commit 取代。见[决策](./docs/decisions/2026-09-28-switch-to-web-lite.md)。
+新需求改走「PRD → 最小 Task → worktree → coding → 冷读 → 本地提交」，不再跑 G0–G8 或 v2 work-item。2026-10-10 被 prd-to-commit 取代。见[决策](/Users/aven/.ai-rules/labs/prd-to-commit/decisions/2026-09-28-switch-to-web-lite.md)。
 
 ## 优化落地与真实需求 Pilot — 2026-09-24 ~ 09-26
 

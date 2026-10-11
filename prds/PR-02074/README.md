@@ -1,9 +1,9 @@
 ---
 projectId: PR-02074
-status: active
+status: closed
 stage: G7
 branch: feature/PR-02074
-worktree: /Users/aven/github/PR-02074
+worktree: ""
 port: ""
 visualFidelity: standard
 prdSource: https://qfglxo2m3dc.sg.larksuite.com/wiki/G7DYwcDijiUnYbkMuiilT8y8gch

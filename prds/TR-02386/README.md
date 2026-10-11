@@ -1,9 +1,9 @@
 ---
 projectId: TR-02386
-status: active
+status: closed
 stage: G1
 branch: feature/TR-02386
-worktree: "/Users/aven/github/TR-02386"
+worktree: ""
 port: "4109"
 visualFidelity: standard
 prdSource: /Users/aven/github/docs_tdd/prds/TR-02386/inbox/PLAN.md

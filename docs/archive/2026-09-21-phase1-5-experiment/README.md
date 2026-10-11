@@ -49,7 +49,7 @@
 
 - [v3.5.0-review-and-fix-plan.md](./v3.5.0-review-and-fix-plan.md) Phase B：删除不可复算的效率指标和「生产验证成功」声明。
 - [common/CHANGELOG.md](../../../common/CHANGELOG.md) 2026-09-23 / 2026-09-24 条目：删除未经可比样本验证的效率与准确率结论。
-- [2026-10-09 现状审计](../../prd-to-commit/reports/2026-10-09-status-audit.md) §1：这些数字没有实测数据。
+- [2026-10-09 现状审计](/Users/aven/.ai-rules/labs/prd-to-commit/reports/2026-10-09-status-audit.md) §1：这些数字没有实测数据。
 
 ## 沉淀下来、仍然有效的东西
 

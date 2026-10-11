@@ -1,6 +1,6 @@
 # common 公共规则入口
 
-> 自 2026-10-10 起冻结：新需求走 skill `prd-to-commit`（见 [使用说明](../docs/prd-to-commit/usage.md)），不读本目录。`common/` 只为 workflowVersion 1/2 存量项目保留（lark-bot 已于 2026-10-11 迁出为独立仓库 `~/github/lark-bot`），Web Lite 已废弃。
+> 自 2026-10-10 起冻结：新需求走 skill `prd-to-commit`（见 [使用说明](/Users/aven/.ai-rules/labs/prd-to-commit/usage.md)），不读本目录。`common/` 只为 workflowVersion 1/2 存量项目保留（lark-bot 已于 2026-10-11 迁出为独立仓库 `~/github/lark-bot`），Web Lite 已废弃。
 
 `common/` 提供 workflowVersion 1/2 存量项目的流程规则与兼容专题。通用代码质量归全局 AGENTS/skill，FameEX 代码锚点归 `.cursor/rules/*.mdc`。
 

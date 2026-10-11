@@ -1,6 +1,6 @@
 # 决策：lark-bot 拆为独立仓库，加修改范围契约；fameex-web 不再调用 docs_tdd 引擎（2026-10-11）
 
-> 状态：已执行（C 已于 2026-10-11 完成切换；D 已在 fameex-web 本地分支提交，未 push） · 不取代其他决策（[2026-10-10 切换到 prd-to-commit](./2026-10-10-switch-to-prd-to-commit.md) 仍为现行）
+> 状态：已执行（C 已于 2026-10-11 完成切换；D 已在 fameex-web 本地分支提交，未 push） · 不取代其他决策（[2026-10-10 切换到 prd-to-commit](/Users/aven/.ai-rules/labs/prd-to-commit/decisions/2026-10-10-switch-to-prd-to-commit.md) 仍为现行，2026-10-11 已迁到 `~/.ai-rules/labs/prd-to-commit/decisions/`）
 
 ## 背景
 

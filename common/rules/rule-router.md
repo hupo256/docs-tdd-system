@@ -7,7 +7,7 @@
 
 - 走 `prd-to-commit`：拉 PRD（含内嵌表格）→ 需求清单（原句→落点）→ plan 依赖分批 → 用户确认一次 → worktree → 编码（批次并行）→ 改动文件检查 → 独立冷读 → 修复 → 本地 commit。细节以 skill 为准，本文件不复述。
 - Web Lite（[web-lite-workflow.md](./web-lite-workflow.md)）已于 2026-10-10 废弃，仅供查阅。
-- 依据：[现状审计](../../docs/prd-to-commit/reports/2026-10-09-status-audit.md)、[正式化评估](../../docs/prd-to-commit/reports/2026-10-10-readiness.md)、回放基准 [benchmarks/replay/](../../benchmarks/replay/)。
+- 依据：[现状审计](/Users/aven/.ai-rules/labs/prd-to-commit/reports/2026-10-09-status-audit.md)、[正式化评估](/Users/aven/.ai-rules/labs/prd-to-commit/reports/2026-10-10-readiness.md)、回放基准 [replay/](/Users/aven/.ai-rules/labs/prd-to-commit/replay/README.md)（均已迁到 `~/.ai-rules/labs/prd-to-commit/`）。
 
 ## 2. 存量流程路由
 

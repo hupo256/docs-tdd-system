@@ -1,7 +1,7 @@
 # docs_tdd v3.5 引擎手册（存量项目）
 
 > 适用范围：README 标记 `workflowVersion: 1` 或 `workflowVersion: 2` 的存量项目，以及维护 `common/engine/` 本身。
-> **新需求不适用**——新需求走 [prd-to-commit](../prd-to-commit/usage.md)。
+> **新需求不适用**——新需求走 [prd-to-commit](/Users/aven/.ai-rules/labs/prd-to-commit/usage.md)。
 > 本手册于 2026-10-11 从根 README 原样拆出，引擎自 2026-10-10 起冻结在 v3.5.0；变更细目见 [common/CHANGELOG.md](../../common/CHANGELOG.md)。
 
 ## 存量兼容

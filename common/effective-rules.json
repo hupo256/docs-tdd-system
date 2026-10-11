@@ -1,14 +1,14 @@
 {
   "version": 2,
-  "fingerprint": "2f9163904374ba134acba171cac65f9ce68b22af3cc472c6840974c2f74ba4d9",
-  "publishedAt": "2026-10-11T11:42:26.278Z",
-  "l3RuleReleaseFingerprint": "91334667a79a80ca3cef73439461d32d4b9f4402f50954e8f3d0035c370d65b7",
+  "fingerprint": "3c8ae71f9b0b442c401355b41f50a09404aa10fab9e0d20b344c223cfc0cc61a",
+  "publishedAt": "2026-10-11T12:50:38.597Z",
+  "l3RuleReleaseFingerprint": "fbbfbbd54f15d00355eecce906afc2f0caaba2c57754756c02ff030921dd4783",
   "clientMatrix": {
     "codex": {
       "kind": "direct",
       "adapter": "~/.codex/AGENTS.md",
       "enforcement": "SessionStart rule preflight + Pre/PostToolUse receipt/code gate + changed/gate",
-      "sourceFingerprint": "27fa3ed5829be1c41980b32cd6b7b9dded4e683a6c74710a01eb44f6a4b2988a",
+      "sourceFingerprint": "03d26bb5e1d69821f43033bcd745fc31236a13f7cb84d47587dc9ed56cddcc9d",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -112,14 +112,14 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "91334667a79a80ca3cef73439461d32d4b9f4402f50954e8f3d0035c370d65b7",
+      "l3Fingerprint": "fbbfbbd54f15d00355eecce906afc2f0caaba2c57754756c02ff030921dd4783",
       "conflictOverrides": []
     },
     "claude": {
       "kind": "direct",
       "adapter": "~/.claude/CLAUDE.md",
       "enforcement": "UserPromptSubmit rule preflight + Pre/PostToolUse receipt + changed/gate",
-      "sourceFingerprint": "27fa3ed5829be1c41980b32cd6b7b9dded4e683a6c74710a01eb44f6a4b2988a",
+      "sourceFingerprint": "03d26bb5e1d69821f43033bcd745fc31236a13f7cb84d47587dc9ed56cddcc9d",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -223,14 +223,14 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "91334667a79a80ca3cef73439461d32d4b9f4402f50954e8f3d0035c370d65b7",
+      "l3Fingerprint": "fbbfbbd54f15d00355eecce906afc2f0caaba2c57754756c02ff030921dd4783",
       "conflictOverrides": []
     },
     "cursor": {
       "kind": "direct",
       "adapter": "~/.cursor/rules/fameex-local-governance.mdc",
       "enforcement": "native glob/alwaysApply + resolver conformance + changed/gate",
-      "sourceFingerprint": "27fa3ed5829be1c41980b32cd6b7b9dded4e683a6c74710a01eb44f6a4b2988a",
+      "sourceFingerprint": "03d26bb5e1d69821f43033bcd745fc31236a13f7cb84d47587dc9ed56cddcc9d",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -334,14 +334,14 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "91334667a79a80ca3cef73439461d32d4b9f4402f50954e8f3d0035c370d65b7",
+      "l3Fingerprint": "fbbfbbd54f15d00355eecce906afc2f0caaba2c57754756c02ff030921dd4783",
       "conflictOverrides": []
     },
     "pi": {
       "kind": "direct",
       "adapter": "~/.pi/agent/AGENTS.md",
       "enforcement": "extension before_agent_start rule preflight + tool_call receipt + tool_result code gate + changed/gate",
-      "sourceFingerprint": "27fa3ed5829be1c41980b32cd6b7b9dded4e683a6c74710a01eb44f6a4b2988a",
+      "sourceFingerprint": "03d26bb5e1d69821f43033bcd745fc31236a13f7cb84d47587dc9ed56cddcc9d",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -445,7 +445,7 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "91334667a79a80ca3cef73439461d32d4b9f4402f50954e8f3d0035c370d65b7",
+      "l3Fingerprint": "fbbfbbd54f15d00355eecce906afc2f0caaba2c57754756c02ff030921dd4783",
       "conflictOverrides": []
     },
     "lark-codex": {
@@ -453,7 +453,7 @@
       "delegatesTo": "codex",
       "adapter": "common/engine/agent-scripts/rule-context-hook.mjs + common/engine/agent-scripts/rule-context.mjs + common/engine/agent-scripts/lib/l2-rule-resolver.mjs + common/engine/agent-scripts/lib/rule-consumption.mjs",
       "enforcement": "fresh effective rules + focused context + worker quality gate",
-      "sourceFingerprint": "27fa3ed5829be1c41980b32cd6b7b9dded4e683a6c74710a01eb44f6a4b2988a",
+      "sourceFingerprint": "03d26bb5e1d69821f43033bcd745fc31236a13f7cb84d47587dc9ed56cddcc9d",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -557,7 +557,7 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "91334667a79a80ca3cef73439461d32d4b9f4402f50954e8f3d0035c370d65b7",
+      "l3Fingerprint": "fbbfbbd54f15d00355eecce906afc2f0caaba2c57754756c02ff030921dd4783",
       "conflictOverrides": []
     },
     "lark-claude": {
@@ -565,7 +565,7 @@
       "delegatesTo": "claude",
       "adapter": "common/engine/agent-scripts/rule-context-hook.mjs + common/engine/agent-scripts/rule-context.mjs + common/engine/agent-scripts/lib/l2-rule-resolver.mjs + common/engine/agent-scripts/lib/rule-consumption.mjs",
       "enforcement": "fresh effective rules + focused context + worker quality gate",
-      "sourceFingerprint": "27fa3ed5829be1c41980b32cd6b7b9dded4e683a6c74710a01eb44f6a4b2988a",
+      "sourceFingerprint": "03d26bb5e1d69821f43033bcd745fc31236a13f7cb84d47587dc9ed56cddcc9d",
       "l1": [
         "~/.ai-rules/AGENT.md",
         "~/.ai-rules/skills/coding-quality/SKILL.md",
@@ -669,7 +669,7 @@
         "CLAUDE.md"
       ],
       "l3Router": "apps/web/docs_tdd/common/rules/rule-router.md",
-      "l3Fingerprint": "91334667a79a80ca3cef73439461d32d4b9f4402f50954e8f3d0035c370d65b7",
+      "l3Fingerprint": "fbbfbbd54f15d00355eecce906afc2f0caaba2c57754756c02ff030921dd4783",
       "conflictOverrides": []
     }
   },
@@ -760,7 +760,7 @@
     ".cursor/rules/state-context-interface.mdc": "cd3f3cf0da916c2315646c9d7b157391931ed2d6d2b6e6b756f87edf550b47c9",
     ".cursor/rules/state-decouple-implementation.mdc": "720aea501afbe5908f518ac8f072b2dfd5f4cfda6cf3cbee8b5c40ae8c109609",
     ".cursor/rules/state-lift-state.mdc": "98fd28e2f0c89a98ffb077ca5ba0a0b1777ebfffab2e4a13ea6a03b31282db8a",
-    "~/.ai-rules/AGENT.md": "28f2747e080341d28426cbaf9ec80f6ef51a1c0d4e6e6498dbb95cb5f7d81cc2",
+    "~/.ai-rules/AGENT.md": "e9ce95e53c4164d7e11988a24a05e8cbfcdce9dfd4add5d1d4177fa6dff968d9",
     "~/.ai-rules/skills/coding-quality/references/acceptance-evidence.md": "d1c98896f5119dd060d12a196f22c38fa04ac11086adf6699f85a821fa7df1db",
     "~/.ai-rules/skills/coding-quality/references/api-schema-mapper.md": "d59e1590deb2111545bd6d56139b03d74b9347dcafc35a8175d2344813e130ed",
     "~/.ai-rules/skills/coding-quality/references/controlled-form-hooks.md": "43c6845aeff7e6af1640c3a51d4475dc586918ae7f9cbc62a427adfa552f90e3",
@@ -776,13 +776,13 @@
     "~/.ai-rules/skills/coding-quality/SKILL.md": "e7bd8883e1761d49d7752dff79c5819d816aca762f1fb75a5a3ae31465d5fbbf",
     "~/.ai-rules/skills/figma-read/scripts/figma-fetch.mjs": "4502e3284d3d8950dcdd81ea0527463820721f4d5022bf433127d22e488b4b71",
     "~/.ai-rules/skills/figma-read/scripts/figma-spec.mjs": "bd1b00cd243c00697549b12fa2ddb3dd4648fe953243519985f5023e0aa93994",
-    "~/.ai-rules/skills/figma-read/SKILL.md": "c0e8cad3176bd50eccc1b6a70702afe07a63b284cb88a23d7c1c380f8e198b89",
-    "~/.claude/CLAUDE.md": "28f2747e080341d28426cbaf9ec80f6ef51a1c0d4e6e6498dbb95cb5f7d81cc2",
+    "~/.ai-rules/skills/figma-read/SKILL.md": "33485be4dbc16ca9dcce5a743cff31bf5b93c7d8988ad78f43ec9546a02f3218",
+    "~/.claude/CLAUDE.md": "e9ce95e53c4164d7e11988a24a05e8cbfcdce9dfd4add5d1d4177fa6dff968d9",
     "~/.claude/settings.json": "cb716ca0316a25d0a960f15f41523074f163ba4250b91b65150fc15d9c296a8a",
-    "~/.codex/AGENTS.md": "28f2747e080341d28426cbaf9ec80f6ef51a1c0d4e6e6498dbb95cb5f7d81cc2",
+    "~/.codex/AGENTS.md": "e9ce95e53c4164d7e11988a24a05e8cbfcdce9dfd4add5d1d4177fa6dff968d9",
     "~/.codex/hooks.json": "78922a784ee78e9e50587e93628cd3b9d4dfbe49087adc4514e6781cea38cbb9",
     "~/.cursor/rules/fameex-local-governance.mdc": "1b34e1269caf928ae2c157970bb915c798824345fd883817a9343001f76f2b45",
-    "~/.pi/agent/AGENTS.md": "28f2747e080341d28426cbaf9ec80f6ef51a1c0d4e6e6498dbb95cb5f7d81cc2",
+    "~/.pi/agent/AGENTS.md": "e9ce95e53c4164d7e11988a24a05e8cbfcdce9dfd4add5d1d4177fa6dff968d9",
     "~/.pi/agent/extensions/docs-tdd-rules.ts": "2a59c7468e3f8bbb4895d048979f94116c61f9c0dc30077c83f56ac5cb39ad3a",
     "AGENTS.md": "9b4521e96bdded4d20ba344f2cd78224cda48a0f8caa9331e5bedbb30aaf6166",
     "CLAUDE.md": "47353803f155e3beef8e05cbd8532d22acb34167f0ded8aa263164c383d68c34",

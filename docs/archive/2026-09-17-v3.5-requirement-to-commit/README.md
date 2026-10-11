@@ -1,6 +1,6 @@
 # v3.5 Requirement-to-Commit：交付真实性与 AutoPilot 规划（2026-09-17 ~ 2026-09-23）
 
-> 状态：已归档（只读） · 结论有效性：部分有效 · 后继：[../2026-09-21-phase1-5-experiment/](../2026-09-21-phase1-5-experiment/)、[../2026-09-24-optimization-pilot/](../2026-09-24-optimization-pilot/)；现行流程见 [../../prd-to-commit/releases.md](../../prd-to-commit/releases.md)
+> 状态：已归档（只读） · 结论有效性：部分有效 · 后继：[../2026-09-21-phase1-5-experiment/](../2026-09-21-phase1-5-experiment/)、[../2026-09-24-optimization-pilot/](../2026-09-24-optimization-pilot/)；现行流程见 [releases.md](/Users/aven/.ai-rules/labs/prd-to-commit/releases.md)
 
 ## 一句话
 
@@ -27,7 +27,7 @@ PR-02233 出现「局部实现被误报为整批完成」后，开始规划从�
 | 当时的声称 | 事后核实 |
 |---|---|
 | 交接（09-19）：「v3.5 实施范围内没有剩余代码项」「完成标准 1–9 已满足」 | 09-21 审计认定这是 overclaim：模块已实现，但没接入 `run`，也没有真实项目认证。审计提出 `module-implemented / wired-to-run / synthetic-tested / real-project-certified` 四级状态词，作为纠偏 |
-| 四项目 replay：`silentOmissionCount = 0`、`falseCompletionCount = 0` | 只说明算法能识别人工构造的夹具（synthetic）。09-21 审计和 [CHANGELOG 09-24](../../../common/CHANGELOG.md) 都说明它不能证明真实 PRD 被完整读取。10-09 审计（[status-audit](../../prd-to-commit/reports/2026-10-09-status-audit.md)）显示这四个上线项目提测后仍分别漏了 3–5 项 |
+| 四项目 replay：`silentOmissionCount = 0`、`falseCompletionCount = 0` | 只说明算法能识别人工构造的夹具（synthetic）。09-21 审计和 [CHANGELOG 09-24](../../../common/CHANGELOG.md) 都说明它不能证明真实 PRD 被完整读取。10-09 审计（[status-audit](/Users/aven/.ai-rules/labs/prd-to-commit/reports/2026-10-09-status-audit.md)）显示这四个上线项目提测后仍分别漏了 3–5 项 |
 | 主计划附录 F / 设计 F：当前计划可达「55% AutoPilot」，v3.9 达 80%，v4.0 达 90%，「3–4 周达成」 | **未经实测**，是主观估算。到 10-10 冻结为止，没有任何 AutoPilot 等级通过认证 |
 | 09-21 审计的成熟度表（安全 75%、证据 80%、连续执行 35%、综合 55%–60%） | **未经实测**，原文自己写明是「粗略成熟度评估」 |
 | 09-21 审计：「默认项目流程文件预计从 253 个降至 12 个」「context 字符代理显著下降」 | **未经实测**，属预计值。原文也说明不能把它表述为 token 降幅。09-24 的 CHANGELOG 删除了未经可比样本验证的效率结论 |
@@ -42,7 +42,7 @@ PR-02233 出现「局部实现被误报为整批完成」后，开始规划从�
 - **B2 schema 落地**：`codeLocator / deliveryTarget / wiring / blockedBy` 已写进 [vnext-work-item.schema.json](../../../common/engine/schemas/vnext-work-item.schema.json)，三维对账结果见 [vnext-reconcile-result.schema.json](../../../common/engine/schemas/vnext-reconcile-result.schema.json)。
 - **B3 fixture 落地**：[vnext-reconcile-cases.json](../../../common/engine/fixtures/vnext-reconcile-cases.json) 中有 PR-02233 `SwitchVerifyMethodDialog` 用例；四项目事故 replay 在 [fixtures/vnext-replay/](../../../common/engine/fixtures/vnext-replay/)。
 - **引擎模块**：[vnext-delivery-truth.mjs](../../../common/engine/agent-scripts/lib/vnext-delivery-truth.mjs)、[vnext-repair-policy.mjs](../../../common/engine/agent-scripts/lib/vnext-repair-policy.mjs)、[vnext-source-graph.mjs](../../../common/engine/agent-scripts/lib/vnext-source-graph.mjs)、[vnext-runtime-decisions.mjs](../../../common/engine/agent-scripts/lib/vnext-runtime-decisions.mjs)、[vnext-work-context.mjs](../../../common/engine/agent-scripts/lib/vnext-work-context.mjs)。随 v2 一起冻结，不再演进。
-- **思想被 prd-to-commit 轻量继承**：「requirement → 真实代码落点」演变为需求清单「原句→落点」逐行核对，「provider 存在≠consumer 接入」和集合 expectedCount 演变为冷读里的同因搜索，「不自动 push / 不伪造完成」继续保留。见 skill `~/.ai-rules/skills/prd-to-commit/SKILL.md`（仓库外）和 [docs/prd-to-commit/](../../prd-to-commit/)。
+- **思想被 prd-to-commit 轻量继承**：「requirement → 真实代码落点」演变为需求清单「原句→落点」逐行核对，「provider 存在≠consumer 接入」和集合 expectedCount 演变为冷读里的同因搜索，「不自动 push / 不伪造完成」继续保留。见 skill `~/.ai-rules/skills/prd-to-commit/SKILL.md`（仓库外）和 [~/.ai-rules/labs/prd-to-commit/](/Users/aven/.ai-rules/labs/prd-to-commit/README.md)。
 - **Git 基线语义**：「环境分支禁写、只要求共同历史」与 [common/rules/git-branch-flow.md](../../../common/rules/git-branch-flow.md) 一致。
 
 ## 教训

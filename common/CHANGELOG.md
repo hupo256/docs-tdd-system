@@ -16,7 +16,7 @@
 
 ## 2026-10-10（冻结：新需求改用 prd-to-commit）
 
-- **冻结**：新需求统一走 skill `prd-to-commit`；本引擎停在 v3.5.0，只用于收尾 `workflowVersion: 1|2` 存量项目；Web Lite 废弃。`rule-router.md` §1 改为指向 skill，`startup-prompt.md` 同步。决策见 [docs/decisions](../docs/decisions/2026-10-10-switch-to-prd-to-commit.md)。
+- **冻结**：新需求统一走 skill `prd-to-commit`；本引擎停在 v3.5.0，只用于收尾 `workflowVersion: 1|2` 存量项目；Web Lite 废弃。`rule-router.md` §1 改为指向 skill，`startup-prompt.md` 同步。决策见 [decisions](/Users/aven/.ai-rules/labs/prd-to-commit/decisions/2026-10-10-switch-to-prd-to-commit.md)。
 - **lark-bot**：默认执行器改为 Claude；网关启动时与每 5 分钟回收租约过期的孤儿任务；新增 `lark-bot claude-auth local|proxy`；无人值守任务的常驻规则章节改为 rule-router「## 4. 上下文与验证节制」；修 bug 表任务先做只读分诊，只有 `frontend_fix` 才进入改代码。
 - **生效边界**：fameex-web 的 pre-commit 仍调用 `precommit-verify-code-rules.mjs`，冻结不影响提交路径上的代码规则检查。
 

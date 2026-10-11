@@ -49,8 +49,8 @@ v3.5 stable 发布当天，为解决「小改动耗时长、Token 多」先后�
 
 - 09-24 [CHANGELOG](../../../common/CHANGELOG.md)「优化计划 A/B 首批止损」：公开 `kickoff` 委托 v2 orchestrator；旧 v4 入口仅转发并拒绝 `--force-lite`；旧 Lite executor 改为无写入禁用态；模板撤销预置的 approved/scope approval；Lite 指南改为历史归档指针，删除未经可比样本验证的效率与准确率结论。对应代码提交 aa31b21（禁用 executor、kickoff-v4 转发）、6e26d1d（删除 rule-loader-v4 / vnext-context-v4）。
 - 同日 ebb7c59 清理实验项目目录 `PR-02233-BTN-LOADING`、`TEST-V4-LITE-001`、`PR-02208`（PR-02208 于 09-26 ca4558c 重新作为真实项目建档）；09-26 3b2e09c 删除 `plan/v4-action-plan.md`、`plan/v4-complete-summary.md`。
-- 09-28 [切换 Web Lite 决策](../../decisions/2026-09-28-switch-to-web-lite.md)明确：「目前没有可核实的 10 分钟 / 7K token / 100% 覆盖实验数据，不把它作为目标基线」。
-- 量级参照：10-10 用 prd-to-commit 真实实跑 PR-02208，计量 9.38M token、26 分钟（[实跑结果](../../../benchmarks/replay/results/2026-10-10-PR-02208-live-run.md)）。范围不同、不可直接比较，但说明本阶段「~7K token」类数字是自估而非计量。
+- 09-28 [切换 Web Lite 决策](/Users/aven/.ai-rules/labs/prd-to-commit/decisions/2026-09-28-switch-to-web-lite.md)明确：「目前没有可核实的 10 分钟 / 7K token / 100% 覆盖实验数据，不把它作为目标基线」。
+- 量级参照：10-10 用 prd-to-commit 真实实跑 PR-02208，计量 9.38M token、26 分钟（[实跑结果](/Users/aven/.ai-rules/labs/prd-to-commit/replay/results/2026-10-10-PR-02208-live-run.md)）。范围不同、不可直接比较，但说明本阶段「~7K token」类数字是自估而非计量。
 - 未撤回的残留：`precommit-verify-code-rules.mjs` 中按 `efficiencyRoute` 分档的逻辑在整理基线 2f39fdd 仍存在（随 v2 引擎一起冻结）。
 
 ## 沉淀下来、仍然有效的东西

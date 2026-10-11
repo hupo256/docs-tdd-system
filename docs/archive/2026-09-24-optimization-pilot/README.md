@@ -1,6 +1,6 @@
 # 优化落地计划与真实需求 Pilot（2026-09-24 ~ 2026-09-26）
 
-> 状态：已归档（只读） · 结论有效性：未完成即被取代（批次 A–C 与 v4.x M0–M2 已实现并通过合成验证；Pilot 与 cutover 未完成） · 后继：[Web Lite 切换记录](../../decisions/2026-09-28-switch-to-web-lite.md) → [2026-10-09 现状审计](../../prd-to-commit/reports/2026-10-09-status-audit.md) → prd-to-commit
+> 状态：已归档（只读） · 结论有效性：未完成即被取代（批次 A–C 与 v4.x M0–M2 已实现并通过合成验证；Pilot 与 cutover 未完成） · 后继：[Web Lite 切换记录](/Users/aven/.ai-rules/labs/prd-to-commit/decisions/2026-09-28-switch-to-web-lite.md) → [2026-10-09 现状审计](/Users/aven/.ai-rules/labs/prd-to-commit/reports/2026-10-09-status-audit.md) → prd-to-commit
 
 ## 一句话
 
@@ -45,7 +45,7 @@
 | v4.x M3 真实 Pilot | 状态停在 `blocked-on-new-real-demand` |
 | 公开命令下 repair 二次失败预算与中断恢复 E2E | 未做，随引擎冻结 |
 | 既有债：L2 golden `47 != 49`、`PROJECTS.md` 派生漂移 | 计划写「交给对应 owner」但未指名；git log 中未见后续处理 |
-| 效率基线 | 未建立可审计基线；Web Lite 决策明确不采用未核实数字。prd-to-commit 改用 [回放基准](../../../benchmarks/replay/) 度量 |
+| 效率基线 | 未建立可审计基线；Web Lite 决策明确不采用未核实数字。prd-to-commit 改用 [回放基准](/Users/aven/.ai-rules/labs/prd-to-commit/replay/README.md) 度量 |
 
 ## 沉淀下来、仍然有效的东西
 

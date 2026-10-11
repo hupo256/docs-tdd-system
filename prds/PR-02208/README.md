@@ -1,10 +1,10 @@
 ---
 projectId: PR-02208
-status: active
+status: closed
 stage: G1
 branch: "feature/PR-02208"
 baseRef: "origin/online"
-worktree: "/Users/aven/github/PR-02208"
+worktree: ""
 port: ""
 visualFidelity: standard
 prdSource: https://qfglxo2m3dc.sg.larksuite.com/wiki/TWvcwhONMieDKPkxA0wlrP0cghh
