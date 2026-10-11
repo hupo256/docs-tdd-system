@@ -1,8 +1,14 @@
 # prd-to-commit 自主迭代最终报告（2026-10-11）
 
-> 写给你（Aven）。你只需要看这一份。过程台账见 [autonomous-iteration-ledger.md](../iteration-ledger.md)，使用方法见 [usage.md](../usage.md)。
+> 写给你（Aven）。你只需要看这一份。过程台账见 [iteration-ledger.md](../iteration-ledger.md)，使用方法见 [usage.md](../usage.md)。
 >
-> 后记：本报告是 v1.1 发布时的快照。§3 第 4 条「浏览器核对基本没做」已在同日的 v1.2 中解决，见 [releases.md](../releases.md)。
+> 后记：本报告是 v1.1 发布时的快照，正文不再修改。§3 第 4 条「浏览器核对基本没做」已在同日的 v1.2 中解决，见 [releases.md](../releases.md)。
+>
+> 勘误（2026-10-11 复核）：
+> - §1「其中 4 个高出 2–5 分」应为 6 个基准**全部**高于历史首轮，分别 +2、+2、+4、+3、+2、+5。
+> - §1 说「取各基准用最终版规则跑出的结果」，实际只有 PR-02273 R5 跑在 v1.1 tag 上，其余为 v1.1-dev / v1.1-rc，各轮版本见[台账](../iteration-ledger.md)。
+> - Codex 在 PR-02022 上的 12/12 跑在 v1.1-dev（台账记为 v1.0.1+），不是 v1.1 tag；§4 表格本身写的是 v1.1-dev。
+> - 平均分 95.3% 的精确值是 95.24%。
 
 ## 一句话结论
 
@@ -94,7 +100,7 @@ Codex 使用注意：
 
 1. 下一个真实需求直接用：`用 prd-to-commit，项目号 PR-xxxxx，PRD：<链接>`。清单出来时回答待确认（尤其是码值和接口）。
 2. 提测后把 bug 表的结果告诉我（或任何会话），用于观察期统计。
-3. 以后改 skill，按 [prd-to-commit-usage.md](../usage.md) 里的维护规则来：先回放，没有改善就撤回。
+3. 以后改 skill，按 [usage.md](../usage.md) 里的维护规则来：先回放，没有改善就撤回。
 
 ## 7. 本次的产物
 

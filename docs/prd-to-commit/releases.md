@@ -7,7 +7,11 @@ skill 本体在 `~/.ai-rules/skills/prd-to-commit/`（独立 git 仓库），版
 - **加规则的门槛**：同类问题出现 2 次，并且能在回放中复现。
 - **放行条件**：改动后至少回放受影响的基准；得分不低于上一版，且陷阱零违反。没有改善就撤回。
 - **体量上限**：SKILL.md ≤150 行、≤18KB。超了先精简再加。
-- **记录**：每次打 tag，在本文件顶部追加一节，并在 [iteration-ledger.md](./iteration-ledger.md) 记录回放结果。
+- **记录**：每次打 tag，在本文件顶部追加一节，并在 [iteration-ledger.md](./iteration-ledger.md) 记录回放结果（不回放的要写明原因）；同时更新根 README「现状一览」的版本列和根 CHANGELOG。未打 tag 的提交记在「未发布」一节。
+
+## 未发布
+
+- `fcfd23e`（2026-10-11）：Codex 沙箱里 `.git` 只读、无法提交时，改为把提交打成 bundle 交回（Codex 中出现 3 次）。只改 SKILL.md 文字，未回放；下次打 tag 时并入。
 
 ## v1.2 — 2026-10-11
 
@@ -16,7 +20,7 @@ skill 本体在 `~/.ai-rules/skills/prd-to-commit/`（独立 git 仓库），版
 - 新增 `scripts/browser.mjs`、`browser-sites.json`、`dev.mjs` 和 `references/browser.md`：web、admin、legacy-admin、futures-legacy-admin 四个站点用固定端口的 dev server 加专用浏览器 profile，跑真实页面，连 test 环境。
 - 后台共享登录态（localStorage / window.name），legacy 代理指向 test；只读接口放行，写操作默认拦截。
 - 删除已下线的 futures-admin Next 站点配置。
-- 证据：四个站点完成真实页面验证。后台各页面的验证脚本细节尚未补齐。
+- 证据：四个站点完成真实页面验证。改动集中在浏览器核对：新增脚本和参考文档，并在 SKILL.md 里补了核对步骤的说明（`ccae9bd`）。没有做基准回放，放行依据是四个站点的真实页面验证。后台各页面的验证脚本细节尚未补齐。
 
 ## v1.1 — 2026-10-11（正式版）
 

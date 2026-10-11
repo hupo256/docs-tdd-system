@@ -4,11 +4,12 @@
 
 ## 本地环境
 
-- 本仓：`/Users/aven/github/docs_tdd`（独立 git 仓库，只做本地提交）。
+- 本仓：`/Users/aven/github/docs_tdd`（独立 git 仓库，远端 `github.com/hupo256/docs-tdd-system`；默认只做本地提交，push 需当次授权）。
 - 挂载：`/Users/aven/github/fameex-web/apps/web/docs_tdd` → 本仓（软链）。各 feature worktree 也通过软链读取同一份，禁止复制目录。
 - 新需求流程：skill `prd-to-commit`（`~/.ai-rules/skills/prd-to-commit/`），过程文件在 `~/.prd-cache/<ID>/`，不写入本仓。
 - lark-bot：CLI 为 `~/.local/bin/lark-bot`（`DOCS_ROOT` 指向本仓），密钥在 `~/.config/fameex-lark/`。
 - 当前工作重点：**TR-02386 登录/注册/三方登录迁移到 web-next**——最近工作流结果 V2 enforced passed（2026-09-16）。本行由 `update-project-index.mjs --write` 从最近 Gate / verify 活动派生，勿手改。
+- 上一行的说明：引擎 2026-10-10 冻结后不再有新的 Gate 活动，它只反映存量项目最近一次 Gate，不代表当前在做的需求。新需求的进度在 `~/.prd-cache/<ID>/`。
 
 ## 存量项目与 worktree
 
@@ -17,5 +18,5 @@
 ## 中断后恢复
 
 - **新需求**：进度在 `~/.prd-cache/<ID>/` 的 checklist.md、plan.md、run-log.md 和 `~/github/<ID>` worktree 的提交里。新会话里让 AI 先读这三个文件和 worktree 的 `git log`，再接着做。重跑 skill 时，worktree 已存在会直接复用。
-- **存量项目**：先读该项目 README 里的 `workflowVersion`，再按 [rule-router.md](./common/rules/rule-router.md) §1 的启动协议恢复。
+- **存量项目**：先读该项目 README 里的 `workflowVersion`，再按 [rule-router.md](./common/rules/rule-router.md) §2「存量流程路由」恢复。
 - 不要自动切到其他项目，除非用户明确要求。

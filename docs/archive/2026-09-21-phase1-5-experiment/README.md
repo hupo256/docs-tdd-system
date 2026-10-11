@@ -1,4 +1,4 @@
-# Phase 1–5 优化实验（2026-09-21 – 2026-09-24）
+# Phase 1–5 优化实验（2026-09-21 ~ 2026-09-24）
 
 > 状态：已归档（只读） · 结论有效性：效率/准确率指标已撤回；安全修复与版本入口部分有效 · 前序：[v3.5 Requirement-to-Commit](../2026-09-17-v3.5-requirement-to-commit/) · 后继：[v4 Lite 实验](../2026-09-23-v4-lite-experiment/)、[09-24 优化落地计划](../2026-09-24-optimization-pilot/optimization-execution-plan-2026-09-24.md)
 

@@ -7,6 +7,24 @@
 
 > 更早的历史条目已归档到 [CHANGELOG-archive.md](./CHANGELOG-archive.md)（不进 context、不参与预算）。
 
+## 2026-10-11（文档整理与版本源校正）
+
+- **文档整理**：人读文档移出 `common/` 之外的 `plan/`、`practice-log/`、`output-tdd/`，统一放到仓库 `docs/` 与 `benchmarks/replay/`；`common/` 内的路径和规则正文不变，只修正指向已删除目录的链接。整仓时间线见根 [CHANGELOG.md](../CHANGELOG.md)。
+- **现行口径**：`common/README.md`、`new-project-kickoff.md`、`vnext/README.md`、`docs/lite-mode-guide.md` 和三个专题中仍把 Web Lite 写成新需求流程的句子，改为指向 `prd-to-commit`；只改正文，未改任何被 lark-bot 按标题注入的章节标题。
+- **版本源**：`lib/system-version.mjs` 的 `VERSION_HISTORY` 与真实时间线对齐——v3.5.0 改为 09-23 stable（原写作 09-21 的 Phase 1-5 实验）、删除不存在的 v3.0.0、补 v3.1–v3.3 与 v2.0.0（09-08）。只改数据，自测通过。
+- **未重新发布**：`rule-release --write` 依赖 `check-doc-budget` 全部通过，而 PR-02208 assumptions 枚举、`g0_g2_scope` 超预算、L2 golden 49≠47、kickoff e2e 的 baseRef 断言这四项冻结前就已失败，所以发布清单仍停在 2026-09-26。清单见 [v3.5 引擎手册](../docs/legacy/docs-tdd-v3.5-manual.md)「已知未修项」。
+
+## 2026-10-10（冻结：新需求改用 prd-to-commit）
+
+- **冻结**：新需求统一走 skill `prd-to-commit`；本引擎停在 v3.5.0，只用于收尾 `workflowVersion: 1|2` 存量项目；Web Lite 废弃。`rule-router.md` §1 改为指向 skill，`startup-prompt.md` 同步。决策见 [docs/decisions](../docs/decisions/2026-10-10-switch-to-prd-to-commit.md)。
+- **lark-bot**：默认执行器改为 Claude；网关启动时与每 5 分钟回收租约过期的孤儿任务；新增 `lark-bot claude-auth local|proxy`；无人值守任务的常驻规则章节改为 rule-router「## 4. 上下文与验证节制」；修 bug 表任务先做只读分诊，只有 `frontend_fix` 才进入改代码。
+- **生效边界**：fameex-web 的 pre-commit 仍调用 `precommit-verify-code-rules.mjs`，冻结不影响提交路径上的代码规则检查。
+
+## 2026-09-28 ~ 10-05（Web Lite 与 lark-bot 跟进）
+
+- **Web Lite**：新需求改走「PRD → 最小 Task → worktree → coding → 冷读 → 本地提交」，不再跑 G0–G8 或 v2 work-item；MSW 限于必要场景，Task 要求逐字摘录 PRD 文案（a3c0518）。已于 2026-10-10 废弃。
+- **lark-bot**：worktree 依赖按需安装、允许提交 hook 运行（09-28）；rule-router 章节重构后同步注入的章节标题（10-05）。
+
 ## 2026-09-26（change-set Git 绑定纠偏）
 
 - **遵行既有分支规则**：修复 change-set 初始化擅自生成 `fix/<PROJECT-ID>-<changeId>`、以父 feature 为基线并创建后缀 worktree 的行为。项目内 change 现在复用父项目已有的 `branch/baseRef/worktree`；没有父项目绑定时，仍按 `git-branch-flow.md` 与 `new-project-kickoff.md` 的既有 taxonomy 创建 `feature/<PROJECT-ID>` 或 `fix/<PROJECT-ID>`，基线为 `origin/online`。本次只修实现偏差，不新增规则。

@@ -107,7 +107,7 @@ LARK_CLI_BIN=/path/to/lark-cli node apps/web/docs_tdd/prds/<PROJECT-ID>/agent/sc
 
 ## 8. 富媒体与删除线读取规则
 
-> 本节的 intake manifest、PRD drift 和 G2 动作只用于 workflowVersion 1/2 存量项目。Web Lite 按用户给定 revision 单次完整读取；无法读到影响 Web 的内容时说明具体缺口，不重试或改读其他 revision。
+> 本节的 intake manifest、PRD drift 和 G2 动作只用于 workflowVersion 1/2 存量项目。新需求（`prd-to-commit`）由 skill 的 fetch-prd 单次落盘读取；无法读到影响 Web 的内容时说明具体缺口，不重试或改读其他 revision。
 
 Lark CLI 导出的 Markdown 不是完整视觉还原稿。Agent 读取 PRD 时必须同时检查正文、表格、图片、白板 / 思维导图占位和删除线，不能把“CLI 已导出 Markdown”等同于“全部需求已读”。
 

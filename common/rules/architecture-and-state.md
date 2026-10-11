@@ -132,7 +132,7 @@ Modal、分享渠道行、底部浮层、分页、状态 CTA **必须先 grep �
 
 ## 8. 存量项目 Mock 策略：workflowVersion 1/2
 
-本节中的 manifest、assumptions、waiver、Gate 和证据要求仅用于对应存量项目；不得带入 Web Lite 新需求。Web Lite 的 MSW 约定以 [web-lite-workflow.md](./web-lite-workflow.md) 为准。
+本节中的 manifest、assumptions、waiver、Gate 和证据要求仅用于对应存量项目；不得带入新需求（新需求走 `prd-to-commit`，MSW 约定以该 skill 为准）。
 
 **存量项目主路径**：适用项目按 **MSW 路线 B**（§8.4.1）实施；service/hook/mapper 从第一天只写真实请求，mock 只在 `src/mocks/handlers/`。存量项目的 waiver 和验收要求仍按原规则执行。**遗留 `if(USE_MOCK)` 路线 A 的隔离/拆除税已移至 [mock-legacy-route-a.md](./mock-legacy-route-a.md)**。
 

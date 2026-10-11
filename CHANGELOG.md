@@ -13,13 +13,21 @@
 ### Changed
 
 - 人读文档统一放到 `docs/`，按现行流程（`prd-to-commit/`）、决策（`decisions/`）、存量手册（`legacy/`）、历史归档（`archive/`）分类，分类和命名规则见 [docs/README.md](./docs/README.md)。
-- 回放基准从 `plan/replay/` 移到 [benchmarks/replay/](./benchmarks/replay/README.md)，评分标准和结果记录分开存放；`score-prompt.sh` 不再写死仓库绝对路径。
+- 回放基准从 `plan/replay/` 移到 [benchmarks/replay/](./benchmarks/replay/README.md)，评分标准和结果记录分开存放；`score-prompt.sh` 改为按脚本位置定位评分标准，不再写死本仓路径（`prompt.tpl`、`codex-run.sh` 中指向回放 worktree 的本机路径仍保留）。
 - 根 README 改写为首页，只保留现状、快速开始和目录；docs_tdd v3.5 引擎的完整手册拆到 [docs/legacy/docs-tdd-v3.5-manual.md](./docs/legacy/docs-tdd-v3.5-manual.md)。
 - 本文件重写为整仓时间线，补上 v4 实验、Web Lite 和 prd-to-commit 的记录。
+- 复审修正（同日第二个提交）：
+  - `common/` 里仍把 Web Lite 写成新需求流程的正文改为指向 prd-to-commit（不改被 lark-bot 引用的标题）；
+  - 引擎版本源 `system-version.mjs` 的历史与本文件对齐；
+  - `common/CHANGELOG.md` 补齐 09-28 之后的条目；
+  - 存量项目指针从 rule-router §1 改为 §2；
+  - Lite 遗留模板和 lark 交接快照移入归档，`common/docs/`、`common/templates/` 两个目录不再存在；
+  - 重新生成 PROJECTS.md；规则指纹没有重新发布：`rule-release --write` 被引擎的已知失败挡住，已记录在[引擎手册](./docs/legacy/docs-tdd-v3.5-manual.md)「已知未修项」；
+  - 修正 usage、台账中的数字，最终报告加勘误。
 
 ### Removed
 
-- `plan/`、`practice-log/`、`output-tdd/`、`share/` 四个目录，以及根目录的 `RELEASE-v3.5.0.md`、`MIGRATION.md`、`VERSION`。内容迁移位置见[旧路径对照](./docs/archive/README.md)。`VERSION` 不再保留：仓库里有多个组件，各自的版本来源见 [docs/README.md](./docs/README.md)。
+- `plan/`、`practice-log/`、`share/` 三个目录和 `output-tdd/` 下的报告（该目录本身仍是引擎运行时日志的位置，已被 gitignore），以及根目录的 `RELEASE-v3.5.0.md`、`MIGRATION.md`、`VERSION`。内容迁移位置见[旧路径对照](./docs/archive/README.md)。`VERSION` 不再保留：仓库里有多个组件，各自的版本来源见 [docs/README.md](./docs/README.md)。
 - 28 份冗余的完成报告、日报和被取代的计划草稿，内容合并进对应阶段纪要后删除。原路径登记在各纪要中，可用 `git show 2f39fdd:<原路径>` 取回。
 - 残留的测试目录 `apps/web/docs_tdd/prds/TEST-V4-LITE-001/`（v4 Lite 实验的 kickoff 产物，路径套错了一层）。
 - 旧版本文件里的 v3.5.0 效率、准确率指标（「准确率 +30%」「Token −60%」等）。这些数字已于 09-24 撤回，此前在本文件里一直没删。原始声明保留在[归档的发布说明](./docs/archive/2026-09-21-phase1-5-experiment/release-notes-v3.5.0.md)中作为证据。
@@ -57,11 +65,11 @@
 - 09-21 的 Phase 1–5 实验模块曾以「v3.5.0 发布」的名义带着效率指标对外说明，当天审查发现安全问题后回滚为只读候选，指标于 09-24 撤回。见[阶段纪要](./docs/archive/2026-09-21-phase1-5-experiment/README.md)。
 - 细目：[common/CHANGELOG.md](./common/CHANGELOG.md) 2026-09-19、09-23 条；设计与计划见[阶段纪要](./docs/archive/2026-09-17-v3.5-requirement-to-commit/README.md)。
 
-## docs_tdd v3.1 – v3.3 — 2026-09-11 ~ 09-16
+## docs_tdd v3.1.0 ~ v3.3.0 — 2026-09-11 ~ 09-16
 
 v3.1 定版（09-11），v3.2 改进 Intake 和 Review 的可靠性，v3.3 实现 Autopilot Implementation Loop（均为 09-12），随后补齐审查成本上限、验证经济和 Hook 兼容。首批真实项目的实践记录见[阶段纪要](./docs/archive/2026-09-12-v3.1-v3.3-practice/README.md)。
 
-## docs_tdd v2（workflowVersion 2）— 2026-09-08
+## docs_tdd v2.0.0 — 2026-09-08（启用 workflowVersion 2 协议）
 
 新需求默认使用 v2：work-item 状态机，`docs-tdd verify` 是唯一正式出口，结果全等级 enforced。存量项目继续用 v1。见[切换决策](./common/vnext/cutover-decision-20260908.md)。
 

@@ -58,7 +58,7 @@ v3.5 stable 发布当天，为解决「小改动耗时长、Token 多」先后�
 - **规则按需加载**：rule-loader-v4 的「按档位裁剪」实现已删除，但「不全量加载规则」的方向被 rule-router 渐进披露、Web Lite「只加载确实命中的编码专题」、prd-to-commit 及全局规则的 On-Demand Rule Loading 继承。
 - **小需求不建台账**：Lite 的「最小产物」想法以更安全的形式进入 [Web Lite](../../../common/rules/web-lite-workflow.md)（Task 默认留在对话、不建项目骨架/状态 JSON）和 prd-to-commit；但「人工摘要绕过来源对账、预置 approved、跳过正式 verify」明确未被继承（见 [v4x 迭代计划](../2026-09-24-optimization-pilot/v4x-iteration-plan-2026-09-25.md)）。
 - **PR-02208 的教训**：新增页面类需求必须先拿到页面位置与 API 阻塞信息；「完整读 PRD 的价值在于阻塞点前置」。对应 Web Lite「PRD 单次完整读取 + 提取核对」与 prd-to-commit「需求清单（原句→落点）+ 冷读逐条找落点」。
-- 兼容入口：[lite-mode-guide.md](../../../common/docs/lite-mode-guide.md)（归档指针）、[lite-work-item-template.json](../../../common/templates/lite-work-item-template.json)（仅供历史审阅）。
+- 实验产物：[lite-mode-guide.md](./lite-mode-guide.md)（原兼容指针）、[lite-work-item-template.json](./lite-work-item-template.json)、[lite-experiment-template.md](./lite-experiment-template.md)，仅供历史审阅。原在 `common/docs/` 与 `common/templates/`，2026-10-11 移入本目录。
 
 ## 教训
 

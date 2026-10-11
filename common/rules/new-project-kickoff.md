@@ -1,6 +1,8 @@
 # 新需求启动协议
 
-> 本文定义新需求入口；完整规则见 [web-lite-workflow.md](./web-lite-workflow.md)。章节号 §2 被外链引用，勿改编号。
+> **已废弃（2026-10-10）**：本文是 Web Lite 时期（2026-09-28 ~ 10-10）的新需求启动协议，仅供查阅。新需求改用 skill `prd-to-commit`（`~/.ai-rules/skills/prd-to-commit/SKILL.md`）；存量项目路由见 [rule-router.md](./rule-router.md) §2。
+>
+> 原说明：本文定义新需求入口；完整规则见 [web-lite-workflow.md](./web-lite-workflow.md)。章节号 §2 被外链引用，勿改编号。
 
 ## 1. 启动口令
 

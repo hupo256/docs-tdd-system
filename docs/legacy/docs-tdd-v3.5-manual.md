@@ -264,3 +264,18 @@ node <mount>/common/engine/agent-scripts/decommission-worktree.mjs PR-01234
 - **脚本体量预算**：`common/engine/agent-scripts/*.mjs` 与 `common/lark-bot/*.mjs` 同样有告警线/硬上限（默认 24000 / 30000 字符，大执行器设有界 grandfather 上限）。超限就按职责拆——纯逻辑下沉到同域 `lib/` 并带 `--self-test`，`check-doc-budget.mjs` 强制每个 `lib/*.mjs` 要么有自测要么显式登记豁免（门禁/服务脚本是 AI 最难 review、出错影响最大的部分，故拆小、可测、门面只做编排）。
 - **日志轮转**：`CHANGELOG.md` 只保留近期条目，旧条目轮转进 `CHANGELOG-archive.md`（不进 context、不参与预算）。
 - **防重复守护**：`FORBIDDEN_DUPLICATE_BLOCKS` 登记已收敛的唯一正文源签名，防规则正文在多处回潮重复。
+
+## 已知未修项（2026-10-11 记录）
+
+引擎冻结后，`check-doc-budget.mjs` 以退出码 1 结束，原因是下面这些失败。它们在冻结前就已存在，**不再修复**。维护 `common/` 时只需确认没有在此之外新增失败。
+
+| 失败项 | 原因 | 影响 |
+|---|---|---|
+| `PR-02208/agent/assumptions.json` 有 3 条 `status` 值为 `resolved-by-documented-contract`，不在 schema 枚举内 | 项目数据使用了 schema 之外的状态值 | 仅该存量项目的 schema 校验 |
+| 默认 context pack `g0_g2_scope` 为 36188 字符，超过 32000 上限 | 存量 v1 规则累积超出预算 | 仅存量 v1 项目的 G0–G2 上下文包 |
+| `lib/l2-rule-resolver-golden.mjs`：首次编辑 `.tsx` 命中的 L2 规则数为 49，golden 期望 47 | fameex-web 的 `.cursor/rules` 新增了规则，golden 未更新 | 仅 golden 回归，不影响规则解析本身 |
+| `vnext-kickoff-public-e2e.mjs` 自测期望合成项目的 `baseRef` 为 `origin/online`，实际为 `origin/main` | 自测依赖本机 `docs-tdd.config.json`，未与默认配置隔离 | 仅该自测 |
+
+**连带后果：规则指纹无法重新发布。** `rule-release.mjs --write` 会先跑 `check-doc-budget.mjs`，上述失败存在时拒绝发布，所以发布清单 `common/rule-release.json` 停在 2026-09-26，`rule-release --check` 报 stale。存量项目按各自钉住的 `rulePolicy` 读取规则，stale 不阻断 `context`、`changed`、`gate`。要恢复 fresh，需先修完上表四项，再运行 `rule-release --write`。
+
+另外，按 `check-doc-budget.mjs` 内置的体量告警线，若干脚本与 `architecture-and-state.md` 处于体量告警区（⚠，不是失败）。

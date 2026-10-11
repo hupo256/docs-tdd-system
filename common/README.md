@@ -6,13 +6,13 @@
 
 项目编号统一使用大写 `PR-xxxxx` 或 `TR-xxxxx`（五位数字）；下方命令中的 `PR-01234` 仅为示例，两类编号均由同一工具链支持。
 
-> **开工不要全读本索引**：存量项目从 [rule-router.md](./rules/rule-router.md) §1 开工，按场景命中再读专题。下面是**专题全索引，供人工查阅**，不是每次全读清单。
+> **开工不要全读本索引**：存量项目从 [rule-router.md](./rules/rule-router.md) §2 开工，按场景命中再读专题。下面是**专题全索引，供人工查阅**，不是每次全读清单。
 
 ## 专题全索引（查阅用）
 
 1. [rule-router.md](./rules/rule-router.md)：**渐进披露路由表**（开工唯一常驻入口，按场景命中才读正文）。
 2. [web-lite-workflow.md](./rules/web-lite-workflow.md)：**已废弃**（2026-09-28 至 10-10 的新需求流程），仅供查阅。
-3. [new-project-kickoff.md](./rules/new-project-kickoff.md)：存量协议的项目启动参考；实际路由以 rule-router 为准。
+3. [new-project-kickoff.md](./rules/new-project-kickoff.md)：**已废弃**（Web Lite 时期的新需求启动协议），仅供查阅；存量项目路由见 rule-router §2。
 4. [startup-prompt.md](./rules/startup-prompt.md)：新需求启动口令（指向 prd-to-commit）。
    - [rule-index.json](./rules/rule-index.json)：机器可读场景路由索引。
    - [rule-ownership.json](./rules/rule-ownership.json)：专题唯一正文所有权表；Router、Gate、模板只消费，不复制正文。
@@ -98,12 +98,12 @@
 
 - 修改规则后先跑公共自检，再依次执行 `rule-release.mjs --write`、`effective-rules.mjs --write` 和 `docs-tdd doctor`；`context/changed/gate` 只消费两层 fresh release。
 - 新项目启动时只从 `common/` 继承公共规则。
-- 新需求按 [rule-router.md](./rules/rule-router.md) 与 [web-lite-workflow.md](./rules/web-lite-workflow.md) 执行；启动模板可选，不运行旧引擎 kickoff。
+- 新需求走 skill `prd-to-commit`，不读本目录、不运行旧引擎 kickoff；Web Lite 已于 2026-10-10 废弃。
 - 旧项目里发现可复用规则，必须提炼到 `common/`，再继续当前项目。
 - 项目 `engineering/development-rules.md` 只写特殊约束，不复制整份公共规则。
 - 每次发现“以前定过但新项目没继承”，视为文档流程缺陷，先补 `common/`。
 - 维护 `docs_tdd` 时先按 [rule-inheritance.md](./rules/rule-inheritance.md) §0.1/§0.2 判断载体；不要把 L1/L2 代码规范正文复制进 L3。
-- 新需求默认按 [web-lite-workflow.md](./rules/web-lite-workflow.md)；不创建 workflowVersion、项目状态台账或 evidence 套件。
+- 新需求不创建 workflowVersion、项目状态台账或 evidence 套件。
 - 已有 v1 项目继续执行 [prd-feature-inventory.md](./rules/prd-feature-inventory.md) §3 和 G0–G8；已有 v2 项目继续使用其 work-item/verify。不得静默迁移。
 - 只有恢复存量项目或用户明确要求旧协议时，才使用 `docs-tdd.mjs run/kickoff/verify/gate` 与 [coding-worktree.md](./rules/coding-worktree.md)。
 - v1 项目进入 G2 / G5 / G6 / G7 / G8 前：Agent 必须按 [rule-ids-and-gates.md](./rules/rule-ids-and-gates.md) 依次跑对应 gate；v2 不运行这条 Gate 链。

@@ -9,7 +9,7 @@ docs_tdd 从 v1 到 prd-to-commit 各阶段的计划、设计、实验和复盘�
 | 阶段 | 时间 | 一句话 | 结论有效性 |
 |---|---|---|---|
 | v1 → v2 | 2026-06 ~ 09-08 | G0–G8 门禁流程上线；09-08 切到 workflowVersion 2（[切换决策](../../common/vnext/cutover-decision-20260908.md)）。这段时期没有单独的归档文档，细目见 [CHANGELOG-archive](../../common/CHANGELOG-archive.md) | 存量 v1/v2 项目仍按此执行 |
-| [规则治理三合一分享](./2026-08-rule-governance/README.md) | 2026-07 ~ 08 | 架构规则、L1/L2/L3 分层、按需加载三项治理的会议分享 | 部分有效：分层判据沿用至今 |
+| [规则治理三合一分享](./2026-07-24-rule-governance/README.md) | 2026-07 ~ 08 | 架构规则、L1/L2/L3 分层、按需加载三项治理的会议分享 | 部分有效：分层判据沿用至今 |
 | [v3.1–v3.3 实践期](./2026-09-12-v3.1-v3.3-practice/README.md) | 09-12 ~ 09-18 | v3.1 首次在 3 个真实需求上跑通，暴露约 40 条框架缺陷；PR-02233 出现「局部实现被误报为整批完成」的事故 | 部分有效 |
 | [v3.5 Requirement-to-Commit](./2026-09-17-v3.5-requirement-to-commit/README.md) | 09-17 ~ 09-23 | 从「流程发生过」转向「交付事实可信」：surface→code 对账、预算路由、有界修复、delivery truth；09-23 发布 v3.5.0 stable | 部分有效：引擎落地，AutoPilot 未经真实认证 |
 | [Phase 1–5 优化实验](./2026-09-21-phase1-5-experiment/README.md) | 09-21 ~ 09-24 | 一天写出 8 个实验模块，宣称大幅提效；当天审查发现安全问题并回滚 | **指标已撤回** |
@@ -26,7 +26,7 @@ docs_tdd 从 v1 到 prd-to-commit 各阶段的计划、设计、实验和复盘�
 
 ## 旧路径对照
 
-2026-10-11 整理前，这些文档散在根目录的 `plan/`、`practice-log/`、`output-tdd/`、`share/` 下。归档原文里出现的旧路径按下表对应：
+2026-10-11 整理前，这些文档散在根目录的 `plan/`、`practice-log/`、`output-tdd/`、`share/` 以及 `common/` 的几个角落里。归档原文里出现的旧路径按下表对应：
 
 | 旧位置 | 现位置 |
 |---|---|
@@ -35,7 +35,9 @@ docs_tdd 从 v1 到 prd-to-commit 各阶段的计划、设计、实验和复盘�
 | `output-tdd/*`、`plan/optimization-plan-2026-09-21.md`、`plan/phase*`、`plan/task-completion-*`、根目录 `RELEASE-v3.5.0.md` | [2026-09-21-phase1-5-experiment/](./2026-09-21-phase1-5-experiment/README.md) |
 | `practice-log/V4.0-*`、`plan/v4-lite-experiment-results.md`、`plan/v4.1-*` | [2026-09-23-v4-lite-experiment/](./2026-09-23-v4-lite-experiment/README.md) |
 | `plan/optimization-execution-plan-*`、`plan/next-steps-*`、`plan/*pilot*`、`plan/v4x-*` | [2026-09-24-optimization-pilot/](./2026-09-24-optimization-pilot/README.md) |
-| `share/rule-governance-share.html` | [2026-08-rule-governance/](./2026-08-rule-governance/README.md) |
+| `share/rule-governance-share.html` | [2026-07-24-rule-governance/](./2026-07-24-rule-governance/README.md) |
+| `common/docs/lite-mode-guide.md`、`common/templates/lite-*` | [2026-09-23-v4-lite-experiment/](./2026-09-23-v4-lite-experiment/README.md) |
+| `common/lark-bot/docs/handoff-lark-lightweight-v31.md` | [2026-09-12-v3.1-v3.3-practice/](./2026-09-12-v3.1-v3.3-practice/README.md) |
 | 根目录 `MIGRATION.md` | [decisions/2026-09-28-switch-to-web-lite.md](../decisions/2026-09-28-switch-to-web-lite.md) |
 | `plan/prd-to-commit-*`、`plan/status-audit-*`、`plan/final-report-*`、`plan/autonomous-iteration-ledger.md` | [docs/prd-to-commit/](../prd-to-commit/usage.md) |
 | `plan/replay/` | [benchmarks/replay/](../../benchmarks/replay/README.md) |

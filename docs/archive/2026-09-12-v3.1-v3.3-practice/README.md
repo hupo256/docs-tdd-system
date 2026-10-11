@@ -1,4 +1,4 @@
-# v3.1–v3.3 真实项目实践日志（2026-09-12 – 2026-09-18）
+# v3.1–v3.3 真实项目实践日志（2026-09-12 ~ 2026-09-18）
 
 > 状态：已归档（只读） · 结论有效性：部分有效 · 后继：[v3.5 Requirement-to-Commit 阶段](../2026-09-17-v3.5-requirement-to-commit/)（其 [iteration-plan-v3.5](../2026-09-17-v3.5-requirement-to-commit/iteration-plan-v3.5-2026-09-17.md) 附录 A 逐条承接本目录观察项）；现行入口见 [rule-router.md](../../../common/rules/rule-router.md)
 
@@ -78,6 +78,7 @@ PR-02233 过程要点：
 | [practice-log-v3.1-hichat-bugfix-2026-09-12.md](./practice-log-v3.1-hichat-bugfix-2026-09-12.md) | 实践日志 | hichat bug 根因（`skipTrailingSlashRedirect` 下尾斜杠空段）、HB-1 ~ HB-5、分支命名三处不一致的消歧决策 |
 | [practice-log-v3.3-tr-02386-2026-09-15.md](./practice-log-v3.3-tr-02386-2026-09-15.md) | 实践日志 | TR-02386 kickoff 误判为 v1、本地 PRD 路径约束、bounded-batch 无延期项不自洽、审查循环排序陷阱 |
 | [pr-02233-system-feedback-2026-09-18.md](./pr-02233-system-feedback-2026-09-18.md) | 门禁反馈 + 验收记录 | Q1 ~ Q4（版本语义、fail-closed 守卫、policyPaths 低估）、R-004 改按 Figma 排序的决策、MA-001 ~ MA-010 |
+| [lark-lightweight-handoff-2026-09-11.md](./lark-lightweight-handoff-2026-09-11.md) | 交接快照 | v3.1 时期 lark-bot 轻量闭环强化（提交前 HEAD + diffHash 二次校验等）的跨会话交接；原为 `common/lark-bot/docs/handoff-lark-lightweight-v31.md`，2026-10-11 移入 |
 
 ### 已合并删除的原文件
 
