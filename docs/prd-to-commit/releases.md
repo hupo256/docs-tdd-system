@@ -11,6 +11,7 @@ skill 本体在 `~/.ai-rules/skills/prd-to-commit/`（独立 git 仓库），版
 
 ## 未发布
 
+- `c99da4c`（2026-10-11）：登录窗口改为**普通 Chrome**，登录期间只在浏览器级别读 cookie，不连接页面。原先由 Playwright 启动或经 Playwright 连进页面做快照，dev 登录页会不停闪动、无法操作；二分实验确认普通 Chrome 加浏览器级读取是稳定的。登录态按环境打标记，换环境时自动归档旧 profile。关窗后进程不退出的问题一并修复。四个站点已在 dev 上 check 通过。
 - （2026-10-11）浏览器核对在 dev 上默认**真实写入**（用户要求）：dev 本来就是联调环境，数据可以操作；报告的 `realWrites` 列出每条真实写入，交付说明要写明。发往 dev 以外域名的写操作仍一律拦截，防止环境配错；spec 设 `strictWrites = true` 可在 dev 上也拦截；登出接口始终拦截。
 - `a6fc678`（2026-10-11）：浏览器核对改连 dev 环境（pfyys），不再连 test。原因是开发期接口先发 dev、在 dev 联调完才上 test，dev 上也更好操作（用户要求）。Next 站点改用仓库 `.env.dev`，legacy 后台以 `--mode dev` 启动并沿用仓库自带的 pfyys 代理。只改站点配置和说明，未回放；web 与现货后台需要在 dev 上各重新登录一次。
 - `fcfd23e`（2026-10-11）：Codex 沙箱里 `.git` 只读、无法提交时，改为把提交打成 bundle 交回（Codex 中出现 3 次）。只改 SKILL.md 文字，未回放；下次打 tag 时并入。
