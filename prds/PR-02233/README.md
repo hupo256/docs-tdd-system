@@ -1,9 +1,9 @@
 ---
 projectId: PR-02233
-status: active
+status: closed
 stage: G1
 branch: "feature/PR-02233"
-worktree: "/Users/aven/github/PR-02233"
+worktree: ""
 port: "4101"
 visualFidelity: standard
 prdSource: https://qfglxo2m3dc.sg.larksuite.com/docx/QaBEditNroySaGxmywFl8CwXg6d

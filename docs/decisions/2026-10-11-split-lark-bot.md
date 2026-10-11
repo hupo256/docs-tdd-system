@@ -59,7 +59,7 @@
 | B2 | ✅ | lark-bot `90f6b40`、`afaf75c`；合并后 15 个测试文件共 507 条全部通过 |
 | B3 | ✅ 已准备 | docs_tdd 分支 `chore/split-lark-bot` `7dcdab7`，切换后合并 |
 | C | ✅ | 2026-10-11 切换：服务从新仓库运行，健康检查显示代码版本未落后；docs_tdd 合并 `d2d1380`；规则指纹 `91334667a79a` 与生效规则 `cf11742be7a7` 已重新发布 |
-| D | ✅ 本地 | fameex-web 分支 `fix/remove-docs-tdd-lint-staged` `caf0b23f8`（基于 `origin/online`，worktree `~/github/fix-docs-tdd-lint-staged`），未 push，何时合入由用户决定。v2 存量项目的提交守卫随之失效，交付前按各自 README 手动运行 |
+| D | ✅ 本地 | fameex-web 分支 `fix/remove-docs-tdd-lint-staged` `caf0b23f8`（基于 `origin/online`，worktree `~/github/fix-docs-tdd-lint-staged`），未 push，何时合入由用户决定。PR-02233 已上线（已完整合入 `origin/online`），2026-10-11 标为 closed。剩余 v2 项目（PR-02208、PR-02440、TR-02386）都在 planning 阶段，没有活跃 worktree，提交守卫失效对它们没有影响 |
 
 ### 范围契约（A3 / B1）
 

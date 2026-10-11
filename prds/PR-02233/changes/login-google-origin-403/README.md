@@ -1,11 +1,11 @@
 ---
 projectId: PR-02233
 changeId: login-google-origin-403
-status: active
+status: closed
 stage: G1
 branch: "feature/PR-02233"
 baseRef: "origin/online"
-worktree: "/Users/aven/github/PR-02233"
+worktree: ""
 port: ""
 visualFidelity: standard
 prdSource: /Users/aven/github/docs_tdd/prds/PR-02233/inbox/login-google-origin-403-2026-09-26.md
