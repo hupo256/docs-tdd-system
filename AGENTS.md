@@ -1,6 +1,6 @@
 # docs_tdd Agent 规则
 
-> 本仓是个人维护的独立 git 仓库（`~/github/docs_tdd`，远端 `github.com/hupo256/docs-tdd-system`），以软链挂载为 `fameex-web/apps/web/docs_tdd`，在业务仓中由 `.git/info/exclude` 忽略，不进入业务提交。仓库定位和目录见 [README.md](./README.md)。
+> 本仓是个人维护的独立 git 仓库（`~/github/docs_tdd`，远端 `github.com/hupo256/docs-tdd-system`）。2026-10-17 起不再软链挂载到 `fameex-web`，业务仓（含 worktree）里没有 `apps/web/docs_tdd`，也不要再建。仓库定位和目录见 [README.md](./README.md)。
 >
 > **只读归档（2026-10-11 起）**：不再承担现役职能。新需求走 prd-to-commit；prd-to-commit 的回放基准与发版台账已迁到 `~/.ai-rules/labs/prd-to-commit/`；lark-bot 在 `~/github/lark-bot`。除查阅存量项目外不要再改本仓。
 
@@ -36,4 +36,4 @@
 ## 4. Git
 
 - 只做本地提交；未经当次明确授权，不 push。
-- 在业务仓中，`apps/web/docs_tdd` 和 `apps/web/docs` 都是本地忽略目录，不进入业务提交，也不要 `git add -f`。
+- 在业务仓中，`apps/web/docs` 是本地忽略目录，不进入业务提交，也不要 `git add -f`。

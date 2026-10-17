@@ -1,6 +1,6 @@
 # docs_tdd
 
-FameEX Web 前端需求交付的**流程文档与规则库**（prd-to-commit 的回放基准、发版台账和流程决策已于 2026-10-11 迁到 `~/.ai-rules/labs/prd-to-commit/`）。本仓是个人维护的独立 git 仓库（远端 `github.com/hupo256/docs-tdd-system`，默认只做本地提交），通过软链挂载到 `fameex-web/apps/web/docs_tdd`，不进入业务仓提交。
+FameEX Web 前端需求交付的**流程文档与规则库**（prd-to-commit 的回放基准、发版台账和流程决策已于 2026-10-11 迁到 `~/.ai-rules/labs/prd-to-commit/`）。本仓是个人维护的独立 git 仓库（远端 `github.com/hupo256/docs-tdd-system`，默认只做本地提交）。2026-10-17 起不再软链挂载到 `fameex-web/apps/web/docs_tdd`。
 
 ## 现状一览
 
